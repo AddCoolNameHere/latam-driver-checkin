@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · Street View LATAM</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --c-primary: #2C5282;
+    --c-primary-dark: #1A365D;
+    --c-accent: #4A9FE0;
+    --c-bg-tint: #EBF4FB;
+    --c-bg: #F4F6F9;
+    --c-surface: #FFFFFF;
+    --c-border: #E2E8F0;
+    --c-border-strong: #CBD5E1;
+    --c-text: #1A202C;
+    --c-text-muted: #64748B;
+    --c-text-dim: #94A3B8;
+    --c-success: #22C55E;
+    --c-success-bg: #ECFDF5;
+    --c-warn: #F59E0B;
+    --c-warn-bg: #FEF3C7;
+    --c-danger: #EF4444;
+    --c-danger-bg: #FEE2E2;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* HEADER */
+  .header {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-logo { height: 32px; width: auto; }
+  .brand-divider { width: 1px; height: 28px; background: var(--c-border-strong); }
+  .brand-sub {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    letter-spacing: 1.2px;
+    line-height: 1.2;
+  }
+  .brand-sub span {
+    display: block;
+    color: var(--c-primary);
+    font-size: 12px;
+  }
+  .header-right {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--c-text-muted);
+  }
+  .last-updated {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .refresh-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c-success);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .demo-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--c-warn-bg);
+    border: 1px solid var(--c-warn);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #854F0B;
+    font-weight: 500;
+  }
+  .demo-toggle.active {
+    background: var(--c-warn);
+    color: white;
+  }
+  .refresh-btn {
+    background: none;
+    border: 1px solid var(--c-border-strong);
+    color: var(--c-text-muted);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+  }
+  .refresh-btn:hover { background: var(--c-bg-tint); color: var(--c-primary); }
+
+  /* FILTERS */
+  .filters {
+    background: white;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .filter-label {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    margin-right: 4px;
+  }
+  .filter-chip {
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--c-text);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .filter-chip:hover { border-color: var(--c-primary); color: var(--c-primary); }
+  .filter-chip.active {
+    background: var(--c-primary);
+    color: white;
+    border-color: var(--c-primary);
+  }
+
+  /* SCORECARDS */
+  .scorecards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .scorecard {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+  .scorecard::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--c-primary);
+  }
+  .scorecard.warn::before { background: var(--c-warn); }
+  .scorecard.danger::before { background: var(--c-danger); }
+  .scorecard.accent::before { background: var(--c-accent); }
+
+  .scorecard-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .scorecard-value {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--c-text);
+    line-height: 1;
+  }
+  .scorecard-sub {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 6px;
+  }
+
+  /* MAP */
+  .map-section {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--c-primary-dark);
+  }
+  .section-sub {
+    font-size: 11px;
+    color: var(--c-text-muted);
+  }
+  #map {
+    height: 480px;
+    border-radius: 8px;
+    border: 1px solid var(--c-border);
+  }
+  .map-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--c-text-muted);
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  /* TABLE */
+  .table-section {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .driver-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .driver-table th {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--c-border);
+    background: #FAFBFC;
+  }
+  .driver-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .driver-table tr:hover td {
+    background: var(--c-bg-tint);
+    cursor: pointer;
+  }
+  .driver-table tr:last-child td { border-bottom: none; }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .status-active { background: var(--c-success-bg); color: #065F46; }
+  .status-warn { background: var(--c-warn-bg); color: #854F0B; }
+  .status-danger { background: var(--c-danger-bg); color: #991B1B; }
+  .status-neutral { background: var(--c-bg-tint); color: var(--c-primary-dark); }
+
+  .country-tag {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--c-text-muted);
+    padding: 2px 6px;
+    background: var(--c-bg);
+    border-radius: 4px;
+  }
+
+  /* LOADER */
+  .loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(244, 246, 249, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--c-border);
+    border-top-color: var(--c-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text {
+    font-size: 13px;
+    color: var(--c-text-muted);
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--c-text-dim);
+  }
+  footer img { height: 18px; opacity: 0.6; margin-bottom: 4px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .scorecards { grid-template-columns: repeat(2, 1fr); }
+    body { padding: 12px; }
+    #map { height: 340px; }
+    .driver-table { font-size: 11px; }
+    .driver-table th, .driver-table td { padding: 6px 8px; }
+    .hide-mobile { display: none; }
+  }
+
+  /* LEAFLET CUSTOM POPUP */
+  .leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    font-family: inherit;
+  }
+  .leaflet-popup-content {
+    margin: 10px 14px;
+    font-size: 12px;
+  }
+  .popup-title {
+    font-weight: 600;
+    color: var(--c-primary-dark);
+    margin-bottom: 4px;
+  }
+  .popup-row {
+    color: var(--c-text-muted);
+    margin: 2px 0;
+  }
+</style>
+</head>
+<body>
+
+<div id="loader" class="loader-overlay">
+  <div class="spinner"></div>
+  <div class="loader-text">Carregando dados...</div>
+</div>
+
+<div class="header">
+  <div class="brand-wrap">
+    <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
+    <div class="brand-divider"></div>
+    <div class="brand-sub">
+      STREET VIEW DASHBOARD
+      <span>LATAM</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="demo-toggle" id="demo-toggle" onclick="toggleDemoMode()">
+      <span id="demo-icon">🎭</span>
+      <span id="demo-label">Modo demo</span>
+    </button>
+    <div class="last-updated">
+      <div class="refresh-dot"></div>
+      <span id="last-updated">—</span>
+    </div>
+    <button class="refresh-btn" onclick="loadData()">⟳ Atualizar</button>
+  </div>
+</div>
+
+<div class="filters">
+  <span class="filter-label">País:</span>
+  <button class="filter-chip active" data-country="all" onclick="setFilter('country', 'all')">Todos</button>
+  <button class="filter-chip" data-country="Brazil" onclick="setFilter('country', 'Brazil')">Brasil</button>
+  <button class="filter-chip" data-country="Argentina" onclick="setFilter('country', 'Argentina')">Argentina</button>
+  <button class="filter-chip" data-country="Chile" onclick="setFilter('country', 'Chile')">Chile</button>
+  <button class="filter-chip" data-country="Colombia" onclick="setFilter('country', 'Colombia')">Colombia</button>
+  <button class="filter-chip" data-country="México" onclick="setFilter('country', 'México')">México</button>
+  <button class="filter-chip" data-country="Peru" onclick="setFilter('country', 'Peru')">Peru</button>
+
+  <span class="filter-label" style="margin-left:16px;">Período:</span>
+  <button class="filter-chip" data-period="1" onclick="setFilter('period', 1)">Hoje</button>
+  <button class="filter-chip active" data-period="7" onclick="setFilter('period', 7)">7 dias</button>
+  <button class="filter-chip" data-period="30" onclick="setFilter('period', 30)">30 dias</button>
+</div>
+
+<div class="scorecards">
+  <div class="scorecard">
+    <div class="scorecard-label">DRIVERS ATIVOS</div>
+    <div class="scorecard-value" id="sc-total">—</div>
+    <div class="scorecard-sub" id="sc-total-sub">no filtro selecionado</div>
+  </div>
+  <div class="scorecard accent">
+    <div class="scorecard-label">EM HOTEL MODE</div>
+    <div class="scorecard-value" id="sc-hotel">—</div>
+    <div class="scorecard-sub" id="sc-hotel-sub">—</div>
+  </div>
+  <div class="scorecard warn">
+    <div class="scorecard-label">SEM CHECK-IN RECENTE</div>
+    <div class="scorecard-value" id="sc-missing">—</div>
+    <div class="scorecard-sub">&gt; 24h sem update</div>
+  </div>
+  <div class="scorecard danger">
+    <div class="scorecard-label">ISSUES REPORTADOS</div>
+    <div class="scorecard-value" id="sc-issues">—</div>
+    <div class="scorecard-sub">veículos no período</div>
+  </div>
+</div>
+
+<div class="map-section">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Mapa LATAM</div>
+      <div class="section-sub">Base atual e área de mapeamento por driver</div>
+    </div>
+    <div class="section-sub"><span id="map-count">—</span> drivers visíveis</div>
+  </div>
+  <div id="map"></div>
+  <div class="map-legend">
+    <div class="legend-item"><span class="legend-dot" style="background:#2C5282;"></span> Base (hotel/casa)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#4A9FE0; opacity:0.4;"></span> Área de mapeamento</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#22C55E;"></span> Check-in nas últimas 24h</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#F59E0B;"></span> Sem check-in &gt; 24h</div>
+  </div>
+</div>
+
+<div class="table-section">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Drivers</div>
+      <div class="section-sub">Clique numa linha pra centralizar no mapa</div>
+    </div>
+  </div>
+  <table class="driver-table">
+    <thead>
+      <tr>
+        <th>Driver</th>
+        <th>País</th>
+        <th class="hide-mobile">Cidade</th>
+        <th>Base</th>
+        <th class="hide-mobile">Último check-in</th>
+        <th class="hide-mobile">Km base→área</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="driver-tbody">
+    </tbody>
+  </table>
+</div>
+
+<footer>
+  <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display='none'"><br>
+  Plataforma interna — Aceolution do Brasil Ltda.
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  refreshMs: 5 * 60 * 1000,
+};
+
+let state = {
+  drivers: [],
+  demoMode: false,
+  filter: { country: 'all', period: 7 },
+};
+
+let map = null;
+let markerLayer = null;
+
+// Coordenadas aproximadas das principais cidades LATAM onde há drivers
+const CITY_COORDS = {
+  'São Paulo': [-23.5505, -46.6333],
+  'Rio de Janeiro': [-22.9068, -43.1729],
+  'Belo Horizonte': [-19.9167, -43.9345],
+  'Brasília': [-15.7801, -47.9292],
+  'Salvador': [-12.9714, -38.5014],
+  'Curitiba': [-25.4284, -49.2733],
+  'Porto Alegre': [-30.0346, -51.2177],
+  'Fortaleza': [-3.7172, -38.5433],
+  'Recife': [-8.0476, -34.8770],
+  'Manaus': [-3.1190, -60.0217],
+  'Buenos Aires': [-34.6037, -58.3816],
+  'Cordoba': [-31.4201, -64.1888],
+  'Mendoza': [-32.8895, -68.8458],
+  'Rosario': [-32.9442, -60.6505],
+  'Tucuman': [-26.8083, -65.2176],
+  'Santiago': [-33.4489, -70.6693],
+  'Valparaíso': [-33.0472, -71.6127],
+  'Concepción': [-36.8270, -73.0498],
+  'Bogotá': [4.7110, -74.0721],
+  'Medellín': [6.2442, -75.5812],
+  'Cali': [3.4516, -76.5320],
+  'Cartagena': [10.3910, -75.4794],
+  'Mexico City': [19.4326, -99.1332],
+  'Guadalajara': [20.6597, -103.3496],
+  'Monterrey': [25.6866, -100.3161],
+  'Puebla': [19.0414, -98.2063],
+  'Lima': [-12.0464, -77.0428],
+  'Arequipa': [-16.4090, -71.5375],
+  'Cusco': [-13.5319, -71.9675],
+  'Trujillo': [-8.1116, -79.0287],
+};
+
+const COUNTRY_CENTERS = {
+  'Brazil': [-10.3333, -53.2],
+  'Argentina': [-38.4, -63.6],
+  'Chile': [-35.7, -71.5],
+  'Colombia': [4.5, -74.3],
+  'México': [23.6, -102.5],
+  'Mexico': [23.6, -102.5],
+  'Peru': [-9.2, -75.0],
+};
+
+// =================================================================
+// MAP SETUP
+// =================================================================
+
+function initMap() {
+  if (map) return;
+  map = L.map('map').setView([-15, -60], 4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 18,
+  }).addTo(map);
+  markerLayer = L.layerGroup().addTo(map);
+}
+
+function renderMap(drivers) {
+  markerLayer.clearLayers();
+  const bounds = [];
+
+  drivers.forEach(d => {
+    if (!d.base || !d.base.lat) return;
+
+    const isRecent = d.hoursAgo !== null && d.hoursAgo <= 24;
+    const baseColor = isRecent ? '#22C55E' : '#F59E0B';
+
+    // Ícone personalizado de base
+    const baseIcon = L.divIcon({
+      className: 'driver-marker',
+      html: `<div style="width:14px;height:14px;background:${baseColor};border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    });
+
+    const marker = L.marker([d.base.lat, d.base.lng], { icon: baseIcon });
+    marker.bindPopup(`
+      <div class="popup-title">${d.name}</div>
+      <div class="popup-row">${d.country} · ${d.city || '—'}</div>
+      <div class="popup-row">Base: ${d.base.type || '—'}</div>
+      <div class="popup-row">${d.base.address || ''}</div>
+      ${d.hoursAgo !== null ? `<div class="popup-row" style="margin-top:6px;color:${isRecent ? '#22C55E' : '#F59E0B'};">Check-in há ${formatHoursAgo(d.hoursAgo)}</div>` : '<div class="popup-row" style="color:#94A3B8;">Sem check-in</div>'}
+    `);
+    markerLayer.addLayer(marker);
+    bounds.push([d.base.lat, d.base.lng]);
+
+    // Círculo da área de mapeamento
+    if (d.area && d.area.lat && d.area.radius) {
+      const circle = L.circle([d.area.lat, d.area.lng], {
+        radius: d.area.radius * 1000,
+        color: '#4A9FE0',
+        fillColor: '#4A9FE0',
+        fillOpacity: 0.15,
+        weight: 1.5,
+      });
+      markerLayer.addLayer(circle);
+      bounds.push([d.area.lat, d.area.lng]);
+
+      // Linha base → centro da área
+      const line = L.polyline([[d.base.lat, d.base.lng], [d.area.lat, d.area.lng]], {
+        color: '#2C5282',
+        weight: 1,
+        opacity: 0.4,
+        dashArray: '4 4',
+      });
+      markerLayer.addLayer(line);
+    }
+  });
+
+  if (bounds.length > 0) {
+    // Se filtro por país, centraliza no país; senão enquadra tudo
+    if (state.filter.country !== 'all') {
+      const c = COUNTRY_CENTERS[state.filter.country];
+      if (c) map.setView(c, 5);
+    } else {
+      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 6 });
+    }
+  }
+
+  document.getElementById('map-count').textContent = drivers.filter(d => d.base && d.base.lat).length;
+}
+
+// =================================================================
+// DATA LOADING
+// =================================================================
+
+async function loadData() {
+  showLoader(true);
+
+  try {
+    if (state.demoMode) {
+      state.drivers = generateDemoData();
+    } else {
+      state.drivers = await fetchRealData();
+    }
+
+    applyFiltersAndRender();
+    document.getElementById('last-updated').textContent = 'Atualizado ' + formatTime(new Date());
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao carregar dados: ' + err.message);
+  } finally {
+    showLoader(false);
+  }
+}
+
+async function fetchRealData() {
+  // 1. Buscar lista de drivers ativos
+  const driversRes = await fetch(CONFIG.scriptUrl + '?action=getDrivers');
+  const driversData = await driversRes.json();
+  if (!driversData.success) throw new Error(driversData.error);
+
+  const drivers = driversData.drivers;
+
+  // 2. Em paralelo, buscar base e última área de cada driver
+  const enriched = await Promise.all(drivers.map(async (d) => {
+    try {
+      const [baseRes, areaRes] = await Promise.all([
+        fetch(CONFIG.scriptUrl + '?action=getBase&email=' + encodeURIComponent(d.email)),
+        fetch(CONFIG.scriptUrl + '?action=getLastArea&email=' + encodeURIComponent(d.email)),
+      ]);
+      const base = (await baseRes.json()).base;
+      const area = (await areaRes.json()).area;
+
+      let hoursAgo = null;
+      let lastCheckinDate = null;
+      if (area && area.address) {
+        // Não temos timestamp do last area — assumimos que existência da área = check-in recente
+        // Quando tiver endpoint novo, ajustar isso
+        lastCheckinDate = new Date(); // placeholder
+        hoursAgo = 0;
+      }
+
+      return {
+        name: d.name,
+        email: d.email,
+        country: d.country,
+        city: d.city,
+        base,
+        area,
+        hoursAgo,
+        vehicleStatus: 'OK',  // precisaria endpoint novo pra saber
+        distBaseToEdge: (base && area && area.radius)
+          ? Math.max(0, Math.round((haversine(base.lat, base.lng, area.lat, area.lng) - area.radius) * 10) / 10)
+          : null,
+      };
+    } catch (err) {
+      return { name: d.name, email: d.email, country: d.country, city: d.city, base: null, area: null, hoursAgo: null };
+    }
+  }));
+
+  return enriched;
+}
+
+// =================================================================
+// DEMO DATA GENERATOR
+// =================================================================
+
+function generateDemoData() {
+  const driverTemplates = [
+    { name: 'Andre Luiz Barbosa Lima', country: 'Brazil', city: 'Rio de Janeiro' },
+    { name: 'Ruan Mota Santana', country: 'Brazil', city: 'Salvador' },
+    { name: 'Igor Resende Da Macena', country: 'Brazil', city: 'Belo Horizonte' },
+    { name: 'Flávio Rafael Batista', country: 'Brazil', city: 'Recife' },
+    { name: 'Douglas da Silva Batista', country: 'Brazil', city: 'Porto Alegre' },
+    { name: 'Murilo Carlos Daltin', country: 'Brazil', city: 'São Paulo' },
+    { name: 'Edson Alves de Miranda', country: 'Brazil', city: 'Curitiba' },
+    { name: 'Deivide Nelson dos Santos', country: 'Brazil', city: 'Brasília' },
+    { name: 'Maximiliano Tadeu Brant', country: 'Brazil', city: 'Fortaleza' },
+    { name: 'Matías Daniel Moreira', country: 'Argentina', city: 'Buenos Aires' },
+    { name: 'Axel Augusto Gentilini', country: 'Argentina', city: 'Cordoba' },
+    { name: 'Mauro Leandro Canepa', country: 'Argentina', city: 'Rosario' },
+    { name: 'Leandro Martín Andreoli', country: 'Argentina', city: 'Mendoza' },
+    { name: 'Guillermo Amado Juarez', country: 'Argentina', city: 'Tucuman' },
+    { name: 'Mauricio Alejandro Gallero', country: 'Argentina', city: 'Buenos Aires' },
+    { name: 'Carlos Alberto Silva', country: 'Chile', city: 'Santiago' },
+    { name: 'Rodrigo Martinez', country: 'Chile', city: 'Valparaíso' },
+    { name: 'Felipe Gonzalez', country: 'Chile', city: 'Concepción' },
+    { name: 'Cesar Casallas', country: 'Colombia', city: 'Bogotá' },
+    { name: 'Andres Rodriguez', country: 'Colombia', city: 'Medellín' },
+    { name: 'Juan Pablo Torres', country: 'Colombia', city: 'Cali' },
+    { name: 'Rafael Roberto Naylor', country: 'México', city: 'Mexico City' },
+    { name: 'Montserrat Santos', country: 'México', city: 'Guadalajara' },
+    { name: 'Christian Jesus Fonseca', country: 'México', city: 'Monterrey' },
+    { name: 'Diego Garcia Llerenas', country: 'México', city: 'Puebla' },
+    { name: 'Jesus Vazquez', country: 'México', city: 'Mexico City' },
+    { name: 'Juan Carlos Mauricio', country: 'Peru', city: 'Lima' },
+    { name: 'Luis Fernando Castro', country: 'Peru', city: 'Arequipa' },
+    { name: 'Miguel Angel Vargas', country: 'Peru', city: 'Cusco' },
+    { name: 'Ricardo Alonso Mendoza', country: 'Peru', city: 'Trujillo' },
+  ];
+
+  return driverTemplates.map((d, i) => {
+    const cityCoords = CITY_COORDS[d.city] || COUNTRY_CENTERS[d.country] || [-15, -60];
+    const baseLat = cityCoords[0] + (Math.random() - 0.5) * 0.2;
+    const baseLng = cityCoords[1] + (Math.random() - 0.5) * 0.2;
+
+    // Área de mapeamento: 70% dos casos perto da base, 30% mais longe (hotel mode)
+    const isHotelMode = Math.random() > 0.3;
+    const distanceDeg = isHotelMode ? 0.3 + Math.random() * 0.8 : 0.05 + Math.random() * 0.2;
+    const angle = Math.random() * 2 * Math.PI;
+    const areaLat = baseLat + distanceDeg * Math.cos(angle);
+    const areaLng = baseLng + distanceDeg * Math.sin(angle);
+    const radius = 5 + Math.floor(Math.random() * 40);
+
+    // Alguns drivers sem check-in recente
+    const hoursAgo = i % 7 === 0 ? (30 + Math.floor(Math.random() * 80)) :
+                     i % 5 === 0 ? (3 + Math.floor(Math.random() * 18)) :
+                     Math.floor(Math.random() * 4);
+
+    // Alguns com issue
+    const vehicleStatus = i % 11 === 0 ? 'Minor Issue' :
+                          i % 17 === 0 ? 'Critical Issue' : 'OK';
+
+    const baseType = Math.random() > 0.4 ? 'Hotel' : 'Home';
+    const distBaseToEdge = Math.max(0, Math.round((haversine(baseLat, baseLng, areaLat, areaLng) - radius) * 10) / 10);
+
+    return {
+      name: d.name,
+      email: d.name.toLowerCase().replace(/\s/g, '.') + '@field-ops-xpe.com',
+      country: d.country,
+      city: d.city,
+      base: {
+        type: baseType,
+        address: `${baseType} · ${d.city}`,
+        lat: baseLat,
+        lng: baseLng,
+      },
+      area: {
+        lat: areaLat,
+        lng: areaLng,
+        radius: radius,
+        address: `Área de mapeamento · ${d.city}`,
+      },
+      hoursAgo,
+      vehicleStatus,
+      distBaseToEdge,
+    };
+  });
+}
+
+// =================================================================
+// FILTERS & RENDER
+// =================================================================
+
+function setFilter(type, value) {
+  state.filter[type] = value;
+
+  // Update chip UI
+  if (type === 'country') {
+    document.querySelectorAll('[data-country]').forEach(el => {
+      el.classList.toggle('active', el.dataset.country === value);
+    });
+  } else if (type === 'period') {
+    document.querySelectorAll('[data-period]').forEach(el => {
+      el.classList.toggle('active', parseInt(el.dataset.period) === value);
+    });
+  }
+
+  applyFiltersAndRender();
+}
+
+function applyFiltersAndRender() {
+  const filtered = state.drivers.filter(d => {
+    if (state.filter.country !== 'all' && d.country !== state.filter.country) return false;
+    return true;
+  });
+
+  // Filtro de período aplica diferente: drivers sem check-in no período ainda aparecem como "sem check-in"
+  const periodHours = state.filter.period * 24;
+
+  renderScorecards(filtered, periodHours);
+  renderMap(filtered);
+  renderTable(filtered, periodHours);
+}
+
+function renderScorecards(drivers, periodHours) {
+  const total = drivers.length;
+  const withCheckin = drivers.filter(d => d.hoursAgo !== null && d.hoursAgo <= periodHours).length;
+  const hotelMode = drivers.filter(d => d.base && d.base.type === 'Hotel').length;
+  const missing = drivers.filter(d => d.hoursAgo === null || d.hoursAgo > 24).length;
+  const issues = drivers.filter(d => d.vehicleStatus && d.vehicleStatus !== 'OK').length;
+
+  document.getElementById('sc-total').textContent = total;
+  document.getElementById('sc-total-sub').textContent = withCheckin + ' com check-in no período';
+
+  document.getElementById('sc-hotel').textContent = hotelMode;
+  const pct = total > 0 ? Math.round((hotelMode / total) * 100) : 0;
+  document.getElementById('sc-hotel-sub').textContent = pct + '% do total';
+
+  document.getElementById('sc-missing').textContent = missing;
+  document.getElementById('sc-issues').textContent = issues;
+}
+
+function renderTable(drivers, periodHours) {
+  const tbody = document.getElementById('driver-tbody');
+  tbody.innerHTML = '';
+
+  const sorted = [...drivers].sort((a, b) => {
+    // Prioriza drivers com issue, depois sem check-in recente
+    const scoreA = (a.vehicleStatus !== 'OK' ? 1000 : 0) + (a.hoursAgo === null ? 500 : a.hoursAgo);
+    const scoreB = (b.vehicleStatus !== 'OK' ? 1000 : 0) + (b.hoursAgo === null ? 500 : b.hoursAgo);
+    return scoreB - scoreA;
+  });
+
+  sorted.forEach(d => {
+    const row = document.createElement('tr');
+    const statusPill = getStatusPill(d, periodHours);
+    const hoursDisplay = d.hoursAgo === null ? '—' : formatHoursAgo(d.hoursAgo);
+
+    row.innerHTML = `
+      <td><strong>${d.name}</strong></td>
+      <td><span class="country-tag">${d.country}</span></td>
+      <td class="hide-mobile">${d.city || '—'}</td>
+      <td>${d.base ? d.base.type : '—'}</td>
+      <td class="hide-mobile">${hoursDisplay}</td>
+      <td class="hide-mobile">${d.distBaseToEdge !== null && d.distBaseToEdge !== undefined ? d.distBaseToEdge + ' km' : '—'}</td>
+      <td>${statusPill}</td>
+    `;
+
+    row.addEventListener('click', () => {
+      if (d.base && d.base.lat) {
+        map.setView([d.base.lat, d.base.lng], 10);
+      }
+    });
+
+    tbody.appendChild(row);
+  });
+}
+
+function getStatusPill(d, periodHours) {
+  if (d.vehicleStatus === 'Critical Issue') return '<span class="status-pill status-danger">⚠ Crítico</span>';
+  if (d.vehicleStatus === 'Minor Issue') return '<span class="status-pill status-warn">⚠ Alerta</span>';
+  if (d.hoursAgo === null) return '<span class="status-pill status-neutral">Sem check-in</span>';
+  if (d.hoursAgo > 24) return '<span class="status-pill status-warn">&gt; 24h</span>';
+  return '<span class="status-pill status-active">✓ Ativo</span>';
+}
+
+// =================================================================
+// UTILS
+// =================================================================
+
+function haversine(lat1, lng1, lat2, lng2) {
+  if (!lat1 || !lat2) return 0;
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) ** 2 +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatTime(d) {
+  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatHoursAgo(h) {
+  if (h < 1) return 'menos de 1h';
+  if (h < 24) return Math.floor(h) + 'h';
+  return Math.floor(h / 24) + 'd';
+}
+
+function showLoader(show) {
+  document.getElementById('loader').style.display = show ? 'flex' : 'none';
+}
+
+function toggleDemoMode() {
+  state.demoMode = !state.demoMode;
+  const btn = document.getElementById('demo-toggle');
+  const label = document.getElementById('demo-label');
+  btn.classList.toggle('active', state.demoMode);
+  label.textContent = state.demoMode ? 'Modo demo ativo' : 'Modo demo';
+  loadData();
+}
+
+// =================================================================
+// INIT
+// =================================================================
+
+initMap();
+loadData();
+setInterval(loadData, CONFIG.refreshMs);
+
+</script>
+
+</body>
+</html>
