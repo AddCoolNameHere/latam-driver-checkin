@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Daily Check-in · Aceolution LATAM</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f6f8;
+    color: #1a2332;
+    padding: 16px;
+    padding-bottom: 80px;
+    max-width: 520px;
+    margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-logo {
+    height: 28px;
+    width: auto;
+  }
+  .brand-divider {
+    width: 1px;
+    height: 24px;
+    background: #d5d7db;
+  }
+  .brand-sub {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b7280;
+    letter-spacing: 1px;
+    line-height: 1.2;
+  }
+  .brand-sub span {
+    display: block;
+    color: #2C5282;
+    font-size: 11px;
+  }
+  .lang-switch {
+    font-size: 13px;
+    color: #666;
+  }
+  .lang-switch button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 6px;
+    font-size: 13px;
+  }
+  .lang-switch button.active {
+    color: #2C5282;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #1a2332;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 20px;
+  }
+
+  footer {
+    margin-top: 24px;
+    padding: 16px;
+    text-align: center;
+    font-size: 11px;
+    color: #9ca3af;
+    line-height: 1.6;
+  }
+  footer a {
+    color: #2C5282;
+    text-decoration: none;
+  }
+  footer .footer-logo {
+    height: 18px;
+    opacity: 0.6;
+    margin-bottom: 6px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 6px;
+  }
+  .label-sub {
+    font-size: 12px;
+    color: #888;
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  select, input, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d5d7db;
+    border-radius: 8px;
+    font-size: 15px;
+    background: white;
+    font-family: inherit;
+  }
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: #2C5282;
+    box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.15);
+  }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #2C5282;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .step-title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .btn-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .btn-action {
+    padding: 10px;
+    border: 1px solid #d5d7db;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .btn-action:hover { background: #f0f1f3; }
+  .btn-action.active {
+    background: #EBF4FB;
+    border-color: #2C5282;
+    color: #1A365D;
+  }
+  .btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .coords-display {
+    font-size: 12px;
+    color: #666;
+    padding: 8px 10px;
+    background: #f0f1f3;
+    border-radius: 6px;
+    margin-top: 8px;
+    font-family: 'SF Mono', Consolas, monospace;
+    word-break: break-all;
+  }
+  .coords-display.success { background: #EBF4FB; color: #1A365D; }
+  .coords-display.error { background: #fdecec; color: #a32d2d; }
+
+  .map-container {
+    height: 220px;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 10px;
+    border: 1px solid #d5d7db;
+  }
+  .map-container.hidden { display: none; }
+
+  .radio-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .radio-option {
+    padding: 12px;
+    border: 1px solid #d5d7db;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center;
+    background: white;
+  }
+  .radio-option.selected {
+    background: #EBF4FB;
+    border-color: #2C5282;
+    color: #1A365D;
+    font-weight: 500;
+  }
+
+  .status-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .status-option {
+    padding: 10px 6px;
+    border: 1px solid #d5d7db;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: center;
+    background: white;
+  }
+  .status-option.ok.selected { background: #EBF4FB; border-color: #2C5282; color: #1A365D; }
+  .status-option.warn.selected { background: #fef4e0; border-color: #ba7517; color: #854f0b; }
+  .status-option.bad.selected { background: #fdecec; border-color: #a32d2d; color: #791f1f; }
+
+  .hidden { display: none; }
+
+  .base-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: #EBF4FB;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  .base-status .change-link {
+    color: #2C5282;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    box-shadow: 0 2px 6px rgba(44, 82, 130, 0.2);
+  }
+  .submit-btn:disabled { background: #94B8D9; cursor: not-allowed; box-shadow: none; }
+  .submit-btn:active { transform: scale(0.98); }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    z-index: 9999;
+    max-width: 90%;
+    text-align: center;
+  }
+  .toast.success { background: #1A365D; }
+  .toast.error { background: #a32d2d; }
+
+  .search-input-wrap { position: relative; }
+  .search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #d5d7db;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+  }
+  .search-result-item {
+    padding: 10px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f1f3;
+  }
+  .search-result-item:hover { background: #EBF4FB; }
+  .search-result-item:last-child { border-bottom: none; }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loader {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-wrap">
+    <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
+    <div class="brand-divider"></div>
+    <div class="brand-sub">
+      STREET VIEW
+      <span>LATAM</span>
+    </div>
+  </div>
+  <div class="lang-switch">
+    <button data-lang="pt" class="active">PT</button>
+    <button data-lang="es">ES</button>
+  </div>
+</header>
+
+<h1 data-i18n="title">Check-in Diário</h1>
+<div class="subtitle" data-i18n="subtitle">Preencha ao início do dia antes de começar a mapear</div>
+
+<div id="app-loader" class="loader" data-i18n="loading">Carregando drivers...</div>
+
+<div id="app-content" class="hidden">
+
+  <div class="card">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title" data-i18n="step1">Identificação</div>
+    </div>
+    <label data-i18n="selectDriver">Selecione seu nome</label>
+    <select id="driver-select">
+      <option value="" data-i18n="chooseOption">-- Escolha --</option>
+    </select>
+  </div>
+
+  <div id="base-card" class="card hidden">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title" data-i18n="step2">Base atual</div>
+    </div>
+
+    <div id="base-current" class="hidden">
+      <div class="base-status">
+        <div>
+          <strong data-i18n="currentBase">Sua base atual:</strong>
+          <div id="base-current-text" style="font-size:12px;color:#666;margin-top:2px;"></div>
+        </div>
+        <span class="change-link" id="change-base" data-i18n="changeBase">Mudar</span>
+      </div>
+    </div>
+
+    <div id="base-form" class="hidden">
+      <label data-i18n="baseType">Tipo de base</label>
+      <div class="radio-group" style="margin-bottom:12px;">
+        <div class="radio-option" data-base-type="Home" data-i18n="home">🏠 Casa</div>
+        <div class="radio-option" data-base-type="Hotel" data-i18n="hotel">🏨 Hotel</div>
+      </div>
+
+      <label data-i18n="baseAddress">Endereço da base</label>
+      <div class="search-input-wrap">
+        <input type="text" id="base-search" data-i18n-placeholder="searchPlaceholder" placeholder="Digite cidade, rua ou local...">
+        <div id="base-search-results" class="search-results hidden"></div>
+      </div>
+      <div id="base-coords" class="coords-display hidden"></div>
+      <div id="base-map" class="map-container hidden"></div>
+    </div>
+  </div>
+
+  <div id="origin-card" class="card hidden">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title" data-i18n="step3">Onde você está agora</div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn-action" id="btn-gps-origin">
+        📍 <span data-i18n="useGps">Usar GPS</span>
+      </button>
+      <button class="btn-action" id="btn-search-origin">
+        🔍 <span data-i18n="searchAddress">Buscar endereço</span>
+      </button>
+    </div>
+
+    <div id="origin-search-wrap" class="search-input-wrap hidden" style="margin-top:8px;">
+      <input type="text" id="origin-search" data-i18n-placeholder="searchPlaceholder" placeholder="Digite cidade, rua ou local...">
+      <div id="origin-search-results" class="search-results hidden"></div>
+    </div>
+
+    <div id="origin-coords" class="coords-display hidden"></div>
+    <div id="origin-map" class="map-container hidden"></div>
+  </div>
+
+  <div id="dest-card" class="card hidden">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div class="step-title" data-i18n="step4">Área de mapeamento de hoje</div>
+    </div>
+
+    <div id="dest-last-area" class="hidden" style="margin-bottom:10px;">
+      <button class="btn-action" id="btn-reuse-area" style="width:100%;">
+        🔁 <span data-i18n="reuseArea">Usar minha última área</span>
+      </button>
+    </div>
+
+    <div style="font-size:12px;color:#666;margin-bottom:8px;" data-i18n="destHelp">Toque no mapa para marcar o centro da área. Depois ajuste o raio com o slider.</div>
+
+    <div class="search-input-wrap" style="margin-bottom:10px;">
+      <input type="text" id="dest-search" data-i18n-placeholder="destSearchPlaceholder" placeholder="Ou busque uma cidade/região...">
+      <div id="dest-search-results" class="search-results hidden"></div>
+    </div>
+
+    <div id="dest-map-wrap">
+      <div id="dest-map" class="map-container" style="height:260px;display:block;"></div>
+
+      <div id="dest-radius-control" class="hidden" style="margin-top:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <label style="margin:0;" data-i18n="radiusLabel">Raio da área</label>
+          <span id="dest-radius-value" style="font-size:14px;font-weight:600;color:#2C5282;">10 km</span>
+        </div>
+        <input type="range" id="dest-radius" min="1" max="100" value="10" step="1" style="width:100%;">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#888;margin-top:2px;">
+          <span>1 km</span>
+          <span>50 km</span>
+          <span>100 km</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="dest-coords" class="coords-display hidden"></div>
+  </div>
+
+  <div id="extras-card" class="card hidden">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div class="step-title" data-i18n="step5">Status e observações</div>
+    </div>
+
+    <label data-i18n="vehicleStatus">Status do veículo</label>
+    <div class="status-group" style="margin-bottom:12px;">
+      <div class="status-option ok" data-status="OK" data-i18n="statusOk">✓ OK</div>
+      <div class="status-option warn" data-status="Minor Issue" data-i18n="statusMinor">⚠ Alerta</div>
+      <div class="status-option bad" data-status="Critical Issue" data-i18n="statusCritical">✕ Crítico</div>
+    </div>
+
+    <div id="vehicle-issue-wrap" class="hidden" style="margin-bottom:12px;">
+      <label data-i18n="describeIssue">Descreva o problema</label>
+      <textarea id="vehicle-issue" rows="2"></textarea>
+    </div>
+
+    <label data-i18n="notes">Observações <span class="label-sub" data-i18n="notesOptional">(opcional)</span></label>
+    <textarea id="notes" rows="2"></textarea>
+  </div>
+
+  <button id="submit-btn" class="submit-btn hidden" data-i18n="submit">Enviar check-in</button>
+
+</div>
+
+<footer>
+  <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="footer-logo" onerror="this.style.display='none'"><br>
+  <span data-i18n="footerText">Plataforma interna — Aceolution do Brasil Ltda.</span><br>
+  <a href="https://www.aceolution.com" target="_blank">aceolution.com</a>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+};
+
+const I18N = {
+  pt: {
+    title: 'Check-in Diário',
+    subtitle: 'Preencha ao início do dia antes de começar a mapear',
+    loading: 'Carregando drivers...',
+    step1: 'Identificação',
+    step2: 'Base atual',
+    step3: 'Onde você está agora',
+    step4: 'Área de mapeamento de hoje',
+    step5: 'Status e observações',
+    selectDriver: 'Selecione seu nome',
+    chooseOption: '-- Escolha --',
+    currentBase: 'Sua base atual:',
+    changeBase: 'Mudar',
+    baseType: 'Tipo de base',
+    home: '🏠 Casa',
+    hotel: '🏨 Hotel',
+    baseAddress: 'Endereço da base',
+    searchPlaceholder: 'Digite cidade, rua ou local...',
+    destSearchPlaceholder: 'Ou busque uma cidade/região...',
+    destHelp: 'Toque no mapa para marcar o centro da área. Depois ajuste o raio com o slider.',
+    reuseArea: 'Usar minha última área',
+    radiusLabel: 'Raio da área',
+    useGps: 'Usar GPS',
+    searchAddress: 'Buscar endereço',
+    destAddress: 'Destino ou área de mapeamento',
+    vehicleStatus: 'Status do veículo',
+    statusOk: '✓ OK',
+    statusMinor: '⚠ Alerta',
+    statusCritical: '✕ Crítico',
+    describeIssue: 'Descreva o problema',
+    notes: 'Observações',
+    notesOptional: '(opcional)',
+    submit: 'Enviar check-in',
+    sending: 'Enviando...',
+    gpsDenied: 'GPS negado — use busca por endereço',
+    gpsError: 'Não foi possível obter localização',
+    noResults: 'Nenhum resultado encontrado',
+    success: 'Check-in enviado com sucesso!',
+    errorSend: 'Erro ao enviar. Tente novamente.',
+    fillAll: 'Preencha todos os campos obrigatórios',
+    gpsLabel: 'GPS',
+    searchLabel: 'Endereço',
+    footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+  },
+  es: {
+    title: 'Check-in Diario',
+    subtitle: 'Complete al inicio del día antes de comenzar a mapear',
+    loading: 'Cargando conductores...',
+    step1: 'Identificación',
+    step2: 'Base actual',
+    step3: 'Dónde está ahora',
+    step4: 'Área de mapeo de hoy',
+    step5: 'Estado y observaciones',
+    selectDriver: 'Seleccione su nombre',
+    chooseOption: '-- Elegir --',
+    currentBase: 'Su base actual:',
+    changeBase: 'Cambiar',
+    baseType: 'Tipo de base',
+    home: '🏠 Casa',
+    hotel: '🏨 Hotel',
+    baseAddress: 'Dirección de la base',
+    searchPlaceholder: 'Escriba ciudad, calle o lugar...',
+    destSearchPlaceholder: 'O busque una ciudad/región...',
+    destHelp: 'Toque el mapa para marcar el centro del área. Luego ajuste el radio con el deslizador.',
+    reuseArea: 'Usar mi última área',
+    radiusLabel: 'Radio del área',
+    useGps: 'Usar GPS',
+    searchAddress: 'Buscar dirección',
+    destAddress: 'Destino o área de mapeo',
+    vehicleStatus: 'Estado del vehículo',
+    statusOk: '✓ OK',
+    statusMinor: '⚠ Alerta',
+    statusCritical: '✕ Crítico',
+    describeIssue: 'Describa el problema',
+    notes: 'Observaciones',
+    notesOptional: '(opcional)',
+    submit: 'Enviar check-in',
+    sending: 'Enviando...',
+    gpsDenied: 'GPS denegado — use búsqueda por dirección',
+    gpsError: 'No se pudo obtener la ubicación',
+    noResults: 'Ningún resultado encontrado',
+    success: '¡Check-in enviado con éxito!',
+    errorSend: 'Error al enviar. Intente de nuevo.',
+    fillAll: 'Complete todos los campos obligatorios',
+    gpsLabel: 'GPS',
+    searchLabel: 'Dirección',
+    footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+  },
+};
+
+let currentLang = 'pt';
+let state = {
+  driver: null,
+  base: null,
+  baseNew: null,
+  origin: null,
+  originMethod: null,
+  dest: null,
+  destRadius: 10,
+  lastArea: null,
+  vehicleStatus: null,
+  vehicleIssue: '',
+  notes: '',
+  changingBase: false,
+  newBaseType: null,
+};
+let maps = {};
+let destCircle = null;
+let destMarker = null;
+
+function t(key) { return I18N[currentLang][key] || key; }
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : 'es';
+}
+
+document.querySelectorAll('.lang-switch button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentLang = btn.dataset.lang;
+    document.querySelectorAll('.lang-switch button').forEach(b => b.classList.toggle('active', b === btn));
+    applyI18n();
+  });
+});
+
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (type || '');
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 3500);
+}
+
+async function loadDrivers() {
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getDrivers');
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+
+    const select = document.getElementById('driver-select');
+    let lastCountry = '';
+    data.drivers.forEach(d => {
+      if (d.country !== lastCountry) {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = d.country;
+        select.appendChild(optgroup);
+        lastCountry = d.country;
+      }
+      const opt = document.createElement('option');
+      opt.value = JSON.stringify(d);
+      opt.textContent = d.name;
+      select.lastElementChild.appendChild(opt);
+    });
+
+    document.getElementById('app-loader').classList.add('hidden');
+    document.getElementById('app-content').classList.remove('hidden');
+  } catch (err) {
+    document.getElementById('app-loader').textContent = 'Error loading drivers: ' + err.message;
+  }
+}
+
+document.getElementById('driver-select').addEventListener('change', async (e) => {
+  if (!e.target.value) return;
+  state.driver = JSON.parse(e.target.value);
+  document.getElementById('base-card').classList.remove('hidden');
+  await loadBase();
+});
+
+async function loadBase() {
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getBase&email=' + encodeURIComponent(state.driver.email));
+    const data = await res.json();
+    state.base = data.base;
+
+    const current = document.getElementById('base-current');
+    const form = document.getElementById('base-form');
+
+    if (state.base && !state.changingBase) {
+      current.classList.remove('hidden');
+      form.classList.add('hidden');
+      document.getElementById('base-current-text').textContent = state.base.type + ' · ' + state.base.address;
+      showOriginCard();
+    } else {
+      current.classList.add('hidden');
+      form.classList.remove('hidden');
+    }
+
+    loadLastArea();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function loadLastArea() {
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getLastArea&email=' + encodeURIComponent(state.driver.email));
+    const data = await res.json();
+    if (data.success && data.area) {
+      state.lastArea = data.area;
+      document.getElementById('dest-last-area').classList.remove('hidden');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+document.getElementById('change-base').addEventListener('click', () => {
+  state.changingBase = true;
+  document.getElementById('base-current').classList.add('hidden');
+  document.getElementById('base-form').classList.remove('hidden');
+});
+
+document.querySelectorAll('[data-base-type]').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('[data-base-type]').forEach(x => x.classList.remove('selected'));
+    el.classList.add('selected');
+    state.newBaseType = el.dataset.baseType;
+  });
+});
+
+function setupSearch(inputId, resultsId, onSelect) {
+  const input = document.getElementById(inputId);
+  const resultsEl = document.getElementById(resultsId);
+  let timer;
+
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (q.length < 3) {
+      resultsEl.classList.add('hidden');
+      return;
+    }
+    timer = setTimeout(() => searchAddress(q, resultsEl, onSelect), 400);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!resultsEl.contains(e.target) && e.target !== input) {
+      resultsEl.classList.add('hidden');
+    }
+  });
+}
+
+async function searchAddress(query, resultsEl, onSelect) {
+  try {
+    const countryBias = state.driver ? countryCode(state.driver.country) : '';
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=5&q=' +
+                encodeURIComponent(query) + (countryBias ? '&countrycodes=' + countryBias : '');
+    const res = await fetch(url);
+    const results = await res.json();
+
+    resultsEl.innerHTML = '';
+    if (results.length === 0) {
+      resultsEl.innerHTML = '<div class="search-result-item">' + t('noResults') + '</div>';
+      resultsEl.classList.remove('hidden');
+      return;
+    }
+
+    results.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'search-result-item';
+      item.textContent = r.display_name;
+      item.addEventListener('click', () => {
+        onSelect({
+          lat: parseFloat(r.lat),
+          lng: parseFloat(r.lon),
+          address: r.display_name,
+          method: 'Address',
+        });
+        resultsEl.classList.add('hidden');
+      });
+      resultsEl.appendChild(item);
+    });
+    resultsEl.classList.remove('hidden');
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function countryCode(country) {
+  const map = {
+    'Brazil': 'br', 'Brasil': 'br',
+    'Argentina': 'ar',
+    'Chile': 'cl',
+    'Colombia': 'co',
+    'México': 'mx', 'Mexico': 'mx',
+    'Peru': 'pe',
+  };
+  return map[country] || '';
+}
+
+setupSearch('base-search', 'base-search-results', (loc) => {
+  state.baseNew = { ...loc, type: state.newBaseType };
+  document.getElementById('base-search').value = loc.address;
+  showMap('base-map', loc.lat, loc.lng);
+  document.getElementById('base-coords').textContent = t('searchLabel') + ': ' + loc.lat.toFixed(5) + ', ' + loc.lng.toFixed(5);
+  document.getElementById('base-coords').className = 'coords-display success';
+  showOriginCard();
+});
+
+setupSearch('origin-search', 'origin-search-results', (loc) => {
+  state.origin = loc;
+  state.originMethod = 'Address';
+  document.getElementById('origin-search').value = loc.address;
+  showMap('origin-map', loc.lat, loc.lng);
+  document.getElementById('origin-coords').textContent = t('searchLabel') + ': ' + loc.lat.toFixed(5) + ', ' + loc.lng.toFixed(5);
+  document.getElementById('origin-coords').className = 'coords-display success';
+  showDestCard();
+});
+
+setupSearch('dest-search', 'dest-search-results', (loc) => {
+  document.getElementById('dest-search').value = loc.address;
+  setDestArea(loc.lat, loc.lng, state.destRadius, loc.address);
+});
+
+function initDestMap() {
+  if (maps['dest-map']) return;
+
+  let centerLat, centerLng, zoom;
+  if (state.base && state.base.lat) {
+    centerLat = state.base.lat;
+    centerLng = state.base.lng;
+    zoom = 10;
+  } else if (state.origin) {
+    centerLat = state.origin.lat;
+    centerLng = state.origin.lng;
+    zoom = 10;
+  } else {
+    centerLat = -15; centerLng = -55; zoom = 4;
+  }
+
+  const map = L.map('dest-map').setView([centerLat, centerLng], zoom);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 18,
+  }).addTo(map);
+
+  map.on('click', (e) => {
+    setDestArea(e.latlng.lat, e.latlng.lng, state.destRadius);
+  });
+
+  maps['dest-map'] = map;
+  setTimeout(() => map.invalidateSize(), 100);
+}
+
+async function setDestArea(lat, lng, radiusKm, knownAddress) {
+  const map = maps['dest-map'];
+  if (!map) return;
+
+  if (destMarker) map.removeLayer(destMarker);
+  if (destCircle) map.removeLayer(destCircle);
+
+  destMarker = L.marker([lat, lng]).addTo(map);
+  destCircle = L.circle([lat, lng], {
+    radius: radiusKm * 1000,
+    color: '#2C5282',
+    fillColor: '#2C5282',
+    fillOpacity: 0.15,
+    weight: 2,
+  }).addTo(map);
+
+  const bounds = destCircle.getBounds();
+  map.fitBounds(bounds, { padding: [20, 20] });
+
+  const address = knownAddress || await reverseGeocode(lat, lng);
+  state.dest = { lat, lng, address, radius: radiusKm };
+
+  const coordsEl = document.getElementById('dest-coords');
+  coordsEl.classList.remove('hidden');
+  coordsEl.className = 'coords-display success';
+  coordsEl.innerHTML = '<strong>' + address + '</strong><br>' +
+    lat.toFixed(5) + ', ' + lng.toFixed(5) + ' · ' + t('radiusLabel') + ': ' + radiusKm + ' km';
+
+  document.getElementById('dest-radius-control').classList.remove('hidden');
+  showExtrasCard();
+}
+
+document.getElementById('dest-radius').addEventListener('input', (e) => {
+  const r = parseInt(e.target.value);
+  state.destRadius = r;
+  document.getElementById('dest-radius-value').textContent = r + ' km';
+
+  if (state.dest && destCircle) {
+    destCircle.setRadius(r * 1000);
+    state.dest.radius = r;
+    const coordsEl = document.getElementById('dest-coords');
+    coordsEl.innerHTML = '<strong>' + state.dest.address + '</strong><br>' +
+      state.dest.lat.toFixed(5) + ', ' + state.dest.lng.toFixed(5) + ' · ' + t('radiusLabel') + ': ' + r + ' km';
+    maps['dest-map'].fitBounds(destCircle.getBounds(), { padding: [20, 20] });
+  }
+});
+
+document.getElementById('btn-reuse-area').addEventListener('click', () => {
+  if (!state.lastArea) return;
+  document.getElementById('dest-radius').value = state.lastArea.radius;
+  state.destRadius = state.lastArea.radius;
+  document.getElementById('dest-radius-value').textContent = state.lastArea.radius + ' km';
+  setDestArea(state.lastArea.lat, state.lastArea.lng, state.lastArea.radius, state.lastArea.address);
+});
+
+document.getElementById('btn-gps-origin').addEventListener('click', () => {
+  if (!navigator.geolocation) return toast(t('gpsError'), 'error');
+
+  const btn = document.getElementById('btn-gps-origin');
+  btn.disabled = true;
+  btn.querySelector('span').textContent = '...';
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const address = await reverseGeocode(lat, lng);
+      state.origin = { lat, lng, address };
+      state.originMethod = 'GPS';
+
+      document.getElementById('origin-coords').textContent = t('gpsLabel') + ': ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
+      document.getElementById('origin-coords').classList.remove('hidden');
+      document.getElementById('origin-coords').className = 'coords-display success';
+      showMap('origin-map', lat, lng);
+
+      btn.classList.add('active');
+      btn.disabled = false;
+      btn.querySelector('span').textContent = t('useGps');
+      showDestCard();
+    },
+    (err) => {
+      toast(err.code === 1 ? t('gpsDenied') : t('gpsError'), 'error');
+      btn.disabled = false;
+      btn.querySelector('span').textContent = t('useGps');
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+});
+
+document.getElementById('btn-search-origin').addEventListener('click', () => {
+  document.getElementById('origin-search-wrap').classList.remove('hidden');
+  document.getElementById('origin-search').focus();
+});
+
+async function reverseGeocode(lat, lng) {
+  try {
+    const url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.display_name || (lat.toFixed(5) + ', ' + lng.toFixed(5));
+  } catch {
+    return lat.toFixed(5) + ', ' + lng.toFixed(5);
+  }
+}
+
+function showMap(containerId, lat, lng) {
+  const el = document.getElementById(containerId);
+  el.classList.remove('hidden');
+  document.getElementById(containerId.replace('-map', '-coords')).classList.remove('hidden');
+
+  if (maps[containerId]) {
+    maps[containerId].remove();
+  }
+  const map = L.map(containerId).setView([lat, lng], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 18,
+  }).addTo(map);
+  L.marker([lat, lng]).addTo(map);
+  maps[containerId] = map;
+  setTimeout(() => map.invalidateSize(), 100);
+}
+
+function showOriginCard() {
+  document.getElementById('origin-card').classList.remove('hidden');
+}
+function showDestCard() {
+  document.getElementById('dest-card').classList.remove('hidden');
+  setTimeout(initDestMap, 50);
+}
+function showExtrasCard() {
+  document.getElementById('extras-card').classList.remove('hidden');
+  document.getElementById('submit-btn').classList.remove('hidden');
+}
+
+document.querySelectorAll('[data-status]').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('[data-status]').forEach(x => x.classList.remove('selected'));
+    el.classList.add('selected');
+    state.vehicleStatus = el.dataset.status;
+    const issueWrap = document.getElementById('vehicle-issue-wrap');
+    issueWrap.classList.toggle('hidden', state.vehicleStatus === 'OK');
+  });
+});
+
+document.getElementById('submit-btn').addEventListener('click', async () => {
+  if (!state.driver || !state.origin || !state.dest || !state.vehicleStatus) {
+    return toast(t('fillAll'), 'error');
+  }
+  const effectiveBase = state.baseNew || state.base;
+  if (!effectiveBase) return toast(t('fillAll'), 'error');
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> ' + t('sending');
+
+  state.vehicleIssue = document.getElementById('vehicle-issue').value;
+  state.notes = document.getElementById('notes').value;
+
+  try {
+    if (state.baseNew) {
+      await fetch(CONFIG.scriptUrl, {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'base',
+          driverEmail: state.driver.email,
+          driverName: state.driver.name,
+          country: state.driver.country,
+          baseType: state.baseNew.type,
+          baseAddress: state.baseNew.address,
+          baseLat: state.baseNew.lat,
+          baseLng: state.baseNew.lng,
+        }),
+      });
+    }
+
+    await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'checkin',
+        driverName: state.driver.name,
+        driverEmail: state.driver.email,
+        country: state.driver.country,
+        originLat: state.origin.lat,
+        originLng: state.origin.lng,
+        originAddress: state.origin.address,
+        originMethod: state.originMethod,
+        destLat: state.dest.lat,
+        destLng: state.dest.lng,
+        destAddress: state.dest.address,
+        destRadius: state.dest.radius,
+        vehicleStatus: state.vehicleStatus,
+        vehicleIssue: state.vehicleIssue,
+        notes: state.notes,
+      }),
+    });
+
+    toast(t('success'), 'success');
+    setTimeout(() => location.reload(), 2000);
+  } catch (err) {
+    toast(t('errorSend'), 'error');
+    btn.disabled = false;
+    btn.textContent = t('submit');
+  }
+});
+
+applyI18n();
+loadDrivers();
+
+</script>
+
+</body>
+</html>
