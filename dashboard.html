@@ -184,7 +184,7 @@
   /* SCORECARDS */
   .scorecards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 12px;
     margin-bottom: 12px;
   }
@@ -208,6 +208,8 @@
   .scorecard.warn::before { background: var(--c-warn); }
   .scorecard.danger::before { background: var(--c-danger); }
   .scorecard.accent::before { background: var(--c-accent); }
+  .scorecard.success::before { background: #22C55E; }
+  .scorecard.success .scorecard-value { color: #16A34A; }
 
   .scorecard-label {
     font-size: 10px;
@@ -283,6 +285,62 @@
     margin-bottom: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   }
+  .cts-section {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .cts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .cts-card {
+    background: #F8FAFC;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid #E2E8F0;
+  }
+  .cts-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .cts-card-country {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-primary-dark);
+  }
+  .cts-card-pct {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .cts-card-pct.ok { color: #16A34A; }
+  .cts-card-pct.close { color: #F59E0B; }
+  .cts-card-pct.behind { color: #EF4444; }
+  .cts-progress {
+    height: 6px;
+    background: #E2E8F0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .cts-progress-fill {
+    height: 100%;
+    transition: width 0.3s;
+  }
+  .cts-card-stats {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+  .cts-card-stats strong { color: var(--c-text); }
   .driver-table {
     width: 100%;
     border-collapse: collapse;
@@ -560,6 +618,7 @@
   /* RESPONSIVE */
   @media (max-width: 768px) {
     .scorecards { grid-template-columns: repeat(2, 1fr); }
+    .scorecard.success { grid-column: span 2; }
     body { padding: 12px; }
     #map { height: 340px; }
     .driver-table { font-size: 11px; }
@@ -650,6 +709,11 @@
     <div class="scorecard-value" id="sc-hotel">—</div>
     <div class="scorecard-sub" id="sc-hotel-sub">—</div>
   </div>
+  <div class="scorecard success">
+    <div class="scorecard-label" data-i18n="scSavings">ECONOMIA HOTEL MODE</div>
+    <div class="scorecard-value" id="sc-savings">—</div>
+    <div class="scorecard-sub" data-i18n="scSavingsSub">km/dia evitados</div>
+  </div>
   <div class="scorecard warn">
     <div class="scorecard-label" data-i18n="scMissing">SEM CHECK-IN RECENTE</div>
     <div class="scorecard-value" id="sc-missing">—</div>
@@ -679,6 +743,17 @@
   </div>
 </div>
 
+<div class="cts-section" id="cts-section" style="display:none;">
+  <div class="section-header">
+    <div>
+      <div class="section-title" data-i18n="ctsTitle">CTS Goal vs Achieved</div>
+      <div class="section-sub" data-i18n="ctsSub">Progresso mensal por país (dados da mastersheet)</div>
+    </div>
+    <div class="section-sub"><span id="cts-period">—</span></div>
+  </div>
+  <div class="cts-grid" id="cts-grid"></div>
+</div>
+
 <div class="table-section">
   <div class="section-header">
     <div>
@@ -693,6 +768,7 @@
         <th data-i18n="thCountry">País</th>
         <th class="hide-mobile" data-i18n="thCity">Cidade</th>
         <th data-i18n="thBase">Base</th>
+        <th class="hide-mobile" data-i18n="thHmMonthly">HM mensal</th>
         <th class="hide-mobile" data-i18n="thLastCheckin">Último check-in</th>
         <th class="hide-mobile" data-i18n="thDistance">Km base→área</th>
         <th data-i18n="thStatus">Status</th>
@@ -733,6 +809,26 @@
       <div class="info-row">
         <span class="info-label" data-i18n="pAddress">Endereço</span>
         <span class="info-value small" id="panel-base-address">—</span>
+      </div>
+    </div>
+
+    <div class="panel-section" id="panel-efficiency-section" style="display:none;">
+      <div class="panel-section-title" data-i18n="pEfficiency">Eficiência hotel mode</div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pHomeAddress">Casa</span>
+        <span class="info-value small" id="panel-home-address">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pDistHome">Km casa → área</span>
+        <span class="info-value" id="panel-dist-home">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pSavings">Economia (km/dia)</span>
+        <span class="info-value" id="panel-savings" style="color:#16A34A;font-weight:600;">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pHmMonthly">Hotel Mode (mensal)</span>
+        <span class="info-value" id="panel-hm-monthly">—</span>
       </div>
     </div>
 
@@ -810,6 +906,8 @@ const I18N = {
     scWithCheckin: 'com check-in no período',
     scHotelMode: 'EM HOTEL MODE',
     scOfTotal: '% do total',
+    scSavings: 'ECONOMIA HOTEL MODE',
+    scSavingsSub: 'km/dia evitados',
     scMissing: 'SEM CHECK-IN RECENTE',
     scMissingSub: '> 24h sem update',
     scIssues: 'ISSUES REPORTADOS',
@@ -823,12 +921,18 @@ const I18N = {
     legendOld: 'Sem check-in > 24h',
     tableTitle: 'Drivers',
     tableSub: 'Clique numa linha pra abrir detalhes',
+    ctsTitle: 'CTS Goal vs Achieved',
+    ctsSub: 'Progresso mensal por país (dados da mastersheet)',
+    ctsGoal: 'Meta',
+    ctsAchieved: 'Atingido',
+    ctsPending: 'Falta',
     thDriver: 'Driver',
     thCountry: 'País',
     thCity: 'Cidade',
     thBase: 'Base',
     thLastCheckin: 'Último check-in',
     thDistance: 'Km base→área',
+    thHmMonthly: 'HM mensal',
     thStatus: 'Status',
     pillActive: '✓ Ativo',
     pillWarn24h: '> 24h',
@@ -841,6 +945,11 @@ const I18N = {
     lessThanHour: 'menos de 1h',
     pMetric: 'Km base → área',
     pCurrentBase: 'Base atual',
+    pEfficiency: 'Eficiência hotel mode',
+    pHomeAddress: 'Casa',
+    pDistHome: 'Km casa → área',
+    pSavings: 'Economia (km/dia)',
+    pHmMonthly: 'Hotel Mode (mensal)',
     pType: 'Tipo',
     pAddress: 'Endereço',
     pArea: 'Área de mapeamento',
@@ -851,6 +960,9 @@ const I18N = {
     pVehicle: 'Status veículo',
     pNotes: 'Observações',
     pHistory: 'Histórico de áreas',
+    loadingHistory: 'Carregando histórico',
+    yesterday: 'Ontem',
+    daysAgoLabel: 'dias atrás',
     pNoLocation: 'Sem localização disponível',
     pNoBase: 'Sem base cadastrada',
     pNoArea: 'Sem área registrada',
@@ -861,6 +973,7 @@ const I18N = {
     classHigh: 'Distância alta',
     classNoData: 'Sem dados',
     baseTooltipPrefix: 'Base:',
+    homeTooltip: 'Casa do driver',
     areaTooltipPrefix: 'Área atual ·',
     kmUnit: 'km',
     daysAgoSuffix: 'd',
@@ -892,6 +1005,8 @@ const I18N = {
     scWithCheckin: 'con check-in en el período',
     scHotelMode: 'EN HOTEL MODE',
     scOfTotal: '% del total',
+    scSavings: 'AHORRO HOTEL MODE',
+    scSavingsSub: 'km/día evitados',
     scMissing: 'SIN CHECK-IN RECIENTE',
     scMissingSub: '> 24h sin actualizar',
     scIssues: 'PROBLEMAS REPORTADOS',
@@ -905,12 +1020,18 @@ const I18N = {
     legendOld: 'Sin check-in > 24h',
     tableTitle: 'Conductores',
     tableSub: 'Haga clic en una fila para ver detalles',
+    ctsTitle: 'CTS Goal vs Achieved',
+    ctsSub: 'Progreso mensual por país (datos de la mastersheet)',
+    ctsGoal: 'Meta',
+    ctsAchieved: 'Logrado',
+    ctsPending: 'Faltante',
     thDriver: 'Conductor',
     thCountry: 'País',
     thCity: 'Ciudad',
     thBase: 'Base',
     thLastCheckin: 'Último check-in',
     thDistance: 'Km base→área',
+    thHmMonthly: 'HM mensual',
     thStatus: 'Estado',
     pillActive: '✓ Activo',
     pillWarn24h: '> 24h',
@@ -923,6 +1044,11 @@ const I18N = {
     lessThanHour: 'menos de 1h',
     pMetric: 'Km base → área',
     pCurrentBase: 'Base actual',
+    pEfficiency: 'Eficiencia hotel mode',
+    pHomeAddress: 'Casa',
+    pDistHome: 'Km casa → área',
+    pSavings: 'Ahorro (km/día)',
+    pHmMonthly: 'Hotel Mode (mensual)',
     pType: 'Tipo',
     pAddress: 'Dirección',
     pArea: 'Área de mapeo',
@@ -943,6 +1069,7 @@ const I18N = {
     classHigh: 'Distancia alta',
     classNoData: 'Sin datos',
     baseTooltipPrefix: 'Base:',
+    homeTooltip: 'Casa del conductor',
     areaTooltipPrefix: 'Área actual ·',
     kmUnit: 'km',
     daysAgoSuffix: 'd',
@@ -974,6 +1101,8 @@ const I18N = {
     scWithCheckin: 'checked in this period',
     scHotelMode: 'IN HOTEL MODE',
     scOfTotal: '% of total',
+    scSavings: 'HOTEL MODE SAVINGS',
+    scSavingsSub: 'km/day avoided',
     scMissing: 'MISSING CHECK-IN',
     scMissingSub: '> 24h without update',
     scIssues: 'REPORTED ISSUES',
@@ -987,12 +1116,18 @@ const I18N = {
     legendOld: 'No check-in > 24h',
     tableTitle: 'Drivers',
     tableSub: 'Click a row to open details',
+    ctsTitle: 'CTS Goal vs Achieved',
+    ctsSub: 'Monthly progress by country (data from mastersheet)',
+    ctsGoal: 'Goal',
+    ctsAchieved: 'Achieved',
+    ctsPending: 'Pending',
     thDriver: 'Driver',
     thCountry: 'Country',
     thCity: 'City',
     thBase: 'Base',
     thLastCheckin: 'Last check-in',
     thDistance: 'Km base→area',
+    thHmMonthly: 'Monthly HM',
     thStatus: 'Status',
     pillActive: '✓ Active',
     pillWarn24h: '> 24h',
@@ -1005,6 +1140,11 @@ const I18N = {
     lessThanHour: 'less than 1h ago',
     pMetric: 'Km base → area',
     pCurrentBase: 'Current base',
+    pEfficiency: 'Hotel mode efficiency',
+    pHomeAddress: 'Home',
+    pDistHome: 'Km home → area',
+    pSavings: 'Savings (km/day)',
+    pHmMonthly: 'Hotel Mode (monthly)',
     pType: 'Type',
     pAddress: 'Address',
     pArea: 'Mapping area',
@@ -1025,6 +1165,7 @@ const I18N = {
     classHigh: 'High distance',
     classNoData: 'No data',
     baseTooltipPrefix: 'Base:',
+    homeTooltip: "Driver's home",
     areaTooltipPrefix: 'Current area ·',
     kmUnit: 'km',
     daysAgoSuffix: 'd ago',
@@ -1035,7 +1176,10 @@ const I18N = {
 
 let currentLang = localStorage.getItem('dashboardLang') || 'pt';
 
-function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || key; }
+function t(key) {
+  if (I18N[currentLang] && key in I18N[currentLang]) return I18N[currentLang][key];
+  return key;
+}
 
 function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -1078,6 +1222,10 @@ let state = {
   drivers: [],
   demoMode: false,
   filter: { country: 'all', period: 7 },
+  // v3 aux data
+  hmByCountry: [],
+  hmByDriver: [],
+  ctsGoals: [],
 };
 
 let map = null;
@@ -1247,59 +1395,100 @@ function showError(msg) {
 }
 
 async function fetchRealData() {
-  // 1. Buscar lista de drivers ativos
-  const driversData = await fetchWithTimeout(CONFIG.scriptUrl + '?action=getDrivers', 20000);
-  if (!driversData.success) throw new Error(driversData.error || 'Falha ao buscar drivers');
+  showLoader(true, t('loadingProgress') + '...');
 
-  const drivers = driversData.drivers;
-  console.log('Drivers carregados:', drivers.length);
+  // 3 requests em paralelo — muito mais rápido que 147
+  const [dashData, hmCountry, hmDriver, ctsData] = await Promise.all([
+    fetchWithTimeout(CONFIG.scriptUrl + '?action=getDashboardData&days=7', 30000)
+      .catch(err => { console.warn('getDashboardData falhou', err); return { success: false }; }),
+    fetchWithTimeout(CONFIG.scriptUrl + '?action=getHotelModeByCountry', 15000)
+      .catch(err => { console.warn('getHotelModeByCountry falhou', err); return { success: false }; }),
+    fetchWithTimeout(CONFIG.scriptUrl + '?action=getHotelModeByDriver', 15000)
+      .catch(err => { console.warn('getHotelModeByDriver falhou', err); return { success: false }; }),
+    fetchWithTimeout(CONFIG.scriptUrl + '?action=getCtsGoals', 15000)
+      .catch(err => { console.warn('getCtsGoals falhou', err); return { success: false }; }),
+  ]);
 
-  // 2. Processar em lotes de 10 em paralelo (pra não sobrecarregar o Apps Script)
-  const BATCH_SIZE = 10;
-  const enriched = [];
+  if (!dashData.success) throw new Error(dashData.error || 'Falha ao buscar dashboardData');
 
-  for (let i = 0; i < drivers.length; i += BATCH_SIZE) {
-    const batch = drivers.slice(i, i + BATCH_SIZE);
-    const batchNum = Math.floor(i/BATCH_SIZE) + 1;
-    const totalBatches = Math.ceil(drivers.length/BATCH_SIZE);
-    console.log(`Processando batch ${batchNum}/${totalBatches} (${batch.length} drivers)`);
-    showLoader(true, t('loadingProgress') + ' (' + Math.min(i + BATCH_SIZE, drivers.length) + '/' + drivers.length + ')...');
+  // Armazena dados auxiliares no state global pra renderizações derivadas
+  state.hmByCountry = hmCountry.success ? hmCountry.countries : [];
+  state.hmByDriver = hmDriver.success ? hmDriver.drivers : [];
+  state.ctsGoals = ctsData.success ? ctsData.goals : [];
 
-    const batchResults = await Promise.all(batch.map(d => enrichDriver(d)));
-    enriched.push(...batchResults);
-  }
+  // Indexa hmByDriver por email pra lookup rápido
+  const hmByEmail = {};
+  state.hmByDriver.forEach(d => { if (d.email) hmByEmail[d.email] = d; });
 
-  console.log('Drivers processados:', enriched.length, 'com dados:', enriched.filter(d => d.base).length);
-  return enriched;
-}
+  const { drivers, bases, lastCheckins } = dashData.data;
 
-async function enrichDriver(d) {
-  try {
-    const [baseData, areaData] = await Promise.all([
-      fetchWithTimeout(CONFIG.scriptUrl + '?action=getBase&email=' + encodeURIComponent(d.email), 10000).catch(() => ({ base: null })),
-      fetchWithTimeout(CONFIG.scriptUrl + '?action=getLastArea&email=' + encodeURIComponent(d.email), 10000).catch(() => ({ area: null })),
-    ]);
+  // Consolida tudo num único array
+  const enriched = drivers.map(d => {
+    const base = bases[d.email] || null;
+    const checkin = lastCheckins[d.email] || null;
+    const hm = hmByEmail[d.email] || null;
 
-    const base = baseData.base;
-    const area = areaData.area;
+    // Base→área edge (só se tem base + última área)
+    let distBaseToEdge = null;
+    if (base && checkin && checkin.destLat && checkin.destRadius) {
+      distBaseToEdge = Math.max(0,
+        Math.round((haversine(base.lat, base.lng, checkin.destLat, checkin.destLng) - checkin.destRadius) * 10) / 10
+      );
+    }
+
+    // Casa→área edge (só se tem homeLat + última área)
+    let distHomeToEdge = null;
+    let distHomeToCenter = null;
+    if (d.homeLat && d.homeLng && checkin && checkin.destLat) {
+      distHomeToCenter = Math.round(haversine(d.homeLat, d.homeLng, checkin.destLat, checkin.destLng) * 10) / 10;
+      distHomeToEdge = Math.max(0,
+        Math.round((distHomeToCenter - (checkin.destRadius || 0)) * 10) / 10
+      );
+    }
+
+    // Economia hotel mode = (casa→edge) - (base→edge), só faz sentido se base é hotel
+    let savingsKm = null;
+    if (base && base.type === 'Hotel' && distHomeToEdge !== null && distBaseToEdge !== null) {
+      savingsKm = Math.round((distHomeToEdge - distBaseToEdge) * 10) / 10;
+    }
+
+    // Area "virtual" (última check-in) — mantém compatibilidade com renderMap existente
+    const area = (checkin && checkin.destLat) ? {
+      lat: checkin.destLat,
+      lng: checkin.destLng,
+      address: checkin.destAddress,
+      radius: checkin.destRadius || 10,
+    } : null;
 
     return {
       name: d.name,
       email: d.email,
       country: d.country,
       city: d.city,
+      fullAddress: d.fullAddress,
+      homeLat: d.homeLat,
+      homeLng: d.homeLng,
       base,
       area,
-      hoursAgo: area ? 0 : null,
-      vehicleStatus: 'OK',
-      distBaseToEdge: (base && area && area.radius)
-        ? Math.max(0, Math.round((haversine(base.lat, base.lng, area.lat, area.lng) - area.radius) * 10) / 10)
-        : null,
+      hoursAgo: checkin ? checkin.hoursAgo : null,
+      vehicleStatus: checkin ? (checkin.vehicleStatus || 'OK') : 'OK',
+      vehicleIssue: checkin ? checkin.vehicleIssue : '',
+      notes: checkin ? checkin.notes : '',
+      distBaseToEdge,
+      distHomeToEdge,
+      distHomeToCenter,
+      savingsKm,
+      // Dados da mastersheet (DASHBOARD (HM))
+      hmMonthly: hm ? hm.hotelMode : null,   // "Yes" / "No" / null
+      breakevenPct: hm ? hm.breakevenTkmPct : null,
+      paidSalary: hm ? hm.paidSalary : null,
+      rampTx: hm ? hm.rampTransactions : null,
+      totalDirectCost: hm ? hm.totalDirectCost : null,
     };
-  } catch (err) {
-    console.warn('Erro ao enriquecer driver', d.email, err);
-    return { name: d.name, email: d.email, country: d.country, city: d.city, base: null, area: null, hoursAgo: null };
-  }
+  });
+
+  console.log('Drivers consolidados:', enriched.length);
+  return enriched;
 }
 
 async function fetchWithTimeout(url, timeoutMs) {
@@ -1378,6 +1567,27 @@ function generateDemoData() {
     const baseType = Math.random() > 0.4 ? 'Hotel' : 'Home';
     const distBaseToEdge = Math.max(0, Math.round((haversine(baseLat, baseLng, areaLat, areaLng) - radius) * 10) / 10);
 
+    // Casa: se é Hotel mode, casa fica 200-400km longe. Se é Home, casa = base.
+    let homeLat, homeLng, distHomeToEdge, distHomeToCenter, savingsKm;
+    if (baseType === 'Hotel') {
+      // Home em outra cidade (simula long-distance worker)
+      const homeOffset = 1.8 + Math.random() * 2.2; // ~200-400km em graus aproximados
+      const homeAngle = Math.random() * 2 * Math.PI;
+      homeLat = baseLat + homeOffset * Math.cos(homeAngle);
+      homeLng = baseLng + homeOffset * Math.sin(homeAngle);
+      distHomeToCenter = Math.round(haversine(homeLat, homeLng, areaLat, areaLng) * 10) / 10;
+      distHomeToEdge = Math.max(0, Math.round((distHomeToCenter - radius) * 10) / 10);
+      savingsKm = Math.round((distHomeToEdge - distBaseToEdge) * 10) / 10;
+    } else {
+      homeLat = baseLat + (Math.random() - 0.5) * 0.05;
+      homeLng = baseLng + (Math.random() - 0.5) * 0.05;
+      distHomeToCenter = Math.round(haversine(homeLat, homeLng, areaLat, areaLng) * 10) / 10;
+      distHomeToEdge = distBaseToEdge;
+      savingsKm = 0;
+    }
+
+    const hmMonthly = (baseType === 'Hotel' && savingsKm > 50) ? 'Yes' : 'No';
+
     // Gera 3-5 áreas históricas próximas à atual (simulando check-ins passados)
     const historyCount = 3 + Math.floor(Math.random() * 3);
     const historyAreas = [];
@@ -1408,6 +1618,8 @@ function generateDemoData() {
       email: d.name.toLowerCase().replace(/\s/g, '.') + '@field-ops-xpe.com',
       country: d.country,
       city: d.city,
+      fullAddress: `Demo addr · ${d.city}`,
+      homeLat, homeLng,
       base: {
         type: baseType,
         address: `${baseType === 'Hotel' ? 'Hotel ' : ''}${d.city} — Centro`,
@@ -1423,6 +1635,11 @@ function generateDemoData() {
       hoursAgo,
       vehicleStatus,
       distBaseToEdge,
+      distHomeToEdge,
+      distHomeToCenter,
+      savingsKm,
+      hmMonthly,
+      breakevenPct: 0.5 + Math.random() * 1.2,
       historyAreas,
       notes,
     };
@@ -1461,7 +1678,109 @@ function applyFiltersAndRender() {
 
   renderScorecards(filtered, periodHours);
   renderMap(filtered);
+  renderCtsGoals(filtered);
   renderTable(filtered, periodHours);
+}
+
+function renderCtsGoals(filteredDrivers) {
+  const section = document.getElementById('cts-section');
+  const grid = document.getElementById('cts-grid');
+  const periodEl = document.getElementById('cts-period');
+
+  if (!state.ctsGoals || state.ctsGoals.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  // Pega o período mais recente (ex: "4.2026" > "3.2026")
+  const byPeriod = {};
+  state.ctsGoals.forEach(g => {
+    if (!byPeriod[g.period]) byPeriod[g.period] = [];
+    byPeriod[g.period].push(g);
+  });
+
+  const sortedPeriods = Object.keys(byPeriod).sort((a, b) => {
+    const [ma, ya] = a.split('.').map(Number);
+    const [mb, yb] = b.split('.').map(Number);
+    return (yb - ya) || (mb - ma);
+  });
+
+  if (sortedPeriods.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  const latestPeriod = sortedPeriods[0];
+  let goals = byPeriod[latestPeriod];
+
+  // Filtro por país (se o filtro atual não for "all")
+  if (state.filter.country !== 'all') {
+    goals = goals.filter(g => g.country === state.filter.country || g.country === translateCountry(state.filter.country));
+  }
+
+  if (goals.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = '';
+
+  // Formato período: "4.2026" → "Abril/2026" etc.
+  const [month, year] = latestPeriod.split('.').map(Number);
+  const monthNames = currentLang === 'pt'
+    ? ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+    : currentLang === 'es'
+    ? ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+    : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  periodEl.textContent = (monthNames[month - 1] || month) + '/' + year;
+
+  grid.innerHTML = goals.map(g => {
+    const pct = g.ctsGoal > 0 ? (g.achieved / g.ctsGoal) * 100 : 0;
+    const pctRounded = Math.round(pct);
+    const fillWidth = Math.min(100, pct);
+    let pctClass = 'behind';
+    let barColor = '#EF4444';
+    if (pct >= 100) { pctClass = 'ok'; barColor = '#22C55E'; }
+    else if (pct >= 80) { pctClass = 'close'; barColor = '#F59E0B'; }
+
+    const pending = g.tkmPending;
+    const pendingLabel = pending >= 0
+      ? pending.toLocaleString(undefined, {maximumFractionDigits: 0}) + ' TKM'
+      : '✓ ' + Math.abs(pending).toLocaleString(undefined, {maximumFractionDigits: 0}) + ' TKM (' + (currentLang === 'en' ? 'over' : currentLang === 'es' ? 'superado' : 'acima') + ')';
+
+    return `
+      <div class="cts-card">
+        <div class="cts-card-header">
+          <span class="cts-card-country">${g.country}</span>
+          <span class="cts-card-pct ${pctClass}">${pctRounded}%</span>
+        </div>
+        <div class="cts-progress">
+          <div class="cts-progress-fill" style="width:${fillWidth}%;background:${barColor};"></div>
+        </div>
+        <div class="cts-card-stats">
+          <span>${t('ctsGoal')}: <strong>${g.ctsGoal.toLocaleString(undefined, {maximumFractionDigits: 0})}</strong></span>
+          <span>${t('ctsAchieved')}: <strong>${g.achieved.toLocaleString(undefined, {maximumFractionDigits: 0})}</strong></span>
+        </div>
+        <div class="cts-card-stats" style="margin-top:6px;">
+          <span>${t('ctsPending')}: <strong>${pendingLabel}</strong></span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * Algumas planilhas usam "Brazil" em inglês enquanto o filtro do dashboard
+ * usa "Brasil" em português (e México também varia). Normaliza pra match.
+ */
+function translateCountry(c) {
+  const map = {
+    'Brasil': 'Brazil',
+    'Brazil': 'Brasil',
+    'México': 'Mexico',
+    'Mexico': 'México',
+  };
+  return map[c] || c;
 }
 
 function renderScorecards(drivers, periodHours) {
@@ -1471,12 +1790,22 @@ function renderScorecards(drivers, periodHours) {
   const missing = drivers.filter(d => d.hoursAgo === null || d.hoursAgo > 24).length;
   const issues = drivers.filter(d => d.vehicleStatus && d.vehicleStatus !== 'OK').length;
 
+  // Economia total: soma savingsKm de drivers em hotel mode
+  const savingsTotal = drivers.reduce((sum, d) => {
+    if (d.base && d.base.type === 'Hotel' && typeof d.savingsKm === 'number' && d.savingsKm > 0) {
+      return sum + d.savingsKm;
+    }
+    return sum;
+  }, 0);
+
   document.getElementById('sc-total').textContent = total;
   document.getElementById('sc-total-sub').textContent = withCheckin + ' ' + t('scWithCheckin');
 
   document.getElementById('sc-hotel').textContent = hotelMode;
   const pct = total > 0 ? Math.round((hotelMode / total) * 100) : 0;
   document.getElementById('sc-hotel-sub').textContent = pct + t('scOfTotal');
+
+  document.getElementById('sc-savings').textContent = Math.round(savingsTotal).toLocaleString() + ' km';
 
   document.getElementById('sc-missing').textContent = missing;
   document.getElementById('sc-issues').textContent = issues;
@@ -1498,11 +1827,17 @@ function renderTable(drivers, periodHours) {
     const statusPill = getStatusPill(d, periodHours);
     const hoursDisplay = d.hoursAgo === null ? '—' : formatHoursAgo(d.hoursAgo);
 
+    // HM mensal pill
+    let hmCell = '—';
+    if (d.hmMonthly === 'Yes') hmCell = '<span class="status-pill status-active">✓ Yes</span>';
+    else if (d.hmMonthly === 'No') hmCell = '<span class="status-pill status-neutral">No</span>';
+
     row.innerHTML = `
       <td><strong>${d.name}</strong></td>
       <td><span class="country-tag">${d.country}</span></td>
       <td class="hide-mobile">${d.city || '—'}</td>
       <td>${d.base ? d.base.type : '—'}</td>
+      <td class="hide-mobile">${hmCell}</td>
       <td class="hide-mobile">${hoursDisplay}</td>
       <td class="hide-mobile">${d.distBaseToEdge !== null && d.distBaseToEdge !== undefined ? d.distBaseToEdge + ' km' : '—'}</td>
       <td>${statusPill}</td>
@@ -1568,6 +1903,38 @@ function openDriverPanel(d) {
   // Base atual
   document.getElementById('panel-base-type').textContent = d.base ? (d.base.type || '—') : t('pNoBase');
   document.getElementById('panel-base-address').textContent = d.base ? (d.base.address || '—') : '—';
+
+  // Seção de eficiência hotel mode — só aparece se for Hotel com dados de casa
+  const efficiencySection = document.getElementById('panel-efficiency-section');
+  const isHotel = d.base && d.base.type === 'Hotel';
+  const hasHome = d.homeLat && d.homeLng;
+
+  if (isHotel && hasHome) {
+    efficiencySection.style.display = '';
+    document.getElementById('panel-home-address').textContent = d.fullAddress || d.city || '—';
+    document.getElementById('panel-dist-home').textContent =
+      (typeof d.distHomeToEdge === 'number') ? d.distHomeToEdge + ' ' + t('kmUnit') : '—';
+
+    const savingsEl = document.getElementById('panel-savings');
+    if (typeof d.savingsKm === 'number') {
+      savingsEl.textContent = (d.savingsKm > 0 ? '+' : '') + d.savingsKm + ' ' + t('kmUnit');
+      savingsEl.style.color = d.savingsKm > 0 ? '#16A34A' : '#EF4444';
+    } else {
+      savingsEl.textContent = '—';
+      savingsEl.style.color = '';
+    }
+
+    const hmEl = document.getElementById('panel-hm-monthly');
+    if (d.hmMonthly === 'Yes') {
+      hmEl.innerHTML = '<span class="status-pill status-active">✓ Yes</span>';
+    } else if (d.hmMonthly === 'No') {
+      hmEl.innerHTML = '<span class="status-pill status-neutral">No</span>';
+    } else {
+      hmEl.textContent = '—';
+    }
+  } else {
+    efficiencySection.style.display = 'none';
+  }
 
   // Área
   document.getElementById('panel-area-address').textContent = d.area ? (d.area.address || '—') : t('pNoArea');
@@ -1642,7 +2009,7 @@ function renderPanelMap(d) {
 
   const bounds = [];
 
-  // Pin da base
+  // Pin da base (hotel/casa atual)
   const baseIcon = L.divIcon({
     className: 'driver-marker',
     html: '<div style="width:16px;height:16px;background:#2C5282;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
@@ -1653,6 +2020,31 @@ function renderPanelMap(d) {
     .bindTooltip(t('baseTooltipPrefix') + ' ' + (d.base.type || '—'), { permanent: false, direction: 'top' })
     .addTo(panelLayer);
   bounds.push([d.base.lat, d.base.lng]);
+
+  // Pin da CASA (se diferente da base, ex: hotel mode)
+  // Mostramos o pin de casa sempre que tiver homeLat e a base for do tipo Hotel
+  // (se base for Home, base já é a casa)
+  const isHotelMode = d.base.type === 'Hotel';
+  if (isHotelMode && d.homeLat && d.homeLng) {
+    const homeIcon = L.divIcon({
+      className: 'driver-marker',
+      html: '<div style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:white;border:2px solid #22C55E;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:14px;">🏠</div>',
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+    });
+    L.marker([d.homeLat, d.homeLng], { icon: homeIcon })
+      .bindTooltip(t('homeTooltip'), { permanent: false, direction: 'top' })
+      .addTo(panelLayer);
+    bounds.push([d.homeLat, d.homeLng]);
+
+    // Linha casa → hotel (economizada pelo hotel mode) em verde tracejado
+    L.polyline([[d.homeLat, d.homeLng], [d.base.lat, d.base.lng]], {
+      color: '#22C55E',
+      weight: 1.5,
+      opacity: 0.6,
+      dashArray: '3 6',
+    }).addTo(panelLayer);
+  }
 
   // Histórico de áreas (fade gradual)
   if (d.historyAreas && d.historyAreas.length > 0) {
@@ -1701,21 +2093,62 @@ function renderPanelMap(d) {
   setTimeout(() => panelMap.invalidateSize(), 100);
 }
 
-function renderDriverHistory(d) {
+async function renderDriverHistory(d) {
   const container = document.getElementById('panel-history');
 
-  if (!d.historyAreas || d.historyAreas.length === 0) {
-    container.innerHTML = `<div class="history-empty">${t('pHistoryEmpty')}${state.demoMode ? '' : t('pHistoryEmptyReal')}</div>`;
+  // Demo mode: usa historyAreas mockados
+  if (state.demoMode) {
+    if (!d.historyAreas || d.historyAreas.length === 0) {
+      container.innerHTML = `<div class="history-empty">${t('pHistoryEmpty')}</div>`;
+      return;
+    }
+    container.innerHTML = d.historyAreas.map(h => `
+      <div class="history-item">
+        <span class="history-radius">${h.radius} km</span>
+        <div class="history-date">${h.dateLabel}</div>
+        <div class="history-address">${h.address}</div>
+      </div>
+    `).join('');
     return;
   }
 
-  container.innerHTML = d.historyAreas.map(h => `
-    <div class="history-item">
-      <span class="history-radius">${h.radius} km</span>
-      <div class="history-date">${h.dateLabel}</div>
-      <div class="history-address">${h.address}</div>
-    </div>
-  `).join('');
+  // Modo real: busca histórico via getDriverHistory
+  container.innerHTML = `<div class="history-empty">${t('loadingHistory')}...</div>`;
+
+  try {
+    const res = await fetchWithTimeout(
+      CONFIG.scriptUrl + '?action=getDriverHistory&email=' + encodeURIComponent(d.email) + '&days=30',
+      15000
+    );
+
+    if (!res.success || !res.history || res.history.length === 0) {
+      container.innerHTML = `<div class="history-empty">${t('pHistoryEmpty')}</div>`;
+      return;
+    }
+
+    const items = res.history.map(h => {
+      const ts = new Date(h.timestamp);
+      const now = new Date();
+      const daysDiff = Math.floor((now - ts) / (1000 * 60 * 60 * 24));
+      let dateLabel;
+      if (daysDiff === 0) dateLabel = t('today');
+      else if (daysDiff === 1) dateLabel = t('yesterday');
+      else dateLabel = daysDiff + ' ' + t('daysAgoLabel');
+
+      return `
+        <div class="history-item">
+          <span class="history-radius">${h.destRadius || '—'} km</span>
+          <div class="history-date">${dateLabel}</div>
+          <div class="history-address">${h.destAddress || '—'}</div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = items;
+  } catch (err) {
+    console.warn('Erro ao buscar histórico:', err);
+    container.innerHTML = `<div class="history-empty">${t('pHistoryEmpty')}</div>`;
+  }
 }
 
 // ESC fecha o painel
@@ -1749,7 +2182,7 @@ function formatHoursAgo(h) {
   let val;
   if (h < 24) val = Math.floor(h) + t('hoursAgoSuffix');
   else val = Math.floor(h / 24) + t('daysAgoSuffix');
-  return prefix ? prefix + ' ' + val : val;
+  return prefix !== '' ? prefix + ' ' + val : val;
 }
 
 function showLoader(show, msg) {
