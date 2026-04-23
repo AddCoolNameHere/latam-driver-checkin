@@ -122,6 +122,31 @@
   }
   .refresh-btn:hover { background: var(--c-bg-tint); color: var(--c-primary); }
 
+  .lang-switch {
+    display: flex;
+    background: var(--c-bg);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 0;
+  }
+  .lang-switch button {
+    background: none;
+    border: none;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+  }
+  .lang-switch button.active {
+    background: white;
+    color: var(--c-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+
   /* FILTERS */
   .filters {
     background: white;
@@ -342,6 +367,196 @@
   }
   footer img { height: 18px; opacity: 0.6; margin-bottom: 4px; }
 
+  /* SIDE PANEL (DRILL-DOWN) */
+  .panel-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .panel-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .side-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 480px;
+    max-width: 100vw;
+    background: white;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+    z-index: 999;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .side-panel.open {
+    transform: translateX(0);
+  }
+  .panel-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    border-bottom: 1px solid var(--c-border);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    z-index: 2;
+  }
+  .panel-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--c-text);
+    line-height: 1.3;
+    margin-bottom: 2px;
+  }
+  .panel-subtitle {
+    font-size: 12px;
+    color: var(--c-text-muted);
+  }
+  .panel-close {
+    background: none;
+    border: 1px solid var(--c-border);
+    color: var(--c-text-muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .panel-close:hover {
+    background: var(--c-bg);
+    color: var(--c-text);
+  }
+  .panel-body {
+    padding: 16px 20px 24px;
+  }
+  .panel-map {
+    height: 280px;
+    border-radius: 8px;
+    border: 1px solid var(--c-border);
+    margin-bottom: 16px;
+  }
+  .panel-metric {
+    background: var(--c-bg-tint);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .panel-metric-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--c-primary-dark);
+    line-height: 1;
+  }
+  .panel-metric-label {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .panel-classification {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .pc-efficient { background: var(--c-success-bg); color: #065F46; }
+  .pc-questionable { background: var(--c-warn-bg); color: #854F0B; }
+  .pc-near { background: var(--c-bg-tint); color: var(--c-primary-dark); }
+
+  .panel-section {
+    margin-bottom: 20px;
+  }
+  .panel-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--c-border);
+    font-size: 13px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label {
+    color: var(--c-text-muted);
+    flex-shrink: 0;
+  }
+  .info-value {
+    color: var(--c-text);
+    text-align: right;
+    font-weight: 500;
+    word-break: break-word;
+  }
+  .info-value.small { font-weight: 400; font-size: 12px; color: var(--c-text-muted); }
+
+  .history-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--c-text-dim);
+    font-size: 12px;
+    background: var(--c-bg);
+    border-radius: 8px;
+    font-style: italic;
+  }
+  .history-item {
+    padding: 10px 12px;
+    background: var(--c-bg);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .history-date {
+    color: var(--c-text-muted);
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+  .history-address {
+    color: var(--c-text);
+  }
+  .history-radius {
+    color: var(--c-primary);
+    font-weight: 500;
+    float: right;
+  }
+
+  .notes-box {
+    padding: 10px 12px;
+    background: var(--c-bg);
+    border-left: 3px solid var(--c-accent);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--c-text);
+    font-style: italic;
+  }
+
   /* RESPONSIVE */
   @media (max-width: 768px) {
     .scorecards { grid-template-columns: repeat(2, 1fr); }
@@ -350,6 +565,8 @@
     .driver-table { font-size: 11px; }
     .driver-table th, .driver-table td { padding: 6px 8px; }
     .hide-mobile { display: none; }
+    .side-panel { width: 100vw; }
+    .panel-map { height: 220px; }
   }
 
   /* LEAFLET CUSTOM POPUP */
@@ -376,104 +593,109 @@
 
 <div id="loader" class="loader-overlay">
   <div class="spinner"></div>
-  <div class="loader-text">Carregando dados...</div>
+  <div class="loader-text" data-i18n="loadingData">Carregando dados...</div>
 </div>
 
 <div class="header">
   <div class="brand-wrap">
     <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
     <div class="brand-divider"></div>
-    <div class="brand-sub">
+    <div class="brand-sub" data-i18n="brandTitle">
       STREET VIEW DASHBOARD
-      <span>LATAM</span>
+      <span data-i18n="brandRegion">LATAM</span>
     </div>
   </div>
   <div class="header-right">
+    <div class="lang-switch">
+      <button data-lang="pt" class="active">PT</button>
+      <button data-lang="es">ES</button>
+      <button data-lang="en">EN</button>
+    </div>
     <button class="demo-toggle" id="demo-toggle" onclick="toggleDemoMode()">
       <span id="demo-icon">🎭</span>
-      <span id="demo-label">Modo demo</span>
+      <span id="demo-label" data-i18n="demoMode">Modo demo</span>
     </button>
     <div class="last-updated">
       <div class="refresh-dot"></div>
       <span id="last-updated">—</span>
     </div>
-    <button class="refresh-btn" onclick="loadData()">⟳ Atualizar</button>
+    <button class="refresh-btn" onclick="loadData()" data-i18n="refresh">⟳ Atualizar</button>
   </div>
 </div>
 
 <div class="filters">
-  <span class="filter-label">País:</span>
-  <button class="filter-chip active" data-country="all" onclick="setFilter('country', 'all')">Todos</button>
-  <button class="filter-chip" data-country="Brazil" onclick="setFilter('country', 'Brazil')">Brasil</button>
+  <span class="filter-label" data-i18n="filterCountry">País:</span>
+  <button class="filter-chip active" data-country="all" onclick="setFilter('country', 'all')" data-i18n="all">Todos</button>
+  <button class="filter-chip" data-country="Brazil" onclick="setFilter('country', 'Brazil')" data-i18n="brazil">Brasil</button>
   <button class="filter-chip" data-country="Argentina" onclick="setFilter('country', 'Argentina')">Argentina</button>
   <button class="filter-chip" data-country="Chile" onclick="setFilter('country', 'Chile')">Chile</button>
   <button class="filter-chip" data-country="Colombia" onclick="setFilter('country', 'Colombia')">Colombia</button>
-  <button class="filter-chip" data-country="México" onclick="setFilter('country', 'México')">México</button>
+  <button class="filter-chip" data-country="México" onclick="setFilter('country', 'México')" data-i18n="mexico">México</button>
   <button class="filter-chip" data-country="Peru" onclick="setFilter('country', 'Peru')">Peru</button>
 
-  <span class="filter-label" style="margin-left:16px;">Período:</span>
-  <button class="filter-chip" data-period="1" onclick="setFilter('period', 1)">Hoje</button>
-  <button class="filter-chip active" data-period="7" onclick="setFilter('period', 7)">7 dias</button>
-  <button class="filter-chip" data-period="30" onclick="setFilter('period', 30)">30 dias</button>
+  <span class="filter-label" style="margin-left:16px;" data-i18n="filterPeriod">Período:</span>
+  <button class="filter-chip" data-period="1" onclick="setFilter('period', 1)" data-i18n="today">Hoje</button>
+  <button class="filter-chip active" data-period="7" onclick="setFilter('period', 7)" data-i18n="sevenDays">7 dias</button>
+  <button class="filter-chip" data-period="30" onclick="setFilter('period', 30)" data-i18n="thirtyDays">30 dias</button>
 </div>
 
 <div class="scorecards">
   <div class="scorecard">
-    <div class="scorecard-label">DRIVERS ATIVOS</div>
+    <div class="scorecard-label" data-i18n="scActiveDrivers">DRIVERS ATIVOS</div>
     <div class="scorecard-value" id="sc-total">—</div>
-    <div class="scorecard-sub" id="sc-total-sub">no filtro selecionado</div>
+    <div class="scorecard-sub" id="sc-total-sub" data-i18n="scInFilter">no filtro selecionado</div>
   </div>
   <div class="scorecard accent">
-    <div class="scorecard-label">EM HOTEL MODE</div>
+    <div class="scorecard-label" data-i18n="scHotelMode">EM HOTEL MODE</div>
     <div class="scorecard-value" id="sc-hotel">—</div>
     <div class="scorecard-sub" id="sc-hotel-sub">—</div>
   </div>
   <div class="scorecard warn">
-    <div class="scorecard-label">SEM CHECK-IN RECENTE</div>
+    <div class="scorecard-label" data-i18n="scMissing">SEM CHECK-IN RECENTE</div>
     <div class="scorecard-value" id="sc-missing">—</div>
-    <div class="scorecard-sub">&gt; 24h sem update</div>
+    <div class="scorecard-sub" data-i18n="scMissingSub">&gt; 24h sem update</div>
   </div>
   <div class="scorecard danger">
-    <div class="scorecard-label">ISSUES REPORTADOS</div>
+    <div class="scorecard-label" data-i18n="scIssues">ISSUES REPORTADOS</div>
     <div class="scorecard-value" id="sc-issues">—</div>
-    <div class="scorecard-sub">veículos no período</div>
+    <div class="scorecard-sub" data-i18n="scIssuesSub">veículos no período</div>
   </div>
 </div>
 
 <div class="map-section">
   <div class="section-header">
     <div>
-      <div class="section-title">Mapa LATAM</div>
-      <div class="section-sub">Base atual e área de mapeamento por driver</div>
+      <div class="section-title" data-i18n="mapTitle">Mapa LATAM</div>
+      <div class="section-sub" data-i18n="mapSub">Base atual e área de mapeamento por driver</div>
     </div>
-    <div class="section-sub"><span id="map-count">—</span> drivers visíveis</div>
+    <div class="section-sub"><span id="map-count">—</span> <span data-i18n="driversVisible">drivers visíveis</span></div>
   </div>
   <div id="map"></div>
   <div class="map-legend">
-    <div class="legend-item"><span class="legend-dot" style="background:#2C5282;"></span> Base (hotel/casa)</div>
-    <div class="legend-item"><span class="legend-dot" style="background:#4A9FE0; opacity:0.4;"></span> Área de mapeamento</div>
-    <div class="legend-item"><span class="legend-dot" style="background:#22C55E;"></span> Check-in nas últimas 24h</div>
-    <div class="legend-item"><span class="legend-dot" style="background:#F59E0B;"></span> Sem check-in &gt; 24h</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#2C5282;"></span> <span data-i18n="legendBase">Base (hotel/casa)</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#4A9FE0; opacity:0.4;"></span> <span data-i18n="legendArea">Área de mapeamento</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#22C55E;"></span> <span data-i18n="legendRecent">Check-in nas últimas 24h</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#F59E0B;"></span> <span data-i18n="legendOld">Sem check-in &gt; 24h</span></div>
   </div>
 </div>
 
 <div class="table-section">
   <div class="section-header">
     <div>
-      <div class="section-title">Drivers</div>
-      <div class="section-sub">Clique numa linha pra centralizar no mapa</div>
+      <div class="section-title" data-i18n="tableTitle">Drivers</div>
+      <div class="section-sub" data-i18n="tableSub">Clique numa linha pra abrir detalhes</div>
     </div>
   </div>
   <table class="driver-table">
     <thead>
       <tr>
-        <th>Driver</th>
-        <th>País</th>
-        <th class="hide-mobile">Cidade</th>
-        <th>Base</th>
-        <th class="hide-mobile">Último check-in</th>
-        <th class="hide-mobile">Km base→área</th>
-        <th>Status</th>
+        <th data-i18n="thDriver">Driver</th>
+        <th data-i18n="thCountry">País</th>
+        <th class="hide-mobile" data-i18n="thCity">Cidade</th>
+        <th data-i18n="thBase">Base</th>
+        <th class="hide-mobile" data-i18n="thLastCheckin">Último check-in</th>
+        <th class="hide-mobile" data-i18n="thDistance">Km base→área</th>
+        <th data-i18n="thStatus">Status</th>
       </tr>
     </thead>
     <tbody id="driver-tbody">
@@ -481,9 +703,77 @@
   </table>
 </div>
 
+<div class="panel-backdrop" id="panel-backdrop" onclick="closeDriverPanel()"></div>
+
+<aside class="side-panel" id="side-panel" role="dialog" aria-hidden="true">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="panel-name">—</div>
+      <div class="panel-subtitle" id="panel-subtitle">—</div>
+    </div>
+    <button class="panel-close" onclick="closeDriverPanel()" aria-label="Fechar">×</button>
+  </div>
+  <div class="panel-body">
+    <div id="panel-map" class="panel-map"></div>
+
+    <div class="panel-metric">
+      <div>
+        <div class="panel-metric-label" data-i18n="pMetric">Km base → área</div>
+        <div class="panel-metric-value" id="panel-dist">—</div>
+      </div>
+      <div class="panel-classification" id="panel-class">—</div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title" data-i18n="pCurrentBase">Base atual</div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pType">Tipo</span>
+        <span class="info-value" id="panel-base-type">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pAddress">Endereço</span>
+        <span class="info-value small" id="panel-base-address">—</span>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title" data-i18n="pArea">Área de mapeamento</div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pLocation">Local</span>
+        <span class="info-value small" id="panel-area-address">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pRadius">Raio</span>
+        <span class="info-value" id="panel-area-radius">—</span>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title" data-i18n="pLastCheckin">Último check-in</div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pWhen">Quando</span>
+        <span class="info-value" id="panel-checkin-when">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pVehicle">Status veículo</span>
+        <span class="info-value" id="panel-vehicle">—</span>
+      </div>
+      <div class="info-row" id="panel-notes-row" style="display:none;">
+        <span class="info-label" data-i18n="pNotes">Observações</span>
+      </div>
+      <div id="panel-notes-box" style="display:none;margin-top:8px;"></div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title" data-i18n="pHistory">Histórico de áreas</div>
+      <div id="panel-history"></div>
+    </div>
+  </div>
+</aside>
+
 <footer>
   <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display='none'"><br>
-  Plataforma interna — Aceolution do Brasil Ltda.
+  <span data-i18n="footerText">Plataforma interna — Aceolution do Brasil Ltda.</span>
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -493,6 +783,296 @@ const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
   refreshMs: 5 * 60 * 1000,
 };
+
+const I18N = {
+  pt: {
+    loadingData: 'Carregando dados...',
+    loadingProgress: 'Carregando drivers',
+    brandTitle: 'STREET VIEW DASHBOARD',
+    brandRegion: 'LATAM',
+    demoMode: 'Modo demo',
+    demoModeActive: 'Modo demo ativo',
+    refresh: '⟳ Atualizar',
+    updatedAt: 'Atualizado',
+    errorLoading: 'Erro ao carregar',
+    errorPrefix: 'Erro',
+    errorFallback: 'Erro ao carregar dados. Ative o Modo Demo pra testar o visual.',
+    filterCountry: 'País:',
+    filterPeriod: 'Período:',
+    all: 'Todos',
+    brazil: 'Brasil',
+    mexico: 'México',
+    today: 'Hoje',
+    sevenDays: '7 dias',
+    thirtyDays: '30 dias',
+    scActiveDrivers: 'DRIVERS ATIVOS',
+    scInFilter: 'no filtro selecionado',
+    scWithCheckin: 'com check-in no período',
+    scHotelMode: 'EM HOTEL MODE',
+    scOfTotal: '% do total',
+    scMissing: 'SEM CHECK-IN RECENTE',
+    scMissingSub: '> 24h sem update',
+    scIssues: 'ISSUES REPORTADOS',
+    scIssuesSub: 'veículos no período',
+    mapTitle: 'Mapa LATAM',
+    mapSub: 'Base atual e área de mapeamento por driver',
+    driversVisible: 'drivers visíveis',
+    legendBase: 'Base (hotel/casa)',
+    legendArea: 'Área de mapeamento',
+    legendRecent: 'Check-in nas últimas 24h',
+    legendOld: 'Sem check-in > 24h',
+    tableTitle: 'Drivers',
+    tableSub: 'Clique numa linha pra abrir detalhes',
+    thDriver: 'Driver',
+    thCountry: 'País',
+    thCity: 'Cidade',
+    thBase: 'Base',
+    thLastCheckin: 'Último check-in',
+    thDistance: 'Km base→área',
+    thStatus: 'Status',
+    pillActive: '✓ Ativo',
+    pillWarn24h: '> 24h',
+    pillNoCheckin: 'Sem check-in',
+    pillCritical: '⚠ Crítico',
+    pillMinor: '⚠ Alerta',
+    pillOk: '✓ OK',
+    noCheckin: 'Nunca',
+    hoursAgoPrefix: 'há',
+    lessThanHour: 'menos de 1h',
+    pMetric: 'Km base → área',
+    pCurrentBase: 'Base atual',
+    pType: 'Tipo',
+    pAddress: 'Endereço',
+    pArea: 'Área de mapeamento',
+    pLocation: 'Local',
+    pRadius: 'Raio',
+    pLastCheckin: 'Último check-in',
+    pWhen: 'Quando',
+    pVehicle: 'Status veículo',
+    pNotes: 'Observações',
+    pHistory: 'Histórico de áreas',
+    pNoLocation: 'Sem localização disponível',
+    pNoBase: 'Sem base cadastrada',
+    pNoArea: 'Sem área registrada',
+    pHistoryEmpty: 'Sem histórico disponível',
+    pHistoryEmptyReal: ' — feature completa após atualização do backend',
+    classNear: 'Próximo da base',
+    classEfficient: 'Hotel mode eficiente',
+    classHigh: 'Distância alta',
+    classNoData: 'Sem dados',
+    baseTooltipPrefix: 'Base:',
+    areaTooltipPrefix: 'Área atual ·',
+    kmUnit: 'km',
+    daysAgoSuffix: 'd',
+    hoursAgoSuffix: 'h',
+    footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+  },
+  es: {
+    loadingData: 'Cargando datos...',
+    loadingProgress: 'Cargando conductores',
+    brandTitle: 'STREET VIEW DASHBOARD',
+    brandRegion: 'LATAM',
+    demoMode: 'Modo demo',
+    demoModeActive: 'Modo demo activo',
+    refresh: '⟳ Actualizar',
+    updatedAt: 'Actualizado',
+    errorLoading: 'Error al cargar',
+    errorPrefix: 'Error',
+    errorFallback: 'Error al cargar datos. Active el Modo Demo para probar el visual.',
+    filterCountry: 'País:',
+    filterPeriod: 'Período:',
+    all: 'Todos',
+    brazil: 'Brasil',
+    mexico: 'México',
+    today: 'Hoy',
+    sevenDays: '7 días',
+    thirtyDays: '30 días',
+    scActiveDrivers: 'CONDUCTORES ACTIVOS',
+    scInFilter: 'en el filtro seleccionado',
+    scWithCheckin: 'con check-in en el período',
+    scHotelMode: 'EN HOTEL MODE',
+    scOfTotal: '% del total',
+    scMissing: 'SIN CHECK-IN RECIENTE',
+    scMissingSub: '> 24h sin actualizar',
+    scIssues: 'PROBLEMAS REPORTADOS',
+    scIssuesSub: 'vehículos en el período',
+    mapTitle: 'Mapa LATAM',
+    mapSub: 'Base actual y área de mapeo por conductor',
+    driversVisible: 'conductores visibles',
+    legendBase: 'Base (hotel/casa)',
+    legendArea: 'Área de mapeo',
+    legendRecent: 'Check-in en las últimas 24h',
+    legendOld: 'Sin check-in > 24h',
+    tableTitle: 'Conductores',
+    tableSub: 'Haga clic en una fila para ver detalles',
+    thDriver: 'Conductor',
+    thCountry: 'País',
+    thCity: 'Ciudad',
+    thBase: 'Base',
+    thLastCheckin: 'Último check-in',
+    thDistance: 'Km base→área',
+    thStatus: 'Estado',
+    pillActive: '✓ Activo',
+    pillWarn24h: '> 24h',
+    pillNoCheckin: 'Sin check-in',
+    pillCritical: '⚠ Crítico',
+    pillMinor: '⚠ Alerta',
+    pillOk: '✓ OK',
+    noCheckin: 'Nunca',
+    hoursAgoPrefix: 'hace',
+    lessThanHour: 'menos de 1h',
+    pMetric: 'Km base → área',
+    pCurrentBase: 'Base actual',
+    pType: 'Tipo',
+    pAddress: 'Dirección',
+    pArea: 'Área de mapeo',
+    pLocation: 'Lugar',
+    pRadius: 'Radio',
+    pLastCheckin: 'Último check-in',
+    pWhen: 'Cuándo',
+    pVehicle: 'Estado vehículo',
+    pNotes: 'Observaciones',
+    pHistory: 'Historial de áreas',
+    pNoLocation: 'Sin ubicación disponible',
+    pNoBase: 'Sin base registrada',
+    pNoArea: 'Sin área registrada',
+    pHistoryEmpty: 'Sin historial disponible',
+    pHistoryEmptyReal: ' — función completa tras actualización del backend',
+    classNear: 'Cerca de la base',
+    classEfficient: 'Hotel mode eficiente',
+    classHigh: 'Distancia alta',
+    classNoData: 'Sin datos',
+    baseTooltipPrefix: 'Base:',
+    areaTooltipPrefix: 'Área actual ·',
+    kmUnit: 'km',
+    daysAgoSuffix: 'd',
+    hoursAgoSuffix: 'h',
+    footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+  },
+  en: {
+    loadingData: 'Loading data...',
+    loadingProgress: 'Loading drivers',
+    brandTitle: 'STREET VIEW DASHBOARD',
+    brandRegion: 'LATAM',
+    demoMode: 'Demo mode',
+    demoModeActive: 'Demo mode on',
+    refresh: '⟳ Refresh',
+    updatedAt: 'Updated',
+    errorLoading: 'Loading error',
+    errorPrefix: 'Error',
+    errorFallback: 'Error loading data. Try Demo Mode to test the visual.',
+    filterCountry: 'Country:',
+    filterPeriod: 'Period:',
+    all: 'All',
+    brazil: 'Brazil',
+    mexico: 'Mexico',
+    today: 'Today',
+    sevenDays: '7 days',
+    thirtyDays: '30 days',
+    scActiveDrivers: 'ACTIVE DRIVERS',
+    scInFilter: 'in selected filter',
+    scWithCheckin: 'checked in this period',
+    scHotelMode: 'IN HOTEL MODE',
+    scOfTotal: '% of total',
+    scMissing: 'MISSING CHECK-IN',
+    scMissingSub: '> 24h without update',
+    scIssues: 'REPORTED ISSUES',
+    scIssuesSub: 'vehicles in period',
+    mapTitle: 'LATAM Map',
+    mapSub: 'Current base and mapping area per driver',
+    driversVisible: 'drivers visible',
+    legendBase: 'Base (hotel/home)',
+    legendArea: 'Mapping area',
+    legendRecent: 'Check-in within 24h',
+    legendOld: 'No check-in > 24h',
+    tableTitle: 'Drivers',
+    tableSub: 'Click a row to open details',
+    thDriver: 'Driver',
+    thCountry: 'Country',
+    thCity: 'City',
+    thBase: 'Base',
+    thLastCheckin: 'Last check-in',
+    thDistance: 'Km base→area',
+    thStatus: 'Status',
+    pillActive: '✓ Active',
+    pillWarn24h: '> 24h',
+    pillNoCheckin: 'No check-in',
+    pillCritical: '⚠ Critical',
+    pillMinor: '⚠ Warning',
+    pillOk: '✓ OK',
+    noCheckin: 'Never',
+    hoursAgoPrefix: '',
+    lessThanHour: 'less than 1h ago',
+    pMetric: 'Km base → area',
+    pCurrentBase: 'Current base',
+    pType: 'Type',
+    pAddress: 'Address',
+    pArea: 'Mapping area',
+    pLocation: 'Location',
+    pRadius: 'Radius',
+    pLastCheckin: 'Last check-in',
+    pWhen: 'When',
+    pVehicle: 'Vehicle status',
+    pNotes: 'Notes',
+    pHistory: 'Area history',
+    pNoLocation: 'No location available',
+    pNoBase: 'No base registered',
+    pNoArea: 'No area registered',
+    pHistoryEmpty: 'No history available',
+    pHistoryEmptyReal: ' — full feature available after backend update',
+    classNear: 'Close to base',
+    classEfficient: 'Efficient hotel mode',
+    classHigh: 'High distance',
+    classNoData: 'No data',
+    baseTooltipPrefix: 'Base:',
+    areaTooltipPrefix: 'Current area ·',
+    kmUnit: 'km',
+    daysAgoSuffix: 'd ago',
+    hoursAgoSuffix: 'h ago',
+    footerText: 'Internal platform — Aceolution do Brasil Ltda.',
+  },
+};
+
+let currentLang = localStorage.getItem('dashboardLang') || 'pt';
+
+function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || key; }
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    // Skip elements that have complex children (brand-sub has a span child)
+    if (key === 'brandTitle') {
+      // Only replace text node, preserve span
+      const span = el.querySelector('span');
+      el.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = t(key) + ' '; });
+      return;
+    }
+    el.textContent = t(key);
+  });
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : currentLang;
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('dashboardLang', lang);
+  document.querySelectorAll('.lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  applyI18n();
+  // Re-render dynamic content that's built via JS
+  if (state.drivers && state.drivers.length) applyFiltersAndRender();
+  updateDemoLabel();
+}
+
+function updateDemoLabel() {
+  const label = document.getElementById('demo-label');
+  if (label) label.textContent = state.demoMode ? t('demoModeActive') : t('demoMode');
+}
+
+document.querySelectorAll('.lang-switch button').forEach(btn => {
+  btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+});
+
 
 let state = {
   drivers: [],
@@ -554,9 +1134,10 @@ const COUNTRY_CENTERS = {
 function initMap() {
   if (map) return;
   map = L.map('map').setView([-15, -60], 4);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
-    maxZoom: 18,
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19,
   }).addTo(map);
   markerLayer = L.layerGroup().addTo(map);
 }
@@ -580,12 +1161,14 @@ function renderMap(drivers) {
     });
 
     const marker = L.marker([d.base.lat, d.base.lng], { icon: baseIcon });
+    marker._driverData = d;
     marker.bindPopup(`
       <div class="popup-title">${d.name}</div>
       <div class="popup-row">${d.country} · ${d.city || '—'}</div>
       <div class="popup-row">Base: ${d.base.type || '—'}</div>
       <div class="popup-row">${d.base.address || ''}</div>
-      ${d.hoursAgo !== null ? `<div class="popup-row" style="margin-top:6px;color:${isRecent ? '#22C55E' : '#F59E0B'};">Check-in há ${formatHoursAgo(d.hoursAgo)}</div>` : '<div class="popup-row" style="color:#94A3B8;">Sem check-in</div>'}
+      ${d.hoursAgo !== null ? `<div class="popup-row" style="margin-top:6px;color:${isRecent ? '#22C55E' : '#F59E0B'};">${formatHoursAgo(d.hoursAgo)}</div>` : `<div class="popup-row" style="color:#94A3B8;">${t('pillNoCheckin')}</div>`}
+      <div style="margin-top:8px;"><a href="#" onclick="event.preventDefault(); openDriverPanelByEmail('${d.email}'); return false;" style="color:#2C5282;font-weight:500;">Ver detalhes →</a></div>
     `);
     markerLayer.addLayer(marker);
     bounds.push([d.base.lat, d.base.lng]);
@@ -631,7 +1214,7 @@ function renderMap(drivers) {
 // =================================================================
 
 async function loadData() {
-  showLoader(true);
+  showLoader(true, t('loadingProgress') + '...');
 
   try {
     if (state.demoMode) {
@@ -641,61 +1224,95 @@ async function loadData() {
     }
 
     applyFiltersAndRender();
-    document.getElementById('last-updated').textContent = 'Atualizado ' + formatTime(new Date());
+    document.getElementById('last-updated').textContent = t('updatedAt') + ' ' + formatTime(new Date());
   } catch (err) {
-    console.error(err);
-    alert('Erro ao carregar dados: ' + err.message);
+    console.error('Erro no loadData:', err);
+    document.getElementById('last-updated').textContent = t('errorLoading');
+    showError(err.message || t('errorFallback'));
   } finally {
+    // SEMPRE esconde o loader, mesmo com erro
     showLoader(false);
   }
 }
 
+function showError(msg) {
+  let errBar = document.getElementById('err-bar');
+  if (!errBar) {
+    errBar = document.createElement('div');
+    errBar.id = 'err-bar';
+    errBar.style.cssText = 'background:#FEE2E2;color:#991B1B;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;border:1px solid #FECACA;';
+    document.querySelector('.header').insertAdjacentElement('afterend', errBar);
+  }
+  errBar.innerHTML = '⚠ <strong>' + t('errorPrefix') + ':</strong> ' + msg + ' <button onclick="document.getElementById(\'err-bar\').remove()" style="float:right;background:none;border:none;cursor:pointer;font-size:16px;color:#991B1B;">×</button>';
+}
+
 async function fetchRealData() {
   // 1. Buscar lista de drivers ativos
-  const driversRes = await fetch(CONFIG.scriptUrl + '?action=getDrivers');
-  const driversData = await driversRes.json();
-  if (!driversData.success) throw new Error(driversData.error);
+  const driversData = await fetchWithTimeout(CONFIG.scriptUrl + '?action=getDrivers', 20000);
+  if (!driversData.success) throw new Error(driversData.error || 'Falha ao buscar drivers');
 
   const drivers = driversData.drivers;
+  console.log('Drivers carregados:', drivers.length);
 
-  // 2. Em paralelo, buscar base e última área de cada driver
-  const enriched = await Promise.all(drivers.map(async (d) => {
-    try {
-      const [baseRes, areaRes] = await Promise.all([
-        fetch(CONFIG.scriptUrl + '?action=getBase&email=' + encodeURIComponent(d.email)),
-        fetch(CONFIG.scriptUrl + '?action=getLastArea&email=' + encodeURIComponent(d.email)),
-      ]);
-      const base = (await baseRes.json()).base;
-      const area = (await areaRes.json()).area;
+  // 2. Processar em lotes de 10 em paralelo (pra não sobrecarregar o Apps Script)
+  const BATCH_SIZE = 10;
+  const enriched = [];
 
-      let hoursAgo = null;
-      let lastCheckinDate = null;
-      if (area && area.address) {
-        // Não temos timestamp do last area — assumimos que existência da área = check-in recente
-        // Quando tiver endpoint novo, ajustar isso
-        lastCheckinDate = new Date(); // placeholder
-        hoursAgo = 0;
-      }
+  for (let i = 0; i < drivers.length; i += BATCH_SIZE) {
+    const batch = drivers.slice(i, i + BATCH_SIZE);
+    const batchNum = Math.floor(i/BATCH_SIZE) + 1;
+    const totalBatches = Math.ceil(drivers.length/BATCH_SIZE);
+    console.log(`Processando batch ${batchNum}/${totalBatches} (${batch.length} drivers)`);
+    showLoader(true, t('loadingProgress') + ' (' + Math.min(i + BATCH_SIZE, drivers.length) + '/' + drivers.length + ')...');
 
-      return {
-        name: d.name,
-        email: d.email,
-        country: d.country,
-        city: d.city,
-        base,
-        area,
-        hoursAgo,
-        vehicleStatus: 'OK',  // precisaria endpoint novo pra saber
-        distBaseToEdge: (base && area && area.radius)
-          ? Math.max(0, Math.round((haversine(base.lat, base.lng, area.lat, area.lng) - area.radius) * 10) / 10)
-          : null,
-      };
-    } catch (err) {
-      return { name: d.name, email: d.email, country: d.country, city: d.city, base: null, area: null, hoursAgo: null };
-    }
-  }));
+    const batchResults = await Promise.all(batch.map(d => enrichDriver(d)));
+    enriched.push(...batchResults);
+  }
 
+  console.log('Drivers processados:', enriched.length, 'com dados:', enriched.filter(d => d.base).length);
   return enriched;
+}
+
+async function enrichDriver(d) {
+  try {
+    const [baseData, areaData] = await Promise.all([
+      fetchWithTimeout(CONFIG.scriptUrl + '?action=getBase&email=' + encodeURIComponent(d.email), 10000).catch(() => ({ base: null })),
+      fetchWithTimeout(CONFIG.scriptUrl + '?action=getLastArea&email=' + encodeURIComponent(d.email), 10000).catch(() => ({ area: null })),
+    ]);
+
+    const base = baseData.base;
+    const area = areaData.area;
+
+    return {
+      name: d.name,
+      email: d.email,
+      country: d.country,
+      city: d.city,
+      base,
+      area,
+      hoursAgo: area ? 0 : null,
+      vehicleStatus: 'OK',
+      distBaseToEdge: (base && area && area.radius)
+        ? Math.max(0, Math.round((haversine(base.lat, base.lng, area.lat, area.lng) - area.radius) * 10) / 10)
+        : null,
+    };
+  } catch (err) {
+    console.warn('Erro ao enriquecer driver', d.email, err);
+    return { name: d.name, email: d.email, country: d.country, city: d.city, base: null, area: null, hoursAgo: null };
+  }
+}
+
+async function fetchWithTimeout(url, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    return await res.json();
+  } catch (err) {
+    clearTimeout(timeout);
+    throw err;
+  }
 }
 
 // =================================================================
@@ -761,6 +1378,31 @@ function generateDemoData() {
     const baseType = Math.random() > 0.4 ? 'Hotel' : 'Home';
     const distBaseToEdge = Math.max(0, Math.round((haversine(baseLat, baseLng, areaLat, areaLng) - radius) * 10) / 10);
 
+    // Gera 3-5 áreas históricas próximas à atual (simulando check-ins passados)
+    const historyCount = 3 + Math.floor(Math.random() * 3);
+    const historyAreas = [];
+    for (let h = 0; h < historyCount; h++) {
+      const jitter = 0.15;
+      historyAreas.push({
+        lat: areaLat + (Math.random() - 0.5) * jitter * 2,
+        lng: areaLng + (Math.random() - 0.5) * jitter * 2,
+        radius: Math.max(3, radius + Math.floor((Math.random() - 0.5) * 20)),
+        address: `Área · ${d.city}${h === 0 ? ' (norte)' : h === 1 ? ' (sul)' : h === 2 ? ' (centro)' : ' (leste)'}`,
+        dateLabel: h === 0 ? 'Ontem' : (h + 1) + ' dias atrás',
+      });
+    }
+
+    // Notas ocasionais (20% dos drivers)
+    const demoNotes = [
+      'Trânsito intenso na região, pode atrasar.',
+      'Obra fechando rua principal — rota alternativa.',
+      'Área nova, primeira vez mapeando aqui.',
+      'Clima instável previsto pra tarde.',
+      'Reabastecer combustível antes das 11h.',
+      'Hotel confirmado por mais 3 noites.',
+    ];
+    const notes = (i % 5 === 0) ? demoNotes[i % demoNotes.length] : '';
+
     return {
       name: d.name,
       email: d.name.toLowerCase().replace(/\s/g, '.') + '@field-ops-xpe.com',
@@ -768,7 +1410,7 @@ function generateDemoData() {
       city: d.city,
       base: {
         type: baseType,
-        address: `${baseType} · ${d.city}`,
+        address: `${baseType === 'Hotel' ? 'Hotel ' : ''}${d.city} — Centro`,
         lat: baseLat,
         lng: baseLng,
       },
@@ -776,11 +1418,13 @@ function generateDemoData() {
         lat: areaLat,
         lng: areaLng,
         radius: radius,
-        address: `Área de mapeamento · ${d.city}`,
+        address: `Região de ${d.city}`,
       },
       hoursAgo,
       vehicleStatus,
       distBaseToEdge,
+      historyAreas,
+      notes,
     };
   });
 }
@@ -828,11 +1472,11 @@ function renderScorecards(drivers, periodHours) {
   const issues = drivers.filter(d => d.vehicleStatus && d.vehicleStatus !== 'OK').length;
 
   document.getElementById('sc-total').textContent = total;
-  document.getElementById('sc-total-sub').textContent = withCheckin + ' com check-in no período';
+  document.getElementById('sc-total-sub').textContent = withCheckin + ' ' + t('scWithCheckin');
 
   document.getElementById('sc-hotel').textContent = hotelMode;
   const pct = total > 0 ? Math.round((hotelMode / total) * 100) : 0;
-  document.getElementById('sc-hotel-sub').textContent = pct + '% do total';
+  document.getElementById('sc-hotel-sub').textContent = pct + t('scOfTotal');
 
   document.getElementById('sc-missing').textContent = missing;
   document.getElementById('sc-issues').textContent = issues;
@@ -864,23 +1508,220 @@ function renderTable(drivers, periodHours) {
       <td>${statusPill}</td>
     `;
 
-    row.addEventListener('click', () => {
-      if (d.base && d.base.lat) {
-        map.setView([d.base.lat, d.base.lng], 10);
-      }
-    });
+    row.addEventListener('click', () => openDriverPanel(d));
 
     tbody.appendChild(row);
   });
 }
 
 function getStatusPill(d, periodHours) {
-  if (d.vehicleStatus === 'Critical Issue') return '<span class="status-pill status-danger">⚠ Crítico</span>';
-  if (d.vehicleStatus === 'Minor Issue') return '<span class="status-pill status-warn">⚠ Alerta</span>';
-  if (d.hoursAgo === null) return '<span class="status-pill status-neutral">Sem check-in</span>';
-  if (d.hoursAgo > 24) return '<span class="status-pill status-warn">&gt; 24h</span>';
-  return '<span class="status-pill status-active">✓ Ativo</span>';
+  if (d.vehicleStatus === 'Critical Issue') return '<span class="status-pill status-danger">' + t('pillCritical') + '</span>';
+  if (d.vehicleStatus === 'Minor Issue') return '<span class="status-pill status-warn">' + t('pillMinor') + '</span>';
+  if (d.hoursAgo === null) return '<span class="status-pill status-neutral">' + t('pillNoCheckin') + '</span>';
+  if (d.hoursAgo > 24) return '<span class="status-pill status-warn">' + t('pillWarn24h') + '</span>';
+  return '<span class="status-pill status-active">' + t('pillActive') + '</span>';
 }
+
+// =================================================================
+// SIDE PANEL (DRIVER DRILL-DOWN)
+// =================================================================
+
+let panelMap = null;
+let panelLayer = null;
+
+function openDriverPanelByEmail(email) {
+  const driver = state.drivers.find(d => d.email === email);
+  if (driver) openDriverPanel(driver);
+}
+
+function openDriverPanel(d) {
+  const panel = document.getElementById('side-panel');
+  const backdrop = document.getElementById('panel-backdrop');
+
+  // Cabeçalho
+  document.getElementById('panel-name').textContent = d.name;
+  document.getElementById('panel-subtitle').textContent = `${d.country} · ${d.city || '—'} · ${d.email}`;
+
+  // Métrica principal
+  const dist = d.distBaseToEdge;
+  const distEl = document.getElementById('panel-dist');
+  const classEl = document.getElementById('panel-class');
+
+  if (dist !== null && dist !== undefined) {
+    distEl.textContent = dist + ' ' + t('kmUnit');
+    if (dist < 10) {
+      classEl.textContent = t('classNear');
+      classEl.className = 'panel-classification pc-near';
+    } else if (dist < 100) {
+      classEl.textContent = t('classEfficient');
+      classEl.className = 'panel-classification pc-efficient';
+    } else {
+      classEl.textContent = t('classHigh');
+      classEl.className = 'panel-classification pc-questionable';
+    }
+  } else {
+    distEl.textContent = '—';
+    classEl.textContent = t('classNoData');
+    classEl.className = 'panel-classification pc-near';
+  }
+
+  // Base atual
+  document.getElementById('panel-base-type').textContent = d.base ? (d.base.type || '—') : t('pNoBase');
+  document.getElementById('panel-base-address').textContent = d.base ? (d.base.address || '—') : '—';
+
+  // Área
+  document.getElementById('panel-area-address').textContent = d.area ? (d.area.address || '—') : t('pNoArea');
+  document.getElementById('panel-area-radius').textContent = d.area && d.area.radius ? d.area.radius + ' ' + t('kmUnit') : '—';
+
+  // Último check-in
+  document.getElementById('panel-checkin-when').textContent = d.hoursAgo === null ? t('noCheckin') : formatHoursAgo(d.hoursAgo);
+
+  const vehicleEl = document.getElementById('panel-vehicle');
+  if (d.vehicleStatus === 'OK') {
+    vehicleEl.innerHTML = '<span class="status-pill status-active">' + t('pillOk') + '</span>';
+  } else if (d.vehicleStatus === 'Minor Issue') {
+    vehicleEl.innerHTML = '<span class="status-pill status-warn">' + t('pillMinor') + '</span>';
+  } else if (d.vehicleStatus === 'Critical Issue') {
+    vehicleEl.innerHTML = '<span class="status-pill status-danger">' + t('pillCritical') + '</span>';
+  } else {
+    vehicleEl.textContent = '—';
+  }
+
+  // Notas (se tiver)
+  const notesBox = document.getElementById('panel-notes-box');
+  const notesRow = document.getElementById('panel-notes-row');
+  if (d.notes) {
+    notesRow.style.display = 'flex';
+    notesBox.style.display = 'block';
+    notesBox.innerHTML = `<div class="notes-box">${d.notes}</div>`;
+  } else {
+    notesRow.style.display = 'none';
+    notesBox.style.display = 'none';
+  }
+
+  // Histórico
+  renderDriverHistory(d);
+
+  // Abre painel
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden', 'false');
+  backdrop.classList.add('open');
+
+  // Renderiza mapa do painel depois do slide (pra calcular tamanho certo)
+  setTimeout(() => renderPanelMap(d), 320);
+}
+
+function closeDriverPanel() {
+  document.getElementById('side-panel').classList.remove('open');
+  document.getElementById('side-panel').setAttribute('aria-hidden', 'true');
+  document.getElementById('panel-backdrop').classList.remove('open');
+}
+
+function renderPanelMap(d) {
+  const container = document.getElementById('panel-map');
+
+  if (panelMap) {
+    panelMap.remove();
+    panelMap = null;
+  }
+
+  if (!d.base || !d.base.lat) {
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94A3B8;font-size:12px;">' + t('pNoLocation') + '</div>';
+    return;
+  }
+
+  container.innerHTML = ''; // limpa se tinha fallback antes
+  panelMap = L.map('panel-map').setView([d.base.lat, d.base.lng], 10);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(panelMap);
+
+  panelLayer = L.layerGroup().addTo(panelMap);
+
+  const bounds = [];
+
+  // Pin da base
+  const baseIcon = L.divIcon({
+    className: 'driver-marker',
+    html: '<div style="width:16px;height:16px;background:#2C5282;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+  });
+  L.marker([d.base.lat, d.base.lng], { icon: baseIcon })
+    .bindTooltip(t('baseTooltipPrefix') + ' ' + (d.base.type || '—'), { permanent: false, direction: 'top' })
+    .addTo(panelLayer);
+  bounds.push([d.base.lat, d.base.lng]);
+
+  // Histórico de áreas (fade gradual)
+  if (d.historyAreas && d.historyAreas.length > 0) {
+    d.historyAreas.forEach((h, idx) => {
+      const opacity = 0.3 - (idx * 0.05); // mais antigo = mais transparente
+      L.circle([h.lat, h.lng], {
+        radius: (h.radius || 10) * 1000,
+        color: '#4A9FE0',
+        fillColor: '#4A9FE0',
+        fillOpacity: Math.max(0.05, opacity * 0.5),
+        weight: 1,
+        opacity: Math.max(0.2, opacity),
+        dashArray: '3 4',
+      }).addTo(panelLayer);
+      bounds.push([h.lat, h.lng]);
+    });
+  }
+
+  // Área atual (destaque)
+  if (d.area && d.area.lat) {
+    L.circle([d.area.lat, d.area.lng], {
+      radius: (d.area.radius || 10) * 1000,
+      color: '#2C5282',
+      fillColor: '#4A9FE0',
+      fillOpacity: 0.2,
+      weight: 2,
+    })
+      .bindTooltip(t('areaTooltipPrefix') + ' ' + (d.area.radius || 10) + ' ' + t('kmUnit'), { permanent: false, direction: 'top' })
+      .addTo(panelLayer);
+
+    // Linha base → área
+    L.polyline([[d.base.lat, d.base.lng], [d.area.lat, d.area.lng]], {
+      color: '#2C5282',
+      weight: 1.5,
+      opacity: 0.5,
+      dashArray: '5 5',
+    }).addTo(panelLayer);
+
+    bounds.push([d.area.lat, d.area.lng]);
+  }
+
+  if (bounds.length > 1) {
+    panelMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 11 });
+  }
+
+  setTimeout(() => panelMap.invalidateSize(), 100);
+}
+
+function renderDriverHistory(d) {
+  const container = document.getElementById('panel-history');
+
+  if (!d.historyAreas || d.historyAreas.length === 0) {
+    container.innerHTML = `<div class="history-empty">${t('pHistoryEmpty')}${state.demoMode ? '' : t('pHistoryEmptyReal')}</div>`;
+    return;
+  }
+
+  container.innerHTML = d.historyAreas.map(h => `
+    <div class="history-item">
+      <span class="history-radius">${h.radius} km</span>
+      <div class="history-date">${h.dateLabel}</div>
+      <div class="history-address">${h.address}</div>
+    </div>
+  `).join('');
+}
+
+// ESC fecha o painel
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeDriverPanel();
+});
 
 // =================================================================
 // UTILS
@@ -898,17 +1739,26 @@ function haversine(lat1, lng1, lat2, lng2) {
 }
 
 function formatTime(d) {
-  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const locale = currentLang === 'pt' ? 'pt-BR' : currentLang === 'es' ? 'es-ES' : 'en-US';
+  return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatHoursAgo(h) {
-  if (h < 1) return 'menos de 1h';
-  if (h < 24) return Math.floor(h) + 'h';
-  return Math.floor(h / 24) + 'd';
+  if (h < 1) return t('lessThanHour');
+  const prefix = t('hoursAgoPrefix');
+  let val;
+  if (h < 24) val = Math.floor(h) + t('hoursAgoSuffix');
+  else val = Math.floor(h / 24) + t('daysAgoSuffix');
+  return prefix ? prefix + ' ' + val : val;
 }
 
-function showLoader(show) {
-  document.getElementById('loader').style.display = show ? 'flex' : 'none';
+function showLoader(show, msg) {
+  const loader = document.getElementById('loader');
+  loader.style.display = show ? 'flex' : 'none';
+  if (msg) {
+    const textEl = loader.querySelector('.loader-text');
+    if (textEl) textEl.textContent = msg;
+  }
 }
 
 function toggleDemoMode() {
@@ -916,13 +1766,16 @@ function toggleDemoMode() {
   const btn = document.getElementById('demo-toggle');
   const label = document.getElementById('demo-label');
   btn.classList.toggle('active', state.demoMode);
-  label.textContent = state.demoMode ? 'Modo demo ativo' : 'Modo demo';
+  label.textContent = state.demoMode ? t('demoModeActive') : t('demoMode');
   loadData();
 }
 
 // =================================================================
 // INIT
 // =================================================================
+
+// Aplica idioma (do localStorage ou default PT) antes de tudo
+setLanguage(currentLang);
 
 initMap();
 loadData();
