@@ -967,13 +967,12 @@ document.getElementById('submit-checkout-btn').addEventListener('click', async (
       notes: notes,
     };
 
-    const res = await fetch(CONFIG.scriptUrl, {
+    // Fire-and-forget como o checkin normal — não tenta ler JSON da resposta,
+    // porque CORS do Apps Script bloqueia o read mesmo com a requisição funcionando.
+    await fetch(CONFIG.scriptUrl, {
       method: 'POST',
       body: JSON.stringify(payload),
     });
-    const result = await res.json();
-
-    if (!result.success) throw new Error(result.error || 'Falha desconhecida');
 
     showToast(t('checkoutSent'), 'success');
 
