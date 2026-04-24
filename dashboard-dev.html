@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard · Street View LATAM</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -121,6 +123,35 @@
     font-family: inherit;
   }
   .refresh-btn:hover { background: var(--c-bg-tint); color: var(--c-primary); }
+
+  .export-wrap { position: relative; }
+  .export-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+    min-width: 240px;
+    z-index: 100;
+    padding: 6px;
+  }
+  .export-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--c-text);
+  }
+  .export-menu button:hover { background: var(--c-bg-tint); }
+  .export-menu .export-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; color: var(--c-primary-dark); }
+  .export-menu .export-sub { font-size: 10px; color: var(--c-text-muted); }
 
   .lang-switch {
     display: flex;
@@ -341,6 +372,19 @@
     margin-top: 4px;
   }
   .cts-card-stats strong { color: var(--c-text); }
+  .cts-period-select {
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--c-text);
+    cursor: pointer;
+    min-width: 140px;
+  }
+  .cts-period-select:hover { border-color: var(--c-accent); }
+  .cts-period-select:focus { outline: none; border-color: var(--c-primary); }
   .driver-table {
     width: 100%;
     border-collapse: collapse;
@@ -357,6 +401,115 @@
     border-bottom: 1px solid var(--c-border);
     background: #FAFBFC;
   }
+  .driver-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+  }
+  .driver-table th.sortable:hover {
+    color: var(--c-primary);
+    background: var(--c-bg-tint);
+  }
+  .driver-table th .sort-icon {
+    display: inline-block;
+    width: 10px;
+    margin-left: 4px;
+    opacity: 0.3;
+    font-size: 9px;
+  }
+  .driver-table th.sort-asc .sort-icon::after { content: '▲'; opacity: 1; }
+  .driver-table th.sort-desc .sort-icon::after { content: '▼'; opacity: 1; }
+  .driver-table th.sortable:not(.sort-asc):not(.sort-desc) .sort-icon::after { content: '▼'; }
+
+  /* Rankings section (Top economia / eficiência) */
+  .rankings-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .ranking-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+  }
+  .ranking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .ranking-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--c-primary-dark);
+  }
+  .ranking-sub {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+  .ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+  .ranking-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #F8FAFC;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 13px;
+  }
+  .ranking-item:hover { background: var(--c-bg-tint); }
+  .ranking-position {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--c-border);
+    color: var(--c-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .ranking-item:nth-child(1) .ranking-position { background: #FEF3C7; color: #854F0B; }
+  .ranking-item:nth-child(2) .ranking-position { background: #E2E8F0; color: #475569; }
+  .ranking-item:nth-child(3) .ranking-position { background: #FDE68A; color: #92400E; }
+  .ranking-name { flex: 1; font-weight: 500; }
+  .ranking-country {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-right: 8px;
+  }
+  .ranking-value {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .ranking-value.positive { color: #16A34A; }
+  .ranking-value.neutral { color: var(--c-primary); }
+  .ranking-toggle {
+    background: none;
+    border: 1px dashed var(--c-border);
+    color: var(--c-text-muted);
+    padding: 6px 10px;
+    margin-top: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    width: 100%;
+  }
+  .ranking-toggle:hover { border-color: var(--c-accent); color: var(--c-primary); }
   .driver-table td {
     padding: 10px 12px;
     border-bottom: 1px solid var(--c-border);
@@ -618,6 +771,7 @@
   /* RESPONSIVE */
   @media (max-width: 768px) {
     .scorecards { grid-template-columns: repeat(2, 1fr); }
+    .rankings-section { grid-template-columns: 1fr; }
     .scorecard.success { grid-column: span 2; }
     body { padding: 12px; }
     #map { height: 340px; }
@@ -677,6 +831,19 @@
     <div class="last-updated">
       <div class="refresh-dot"></div>
       <span id="last-updated">—</span>
+    </div>
+    <div class="export-wrap">
+      <button class="refresh-btn" onclick="toggleExportMenu(event)" title="Exportar">⬇ <span data-i18n="exportBtn">Exportar</span></button>
+      <div class="export-menu" id="export-menu" style="display:none;">
+        <button onclick="exportDashboardPdf()">
+          <div class="export-title" data-i18n="exportFull">Dashboard completo</div>
+          <div class="export-sub" data-i18n="exportFullSub">PDF de tudo que está na tela</div>
+        </button>
+        <button onclick="exportSummaryPdf()">
+          <div class="export-title" data-i18n="exportSummary">Relatório resumido</div>
+          <div class="export-sub" data-i18n="exportSummarySub">Scorecards + CTS + top drivers</div>
+        </button>
+      </div>
     </div>
     <button class="refresh-btn" onclick="loadData()" data-i18n="refresh">⟳ Atualizar</button>
   </div>
@@ -749,7 +916,9 @@
       <div class="section-title" data-i18n="ctsTitle">CTS Goal vs Achieved</div>
       <div class="section-sub" data-i18n="ctsSub">Progresso mensal por país (dados da mastersheet)</div>
     </div>
-    <div class="section-sub"><span id="cts-period">—</span></div>
+    <select id="cts-period-select" class="cts-period-select" onchange="setCtsPeriod(this.value)">
+      <!-- opções preenchidas via JS -->
+    </select>
   </div>
   <div class="cts-grid" id="cts-grid"></div>
 </div>
@@ -764,19 +933,48 @@
   <table class="driver-table">
     <thead>
       <tr>
-        <th data-i18n="thDriver">Driver</th>
-        <th data-i18n="thCountry">País</th>
-        <th class="hide-mobile" data-i18n="thCity">Cidade</th>
-        <th data-i18n="thBase">Base</th>
-        <th class="hide-mobile" data-i18n="thHmMonthly">HM mensal</th>
-        <th class="hide-mobile" data-i18n="thLastCheckin">Último check-in</th>
-        <th class="hide-mobile" data-i18n="thDistance">Km base→área</th>
-        <th data-i18n="thStatus">Status</th>
+        <th class="sortable" data-sort="name"><span data-i18n="thDriver">Driver</span><span class="sort-icon"></span></th>
+        <th class="sortable" data-sort="country"><span data-i18n="thCountry">País</span><span class="sort-icon"></span></th>
+        <th class="hide-mobile sortable" data-sort="city"><span data-i18n="thCity">Cidade</span><span class="sort-icon"></span></th>
+        <th class="sortable" data-sort="baseType"><span data-i18n="thBase">Base</span><span class="sort-icon"></span></th>
+        <th class="hide-mobile sortable" data-sort="hmMonthly"><span data-i18n="thHmMonthly">HM mensal</span><span class="sort-icon"></span></th>
+        <th class="hide-mobile sortable" data-sort="hoursAgo"><span data-i18n="thLastCheckin">Último check-in</span><span class="sort-icon"></span></th>
+        <th class="hide-mobile sortable" data-sort="distBaseToEdge"><span data-i18n="thDistance">Km base→área</span><span class="sort-icon"></span></th>
+        <th class="hide-mobile sortable" data-sort="savingsKm"><span data-i18n="thSavings">Economia</span><span class="sort-icon"></span></th>
+        <th class="sortable" data-sort="status"><span data-i18n="thStatus">Status</span><span class="sort-icon"></span></th>
       </tr>
     </thead>
     <tbody id="driver-tbody">
     </tbody>
   </table>
+</div>
+
+<div class="rankings-section" id="rankings-section" style="display:none;">
+  <div class="ranking-card">
+    <div class="ranking-header">
+      <div>
+        <div class="ranking-title" data-i18n="topSavings">Maior economia hotel mode</div>
+        <div class="ranking-sub" data-i18n="topSavingsSub">Drivers que mais economizam km/dia com o hotel</div>
+      </div>
+    </div>
+    <div class="ranking-list" id="top-savings-list"></div>
+    <button class="ranking-toggle" id="toggle-savings" onclick="toggleRanking()">
+      <span data-i18n="showMore">Ver lista completa</span>
+    </button>
+  </div>
+
+  <div class="ranking-card">
+    <div class="ranking-header">
+      <div>
+        <div class="ranking-title" data-i18n="topEfficiency">Maior eficiência</div>
+        <div class="ranking-sub" data-i18n="topEfficiencySub">Drivers com menor distância base→área</div>
+      </div>
+    </div>
+    <div class="ranking-list" id="top-efficiency-list"></div>
+    <button class="ranking-toggle" id="toggle-efficiency" onclick="toggleRanking()">
+      <span data-i18n="showMore">Ver lista completa</span>
+    </button>
+  </div>
 </div>
 
 <div class="panel-backdrop" id="panel-backdrop" onclick="closeDriverPanel()"></div>
@@ -933,6 +1131,21 @@ const I18N = {
     thLastCheckin: 'Último check-in',
     thDistance: 'Km base→área',
     thHmMonthly: 'HM mensal',
+    thSavings: 'Economia',
+    topSavings: 'Maior economia hotel mode',
+    topSavingsSub: 'Drivers que mais economizam km/dia com o hotel',
+    topEfficiency: 'Maior eficiência',
+    topEfficiencySub: 'Drivers com menor distância base→área',
+    showMore: 'Ver lista completa',
+    showLess: 'Ver top 5',
+    noData: 'Sem dados',
+    exportBtn: 'Exportar',
+    exportFull: 'Dashboard completo',
+    exportFullSub: 'PDF de tudo que está na tela',
+    exportSummary: 'Relatório resumido',
+    exportSummarySub: 'Scorecards + CTS + top drivers',
+    exportGenerating: 'Gerando PDF',
+    exportError: 'Erro ao gerar PDF',
     thStatus: 'Status',
     pillActive: '✓ Ativo',
     pillWarn24h: '> 24h',
@@ -1033,6 +1246,21 @@ const I18N = {
     thLastCheckin: 'Último check-in',
     thDistance: 'Km base→área',
     thHmMonthly: 'HM mensual',
+    thSavings: 'Ahorro',
+    topSavings: 'Mayor ahorro hotel mode',
+    topSavingsSub: 'Conductores que más ahorran km/día con el hotel',
+    topEfficiency: 'Mayor eficiencia',
+    topEfficiencySub: 'Conductores con menor distancia base→área',
+    showMore: 'Ver lista completa',
+    showLess: 'Ver top 5',
+    noData: 'Sin datos',
+    exportBtn: 'Exportar',
+    exportFull: 'Dashboard completo',
+    exportFullSub: 'PDF de todo lo que está en pantalla',
+    exportSummary: 'Informe resumido',
+    exportSummarySub: 'Scorecards + CTS + top conductores',
+    exportGenerating: 'Generando PDF',
+    exportError: 'Error al generar PDF',
     thStatus: 'Estado',
     pillActive: '✓ Activo',
     pillWarn24h: '> 24h',
@@ -1130,6 +1358,21 @@ const I18N = {
     thLastCheckin: 'Last check-in',
     thDistance: 'Km base→area',
     thHmMonthly: 'Monthly HM',
+    thSavings: 'Savings',
+    topSavings: 'Highest hotel mode savings',
+    topSavingsSub: 'Drivers saving the most km/day via hotel',
+    topEfficiency: 'Highest efficiency',
+    topEfficiencySub: 'Drivers with shortest base→area distance',
+    showMore: 'Show full list',
+    showLess: 'Show top 5',
+    noData: 'No data',
+    exportBtn: 'Export',
+    exportFull: 'Full dashboard',
+    exportFullSub: 'PDF of everything on screen',
+    exportSummary: 'Summary report',
+    exportSummarySub: 'Scorecards + CTS + top drivers',
+    exportGenerating: 'Generating PDF',
+    exportError: 'Error generating PDF',
     thStatus: 'Status',
     pillActive: '✓ Active',
     pillWarn24h: '> 24h',
@@ -1220,6 +1463,12 @@ document.querySelectorAll('.lang-switch button').forEach(btn => {
   btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
 });
 
+// Wire up de sort nos cabeçalhos da tabela (via delegation)
+document.addEventListener('click', (e) => {
+  const th = e.target.closest('.driver-table th.sortable');
+  if (th && th.dataset.sort) handleSortClick(th.dataset.sort);
+});
+
 
 let state = {
   drivers: [],
@@ -1229,6 +1478,12 @@ let state = {
   hmByCountry: [],
   hmByDriver: [],
   ctsGoals: [],
+  // Sort da tabela
+  sort: { column: 'name', direction: 'asc' },
+  // CTS filtro
+  ctsSelectedPeriod: null, // null = mês mais recente
+  // Top N expandido?
+  topExpanded: false,
 };
 
 let map = null;
@@ -1442,7 +1697,7 @@ async function fetchRealData() {
     // Casa→área edge (só se tem homeLat + última área)
     let distHomeToEdge = null;
     let distHomeToCenter = null;
-    if (d.homeLat && d.homeLng && checkin && checkin.destLat) {
+    if (isValidCoord(d.homeLat, d.homeLng) && checkin && checkin.destLat) {
       distHomeToCenter = Math.round(haversine(d.homeLat, d.homeLng, checkin.destLat, checkin.destLng) * 10) / 10;
       distHomeToEdge = Math.max(0,
         Math.round((distHomeToCenter - (checkin.destRadius || 0)) * 10) / 10
@@ -1683,19 +1938,420 @@ function applyFiltersAndRender() {
   renderMap(filtered);
   renderCtsGoals(filtered);
   renderTable(filtered, periodHours);
+  renderRankings(filtered);
+}
+
+function renderRankings(drivers) {
+  const section = document.getElementById('rankings-section');
+
+  // Top savings: só drivers em hotel mode com savings calculada
+  const savingsList = drivers
+    .filter(d => d.base && d.base.type === 'Hotel' && typeof d.savingsKm === 'number' && d.savingsKm > 0)
+    .sort((a, b) => b.savingsKm - a.savingsKm);
+
+  // Top efficiency: menor distância base→área (exclui valores null)
+  const efficiencyList = drivers
+    .filter(d => typeof d.distBaseToEdge === 'number' && d.distBaseToEdge >= 0)
+    .sort((a, b) => a.distBaseToEdge - b.distBaseToEdge);
+
+  if (savingsList.length === 0 && efficiencyList.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = '';
+
+  const limit = state.topExpanded ? Infinity : 5;
+
+  renderRankingList('top-savings-list', savingsList.slice(0, limit), 'savings');
+  renderRankingList('top-efficiency-list', efficiencyList.slice(0, limit), 'efficiency');
+
+  // Toggle buttons
+  document.getElementById('toggle-savings').querySelector('span').textContent = state.topExpanded ? t('showLess') : t('showMore');
+  document.getElementById('toggle-efficiency').querySelector('span').textContent = state.topExpanded ? t('showLess') : t('showMore');
+
+  // Esconde os botões se tem ≤ 5 drivers (não tem mais pra mostrar)
+  document.getElementById('toggle-savings').style.display = savingsList.length > 5 ? '' : 'none';
+  document.getElementById('toggle-efficiency').style.display = efficiencyList.length > 5 ? '' : 'none';
+}
+
+function renderRankingList(containerId, list, type) {
+  const container = document.getElementById(containerId);
+
+  if (list.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px 0;color:#94A3B8;font-size:12px;">' + t('noData') + '</div>';
+    return;
+  }
+
+  container.innerHTML = list.map((d, i) => {
+    let value, valueClass;
+    if (type === 'savings') {
+      value = '+' + d.savingsKm + ' km';
+      valueClass = 'positive';
+    } else {
+      value = d.distBaseToEdge + ' km';
+      valueClass = 'neutral';
+    }
+    return `
+      <div class="ranking-item" data-email="${d.email}">
+        <span class="ranking-position">${i + 1}</span>
+        <span class="ranking-name">${d.name}</span>
+        <span class="ranking-country">${d.country}</span>
+        <span class="ranking-value ${valueClass}">${value}</span>
+      </div>
+    `;
+  }).join('');
+
+  // Click pra abrir painel
+  container.querySelectorAll('.ranking-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const email = el.dataset.email;
+      openDriverPanelByEmail(email);
+    });
+  });
+}
+
+function toggleRanking() {
+  state.topExpanded = !state.topExpanded;
+  applyFiltersAndRender();
+}
+
+function setCtsPeriod(period) {
+  state.ctsSelectedPeriod = period;
+  applyFiltersAndRender();
+}
+
+// =================================================================
+// EXPORT PDF
+// =================================================================
+
+function toggleExportMenu(evt) {
+  evt.stopPropagation();
+  const menu = document.getElementById('export-menu');
+  menu.style.display = menu.style.display === 'none' ? '' : 'none';
+}
+
+// Fecha o menu ao clicar fora
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('export-menu');
+  if (menu && menu.style.display !== 'none' && !e.target.closest('.export-wrap')) {
+    menu.style.display = 'none';
+  }
+});
+
+/**
+ * Exporta o dashboard completo como PDF (captura da tela).
+ * Usa html2canvas + jsPDF. Esconde elementos do header de export durante a captura.
+ */
+async function exportDashboardPdf() {
+  document.getElementById('export-menu').style.display = 'none';
+
+  if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+    alert(t('exportError'));
+    return;
+  }
+
+  showLoader(true, t('exportGenerating') + '...');
+
+  try {
+    // Fecha painel lateral se estiver aberto (atrapalha a captura)
+    closeDriverPanel();
+    // Pequeno delay pra DOM estabilizar
+    await new Promise(r => setTimeout(r, 300));
+
+    const target = document.body;
+    const canvas = await html2canvas(target, {
+      scale: 1.5,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: '#F4F6F9',
+      ignoreElements: (el) => el.id === 'loader' || el.classList.contains('export-menu') || el.id === 'side-panel' || el.id === 'panel-backdrop',
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.85);
+    const pdfWidth = 210; // A4 portrait em mm
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: pdfHeight > pdfWidth ? 'portrait' : 'landscape',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    // Se a imagem for mais alta que A4, pagina
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgHeight = pdfHeight;
+
+    if (imgHeight <= pageHeight) {
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeight);
+    } else {
+      let heightLeft = imgHeight;
+      let position = 0;
+      while (heightLeft > 0) {
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pageHeight;
+        position -= pageHeight;
+        if (heightLeft > 0) pdf.addPage();
+      }
+    }
+
+    const filename = 'dashboard-latam-' + formatDateForFilename() + '.pdf';
+    pdf.save(filename);
+  } catch (err) {
+    console.error('Erro ao exportar PDF:', err);
+    alert(t('exportError') + ': ' + err.message);
+  } finally {
+    showLoader(false);
+  }
+}
+
+/**
+ * Exporta relatório resumido (scorecards + CTS + top drivers) em PDF.
+ * Gera um HTML limpo só com os componentes essenciais e converte.
+ */
+async function exportSummaryPdf() {
+  document.getElementById('export-menu').style.display = 'none';
+
+  if (typeof window.jspdf === 'undefined') {
+    alert(t('exportError'));
+    return;
+  }
+
+  showLoader(true, t('exportGenerating') + '...');
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    const filtered = state.drivers.filter(d => {
+      if (state.filter.country !== 'all' && d.country !== state.filter.country) return false;
+      return true;
+    });
+    const periodHours = state.filter.period * 24;
+
+    // Métricas do topo
+    const total = filtered.length;
+    const withCheckin = filtered.filter(d => d.hoursAgo !== null && d.hoursAgo <= periodHours).length;
+    const hotelMode = filtered.filter(d => d.base && d.base.type === 'Hotel').length;
+    const missing = filtered.filter(d => d.hoursAgo === null || d.hoursAgo > 24).length;
+    const issues = filtered.filter(d => d.vehicleStatus && d.vehicleStatus !== 'OK').length;
+    const savingsTotal = filtered.reduce((s, d) => (d.base && d.base.type === 'Hotel' && typeof d.savingsKm === 'number' && d.savingsKm > 0) ? s + d.savingsKm : s, 0);
+
+    // Tops
+    const topSavings = filtered
+      .filter(d => d.base && d.base.type === 'Hotel' && typeof d.savingsKm === 'number' && d.savingsKm > 0)
+      .sort((a, b) => b.savingsKm - a.savingsKm)
+      .slice(0, 10);
+
+    const topEfficiency = filtered
+      .filter(d => typeof d.distBaseToEdge === 'number' && d.distBaseToEdge >= 0)
+      .sort((a, b) => a.distBaseToEdge - b.distBaseToEdge)
+      .slice(0, 10);
+
+    // ---- Layout do PDF ----
+    let y = 15;
+    const leftX = 15;
+    const pageW = pdf.internal.pageSize.getWidth();
+
+    // Header
+    pdf.setFontSize(18);
+    pdf.setTextColor(26, 54, 93); // c-primary-dark
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Street View LATAM', leftX, y);
+    y += 6;
+
+    pdf.setFontSize(10);
+    pdf.setTextColor(100, 116, 139);
+    pdf.setFont('helvetica', 'normal');
+    const now = new Date();
+    const locale = currentLang === 'pt' ? 'pt-BR' : currentLang === 'es' ? 'es-ES' : 'en-US';
+    pdf.text(t('exportSummary') + ' · ' + now.toLocaleDateString(locale) + ' ' + formatTime(now), leftX, y);
+    y += 10;
+
+    // Filtro aplicado
+    if (state.filter.country !== 'all') {
+      pdf.setFontSize(9);
+      pdf.setTextColor(44, 82, 130);
+      pdf.text(t('filterCountry') + ' ' + state.filter.country + ' · ' + t('filterPeriod') + ' ' + state.filter.period + 'd', leftX, y);
+      y += 6;
+    }
+
+    // Linha separadora
+    pdf.setDrawColor(226, 232, 240);
+    pdf.line(leftX, y, pageW - leftX, y);
+    y += 8;
+
+    // Scorecards em 2 linhas
+    pdf.setFontSize(10);
+    pdf.setTextColor(100, 116, 139);
+    pdf.setFont('helvetica', 'bold');
+
+    const cardW = (pageW - 2 * leftX) / 3;
+    const drawCard = (label, value, sub, col, row, color) => {
+      const x = leftX + col * cardW;
+      const yy = y + row * 26;
+      pdf.setDrawColor(226, 232, 240);
+      pdf.roundedRect(x, yy, cardW - 4, 22, 2, 2);
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(label, x + 3, yy + 5);
+      pdf.setFontSize(18);
+      pdf.setTextColor(color[0], color[1], color[2]);
+      pdf.text(String(value), x + 3, yy + 14);
+      pdf.setFontSize(7);
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(sub || '', x + 3, yy + 19);
+    };
+
+    drawCard(t('scActiveDrivers'), total, withCheckin + ' ' + t('scWithCheckin'), 0, 0, [26, 54, 93]);
+    drawCard(t('scHotelMode'), hotelMode, (total > 0 ? Math.round(hotelMode/total*100) : 0) + t('scOfTotal'), 1, 0, [74, 159, 224]);
+    drawCard(t('scSavings'), Math.round(savingsTotal).toLocaleString() + ' km', t('scSavingsSub'), 2, 0, [34, 197, 94]);
+    drawCard(t('scMissing'), missing, t('scMissingSub'), 0, 1, [245, 158, 11]);
+    drawCard(t('scIssues'), issues, t('scIssuesSub'), 1, 1, [239, 68, 68]);
+
+    y += 56;
+
+    // CTS Goals
+    if (state.ctsGoals && state.ctsGoals.length > 0) {
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('ctsTitle'), leftX, y);
+      y += 6;
+
+      // Pega o período selecionado
+      const selectedPeriod = state.ctsSelectedPeriod || (() => {
+        const periods = [...new Set(state.ctsGoals.map(g => g.period))].sort((a, b) => {
+          const [ma, ya] = a.split('.').map(Number);
+          const [mb, yb] = b.split('.').map(Number);
+          return (yb - ya) || (mb - ma);
+        });
+        return periods[0];
+      })();
+
+      let ctsGoals = state.ctsGoals.filter(g => g.period === selectedPeriod);
+      if (state.filter.country !== 'all') {
+        ctsGoals = ctsGoals.filter(g => g.country === state.filter.country || g.country === translateCountry(state.filter.country));
+      }
+
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 116, 139);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(selectedPeriod, leftX, y);
+      y += 5;
+
+      // Tabela CTS simples
+      ctsGoals.forEach(g => {
+        const pct = g.ctsGoal > 0 ? Math.round((g.achieved / g.ctsGoal) * 100) : 0;
+        const color = pct >= 80 ? [22, 163, 74] : (pct >= 40 ? [245, 158, 11] : [239, 68, 68]);
+        pdf.setFontSize(9);
+        pdf.setTextColor(26, 54, 93);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(g.country, leftX, y);
+        pdf.setTextColor(color[0], color[1], color[2]);
+        pdf.text(pct + '%', leftX + 40, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(t('ctsAchieved') + ': ' + Math.round(g.achieved).toLocaleString() + ' / ' + t('ctsGoal') + ': ' + Math.round(g.ctsGoal).toLocaleString(), leftX + 60, y);
+        y += 5;
+      });
+
+      y += 5;
+    }
+
+    // Top drivers: economia
+    if (topSavings.length > 0) {
+      if (y > 240) { pdf.addPage(); y = 15; }
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('topSavings'), leftX, y);
+      y += 6;
+
+      topSavings.forEach((d, i) => {
+        if (y > 280) { pdf.addPage(); y = 15; }
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 116, 139);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(String(i + 1) + '.', leftX, y);
+        pdf.setTextColor(26, 54, 93);
+        pdf.text(d.name, leftX + 8, y);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(d.country, leftX + 90, y);
+        pdf.setTextColor(22, 163, 74);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('+' + d.savingsKm + ' km', leftX + 140, y);
+        y += 5;
+      });
+
+      y += 4;
+    }
+
+    // Top drivers: eficiência
+    if (topEfficiency.length > 0) {
+      if (y > 240) { pdf.addPage(); y = 15; }
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('topEfficiency'), leftX, y);
+      y += 6;
+
+      topEfficiency.forEach((d, i) => {
+        if (y > 280) { pdf.addPage(); y = 15; }
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 116, 139);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(String(i + 1) + '.', leftX, y);
+        pdf.setTextColor(26, 54, 93);
+        pdf.text(d.name, leftX + 8, y);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(d.country, leftX + 90, y);
+        pdf.setTextColor(44, 82, 130);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(d.distBaseToEdge + ' km', leftX + 140, y);
+        y += 5;
+      });
+    }
+
+    // Footer
+    const pageCount = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(7);
+      pdf.setTextColor(148, 163, 184);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Aceolution do Brasil · ' + now.toLocaleDateString(locale), leftX, 287);
+      pdf.text(String(i) + ' / ' + pageCount, pageW - leftX - 10, 287);
+    }
+
+    const filename = 'relatorio-latam-' + formatDateForFilename() + '.pdf';
+    pdf.save(filename);
+  } catch (err) {
+    console.error('Erro ao exportar relatório:', err);
+    alert(t('exportError') + ': ' + err.message);
+  } finally {
+    showLoader(false);
+  }
+}
+
+function formatDateForFilename() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 }
 
 function renderCtsGoals(filteredDrivers) {
   const section = document.getElementById('cts-section');
   const grid = document.getElementById('cts-grid');
-  const periodEl = document.getElementById('cts-period');
+  const select = document.getElementById('cts-period-select');
 
   if (!state.ctsGoals || state.ctsGoals.length === 0) {
     section.style.display = 'none';
     return;
   }
 
-  // Pega o período mais recente (ex: "4.2026" > "3.2026")
+  // Agrupa goals por período (ex: "4.2026" → [...])
   const byPeriod = {};
   state.ctsGoals.forEach(g => {
     if (!byPeriod[g.period]) byPeriod[g.period] = [];
@@ -1713,8 +2369,29 @@ function renderCtsGoals(filteredDrivers) {
     return;
   }
 
-  const latestPeriod = sortedPeriods[0];
-  let goals = byPeriod[latestPeriod];
+  // Popula o dropdown
+  const monthNames = currentLang === 'pt'
+    ? ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+    : currentLang === 'es'
+    ? ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+    : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const periodLabel = (p) => {
+    const [m, y] = p.split('.').map(Number);
+    return (monthNames[m - 1] || m) + '/' + y;
+  };
+
+  select.innerHTML = sortedPeriods.map(p =>
+    `<option value="${p}">${periodLabel(p)}</option>`
+  ).join('');
+
+  // Período selecionado: state.ctsSelectedPeriod (se válido) ou mais recente
+  const selectedPeriod = (state.ctsSelectedPeriod && byPeriod[state.ctsSelectedPeriod])
+    ? state.ctsSelectedPeriod
+    : sortedPeriods[0];
+  select.value = selectedPeriod;
+
+  let goals = byPeriod[selectedPeriod];
 
   // Filtro por país (se o filtro atual não for "all")
   if (state.filter.country !== 'all') {
@@ -1722,20 +2399,12 @@ function renderCtsGoals(filteredDrivers) {
   }
 
   if (goals.length === 0) {
-    section.style.display = 'none';
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px 0;color:#94A3B8;font-size:12px;">' + t('noData') + '</div>';
+    section.style.display = '';
     return;
   }
 
   section.style.display = '';
-
-  // Formato período: "4.2026" → "Abril/2026" etc.
-  const [month, year] = latestPeriod.split('.').map(Number);
-  const monthNames = currentLang === 'pt'
-    ? ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
-    : currentLang === 'es'
-    ? ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-    : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  periodEl.textContent = (monthNames[month - 1] || month) + '/' + year;
 
   grid.innerHTML = goals.map(g => {
     const pct = g.ctsGoal > 0 ? (g.achieved / g.ctsGoal) * 100 : 0;
@@ -1818,11 +2487,15 @@ function renderTable(drivers, periodHours) {
   const tbody = document.getElementById('driver-tbody');
   tbody.innerHTML = '';
 
-  const sorted = [...drivers].sort((a, b) => {
-    // Prioriza drivers com issue, depois sem check-in recente
-    const scoreA = (a.vehicleStatus !== 'OK' ? 1000 : 0) + (a.hoursAgo === null ? 500 : a.hoursAgo);
-    const scoreB = (b.vehicleStatus !== 'OK' ? 1000 : 0) + (b.hoursAgo === null ? 500 : b.hoursAgo);
-    return scoreB - scoreA;
+  // Aplica sort baseado no state
+  const sorted = sortDrivers([...drivers], state.sort.column, state.sort.direction);
+
+  // Atualiza indicadores visuais nos headers
+  document.querySelectorAll('.driver-table th.sortable').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (th.dataset.sort === state.sort.column) {
+      th.classList.add(state.sort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+    }
   });
 
   sorted.forEach(d => {
@@ -1835,6 +2508,14 @@ function renderTable(drivers, periodHours) {
     if (d.hmMonthly === 'Yes') hmCell = '<span class="status-pill status-active">✓ Yes</span>';
     else if (d.hmMonthly === 'No') hmCell = '<span class="status-pill status-neutral">No</span>';
 
+    // Economia cell
+    let savingsCell = '—';
+    if (typeof d.savingsKm === 'number' && d.base && d.base.type === 'Hotel') {
+      const sign = d.savingsKm > 0 ? '+' : '';
+      const color = d.savingsKm > 0 ? '#16A34A' : (d.savingsKm < 0 ? '#EF4444' : '#64748B');
+      savingsCell = `<span style="color:${color};font-weight:500;">${sign}${d.savingsKm} km</span>`;
+    }
+
     row.innerHTML = `
       <td><strong>${d.name}</strong></td>
       <td><span class="country-tag">${d.country}</span></td>
@@ -1843,13 +2524,69 @@ function renderTable(drivers, periodHours) {
       <td class="hide-mobile">${hmCell}</td>
       <td class="hide-mobile">${hoursDisplay}</td>
       <td class="hide-mobile">${d.distBaseToEdge !== null && d.distBaseToEdge !== undefined ? d.distBaseToEdge + ' km' : '—'}</td>
+      <td class="hide-mobile">${savingsCell}</td>
       <td>${statusPill}</td>
     `;
 
     row.addEventListener('click', () => openDriverPanel(d));
-
     tbody.appendChild(row);
   });
+}
+
+/**
+ * Ordena array de drivers pela coluna especificada.
+ * Drivers sem valor na coluna sempre vão pro fim.
+ */
+function sortDrivers(drivers, column, direction) {
+  const dir = direction === 'asc' ? 1 : -1;
+
+  const getValue = (d) => {
+    switch (column) {
+      case 'name': return (d.name || '').toLowerCase();
+      case 'country': return (d.country || '').toLowerCase();
+      case 'city': return (d.city || '').toLowerCase();
+      case 'baseType': return d.base ? d.base.type : '';
+      case 'hmMonthly': return d.hmMonthly === 'Yes' ? 1 : (d.hmMonthly === 'No' ? 0 : -1);
+      case 'hoursAgo': return (d.hoursAgo === null || d.hoursAgo === undefined) ? null : d.hoursAgo;
+      case 'distBaseToEdge': return (d.distBaseToEdge === null || d.distBaseToEdge === undefined) ? null : d.distBaseToEdge;
+      case 'savingsKm': return (typeof d.savingsKm !== 'number' || !d.base || d.base.type !== 'Hotel') ? null : d.savingsKm;
+      case 'status': {
+        // Prioridade: crítico > alerta > > 24h > ativo > sem check-in
+        if (d.vehicleStatus === 'Critical Issue') return 4;
+        if (d.vehicleStatus === 'Minor Issue') return 3;
+        if (d.hoursAgo === null) return 0;
+        if (d.hoursAgo > 24) return 2;
+        return 1;
+      }
+      default: return '';
+    }
+  };
+
+  return drivers.sort((a, b) => {
+    const va = getValue(a);
+    const vb = getValue(b);
+
+    // Null/missing sempre vai pro fim (independente da direção)
+    if (va === null && vb === null) return 0;
+    if (va === null) return 1;
+    if (vb === null) return -1;
+
+    if (typeof va === 'string') return va.localeCompare(vb) * dir;
+    return (va - vb) * dir;
+  });
+}
+
+function handleSortClick(column) {
+  if (state.sort.column === column) {
+    // Mesma coluna → toggle direction
+    state.sort.direction = state.sort.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    // Nova coluna → inicia em asc pra texto, desc pra números
+    state.sort.column = column;
+    const numericColumns = ['hoursAgo', 'distBaseToEdge', 'savingsKm', 'hmMonthly', 'status'];
+    state.sort.direction = numericColumns.includes(column) ? 'desc' : 'asc';
+  }
+  applyFiltersAndRender();
 }
 
 function getStatusPill(d, periodHours) {
@@ -1910,7 +2647,7 @@ function openDriverPanel(d) {
   // Seção de casa/eficiência — aparece sempre que tiver coordenadas de casa cadastradas
   const efficiencySection = document.getElementById('panel-efficiency-section');
   const isHotel = d.base && d.base.type === 'Hotel';
-  const hasHome = d.homeLat && d.homeLng;
+  const hasHome = isValidCoord(d.homeLat, d.homeLng);
   const hasEfficiencyData = isHotel && hasHome && typeof d.distHomeToEdge === 'number';
 
   if (hasHome) {
@@ -2020,7 +2757,7 @@ function renderPanelMap(d) {
   }
 
   // Agora mostramos o mapa se tiver QUALQUER coordenada (casa, base ou área).
-  const hasHome = d.homeLat && d.homeLng;
+  const hasHome = isValidCoord(d.homeLat, d.homeLng);
   const hasBase = d.base && d.base.lat;
   const hasArea = d.area && d.area.lat;
 
@@ -2122,22 +2859,29 @@ function renderPanelMap(d) {
       .bindTooltip(t('areaTooltipPrefix') + ' ' + (d.area.radius || 10) + ' ' + t('kmUnit'), { permanent: false, direction: 'top' })
       .addTo(panelLayer);
 
-    // Linha base → área
-    L.polyline([[d.base.lat, d.base.lng], [d.area.lat, d.area.lng]], {
-      color: '#2C5282',
-      weight: 1.5,
-      opacity: 0.5,
-      dashArray: '5 5',
-    }).addTo(panelLayer);
+    // Linha base → área (só se tiver base)
+    if (hasBase) {
+      L.polyline([[d.base.lat, d.base.lng], [d.area.lat, d.area.lng]], {
+        color: '#2C5282',
+        weight: 1.5,
+        opacity: 0.5,
+        dashArray: '5 5',
+      }).addTo(panelLayer);
+    }
 
     bounds.push([d.area.lat, d.area.lng]);
   }
 
-  if (bounds.length > 1) {
-    panelMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 11 });
-  }
-
-  setTimeout(() => panelMap.invalidateSize(), 100);
+  // Ajusta viewport: se tem múltiplos pontos, usa fitBounds;
+  // se tem só um ponto (só casa cadastrada), centraliza com zoom fixo confortável
+  setTimeout(() => {
+    panelMap.invalidateSize();
+    if (bounds.length > 1) {
+      panelMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 11 });
+    } else if (bounds.length === 1) {
+      panelMap.setView(bounds[0], 13);
+    }
+  }, 200);
 }
 
 async function renderDriverHistory(d) {
@@ -2206,6 +2950,22 @@ document.addEventListener('keydown', (e) => {
 // =================================================================
 // UTILS
 // =================================================================
+
+/**
+ * Valida se um par lat/lng é uma coordenada geograficamente válida.
+ * Protege contra erros de dado na planilha (0,0, números sem decimal como
+ * -30169202 em vez de -30.169202, strings vazias, null, undefined, etc).
+ * Lat vai de -90 a 90, Lng vai de -180 a 180.
+ */
+function isValidCoord(lat, lng) {
+  if (lat === null || lat === undefined || lng === null || lng === undefined) return false;
+  if (typeof lat !== 'number' || typeof lng !== 'number') return false;
+  if (isNaN(lat) || isNaN(lng)) return false;
+  if (lat === 0 && lng === 0) return false;  // (0,0) é no meio do oceano, quase certeza erro
+  if (lat < -90 || lat > 90) return false;
+  if (lng < -180 || lng > 180) return false;
+  return true;
+}
 
 function haversine(lat1, lng1, lat2, lng2) {
   if (!lat1 || !lat2) return 0;
