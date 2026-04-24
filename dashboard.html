@@ -1740,8 +1740,8 @@ function renderCtsGoals(filteredDrivers) {
     const fillWidth = Math.min(100, pct);
     let pctClass = 'behind';
     let barColor = '#EF4444';
-    if (pct >= 100) { pctClass = 'ok'; barColor = '#22C55E'; }
-    else if (pct >= 80) { pctClass = 'close'; barColor = '#F59E0B'; }
+    if (pct >= 80) { pctClass = 'ok'; barColor = '#22C55E'; }
+    else if (pct >= 40) { pctClass = 'close'; barColor = '#F59E0B'; }
 
     const pending = g.tkmPending;
     const pendingLabel = pending >= 0
