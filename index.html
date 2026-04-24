@@ -162,6 +162,53 @@
     font-weight: 600;
   }
 
+  .mode-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 18px 12px;
+    border: 2px solid #d5d7db;
+    background: white;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    color: #1A202C;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .mode-btn:hover {
+    border-color: #4A9FE0;
+    background: #EBF4FB;
+  }
+  .mode-btn.active {
+    border-color: #2C5282;
+    background: #EBF4FB;
+    box-shadow: 0 0 0 3px rgba(74,159,224,0.2);
+  }
+  .mode-btn .mode-icon {
+    font-size: 28px;
+    color: #2C5282;
+    line-height: 1;
+  }
+  .mode-btn .mode-label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .mode-btn .mode-sub {
+    font-size: 11px;
+    color: #64748B;
+    line-height: 1.3;
+  }
+  @media (max-width: 480px) {
+    .mode-buttons { grid-template-columns: 1fr; }
+  }
+
   .btn-group {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -377,6 +424,25 @@
     </select>
   </div>
 
+  <div id="mode-card" class="card hidden">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title" data-i18n="modeTitle">O que você vai fazer agora?</div>
+    </div>
+    <div class="mode-buttons">
+      <button type="button" class="mode-btn" id="mode-checkin" onclick="selectMode('checkin')">
+        <span class="mode-icon">▶</span>
+        <span class="mode-label" data-i18n="modeStarting">Começando o dia</span>
+        <span class="mode-sub" data-i18n="modeStartingSub">Check-in completo (base, área, status)</span>
+      </button>
+      <button type="button" class="mode-btn" id="mode-checkout" onclick="selectMode('checkout')">
+        <span class="mode-icon">⏹</span>
+        <span class="mode-label" data-i18n="modeFinishing">Terminando o dia</span>
+        <span class="mode-sub" data-i18n="modeFinishingSub">Checkout rápido (km mapeados + observações)</span>
+      </button>
+    </div>
+  </div>
+
   <div id="base-card" class="card hidden">
     <div class="step-header">
       <div class="step-num">2</div>
@@ -495,7 +561,38 @@
     <textarea id="notes" rows="2"></textarea>
   </div>
 
+  <!-- ===== Cards de CHECKOUT (modo terminando) ===== -->
+  <div id="checkout-card" class="card hidden">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title" data-i18n="checkoutTitle">Fim do dia</div>
+    </div>
+
+    <div id="checkout-base-info" class="info-banner hidden" style="background:#EBF4FB;border-left:3px solid #4A9FE0;padding:10px;border-radius:6px;margin-bottom:12px;font-size:13px;color:#1A365D;">
+      <span data-i18n="checkoutCheckinFound">Check-in da manhã encontrado, vou atualizar a mesma linha.</span>
+    </div>
+    <div id="checkout-no-checkin" class="info-banner hidden" style="background:#FEF3C7;border-left:3px solid #F59E0B;padding:10px;border-radius:6px;margin-bottom:12px;font-size:13px;color:#92400E;">
+      <span data-i18n="checkoutNoCheckin">⚠ Não encontrei seu check-in da manhã. Vou registrar como "checkout sem check-in".</span>
+    </div>
+
+    <label data-i18n="checkoutLocation">Sua localização agora</label>
+    <button type="button" class="btn-action" id="checkout-gps-btn" onclick="captureCheckoutGps()">
+      <span data-i18n="useGps">📍 Usar GPS</span>
+    </button>
+    <div id="checkout-gps-status" style="font-size:12px;color:#64748B;margin-top:4px;"></div>
+
+    <label style="margin-top:14px;" data-i18n="tkmMapped">TKM mapeados hoje</label>
+    <input type="number" id="checkout-tkm" inputmode="decimal" step="0.01" min="0" placeholder="Ex: 145.5">
+
+    <label style="margin-top:10px;" data-i18n="kmDriven">Total de KM dirigidos hoje</label>
+    <input type="number" id="checkout-km" inputmode="decimal" step="0.01" min="0" placeholder="Ex: 320.0">
+
+    <label style="margin-top:10px;" data-i18n="checkoutNotesLabel">Observações <span class="label-sub" data-i18n="notesOptional">(opcional)</span></label>
+    <textarea id="checkout-notes" rows="3" data-i18n-placeholder="checkoutNotesPlaceholder" placeholder="Ex: parei mais cedo por chuva, problema de bateria no carro..."></textarea>
+  </div>
+
   <button id="submit-btn" class="submit-btn hidden" data-i18n="submit">Enviar check-in</button>
+  <button id="submit-checkout-btn" class="submit-btn hidden" data-i18n="submitCheckout">Enviar checkout</button>
 
 </div>
 
@@ -524,6 +621,26 @@ const I18N = {
     step3: 'Onde você está agora',
     step4: 'Área de mapeamento de hoje',
     step5: 'Status e observações',
+    modeTitle: 'O que você vai fazer agora?',
+    modeStarting: 'Começando o dia',
+    modeStartingSub: 'Check-in completo (base, área, status)',
+    modeFinishing: 'Terminando o dia',
+    modeFinishingSub: 'Checkout rápido (km mapeados + observações)',
+    checkoutTitle: 'Fim do dia',
+    checkoutCheckinFound: '✓ Check-in da manhã encontrado, vou atualizar a mesma linha.',
+    checkoutNoCheckin: '⚠ Não encontrei seu check-in da manhã. Vou registrar como "checkout sem check-in".',
+    checkoutLocation: 'Sua localização agora',
+    tkmMapped: 'TKM mapeados hoje',
+    kmDriven: 'Total de KM dirigidos hoje',
+    checkoutNotesLabel: 'Observações',
+    checkoutNotesPlaceholder: 'Ex: parei mais cedo por chuva, problema de bateria no carro...',
+    submitCheckout: 'Enviar checkout',
+    checkoutSent: 'Checkout enviado!',
+    fillRequired: 'Preencha os campos obrigatórios',
+    gpsCapturing: 'Capturando GPS...',
+    gpsOk: '✓ GPS capturado',
+    gpsError: 'Erro ao capturar GPS',
+    checkingExistingCheckin: 'Verificando se já fez check-in hoje...',
     selectDriver: 'Selecione seu nome',
     chooseOption: '-- Escolha --',
     currentBase: 'Sua base atual:',
@@ -568,6 +685,26 @@ const I18N = {
     step3: 'Dónde está ahora',
     step4: 'Área de mapeo de hoy',
     step5: 'Estado y observaciones',
+    modeTitle: '¿Qué vas a hacer ahora?',
+    modeStarting: 'Comenzando el día',
+    modeStartingSub: 'Check-in completo (base, área, estado)',
+    modeFinishing: 'Terminando el día',
+    modeFinishingSub: 'Checkout rápido (km mapeados + observaciones)',
+    checkoutTitle: 'Fin del día',
+    checkoutCheckinFound: '✓ Check-in de la mañana encontrado, actualizaré la misma fila.',
+    checkoutNoCheckin: '⚠ No encontré tu check-in de la mañana. Registraré como "checkout sin check-in".',
+    checkoutLocation: 'Tu ubicación ahora',
+    tkmMapped: 'TKM mapeados hoy',
+    kmDriven: 'Total de KM conducidos hoy',
+    checkoutNotesLabel: 'Observaciones',
+    checkoutNotesPlaceholder: 'Ej: paré antes por lluvia, problema de batería en el auto...',
+    submitCheckout: 'Enviar checkout',
+    checkoutSent: '¡Checkout enviado!',
+    fillRequired: 'Completa los campos obligatorios',
+    gpsCapturing: 'Capturando GPS...',
+    gpsOk: '✓ GPS capturado',
+    gpsError: 'Error al capturar GPS',
+    checkingExistingCheckin: 'Verificando si ya hiciste check-in hoy...',
     selectDriver: 'Seleccione su nombre',
     chooseOption: '-- Elegir --',
     currentBase: 'Su base actual:',
@@ -620,6 +757,9 @@ let state = {
   notes: '',
   changingBase: false,
   newBaseType: null,
+  // v5: checkout
+  mode: null,           // 'checkin' | 'checkout' | null
+  checkoutGps: null,    // {lat, lng}
 };
 let maps = {};
 let destCircle = null;
@@ -684,8 +824,178 @@ async function loadDrivers() {
 document.getElementById('driver-select').addEventListener('change', async (e) => {
   if (!e.target.value) return;
   state.driver = JSON.parse(e.target.value);
-  document.getElementById('base-card').classList.remove('hidden');
-  await loadBase();
+  // Mostra primeiro o card de modo (Começando/Terminando) — não vai direto pra base
+  document.getElementById('mode-card').classList.remove('hidden');
+  // Esconde tudo até escolher o modo (caso tenha trocado de driver)
+  document.getElementById('base-card').classList.add('hidden');
+  document.getElementById('checkout-card').classList.add('hidden');
+  document.getElementById('submit-btn').classList.add('hidden');
+  document.getElementById('submit-checkout-btn').classList.add('hidden');
+  // Reset visual dos mode buttons
+  document.getElementById('mode-checkin').classList.remove('active');
+  document.getElementById('mode-checkout').classList.remove('active');
+  state.mode = null;
+  state.checkoutGps = null;
+});
+
+/**
+ * Usuário escolheu modo: 'checkin' (fluxo completo) ou 'checkout' (form rápido).
+ */
+function selectMode(mode) {
+  state.mode = mode;
+  document.getElementById('mode-checkin').classList.toggle('active', mode === 'checkin');
+  document.getElementById('mode-checkout').classList.toggle('active', mode === 'checkout');
+
+  if (mode === 'checkin') {
+    // Modo normal: esconde checkout, mostra fluxo de check-in
+    document.getElementById('checkout-card').classList.add('hidden');
+    document.getElementById('submit-checkout-btn').classList.add('hidden');
+    document.getElementById('base-card').classList.remove('hidden');
+    loadBase();
+  } else {
+    // Modo checkout: esconde tudo do checkin, mostra só card de checkout
+    document.getElementById('base-card').classList.add('hidden');
+    document.getElementById('origin-card')?.classList.add('hidden');
+    document.getElementById('dest-card')?.classList.add('hidden');
+    document.getElementById('status-card')?.classList.add('hidden');
+    document.getElementById('submit-btn').classList.add('hidden');
+    document.getElementById('checkout-card').classList.remove('hidden');
+    document.getElementById('submit-checkout-btn').classList.remove('hidden');
+    checkExistingCheckin();
+  }
+}
+
+/**
+ * Verifica via getDashboardData se o driver fez check-in hoje.
+ * Mostra o banner correto (encontrado / não encontrado).
+ */
+async function checkExistingCheckin() {
+  const foundBanner = document.getElementById('checkout-base-info');
+  const noBanner = document.getElementById('checkout-no-checkin');
+  foundBanner.classList.add('hidden');
+  noBanner.classList.add('hidden');
+
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getDashboardData&days=1');
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+
+    const checkin = data.data.lastCheckins[state.driver.email];
+    const today = new Date().toISOString().split('T')[0];
+
+    let hasToday = false;
+    if (checkin && checkin.timestamp) {
+      const checkinDate = new Date(checkin.timestamp).toISOString().split('T')[0];
+      hasToday = checkinDate === today;
+    }
+
+    if (hasToday) {
+      foundBanner.classList.remove('hidden');
+    } else {
+      noBanner.classList.remove('hidden');
+    }
+  } catch (err) {
+    // Em caso de erro silencioso, mostra o banner de "sem check-in" como fallback seguro
+    console.warn('Erro verificando check-in existente:', err);
+    noBanner.classList.remove('hidden');
+  }
+}
+
+/**
+ * Captura GPS atual pro checkout (proof of work).
+ */
+function captureCheckoutGps() {
+  const status = document.getElementById('checkout-gps-status');
+  const btn = document.getElementById('checkout-gps-btn');
+  status.textContent = t('gpsCapturing');
+  status.style.color = '#64748B';
+  btn.disabled = true;
+
+  if (!navigator.geolocation) {
+    status.textContent = t('gpsError');
+    status.style.color = '#EF4444';
+    btn.disabled = false;
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      state.checkoutGps = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      };
+      status.textContent = t('gpsOk') + ' (' + pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5) + ')';
+      status.style.color = '#16A34A';
+      btn.disabled = false;
+    },
+    (err) => {
+      status.textContent = t('gpsError') + ': ' + err.message;
+      status.style.color = '#EF4444';
+      btn.disabled = false;
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+/**
+ * Handler do botão de envio do checkout.
+ */
+document.getElementById('submit-checkout-btn').addEventListener('click', async () => {
+  const tkm = document.getElementById('checkout-tkm').value.trim();
+  const km = document.getElementById('checkout-km').value.trim();
+  const notes = document.getElementById('checkout-notes').value.trim();
+
+  if (!tkm || !km) {
+    showToast(t('fillRequired'), 'error');
+    return;
+  }
+
+  const btn = document.getElementById('submit-checkout-btn');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    const payload = {
+      type: 'checkout',
+      driverEmail: state.driver.email,
+      driverName: state.driver.name,
+      country: state.driver.country,
+      checkoutLat: state.checkoutGps ? state.checkoutGps.lat : '',
+      checkoutLng: state.checkoutGps ? state.checkoutGps.lng : '',
+      tkmMapped: parseFloat(tkm),
+      totalKmDriven: parseFloat(km),
+      notes: notes,
+    };
+
+    const res = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+
+    if (!result.success) throw new Error(result.error || 'Falha desconhecida');
+
+    showToast(t('checkoutSent'), 'success');
+
+    // Reseta o formulário após 2s
+    setTimeout(() => {
+      document.getElementById('checkout-tkm').value = '';
+      document.getElementById('checkout-km').value = '';
+      document.getElementById('checkout-notes').value = '';
+      document.getElementById('checkout-gps-status').textContent = '';
+      state.checkoutGps = null;
+      document.getElementById('driver-select').value = '';
+      document.getElementById('mode-card').classList.add('hidden');
+      document.getElementById('checkout-card').classList.add('hidden');
+      document.getElementById('submit-checkout-btn').classList.add('hidden');
+      btn.disabled = false;
+      btn.textContent = t('submitCheckout');
+    }, 2000);
+  } catch (err) {
+    showToast((err.message || 'Erro'), 'error');
+    btn.disabled = false;
+    btn.textContent = t('submitCheckout');
+  }
 });
 
 async function loadBase() {
@@ -851,8 +1161,8 @@ function initDestMap() {
   }
 
   const map = L.map('dest-map').setView([centerLat, centerLng], zoom);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO', subdomains: 'abcd',
     maxZoom: 18,
   }).addTo(map);
 
@@ -978,8 +1288,8 @@ function showMap(containerId, lat, lng) {
     maps[containerId].remove();
   }
   const map = L.map(containerId).setView([lat, lng], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO', subdomains: 'abcd',
     maxZoom: 18,
   }).addTo(map);
   L.marker([lat, lng]).addTo(map);
