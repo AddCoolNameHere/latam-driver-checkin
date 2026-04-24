@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · Street View LATAM</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --c-primary: #2C5282;
+    --c-primary-dark: #1A365D;
+    --c-accent: #4A9FE0;
+    --c-bg-tint: #EBF4FB;
+    --c-bg: #F4F6F9;
+    --c-surface: #FFFFFF;
+    --c-border: #E2E8F0;
+    --c-border-strong: #CBD5E1;
+    --c-text: #1A202C;
+    --c-text-muted: #64748B;
+    --c-text-dim: #94A3B8;
+    --c-success: #22C55E;
+    --c-success-bg: #ECFDF5;
+    --c-warn: #F59E0B;
+    --c-warn-bg: #FEF3C7;
+    --c-danger: #EF4444;
+    --c-danger-bg: #FEE2E2;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* HEADER */
+  .header {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-logo { height: 32px; width: auto; }
+  .brand-divider { width: 1px; height: 28px; background: var(--c-border-strong); }
+  .brand-sub {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    letter-spacing: 1.2px;
+    line-height: 1.2;
+  }
+  .brand-sub span {
+    display: block;
+    color: var(--c-primary);
+    font-size: 12px;
+  }
+  .header-right {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--c-text-muted);
+  }
+  .last-updated {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .refresh-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c-success);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .demo-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--c-warn-bg);
+    border: 1px solid var(--c-warn);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #854F0B;
+    font-weight: 500;
+  }
+  .demo-toggle.active {
+    background: var(--c-warn);
+    color: white;
+  }
+  .refresh-btn {
+    background: none;
+    border: 1px solid var(--c-border-strong);
+    color: var(--c-text-muted);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+  }
+  .refresh-btn:hover { background: var(--c-bg-tint); color: var(--c-primary); }
+
+  .lang-switch {
+    display: flex;
+    background: var(--c-bg);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 0;
+  }
+  .lang-switch button {
+    background: none;
+    border: none;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+  }
+  .lang-switch button.active {
+    background: white;
+    color: var(--c-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  /* FILTERS */
+  .filters {
+    background: white;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .filter-label {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    margin-right: 4px;
+  }
+  .filter-chip {
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--c-text);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .filter-chip:hover { border-color: var(--c-primary); color: var(--c-primary); }
+  .filter-chip.active {
+    background: var(--c-primary);
+    color: white;
+    border-color: var(--c-primary);
+  }
+
+  /* SCORECARDS */
+  .scorecards {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .scorecard {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+  .scorecard::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--c-primary);
+  }
+  .scorecard.warn::before { background: var(--c-warn); }
+  .scorecard.danger::before { background: var(--c-danger); }
+  .scorecard.accent::before { background: var(--c-accent); }
+  .scorecard.success::before { background: #22C55E; }
+  .scorecard.success .scorecard-value { color: #16A34A; }
+
+  .scorecard-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .scorecard-value {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--c-text);
+    line-height: 1;
+  }
+  .scorecard-sub {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 6px;
+  }
+
+  /* MAP */
+  .map-section {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--c-primary-dark);
+  }
+  .section-sub {
+    font-size: 11px;
+    color: var(--c-text-muted);
+  }
+  #map {
+    height: 480px;
+    border-radius: 8px;
+    border: 1px solid var(--c-border);
+  }
+  .map-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--c-text-muted);
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  /* TABLE */
+  .table-section {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .cts-section {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .cts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .cts-card {
+    background: #F8FAFC;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid #E2E8F0;
+  }
+  .cts-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .cts-card-country {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-primary-dark);
+  }
+  .cts-card-pct {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .cts-card-pct.ok { color: #16A34A; }
+  .cts-card-pct.close { color: #F59E0B; }
+  .cts-card-pct.behind { color: #EF4444; }
+  .cts-progress {
+    height: 6px;
+    background: #E2E8F0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .cts-progress-fill {
+    height: 100%;
+    transition: width 0.3s;
+  }
+  .cts-card-stats {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+  .cts-card-stats strong { color: var(--c-text); }
+  .driver-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .driver-table th {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--c-border);
+    background: #FAFBFC;
+  }
+  .driver-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .driver-table tr:hover td {
+    background: var(--c-bg-tint);
+    cursor: pointer;
+  }
+  .driver-table tr:last-child td { border-bottom: none; }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .status-active { background: var(--c-success-bg); color: #065F46; }
+  .status-warn { background: var(--c-warn-bg); color: #854F0B; }
+  .status-danger { background: var(--c-danger-bg); color: #991B1B; }
+  .status-neutral { background: var(--c-bg-tint); color: var(--c-primary-dark); }
+
+  .country-tag {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--c-text-muted);
+    padding: 2px 6px;
+    background: var(--c-bg);
+    border-radius: 4px;
+  }
+
+  /* LOADER */
+  .loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(244, 246, 249, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--c-border);
+    border-top-color: var(--c-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text {
+    font-size: 13px;
+    color: var(--c-text-muted);
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--c-text-dim);
+  }
+  footer img { height: 18px; opacity: 0.6; margin-bottom: 4px; }
+
+  /* SIDE PANEL (DRILL-DOWN) */
+  .panel-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .panel-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .side-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 480px;
+    max-width: 100vw;
+    background: white;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+    z-index: 999;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .side-panel.open {
+    transform: translateX(0);
+  }
+  .panel-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    border-bottom: 1px solid var(--c-border);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    z-index: 2;
+  }
+  .panel-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--c-text);
+    line-height: 1.3;
+    margin-bottom: 2px;
+  }
+  .panel-subtitle {
+    font-size: 12px;
+    color: var(--c-text-muted);
+  }
+  .panel-close {
+    background: none;
+    border: 1px solid var(--c-border);
+    color: var(--c-text-muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .panel-close:hover {
+    background: var(--c-bg);
+    color: var(--c-text);
+  }
+  .panel-body {
+    padding: 16px 20px 24px;
+  }
+  .panel-map {
+    height: 280px;
+    border-radius: 8px;
+    border: 1px solid var(--c-border);
+    margin-bottom: 16px;
+  }
+  .panel-metric {
+    background: var(--c-bg-tint);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .panel-metric-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--c-primary-dark);
+    line-height: 1;
+  }
+  .panel-metric-label {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .panel-classification {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .pc-efficient { background: var(--c-success-bg); color: #065F46; }
+  .pc-questionable { background: var(--c-warn-bg); color: #854F0B; }
+  .pc-near { background: var(--c-bg-tint); color: var(--c-primary-dark); }
+
+  .panel-section {
+    margin-bottom: 20px;
+  }
+  .panel-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--c-border);
+    font-size: 13px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label {
+    color: var(--c-text-muted);
+    flex-shrink: 0;
+  }
+  .info-value {
+    color: var(--c-text);
+    text-align: right;
+    font-weight: 500;
+    word-break: break-word;
+  }
+  .info-value.small { font-weight: 400; font-size: 12px; color: var(--c-text-muted); }
+
+  .history-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--c-text-dim);
+    font-size: 12px;
+    background: var(--c-bg);
+    border-radius: 8px;
+    font-style: italic;
+  }
+  .history-item {
+    padding: 10px 12px;
+    background: var(--c-bg);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .history-date {
+    color: var(--c-text-muted);
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+  .history-address {
+    color: var(--c-text);
+  }
+  .history-radius {
+    color: var(--c-primary);
+    font-weight: 500;
+    float: right;
+  }
+
+  .notes-box {
+    padding: 10px 12px;
+    background: var(--c-bg);
+    border-left: 3px solid var(--c-accent);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--c-text);
+    font-style: italic;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .scorecards { grid-template-columns: repeat(2, 1fr); }
+    .scorecard.success { grid-column: span 2; }
+    body { padding: 12px; }
+    #map { height: 340px; }
+    .driver-table { font-size: 11px; }
+    .driver-table th, .driver-table td { padding: 6px 8px; }
+    .hide-mobile { display: none; }
+    .side-panel { width: 100vw; }
+    .panel-map { height: 220px; }
+  }
+
+  /* LEAFLET CUSTOM POPUP */
+  .leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    font-family: inherit;
+  }
+  .leaflet-popup-content {
+    margin: 10px 14px;
+    font-size: 12px;
+  }
+  .popup-title {
+    font-weight: 600;
+    color: var(--c-primary-dark);
+    margin-bottom: 4px;
+  }
+  .popup-row {
+    color: var(--c-text-muted);
+    margin: 2px 0;
+  }
+</style>
+</head>
+<body>
+
+<div id="loader" class="loader-overlay">
+  <div class="spinner"></div>
+  <div class="loader-text" data-i18n="loadingData">Carregando dados...</div>
+</div>
+
+<div class="header">
+  <div class="brand-wrap">
+    <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
+    <div class="brand-divider"></div>
+    <div class="brand-sub" data-i18n="brandTitle">
+      STREET VIEW DASHBOARD
+      <span data-i18n="brandRegion">LATAM</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="lang-switch">
+      <button data-lang="pt" class="active">PT</button>
+      <button data-lang="es">ES</button>
+      <button data-lang="en">EN</button>
+    </div>
+    <button class="demo-toggle" id="demo-toggle" onclick="toggleDemoMode()">
+      <span id="demo-icon">🎭</span>
+      <span id="demo-label" data-i18n="demoMode">Modo demo</span>
+    </button>
+    <div class="last-updated">
+      <div class="refresh-dot"></div>
+      <span id="last-updated">—</span>
+    </div>
+    <button class="refresh-btn" onclick="loadData()" data-i18n="refresh">⟳ Atualizar</button>
+  </div>
+</div>
+
+<div class="filters">
+  <span class="filter-label" data-i18n="filterCountry">País:</span>
+  <button class="filter-chip active" data-country="all" onclick="setFilter('country', 'all')" data-i18n="all">Todos</button>
+  <button class="filter-chip" data-country="Brazil" onclick="setFilter('country', 'Brazil')" data-i18n="brazil">Brasil</button>
+  <button class="filter-chip" data-country="Argentina" onclick="setFilter('country', 'Argentina')">Argentina</button>
+  <button class="filter-chip" data-country="Chile" onclick="setFilter('country', 'Chile')">Chile</button>
+  <button class="filter-chip" data-country="Colombia" onclick="setFilter('country', 'Colombia')">Colombia</button>
+  <button class="filter-chip" data-country="México" onclick="setFilter('country', 'México')" data-i18n="mexico">México</button>
+  <button class="filter-chip" data-country="Peru" onclick="setFilter('country', 'Peru')">Peru</button>
+
+  <span class="filter-label" style="margin-left:16px;" data-i18n="filterPeriod">Período:</span>
+  <button class="filter-chip" data-period="1" onclick="setFilter('period', 1)" data-i18n="today">Hoje</button>
+  <button class="filter-chip active" data-period="7" onclick="setFilter('period', 7)" data-i18n="sevenDays">7 dias</button>
+  <button class="filter-chip" data-period="30" onclick="setFilter('period', 30)" data-i18n="thirtyDays">30 dias</button>
+</div>
+
+<div class="scorecards">
+  <div class="scorecard">
+    <div class="scorecard-label" data-i18n="scActiveDrivers">DRIVERS ATIVOS</div>
+    <div class="scorecard-value" id="sc-total">—</div>
+    <div class="scorecard-sub" id="sc-total-sub" data-i18n="scInFilter">no filtro selecionado</div>
+  </div>
+  <div class="scorecard accent">
+    <div class="scorecard-label" data-i18n="scHotelMode">EM HOTEL MODE</div>
+    <div class="scorecard-value" id="sc-hotel">—</div>
+    <div class="scorecard-sub" id="sc-hotel-sub">—</div>
+  </div>
+  <div class="scorecard success">
+    <div class="scorecard-label" data-i18n="scSavings">ECONOMIA HOTEL MODE</div>
+    <div class="scorecard-value" id="sc-savings">—</div>
+    <div class="scorecard-sub" data-i18n="scSavingsSub">km/dia evitados</div>
+  </div>
+  <div class="scorecard warn">
+    <div class="scorecard-label" data-i18n="scMissing">SEM CHECK-IN RECENTE</div>
+    <div class="scorecard-value" id="sc-missing">—</div>
+    <div class="scorecard-sub" data-i18n="scMissingSub">&gt; 24h sem update</div>
+  </div>
+  <div class="scorecard danger">
+    <div class="scorecard-label" data-i18n="scIssues">ISSUES REPORTADOS</div>
+    <div class="scorecard-value" id="sc-issues">—</div>
+    <div class="scorecard-sub" data-i18n="scIssuesSub">veículos no período</div>
+  </div>
+</div>
+
+<div class="map-section">
+  <div class="section-header">
+    <div>
+      <div class="section-title" data-i18n="mapTitle">Mapa LATAM</div>
+      <div class="section-sub" data-i18n="mapSub">Base atual e área de mapeamento por driver</div>
+    </div>
+    <div class="section-sub"><span id="map-count">—</span> <span data-i18n="driversVisible">drivers visíveis</span></div>
+  </div>
+  <div id="map"></div>
+  <div class="map-legend">
+    <div class="legend-item"><span class="legend-dot" style="background:#2C5282;"></span> <span data-i18n="legendBase">Base (hotel/casa)</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#4A9FE0; opacity:0.4;"></span> <span data-i18n="legendArea">Área de mapeamento</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#22C55E;"></span> <span data-i18n="legendRecent">Check-in nas últimas 24h</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#F59E0B;"></span> <span data-i18n="legendOld">Sem check-in &gt; 24h</span></div>
+  </div>
+</div>
+
+<div class="cts-section" id="cts-section" style="display:none;">
+  <div class="section-header">
+    <div>
+      <div class="section-title" data-i18n="ctsTitle">CTS Goal vs Achieved</div>
+      <div class="section-sub" data-i18n="ctsSub">Progresso mensal por país (dados da mastersheet)</div>
+    </div>
+    <div class="section-sub"><span id="cts-period">—</span></div>
+  </div>
+  <div class="cts-grid" id="cts-grid"></div>
+</div>
+
+<div class="table-section">
+  <div class="section-header">
+    <div>
+      <div class="section-title" data-i18n="tableTitle">Drivers</div>
+      <div class="section-sub" data-i18n="tableSub">Clique numa linha pra abrir detalhes</div>
+    </div>
+  </div>
+  <table class="driver-table">
+    <thead>
+      <tr>
+        <th data-i18n="thDriver">Driver</th>
+        <th data-i18n="thCountry">País</th>
+        <th class="hide-mobile" data-i18n="thCity">Cidade</th>
+        <th data-i18n="thBase">Base</th>
+        <th class="hide-mobile" data-i18n="thHmMonthly">HM mensal</th>
+        <th class="hide-mobile" data-i18n="thLastCheckin">Último check-in</th>
+        <th class="hide-mobile" data-i18n="thDistance">Km base→área</th>
+        <th data-i18n="thStatus">Status</th>
+      </tr>
+    </thead>
+    <tbody id="driver-tbody">
+    </tbody>
+  </table>
+</div>
+
+<div class="panel-backdrop" id="panel-backdrop" onclick="closeDriverPanel()"></div>
+
+<aside class="side-panel" id="side-panel" role="dialog" aria-hidden="true">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="panel-name">—</div>
+      <div class="panel-subtitle" id="panel-subtitle">—</div>
+    </div>
+    <button class="panel-close" onclick="closeDriverPanel()" aria-label="Fechar">×</button>
+  </div>
+  <div class="panel-body">
+    <div id="panel-map" class="panel-map"></div>
+
+    <div class="panel-metric">
+      <div>
+        <div class="panel-metric-label" data-i18n="pMetric">Km base → área</div>
+        <div class="panel-metric-value" id="panel-dist">—</div>
+      </div>
+      <div class="panel-classification" id="panel-class">—</div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title" data-i18n="pCurrentBase">Base atual</div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pType">Tipo</span>
+        <span class="info-value" id="panel-base-type">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pAddress">Endereço</span>
+        <span class="info-value small" id="panel-base-address">—</span>
+      </div>
+    </div>
+
+    <div class="panel-section" id="panel-efficiency-section" style="display:none;">
+      <div class="panel-section-title" id="panel-efficiency-title" data-i18n="pEfficiency">Eficiência hotel mode</div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pHomeAddress">Casa</span>
+        <span class="info-value small" id="panel-home-address">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pDistHome">Km casa → área</span>
+        <span class="info-value" id="panel-dist-home">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pSavings">Economia (km/dia)</span>
+        <span class="info-value" id="panel-savings" style="color:#16A34A;font-weight:600;">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pHmMonthly">Hotel Mode (mensal)</span>
+        <span class="info-value" id="panel-hm-monthly">—</span>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title" data-i18n="pArea">Área de mapeamento</div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pLocation">Local</span>
+        <span class="info-value small" id="panel-area-address">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pRadius">Raio</span>
+        <span class="info-value" id="panel-area-radius">—</span>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title" data-i18n="pLastCheckin">Último check-in</div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pWhen">Quando</span>
+        <span class="info-value" id="panel-checkin-when">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pVehicle">Status veículo</span>
+        <span class="info-value" id="panel-vehicle">—</span>
+      </div>
+      <div class="info-row" id="panel-notes-row" style="display:none;">
+        <span class="info-label" data-i18n="pNotes">Observações</span>
+      </div>
+      <div id="panel-notes-box" style="display:none;margin-top:8px;"></div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title" data-i18n="pHistory">Histórico de áreas</div>
+      <div id="panel-history"></div>
+    </div>
+  </div>
+</aside>
+
+<footer>
+  <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display='none'"><br>
+  <span data-i18n="footerText">Plataforma interna — Aceolution do Brasil Ltda.</span>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  refreshMs: 5 * 60 * 1000,
+};
+
+const I18N = {
+  pt: {
+    loadingData: 'Carregando dados...',
+    loadingProgress: 'Carregando drivers',
+    brandTitle: 'STREET VIEW DASHBOARD',
+    brandRegion: 'LATAM',
+    demoMode: 'Modo demo',
+    demoModeActive: 'Modo demo ativo',
+    refresh: '⟳ Atualizar',
+    updatedAt: 'Atualizado',
+    errorLoading: 'Erro ao carregar',
+    errorPrefix: 'Erro',
+    errorFallback: 'Erro ao carregar dados. Ative o Modo Demo pra testar o visual.',
+    filterCountry: 'País:',
+    filterPeriod: 'Período:',
+    all: 'Todos',
+    brazil: 'Brasil',
+    mexico: 'México',
+    today: 'Hoje',
+    sevenDays: '7 dias',
+    thirtyDays: '30 dias',
+    scActiveDrivers: 'DRIVERS ATIVOS',
+    scInFilter: 'no filtro selecionado',
+    scWithCheckin: 'com check-in no período',
+    scHotelMode: 'EM HOTEL MODE',
+    scOfTotal: '% do total',
+    scSavings: 'ECONOMIA HOTEL MODE',
+    scSavingsSub: 'km/dia evitados',
+    scMissing: 'SEM CHECK-IN RECENTE',
+    scMissingSub: '> 24h sem update',
+    scIssues: 'ISSUES REPORTADOS',
+    scIssuesSub: 'veículos no período',
+    mapTitle: 'Mapa LATAM',
+    mapSub: 'Base atual e área de mapeamento por driver',
+    driversVisible: 'drivers visíveis',
+    legendBase: 'Base (hotel/casa)',
+    legendArea: 'Área de mapeamento',
+    legendRecent: 'Check-in nas últimas 24h',
+    legendOld: 'Sem check-in > 24h',
+    tableTitle: 'Drivers',
+    tableSub: 'Clique numa linha pra abrir detalhes',
+    ctsTitle: 'CTS Goal vs Achieved',
+    ctsSub: 'Progresso mensal por país (dados da mastersheet)',
+    ctsGoal: 'Meta',
+    ctsAchieved: 'Atingido',
+    ctsPending: 'Falta',
+    thDriver: 'Driver',
+    thCountry: 'País',
+    thCity: 'Cidade',
+    thBase: 'Base',
+    thLastCheckin: 'Último check-in',
+    thDistance: 'Km base→área',
+    thHmMonthly: 'HM mensal',
+    thStatus: 'Status',
+    pillActive: '✓ Ativo',
+    pillWarn24h: '> 24h',
+    pillNoCheckin: 'Sem check-in',
+    pillCritical: '⚠ Crítico',
+    pillMinor: '⚠ Alerta',
+    pillOk: '✓ OK',
+    noCheckin: 'Nunca',
+    hoursAgoPrefix: 'há',
+    lessThanHour: 'menos de 1h',
+    pMetric: 'Km base → área',
+    pCurrentBase: 'Base atual',
+    pEfficiency: 'Eficiência hotel mode',
+    pHomeSection: 'Casa do driver',
+    pHomeAddress: 'Casa',
+    pDistHome: 'Km casa → área',
+    pSavings: 'Economia (km/dia)',
+    pHmMonthly: 'Hotel Mode (mensal)',
+    pType: 'Tipo',
+    pAddress: 'Endereço',
+    pArea: 'Área de mapeamento',
+    pLocation: 'Local',
+    pRadius: 'Raio',
+    pLastCheckin: 'Último check-in',
+    pWhen: 'Quando',
+    pVehicle: 'Status veículo',
+    pNotes: 'Observações',
+    pHistory: 'Histórico de áreas',
+    loadingHistory: 'Carregando histórico',
+    yesterday: 'Ontem',
+    daysAgoLabel: 'dias atrás',
+    pNoLocation: 'Sem localização disponível',
+    pNoBase: 'Sem base cadastrada',
+    pNoArea: 'Sem área registrada',
+    pHistoryEmpty: 'Sem histórico disponível',
+    pHistoryEmptyReal: ' — feature completa após atualização do backend',
+    classNear: 'Próximo da base',
+    classEfficient: 'Hotel mode eficiente',
+    classHigh: 'Distância alta',
+    classNoData: 'Sem dados',
+    baseTooltipPrefix: 'Base:',
+    homeTooltip: 'Casa do driver',
+    areaTooltipPrefix: 'Área atual ·',
+    kmUnit: 'km',
+    daysAgoSuffix: 'd',
+    hoursAgoSuffix: 'h',
+    footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+  },
+  es: {
+    loadingData: 'Cargando datos...',
+    loadingProgress: 'Cargando conductores',
+    brandTitle: 'STREET VIEW DASHBOARD',
+    brandRegion: 'LATAM',
+    demoMode: 'Modo demo',
+    demoModeActive: 'Modo demo activo',
+    refresh: '⟳ Actualizar',
+    updatedAt: 'Actualizado',
+    errorLoading: 'Error al cargar',
+    errorPrefix: 'Error',
+    errorFallback: 'Error al cargar datos. Active el Modo Demo para probar el visual.',
+    filterCountry: 'País:',
+    filterPeriod: 'Período:',
+    all: 'Todos',
+    brazil: 'Brasil',
+    mexico: 'México',
+    today: 'Hoy',
+    sevenDays: '7 días',
+    thirtyDays: '30 días',
+    scActiveDrivers: 'CONDUCTORES ACTIVOS',
+    scInFilter: 'en el filtro seleccionado',
+    scWithCheckin: 'con check-in en el período',
+    scHotelMode: 'EN HOTEL MODE',
+    scOfTotal: '% del total',
+    scSavings: 'AHORRO HOTEL MODE',
+    scSavingsSub: 'km/día evitados',
+    scMissing: 'SIN CHECK-IN RECIENTE',
+    scMissingSub: '> 24h sin actualizar',
+    scIssues: 'PROBLEMAS REPORTADOS',
+    scIssuesSub: 'vehículos en el período',
+    mapTitle: 'Mapa LATAM',
+    mapSub: 'Base actual y área de mapeo por conductor',
+    driversVisible: 'conductores visibles',
+    legendBase: 'Base (hotel/casa)',
+    legendArea: 'Área de mapeo',
+    legendRecent: 'Check-in en las últimas 24h',
+    legendOld: 'Sin check-in > 24h',
+    tableTitle: 'Conductores',
+    tableSub: 'Haga clic en una fila para ver detalles',
+    ctsTitle: 'CTS Goal vs Achieved',
+    ctsSub: 'Progreso mensual por país (datos de la mastersheet)',
+    ctsGoal: 'Meta',
+    ctsAchieved: 'Logrado',
+    ctsPending: 'Faltante',
+    thDriver: 'Conductor',
+    thCountry: 'País',
+    thCity: 'Ciudad',
+    thBase: 'Base',
+    thLastCheckin: 'Último check-in',
+    thDistance: 'Km base→área',
+    thHmMonthly: 'HM mensual',
+    thStatus: 'Estado',
+    pillActive: '✓ Activo',
+    pillWarn24h: '> 24h',
+    pillNoCheckin: 'Sin check-in',
+    pillCritical: '⚠ Crítico',
+    pillMinor: '⚠ Alerta',
+    pillOk: '✓ OK',
+    noCheckin: 'Nunca',
+    hoursAgoPrefix: 'hace',
+    lessThanHour: 'menos de 1h',
+    pMetric: 'Km base → área',
+    pCurrentBase: 'Base actual',
+    pEfficiency: 'Eficiencia hotel mode',
+    pHomeSection: 'Casa del conductor',
+    pHomeAddress: 'Casa',
+    pDistHome: 'Km casa → área',
+    pSavings: 'Ahorro (km/día)',
+    pHmMonthly: 'Hotel Mode (mensual)',
+    pType: 'Tipo',
+    pAddress: 'Dirección',
+    pArea: 'Área de mapeo',
+    pLocation: 'Lugar',
+    pRadius: 'Radio',
+    pLastCheckin: 'Último check-in',
+    pWhen: 'Cuándo',
+    pVehicle: 'Estado vehículo',
+    pNotes: 'Observaciones',
+    pHistory: 'Historial de áreas',
+    pNoLocation: 'Sin ubicación disponible',
+    pNoBase: 'Sin base registrada',
+    pNoArea: 'Sin área registrada',
+    pHistoryEmpty: 'Sin historial disponible',
+    pHistoryEmptyReal: ' — función completa tras actualización del backend',
+    classNear: 'Cerca de la base',
+    classEfficient: 'Hotel mode eficiente',
+    classHigh: 'Distancia alta',
+    classNoData: 'Sin datos',
+    baseTooltipPrefix: 'Base:',
+    homeTooltip: 'Casa del conductor',
+    areaTooltipPrefix: 'Área actual ·',
+    kmUnit: 'km',
+    daysAgoSuffix: 'd',
+    hoursAgoSuffix: 'h',
+    footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+  },
+  en: {
+    loadingData: 'Loading data...',
+    loadingProgress: 'Loading drivers',
+    brandTitle: 'STREET VIEW DASHBOARD',
+    brandRegion: 'LATAM',
+    demoMode: 'Demo mode',
+    demoModeActive: 'Demo mode on',
+    refresh: '⟳ Refresh',
+    updatedAt: 'Updated',
+    errorLoading: 'Loading error',
+    errorPrefix: 'Error',
+    errorFallback: 'Error loading data. Try Demo Mode to test the visual.',
+    filterCountry: 'Country:',
+    filterPeriod: 'Period:',
+    all: 'All',
+    brazil: 'Brazil',
+    mexico: 'Mexico',
+    today: 'Today',
+    sevenDays: '7 days',
+    thirtyDays: '30 days',
+    scActiveDrivers: 'ACTIVE DRIVERS',
+    scInFilter: 'in selected filter',
+    scWithCheckin: 'checked in this period',
+    scHotelMode: 'IN HOTEL MODE',
+    scOfTotal: '% of total',
+    scSavings: 'HOTEL MODE SAVINGS',
+    scSavingsSub: 'km/day avoided',
+    scMissing: 'MISSING CHECK-IN',
+    scMissingSub: '> 24h without update',
+    scIssues: 'REPORTED ISSUES',
+    scIssuesSub: 'vehicles in period',
+    mapTitle: 'LATAM Map',
+    mapSub: 'Current base and mapping area per driver',
+    driversVisible: 'drivers visible',
+    legendBase: 'Base (hotel/home)',
+    legendArea: 'Mapping area',
+    legendRecent: 'Check-in within 24h',
+    legendOld: 'No check-in > 24h',
+    tableTitle: 'Drivers',
+    tableSub: 'Click a row to open details',
+    ctsTitle: 'CTS Goal vs Achieved',
+    ctsSub: 'Monthly progress by country (data from mastersheet)',
+    ctsGoal: 'Goal',
+    ctsAchieved: 'Achieved',
+    ctsPending: 'Pending',
+    thDriver: 'Driver',
+    thCountry: 'Country',
+    thCity: 'City',
+    thBase: 'Base',
+    thLastCheckin: 'Last check-in',
+    thDistance: 'Km base→area',
+    thHmMonthly: 'Monthly HM',
+    thStatus: 'Status',
+    pillActive: '✓ Active',
+    pillWarn24h: '> 24h',
+    pillNoCheckin: 'No check-in',
+    pillCritical: '⚠ Critical',
+    pillMinor: '⚠ Warning',
+    pillOk: '✓ OK',
+    noCheckin: 'Never',
+    hoursAgoPrefix: '',
+    lessThanHour: 'less than 1h ago',
+    pMetric: 'Km base → area',
+    pCurrentBase: 'Current base',
+    pEfficiency: 'Hotel mode efficiency',
+    pHomeSection: "Driver's home",
+    pHomeAddress: 'Home',
+    pDistHome: 'Km home → area',
+    pSavings: 'Savings (km/day)',
+    pHmMonthly: 'Hotel Mode (monthly)',
+    pType: 'Type',
+    pAddress: 'Address',
+    pArea: 'Mapping area',
+    pLocation: 'Location',
+    pRadius: 'Radius',
+    pLastCheckin: 'Last check-in',
+    pWhen: 'When',
+    pVehicle: 'Vehicle status',
+    pNotes: 'Notes',
+    pHistory: 'Area history',
+    pNoLocation: 'No location available',
+    pNoBase: 'No base registered',
+    pNoArea: 'No area registered',
+    pHistoryEmpty: 'No history available',
+    pHistoryEmptyReal: ' — full feature available after backend update',
+    classNear: 'Close to base',
+    classEfficient: 'Efficient hotel mode',
+    classHigh: 'High distance',
+    classNoData: 'No data',
+    baseTooltipPrefix: 'Base:',
+    homeTooltip: "Driver's home",
+    areaTooltipPrefix: 'Current area ·',
+    kmUnit: 'km',
+    daysAgoSuffix: 'd ago',
+    hoursAgoSuffix: 'h ago',
+    footerText: 'Internal platform — Aceolution do Brasil Ltda.',
+  },
+};
+
+let currentLang = localStorage.getItem('dashboardLang') || 'pt';
+
+function t(key) {
+  if (I18N[currentLang] && key in I18N[currentLang]) return I18N[currentLang][key];
+  return key;
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    // Skip elements that have complex children (brand-sub has a span child)
+    if (key === 'brandTitle') {
+      // Only replace text node, preserve span
+      const span = el.querySelector('span');
+      el.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = t(key) + ' '; });
+      return;
+    }
+    el.textContent = t(key);
+  });
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : currentLang;
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('dashboardLang', lang);
+  document.querySelectorAll('.lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  applyI18n();
+  // Re-render dynamic content that's built via JS
+  if (state.drivers && state.drivers.length) applyFiltersAndRender();
+  updateDemoLabel();
+}
+
+function updateDemoLabel() {
+  const label = document.getElementById('demo-label');
+  if (label) label.textContent = state.demoMode ? t('demoModeActive') : t('demoMode');
+}
+
+document.querySelectorAll('.lang-switch button').forEach(btn => {
+  btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+});
+
+
+let state = {
+  drivers: [],
+  demoMode: false,
+  filter: { country: 'all', period: 7 },
+  // v3 aux data
+  hmByCountry: [],
+  hmByDriver: [],
+  ctsGoals: [],
+};
+
+let map = null;
+let markerLayer = null;
+
+// Coordenadas aproximadas das principais cidades LATAM onde há drivers
+const CITY_COORDS = {
+  'São Paulo': [-23.5505, -46.6333],
+  'Rio de Janeiro': [-22.9068, -43.1729],
+  'Belo Horizonte': [-19.9167, -43.9345],
+  'Brasília': [-15.7801, -47.9292],
+  'Salvador': [-12.9714, -38.5014],
+  'Curitiba': [-25.4284, -49.2733],
+  'Porto Alegre': [-30.0346, -51.2177],
+  'Fortaleza': [-3.7172, -38.5433],
+  'Recife': [-8.0476, -34.8770],
+  'Manaus': [-3.1190, -60.0217],
+  'Buenos Aires': [-34.6037, -58.3816],
+  'Cordoba': [-31.4201, -64.1888],
+  'Mendoza': [-32.8895, -68.8458],
+  'Rosario': [-32.9442, -60.6505],
+  'Tucuman': [-26.8083, -65.2176],
+  'Santiago': [-33.4489, -70.6693],
+  'Valparaíso': [-33.0472, -71.6127],
+  'Concepción': [-36.8270, -73.0498],
+  'Bogotá': [4.7110, -74.0721],
+  'Medellín': [6.2442, -75.5812],
+  'Cali': [3.4516, -76.5320],
+  'Cartagena': [10.3910, -75.4794],
+  'Mexico City': [19.4326, -99.1332],
+  'Guadalajara': [20.6597, -103.3496],
+  'Monterrey': [25.6866, -100.3161],
+  'Puebla': [19.0414, -98.2063],
+  'Lima': [-12.0464, -77.0428],
+  'Arequipa': [-16.4090, -71.5375],
+  'Cusco': [-13.5319, -71.9675],
+  'Trujillo': [-8.1116, -79.0287],
+};
+
+const COUNTRY_CENTERS = {
+  'Brazil': [-10.3333, -53.2],
+  'Argentina': [-38.4, -63.6],
+  'Chile': [-35.7, -71.5],
+  'Colombia': [4.5, -74.3],
+  'México': [23.6, -102.5],
+  'Mexico': [23.6, -102.5],
+  'Peru': [-9.2, -75.0],
+};
+
+// =================================================================
+// MAP SETUP
+// =================================================================
+
+function initMap() {
+  if (map) return;
+  map = L.map('map').setView([-15, -60], 4);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(map);
+  markerLayer = L.layerGroup().addTo(map);
+}
+
+function renderMap(drivers) {
+  markerLayer.clearLayers();
+  const bounds = [];
+
+  drivers.forEach(d => {
+    if (!d.base || !d.base.lat) return;
+
+    const isRecent = d.hoursAgo !== null && d.hoursAgo <= 24;
+    const baseColor = isRecent ? '#22C55E' : '#F59E0B';
+
+    // Ícone personalizado de base
+    const baseIcon = L.divIcon({
+      className: 'driver-marker',
+      html: `<div style="width:14px;height:14px;background:${baseColor};border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    });
+
+    const marker = L.marker([d.base.lat, d.base.lng], { icon: baseIcon });
+    marker._driverData = d;
+    marker.bindPopup(`
+      <div class="popup-title">${d.name}</div>
+      <div class="popup-row">${d.country} · ${d.city || '—'}</div>
+      <div class="popup-row">Base: ${d.base.type || '—'}</div>
+      <div class="popup-row">${d.base.address || ''}</div>
+      ${d.hoursAgo !== null ? `<div class="popup-row" style="margin-top:6px;color:${isRecent ? '#22C55E' : '#F59E0B'};">${formatHoursAgo(d.hoursAgo)}</div>` : `<div class="popup-row" style="color:#94A3B8;">${t('pillNoCheckin')}</div>`}
+      <div style="margin-top:8px;"><a href="#" onclick="event.preventDefault(); openDriverPanelByEmail('${d.email}'); return false;" style="color:#2C5282;font-weight:500;">Ver detalhes →</a></div>
+    `);
+    markerLayer.addLayer(marker);
+    bounds.push([d.base.lat, d.base.lng]);
+
+    // Círculo da área de mapeamento
+    if (d.area && d.area.lat && d.area.radius) {
+      const circle = L.circle([d.area.lat, d.area.lng], {
+        radius: d.area.radius * 1000,
+        color: '#4A9FE0',
+        fillColor: '#4A9FE0',
+        fillOpacity: 0.15,
+        weight: 1.5,
+      });
+      markerLayer.addLayer(circle);
+      bounds.push([d.area.lat, d.area.lng]);
+
+      // Linha base → centro da área
+      const line = L.polyline([[d.base.lat, d.base.lng], [d.area.lat, d.area.lng]], {
+        color: '#2C5282',
+        weight: 1,
+        opacity: 0.4,
+        dashArray: '4 4',
+      });
+      markerLayer.addLayer(line);
+    }
+  });
+
+  if (bounds.length > 0) {
+    // Se filtro por país, centraliza no país; senão enquadra tudo
+    if (state.filter.country !== 'all') {
+      const c = COUNTRY_CENTERS[state.filter.country];
+      if (c) map.setView(c, 5);
+    } else {
+      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 6 });
+    }
+  }
+
+  document.getElementById('map-count').textContent = drivers.filter(d => d.base && d.base.lat).length;
+}
+
+// =================================================================
+// DATA LOADING
+// =================================================================
+
+async function loadData() {
+  showLoader(true, t('loadingProgress') + '...');
+
+  try {
+    if (state.demoMode) {
+      state.drivers = generateDemoData();
+    } else {
+      state.drivers = await fetchRealData();
+    }
+
+    applyFiltersAndRender();
+    document.getElementById('last-updated').textContent = t('updatedAt') + ' ' + formatTime(new Date());
+  } catch (err) {
+    console.error('Erro no loadData:', err);
+    document.getElementById('last-updated').textContent = t('errorLoading');
+    showError(err.message || t('errorFallback'));
+  } finally {
+    // SEMPRE esconde o loader, mesmo com erro
+    showLoader(false);
+  }
+}
+
+function showError(msg) {
+  let errBar = document.getElementById('err-bar');
+  if (!errBar) {
+    errBar = document.createElement('div');
+    errBar.id = 'err-bar';
+    errBar.style.cssText = 'background:#FEE2E2;color:#991B1B;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;border:1px solid #FECACA;';
+    document.querySelector('.header').insertAdjacentElement('afterend', errBar);
+  }
+  errBar.innerHTML = '⚠ <strong>' + t('errorPrefix') + ':</strong> ' + msg + ' <button onclick="document.getElementById(\'err-bar\').remove()" style="float:right;background:none;border:none;cursor:pointer;font-size:16px;color:#991B1B;">×</button>';
+}
+
+async function fetchRealData() {
+  showLoader(true, t('loadingProgress') + '...');
+
+  // 3 requests em paralelo — muito mais rápido que 147
+  const [dashData, hmCountry, hmDriver, ctsData] = await Promise.all([
+    fetchWithTimeout(CONFIG.scriptUrl + '?action=getDashboardData&days=7', 30000)
+      .catch(err => { console.warn('getDashboardData falhou', err); return { success: false }; }),
+    fetchWithTimeout(CONFIG.scriptUrl + '?action=getHotelModeByCountry', 15000)
+      .catch(err => { console.warn('getHotelModeByCountry falhou', err); return { success: false }; }),
+    fetchWithTimeout(CONFIG.scriptUrl + '?action=getHotelModeByDriver', 15000)
+      .catch(err => { console.warn('getHotelModeByDriver falhou', err); return { success: false }; }),
+    fetchWithTimeout(CONFIG.scriptUrl + '?action=getCtsGoals', 15000)
+      .catch(err => { console.warn('getCtsGoals falhou', err); return { success: false }; }),
+  ]);
+
+  if (!dashData.success) throw new Error(dashData.error || 'Falha ao buscar dashboardData');
+
+  // Armazena dados auxiliares no state global pra renderizações derivadas
+  state.hmByCountry = hmCountry.success ? hmCountry.countries : [];
+  state.hmByDriver = hmDriver.success ? hmDriver.drivers : [];
+  state.ctsGoals = ctsData.success ? ctsData.goals : [];
+
+  // Indexa hmByDriver por email pra lookup rápido
+  const hmByEmail = {};
+  state.hmByDriver.forEach(d => { if (d.email) hmByEmail[d.email] = d; });
+
+  const { drivers, bases, lastCheckins } = dashData.data;
+
+  // Consolida tudo num único array
+  const enriched = drivers.map(d => {
+    const base = bases[d.email] || null;
+    const checkin = lastCheckins[d.email] || null;
+    const hm = hmByEmail[d.email] || null;
+
+    // Base→área edge (só se tem base + última área)
+    let distBaseToEdge = null;
+    if (base && checkin && checkin.destLat && checkin.destRadius) {
+      distBaseToEdge = Math.max(0,
+        Math.round((haversine(base.lat, base.lng, checkin.destLat, checkin.destLng) - checkin.destRadius) * 10) / 10
+      );
+    }
+
+    // Casa→área edge (só se tem homeLat + última área)
+    let distHomeToEdge = null;
+    let distHomeToCenter = null;
+    if (d.homeLat && d.homeLng && checkin && checkin.destLat) {
+      distHomeToCenter = Math.round(haversine(d.homeLat, d.homeLng, checkin.destLat, checkin.destLng) * 10) / 10;
+      distHomeToEdge = Math.max(0,
+        Math.round((distHomeToCenter - (checkin.destRadius || 0)) * 10) / 10
+      );
+    }
+
+    // Economia hotel mode = (casa→edge) - (base→edge), só faz sentido se base é hotel
+    let savingsKm = null;
+    if (base && base.type === 'Hotel' && distHomeToEdge !== null && distBaseToEdge !== null) {
+      savingsKm = Math.round((distHomeToEdge - distBaseToEdge) * 10) / 10;
+    }
+
+    // Area "virtual" (última check-in) — mantém compatibilidade com renderMap existente
+    const area = (checkin && checkin.destLat) ? {
+      lat: checkin.destLat,
+      lng: checkin.destLng,
+      address: checkin.destAddress,
+      radius: checkin.destRadius || 10,
+    } : null;
+
+    return {
+      name: d.name,
+      email: d.email,
+      country: d.country,
+      city: d.city,
+      fullAddress: d.fullAddress,
+      homeLat: d.homeLat,
+      homeLng: d.homeLng,
+      base,
+      area,
+      hoursAgo: checkin ? checkin.hoursAgo : null,
+      vehicleStatus: checkin ? (checkin.vehicleStatus || 'OK') : 'OK',
+      vehicleIssue: checkin ? checkin.vehicleIssue : '',
+      notes: checkin ? checkin.notes : '',
+      distBaseToEdge,
+      distHomeToEdge,
+      distHomeToCenter,
+      savingsKm,
+      // Dados da mastersheet (DASHBOARD (HM))
+      hmMonthly: hm ? hm.hotelMode : null,   // "Yes" / "No" / null
+      breakevenPct: hm ? hm.breakevenTkmPct : null,
+      paidSalary: hm ? hm.paidSalary : null,
+      rampTx: hm ? hm.rampTransactions : null,
+      totalDirectCost: hm ? hm.totalDirectCost : null,
+    };
+  });
+
+  console.log('Drivers consolidados:', enriched.length);
+  return enriched;
+}
+
+async function fetchWithTimeout(url, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    return await res.json();
+  } catch (err) {
+    clearTimeout(timeout);
+    throw err;
+  }
+}
+
+// =================================================================
+// DEMO DATA GENERATOR
+// =================================================================
+
+function generateDemoData() {
+  const driverTemplates = [
+    { name: 'Andre Luiz Barbosa Lima', country: 'Brazil', city: 'Rio de Janeiro' },
+    { name: 'Ruan Mota Santana', country: 'Brazil', city: 'Salvador' },
+    { name: 'Igor Resende Da Macena', country: 'Brazil', city: 'Belo Horizonte' },
+    { name: 'Flávio Rafael Batista', country: 'Brazil', city: 'Recife' },
+    { name: 'Douglas da Silva Batista', country: 'Brazil', city: 'Porto Alegre' },
+    { name: 'Murilo Carlos Daltin', country: 'Brazil', city: 'São Paulo' },
+    { name: 'Edson Alves de Miranda', country: 'Brazil', city: 'Curitiba' },
+    { name: 'Deivide Nelson dos Santos', country: 'Brazil', city: 'Brasília' },
+    { name: 'Maximiliano Tadeu Brant', country: 'Brazil', city: 'Fortaleza' },
+    { name: 'Matías Daniel Moreira', country: 'Argentina', city: 'Buenos Aires' },
+    { name: 'Axel Augusto Gentilini', country: 'Argentina', city: 'Cordoba' },
+    { name: 'Mauro Leandro Canepa', country: 'Argentina', city: 'Rosario' },
+    { name: 'Leandro Martín Andreoli', country: 'Argentina', city: 'Mendoza' },
+    { name: 'Guillermo Amado Juarez', country: 'Argentina', city: 'Tucuman' },
+    { name: 'Mauricio Alejandro Gallero', country: 'Argentina', city: 'Buenos Aires' },
+    { name: 'Carlos Alberto Silva', country: 'Chile', city: 'Santiago' },
+    { name: 'Rodrigo Martinez', country: 'Chile', city: 'Valparaíso' },
+    { name: 'Felipe Gonzalez', country: 'Chile', city: 'Concepción' },
+    { name: 'Cesar Casallas', country: 'Colombia', city: 'Bogotá' },
+    { name: 'Andres Rodriguez', country: 'Colombia', city: 'Medellín' },
+    { name: 'Juan Pablo Torres', country: 'Colombia', city: 'Cali' },
+    { name: 'Rafael Roberto Naylor', country: 'México', city: 'Mexico City' },
+    { name: 'Montserrat Santos', country: 'México', city: 'Guadalajara' },
+    { name: 'Christian Jesus Fonseca', country: 'México', city: 'Monterrey' },
+    { name: 'Diego Garcia Llerenas', country: 'México', city: 'Puebla' },
+    { name: 'Jesus Vazquez', country: 'México', city: 'Mexico City' },
+    { name: 'Juan Carlos Mauricio', country: 'Peru', city: 'Lima' },
+    { name: 'Luis Fernando Castro', country: 'Peru', city: 'Arequipa' },
+    { name: 'Miguel Angel Vargas', country: 'Peru', city: 'Cusco' },
+    { name: 'Ricardo Alonso Mendoza', country: 'Peru', city: 'Trujillo' },
+  ];
+
+  return driverTemplates.map((d, i) => {
+    const cityCoords = CITY_COORDS[d.city] || COUNTRY_CENTERS[d.country] || [-15, -60];
+    const baseLat = cityCoords[0] + (Math.random() - 0.5) * 0.2;
+    const baseLng = cityCoords[1] + (Math.random() - 0.5) * 0.2;
+
+    // Área de mapeamento: 70% dos casos perto da base, 30% mais longe (hotel mode)
+    const isHotelMode = Math.random() > 0.3;
+    const distanceDeg = isHotelMode ? 0.3 + Math.random() * 0.8 : 0.05 + Math.random() * 0.2;
+    const angle = Math.random() * 2 * Math.PI;
+    const areaLat = baseLat + distanceDeg * Math.cos(angle);
+    const areaLng = baseLng + distanceDeg * Math.sin(angle);
+    const radius = 5 + Math.floor(Math.random() * 40);
+
+    // Alguns drivers sem check-in recente
+    const hoursAgo = i % 7 === 0 ? (30 + Math.floor(Math.random() * 80)) :
+                     i % 5 === 0 ? (3 + Math.floor(Math.random() * 18)) :
+                     Math.floor(Math.random() * 4);
+
+    // Alguns com issue
+    const vehicleStatus = i % 11 === 0 ? 'Minor Issue' :
+                          i % 17 === 0 ? 'Critical Issue' : 'OK';
+
+    const baseType = Math.random() > 0.4 ? 'Hotel' : 'Home';
+    const distBaseToEdge = Math.max(0, Math.round((haversine(baseLat, baseLng, areaLat, areaLng) - radius) * 10) / 10);
+
+    // Casa: se é Hotel mode, casa fica 200-400km longe. Se é Home, casa = base.
+    let homeLat, homeLng, distHomeToEdge, distHomeToCenter, savingsKm;
+    if (baseType === 'Hotel') {
+      // Home em outra cidade (simula long-distance worker)
+      const homeOffset = 1.8 + Math.random() * 2.2; // ~200-400km em graus aproximados
+      const homeAngle = Math.random() * 2 * Math.PI;
+      homeLat = baseLat + homeOffset * Math.cos(homeAngle);
+      homeLng = baseLng + homeOffset * Math.sin(homeAngle);
+      distHomeToCenter = Math.round(haversine(homeLat, homeLng, areaLat, areaLng) * 10) / 10;
+      distHomeToEdge = Math.max(0, Math.round((distHomeToCenter - radius) * 10) / 10);
+      savingsKm = Math.round((distHomeToEdge - distBaseToEdge) * 10) / 10;
+    } else {
+      homeLat = baseLat + (Math.random() - 0.5) * 0.05;
+      homeLng = baseLng + (Math.random() - 0.5) * 0.05;
+      distHomeToCenter = Math.round(haversine(homeLat, homeLng, areaLat, areaLng) * 10) / 10;
+      distHomeToEdge = distBaseToEdge;
+      savingsKm = 0;
+    }
+
+    const hmMonthly = (baseType === 'Hotel' && savingsKm > 50) ? 'Yes' : 'No';
+
+    // Gera 3-5 áreas históricas próximas à atual (simulando check-ins passados)
+    const historyCount = 3 + Math.floor(Math.random() * 3);
+    const historyAreas = [];
+    for (let h = 0; h < historyCount; h++) {
+      const jitter = 0.15;
+      historyAreas.push({
+        lat: areaLat + (Math.random() - 0.5) * jitter * 2,
+        lng: areaLng + (Math.random() - 0.5) * jitter * 2,
+        radius: Math.max(3, radius + Math.floor((Math.random() - 0.5) * 20)),
+        address: `Área · ${d.city}${h === 0 ? ' (norte)' : h === 1 ? ' (sul)' : h === 2 ? ' (centro)' : ' (leste)'}`,
+        dateLabel: h === 0 ? 'Ontem' : (h + 1) + ' dias atrás',
+      });
+    }
+
+    // Notas ocasionais (20% dos drivers)
+    const demoNotes = [
+      'Trânsito intenso na região, pode atrasar.',
+      'Obra fechando rua principal — rota alternativa.',
+      'Área nova, primeira vez mapeando aqui.',
+      'Clima instável previsto pra tarde.',
+      'Reabastecer combustível antes das 11h.',
+      'Hotel confirmado por mais 3 noites.',
+    ];
+    const notes = (i % 5 === 0) ? demoNotes[i % demoNotes.length] : '';
+
+    return {
+      name: d.name,
+      email: d.name.toLowerCase().replace(/\s/g, '.') + '@field-ops-xpe.com',
+      country: d.country,
+      city: d.city,
+      fullAddress: `Demo addr · ${d.city}`,
+      homeLat, homeLng,
+      base: {
+        type: baseType,
+        address: `${baseType === 'Hotel' ? 'Hotel ' : ''}${d.city} — Centro`,
+        lat: baseLat,
+        lng: baseLng,
+      },
+      area: {
+        lat: areaLat,
+        lng: areaLng,
+        radius: radius,
+        address: `Região de ${d.city}`,
+      },
+      hoursAgo,
+      vehicleStatus,
+      distBaseToEdge,
+      distHomeToEdge,
+      distHomeToCenter,
+      savingsKm,
+      hmMonthly,
+      breakevenPct: 0.5 + Math.random() * 1.2,
+      historyAreas,
+      notes,
+    };
+  });
+}
+
+// =================================================================
+// FILTERS & RENDER
+// =================================================================
+
+function setFilter(type, value) {
+  state.filter[type] = value;
+
+  // Update chip UI
+  if (type === 'country') {
+    document.querySelectorAll('[data-country]').forEach(el => {
+      el.classList.toggle('active', el.dataset.country === value);
+    });
+  } else if (type === 'period') {
+    document.querySelectorAll('[data-period]').forEach(el => {
+      el.classList.toggle('active', parseInt(el.dataset.period) === value);
+    });
+  }
+
+  applyFiltersAndRender();
+}
+
+function applyFiltersAndRender() {
+  const filtered = state.drivers.filter(d => {
+    if (state.filter.country !== 'all' && d.country !== state.filter.country) return false;
+    return true;
+  });
+
+  // Filtro de período aplica diferente: drivers sem check-in no período ainda aparecem como "sem check-in"
+  const periodHours = state.filter.period * 24;
+
+  renderScorecards(filtered, periodHours);
+  renderMap(filtered);
+  renderCtsGoals(filtered);
+  renderTable(filtered, periodHours);
+}
+
+function renderCtsGoals(filteredDrivers) {
+  const section = document.getElementById('cts-section');
+  const grid = document.getElementById('cts-grid');
+  const periodEl = document.getElementById('cts-period');
+
+  if (!state.ctsGoals || state.ctsGoals.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  // Pega o período mais recente (ex: "4.2026" > "3.2026")
+  const byPeriod = {};
+  state.ctsGoals.forEach(g => {
+    if (!byPeriod[g.period]) byPeriod[g.period] = [];
+    byPeriod[g.period].push(g);
+  });
+
+  const sortedPeriods = Object.keys(byPeriod).sort((a, b) => {
+    const [ma, ya] = a.split('.').map(Number);
+    const [mb, yb] = b.split('.').map(Number);
+    return (yb - ya) || (mb - ma);
+  });
+
+  if (sortedPeriods.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  const latestPeriod = sortedPeriods[0];
+  let goals = byPeriod[latestPeriod];
+
+  // Filtro por país (se o filtro atual não for "all")
+  if (state.filter.country !== 'all') {
+    goals = goals.filter(g => g.country === state.filter.country || g.country === translateCountry(state.filter.country));
+  }
+
+  if (goals.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = '';
+
+  // Formato período: "4.2026" → "Abril/2026" etc.
+  const [month, year] = latestPeriod.split('.').map(Number);
+  const monthNames = currentLang === 'pt'
+    ? ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+    : currentLang === 'es'
+    ? ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+    : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  periodEl.textContent = (monthNames[month - 1] || month) + '/' + year;
+
+  grid.innerHTML = goals.map(g => {
+    const pct = g.ctsGoal > 0 ? (g.achieved / g.ctsGoal) * 100 : 0;
+    const pctRounded = Math.round(pct);
+    const fillWidth = Math.min(100, pct);
+    let pctClass = 'behind';
+    let barColor = '#EF4444';
+    if (pct >= 80) { pctClass = 'ok'; barColor = '#22C55E'; }
+    else if (pct >= 40) { pctClass = 'close'; barColor = '#F59E0B'; }
+
+    const pending = g.tkmPending;
+    const pendingLabel = pending >= 0
+      ? pending.toLocaleString(undefined, {maximumFractionDigits: 0}) + ' TKM'
+      : '✓ ' + Math.abs(pending).toLocaleString(undefined, {maximumFractionDigits: 0}) + ' TKM (' + (currentLang === 'en' ? 'over' : currentLang === 'es' ? 'superado' : 'acima') + ')';
+
+    return `
+      <div class="cts-card">
+        <div class="cts-card-header">
+          <span class="cts-card-country">${g.country}</span>
+          <span class="cts-card-pct ${pctClass}">${pctRounded}%</span>
+        </div>
+        <div class="cts-progress">
+          <div class="cts-progress-fill" style="width:${fillWidth}%;background:${barColor};"></div>
+        </div>
+        <div class="cts-card-stats">
+          <span>${t('ctsGoal')}: <strong>${g.ctsGoal.toLocaleString(undefined, {maximumFractionDigits: 0})}</strong></span>
+          <span>${t('ctsAchieved')}: <strong>${g.achieved.toLocaleString(undefined, {maximumFractionDigits: 0})}</strong></span>
+        </div>
+        <div class="cts-card-stats" style="margin-top:6px;">
+          <span>${t('ctsPending')}: <strong>${pendingLabel}</strong></span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * Algumas planilhas usam "Brazil" em inglês enquanto o filtro do dashboard
+ * usa "Brasil" em português (e México também varia). Normaliza pra match.
+ */
+function translateCountry(c) {
+  const map = {
+    'Brasil': 'Brazil',
+    'Brazil': 'Brasil',
+    'México': 'Mexico',
+    'Mexico': 'México',
+  };
+  return map[c] || c;
+}
+
+function renderScorecards(drivers, periodHours) {
+  const total = drivers.length;
+  const withCheckin = drivers.filter(d => d.hoursAgo !== null && d.hoursAgo <= periodHours).length;
+  const hotelMode = drivers.filter(d => d.base && d.base.type === 'Hotel').length;
+  const missing = drivers.filter(d => d.hoursAgo === null || d.hoursAgo > 24).length;
+  const issues = drivers.filter(d => d.vehicleStatus && d.vehicleStatus !== 'OK').length;
+
+  // Economia total: soma savingsKm de drivers em hotel mode
+  const savingsTotal = drivers.reduce((sum, d) => {
+    if (d.base && d.base.type === 'Hotel' && typeof d.savingsKm === 'number' && d.savingsKm > 0) {
+      return sum + d.savingsKm;
+    }
+    return sum;
+  }, 0);
+
+  document.getElementById('sc-total').textContent = total;
+  document.getElementById('sc-total-sub').textContent = withCheckin + ' ' + t('scWithCheckin');
+
+  document.getElementById('sc-hotel').textContent = hotelMode;
+  const pct = total > 0 ? Math.round((hotelMode / total) * 100) : 0;
+  document.getElementById('sc-hotel-sub').textContent = pct + t('scOfTotal');
+
+  document.getElementById('sc-savings').textContent = Math.round(savingsTotal).toLocaleString() + ' km';
+
+  document.getElementById('sc-missing').textContent = missing;
+  document.getElementById('sc-issues').textContent = issues;
+}
+
+function renderTable(drivers, periodHours) {
+  const tbody = document.getElementById('driver-tbody');
+  tbody.innerHTML = '';
+
+  const sorted = [...drivers].sort((a, b) => {
+    // Prioriza drivers com issue, depois sem check-in recente
+    const scoreA = (a.vehicleStatus !== 'OK' ? 1000 : 0) + (a.hoursAgo === null ? 500 : a.hoursAgo);
+    const scoreB = (b.vehicleStatus !== 'OK' ? 1000 : 0) + (b.hoursAgo === null ? 500 : b.hoursAgo);
+    return scoreB - scoreA;
+  });
+
+  sorted.forEach(d => {
+    const row = document.createElement('tr');
+    const statusPill = getStatusPill(d, periodHours);
+    const hoursDisplay = d.hoursAgo === null ? '—' : formatHoursAgo(d.hoursAgo);
+
+    // HM mensal pill
+    let hmCell = '—';
+    if (d.hmMonthly === 'Yes') hmCell = '<span class="status-pill status-active">✓ Yes</span>';
+    else if (d.hmMonthly === 'No') hmCell = '<span class="status-pill status-neutral">No</span>';
+
+    row.innerHTML = `
+      <td><strong>${d.name}</strong></td>
+      <td><span class="country-tag">${d.country}</span></td>
+      <td class="hide-mobile">${d.city || '—'}</td>
+      <td>${d.base ? d.base.type : '—'}</td>
+      <td class="hide-mobile">${hmCell}</td>
+      <td class="hide-mobile">${hoursDisplay}</td>
+      <td class="hide-mobile">${d.distBaseToEdge !== null && d.distBaseToEdge !== undefined ? d.distBaseToEdge + ' km' : '—'}</td>
+      <td>${statusPill}</td>
+    `;
+
+    row.addEventListener('click', () => openDriverPanel(d));
+
+    tbody.appendChild(row);
+  });
+}
+
+function getStatusPill(d, periodHours) {
+  if (d.vehicleStatus === 'Critical Issue') return '<span class="status-pill status-danger">' + t('pillCritical') + '</span>';
+  if (d.vehicleStatus === 'Minor Issue') return '<span class="status-pill status-warn">' + t('pillMinor') + '</span>';
+  if (d.hoursAgo === null) return '<span class="status-pill status-neutral">' + t('pillNoCheckin') + '</span>';
+  if (d.hoursAgo > 24) return '<span class="status-pill status-warn">' + t('pillWarn24h') + '</span>';
+  return '<span class="status-pill status-active">' + t('pillActive') + '</span>';
+}
+
+// =================================================================
+// SIDE PANEL (DRIVER DRILL-DOWN)
+// =================================================================
+
+let panelMap = null;
+let panelLayer = null;
+
+function openDriverPanelByEmail(email) {
+  const driver = state.drivers.find(d => d.email === email);
+  if (driver) openDriverPanel(driver);
+}
+
+function openDriverPanel(d) {
+  const panel = document.getElementById('side-panel');
+  const backdrop = document.getElementById('panel-backdrop');
+
+  // Cabeçalho
+  document.getElementById('panel-name').textContent = d.name;
+  document.getElementById('panel-subtitle').textContent = `${d.country} · ${d.city || '—'} · ${d.email}`;
+
+  // Métrica principal
+  const dist = d.distBaseToEdge;
+  const distEl = document.getElementById('panel-dist');
+  const classEl = document.getElementById('panel-class');
+
+  if (dist !== null && dist !== undefined) {
+    distEl.textContent = dist + ' ' + t('kmUnit');
+    if (dist < 10) {
+      classEl.textContent = t('classNear');
+      classEl.className = 'panel-classification pc-near';
+    } else if (dist < 100) {
+      classEl.textContent = t('classEfficient');
+      classEl.className = 'panel-classification pc-efficient';
+    } else {
+      classEl.textContent = t('classHigh');
+      classEl.className = 'panel-classification pc-questionable';
+    }
+  } else {
+    distEl.textContent = '—';
+    classEl.textContent = t('classNoData');
+    classEl.className = 'panel-classification pc-near';
+  }
+
+  // Base atual
+  document.getElementById('panel-base-type').textContent = d.base ? (d.base.type || '—') : t('pNoBase');
+  document.getElementById('panel-base-address').textContent = d.base ? (d.base.address || '—') : '—';
+
+  // Seção de casa/eficiência — aparece sempre que tiver coordenadas de casa cadastradas
+  const efficiencySection = document.getElementById('panel-efficiency-section');
+  const isHotel = d.base && d.base.type === 'Hotel';
+  const hasHome = d.homeLat && d.homeLng;
+  const hasEfficiencyData = isHotel && hasHome && typeof d.distHomeToEdge === 'number';
+
+  if (hasHome) {
+    efficiencySection.style.display = '';
+
+    // Título da seção: "Hotel Mode Efficiency" se é hotel mode com dados;
+    // "Driver's Home" se é só a casa cadastrada (sem check-in ou não-hotel)
+    const titleEl = document.getElementById('panel-efficiency-title');
+    titleEl.textContent = hasEfficiencyData ? t('pEfficiency') : t('pHomeSection');
+
+    // Endereço de casa — sempre mostra
+    document.getElementById('panel-home-address').textContent = d.fullAddress || d.city || '—';
+
+    // Campos de eficiência (distância, economia, HM mensal) — só se tem dados completos
+    const distHomeRow = document.getElementById('panel-dist-home').closest('.info-row');
+    const savingsRow = document.getElementById('panel-savings').closest('.info-row');
+    const hmRow = document.getElementById('panel-hm-monthly').closest('.info-row');
+
+    if (hasEfficiencyData) {
+      distHomeRow.style.display = '';
+      savingsRow.style.display = '';
+      hmRow.style.display = '';
+
+      document.getElementById('panel-dist-home').textContent = d.distHomeToEdge + ' ' + t('kmUnit');
+
+      const savingsEl = document.getElementById('panel-savings');
+      if (typeof d.savingsKm === 'number') {
+        savingsEl.textContent = (d.savingsKm > 0 ? '+' : '') + d.savingsKm + ' ' + t('kmUnit');
+        savingsEl.style.color = d.savingsKm > 0 ? '#16A34A' : '#EF4444';
+      } else {
+        savingsEl.textContent = '—';
+        savingsEl.style.color = '';
+      }
+
+      const hmEl = document.getElementById('panel-hm-monthly');
+      if (d.hmMonthly === 'Yes') {
+        hmEl.innerHTML = '<span class="status-pill status-active">✓ Yes</span>';
+      } else if (d.hmMonthly === 'No') {
+        hmEl.innerHTML = '<span class="status-pill status-neutral">No</span>';
+      } else {
+        hmEl.textContent = '—';
+      }
+    } else {
+      // Só temos a casa — ocultamos os campos que não fazem sentido sem check-in/hotel
+      distHomeRow.style.display = 'none';
+      savingsRow.style.display = 'none';
+      hmRow.style.display = 'none';
+    }
+  } else {
+    efficiencySection.style.display = 'none';
+  }
+
+  // Área
+  document.getElementById('panel-area-address').textContent = d.area ? (d.area.address || '—') : t('pNoArea');
+  document.getElementById('panel-area-radius').textContent = d.area && d.area.radius ? d.area.radius + ' ' + t('kmUnit') : '—';
+
+  // Último check-in
+  document.getElementById('panel-checkin-when').textContent = d.hoursAgo === null ? t('noCheckin') : formatHoursAgo(d.hoursAgo);
+
+  const vehicleEl = document.getElementById('panel-vehicle');
+  if (d.vehicleStatus === 'OK') {
+    vehicleEl.innerHTML = '<span class="status-pill status-active">' + t('pillOk') + '</span>';
+  } else if (d.vehicleStatus === 'Minor Issue') {
+    vehicleEl.innerHTML = '<span class="status-pill status-warn">' + t('pillMinor') + '</span>';
+  } else if (d.vehicleStatus === 'Critical Issue') {
+    vehicleEl.innerHTML = '<span class="status-pill status-danger">' + t('pillCritical') + '</span>';
+  } else {
+    vehicleEl.textContent = '—';
+  }
+
+  // Notas (se tiver)
+  const notesBox = document.getElementById('panel-notes-box');
+  const notesRow = document.getElementById('panel-notes-row');
+  if (d.notes) {
+    notesRow.style.display = 'flex';
+    notesBox.style.display = 'block';
+    notesBox.innerHTML = `<div class="notes-box">${d.notes}</div>`;
+  } else {
+    notesRow.style.display = 'none';
+    notesBox.style.display = 'none';
+  }
+
+  // Histórico
+  renderDriverHistory(d);
+
+  // Abre painel
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden', 'false');
+  backdrop.classList.add('open');
+
+  // Renderiza mapa do painel depois do slide (pra calcular tamanho certo)
+  setTimeout(() => renderPanelMap(d), 320);
+}
+
+function closeDriverPanel() {
+  document.getElementById('side-panel').classList.remove('open');
+  document.getElementById('side-panel').setAttribute('aria-hidden', 'true');
+  document.getElementById('panel-backdrop').classList.remove('open');
+}
+
+function renderPanelMap(d) {
+  const container = document.getElementById('panel-map');
+
+  if (panelMap) {
+    panelMap.remove();
+    panelMap = null;
+  }
+
+  // Agora mostramos o mapa se tiver QUALQUER coordenada (casa, base ou área).
+  const hasHome = d.homeLat && d.homeLng;
+  const hasBase = d.base && d.base.lat;
+  const hasArea = d.area && d.area.lat;
+
+  if (!hasHome && !hasBase && !hasArea) {
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94A3B8;font-size:12px;">' + t('pNoLocation') + '</div>';
+    return;
+  }
+
+  container.innerHTML = ''; // limpa se tinha fallback antes
+
+  // Define centro inicial: base > casa > área (em ordem de prioridade)
+  let initialCenter;
+  if (hasBase) initialCenter = [d.base.lat, d.base.lng];
+  else if (hasHome) initialCenter = [d.homeLat, d.homeLng];
+  else initialCenter = [d.area.lat, d.area.lng];
+
+  panelMap = L.map('panel-map').setView(initialCenter, 10);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(panelMap);
+
+  panelLayer = L.layerGroup().addTo(panelMap);
+
+  const bounds = [];
+
+  // Pin da base (hotel/casa atual) — só se existir
+  if (hasBase) {
+    const baseIcon = L.divIcon({
+      className: 'driver-marker',
+      html: '<div style="width:16px;height:16px;background:#2C5282;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+    });
+    L.marker([d.base.lat, d.base.lng], { icon: baseIcon })
+      .bindTooltip(t('baseTooltipPrefix') + ' ' + (d.base.type || '—'), { permanent: false, direction: 'top' })
+      .addTo(panelLayer);
+    bounds.push([d.base.lat, d.base.lng]);
+  }
+
+  // Pin da CASA — sempre mostramos se tiver coordenada de casa,
+  // independente de ter base ou não (porque a casa é estática, vem da planilha).
+  // Evitamos duplicar pin se base for Home e ficar muito próxima (< 500m).
+  if (hasHome) {
+    const tooClose = hasBase && d.base.type === 'Home' &&
+      haversine(d.homeLat, d.homeLng, d.base.lat, d.base.lng) < 0.5;
+
+    if (!tooClose) {
+      const homeIcon = L.divIcon({
+        className: 'driver-marker',
+        html: '<div style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:white;border:2px solid #22C55E;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:14px;">🏠</div>',
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+      });
+      L.marker([d.homeLat, d.homeLng], { icon: homeIcon })
+        .bindTooltip(t('homeTooltip'), { permanent: false, direction: 'top' })
+        .addTo(panelLayer);
+      bounds.push([d.homeLat, d.homeLng]);
+
+      // Linha casa → hotel em hotel mode (verde tracejado pra indicar economia)
+      if (hasBase && d.base.type === 'Hotel') {
+        L.polyline([[d.homeLat, d.homeLng], [d.base.lat, d.base.lng]], {
+          color: '#22C55E',
+          weight: 1.5,
+          opacity: 0.6,
+          dashArray: '3 6',
+        }).addTo(panelLayer);
+      }
+    }
+  }
+
+  // Histórico de áreas (fade gradual)
+  if (d.historyAreas && d.historyAreas.length > 0) {
+    d.historyAreas.forEach((h, idx) => {
+      const opacity = 0.3 - (idx * 0.05); // mais antigo = mais transparente
+      L.circle([h.lat, h.lng], {
+        radius: (h.radius || 10) * 1000,
+        color: '#4A9FE0',
+        fillColor: '#4A9FE0',
+        fillOpacity: Math.max(0.05, opacity * 0.5),
+        weight: 1,
+        opacity: Math.max(0.2, opacity),
+        dashArray: '3 4',
+      }).addTo(panelLayer);
+      bounds.push([h.lat, h.lng]);
+    });
+  }
+
+  // Área atual (destaque)
+  if (d.area && d.area.lat) {
+    L.circle([d.area.lat, d.area.lng], {
+      radius: (d.area.radius || 10) * 1000,
+      color: '#2C5282',
+      fillColor: '#4A9FE0',
+      fillOpacity: 0.2,
+      weight: 2,
+    })
+      .bindTooltip(t('areaTooltipPrefix') + ' ' + (d.area.radius || 10) + ' ' + t('kmUnit'), { permanent: false, direction: 'top' })
+      .addTo(panelLayer);
+
+    // Linha base → área
+    L.polyline([[d.base.lat, d.base.lng], [d.area.lat, d.area.lng]], {
+      color: '#2C5282',
+      weight: 1.5,
+      opacity: 0.5,
+      dashArray: '5 5',
+    }).addTo(panelLayer);
+
+    bounds.push([d.area.lat, d.area.lng]);
+  }
+
+  if (bounds.length > 1) {
+    panelMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 11 });
+  }
+
+  setTimeout(() => panelMap.invalidateSize(), 100);
+}
+
+async function renderDriverHistory(d) {
+  const container = document.getElementById('panel-history');
+
+  // Demo mode: usa historyAreas mockados
+  if (state.demoMode) {
+    if (!d.historyAreas || d.historyAreas.length === 0) {
+      container.innerHTML = `<div class="history-empty">${t('pHistoryEmpty')}</div>`;
+      return;
+    }
+    container.innerHTML = d.historyAreas.map(h => `
+      <div class="history-item">
+        <span class="history-radius">${h.radius} km</span>
+        <div class="history-date">${h.dateLabel}</div>
+        <div class="history-address">${h.address}</div>
+      </div>
+    `).join('');
+    return;
+  }
+
+  // Modo real: busca histórico via getDriverHistory
+  container.innerHTML = `<div class="history-empty">${t('loadingHistory')}...</div>`;
+
+  try {
+    const res = await fetchWithTimeout(
+      CONFIG.scriptUrl + '?action=getDriverHistory&email=' + encodeURIComponent(d.email) + '&days=30',
+      15000
+    );
+
+    if (!res.success || !res.history || res.history.length === 0) {
+      container.innerHTML = `<div class="history-empty">${t('pHistoryEmpty')}</div>`;
+      return;
+    }
+
+    const items = res.history.map(h => {
+      const ts = new Date(h.timestamp);
+      const now = new Date();
+      const daysDiff = Math.floor((now - ts) / (1000 * 60 * 60 * 24));
+      let dateLabel;
+      if (daysDiff === 0) dateLabel = t('today');
+      else if (daysDiff === 1) dateLabel = t('yesterday');
+      else dateLabel = daysDiff + ' ' + t('daysAgoLabel');
+
+      return `
+        <div class="history-item">
+          <span class="history-radius">${h.destRadius || '—'} km</span>
+          <div class="history-date">${dateLabel}</div>
+          <div class="history-address">${h.destAddress || '—'}</div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = items;
+  } catch (err) {
+    console.warn('Erro ao buscar histórico:', err);
+    container.innerHTML = `<div class="history-empty">${t('pHistoryEmpty')}</div>`;
+  }
+}
+
+// ESC fecha o painel
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeDriverPanel();
+});
+
+// =================================================================
+// UTILS
+// =================================================================
+
+function haversine(lat1, lng1, lat2, lng2) {
+  if (!lat1 || !lat2) return 0;
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) ** 2 +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatTime(d) {
+  const locale = currentLang === 'pt' ? 'pt-BR' : currentLang === 'es' ? 'es-ES' : 'en-US';
+  return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatHoursAgo(h) {
+  if (h < 1) return t('lessThanHour');
+  const prefix = t('hoursAgoPrefix');
+  let val;
+  if (h < 24) val = Math.floor(h) + t('hoursAgoSuffix');
+  else val = Math.floor(h / 24) + t('daysAgoSuffix');
+  return prefix !== '' ? prefix + ' ' + val : val;
+}
+
+function showLoader(show, msg) {
+  const loader = document.getElementById('loader');
+  loader.style.display = show ? 'flex' : 'none';
+  if (msg) {
+    const textEl = loader.querySelector('.loader-text');
+    if (textEl) textEl.textContent = msg;
+  }
+}
+
+function toggleDemoMode() {
+  state.demoMode = !state.demoMode;
+  const btn = document.getElementById('demo-toggle');
+  const label = document.getElementById('demo-label');
+  btn.classList.toggle('active', state.demoMode);
+  label.textContent = state.demoMode ? t('demoModeActive') : t('demoMode');
+  loadData();
+}
+
+// =================================================================
+// INIT
+// =================================================================
+
+// Aplica idioma (do localStorage ou default PT) antes de tudo
+setLanguage(currentLang);
+
+initMap();
+loadData();
+setInterval(loadData, CONFIG.refreshMs);
+
+</script>
+
+</body>
+</html>
