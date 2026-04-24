@@ -1010,6 +1010,30 @@
       </div>
     </div>
 
+    <div class="panel-section" id="panel-performance-section" style="display:none;">
+      <div class="panel-section-title" data-i18n="pPerformance">Desempenho do mês</div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pEfficiencyMetric">Eficiência</span>
+        <span class="info-value" id="panel-efficiency" style="font-weight:600;">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pTkm">TKM</span>
+        <span class="info-value" id="panel-tkm">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pKmDriven">KM Driven</span>
+        <span class="info-value" id="panel-km-driven">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pMappingDays">Dias de mapeamento</span>
+        <span class="info-value" id="panel-mapping-days">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pBreakeven">Breakeven TKM%</span>
+        <span class="info-value" id="panel-breakeven">—</span>
+      </div>
+    </div>
+
     <div class="panel-section" id="panel-efficiency-section" style="display:none;">
       <div class="panel-section-title" id="panel-efficiency-title" data-i18n="pEfficiency">Eficiência hotel mode</div>
       <div class="info-row">
@@ -1135,7 +1159,7 @@ const I18N = {
     topSavings: 'Maior economia hotel mode',
     topSavingsSub: 'Drivers que mais economizam km/dia com o hotel',
     topEfficiency: 'Maior eficiência',
-    topEfficiencySub: 'Drivers com menor distância base→área',
+    topEfficiencySub: 'Melhor TKM / KM Driven do mês (mastersheet)',
     showMore: 'Ver lista completa',
     showLess: 'Ver top 5',
     noData: 'Sem dados',
@@ -1159,6 +1183,12 @@ const I18N = {
     pMetric: 'Km base → área',
     pCurrentBase: 'Base atual',
     pEfficiency: 'Eficiência hotel mode',
+    pPerformance: 'Desempenho do mês',
+    pEfficiencyMetric: 'Eficiência',
+    pTkm: 'TKM',
+    pKmDriven: 'KM Driven',
+    pMappingDays: 'Dias de mapeamento',
+    pBreakeven: 'Breakeven TKM%',
     pHomeSection: 'Casa do driver',
     pHomeAddress: 'Casa',
     pDistHome: 'Km casa → área',
@@ -1250,7 +1280,7 @@ const I18N = {
     topSavings: 'Mayor ahorro hotel mode',
     topSavingsSub: 'Conductores que más ahorran km/día con el hotel',
     topEfficiency: 'Mayor eficiencia',
-    topEfficiencySub: 'Conductores con menor distancia base→área',
+    topEfficiencySub: 'Mejor TKM / KM Driven del mes (mastersheet)',
     showMore: 'Ver lista completa',
     showLess: 'Ver top 5',
     noData: 'Sin datos',
@@ -1274,6 +1304,12 @@ const I18N = {
     pMetric: 'Km base → área',
     pCurrentBase: 'Base actual',
     pEfficiency: 'Eficiencia hotel mode',
+    pPerformance: 'Desempeño del mes',
+    pEfficiencyMetric: 'Eficiencia',
+    pTkm: 'TKM',
+    pKmDriven: 'KM Driven',
+    pMappingDays: 'Días de mapeo',
+    pBreakeven: 'Breakeven TKM%',
     pHomeSection: 'Casa del conductor',
     pHomeAddress: 'Casa',
     pDistHome: 'Km casa → área',
@@ -1362,7 +1398,7 @@ const I18N = {
     topSavings: 'Highest hotel mode savings',
     topSavingsSub: 'Drivers saving the most km/day via hotel',
     topEfficiency: 'Highest efficiency',
-    topEfficiencySub: 'Drivers with shortest base→area distance',
+    topEfficiencySub: 'Best TKM / KM Driven this month (mastersheet)',
     showMore: 'Show full list',
     showLess: 'Show top 5',
     noData: 'No data',
@@ -1386,6 +1422,12 @@ const I18N = {
     pMetric: 'Km base → area',
     pCurrentBase: 'Current base',
     pEfficiency: 'Hotel mode efficiency',
+    pPerformance: 'Monthly performance',
+    pEfficiencyMetric: 'Efficiency',
+    pTkm: 'TKM',
+    pKmDriven: 'KM Driven',
+    pMappingDays: 'Mapping days',
+    pBreakeven: 'Breakeven TKM%',
     pHomeSection: "Driver's home",
     pHomeAddress: 'Home',
     pDistHome: 'Km home → area',
@@ -1742,6 +1784,11 @@ async function fetchRealData() {
       paidSalary: hm ? hm.paidSalary : null,
       rampTx: hm ? hm.rampTransactions : null,
       totalDirectCost: hm ? hm.totalDirectCost : null,
+      // Performance data (cols N, O, P, Q da DASHBOARD (HM))
+      tkm: hm ? hm.tkm : null,
+      kmDriven: hm ? hm.kmDriven : null,
+      efficiency: hm ? hm.efficiency : null,   // TKM / KM Driven
+      mappingDays: hm ? hm.mappingDays : null,
     };
   });
 
@@ -1949,10 +1996,10 @@ function renderRankings(drivers) {
     .filter(d => d.base && d.base.type === 'Hotel' && typeof d.savingsKm === 'number' && d.savingsKm > 0)
     .sort((a, b) => b.savingsKm - a.savingsKm);
 
-  // Top efficiency: menor distância base→área (exclui valores null)
+  // Top efficiency: maior valor de Efficiency (TKM/KM Driven) da mastersheet
   const efficiencyList = drivers
-    .filter(d => typeof d.distBaseToEdge === 'number' && d.distBaseToEdge >= 0)
-    .sort((a, b) => a.distBaseToEdge - b.distBaseToEdge);
+    .filter(d => typeof d.efficiency === 'number' && d.efficiency > 0)
+    .sort((a, b) => b.efficiency - a.efficiency);
 
   if (savingsList.length === 0 && efficiencyList.length === 0) {
     section.style.display = 'none';
@@ -1989,7 +2036,7 @@ function renderRankingList(containerId, list, type) {
       value = '+' + d.savingsKm + ' km';
       valueClass = 'positive';
     } else {
-      value = d.distBaseToEdge + ' km';
+      value = (d.efficiency * 100).toFixed(1) + '%';
       valueClass = 'neutral';
     }
     return `
@@ -2643,6 +2690,40 @@ function openDriverPanel(d) {
   // Base atual
   document.getElementById('panel-base-type').textContent = d.base ? (d.base.type || '—') : t('pNoBase');
   document.getElementById('panel-base-address').textContent = d.base ? (d.base.address || '—') : '—';
+
+  // Seção Desempenho do mês — aparece se tiver dados da mastersheet
+  const perfSection = document.getElementById('panel-performance-section');
+  const hasPerf = typeof d.efficiency === 'number' || typeof d.tkm === 'number' || typeof d.kmDriven === 'number';
+
+  if (hasPerf) {
+    perfSection.style.display = '';
+
+    // Efficiency (TKM/KM Driven) em percentual — colorir baseado em faixas
+    const effEl = document.getElementById('panel-efficiency');
+    if (typeof d.efficiency === 'number' && d.efficiency > 0) {
+      const pct = d.efficiency * 100;
+      effEl.textContent = pct.toFixed(1) + '%';
+      // Faixas baseadas no print da mastersheet (amarelo 40-100%, normal > 100%)
+      if (pct >= 100) effEl.style.color = '#16A34A';
+      else if (pct >= 40) effEl.style.color = '#F59E0B';
+      else effEl.style.color = '#EF4444';
+    } else {
+      effEl.textContent = '—';
+      effEl.style.color = '';
+    }
+
+    // TKM, KM Driven, Mapping Days — números direto
+    document.getElementById('panel-tkm').textContent =
+      (typeof d.tkm === 'number') ? d.tkm.toLocaleString(undefined, {maximumFractionDigits: 1}) : '—';
+    document.getElementById('panel-km-driven').textContent =
+      (typeof d.kmDriven === 'number') ? d.kmDriven.toLocaleString(undefined, {maximumFractionDigits: 1}) : '—';
+    document.getElementById('panel-mapping-days').textContent =
+      (typeof d.mappingDays === 'number') ? d.mappingDays.toLocaleString(undefined, {maximumFractionDigits: 0}) : '—';
+    document.getElementById('panel-breakeven').textContent =
+      (typeof d.breakevenPct === 'number' && d.breakevenPct > 0) ? (d.breakevenPct * 100).toFixed(1) + '%' : '—';
+  } else {
+    perfSection.style.display = 'none';
+  }
 
   // Seção de casa/eficiência — aparece sempre que tiver coordenadas de casa cadastradas
   const efficiencySection = document.getElementById('panel-efficiency-section');
