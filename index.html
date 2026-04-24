@@ -946,13 +946,13 @@ document.getElementById('submit-checkout-btn').addEventListener('click', async (
   const notes = document.getElementById('checkout-notes').value.trim();
 
   if (!tkm || !km) {
-    showToast(t('fillRequired'), 'error');
+    toast(t('fillAll'), 'error');
     return;
   }
 
   const btn = document.getElementById('submit-checkout-btn');
   btn.disabled = true;
-  btn.textContent = '...';
+  btn.innerHTML = '<span class="loading-spinner"></span> ' + t('sending');
 
   try {
     const payload = {
@@ -974,24 +974,10 @@ document.getElementById('submit-checkout-btn').addEventListener('click', async (
       body: JSON.stringify(payload),
     });
 
-    showToast(t('checkoutSent'), 'success');
-
-    // Reseta o formulário após 2s
-    setTimeout(() => {
-      document.getElementById('checkout-tkm').value = '';
-      document.getElementById('checkout-km').value = '';
-      document.getElementById('checkout-notes').value = '';
-      document.getElementById('checkout-gps-status').textContent = '';
-      state.checkoutGps = null;
-      document.getElementById('driver-select').value = '';
-      document.getElementById('mode-card').classList.add('hidden');
-      document.getElementById('checkout-card').classList.add('hidden');
-      document.getElementById('submit-checkout-btn').classList.add('hidden');
-      btn.disabled = false;
-      btn.textContent = t('submitCheckout');
-    }, 2000);
+    toast(t('checkoutSent'), 'success');
+    setTimeout(() => location.reload(), 2000);
   } catch (err) {
-    showToast((err.message || 'Erro'), 'error');
+    toast(t('errorSend'), 'error');
     btn.disabled = false;
     btn.textContent = t('submitCheckout');
   }
