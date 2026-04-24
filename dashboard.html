@@ -813,7 +813,7 @@
     </div>
 
     <div class="panel-section" id="panel-efficiency-section" style="display:none;">
-      <div class="panel-section-title" data-i18n="pEfficiency">Eficiência hotel mode</div>
+      <div class="panel-section-title" id="panel-efficiency-title" data-i18n="pEfficiency">Eficiência hotel mode</div>
       <div class="info-row">
         <span class="info-label" data-i18n="pHomeAddress">Casa</span>
         <span class="info-value small" id="panel-home-address">—</span>
@@ -946,6 +946,7 @@ const I18N = {
     pMetric: 'Km base → área',
     pCurrentBase: 'Base atual',
     pEfficiency: 'Eficiência hotel mode',
+    pHomeSection: 'Casa do driver',
     pHomeAddress: 'Casa',
     pDistHome: 'Km casa → área',
     pSavings: 'Economia (km/dia)',
@@ -1045,6 +1046,7 @@ const I18N = {
     pMetric: 'Km base → área',
     pCurrentBase: 'Base actual',
     pEfficiency: 'Eficiencia hotel mode',
+    pHomeSection: 'Casa del conductor',
     pHomeAddress: 'Casa',
     pDistHome: 'Km casa → área',
     pSavings: 'Ahorro (km/día)',
@@ -1141,6 +1143,7 @@ const I18N = {
     pMetric: 'Km base → area',
     pCurrentBase: 'Current base',
     pEfficiency: 'Hotel mode efficiency',
+    pHomeSection: "Driver's home",
     pHomeAddress: 'Home',
     pDistHome: 'Km home → area',
     pSavings: 'Savings (km/day)',
@@ -1904,33 +1907,57 @@ function openDriverPanel(d) {
   document.getElementById('panel-base-type').textContent = d.base ? (d.base.type || '—') : t('pNoBase');
   document.getElementById('panel-base-address').textContent = d.base ? (d.base.address || '—') : '—';
 
-  // Seção de eficiência hotel mode — só aparece se for Hotel com dados de casa
+  // Seção de casa/eficiência — aparece sempre que tiver coordenadas de casa cadastradas
   const efficiencySection = document.getElementById('panel-efficiency-section');
   const isHotel = d.base && d.base.type === 'Hotel';
   const hasHome = d.homeLat && d.homeLng;
+  const hasEfficiencyData = isHotel && hasHome && typeof d.distHomeToEdge === 'number';
 
-  if (isHotel && hasHome) {
+  if (hasHome) {
     efficiencySection.style.display = '';
+
+    // Título da seção: "Hotel Mode Efficiency" se é hotel mode com dados;
+    // "Driver's Home" se é só a casa cadastrada (sem check-in ou não-hotel)
+    const titleEl = document.getElementById('panel-efficiency-title');
+    titleEl.textContent = hasEfficiencyData ? t('pEfficiency') : t('pHomeSection');
+
+    // Endereço de casa — sempre mostra
     document.getElementById('panel-home-address').textContent = d.fullAddress || d.city || '—';
-    document.getElementById('panel-dist-home').textContent =
-      (typeof d.distHomeToEdge === 'number') ? d.distHomeToEdge + ' ' + t('kmUnit') : '—';
 
-    const savingsEl = document.getElementById('panel-savings');
-    if (typeof d.savingsKm === 'number') {
-      savingsEl.textContent = (d.savingsKm > 0 ? '+' : '') + d.savingsKm + ' ' + t('kmUnit');
-      savingsEl.style.color = d.savingsKm > 0 ? '#16A34A' : '#EF4444';
-    } else {
-      savingsEl.textContent = '—';
-      savingsEl.style.color = '';
-    }
+    // Campos de eficiência (distância, economia, HM mensal) — só se tem dados completos
+    const distHomeRow = document.getElementById('panel-dist-home').closest('.info-row');
+    const savingsRow = document.getElementById('panel-savings').closest('.info-row');
+    const hmRow = document.getElementById('panel-hm-monthly').closest('.info-row');
 
-    const hmEl = document.getElementById('panel-hm-monthly');
-    if (d.hmMonthly === 'Yes') {
-      hmEl.innerHTML = '<span class="status-pill status-active">✓ Yes</span>';
-    } else if (d.hmMonthly === 'No') {
-      hmEl.innerHTML = '<span class="status-pill status-neutral">No</span>';
+    if (hasEfficiencyData) {
+      distHomeRow.style.display = '';
+      savingsRow.style.display = '';
+      hmRow.style.display = '';
+
+      document.getElementById('panel-dist-home').textContent = d.distHomeToEdge + ' ' + t('kmUnit');
+
+      const savingsEl = document.getElementById('panel-savings');
+      if (typeof d.savingsKm === 'number') {
+        savingsEl.textContent = (d.savingsKm > 0 ? '+' : '') + d.savingsKm + ' ' + t('kmUnit');
+        savingsEl.style.color = d.savingsKm > 0 ? '#16A34A' : '#EF4444';
+      } else {
+        savingsEl.textContent = '—';
+        savingsEl.style.color = '';
+      }
+
+      const hmEl = document.getElementById('panel-hm-monthly');
+      if (d.hmMonthly === 'Yes') {
+        hmEl.innerHTML = '<span class="status-pill status-active">✓ Yes</span>';
+      } else if (d.hmMonthly === 'No') {
+        hmEl.innerHTML = '<span class="status-pill status-neutral">No</span>';
+      } else {
+        hmEl.textContent = '—';
+      }
     } else {
-      hmEl.textContent = '—';
+      // Só temos a casa — ocultamos os campos que não fazem sentido sem check-in/hotel
+      distHomeRow.style.display = 'none';
+      savingsRow.style.display = 'none';
+      hmRow.style.display = 'none';
     }
   } else {
     efficiencySection.style.display = 'none';
@@ -1992,13 +2019,25 @@ function renderPanelMap(d) {
     panelMap = null;
   }
 
-  if (!d.base || !d.base.lat) {
+  // Agora mostramos o mapa se tiver QUALQUER coordenada (casa, base ou área).
+  const hasHome = d.homeLat && d.homeLng;
+  const hasBase = d.base && d.base.lat;
+  const hasArea = d.area && d.area.lat;
+
+  if (!hasHome && !hasBase && !hasArea) {
     container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94A3B8;font-size:12px;">' + t('pNoLocation') + '</div>';
     return;
   }
 
   container.innerHTML = ''; // limpa se tinha fallback antes
-  panelMap = L.map('panel-map').setView([d.base.lat, d.base.lng], 10);
+
+  // Define centro inicial: base > casa > área (em ordem de prioridade)
+  let initialCenter;
+  if (hasBase) initialCenter = [d.base.lat, d.base.lng];
+  else if (hasHome) initialCenter = [d.homeLat, d.homeLng];
+  else initialCenter = [d.area.lat, d.area.lng];
+
+  panelMap = L.map('panel-map').setView(initialCenter, 10);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap contributors © CARTO',
     subdomains: 'abcd',
@@ -2009,41 +2048,49 @@ function renderPanelMap(d) {
 
   const bounds = [];
 
-  // Pin da base (hotel/casa atual)
-  const baseIcon = L.divIcon({
-    className: 'driver-marker',
-    html: '<div style="width:16px;height:16px;background:#2C5282;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
-  });
-  L.marker([d.base.lat, d.base.lng], { icon: baseIcon })
-    .bindTooltip(t('baseTooltipPrefix') + ' ' + (d.base.type || '—'), { permanent: false, direction: 'top' })
-    .addTo(panelLayer);
-  bounds.push([d.base.lat, d.base.lng]);
-
-  // Pin da CASA (se diferente da base, ex: hotel mode)
-  // Mostramos o pin de casa sempre que tiver homeLat e a base for do tipo Hotel
-  // (se base for Home, base já é a casa)
-  const isHotelMode = d.base.type === 'Hotel';
-  if (isHotelMode && d.homeLat && d.homeLng) {
-    const homeIcon = L.divIcon({
+  // Pin da base (hotel/casa atual) — só se existir
+  if (hasBase) {
+    const baseIcon = L.divIcon({
       className: 'driver-marker',
-      html: '<div style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:white;border:2px solid #22C55E;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:14px;">🏠</div>',
-      iconSize: [26, 26],
-      iconAnchor: [13, 13],
+      html: '<div style="width:16px;height:16px;background:#2C5282;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
     });
-    L.marker([d.homeLat, d.homeLng], { icon: homeIcon })
-      .bindTooltip(t('homeTooltip'), { permanent: false, direction: 'top' })
+    L.marker([d.base.lat, d.base.lng], { icon: baseIcon })
+      .bindTooltip(t('baseTooltipPrefix') + ' ' + (d.base.type || '—'), { permanent: false, direction: 'top' })
       .addTo(panelLayer);
-    bounds.push([d.homeLat, d.homeLng]);
+    bounds.push([d.base.lat, d.base.lng]);
+  }
 
-    // Linha casa → hotel (economizada pelo hotel mode) em verde tracejado
-    L.polyline([[d.homeLat, d.homeLng], [d.base.lat, d.base.lng]], {
-      color: '#22C55E',
-      weight: 1.5,
-      opacity: 0.6,
-      dashArray: '3 6',
-    }).addTo(panelLayer);
+  // Pin da CASA — sempre mostramos se tiver coordenada de casa,
+  // independente de ter base ou não (porque a casa é estática, vem da planilha).
+  // Evitamos duplicar pin se base for Home e ficar muito próxima (< 500m).
+  if (hasHome) {
+    const tooClose = hasBase && d.base.type === 'Home' &&
+      haversine(d.homeLat, d.homeLng, d.base.lat, d.base.lng) < 0.5;
+
+    if (!tooClose) {
+      const homeIcon = L.divIcon({
+        className: 'driver-marker',
+        html: '<div style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:white;border:2px solid #22C55E;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:14px;">🏠</div>',
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+      });
+      L.marker([d.homeLat, d.homeLng], { icon: homeIcon })
+        .bindTooltip(t('homeTooltip'), { permanent: false, direction: 'top' })
+        .addTo(panelLayer);
+      bounds.push([d.homeLat, d.homeLng]);
+
+      // Linha casa → hotel em hotel mode (verde tracejado pra indicar economia)
+      if (hasBase && d.base.type === 'Hotel') {
+        L.polyline([[d.homeLat, d.homeLng], [d.base.lat, d.base.lng]], {
+          color: '#22C55E',
+          weight: 1.5,
+          opacity: 0.6,
+          dashArray: '3 6',
+        }).addTo(panelLayer);
+      }
+    }
   }
 
   // Histórico de áreas (fade gradual)
