@@ -907,9 +907,247 @@
     color: var(--c-text-muted);
     margin: 2px 0;
   }
+  /* ============================================
+     TELA DE LOGIN
+     ============================================ */
+  .login-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 10000;
+  }
+  .login-card {
+    background: white;
+    border-radius: 16px;
+    padding: 36px 32px 28px;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    text-align: center;
+    position: relative;
+  }
+
+  /* Seletor de línguas no canto superior do card */
+  .login-lang-switch {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: flex;
+    gap: 2px;
+    background: var(--c-bg-tint);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .login-lang-switch button {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .login-lang-switch button:hover {
+    color: var(--c-primary);
+  }
+  .login-lang-switch button.active {
+    background: white;
+    color: var(--c-primary-dark);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+
+  .login-logo {
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50px;
+  }
+  .login-logo img {
+    height: 44px;
+    opacity: 0.95;
+  }
+  .login-logo-fallback {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .login-logo-text {
+    font-size: 26px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  .login-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 4px;
+  }
+  .login-sub {
+    font-size: 13px;
+    color: var(--c-text-muted);
+    margin-bottom: 24px;
+  }
+  .login-card form {
+    text-align: left;
+  }
+  .login-card label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .login-card input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--c-text);
+    background: white;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-sizing: border-box;
+  }
+  .login-card input:focus {
+    outline: none;
+    border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(74, 159, 224, 0.15);
+  }
+  .login-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 22px;
+    font-family: inherit;
+    transition: transform 0.1s, box-shadow 0.15s;
+  }
+  .login-btn:hover {
+    box-shadow: 0 4px 12px rgba(44, 82, 130, 0.3);
+  }
+  .login-btn:active {
+    transform: scale(0.98);
+  }
+  .login-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .login-error {
+    margin-top: 12px;
+    padding: 9px 12px;
+    background: #FEF2F2;
+    border-left: 3px solid #EF4444;
+    border-radius: 4px;
+    color: #991B1B;
+    font-size: 12px;
+    display: none;
+  }
+  .login-error.visible {
+    display: block;
+  }
+  .login-footer {
+    margin-top: 24px;
+    color: var(--c-text-muted);
+    opacity: 0.6;
+  }
+  .login-footer small {
+    font-size: 11px;
+  }
+
+  /* User pill no header */
+  .user-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--c-bg-tint);
+    border-radius: 20px;
+    color: var(--c-primary-dark);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .user-pill .user-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .user-pill .logout-link {
+    color: var(--c-text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    padding: 0 4px;
+  }
+  .user-pill .logout-link:hover { color: #EF4444; }
+
 </style>
 </head>
 <body>
+
+<!-- TELA DE LOGIN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-lang-switch">
+      <button type="button" data-login-lang="pt" onclick="setLoginLang('pt')" class="active">PT</button>
+      <button type="button" data-login-lang="es" onclick="setLoginLang('es')">ES</button>
+      <button type="button" data-login-lang="en" onclick="setLoginLang('en')">EN</button>
+    </div>
+
+    <div class="login-logo">
+      <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" id="login-logo-img" onerror="this.style.display='none'; document.getElementById('login-logo-fallback').style.display='inline-flex';">
+      <div id="login-logo-fallback" class="login-logo-fallback" style="display:none;">
+        <span class="login-logo-text">Aceolution</span>
+      </div>
+    </div>
+
+    <div class="login-title" id="login-title">Street View LATAM</div>
+    <div class="login-sub" id="login-sub">Faça login para acessar o dashboard</div>
+
+    <form id="login-form" onsubmit="return doLogin(event)">
+      <label for="login-username" id="login-label-user">Usuário</label>
+      <input type="text" id="login-username" autocomplete="username" required autofocus>
+
+      <label for="login-password" id="login-label-pass" style="margin-top:12px;">Senha</label>
+      <input type="password" id="login-password" autocomplete="current-password" required>
+
+      <button type="submit" class="login-btn" id="login-btn">Entrar</button>
+      <div class="login-error" id="login-error"></div>
+    </form>
+
+    <div class="login-footer">
+      <small id="login-footer-text">Aceolution do Brasil · Plataforma interna</small>
+    </div>
+  </div>
+</div>
+
+<!-- APP (escondido até login) -->
+<div id="app-content" style="display:none;">
 
 <div id="loader" class="loader-overlay">
   <div class="spinner"></div>
@@ -957,6 +1195,11 @@
       </div>
     </div>
     <button class="refresh-btn" onclick="loadData()" data-i18n="refresh">⟳ Atualizar</button>
+    <div class="user-pill" id="user-pill" style="display:none;">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span id="user-name">—</span>
+      <span class="logout-link" onclick="doLogout()" title="Sair">↩</span>
+    </div>
   </div>
 </div>
 
@@ -1239,6 +1482,229 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+
+// ================================================================
+// AUTENTICAÇÃO (CLIENT-SIDE — VEJA AVISO)
+// ================================================================
+//
+// AVISO IMPORTANTE: Este sistema de login é CLIENT-SIDE e serve apenas
+// pra evitar acesso casual. Qualquer pessoa com conhecimento técnico
+// (DevTools / F12 / Network) consegue:
+//   1. Ler todos os hashes de senha aqui no código fonte
+//   2. Acessar o Apps Script diretamente sem passar pelo login
+//
+// Pra cada usuário: gere o hash SHA-256 da senha em
+// https://emn178.github.io/online-tools/sha256.html (digite a senha,
+// cole o hash hex no campo 'passwordHash' abaixo).
+//
+// Pra trocar/adicionar usuário: edite o array USERS abaixo.
+//
+// ================================================================
+
+// Strings i18n da tela de login (separado do I18N principal porque o login
+// é mostrado ANTES do app inicializar, então precisa do próprio dicionário)
+const LOGIN_I18N = {
+  pt: {
+    subtitle: 'Faça login para acessar o dashboard',
+    usernameLabel: 'Usuário',
+    passwordLabel: 'Senha',
+    submitBtn: 'Entrar',
+    submitChecking: 'Verificando...',
+    errorEmpty: 'Preencha usuário e senha',
+    errorInvalid: 'Usuário ou senha inválidos',
+    errorGeneric: 'Erro ao fazer login. Tente novamente.',
+    footer: 'Aceolution do Brasil · Plataforma interna',
+    logoutConfirm: 'Sair?',
+  },
+  es: {
+    subtitle: 'Inicie sesión para acceder al dashboard',
+    usernameLabel: 'Usuario',
+    passwordLabel: 'Contraseña',
+    submitBtn: 'Entrar',
+    submitChecking: 'Verificando...',
+    errorEmpty: 'Complete usuario y contraseña',
+    errorInvalid: 'Usuario o contraseña inválidos',
+    errorGeneric: 'Error al iniciar sesión. Inténtelo de nuevo.',
+    footer: 'Aceolution do Brasil · Plataforma interna',
+    logoutConfirm: '¿Salir?',
+  },
+  en: {
+    subtitle: 'Sign in to access the dashboard',
+    usernameLabel: 'Username',
+    passwordLabel: 'Password',
+    submitBtn: 'Sign in',
+    submitChecking: 'Verifying...',
+    errorEmpty: 'Fill in username and password',
+    errorInvalid: 'Invalid username or password',
+    errorGeneric: 'Login error. Please try again.',
+    footer: 'Aceolution do Brasil · Internal platform',
+    logoutConfirm: 'Sign out?',
+  },
+};
+
+let currentLoginLang = localStorage.getItem('preferredLang') || 'pt';
+
+/**
+ * Aplica idioma escolhido na tela de login e salva preferência.
+ * Quando o usuário logar, o app principal vai herdar essa escolha.
+ */
+function setLoginLang(lang) {
+  if (!LOGIN_I18N[lang]) return;
+  currentLoginLang = lang;
+  localStorage.setItem('preferredLang', lang);
+
+  // Marca botão ativo
+  document.querySelectorAll('.login-lang-switch button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.loginLang === lang);
+  });
+
+  const t = LOGIN_I18N[lang];
+  document.getElementById('login-sub').textContent = t.subtitle;
+  document.getElementById('login-label-user').textContent = t.usernameLabel;
+  document.getElementById('login-label-pass').textContent = t.passwordLabel;
+
+  const btn = document.getElementById('login-btn');
+  if (!btn.disabled) btn.textContent = t.submitBtn;
+
+  // Footer
+  const footer = document.querySelector('.login-footer small');
+  if (footer) footer.textContent = t.footer;
+
+  // Atualiza idioma do <html> pra leitores de tela
+  document.documentElement.lang = lang;
+}
+
+// Aplica idioma salvo logo na carga da página
+setLoginLang(currentLoginLang);
+
+const USERS = [
+  // SUBSTITUA estas senhas de exemplo antes de publicar
+  { username: 'fuss', passwordHash: 'f2ca6ae1d77bd372fd9f238b5abb372767d137291c4ab4098c4444b01b0b061a', fullName: 'Fuss' },
+  { username: 'pankaj', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Pankaj' },
+   { username: 'bia', passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Bia' },
+  { username: 'lucas', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Outro Lucas' },
+  // Adicione mais conforme necessário:
+  // { username: 'joao', passwordHash: '...', fullName: 'João Silva' },
+];
+
+let currentUser = null;
+
+/**
+ * Calcula SHA-256 hex de uma string.
+ * Usa a Web Crypto API nativa (não precisa de bibliotecas externas).
+ */
+async function sha256(text) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
+ * Handler do submit do form de login.
+ */
+async function doLogin(event) {
+  event.preventDefault();
+  const usernameEl = document.getElementById('login-username');
+  const passwordEl = document.getElementById('login-password');
+  const errorEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  const t = LOGIN_I18N[currentLoginLang] || LOGIN_I18N.pt;
+
+  const username = usernameEl.value.trim().toLowerCase();
+  const password = passwordEl.value;
+
+  if (!username || !password) {
+    errorEl.textContent = t.errorEmpty;
+    errorEl.classList.add('visible');
+    return false;
+  }
+
+  btn.disabled = true;
+  btn.textContent = t.submitChecking;
+  errorEl.classList.remove('visible');
+
+  try {
+    const passwordHash = await sha256(password);
+    const user = USERS.find(u =>
+      u.username.toLowerCase() === username && u.passwordHash === passwordHash
+    );
+
+    if (!user) {
+      // Pequeno delay anti-brute-force visual (não é segurança real)
+      await new Promise(r => setTimeout(r, 600));
+      errorEl.textContent = t.errorInvalid;
+      errorEl.classList.add('visible');
+      passwordEl.value = '';
+      passwordEl.focus();
+      btn.disabled = false;
+      btn.textContent = t.submitBtn;
+      return false;
+    }
+
+    // Login OK — guarda só na memória (nada em localStorage,
+    // já que a config é "sempre pede ao abrir")
+    currentUser = user;
+    onLoginSuccess();
+  } catch (err) {
+    console.error('Login error:', err);
+    errorEl.textContent = t.errorGeneric;
+    errorEl.classList.add('visible');
+    btn.disabled = false;
+    btn.textContent = t.submitBtn;
+  }
+
+  return false;
+}
+
+/**
+ * Chamado quando login é validado com sucesso.
+ * Esconde tela de login, mostra app, e inicializa tudo (mapa, dados).
+ */
+function onLoginSuccess() {
+  // Esconde tela de login
+  document.getElementById('login-screen').style.display = 'none';
+
+  // Mostra app
+  document.getElementById('app-content').style.display = '';
+
+  // Mostra user pill no header
+  document.getElementById('user-pill').style.display = '';
+  document.getElementById('user-name').textContent = currentUser.fullName;
+
+  // Avatar com iniciais (max 2 letras)
+  const initials = currentUser.fullName
+    .split(' ')
+    .map(s => s.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join('');
+  document.getElementById('user-avatar').textContent = initials;
+
+  // Sincroniza idioma escolhido na tela de login com o app principal
+  // (o app tem sua própria função setLanguage que aplica I18N completo)
+  if (typeof setLanguage === 'function') {
+    setLanguage(currentLoginLang);
+  }
+
+  // Inicializa o resto do app (mapa, dados, refresh automático)
+  initMap();
+  loadData();
+  setInterval(loadData, CONFIG.refreshMs);
+}
+
+/**
+ * Faz logout — recarrega a página, o que volta pra tela de login limpa.
+ */
+function doLogout() {
+  const t = LOGIN_I18N[currentLoginLang] || LOGIN_I18N.pt;
+  if (confirm(t.logoutConfirm)) {
+    currentUser = null;
+    location.reload();
+  }
+}
+
 
 const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
@@ -3508,11 +3974,13 @@ function toggleDemoMode() {
 // Aplica idioma (do localStorage ou default PT) antes de tudo
 setLanguage(currentLang);
 
-initMap();
-loadData();
-setInterval(loadData, CONFIG.refreshMs);
+// Não chamar initMap/loadData aqui — é feito DEPOIS do login bem-sucedido,
+// na função onLoginSuccess(). Se o usuário ainda não logou, a tela de login
+// fica visível e o resto do app fica oculto.
 
 </script>
+
+</div> <!-- /app-content -->
 
 </body>
 </html>
