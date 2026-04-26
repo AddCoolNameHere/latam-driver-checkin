@@ -318,6 +318,23 @@
     color: white;
     border-color: var(--c-primary);
   }
+  .filter-reset {
+    margin-left: auto;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px dashed var(--c-border);
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--c-text-muted);
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .filter-reset:hover {
+    border-style: solid;
+    border-color: #EF4444;
+    color: #EF4444;
+  }
 
   /* SCORECARDS */
   .scorecards {
@@ -844,25 +861,140 @@
     border-radius: 8px;
     font-style: italic;
   }
+
+  /* Timeline de histórico v1.2 */
+  #panel-history {
+    position: relative;
+    padding-left: 16px;
+  }
+  #panel-history::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--c-accent) 0%, var(--c-border) 100%);
+  }
   .history-item {
+    position: relative;
     padding: 10px 12px;
     background: var(--c-bg);
     border-radius: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     font-size: 12px;
+    line-height: 1.45;
+  }
+  .history-item.no-checkin {
+    background: #FEF3C7;
+    border-left: 2px solid #F59E0B;
+  }
+  .history-marker {
+    position: absolute;
+    left: -16px;
+    top: 14px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--c-primary);
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px var(--c-border);
+  }
+  .history-item.no-checkin .history-marker {
+    background: #F59E0B;
+  }
+  .history-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
   }
   .history-date {
     color: var(--c-text-muted);
     font-size: 11px;
-    margin-bottom: 2px;
-  }
-  .history-address {
-    color: var(--c-text);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
   }
   .history-radius {
     color: var(--c-primary);
     font-weight: 500;
-    float: right;
+    font-size: 11px;
+    background: var(--c-bg-tint);
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+  .history-address {
+    color: var(--c-text);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .history-checkout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed var(--c-border);
+    font-size: 11px;
+    color: var(--c-text-muted);
+    flex-wrap: wrap;
+  }
+  .history-checkout.incomplete {
+    color: #92400E;
+  }
+  .history-checkout.incomplete em {
+    color: #92400E;
+    font-style: normal;
+    background: #FEF3C7;
+    padding: 1px 5px;
+    border-radius: 8px;
+  }
+  .history-time-range {
+    font-weight: 600;
+    color: var(--c-primary-dark);
+  }
+  .history-checkout.incomplete .history-time-range {
+    color: #92400E;
+  }
+  .history-hours {
+    color: var(--c-primary);
+    font-weight: 500;
+  }
+  .history-stats {
+    color: var(--c-text-muted);
+  }
+  .history-status {
+    display: inline-block;
+    margin-top: 4px;
+    margin-right: 4px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .history-status.critical {
+    background: #FEF2F2;
+    color: #991B1B;
+  }
+  .history-status.minor {
+    background: #FEF3C7;
+    color: #92400E;
+  }
+  .history-status.warning {
+    background: #FFEDD5;
+    color: #9A3412;
+  }
+  .history-notes {
+    margin-top: 4px;
+    padding: 6px 8px;
+    background: white;
+    border-left: 2px solid var(--c-accent);
+    border-radius: 3px;
+    font-size: 11px;
+    color: var(--c-text);
+    font-style: italic;
+    line-height: 1.4;
   }
 
   .notes-box {
@@ -1249,6 +1381,8 @@
   <button class="filter-chip" data-period="1" onclick="setFilter('period', 1)" data-i18n="today">Hoje</button>
   <button class="filter-chip active" data-period="7" onclick="setFilter('period', 7)" data-i18n="sevenDays">7 dias</button>
   <button class="filter-chip" data-period="30" onclick="setFilter('period', 30)" data-i18n="thirtyDays">30 dias</button>
+
+  <button class="filter-reset" onclick="resetPreferences()" title="Resetar filtros e preferências" data-i18n="resetFilters">↺ Resetar</button>
 </div>
 
 <div class="scorecards">
@@ -1579,10 +1713,8 @@ setLoginLang(currentLoginLang);
 
 const USERS = [
   // SUBSTITUA estas senhas de exemplo antes de publicar
-  { username: 'fuss', passwordHash: 'f2ca6ae1d77bd372fd9f238b5abb372767d137291c4ab4098c4444b01b0b061a', fullName: 'Fuss' },
-  { username: 'pankaj', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Pankaj' },
-   { username: 'bia', passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Bia' },
-  { username: 'lucas', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Outro Lucas' },
+  { username: 'fuss', passwordHash: '16974faf17a176c7426d60b8e2db2647ec3a184fa8af69287b10ba457d6128b9', fullName: 'Fuss' },
+  { username: 'chefao', passwordHash: '76256094a39276750bac0d27d74e1b96c64a727512cc7b07436d5f9f7c13a5a3', fullName: 'Nome do Chefão' },
   // Adicione mais conforme necessário:
   // { username: 'joao', passwordHash: '...', fullName: 'João Silva' },
 ];
@@ -1688,10 +1820,18 @@ function onLoginSuccess() {
     setLanguage(currentLoginLang);
   }
 
+  // Restaura preferências salvas (filtros, sort, etc) antes de qualquer render
+  loadPreferences();
+
   // Inicializa o resto do app (mapa, dados, refresh automático)
   initMap();
   loadData();
   setInterval(loadData, CONFIG.refreshMs);
+
+  // Após dados carregarem, sincroniza UI dos botões de filtro com as
+  // preferências restauradas. Pequeno delay pra garantir que loadData() já
+  // populou os filtros de país dinâmicos.
+  setTimeout(syncFilterButtonsUI, 500);
 }
 
 /**
@@ -1732,6 +1872,9 @@ const I18N = {
     today: 'Hoje',
     sevenDays: '7 dias',
     thirtyDays: '30 dias',
+    resetFilters: '↺ Resetar',
+    hHistoryNoCheckin: 'Sem check-in matinal',
+    hHistoryNoCheckout: 'sem checkout',
     scActiveDrivers: 'DRIVERS ATIVOS',
     scInFilter: 'no filtro selecionado',
     scWithCheckin: 'com check-in no período',
@@ -1871,6 +2014,9 @@ const I18N = {
     today: 'Hoy',
     sevenDays: '7 días',
     thirtyDays: '30 días',
+    resetFilters: '↺ Restablecer',
+    hHistoryNoCheckin: 'Sin check-in matutino',
+    hHistoryNoCheckout: 'sin checkout',
     scActiveDrivers: 'CONDUCTORES ACTIVOS',
     scInFilter: 'en el filtro seleccionado',
     scWithCheckin: 'con check-in en el período',
@@ -2007,6 +2153,9 @@ const I18N = {
     today: 'Today',
     sevenDays: '7 days',
     thirtyDays: '30 days',
+    resetFilters: '↺ Reset',
+    hHistoryNoCheckin: 'No morning check-in',
+    hHistoryNoCheckout: 'no checkout',
     scActiveDrivers: 'ACTIVE DRIVERS',
     scInFilter: 'in selected filter',
     scWithCheckin: 'checked in this period',
@@ -2190,6 +2339,98 @@ let state = {
   // Top N expandido?
   topExpanded: false,
 };
+
+// ================================================================
+// PERSISTÊNCIA DE ESTADO (Feature 1.1)
+// ================================================================
+//
+// Salva preferências do usuário (filtros, sort, etc) em localStorage
+// pra que recarregar a página ou voltar depois mantenha tudo igual.
+// NÃO salva: dados do servidor (drivers, métricas), demoMode.
+
+const STATE_STORAGE_KEY = 'latam-dashboard-prefs-v1';
+
+/**
+ * Salva preferências do estado atual no localStorage.
+ * Chamada após qualquer mudança de filtro/sort/seleção do usuário.
+ */
+function savePreferences() {
+  try {
+    const prefs = {
+      filter: state.filter,
+      sort: state.sort,
+      ctsSelectedPeriod: state.ctsSelectedPeriod,
+      topExpanded: state.topExpanded,
+    };
+    localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(prefs));
+  } catch (err) {
+    // Silencioso — localStorage pode estar cheio ou desabilitado (modo privado).
+    // Não vale quebrar a UX por isso.
+    console.warn('Não foi possível salvar preferências:', err);
+  }
+}
+
+/**
+ * Restaura preferências do localStorage no state.
+ * Chamada uma vez no início do app, antes de qualquer render.
+ * Validação defensiva: se localStorage tiver lixo, ignora silenciosamente.
+ */
+function loadPreferences() {
+  try {
+    const raw = localStorage.getItem(STATE_STORAGE_KEY);
+    if (!raw) return;
+    const prefs = JSON.parse(raw);
+
+    // Aplica só campos válidos (defensivo contra updates de schema)
+    if (prefs.filter && typeof prefs.filter === 'object') {
+      if (typeof prefs.filter.country === 'string') state.filter.country = prefs.filter.country;
+      if (typeof prefs.filter.period === 'number') state.filter.period = prefs.filter.period;
+    }
+    if (prefs.sort && typeof prefs.sort === 'object') {
+      if (typeof prefs.sort.column === 'string') state.sort.column = prefs.sort.column;
+      if (prefs.sort.direction === 'asc' || prefs.sort.direction === 'desc') state.sort.direction = prefs.sort.direction;
+    }
+    if (typeof prefs.ctsSelectedPeriod === 'string' || prefs.ctsSelectedPeriod === null) {
+      state.ctsSelectedPeriod = prefs.ctsSelectedPeriod;
+    }
+    if (typeof prefs.topExpanded === 'boolean') {
+      state.topExpanded = prefs.topExpanded;
+    }
+  } catch (err) {
+    console.warn('Não foi possível carregar preferências:', err);
+    // Limpa entrada corrompida
+    try { localStorage.removeItem(STATE_STORAGE_KEY); } catch {}
+  }
+}
+
+/**
+ * Reseta todos os filtros pra valor default e re-renderiza.
+ * Útil quando usuário se confunde com filtros aplicados.
+ */
+function resetPreferences() {
+  state.filter = { country: 'all', period: 7 };
+  state.sort = { column: 'name', direction: 'asc' };
+  state.ctsSelectedPeriod = null;
+  state.topExpanded = false;
+  savePreferences();
+
+  // Re-aplica visualmente os filtros nos botões
+  syncFilterButtonsUI();
+  applyFiltersAndRender();
+}
+
+/**
+ * Sincroniza estado visual dos botões de filtro (active class) com o state.
+ * Necessário ao restaurar preferências ou após reset.
+ */
+function syncFilterButtonsUI() {
+  document.querySelectorAll('.filter-chip[data-country]').forEach(b => {
+    b.classList.toggle('active', b.dataset.country === state.filter.country);
+  });
+  document.querySelectorAll('.filter-chip[data-period]').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.period) === state.filter.period);
+  });
+}
 
 let map = null;
 let markerLayer = null;
@@ -2632,6 +2873,7 @@ function setFilter(type, value) {
     });
   }
 
+  savePreferences();
   applyFiltersAndRender();
 }
 
@@ -2723,11 +2965,13 @@ function renderRankingList(containerId, list, type) {
 
 function toggleRanking() {
   state.topExpanded = !state.topExpanded;
+  savePreferences();
   applyFiltersAndRender();
 }
 
 function setCtsPeriod(period) {
   state.ctsSelectedPeriod = period;
+  savePreferences();
   applyFiltersAndRender();
 }
 
@@ -3509,6 +3753,7 @@ function handleSortClick(column) {
     const numericColumns = ['hoursAgo', 'distBaseToEdge', 'savingsKm', 'hmMonthly', 'status'];
     state.sort.direction = numericColumns.includes(column) ? 'desc' : 'asc';
   }
+  savePreferences();
   applyFiltersAndRender();
 }
 
@@ -3883,11 +4128,74 @@ async function renderDriverHistory(d) {
       else if (daysDiff === 1) dateLabel = t('yesterday');
       else dateLabel = daysDiff + ' ' + t('daysAgoLabel');
 
+      // Hora do check-in (HH:mm)
+      const checkinTime = ts.toLocaleTimeString(currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es-ES' : 'en-US'), {
+        hour: '2-digit', minute: '2-digit'
+      });
+
+      // Status visual
+      let statusBadge = '';
+      if (h.vehicleStatus === 'Critical Issue') {
+        statusBadge = '<span class="history-status critical">🔴 ' + (h.vehicleIssue || t('pillCritical')) + '</span>';
+      } else if (h.vehicleStatus === 'Minor Issue') {
+        statusBadge = '<span class="history-status minor">🟡 ' + (h.vehicleIssue || t('pillMinor')) + '</span>';
+      }
+
+      // Indicador "sem check-in matinal" (driver fez só checkout)
+      let warningBadge = '';
+      if (h.hasCheckin === 'No') {
+        warningBadge = '<span class="history-status warning">⚠ ' + t('hHistoryNoCheckin') + '</span>';
+      }
+
+      // Checkout info (se foi feito)
+      let checkoutInfo = '';
+      if (h.checkoutTimestamp) {
+        const cts = new Date(h.checkoutTimestamp);
+        const checkoutTime = cts.toLocaleTimeString(currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es-ES' : 'en-US'), {
+          hour: '2-digit', minute: '2-digit'
+        });
+        const hoursWorked = Math.round(((cts - ts) / 3600000) * 10) / 10;
+        const tkm = h.tkmMapped > 0 ? h.tkmMapped.toFixed(1) : '—';
+        const km = h.totalKmDriven > 0 ? h.totalKmDriven.toFixed(1) : '—';
+        checkoutInfo = `
+          <div class="history-checkout">
+            <span class="history-time-range">${checkinTime} → ${checkoutTime}</span>
+            <span class="history-hours">${hoursWorked}h</span>
+            <span class="history-stats">${tkm} TKM · ${km} KM</span>
+          </div>
+        `;
+      } else if (h.hasCheckin !== 'No') {
+        // Tem checkin mas faltou checkout
+        checkoutInfo = `
+          <div class="history-checkout incomplete">
+            <span class="history-time-range">${checkinTime} → <em>${t('hHistoryNoCheckout')}</em></span>
+          </div>
+        `;
+      }
+
+      // Observações combinadas
+      let notesHtml = '';
+      const allNotes = [];
+      if (h.notes) allNotes.push(h.notes);
+      if (h.checkoutNotes) allNotes.push('💬 ' + h.checkoutNotes);
+      if (allNotes.length > 0) {
+        notesHtml = '<div class="history-notes">' + allNotes.map(n => escapeHtml(n)).join('<br>') + '</div>';
+      }
+
       return `
-        <div class="history-item">
-          <span class="history-radius">${h.destRadius || '—'} km</span>
-          <div class="history-date">${dateLabel}</div>
-          <div class="history-address">${h.destAddress || '—'}</div>
+        <div class="history-item ${h.hasCheckin === 'No' ? 'no-checkin' : ''}">
+          <div class="history-marker"></div>
+          <div class="history-content">
+            <div class="history-header-row">
+              <span class="history-date">${dateLabel}</span>
+              ${h.destRadius ? `<span class="history-radius">${h.destRadius} km</span>` : ''}
+            </div>
+            <div class="history-address">${escapeHtml(h.destAddress || '—')}</div>
+            ${checkoutInfo}
+            ${statusBadge}
+            ${warningBadge}
+            ${notesHtml}
+          </div>
         </div>
       `;
     }).join('');
@@ -3897,6 +4205,17 @@ async function renderDriverHistory(d) {
     console.warn('Erro ao buscar histórico:', err);
     container.innerHTML = `<div class="history-empty">${t('pHistoryEmpty')}</div>`;
   }
+}
+
+// Escape HTML pra evitar injeção via notes/observações de drivers
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // ESC fecha o painel
