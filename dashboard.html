@@ -154,6 +154,274 @@
   .export-menu .export-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; color: var(--c-primary-dark); }
   .export-menu .export-sub { font-size: 10px; color: var(--c-text-muted); }
 
+  /* Admin modal (v1.3) */
+  .admin-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .admin-modal-content {
+    background: white;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 70px rgba(15,23,42,0.35);
+  }
+  .admin-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--c-border);
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+  }
+  .admin-modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+  .admin-modal-sub {
+    margin: 4px 0 0;
+    font-size: 12px;
+    opacity: 0.85;
+  }
+  .admin-modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 6px;
+    opacity: 0.8;
+  }
+  .admin-modal-close:hover { opacity: 1; }
+
+  .admin-body {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    flex: 1;
+    overflow: hidden;
+    min-height: 480px;
+  }
+
+  .admin-sidebar {
+    background: #F8FAFC;
+    border-right: 1px solid var(--c-border);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .admin-sidebar input[type="text"] {
+    margin: 12px;
+    padding: 8px 10px;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .admin-driver-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px 12px;
+  }
+  .admin-driver-item {
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 2px;
+    font-size: 13px;
+    transition: all 0.1s;
+  }
+  .admin-driver-item:hover { background: var(--c-bg-tint); }
+  .admin-driver-item.active {
+    background: var(--c-primary);
+    color: white;
+  }
+  .admin-driver-item.active .admin-driver-country { color: rgba(255,255,255,0.8); }
+  .admin-driver-name { font-weight: 500; }
+  .admin-driver-country {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+
+  .admin-editor {
+    overflow-y: auto;
+    padding: 24px;
+  }
+  .admin-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--c-text-muted);
+  }
+  .admin-form-driver-header {
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .admin-form-driver-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+  }
+  .admin-form-driver-meta {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+  .admin-form-section {
+    margin-bottom: 20px;
+  }
+  .admin-form-section h3 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 8px;
+  }
+  .admin-form-section label {
+    display: block;
+    font-size: 12px;
+    color: var(--c-text);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .admin-form-section input[type="text"],
+  .admin-form-section input[type="email"],
+  .admin-form-section textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--c-text);
+    box-sizing: border-box;
+  }
+  .admin-form-section input:focus,
+  .admin-form-section textarea:focus {
+    outline: none;
+    border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(74,159,224,0.15);
+  }
+  .admin-help {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: var(--c-text-muted);
+    font-style: italic;
+  }
+  .admin-base-type-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .admin-base-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    background: white;
+    border: 2px solid var(--c-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    transition: all 0.15s;
+  }
+  .admin-base-btn:hover { border-color: var(--c-accent); }
+  .admin-base-btn.active {
+    border-color: var(--c-primary);
+    background: var(--c-bg-tint);
+  }
+  .admin-base-icon { font-size: 22px; }
+  .admin-address-input-group {
+    display: flex;
+    gap: 6px;
+  }
+  .admin-address-input-group input {
+    flex: 1;
+  }
+  .admin-geocode-btn {
+    padding: 0 12px;
+    background: var(--c-bg-tint);
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    color: var(--c-primary);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .admin-geocode-btn:hover { border-color: var(--c-primary); }
+  .admin-form-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--c-border);
+  }
+  .admin-cancel-btn {
+    padding: 9px 16px;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--c-text);
+  }
+  .admin-save-btn {
+    padding: 9px 18px;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+  }
+  .admin-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .admin-status {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    display: none;
+  }
+  .admin-status.success {
+    background: #DCFCE7;
+    color: #14532D;
+    border-left: 3px solid #22C55E;
+    display: block;
+  }
+  .admin-status.error {
+    background: #FEF2F2;
+    color: #991B1B;
+    border-left: 3px solid #EF4444;
+    display: block;
+  }
+  .admin-btn { color: var(--c-primary); }
+
+  @media (max-width: 720px) {
+    .admin-body { grid-template-columns: 1fr; }
+    .admin-sidebar { max-height: 200px; }
+    .admin-base-type-buttons { grid-template-columns: 1fr; }
+  }
+
   /* Timesheet modal */
   .ts-modal {
     position: fixed;
@@ -317,6 +585,31 @@
     background: var(--c-primary);
     color: white;
     border-color: var(--c-primary);
+  }
+  .filter-reset {
+    margin-left: auto;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px dashed var(--c-border);
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--c-text-muted);
+    font-family: inherit;
+    transition: all 0.15s;
+    opacity: 0.5;
+  }
+  .filter-reset.has-filters {
+    opacity: 1;
+    border-color: var(--c-accent);
+    color: var(--c-primary);
+    border-style: solid;
+  }
+  .filter-reset:hover {
+    border-style: solid;
+    border-color: #EF4444;
+    color: #EF4444;
+    opacity: 1;
   }
 
   /* SCORECARDS */
@@ -844,25 +1137,140 @@
     border-radius: 8px;
     font-style: italic;
   }
+
+  /* Timeline de histórico v1.2 */
+  #panel-history {
+    position: relative;
+    padding-left: 16px;
+  }
+  #panel-history::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--c-accent) 0%, var(--c-border) 100%);
+  }
   .history-item {
+    position: relative;
     padding: 10px 12px;
     background: var(--c-bg);
     border-radius: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     font-size: 12px;
+    line-height: 1.45;
+  }
+  .history-item.no-checkin {
+    background: #FEF3C7;
+    border-left: 2px solid #F59E0B;
+  }
+  .history-marker {
+    position: absolute;
+    left: -16px;
+    top: 14px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--c-primary);
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px var(--c-border);
+  }
+  .history-item.no-checkin .history-marker {
+    background: #F59E0B;
+  }
+  .history-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
   }
   .history-date {
     color: var(--c-text-muted);
     font-size: 11px;
-    margin-bottom: 2px;
-  }
-  .history-address {
-    color: var(--c-text);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
   }
   .history-radius {
     color: var(--c-primary);
     font-weight: 500;
-    float: right;
+    font-size: 11px;
+    background: var(--c-bg-tint);
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+  .history-address {
+    color: var(--c-text);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .history-checkout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed var(--c-border);
+    font-size: 11px;
+    color: var(--c-text-muted);
+    flex-wrap: wrap;
+  }
+  .history-checkout.incomplete {
+    color: #92400E;
+  }
+  .history-checkout.incomplete em {
+    color: #92400E;
+    font-style: normal;
+    background: #FEF3C7;
+    padding: 1px 5px;
+    border-radius: 8px;
+  }
+  .history-time-range {
+    font-weight: 600;
+    color: var(--c-primary-dark);
+  }
+  .history-checkout.incomplete .history-time-range {
+    color: #92400E;
+  }
+  .history-hours {
+    color: var(--c-primary);
+    font-weight: 500;
+  }
+  .history-stats {
+    color: var(--c-text-muted);
+  }
+  .history-status {
+    display: inline-block;
+    margin-top: 4px;
+    margin-right: 4px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .history-status.critical {
+    background: #FEF2F2;
+    color: #991B1B;
+  }
+  .history-status.minor {
+    background: #FEF3C7;
+    color: #92400E;
+  }
+  .history-status.warning {
+    background: #FFEDD5;
+    color: #9A3412;
+  }
+  .history-notes {
+    margin-top: 4px;
+    padding: 6px 8px;
+    background: white;
+    border-left: 2px solid var(--c-accent);
+    border-radius: 3px;
+    font-size: 11px;
+    color: var(--c-text);
+    font-style: italic;
+    line-height: 1.4;
   }
 
   .notes-box {
@@ -1195,10 +1603,93 @@
       </div>
     </div>
     <button class="refresh-btn" onclick="loadData()" data-i18n="refresh">⟳ Atualizar</button>
+    <button class="refresh-btn admin-btn" id="admin-btn" onclick="openAdminPanel()" style="display:none;" title="Admin">⚙ <span data-i18n="adminBtn">Admin</span></button>
     <div class="user-pill" id="user-pill" style="display:none;">
       <div class="user-avatar" id="user-avatar">?</div>
       <span id="user-name">—</span>
       <span class="logout-link" onclick="doLogout()" title="Sair">↩</span>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Admin (Feature 1.3) -->
+<div id="admin-modal" class="admin-modal" style="display:none;">
+  <div class="admin-modal-content">
+    <div class="admin-modal-header">
+      <div>
+        <h2 data-i18n="adminTitle">Painel Admin</h2>
+        <p class="admin-modal-sub" data-i18n="adminSub">Edite informações dos drivers sem abrir a planilha</p>
+      </div>
+      <button class="admin-modal-close" onclick="closeAdminPanel()">×</button>
+    </div>
+
+    <div class="admin-body">
+      <!-- Lista de drivers (esquerda) -->
+      <div class="admin-sidebar">
+        <input type="text" id="admin-search" placeholder="Buscar driver..." oninput="filterAdminDrivers()">
+        <div class="admin-driver-list" id="admin-driver-list"></div>
+      </div>
+
+      <!-- Form de edição (direita) -->
+      <div class="admin-editor" id="admin-editor">
+        <div class="admin-empty-state" id="admin-empty-state">
+          <div style="font-size:48px;opacity:0.2;margin-bottom:8px;">⚙</div>
+          <p data-i18n="adminSelectDriver">Selecione um driver à esquerda pra começar</p>
+        </div>
+
+        <div id="admin-form" style="display:none;">
+          <div class="admin-form-driver-header">
+            <div class="admin-form-driver-name" id="admin-form-name">—</div>
+            <div class="admin-form-driver-meta" id="admin-form-meta">—</div>
+          </div>
+
+          <div class="admin-form-section">
+            <h3 data-i18n="adminContactInfo">Informações de contato</h3>
+            <label data-i18n="adminEmail">Email</label>
+            <input type="email" id="admin-email">
+            <p class="admin-help" data-i18n="adminEmailHelp">Mudar email atualiza na DASHBOARD (HM). Cuidado, isso afeta o login no checkin.</p>
+          </div>
+
+          <div class="admin-form-section">
+            <h3 data-i18n="adminBaseInfo">Base do driver</h3>
+            <label data-i18n="adminBaseType">Tipo de base</label>
+            <div class="admin-base-type-buttons">
+              <button type="button" class="admin-base-btn" data-base-type="Home" onclick="setAdminBaseType('Home')">
+                <span class="admin-base-icon">🏠</span>
+                <span data-i18n="adminBaseHome">Home</span>
+              </button>
+              <button type="button" class="admin-base-btn" data-base-type="Hotel" onclick="setAdminBaseType('Hotel')">
+                <span class="admin-base-icon">🏨</span>
+                <span data-i18n="adminBaseHotel">Hotel</span>
+              </button>
+              <button type="button" class="admin-base-btn" data-base-type="Mixed" onclick="setAdminBaseType('Mixed')">
+                <span class="admin-base-icon">🔄</span>
+                <span data-i18n="adminBaseMixed">Mixed</span>
+              </button>
+            </div>
+
+            <label style="margin-top:12px;" data-i18n="adminBaseAddress">Endereço da base</label>
+            <div class="admin-address-input-group">
+              <input type="text" id="admin-address" placeholder="Rua, cidade...">
+              <button type="button" class="admin-geocode-btn" onclick="geocodeAdminAddress()" data-i18n="adminGeocode">Buscar coords</button>
+            </div>
+            <p class="admin-help" id="admin-coords-display">—</p>
+          </div>
+
+          <div class="admin-form-section">
+            <h3 data-i18n="adminNotesTitle">Observações administrativas</h3>
+            <textarea id="admin-notes" rows="2" data-i18n-placeholder="adminNotesPlaceholder" placeholder="Ex: Driver mudou de cidade em abril/2026. Reembolso pendente..."></textarea>
+            <p class="admin-help" data-i18n="adminNotesHelp">Visível apenas no Driver Base Location pra histórico.</p>
+          </div>
+
+          <div class="admin-form-actions">
+            <button type="button" class="admin-cancel-btn" onclick="closeAdminPanel()" data-i18n="cancel">Cancelar</button>
+            <button type="button" class="admin-save-btn" id="admin-save-btn" onclick="saveAdminEdit()" data-i18n="adminSave">💾 Salvar mudanças</button>
+          </div>
+
+          <div id="admin-status" class="admin-status"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1249,6 +1740,8 @@
   <button class="filter-chip" data-period="1" onclick="setFilter('period', 1)" data-i18n="today">Hoje</button>
   <button class="filter-chip active" data-period="7" onclick="setFilter('period', 7)" data-i18n="sevenDays">7 dias</button>
   <button class="filter-chip" data-period="30" onclick="setFilter('period', 30)" data-i18n="thirtyDays">30 dias</button>
+
+  <button class="filter-reset" onclick="resetPreferences()" title="Resetar filtros e preferências" data-i18n="resetFilters">↺ Resetar</button>
 </div>
 
 <div class="scorecards">
@@ -1579,7 +2072,7 @@ setLoginLang(currentLoginLang);
 
 const USERS = [
   // SUBSTITUA estas senhas de exemplo antes de publicar
-  { username: 'fuss', passwordHash: 'f2ca6ae1d77bd372fd9f238b5abb372767d137291c4ab4098c4444b01b0b061a', fullName: 'Fuss' },
+  { username: 'fuss', passwordHash: '20fc17a5b2949b22e408a7f0748a07c46833654638dd6f4ae744ba74c3af476a', fullName: 'Fuss' },
   { username: 'pankaj', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Pankaj' },
    { username: 'bia', passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Bia' },
   { username: 'lucas', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Outro Lucas' },
@@ -1688,10 +2181,21 @@ function onLoginSuccess() {
     setLanguage(currentLoginLang);
   }
 
+  // Restaura preferências salvas (filtros, sort, etc) antes de qualquer render
+  loadPreferences();
+
+  // Mostra botão Admin se usuário tem permissão (1.3)
+  showAdminButtonIfAllowed();
+
   // Inicializa o resto do app (mapa, dados, refresh automático)
   initMap();
   loadData();
   setInterval(loadData, CONFIG.refreshMs);
+
+  // Após dados carregarem, sincroniza UI dos botões de filtro com as
+  // preferências restauradas. Pequeno delay pra garantir que loadData() já
+  // populou os filtros de país dinâmicos.
+  setTimeout(syncFilterButtonsUI, 500);
 }
 
 /**
@@ -1732,6 +2236,34 @@ const I18N = {
     today: 'Hoje',
     sevenDays: '7 dias',
     thirtyDays: '30 dias',
+    resetFilters: '↺ Resetar',
+    hHistoryNoCheckin: 'Sem check-in matinal',
+    hHistoryNoCheckout: 'sem checkout',
+    adminBtn: 'Admin',
+    adminTitle: 'Painel Admin',
+    adminSub: 'Edite informações dos drivers sem abrir a planilha',
+    adminSelectDriver: 'Selecione um driver à esquerda pra começar',
+    adminContactInfo: 'Informações de contato',
+    adminEmail: 'Email',
+    adminEmailHelp: 'Mudar email atualiza na DASHBOARD (HM). Cuidado, isso afeta o login no checkin.',
+    adminBaseInfo: 'Base do driver',
+    adminBaseType: 'Tipo de base',
+    adminBaseHome: 'Home',
+    adminBaseHotel: 'Hotel',
+    adminBaseMixed: 'Mixed',
+    adminBaseAddress: 'Endereço da base',
+    adminGeocode: 'Buscar coords',
+    adminNotesTitle: 'Observações administrativas',
+    adminNotesPlaceholder: 'Ex: Driver mudou de cidade em abril/2026...',
+    adminNotesHelp: 'Salvas no histórico de Driver Base Location.',
+    adminSave: '💾 Salvar mudanças',
+    adminConfirmSave: 'Confirma salvar essas mudanças?',
+    adminSaveSuccess: 'Mudanças salvas com sucesso',
+    adminSaveError: 'Erro ao salvar',
+    adminGeocoding: 'Buscando coordenadas...',
+    adminGeocodeSuccess: 'Coordenadas encontradas',
+    adminGeocodeError: 'Não foi possível encontrar coordenadas',
+    adminNoChanges: 'Nenhuma mudança detectada',
     scActiveDrivers: 'DRIVERS ATIVOS',
     scInFilter: 'no filtro selecionado',
     scWithCheckin: 'com check-in no período',
@@ -1838,7 +2370,6 @@ const I18N = {
     pNoBase: 'Sem base cadastrada',
     pNoArea: 'Sem área registrada',
     pHistoryEmpty: 'Sem histórico disponível',
-    pHistoryEmptyReal: ' — feature completa após atualização do backend',
     classNear: 'Próximo da base',
     classEfficient: 'Hotel mode eficiente',
     classHigh: 'Distância alta',
@@ -1871,6 +2402,34 @@ const I18N = {
     today: 'Hoy',
     sevenDays: '7 días',
     thirtyDays: '30 días',
+    resetFilters: '↺ Restablecer',
+    hHistoryNoCheckin: 'Sin check-in matutino',
+    hHistoryNoCheckout: 'sin checkout',
+    adminBtn: 'Admin',
+    adminTitle: 'Panel Admin',
+    adminSub: 'Edita información de conductores sin abrir la planilla',
+    adminSelectDriver: 'Seleccione un conductor a la izquierda para comenzar',
+    adminContactInfo: 'Información de contacto',
+    adminEmail: 'Email',
+    adminEmailHelp: 'Cambiar email actualiza en DASHBOARD (HM). Atención: afecta el login del checkin.',
+    adminBaseInfo: 'Base del conductor',
+    adminBaseType: 'Tipo de base',
+    adminBaseHome: 'Home',
+    adminBaseHotel: 'Hotel',
+    adminBaseMixed: 'Mixed',
+    adminBaseAddress: 'Dirección de la base',
+    adminGeocode: 'Buscar coords',
+    adminNotesTitle: 'Observaciones administrativas',
+    adminNotesPlaceholder: 'Ej: Conductor mudó de ciudad en abril/2026...',
+    adminNotesHelp: 'Guardadas en el historial de Driver Base Location.',
+    adminSave: '💾 Guardar cambios',
+    adminConfirmSave: '¿Confirma guardar estos cambios?',
+    adminSaveSuccess: 'Cambios guardados con éxito',
+    adminSaveError: 'Error al guardar',
+    adminGeocoding: 'Buscando coordenadas...',
+    adminGeocodeSuccess: 'Coordenadas encontradas',
+    adminGeocodeError: 'No se pudieron encontrar coordenadas',
+    adminNoChanges: 'Ningún cambio detectado',
     scActiveDrivers: 'CONDUCTORES ACTIVOS',
     scInFilter: 'en el filtro seleccionado',
     scWithCheckin: 'con check-in en el período',
@@ -1973,8 +2532,10 @@ const I18N = {
     pNoLocation: 'Sin ubicación disponible',
     pNoBase: 'Sin base registrada',
     pNoArea: 'Sin área registrada',
+    loadingHistory: 'Cargando historial',
+    yesterday: 'Ayer',
+    daysAgoLabel: 'días atrás',
     pHistoryEmpty: 'Sin historial disponible',
-    pHistoryEmptyReal: ' — función completa tras actualización del backend',
     classNear: 'Cerca de la base',
     classEfficient: 'Hotel mode eficiente',
     classHigh: 'Distancia alta',
@@ -2007,6 +2568,34 @@ const I18N = {
     today: 'Today',
     sevenDays: '7 days',
     thirtyDays: '30 days',
+    resetFilters: '↺ Reset',
+    hHistoryNoCheckin: 'No morning check-in',
+    hHistoryNoCheckout: 'no checkout',
+    adminBtn: 'Admin',
+    adminTitle: 'Admin Panel',
+    adminSub: 'Edit driver info without opening the spreadsheet',
+    adminSelectDriver: 'Select a driver on the left to start',
+    adminContactInfo: 'Contact info',
+    adminEmail: 'Email',
+    adminEmailHelp: 'Changing email updates DASHBOARD (HM). Caution: affects checkin login.',
+    adminBaseInfo: 'Driver base',
+    adminBaseType: 'Base type',
+    adminBaseHome: 'Home',
+    adminBaseHotel: 'Hotel',
+    adminBaseMixed: 'Mixed',
+    adminBaseAddress: 'Base address',
+    adminGeocode: 'Find coords',
+    adminNotesTitle: 'Admin notes',
+    adminNotesPlaceholder: 'Ex: Driver moved cities in April/2026...',
+    adminNotesHelp: 'Saved in Driver Base Location history.',
+    adminSave: '💾 Save changes',
+    adminConfirmSave: 'Confirm saving these changes?',
+    adminSaveSuccess: 'Changes saved successfully',
+    adminSaveError: 'Error saving',
+    adminGeocoding: 'Looking up coordinates...',
+    adminGeocodeSuccess: 'Coordinates found',
+    adminGeocodeError: 'Could not find coordinates',
+    adminNoChanges: 'No changes detected',
     scActiveDrivers: 'ACTIVE DRIVERS',
     scInFilter: 'in selected filter',
     scWithCheckin: 'checked in this period',
@@ -2109,8 +2698,10 @@ const I18N = {
     pNoLocation: 'No location available',
     pNoBase: 'No base registered',
     pNoArea: 'No area registered',
+    loadingHistory: 'Loading history',
+    yesterday: 'Yesterday',
+    daysAgoLabel: 'days ago',
     pHistoryEmpty: 'No history available',
-    pHistoryEmptyReal: ' — full feature available after backend update',
     classNear: 'Close to base',
     classEfficient: 'Efficient hotel mode',
     classHigh: 'High distance',
@@ -2190,6 +2781,110 @@ let state = {
   // Top N expandido?
   topExpanded: false,
 };
+
+// ================================================================
+// PERSISTÊNCIA DE ESTADO (Feature 1.1)
+// ================================================================
+//
+// Salva preferências do usuário (filtros, sort, etc) em localStorage
+// pra que recarregar a página ou voltar depois mantenha tudo igual.
+// NÃO salva: dados do servidor (drivers, métricas), demoMode.
+
+const STATE_STORAGE_KEY = 'latam-dashboard-prefs-v1';
+
+/**
+ * Salva preferências do estado atual no localStorage.
+ * Chamada após qualquer mudança de filtro/sort/seleção do usuário.
+ */
+function savePreferences() {
+  try {
+    const prefs = {
+      filter: state.filter,
+      sort: state.sort,
+      ctsSelectedPeriod: state.ctsSelectedPeriod,
+      topExpanded: state.topExpanded,
+    };
+    localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(prefs));
+  } catch (err) {
+    // Silencioso — localStorage pode estar cheio ou desabilitado (modo privado).
+    // Não vale quebrar a UX por isso.
+    console.warn('Não foi possível salvar preferências:', err);
+  }
+}
+
+/**
+ * Restaura preferências do localStorage no state.
+ * Chamada uma vez no início do app, antes de qualquer render.
+ * Validação defensiva: se localStorage tiver lixo, ignora silenciosamente.
+ */
+function loadPreferences() {
+  try {
+    const raw = localStorage.getItem(STATE_STORAGE_KEY);
+    if (!raw) return;
+    const prefs = JSON.parse(raw);
+
+    // Aplica só campos válidos (defensivo contra updates de schema)
+    if (prefs.filter && typeof prefs.filter === 'object') {
+      if (typeof prefs.filter.country === 'string') state.filter.country = prefs.filter.country;
+      if (typeof prefs.filter.period === 'number') state.filter.period = prefs.filter.period;
+    }
+    if (prefs.sort && typeof prefs.sort === 'object') {
+      if (typeof prefs.sort.column === 'string') state.sort.column = prefs.sort.column;
+      if (prefs.sort.direction === 'asc' || prefs.sort.direction === 'desc') state.sort.direction = prefs.sort.direction;
+    }
+    if (typeof prefs.ctsSelectedPeriod === 'string' || prefs.ctsSelectedPeriod === null) {
+      state.ctsSelectedPeriod = prefs.ctsSelectedPeriod;
+    }
+    if (typeof prefs.topExpanded === 'boolean') {
+      state.topExpanded = prefs.topExpanded;
+    }
+  } catch (err) {
+    console.warn('Não foi possível carregar preferências:', err);
+    // Limpa entrada corrompida
+    try { localStorage.removeItem(STATE_STORAGE_KEY); } catch {}
+  }
+}
+
+/**
+ * Reseta todos os filtros pra valor default e re-renderiza.
+ * Útil quando usuário se confunde com filtros aplicados.
+ */
+function resetPreferences() {
+  state.filter = { country: 'all', period: 7 };
+  state.sort = { column: 'name', direction: 'asc' };
+  state.ctsSelectedPeriod = null;
+  state.topExpanded = false;
+  savePreferences();
+
+  // Re-aplica visualmente os filtros nos botões
+  syncFilterButtonsUI();
+  applyFiltersAndRender();
+}
+
+/**
+ * Sincroniza estado visual dos botões de filtro (active class) com o state.
+ * Necessário ao restaurar preferências ou após reset.
+ */
+function syncFilterButtonsUI() {
+  document.querySelectorAll('.filter-chip[data-country]').forEach(b => {
+    b.classList.toggle('active', b.dataset.country === state.filter.country);
+  });
+  document.querySelectorAll('.filter-chip[data-period]').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.period) === state.filter.period);
+  });
+
+  // Destaca botão reset se algum filtro tá em estado não-default
+  const isDefault = (
+    state.filter.country === 'all' &&
+    state.filter.period === 7 &&
+    state.sort.column === 'name' &&
+    state.sort.direction === 'asc' &&
+    state.ctsSelectedPeriod === null &&
+    !state.topExpanded
+  );
+  const resetBtn = document.querySelector('.filter-reset');
+  if (resetBtn) resetBtn.classList.toggle('has-filters', !isDefault);
+}
 
 let map = null;
 let markerLayer = null;
@@ -2455,7 +3150,6 @@ async function fetchRealData() {
     };
   });
 
-  console.log('Drivers consolidados:', enriched.length);
   return enriched;
 }
 
@@ -2632,10 +3326,14 @@ function setFilter(type, value) {
     });
   }
 
+  savePreferences();
   applyFiltersAndRender();
 }
 
 function applyFiltersAndRender() {
+  // Sincroniza estado visual dos botões (incluindo destaque do reset)
+  syncFilterButtonsUI();
+
   const filtered = state.drivers.filter(d => {
     if (state.filter.country !== 'all' && d.country !== state.filter.country) return false;
     return true;
@@ -2723,13 +3421,263 @@ function renderRankingList(containerId, list, type) {
 
 function toggleRanking() {
   state.topExpanded = !state.topExpanded;
+  savePreferences();
   applyFiltersAndRender();
 }
 
 function setCtsPeriod(period) {
   state.ctsSelectedPeriod = period;
+  savePreferences();
   applyFiltersAndRender();
 }
+
+// =================================================================
+// ADMIN PANEL (Feature 1.3)
+// =================================================================
+//
+// Permite edição de drivers (base type, endereço, email, observações)
+// sem precisar abrir a Google Sheet. Visível só pro user 'fuss'.
+
+const ADMIN_USERNAMES = ['fuss']; // hardcoded por enquanto, simples
+
+let adminState = {
+  selectedDriver: null,    // driver atualmente sendo editado
+  pendingCoords: null,     // {lat, lng} resultado do geocoder
+  pendingBaseType: null,   // 'Home'/'Hotel'/'Mixed' selecionado
+  originalEmail: null,     // pra detectar mudança
+};
+
+/**
+ * Mostra/esconde botão Admin baseado no usuário logado.
+ * Chamado a partir do onLoginSuccess.
+ */
+function showAdminButtonIfAllowed() {
+  if (!currentUser) return;
+  if (ADMIN_USERNAMES.includes(currentUser.username.toLowerCase())) {
+    document.getElementById('admin-btn').style.display = '';
+  }
+}
+
+function openAdminPanel() {
+  if (!currentUser || !ADMIN_USERNAMES.includes(currentUser.username.toLowerCase())) {
+    alert('Sem permissão.');
+    return;
+  }
+  document.getElementById('admin-modal').style.display = 'flex';
+  renderAdminDriverList();
+}
+
+function closeAdminPanel() {
+  document.getElementById('admin-modal').style.display = 'none';
+  // Reseta estado de edição
+  adminState.selectedDriver = null;
+  adminState.pendingCoords = null;
+  adminState.pendingBaseType = null;
+  document.getElementById('admin-form').style.display = 'none';
+  document.getElementById('admin-empty-state').style.display = '';
+  document.getElementById('admin-status').className = 'admin-status';
+  document.getElementById('admin-status').textContent = '';
+}
+
+function renderAdminDriverList() {
+  const list = document.getElementById('admin-driver-list');
+  // Usa state.drivers que já tá carregado do dashboard
+  const sorted = [...state.drivers].sort((a, b) => a.name.localeCompare(b.name));
+
+  list.innerHTML = sorted.map(d => `
+    <div class="admin-driver-item" data-email="${d.email}" onclick="selectAdminDriver('${d.email}')">
+      <div class="admin-driver-name">${escapeHtml(d.name)}</div>
+      <div class="admin-driver-country">${escapeHtml(d.country || '')} · ${d.base ? d.base.type : '—'}</div>
+    </div>
+  `).join('');
+}
+
+function filterAdminDrivers() {
+  const term = document.getElementById('admin-search').value.toLowerCase().trim();
+  document.querySelectorAll('.admin-driver-item').forEach(item => {
+    const txt = item.textContent.toLowerCase();
+    item.style.display = (!term || txt.includes(term)) ? '' : 'none';
+  });
+}
+
+function selectAdminDriver(email) {
+  const d = state.drivers.find(x => x.email === email);
+  if (!d) return;
+
+  // Marca visualmente o selecionado
+  document.querySelectorAll('.admin-driver-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.email === email);
+  });
+
+  adminState.selectedDriver = d;
+  adminState.originalEmail = d.email;
+  adminState.pendingCoords = (d.base && d.base.lat && d.base.lng) ? { lat: d.base.lat, lng: d.base.lng } : null;
+  adminState.pendingBaseType = d.base ? d.base.type : null;
+
+  // Mostra form, esconde empty state
+  document.getElementById('admin-empty-state').style.display = 'none';
+  document.getElementById('admin-form').style.display = '';
+
+  // Popula campos com valores atuais
+  document.getElementById('admin-form-name').textContent = d.name;
+  document.getElementById('admin-form-meta').textContent =
+    (d.country || '—') + ' · ' + (d.city || '—');
+  document.getElementById('admin-email').value = d.email || '';
+  document.getElementById('admin-address').value = (d.base && d.base.address) ? d.base.address : '';
+  document.getElementById('admin-notes').value = '';
+
+  // Marca botão de tipo de base ativo
+  document.querySelectorAll('.admin-base-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.baseType === adminState.pendingBaseType);
+  });
+
+  // Mostra coordenadas atuais
+  updateAdminCoordsDisplay();
+
+  // Limpa status anterior
+  const status = document.getElementById('admin-status');
+  status.className = 'admin-status';
+  status.textContent = '';
+}
+
+function setAdminBaseType(type) {
+  adminState.pendingBaseType = type;
+  document.querySelectorAll('.admin-base-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.baseType === type);
+  });
+}
+
+function updateAdminCoordsDisplay() {
+  const el = document.getElementById('admin-coords-display');
+  if (adminState.pendingCoords) {
+    el.textContent = '📍 ' + adminState.pendingCoords.lat.toFixed(6) + ', ' + adminState.pendingCoords.lng.toFixed(6);
+    el.style.color = '#16A34A';
+  } else {
+    el.textContent = '— sem coordenadas —';
+    el.style.color = '';
+  }
+}
+
+/**
+ * Chama Nominatim (OpenStreetMap) pra geocoder o endereço.
+ * Mesmo serviço usado no checkin.html — gratuito, sem chave de API.
+ */
+async function geocodeAdminAddress() {
+  const address = document.getElementById('admin-address').value.trim();
+  if (!address) return;
+
+  const status = document.getElementById('admin-status');
+  status.className = 'admin-status';
+  status.textContent = t('adminGeocoding');
+  status.style.background = '#EBF4FB';
+  status.style.color = '#1A365D';
+  status.style.borderLeft = '3px solid #4A9FE0';
+  status.style.display = 'block';
+
+  try {
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address) + '&limit=1';
+    const res = await fetch(url, { headers: { 'Accept-Language': currentLang || 'en' } });
+    const results = await res.json();
+
+    if (results && results.length > 0) {
+      const r = results[0];
+      adminState.pendingCoords = {
+        lat: parseFloat(r.lat),
+        lng: parseFloat(r.lon),
+      };
+      updateAdminCoordsDisplay();
+      status.className = 'admin-status success';
+      status.textContent = '✓ ' + t('adminGeocodeSuccess') + ' — ' + r.display_name;
+    } else {
+      status.className = 'admin-status error';
+      status.textContent = t('adminGeocodeError');
+    }
+  } catch (err) {
+    status.className = 'admin-status error';
+    status.textContent = t('adminGeocodeError') + ': ' + err.message;
+  }
+}
+
+async function saveAdminEdit() {
+  const d = adminState.selectedDriver;
+  if (!d) return;
+
+  const newEmail = document.getElementById('admin-email').value.trim();
+  const newAddress = document.getElementById('admin-address').value.trim();
+  const newNotes = document.getElementById('admin-notes').value.trim();
+  const newBaseType = adminState.pendingBaseType;
+
+  // Detecta mudanças
+  const emailChanged = newEmail && newEmail !== adminState.originalEmail;
+  const addressChanged = newAddress && (!d.base || newAddress !== d.base.address);
+  const baseTypeChanged = newBaseType && (!d.base || newBaseType !== d.base.type);
+  const hasNotes = !!newNotes;
+
+  if (!emailChanged && !addressChanged && !baseTypeChanged && !hasNotes) {
+    const status = document.getElementById('admin-status');
+    status.className = 'admin-status error';
+    status.textContent = t('adminNoChanges');
+    return;
+  }
+
+  // Confirmação antes de salvar
+  if (!confirm(t('adminConfirmSave'))) return;
+
+  const btn = document.getElementById('admin-save-btn');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    const payload = {
+      type: 'updateDriverInfo',
+      editorUsername: currentUser.username,
+      editorName: currentUser.fullName,
+      driverName: d.name,
+      driverEmail: d.email,
+      country: d.country || '',
+      // Só envia campos que mudaram
+      newEmail: emailChanged ? newEmail : '',
+      baseType: baseTypeChanged ? newBaseType : '',
+      baseAddress: (addressChanged || baseTypeChanged) ? newAddress : '',
+      baseLat: adminState.pendingCoords ? adminState.pendingCoords.lat : '',
+      baseLng: adminState.pendingCoords ? adminState.pendingCoords.lng : '',
+      notes: newNotes,
+    };
+
+    // Fire-and-forget pelo padrão CORS (igual checkin/checkout)
+    await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+
+    const status = document.getElementById('admin-status');
+    status.className = 'admin-status success';
+    status.textContent = '✓ ' + t('adminSaveSuccess');
+
+    // Auto-refresh dos dados pra ver as mudanças
+    setTimeout(() => {
+      loadData();
+      btn.disabled = false;
+      btn.textContent = t('adminSave');
+    }, 1500);
+  } catch (err) {
+    const status = document.getElementById('admin-status');
+    status.className = 'admin-status error';
+    status.textContent = t('adminSaveError') + ': ' + err.message;
+    btn.disabled = false;
+    btn.textContent = t('adminSave');
+  }
+}
+
+// ESC fecha admin panel também
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const adminModal = document.getElementById('admin-modal');
+    if (adminModal && adminModal.style.display !== 'none') {
+      closeAdminPanel();
+    }
+  }
+});
 
 // =================================================================
 // EXPORT PDF
@@ -3509,6 +4457,7 @@ function handleSortClick(column) {
     const numericColumns = ['hoursAgo', 'distBaseToEdge', 'savingsKm', 'hmMonthly', 'status'];
     state.sort.direction = numericColumns.includes(column) ? 'desc' : 'asc';
   }
+  savePreferences();
   applyFiltersAndRender();
 }
 
@@ -3883,11 +4832,74 @@ async function renderDriverHistory(d) {
       else if (daysDiff === 1) dateLabel = t('yesterday');
       else dateLabel = daysDiff + ' ' + t('daysAgoLabel');
 
+      // Hora do check-in (HH:mm)
+      const checkinTime = ts.toLocaleTimeString(currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es-ES' : 'en-US'), {
+        hour: '2-digit', minute: '2-digit'
+      });
+
+      // Status visual
+      let statusBadge = '';
+      if (h.vehicleStatus === 'Critical Issue') {
+        statusBadge = '<span class="history-status critical">🔴 ' + (h.vehicleIssue || t('pillCritical')) + '</span>';
+      } else if (h.vehicleStatus === 'Minor Issue') {
+        statusBadge = '<span class="history-status minor">🟡 ' + (h.vehicleIssue || t('pillMinor')) + '</span>';
+      }
+
+      // Indicador "sem check-in matinal" (driver fez só checkout)
+      let warningBadge = '';
+      if (h.hasCheckin === 'No') {
+        warningBadge = '<span class="history-status warning">⚠ ' + t('hHistoryNoCheckin') + '</span>';
+      }
+
+      // Checkout info (se foi feito)
+      let checkoutInfo = '';
+      if (h.checkoutTimestamp) {
+        const cts = new Date(h.checkoutTimestamp);
+        const checkoutTime = cts.toLocaleTimeString(currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es-ES' : 'en-US'), {
+          hour: '2-digit', minute: '2-digit'
+        });
+        const hoursWorked = Math.round(((cts - ts) / 3600000) * 10) / 10;
+        const tkm = h.tkmMapped > 0 ? h.tkmMapped.toFixed(1) : '—';
+        const km = h.totalKmDriven > 0 ? h.totalKmDriven.toFixed(1) : '—';
+        checkoutInfo = `
+          <div class="history-checkout">
+            <span class="history-time-range">${checkinTime} → ${checkoutTime}</span>
+            <span class="history-hours">${hoursWorked}h</span>
+            <span class="history-stats">${tkm} TKM · ${km} KM</span>
+          </div>
+        `;
+      } else if (h.hasCheckin !== 'No') {
+        // Tem checkin mas faltou checkout
+        checkoutInfo = `
+          <div class="history-checkout incomplete">
+            <span class="history-time-range">${checkinTime} → <em>${t('hHistoryNoCheckout')}</em></span>
+          </div>
+        `;
+      }
+
+      // Observações combinadas
+      let notesHtml = '';
+      const allNotes = [];
+      if (h.notes) allNotes.push(h.notes);
+      if (h.checkoutNotes) allNotes.push('💬 ' + h.checkoutNotes);
+      if (allNotes.length > 0) {
+        notesHtml = '<div class="history-notes">' + allNotes.map(n => escapeHtml(n)).join('<br>') + '</div>';
+      }
+
       return `
-        <div class="history-item">
-          <span class="history-radius">${h.destRadius || '—'} km</span>
-          <div class="history-date">${dateLabel}</div>
-          <div class="history-address">${h.destAddress || '—'}</div>
+        <div class="history-item ${h.hasCheckin === 'No' ? 'no-checkin' : ''}">
+          <div class="history-marker"></div>
+          <div class="history-content">
+            <div class="history-header-row">
+              <span class="history-date">${dateLabel}</span>
+              ${h.destRadius ? `<span class="history-radius">${h.destRadius} km</span>` : ''}
+            </div>
+            <div class="history-address">${escapeHtml(h.destAddress || '—')}</div>
+            ${checkoutInfo}
+            ${statusBadge}
+            ${warningBadge}
+            ${notesHtml}
+          </div>
         </div>
       `;
     }).join('');
@@ -3897,6 +4909,17 @@ async function renderDriverHistory(d) {
     console.warn('Erro ao buscar histórico:', err);
     container.innerHTML = `<div class="history-empty">${t('pHistoryEmpty')}</div>`;
   }
+}
+
+// Escape HTML pra evitar injeção via notes/observações de drivers
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // ESC fecha o painel
