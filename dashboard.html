@@ -920,6 +920,56 @@
   }
   .driver-table tr:last-child td { border-bottom: none; }
 
+  /* Paginação da tabela de drivers */
+  .table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 12px 8px;
+    border-top: 1px solid var(--c-border);
+    margin-top: 4px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .table-count {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    font-weight: 500;
+  }
+  .table-count strong {
+    color: var(--c-primary-dark);
+    font-weight: 600;
+  }
+  .table-pagination {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .table-page-btn {
+    padding: 6px 14px;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--c-primary);
+    font-family: inherit;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .table-page-btn:hover {
+    border-color: var(--c-primary);
+    background: var(--c-bg-tint);
+  }
+  .table-page-btn.primary {
+    background: var(--c-bg-tint);
+    border-color: var(--c-accent);
+  }
+  .table-page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .status-pill {
     display: inline-flex;
     align-items: center;
@@ -1826,6 +1876,14 @@
     <tbody id="driver-tbody">
     </tbody>
   </table>
+  <div class="table-footer" id="table-footer" style="display:none;">
+    <span class="table-count" id="table-count">—</span>
+    <div class="table-pagination">
+      <button class="table-page-btn" id="show-more-btn" onclick="showMoreDrivers()" data-i18n="showMore10">+ Ver mais 10</button>
+      <button class="table-page-btn primary" id="show-all-btn" onclick="showAllDrivers()" data-i18n="showAllDrivers">Ver todos</button>
+      <button class="table-page-btn" id="collapse-btn" onclick="collapseDrivers()" style="display:none;" data-i18n="collapseTable">↑ Recolher</button>
+    </div>
+  </div>
 </div>
 
 <div class="rankings-section" id="rankings-section" style="display:none;">
@@ -2076,8 +2134,6 @@ const USERS = [
   { username: 'pankaj', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Pankaj' },
    { username: 'bia', passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Bia' },
   { username: 'lucas', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Outro Lucas' },
- { username: 'david', passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'David' },
-  { username: 'eduardo', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Eduardo' },
   // Adicione mais conforme necessário:
   // { username: 'joao', passwordHash: '...', fullName: 'João Silva' },
 ];
@@ -2241,6 +2297,12 @@ const I18N = {
     resetFilters: '↺ Resetar',
     hHistoryNoCheckin: 'Sem check-in matinal',
     hHistoryNoCheckout: 'sem checkout',
+    showMore10: '+ Ver mais 10',
+    showAllDrivers: 'Ver todos',
+    collapseTable: '↑ Recolher',
+    tableShowingCount: 'Mostrando',
+    tableOfCount: 'de',
+    tableDriversWord: 'drivers',
     adminBtn: 'Admin',
     adminTitle: 'Painel Admin',
     adminSub: 'Edite informações dos drivers sem abrir a planilha',
@@ -2407,6 +2469,12 @@ const I18N = {
     resetFilters: '↺ Restablecer',
     hHistoryNoCheckin: 'Sin check-in matutino',
     hHistoryNoCheckout: 'sin checkout',
+    showMore10: '+ Ver más 10',
+    showAllDrivers: 'Ver todos',
+    collapseTable: '↑ Contraer',
+    tableShowingCount: 'Mostrando',
+    tableOfCount: 'de',
+    tableDriversWord: 'conductores',
     adminBtn: 'Admin',
     adminTitle: 'Panel Admin',
     adminSub: 'Edita información de conductores sin abrir la planilla',
@@ -2573,6 +2641,12 @@ const I18N = {
     resetFilters: '↺ Reset',
     hHistoryNoCheckin: 'No morning check-in',
     hHistoryNoCheckout: 'no checkout',
+    showMore10: '+ Show 10 more',
+    showAllDrivers: 'Show all',
+    collapseTable: '↑ Collapse',
+    tableShowingCount: 'Showing',
+    tableOfCount: 'of',
+    tableDriversWord: 'drivers',
     adminBtn: 'Admin',
     adminTitle: 'Admin Panel',
     adminSub: 'Edit driver info without opening the spreadsheet',
@@ -2782,6 +2856,8 @@ let state = {
   ctsSelectedPeriod: null, // null = mês mais recente
   // Top N expandido?
   topExpanded: false,
+  // Paginação progressiva da tabela: 10 inicial, +10 por click, ou Infinity
+  tableLimit: 10,
 };
 
 // ================================================================
@@ -3327,6 +3403,9 @@ function setFilter(type, value) {
       el.classList.toggle('active', parseInt(el.dataset.period) === value);
     });
   }
+
+  // Reset paginação ao filtrar (ordem mudou, top 10 anterior não é mais o mesmo)
+  state.tableLimit = 10;
 
   savePreferences();
   applyFiltersAndRender();
@@ -4371,7 +4450,12 @@ function renderTable(drivers, periodHours) {
     }
   });
 
-  sorted.forEach(d => {
+  // Aplica paginação — só mostra os primeiros N (state.tableLimit)
+  const total = sorted.length;
+  const limit = state.tableLimit === Infinity ? total : Math.min(state.tableLimit, total);
+  const visible = sorted.slice(0, limit);
+
+  visible.forEach(d => {
     const row = document.createElement('tr');
     const statusPill = getStatusPill(d, periodHours);
     const hoursDisplay = d.hoursAgo === null ? '—' : formatHoursAgo(d.hoursAgo);
@@ -4404,6 +4488,69 @@ function renderTable(drivers, periodHours) {
     row.addEventListener('click', () => openDriverPanel(d));
     tbody.appendChild(row);
   });
+
+  // Atualiza footer da paginação
+  updateTableFooter(total, limit);
+}
+
+/**
+ * Atualiza textos e visibilidade dos botões de paginação.
+ */
+function updateTableFooter(total, shown) {
+  const footer = document.getElementById('table-footer');
+  if (!footer) return;
+
+  if (total === 0) {
+    footer.style.display = 'none';
+    return;
+  }
+
+  footer.style.display = '';
+
+  // Conta atual
+  const countEl = document.getElementById('table-count');
+  if (shown >= total) {
+    countEl.innerHTML = `<strong>${total}</strong> ${t('tableDriversWord')}`;
+  } else {
+    countEl.innerHTML = `${t('tableShowingCount')} <strong>${shown}</strong> ${t('tableOfCount')} <strong>${total}</strong> ${t('tableDriversWord')}`;
+  }
+
+  // Botões: visibilidade depende de quanto tá mostrando
+  const btnMore = document.getElementById('show-more-btn');
+  const btnAll = document.getElementById('show-all-btn');
+  const btnCollapse = document.getElementById('collapse-btn');
+
+  if (shown >= total) {
+    // Tudo mostrando — só dá pra recolher
+    btnMore.style.display = 'none';
+    btnAll.style.display = 'none';
+    btnCollapse.style.display = total > 10 ? '' : 'none';
+  } else {
+    // Tem mais pra ver — botões "mais" e "tudo"
+    btnMore.style.display = '';
+    btnMore.textContent = `+ ${t('showMore10').replace(/^\+ ?/, '').replace(/\d+/, Math.min(10, total - shown))}`;
+    btnAll.style.display = '';
+    btnAll.textContent = `${t('showAllDrivers')} (${total})`;
+    btnCollapse.style.display = shown > 10 ? '' : 'none';
+  }
+}
+
+function showMoreDrivers() {
+  state.tableLimit = (state.tableLimit === Infinity ? 10 : state.tableLimit) + 10;
+  applyFiltersAndRender();
+}
+
+function showAllDrivers() {
+  state.tableLimit = Infinity;
+  applyFiltersAndRender();
+}
+
+function collapseDrivers() {
+  state.tableLimit = 10;
+  applyFiltersAndRender();
+  // Scroll suave de volta pro topo da tabela
+  const tableSection = document.querySelector('.table-section');
+  if (tableSection) tableSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /**
@@ -4459,6 +4606,8 @@ function handleSortClick(column) {
     const numericColumns = ['hoursAgo', 'distBaseToEdge', 'savingsKm', 'hmMonthly', 'status'];
     state.sort.direction = numericColumns.includes(column) ? 'desc' : 'asc';
   }
+  // Reset paginação ao reordenar (top 10 muda)
+  state.tableLimit = 10;
   savePreferences();
   applyFiltersAndRender();
 }
