@@ -68,10 +68,17 @@
     letter-spacing: 1.2px;
     line-height: 1.2;
   }
-  .brand-sub span {
-    display: block;
+  .brand-title-line {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    letter-spacing: 1.2px;
+  }
+  .brand-region-line {
     color: var(--c-primary);
-    font-size: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-top: 2px;
   }
   .header-right {
     display: flex;
@@ -1616,9 +1623,9 @@
   <div class="brand-wrap">
     <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
     <div class="brand-divider"></div>
-    <div class="brand-sub" data-i18n="brandTitle">
-      STREET VIEW DASHBOARD
-      <span data-i18n="brandRegion">LATAM</span>
+    <div class="brand-sub">
+      <div class="brand-title-line" data-i18n="brandTitle">STREET VIEW DASHBOARD</div>
+      <div class="brand-region-line" data-i18n="brandRegion">LATAM</div>
     </div>
   </div>
   <div class="header-right">
@@ -2802,13 +2809,6 @@ function t(key) {
 function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
-    // Skip elements that have complex children (brand-sub has a span child)
-    if (key === 'brandTitle') {
-      // Only replace text node, preserve span
-      const span = el.querySelector('span');
-      el.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = t(key) + ' '; });
-      return;
-    }
     el.textContent = t(key);
   });
   document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : currentLang;
