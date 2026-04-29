@@ -726,6 +726,37 @@
     border-color: var(--c-accent);
   }
 
+  /* Range picker (Período específico) — reusa estilo do datepicker */
+  .rangepicker-popover {
+    min-width: 220px;
+    padding: 10px 12px 10px 12px;
+  }
+  .rangepicker-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .rangepicker-row label {
+    color: var(--c-text-muted);
+    font-weight: 600;
+    min-width: 28px;
+  }
+  .rangepicker-row input[type="date"] {
+    flex: 1;
+    padding: 5px 8px;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--c-text);
+  }
+  .rangepicker-row input[type="date"]:focus {
+    outline: none;
+    border-color: var(--c-primary);
+  }
+
   .filter-reset {
     margin-left: auto;
     padding: 6px 12px;
@@ -2007,11 +2038,9 @@
   <button class="filter-chip" data-country="Peru" onclick="setFilter('country', 'Peru')">Peru</button>
 
   <span class="filter-label" style="margin-left:16px;" data-i18n="filterPeriod">Período:</span>
-  <button class="filter-chip" data-period="1" onclick="setFilter('period', 1)" data-i18n="today">Hoje</button>
-  <button class="filter-chip active" data-period="7" onclick="setFilter('period', 7)" data-i18n="sevenDays">7 dias</button>
-  <button class="filter-chip" data-period="30" onclick="setFilter('period', 30)" data-i18n="thirtyDays">30 dias</button>
+  <button class="filter-chip active" data-period="1" onclick="setFilter('period', 1)" data-i18n="today">Hoje</button>
 
-  <!-- Botão pra abrir o mini-calendário -->
+  <!-- Botão pra abrir o mini-calendário (dia único) -->
   <div class="datepicker-wrap">
     <button class="filter-chip datepicker-toggle" id="datepicker-toggle" onclick="toggleDatePicker(event)">
       📅 <span id="datepicker-label" data-i18n="specificDay">Dia específico</span>
@@ -2027,6 +2056,27 @@
       <div class="datepicker-footer">
         <button class="datepicker-action" onclick="clearSpecificDate()" data-i18n="datePickerClear">Limpar</button>
         <button class="datepicker-action primary" onclick="setSpecificDateToToday()" data-i18n="datePickerToday">Hoje</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão pra abrir o seletor de range (período específico) -->
+  <div class="datepicker-wrap">
+    <button class="filter-chip datepicker-toggle" id="rangepicker-toggle" onclick="toggleRangePicker(event)">
+      📆 <span id="rangepicker-label" data-i18n="specificRange">Período específico</span>
+    </button>
+    <div class="datepicker-popover rangepicker-popover" id="rangepicker-popover" style="display:none;">
+      <div class="rangepicker-row">
+        <label data-i18n="rangeFrom">De:</label>
+        <input type="date" id="rangepicker-start">
+      </div>
+      <div class="rangepicker-row">
+        <label data-i18n="rangeTo">Até:</label>
+        <input type="date" id="rangepicker-end">
+      </div>
+      <div class="datepicker-footer">
+        <button class="datepicker-action" onclick="clearSpecificRange()" data-i18n="datePickerClear">Limpar</button>
+        <button class="datepicker-action primary" onclick="applySpecificRange()" data-i18n="rangeApply">Aplicar</button>
       </div>
     </div>
   </div>
@@ -2599,6 +2649,12 @@ const I18N = {
     specificDay: 'Dia específico',
     datePickerClear: 'Limpar',
     datePickerToday: 'Hoje',
+    specificRange: 'Período específico',
+    rangeFrom: 'De:',
+    rangeTo: 'Até:',
+    rangeApply: 'Aplicar',
+    rangeInvalid: 'Datas inválidas — De deve vir antes de Até',
+    rangeLoading: 'Carregando dados do período…',
     exportCalendarSub: 'PDF visual do Driver/VID Calendar (mês)',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Recolher',
@@ -2804,6 +2860,12 @@ const I18N = {
     specificDay: 'Día específico',
     datePickerClear: 'Limpiar',
     datePickerToday: 'Hoy',
+    specificRange: 'Período específico',
+    rangeFrom: 'De:',
+    rangeTo: 'Hasta:',
+    rangeApply: 'Aplicar',
+    rangeInvalid: 'Fechas inválidas — De debe ser antes de Hasta',
+    rangeLoading: 'Cargando datos del período…',
     exportCalendarSub: 'PDF visual del Driver/VID Calendar (mes)',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Contraer',
@@ -3009,6 +3071,12 @@ const I18N = {
     specificDay: 'Specific day',
     datePickerClear: 'Clear',
     datePickerToday: 'Today',
+    specificRange: 'Specific period',
+    rangeFrom: 'From:',
+    rangeTo: 'To:',
+    rangeApply: 'Apply',
+    rangeInvalid: 'Invalid dates — From must be before To',
+    rangeLoading: 'Loading period data…',
     exportCalendarSub: 'Visual PDF of Driver/VID Calendar (month)',
     showAllDrivers: 'Show all',
     collapseTable: '↑ Collapse',
@@ -3206,7 +3274,7 @@ document.addEventListener('click', (e) => {
 let state = {
   drivers: [],
   demoMode: false,
-  filter: { country: 'all', period: 7, specificDate: null }, // specificDate = 'YYYY-MM-DD' ou null
+  filter: { country: 'all', period: 1, specificDate: null, specificRange: null }, // specificDate='YYYY-MM-DD' (1 dia) | specificRange={start,end} (range) | period=1 (hoje)
   // v3 aux data
   hmByCountry: [],
   hmByDriver: [],
@@ -3289,11 +3357,13 @@ function loadPreferences() {
  * Útil quando usuário se confunde com filtros aplicados.
  */
 function resetPreferences() {
-  state.filter = { country: 'all', period: 7, specificDate: null };
+  state.filter = { country: 'all', period: 1, specificDate: null, specificRange: null };
   state.sort = { column: 'name', direction: 'asc' };
   state.ctsSelectedPeriod = null;
   state.topExpanded = false;
   state.tableLimit = 10;
+  // Limpa cache de checkins de período (vai re-buscar quando precisar)
+  periodCheckinsCache = null;
   savePreferences();
 
   // Re-aplica visualmente os filtros nos botões
@@ -3309,18 +3379,22 @@ function syncFilterButtonsUI() {
   document.querySelectorAll('.filter-chip[data-country]').forEach(b => {
     b.classList.toggle('active', b.dataset.country === state.filter.country);
   });
+  // Active no botão "Hoje" só quando não há filtros específicos ativos
+  const periodActive = !state.filter.specificDate && !state.filter.specificRange;
   document.querySelectorAll('.filter-chip[data-period]').forEach(b => {
-    b.classList.toggle('active', Number(b.dataset.period) === state.filter.period);
+    b.classList.toggle('active', periodActive && Number(b.dataset.period) === state.filter.period);
   });
 
-  // Atualiza visual do datepicker (mostra data se selecionada)
+  // Atualiza visual do datepicker e range picker (mostra data se selecionada)
   if (typeof updateDatePickerLabel === 'function') updateDatePickerLabel();
+  if (typeof updateRangePickerLabel === 'function') updateRangePickerLabel();
 
   // Destaca botão reset se algum filtro tá em estado não-default
   const isDefault = (
     state.filter.country === 'all' &&
-    state.filter.period === 7 &&
+    state.filter.period === 1 &&
     !state.filter.specificDate &&
+    !state.filter.specificRange &&
     state.sort.column === 'name' &&
     state.sort.direction === 'asc' &&
     state.ctsSelectedPeriod === null &&
@@ -3767,6 +3841,10 @@ function setFilter(type, value) {
       el.classList.toggle('active', el.dataset.country === value);
     });
   } else if (type === 'period') {
+    // Clicar em "Hoje" desativa filtros específicos (mutuamente exclusivos)
+    state.filter.specificDate = null;
+    state.filter.specificRange = null;
+    periodCheckinsCache = null;
     document.querySelectorAll('[data-period]').forEach(el => {
       el.classList.toggle('active', parseInt(el.dataset.period) === value);
     });
@@ -3779,32 +3857,149 @@ function setFilter(type, value) {
   applyFiltersAndRender();
 }
 
+/**
+ * Cache em memória dos check-ins do período (specificDate ou specificRange).
+ * Vira null quando o filtro é limpo. Repopulado por loadPeriodCheckins().
+ *
+ * Estrutura:
+ *   {
+ *     dateRange: 'YYYY-MM-DD' ou {start, end}, // pra validar cache
+ *     // Map de email -> último check-in DELE no período
+ *     // (já que o backend retorna 1 por dia, escolhemos o mais recente do range)
+ *     byEmail: { 'email@x.com': { timestamp, destLat, destLng, destAddress, destRadius, ... } }
+ *   }
+ */
+let periodCheckinsCache = null;
+
+/**
+ * Busca check-ins do período via backend e popula cache. Chama applyFiltersAndRender ao fim.
+ * Usa o filtro atual (specificDate ou specificRange) pra montar a query.
+ */
+async function loadPeriodCheckins() {
+  let startDate, endDate;
+  if (state.filter.specificDate) {
+    startDate = endDate = state.filter.specificDate;
+  } else if (state.filter.specificRange) {
+    startDate = state.filter.specificRange.start;
+    endDate = state.filter.specificRange.end;
+  } else {
+    // Sem filtro específico — limpa cache
+    periodCheckinsCache = null;
+    applyFiltersAndRender();
+    return;
+  }
+
+  // Cache hit?
+  if (periodCheckinsCache && periodCheckinsCache.startDate === startDate && periodCheckinsCache.endDate === endDate) {
+    applyFiltersAndRender();
+    return;
+  }
+
+  showLoader(true, t('rangeLoading'));
+
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getCheckinsByPeriod&startDate=' + startDate + '&endDate=' + endDate)
+      .then(r => r.json());
+    if (!res.success) throw new Error('Falhou getCheckinsByPeriod');
+
+    // Pra cada driver, mantém só o mais recente check-in do range (pra ter "onde estava por último")
+    const byEmail = {};
+    res.checkins.forEach(c => {
+      const ts = new Date(c.timestamp);
+      if (!byEmail[c.driverEmail] || ts > new Date(byEmail[c.driverEmail].timestamp)) {
+        byEmail[c.driverEmail] = c;
+      }
+    });
+
+    periodCheckinsCache = { startDate, endDate, byEmail };
+  } catch (err) {
+    console.error('Erro ao buscar check-ins do período:', err);
+    alert('Erro ao buscar dados do período: ' + err.message);
+    periodCheckinsCache = null;
+  } finally {
+    showLoader(false);
+  }
+
+  applyFiltersAndRender();
+}
+
 function applyFiltersAndRender() {
   // Sincroniza estado visual dos botões (incluindo destaque do reset)
   syncFilterButtonsUI();
 
-  const filtered = state.drivers.filter(d => {
+  // Filtra por país (sempre)
+  const byCountry = state.drivers.filter(d => {
     if (state.filter.country !== 'all' && d.country !== state.filter.country) return false;
     return true;
   });
 
+  // ---- Decide qual conjunto de drivers + métricas mostrar ----
+  // Modo 1: SEM filtro específico → usa estado normal (último check-in geral)
+  // Modo 2: COM filtro específico → reescreve drivers usando check-ins do período
+  let driversForView;
+  let isSpecificMode = false;
+
+  if ((state.filter.specificDate || state.filter.specificRange) && periodCheckinsCache) {
+    isSpecificMode = true;
+    // Reescreve cada driver substituindo dados do último check-in pelos do período
+    driversForView = byCountry.map(d => {
+      const periodCheckin = periodCheckinsCache.byEmail[d.email];
+      if (!periodCheckin) {
+        // Driver não fez check-in no período — vai ser filtrado abaixo
+        return { ...d, _skipFromView: true };
+      }
+      // Recalcula distância base→área e casa→área com check-in do período
+      let distBaseToEdge = null;
+      if (d.base && periodCheckin.destLat && periodCheckin.destRadius) {
+        distBaseToEdge = Math.max(0,
+          Math.round((haversine(d.base.lat, d.base.lng, periodCheckin.destLat, periodCheckin.destLng) - periodCheckin.destRadius) * 10) / 10
+        );
+      }
+      let distHomeToEdge = null;
+      if (isValidCoord(d.homeLat, d.homeLng) && periodCheckin.destLat) {
+        const c = Math.round(haversine(d.homeLat, d.homeLng, periodCheckin.destLat, periodCheckin.destLng) * 10) / 10;
+        distHomeToEdge = Math.max(0, Math.round((c - (periodCheckin.destRadius || 0)) * 10) / 10);
+      }
+      let savingsKm = null;
+      if (d.base && d.base.type === 'Hotel' && distHomeToEdge !== null && distBaseToEdge !== null) {
+        savingsKm = Math.round((distHomeToEdge - distBaseToEdge) * 10) / 10;
+      }
+      const ts = new Date(periodCheckin.timestamp);
+      return {
+        ...d,
+        // Override com dados do período
+        hoursAgo: (Date.now() - ts.getTime()) / 3600000,
+        lastCheckinDate: formatDateYMD(ts),
+        vehicleStatus: periodCheckin.vehicleStatus || 'OK',
+        vehicleIssue: periodCheckin.vehicleIssue || '',
+        notes: periodCheckin.notes || '',
+        area: {
+          lat: periodCheckin.destLat,
+          lng: periodCheckin.destLng,
+          address: periodCheckin.destAddress,
+          radius: periodCheckin.destRadius || 10,
+        },
+        distBaseToEdge,
+        distHomeToEdge,
+        savingsKm,
+      };
+    }).filter(d => !d._skipFromView);
+  } else {
+    // Modo normal — usa state.drivers como tá
+    driversForView = byCountry;
+  }
+
   // Filtro de período aplica diferente: drivers sem check-in no período ainda aparecem como "sem check-in"
-  const periodHours = state.filter.period * 24;
+  // No modo específico, todos já têm check-in (já filtrado acima)
+  const periodHours = isSpecificMode ? Infinity : state.filter.period * 24;
 
-  // v5.3: se há filtro de dia específico, restringe a TABELA pra só drivers
-  // que fizeram check-in nesse dia exato. As outras seções (scorecards, mapa, CTS,
-  // rankings) continuam usando o conjunto completo, porque "filtro de dia" é
-  // primariamente uma view focada na tabela. Isso evita zerar scorecards
-  // de hotel mode/savings que são valores mensais ou de "estado atual".
-  const tableData = state.filter.specificDate
-    ? filtered.filter(d => d.lastCheckinDate === state.filter.specificDate)
-    : filtered;
-
-  renderScorecards(filtered, periodHours);
-  renderMap(filtered);
-  renderCtsGoals(filtered);
-  renderTable(tableData, periodHours);
-  renderRankings(filtered);
+  // No modo específico, TUDO usa a mesma lista (mapa, scorecards, tabela)
+  // No modo normal, mantém comportamento original
+  renderScorecards(driversForView, periodHours);
+  renderMap(driversForView);
+  renderCtsGoals(byCountry);  // CTS é mensal, sempre usa lista completa por país
+  renderTable(driversForView, periodHours);
+  renderRankings(driversForView);
 }
 
 function renderRankings(drivers) {
@@ -4004,10 +4199,13 @@ function renderDatePicker() {
  */
 function selectDatePickerDay(dateStr) {
   state.filter.specificDate = dateStr;
+  // Limpa specificRange se estava setado (mutuamente exclusivos)
+  state.filter.specificRange = null;
   document.getElementById('datepicker-popover').style.display = 'none';
   updateDatePickerLabel();
   state.tableLimit = 10;  // Reset paginação ao mudar filtro
-  applyFiltersAndRender();
+  // Busca check-ins do dia escolhido (e atualiza tudo via loadPeriodCheckins)
+  loadPeriodCheckins();
 }
 
 /**
@@ -4015,6 +4213,7 @@ function selectDatePickerDay(dateStr) {
  */
 function clearSpecificDate() {
   state.filter.specificDate = null;
+  periodCheckinsCache = null;
   document.getElementById('datepicker-popover').style.display = 'none';
   updateDatePickerLabel();
   state.tableLimit = 10;
@@ -4060,12 +4259,114 @@ function formatDateYMD(d) {
   return `${y}-${m}-${day}`;
 }
 
-// Fecha o calendário se clicar fora dele
+// =================================================================
+// RANGE PICKER (Período Específico)
+// =================================================================
+//
+// Permite filtrar a tabela + mapa + scorecards pra um range de datas.
+// Quando ativo, faz uma chamada nova ao backend pra buscar todos os
+// check-ins do período (`getCheckinsByPeriod`) e atualiza tudo.
+
+function toggleRangePicker(evt) {
+  if (evt) evt.stopPropagation();
+  const popover = document.getElementById('rangepicker-popover');
+  const isOpen = popover.style.display !== 'none';
+
+  // Fecha datepicker se estiver aberto pra não conflitar
+  document.getElementById('datepicker-popover').style.display = 'none';
+
+  if (isOpen) {
+    popover.style.display = 'none';
+    return;
+  }
+
+  // Sincroniza inputs com state atual
+  const startInput = document.getElementById('rangepicker-start');
+  const endInput = document.getElementById('rangepicker-end');
+  if (state.filter.specificRange) {
+    startInput.value = state.filter.specificRange.start;
+    endInput.value = state.filter.specificRange.end;
+  } else {
+    // Default: últimos 7 dias
+    const today = new Date();
+    const week = new Date();
+    week.setDate(week.getDate() - 6);
+    startInput.value = formatDateYMD(week);
+    endInput.value = formatDateYMD(today);
+  }
+
+  popover.style.display = '';
+}
+
+/**
+ * Aplica range de datas escolhido. Valida e dispara filtro.
+ */
+async function applySpecificRange() {
+  const start = document.getElementById('rangepicker-start').value;
+  const end = document.getElementById('rangepicker-end').value;
+
+  if (!start || !end) return; // input vazio, ignora
+  if (start > end) {
+    alert(t('rangeInvalid'));
+    return;
+  }
+
+  state.filter.specificRange = { start, end };
+  // Limpa specificDate se estava setado (mutuamente exclusivos)
+  state.filter.specificDate = null;
+  state.tableLimit = 10;
+
+  document.getElementById('rangepicker-popover').style.display = 'none';
+
+  // Busca check-ins do período (e atualiza tudo via applyFiltersAndRender)
+  await loadPeriodCheckins();
+}
+
+function clearSpecificRange() {
+  state.filter.specificRange = null;
+  periodCheckinsCache = null;
+  document.getElementById('rangepicker-popover').style.display = 'none';
+  state.tableLimit = 10;
+  applyFiltersAndRender();
+}
+
+/**
+ * Atualiza visual do botão "Período específico" no filtro.
+ */
+function updateRangePickerLabel() {
+  const btn = document.getElementById('rangepicker-toggle');
+  const label = document.getElementById('rangepicker-label');
+  if (!btn || !label) return;
+
+  if (state.filter.specificRange) {
+    btn.classList.add('has-date');
+    const [ys, ms, ds] = state.filter.specificRange.start.split('-');
+    const [ye, me, de] = state.filter.specificRange.end.split('-');
+    const fmt = (y, m, d) => currentLang === 'en' ? `${m}/${d}` : `${d}/${m}`;
+    label.textContent = '📆 ' + fmt(ys, ms, ds) + ' → ' + fmt(ye, me, de);
+  } else {
+    btn.classList.remove('has-date');
+    label.textContent = t('specificRange');
+  }
+}
+
+// Fecha popovers se clicar fora deles
 document.addEventListener('click', (e) => {
   const popover = document.getElementById('datepicker-popover');
   const wrap = document.querySelector('.datepicker-wrap');
   if (!popover || !wrap) return;
   if (popover.style.display !== 'none' && !wrap.contains(e.target)) {
+    popover.style.display = 'none';
+  }
+});
+
+// Fecha range picker se clicar fora dele
+document.addEventListener('click', (e) => {
+  const popover = document.getElementById('rangepicker-popover');
+  if (!popover) return;
+  // .datepicker-wrap engloba ambos popovers — mas só fecha se clicou fora do wrap específico
+  const insideAnyWrap = e.target.closest('.datepicker-wrap');
+  if (popover.style.display !== 'none' && !insideAnyWrap) {
     popover.style.display = 'none';
   }
 });
