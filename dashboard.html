@@ -593,6 +593,139 @@
     color: white;
     border-color: var(--c-primary);
   }
+  /* Mini-calendário (filtro de dia específico) */
+  .datepicker-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .datepicker-toggle {
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .datepicker-toggle.has-date {
+    background: var(--c-primary);
+    color: white;
+    border-color: var(--c-primary);
+  }
+  .datepicker-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 999;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.15);
+    min-width: 260px;
+  }
+  .datepicker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .datepicker-nav {
+    background: transparent;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    color: var(--c-primary);
+    font-size: 16px;
+    line-height: 1;
+    font-family: inherit;
+    transition: all 0.1s;
+  }
+  .datepicker-nav:hover { background: var(--c-bg-tint); }
+  .datepicker-month-label {
+    font-weight: 600;
+    color: var(--c-primary-dark);
+    font-size: 13px;
+    text-transform: capitalize;
+  }
+  .datepicker-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 4px;
+  }
+  .datepicker-weekdays > div {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    padding: 4px 0;
+    text-transform: uppercase;
+  }
+  .datepicker-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .datepicker-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--c-text);
+    transition: all 0.1s;
+  }
+  .datepicker-day:hover:not(:disabled):not(.empty) {
+    background: var(--c-bg-tint);
+    border-color: var(--c-accent);
+  }
+  .datepicker-day.empty {
+    visibility: hidden;
+  }
+  .datepicker-day.today {
+    font-weight: 700;
+    color: var(--c-primary);
+  }
+  .datepicker-day.selected {
+    background: var(--c-primary);
+    color: white !important;
+    border-color: var(--c-primary);
+    font-weight: 600;
+  }
+  .datepicker-day.future {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .datepicker-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--c-border);
+  }
+  .datepicker-action {
+    padding: 5px 10px;
+    background: transparent;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--c-text-muted);
+    transition: all 0.1s;
+  }
+  .datepicker-action:hover {
+    border-color: var(--c-primary);
+    color: var(--c-primary);
+  }
+  .datepicker-action.primary {
+    color: var(--c-primary);
+    border-color: var(--c-accent);
+  }
+
   .filter-reset {
     margin-left: auto;
     padding: 6px 12px;
@@ -1878,6 +2011,26 @@
   <button class="filter-chip active" data-period="7" onclick="setFilter('period', 7)" data-i18n="sevenDays">7 dias</button>
   <button class="filter-chip" data-period="30" onclick="setFilter('period', 30)" data-i18n="thirtyDays">30 dias</button>
 
+  <!-- Botão pra abrir o mini-calendário -->
+  <div class="datepicker-wrap">
+    <button class="filter-chip datepicker-toggle" id="datepicker-toggle" onclick="toggleDatePicker(event)">
+      📅 <span id="datepicker-label" data-i18n="specificDay">Dia específico</span>
+    </button>
+    <div class="datepicker-popover" id="datepicker-popover" style="display:none;">
+      <div class="datepicker-header">
+        <button class="datepicker-nav" onclick="navDatePicker(-1)" title="Mês anterior">‹</button>
+        <span class="datepicker-month-label" id="datepicker-month-label">—</span>
+        <button class="datepicker-nav" onclick="navDatePicker(1)" title="Próximo mês">›</button>
+      </div>
+      <div class="datepicker-weekdays" id="datepicker-weekdays"></div>
+      <div class="datepicker-grid" id="datepicker-grid"></div>
+      <div class="datepicker-footer">
+        <button class="datepicker-action" onclick="clearSpecificDate()" data-i18n="datePickerClear">Limpar</button>
+        <button class="datepicker-action primary" onclick="setSpecificDateToToday()" data-i18n="datePickerToday">Hoje</button>
+      </div>
+    </div>
+  </div>
+
   <button class="filter-reset" onclick="resetPreferences()" title="Resetar filtros e preferências" data-i18n="resetFilters">↺ Resetar</button>
 </div>
 
@@ -2443,6 +2596,9 @@ const I18N = {
     pIdleCount: 'Idle Days (mês)',
     pIdleNone: 'Nenhum dia parado',
     pNoVid: 'Sem VID atribuído',
+    specificDay: 'Dia específico',
+    datePickerClear: 'Limpar',
+    datePickerToday: 'Hoje',
     exportCalendarSub: 'PDF visual do Driver/VID Calendar (mês)',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Recolher',
@@ -2645,6 +2801,9 @@ const I18N = {
     pIdleCount: 'Días parado (mes)',
     pIdleNone: 'Ningún día parado',
     pNoVid: 'Sin VID asignado',
+    specificDay: 'Día específico',
+    datePickerClear: 'Limpiar',
+    datePickerToday: 'Hoy',
     exportCalendarSub: 'PDF visual del Driver/VID Calendar (mes)',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Contraer',
@@ -2847,6 +3006,9 @@ const I18N = {
     pIdleCount: 'Idle Days (month)',
     pIdleNone: 'No idle days',
     pNoVid: 'No VID assigned',
+    specificDay: 'Specific day',
+    datePickerClear: 'Clear',
+    datePickerToday: 'Today',
     exportCalendarSub: 'Visual PDF of Driver/VID Calendar (month)',
     showAllDrivers: 'Show all',
     collapseTable: '↑ Collapse',
@@ -3044,7 +3206,7 @@ document.addEventListener('click', (e) => {
 let state = {
   drivers: [],
   demoMode: false,
-  filter: { country: 'all', period: 7 },
+  filter: { country: 'all', period: 7, specificDate: null }, // specificDate = 'YYYY-MM-DD' ou null
   // v3 aux data
   hmByCountry: [],
   hmByDriver: [],
@@ -3127,10 +3289,11 @@ function loadPreferences() {
  * Útil quando usuário se confunde com filtros aplicados.
  */
 function resetPreferences() {
-  state.filter = { country: 'all', period: 7 };
+  state.filter = { country: 'all', period: 7, specificDate: null };
   state.sort = { column: 'name', direction: 'asc' };
   state.ctsSelectedPeriod = null;
   state.topExpanded = false;
+  state.tableLimit = 10;
   savePreferences();
 
   // Re-aplica visualmente os filtros nos botões
@@ -3150,10 +3313,14 @@ function syncFilterButtonsUI() {
     b.classList.toggle('active', Number(b.dataset.period) === state.filter.period);
   });
 
+  // Atualiza visual do datepicker (mostra data se selecionada)
+  if (typeof updateDatePickerLabel === 'function') updateDatePickerLabel();
+
   // Destaca botão reset se algum filtro tá em estado não-default
   const isDefault = (
     state.filter.country === 'all' &&
     state.filter.period === 7 &&
+    !state.filter.specificDate &&
     state.sort.column === 'name' &&
     state.sort.direction === 'asc' &&
     state.ctsSelectedPeriod === null &&
@@ -3406,6 +3573,8 @@ async function fetchRealData() {
       base,
       area,
       hoursAgo: checkin ? checkin.hoursAgo : null,
+      // v5.3: data do último check-in formatada (pra filtro de dia específico)
+      lastCheckinDate: checkin && checkin.timestamp ? formatDateYMD(new Date(checkin.timestamp)) : null,
       vehicleStatus: checkin ? (checkin.vehicleStatus || 'OK') : 'OK',
       vehicleIssue: checkin ? checkin.vehicleIssue : '',
       notes: checkin ? checkin.notes : '',
@@ -3622,10 +3791,19 @@ function applyFiltersAndRender() {
   // Filtro de período aplica diferente: drivers sem check-in no período ainda aparecem como "sem check-in"
   const periodHours = state.filter.period * 24;
 
+  // v5.3: se há filtro de dia específico, restringe a TABELA pra só drivers
+  // que fizeram check-in nesse dia exato. As outras seções (scorecards, mapa, CTS,
+  // rankings) continuam usando o conjunto completo, porque "filtro de dia" é
+  // primariamente uma view focada na tabela. Isso evita zerar scorecards
+  // de hotel mode/savings que são valores mensais ou de "estado atual".
+  const tableData = state.filter.specificDate
+    ? filtered.filter(d => d.lastCheckinDate === state.filter.specificDate)
+    : filtered;
+
   renderScorecards(filtered, periodHours);
   renderMap(filtered);
   renderCtsGoals(filtered);
-  renderTable(filtered, periodHours);
+  renderTable(tableData, periodHours);
   renderRankings(filtered);
 }
 
@@ -3712,13 +3890,194 @@ function setCtsPeriod(period) {
 }
 
 // =================================================================
+// MINI-CALENDÁRIO (Filtro de dia específico)
+// =================================================================
+//
+// Permite filtrar a tabela de drivers pra mostrar só quem fez check-in
+// num dia específico. Filtro estrito: drivers que não fizeram check-in
+// nesse dia somem da lista.
+//
+// Estado interno do calendário (separado do state global pra não persistir).
+let datePickerState = {
+  // Mês visível no calendário (não confundir com data selecionada)
+  visibleYear: new Date().getFullYear(),
+  visibleMonth: new Date().getMonth(), // 0-indexed
+};
+
+/**
+ * Abre/fecha o popover do calendário.
+ * Recebe event pra parar propagação (evita fechar por clique-fora imediato).
+ */
+function toggleDatePicker(evt) {
+  if (evt) evt.stopPropagation();
+  const popover = document.getElementById('datepicker-popover');
+  const isOpen = popover.style.display !== 'none';
+
+  if (isOpen) {
+    popover.style.display = 'none';
+    return;
+  }
+
+  // Sincroniza mês visível com data selecionada (se houver)
+  if (state.filter.specificDate) {
+    const [y, m, d] = state.filter.specificDate.split('-').map(Number);
+    datePickerState.visibleYear = y;
+    datePickerState.visibleMonth = m - 1;
+  } else {
+    const today = new Date();
+    datePickerState.visibleYear = today.getFullYear();
+    datePickerState.visibleMonth = today.getMonth();
+  }
+
+  renderDatePicker();
+  popover.style.display = '';
+}
+
+/**
+ * Navega o mês visível: dir = -1 (prev) ou +1 (next).
+ */
+function navDatePicker(dir) {
+  datePickerState.visibleMonth += dir;
+  if (datePickerState.visibleMonth < 0) {
+    datePickerState.visibleMonth = 11;
+    datePickerState.visibleYear--;
+  } else if (datePickerState.visibleMonth > 11) {
+    datePickerState.visibleMonth = 0;
+    datePickerState.visibleYear++;
+  }
+  renderDatePicker();
+}
+
+/**
+ * Renderiza o conteúdo do calendário (header + dias da semana + grid).
+ * Chamado toda vez que abre, navega, ou seleciona.
+ */
+function renderDatePicker() {
+  const year = datePickerState.visibleYear;
+  const month = datePickerState.visibleMonth;
+
+  // Nome do mês (locale-aware)
+  const locale = currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es-ES' : 'en-US');
+  const monthName = new Date(year, month, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  document.getElementById('datepicker-month-label').textContent = monthName;
+
+  // Dias da semana (Dom a Sáb)
+  const wdayLabels = currentLang === 'pt'
+    ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+    : currentLang === 'es'
+    ? ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+    : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  document.getElementById('datepicker-weekdays').innerHTML =
+    wdayLabels.map(d => `<div>${d}</div>`).join('');
+
+  // Grid de dias
+  const firstDay = new Date(year, month, 1).getDay();      // 0=domingo
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  const todayStr = formatDateYMD(today);
+  const selectedStr = state.filter.specificDate;
+
+  let html = '';
+
+  // Slots vazios antes do dia 1 (alinhar com a coluna do dia da semana correto)
+  for (let i = 0; i < firstDay; i++) {
+    html += '<button class="datepicker-day empty" disabled></button>';
+  }
+
+  // Dias do mês
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dDate = new Date(year, month, day);
+    const isFuture = dDate > today && dStr !== todayStr;
+    const classes = ['datepicker-day'];
+    if (dStr === todayStr) classes.push('today');
+    if (dStr === selectedStr) classes.push('selected');
+    if (isFuture) classes.push('future');
+    html += `<button class="${classes.join(' ')}" ${isFuture ? 'disabled' : ''} onclick="selectDatePickerDay('${dStr}')">${day}</button>`;
+  }
+
+  document.getElementById('datepicker-grid').innerHTML = html;
+}
+
+/**
+ * Seleciona um dia no calendário, fecha o popover e re-renderiza dashboard.
+ */
+function selectDatePickerDay(dateStr) {
+  state.filter.specificDate = dateStr;
+  document.getElementById('datepicker-popover').style.display = 'none';
+  updateDatePickerLabel();
+  state.tableLimit = 10;  // Reset paginação ao mudar filtro
+  applyFiltersAndRender();
+}
+
+/**
+ * Limpa data selecionada (volta a usar period normal).
+ */
+function clearSpecificDate() {
+  state.filter.specificDate = null;
+  document.getElementById('datepicker-popover').style.display = 'none';
+  updateDatePickerLabel();
+  state.tableLimit = 10;
+  applyFiltersAndRender();
+}
+
+/**
+ * Atalho: seleciona hoje.
+ */
+function setSpecificDateToToday() {
+  selectDatePickerDay(formatDateYMD(new Date()));
+}
+
+/**
+ * Atualiza visual do botão "Dia específico" no filtro:
+ * - Sem data: texto padrão, sem destaque
+ * - Com data: mostra a data formatada e destaca o botão
+ */
+function updateDatePickerLabel() {
+  const btn = document.getElementById('datepicker-toggle');
+  const label = document.getElementById('datepicker-label');
+  if (!btn || !label) return;
+
+  if (state.filter.specificDate) {
+    btn.classList.add('has-date');
+    // Formato amigável: "15/04/2026" em PT, "04/15/2026" em EN
+    const [y, m, d] = state.filter.specificDate.split('-');
+    const formatted = currentLang === 'en' ? `${m}/${d}/${y}` : `${d}/${m}/${y}`;
+    label.textContent = '📅 ' + formatted;
+  } else {
+    btn.classList.remove('has-date');
+    label.textContent = t('specificDay');
+  }
+}
+
+/**
+ * Helper: 'YYYY-MM-DD' a partir de Date object (em fuso local, sem UTC weirdness).
+ */
+function formatDateYMD(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// Fecha o calendário se clicar fora dele
+document.addEventListener('click', (e) => {
+  const popover = document.getElementById('datepicker-popover');
+  const wrap = document.querySelector('.datepicker-wrap');
+  if (!popover || !wrap) return;
+  if (popover.style.display !== 'none' && !wrap.contains(e.target)) {
+    popover.style.display = 'none';
+  }
+});
+
+// =================================================================
 // ADMIN PANEL (Feature 1.3)
 // =================================================================
 //
 // Permite edição de drivers (base type, endereço, email, observações)
 // sem precisar abrir a Google Sheet. Visível só pro user 'fuss'.
 
-const ADMIN_USERNAMES = ['fuss']; // hardcoded por enquanto, simples
+const ADMIN_USERNAMES = ['fuss', 'lucas']; // hardcoded por enquanto, simples
 
 let adminState = {
   selectedDriver: null,    // driver atualmente sendo editado
