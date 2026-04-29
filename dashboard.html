@@ -1173,6 +1173,82 @@
     font-size: 13px;
   }
   .info-row:last-child { border-bottom: none; }
+
+  /* Idle mini-grid (no painel lateral do driver) */
+  .panel-idle-section {
+    background: var(--c-bg);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .idle-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .idle-mini-cell {
+    text-align: center;
+    padding: 6px 2px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid var(--c-border);
+  }
+  .idle-mini-cell .idle-mini-label {
+    font-size: 8px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+  }
+  .idle-mini-cell .idle-mini-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--c-text);
+    line-height: 1.1;
+  }
+  .idle-mini-cell.has-value-low .idle-mini-value { color: #64748B; }
+  .idle-mini-cell.has-value-high .idle-mini-value { color: #DC2626; }
+  .idle-mini-cell.has-value-medium .idle-mini-value { color: #D97706; }
+  .idle-empty-msg {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 8px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  /* VID badge floating (Yes/No) */
+  .vid-floating-yes {
+    display: inline-block;
+    padding: 2px 10px;
+    background: #DBEAFE;
+    color: #1E40AF;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .vid-floating-no {
+    display: inline-block;
+    padding: 2px 10px;
+    background: #F1F5F9;
+    color: #475569;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .vid-status-active {
+    color: #16A34A;
+    font-weight: 600;
+  }
+  .vid-status-half {
+    color: #D97706;
+    font-weight: 500;
+  }
+  .vid-status-inactive {
+    color: #DC2626;
+    font-weight: 500;
+  }
   .info-label {
     color: var(--c-text-muted);
     flex-shrink: 0;
@@ -1958,6 +2034,35 @@
       </div>
     </div>
 
+    <!-- Current VID (do VID Calendar) -->
+    <div class="panel-section" id="panel-vid-section" style="display:none;">
+      <div class="panel-section-title" data-i18n="pCurrentVid">Current VID</div>
+      <div class="info-row">
+        <span class="info-label">VID</span>
+        <span class="info-value" id="panel-vid-id" style="font-weight:600;">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pVidFloating">Floating?</span>
+        <span class="info-value" id="panel-vid-floating">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pVidStatus">Status (Google)</span>
+        <span class="info-value" id="panel-vid-status">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pVidQc">QC Score</span>
+        <span class="info-value" id="panel-vid-qc" style="font-weight:600;">—</span>
+      </div>
+    </div>
+
+    <!-- Idle Count do mês (compacto) -->
+    <div class="panel-section panel-idle-section" id="panel-idle-section" style="display:none;">
+      <div class="panel-section-title" data-i18n="pIdleCount">Idle Days (mês)</div>
+      <div class="idle-mini-grid" id="panel-idle-grid">
+        <!-- preenchido dinamicamente -->
+      </div>
+    </div>
+
     <div class="panel-section" id="panel-performance-section" style="display:none;">
       <div class="panel-section-title" data-i18n="pPerformance">Desempenho do mês</div>
       <div class="info-row">
@@ -2331,6 +2436,13 @@ const I18N = {
     reportIdleTech: 'TECH',
     reportIdleWeather: 'WEATHER',
     exportCalendar: 'Resumo Calendar',
+    pCurrentVid: 'VID atual',
+    pVidFloating: 'Floating?',
+    pVidStatus: 'Status (Google)',
+    pVidQc: 'QC Score',
+    pIdleCount: 'Idle Days (mês)',
+    pIdleNone: 'Nenhum dia parado',
+    pNoVid: 'Sem VID atribuído',
     exportCalendarSub: 'PDF visual do Driver/VID Calendar (mês)',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Recolher',
@@ -2526,6 +2638,13 @@ const I18N = {
     reportIdleTech: 'TECH',
     reportIdleWeather: 'WEATHER',
     exportCalendar: 'Resumen Calendar',
+    pCurrentVid: 'VID actual',
+    pVidFloating: '¿Floating?',
+    pVidStatus: 'Estado (Google)',
+    pVidQc: 'QC Score',
+    pIdleCount: 'Días parado (mes)',
+    pIdleNone: 'Ningún día parado',
+    pNoVid: 'Sin VID asignado',
     exportCalendarSub: 'PDF visual del Driver/VID Calendar (mes)',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Contraer',
@@ -2721,6 +2840,13 @@ const I18N = {
     reportIdleTech: 'TECH',
     reportIdleWeather: 'WEATHER',
     exportCalendar: 'Calendar Summary',
+    pCurrentVid: 'Current VID',
+    pVidFloating: 'Floating?',
+    pVidStatus: 'Status (Google)',
+    pVidQc: 'QC Score',
+    pIdleCount: 'Idle Days (month)',
+    pIdleNone: 'No idle days',
+    pNoVid: 'No VID assigned',
     exportCalendarSub: 'Visual PDF of Driver/VID Calendar (month)',
     showAllDrivers: 'Show all',
     collapseTable: '↑ Collapse',
@@ -5229,6 +5355,9 @@ function openDriverPanel(d) {
   const perfSection = document.getElementById('panel-performance-section');
   const hasPerf = typeof d.efficiency === 'number' || typeof d.tkm === 'number' || typeof d.kmDriven === 'number';
 
+  // VID e Idle (do Driver Calendar / VID Calendar) — chamada async, popula quando chegar
+  populateVidAndIdleSections(d);
+
   if (hasPerf) {
     perfSection.style.display = '';
 
@@ -5355,6 +5484,119 @@ function openDriverPanel(d) {
 
   // Renderiza mapa do painel depois do slide (pra calcular tamanho certo)
   setTimeout(() => renderPanelMap(d), 320);
+}
+
+// Cache em memória dos dados do Driver/VID Calendar pra não chamar API toda vez
+// que abrir um driver. Carregado em background no loadData(), reutilizado aqui.
+let calendarCache = { driverCal: null, vidCal: null, loadedAt: 0 };
+
+async function ensureCalendarLoaded() {
+  // Cache válido por 5 minutos (TTL pequeno pra refletir mudanças do colega na planilha)
+  const FRESH_MS = 5 * 60 * 1000;
+  if (calendarCache.loadedAt && (Date.now() - calendarCache.loadedAt) < FRESH_MS) {
+    return calendarCache;
+  }
+  try {
+    const [dcRes, vcRes] = await Promise.all([
+      fetch(CONFIG.scriptUrl + '?action=getDriverCalendar').then(r => r.json()).catch(() => ({ success: false })),
+      fetch(CONFIG.scriptUrl + '?action=getVidCalendar').then(r => r.json()).catch(() => ({ success: false })),
+    ]);
+    calendarCache = {
+      driverCal: dcRes.success ? dcRes.data : null,
+      vidCal: vcRes.success ? vcRes.data : null,
+      loadedAt: Date.now(),
+    };
+  } catch (err) {
+    console.warn('Falhou buscar Calendar:', err);
+  }
+  return calendarCache;
+}
+
+/**
+ * Popula seções de Current VID e Idle Count no painel lateral.
+ * Async porque pode precisar buscar dados se ainda não estão em cache.
+ *
+ * - VID: match pelo email do driver na lista de VIDs (currentDriver)
+ * - Idle: match pelo email do driver na lista de drivers do calendar
+ */
+async function populateVidAndIdleSections(driver) {
+  const vidSection = document.getElementById('panel-vid-section');
+  const idleSection = document.getElementById('panel-idle-section');
+
+  // Default: esconder enquanto não tem dados
+  vidSection.style.display = 'none';
+  idleSection.style.display = 'none';
+
+  const cache = await ensureCalendarLoaded();
+
+  // ---- VID Calendar ----
+  if (cache.vidCal && cache.vidCal.vids) {
+    const matched = cache.vidCal.vids.find(v =>
+      v.currentDriver && v.currentDriver.toLowerCase() === driver.email.toLowerCase()
+    );
+    if (matched) {
+      vidSection.style.display = '';
+      document.getElementById('panel-vid-id').textContent = String(matched.vid || '—');
+
+      // Floating badge
+      const flEl = document.getElementById('panel-vid-floating');
+      if (matched.isFloating === 'Yes') {
+        flEl.innerHTML = '<span class="vid-floating-yes">Yes</span>';
+      } else if (matched.isFloating === 'No') {
+        flEl.innerHTML = '<span class="vid-floating-no">No</span>';
+      } else {
+        flEl.textContent = '—';
+      }
+
+      // Status (Active / Half Active / Not Active)
+      const stEl = document.getElementById('panel-vid-status');
+      const status = matched.statusPerGoogle || '—';
+      stEl.textContent = status;
+      if (status === 'Active') stEl.className = 'info-value vid-status-active';
+      else if (status.toLowerCase().includes('half')) stEl.className = 'info-value vid-status-half';
+      else if (status.toLowerCase().includes('not')) stEl.className = 'info-value vid-status-inactive';
+      else stEl.className = 'info-value';
+
+      // QC Score (0-1 → percentual com cor)
+      const qcEl = document.getElementById('panel-vid-qc');
+      if (typeof matched.qcScore === 'number' && matched.qcScore > 0) {
+        const pct = Math.round(matched.qcScore * 100);
+        qcEl.textContent = pct + '%';
+        if (pct >= 90) qcEl.style.color = '#16A34A';
+        else if (pct >= 70) qcEl.style.color = '#F59E0B';
+        else qcEl.style.color = '#EF4444';
+      } else {
+        qcEl.textContent = '—';
+        qcEl.style.color = '';
+      }
+    }
+  }
+
+  // ---- Driver Calendar (idle counts) ----
+  if (cache.driverCal && cache.driverCal.drivers) {
+    const dcDriver = cache.driverCal.drivers.find(x =>
+      x.email && x.email.toLowerCase() === driver.email.toLowerCase()
+    );
+    if (dcDriver && dcDriver.totalIdle > 0) {
+      idleSection.style.display = '';
+
+      const grid = document.getElementById('panel-idle-grid');
+      const cells = [
+        { label: t('reportIdlePersonal'), value: dcDriver.idlePersonal, severity: 'low' },
+        { label: t('reportIdleDisks'), value: dcDriver.idleDisks, severity: 'low' },
+        { label: t('reportIdleMech'), value: dcDriver.idleMech, severity: 'high' },
+        { label: t('reportIdleTech'), value: dcDriver.idleTech, severity: 'medium' },
+        { label: t('reportIdleWeather'), value: dcDriver.idleWeather, severity: 'medium' },
+      ];
+      grid.innerHTML = cells.map(c => {
+        const sevClass = c.value > 0 ? ('has-value-' + c.severity) : '';
+        return `<div class="idle-mini-cell ${sevClass}">
+                  <div class="idle-mini-label">${c.label}</div>
+                  <div class="idle-mini-value">${c.value || 0}</div>
+                </div>`;
+      }).join('');
+    }
+  }
 }
 
 function closeDriverPanel() {
