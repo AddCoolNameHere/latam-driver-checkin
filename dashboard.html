@@ -1231,6 +1231,15 @@
   .side-panel.open {
     transform: translateX(0);
   }
+  /* Garante que o mapa principal e seus controles (attribution etc)
+     ficam abaixo do painel lateral quando aberto. Leaflet usa z-index 400-1000
+     em vários elementos internos, sobrepondo o painel sem essa regra. */
+  #map .leaflet-control-container,
+  #map .leaflet-pane,
+  #map .leaflet-top,
+  #map .leaflet-bottom {
+    z-index: 400 !important;
+  }
   .panel-header {
     position: sticky;
     top: 0;
@@ -6191,11 +6200,26 @@ async function populateVidAndIdleSections(driver) {
 
   // ---- VID Calendar ----
   if (cache.vidCal && cache.vidCal.vids) {
-    const matched = cache.vidCal.vids.find(v =>
-      v.currentDriver && v.currentDriver.toLowerCase() === driver.email.toLowerCase()
-    );
+    // Match: pelo email primeiro (mais comum), com fallback para nome
+    // (alguns drivers podem ter email digitado diferente na VID CALENDAR
+    // ou estar como "no driver" / nome em vez de email)
+    const driverEmailLower = (driver.email || '').toLowerCase();
+    const driverNameLower = (driver.name || '').toLowerCase();
+
+    const matched = cache.vidCal.vids.find(v => {
+      const cd = (v.currentDriver || '').toLowerCase();
+      if (!cd || cd === 'no driver') return false;
+      // Match exato por email
+      if (driverEmailLower && cd === driverEmailLower) return true;
+      // Fallback: match por nome (caso na planilha o currentDriver tenha nome em vez de email)
+      if (driverNameLower && cd === driverNameLower) return true;
+      return false;
+    });
+
+    // Sempre mostra a seção VID — diferencia entre "tem VID" e "sem VID"
+    vidSection.style.display = '';
+
     if (matched) {
-      vidSection.style.display = '';
       document.getElementById('panel-vid-id').textContent = String(matched.vid || '—');
 
       // Floating badge
@@ -6229,6 +6253,19 @@ async function populateVidAndIdleSections(driver) {
         qcEl.textContent = '—';
         qcEl.style.color = '';
       }
+    } else {
+      // Driver não tem VID atribuído na VID CALENDAR
+      // Mostra a seção mesmo assim com mensagem clara, pra evitar a dúvida
+      // "por que esse driver não tem VID?" — agora fica explícito
+      document.getElementById('panel-vid-id').textContent = '—';
+      document.getElementById('panel-vid-floating').innerHTML =
+        '<span class="vid-floating-no">' + t('pNoVid') + '</span>';
+      const stEl = document.getElementById('panel-vid-status');
+      stEl.textContent = '—';
+      stEl.className = 'info-value';
+      const qcEl = document.getElementById('panel-vid-qc');
+      qcEl.textContent = '—';
+      qcEl.style.color = '';
     }
   }
 
