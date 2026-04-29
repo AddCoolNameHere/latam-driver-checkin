@@ -1657,6 +1657,10 @@
           <div class="export-title" data-i18n="exportTimesheet">Folha de ponto</div>
           <div class="export-sub" data-i18n="exportTimesheetSub">Excel por driver/dia (com horas e km)</div>
         </button>
+        <button onclick="exportCalendarPdf()">
+          <div class="export-title" data-i18n="exportCalendar">Resumo Calendar</div>
+          <div class="export-sub" data-i18n="exportCalendarSub">PDF visual do Driver/VID Calendar (mês)</div>
+        </button>
       </div>
     </div>
     <button class="refresh-btn" onclick="loadData()" data-i18n="refresh">⟳ Atualizar</button>
@@ -2305,6 +2309,29 @@ const I18N = {
     hHistoryNoCheckin: 'Sem check-in matinal',
     hHistoryNoCheckout: 'sem checkout',
     showMore10: '+ Ver mais 10',
+    reportDriversByCountry: 'Drivers por país',
+    reportTotal: 'Total:',
+    reportDriversWord: 'drivers',
+    reportBaselineByCountry: 'Baseline TKM por país',
+    reportBaseline: 'Baseline',
+    reportThreshold: 'Threshold (50%)',
+    reportMaximum: 'Maximum (25%)',
+    reportVidsByCountry: 'VIDs por país',
+    reportFleet: 'Fleet',
+    reportActive: 'Ativos',
+    reportNonActive: 'Inativos',
+    reportFloating: 'Floating',
+    reportQcAvg: 'QC Avg',
+    reportIdleCount: 'Idle Day Count (mês atual)',
+    reportIdleSub: 'Total parado:',
+    reportIdleDays: 'dias',
+    reportIdlePersonal: 'PERSONAL',
+    reportIdleDisks: 'DISKS',
+    reportIdleMech: 'MECH',
+    reportIdleTech: 'TECH',
+    reportIdleWeather: 'WEATHER',
+    exportCalendar: 'Resumo Calendar',
+    exportCalendarSub: 'PDF visual do Driver/VID Calendar (mês)',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Recolher',
     tableShowingCount: 'Mostrando',
@@ -2477,6 +2504,29 @@ const I18N = {
     hHistoryNoCheckin: 'Sin check-in matutino',
     hHistoryNoCheckout: 'sin checkout',
     showMore10: '+ Ver más 10',
+    reportDriversByCountry: 'Conductores por país',
+    reportTotal: 'Total:',
+    reportDriversWord: 'conductores',
+    reportBaselineByCountry: 'Baseline TKM por país',
+    reportBaseline: 'Baseline',
+    reportThreshold: 'Threshold (50%)',
+    reportMaximum: 'Maximum (25%)',
+    reportVidsByCountry: 'VIDs por país',
+    reportFleet: 'Flota',
+    reportActive: 'Activos',
+    reportNonActive: 'Inactivos',
+    reportFloating: 'Floating',
+    reportQcAvg: 'QC Avg',
+    reportIdleCount: 'Idle Day Count (mes actual)',
+    reportIdleSub: 'Total parado:',
+    reportIdleDays: 'días',
+    reportIdlePersonal: 'PERSONAL',
+    reportIdleDisks: 'DISKS',
+    reportIdleMech: 'MECH',
+    reportIdleTech: 'TECH',
+    reportIdleWeather: 'WEATHER',
+    exportCalendar: 'Resumen Calendar',
+    exportCalendarSub: 'PDF visual del Driver/VID Calendar (mes)',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Contraer',
     tableShowingCount: 'Mostrando',
@@ -2649,6 +2699,29 @@ const I18N = {
     hHistoryNoCheckin: 'No morning check-in',
     hHistoryNoCheckout: 'no checkout',
     showMore10: '+ Show 10 more',
+    reportDriversByCountry: 'Drivers by country',
+    reportTotal: 'Total:',
+    reportDriversWord: 'drivers',
+    reportBaselineByCountry: 'Baseline TKM by country',
+    reportBaseline: 'Baseline',
+    reportThreshold: 'Threshold (50%)',
+    reportMaximum: 'Maximum (25%)',
+    reportVidsByCountry: 'VIDs by country',
+    reportFleet: 'Fleet',
+    reportActive: 'Active',
+    reportNonActive: 'Inactive',
+    reportFloating: 'Floating',
+    reportQcAvg: 'QC Avg',
+    reportIdleCount: 'Idle Day Count (current month)',
+    reportIdleSub: 'Total idle:',
+    reportIdleDays: 'days',
+    reportIdlePersonal: 'PERSONAL',
+    reportIdleDisks: 'DISKS',
+    reportIdleMech: 'MECH',
+    reportIdleTech: 'TECH',
+    reportIdleWeather: 'WEATHER',
+    exportCalendar: 'Calendar Summary',
+    exportCalendarSub: 'Visual PDF of Driver/VID Calendar (month)',
     showAllDrivers: 'Show all',
     collapseTable: '↑ Collapse',
     tableShowingCount: 'Showing',
@@ -3519,7 +3592,7 @@ function setCtsPeriod(period) {
 // Permite edição de drivers (base type, endereço, email, observações)
 // sem precisar abrir a Google Sheet. Visível só pro user 'fuss'.
 
-const ADMIN_USERNAMES = ['fuss', 'lucas']; // hardcoded por enquanto, simples
+const ADMIN_USERNAMES = ['fuss']; // hardcoded por enquanto, simples
 
 let adminState = {
   selectedDriver: null,    // driver atualmente sendo editado
@@ -3860,6 +3933,19 @@ async function exportSummaryPdf() {
   showLoader(true, t('exportGenerating') + '...');
 
   try {
+    // Busca dados extras (driver calendar + VID calendar) — mostra alerta se falhar
+    let driverCal = null, vidCal = null;
+    try {
+      const [dcRes, vcRes] = await Promise.all([
+        fetch(CONFIG.scriptUrl + '?action=getDriverCalendar').then(r => r.json()).catch(() => ({ success: false })),
+        fetch(CONFIG.scriptUrl + '?action=getVidCalendar').then(r => r.json()).catch(() => ({ success: false })),
+      ]);
+      if (dcRes.success) driverCal = dcRes.data;
+      if (vcRes.success) vidCal = vcRes.data;
+    } catch (err) {
+      console.warn('Falhou buscar Driver/VID Calendar:', err);
+    }
+
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
@@ -3868,6 +3954,30 @@ async function exportSummaryPdf() {
       return true;
     });
     const periodHours = state.filter.period * 24;
+
+    // Drivers por país — contagem
+    const byCountry = {};
+    filtered.forEach(d => {
+      const c = d.country || '—';
+      byCountry[c] = (byCountry[c] || 0) + 1;
+    });
+    const countriesSorted = Object.entries(byCountry).sort((a, b) => b[1] - a[1]);
+
+    // Idle counts agregados (do Driver Calendar) — só se filtro de país bate
+    let idleAgg = null;
+    if (driverCal && driverCal.drivers) {
+      const idleDrivers = state.filter.country === 'all'
+        ? driverCal.drivers
+        : driverCal.drivers.filter(d => d.country === state.filter.country);
+      idleAgg = {
+        personal: idleDrivers.reduce((s, d) => s + (d.idlePersonal || 0), 0),
+        disks: idleDrivers.reduce((s, d) => s + (d.idleDisks || 0), 0),
+        mech: idleDrivers.reduce((s, d) => s + (d.idleMech || 0), 0),
+        tech: idleDrivers.reduce((s, d) => s + (d.idleTech || 0), 0),
+        weather: idleDrivers.reduce((s, d) => s + (d.idleWeather || 0), 0),
+      };
+      idleAgg.total = idleAgg.personal + idleAgg.disks + idleAgg.mech + idleAgg.tech + idleAgg.weather;
+    }
 
     // Métricas do topo
     const total = filtered.length;
@@ -3999,6 +4109,153 @@ async function exportSummaryPdf() {
       y += 5;
     }
 
+    // ===== Drivers por país =====
+    if (countriesSorted.length > 0) {
+      if (y > 240) { pdf.addPage(); y = 15; }
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportDriversByCountry'), leftX, y);
+      y += 6;
+
+      // Render como linha de chips: BR: 45  ·  AR: 9  ·  CL: 7
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(26, 54, 93);
+      const chipsText = countriesSorted
+        .map(([country, count]) => `${country}: ${count}`)
+        .join('   ·   ');
+      pdf.text(chipsText, leftX, y);
+      y += 6;
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(t('reportTotal') + ' ' + total + ' ' + t('reportDriversWord'), leftX, y);
+      y += 8;
+    }
+
+    // ===== Baseline TKM por país (do Driver Calendar) =====
+    if (driverCal && driverCal.countries && driverCal.countries.length > 0) {
+      if (y > 230) { pdf.addPage(); y = 15; }
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportBaselineByCountry'), leftX, y);
+      y += 6;
+
+      // Mini-tabela: Country | Baseline | Threshold | Maximum
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 116, 139);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('thCountry'), leftX, y);
+      pdf.text(t('reportBaseline'), leftX + 35, y);
+      pdf.text(t('reportThreshold'), leftX + 75, y);
+      pdf.text(t('reportMaximum'), leftX + 120, y);
+      y += 4;
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(leftX, y, pageW - leftX, y);
+      y += 3;
+
+      pdf.setFont('helvetica', 'normal');
+      driverCal.countries.forEach(c => {
+        pdf.setTextColor(26, 54, 93);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(c.country), leftX, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(Math.round(c.baseline).toLocaleString() + ' TKM', leftX + 35, y);
+        pdf.text(Math.round(c.threshold).toLocaleString() + ' TKM', leftX + 75, y);
+        pdf.text(Math.round(c.maximum).toLocaleString() + ' TKM', leftX + 120, y);
+        y += 5;
+      });
+      y += 4;
+    }
+
+    // ===== VIDs por país (Active / Non Active / Floating + QC Score) =====
+    if (vidCal && vidCal.countries && vidCal.countries.length > 0) {
+      if (y > 215) { pdf.addPage(); y = 15; }
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportVidsByCountry'), leftX, y);
+      y += 6;
+
+      // Headers
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 116, 139);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('thCountry'), leftX, y);
+      pdf.text(t('reportFleet'), leftX + 32, y);
+      pdf.text(t('reportActive'), leftX + 55, y);
+      pdf.text(t('reportNonActive'), leftX + 80, y);
+      pdf.text(t('reportFloating'), leftX + 110, y);
+      pdf.text(t('reportQcAvg'), leftX + 145, y);
+      y += 4;
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(leftX, y, pageW - leftX, y);
+      y += 3;
+
+      pdf.setFont('helvetica', 'normal');
+      vidCal.countries.forEach(c => {
+        pdf.setTextColor(26, 54, 93);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(c.country), leftX, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(String(c.fleet), leftX + 32, y);
+        pdf.setTextColor(34, 197, 94);
+        pdf.text(String(c.activeVids), leftX + 55, y);
+        pdf.setTextColor(239, 68, 68);
+        pdf.text(String(c.nonActiveVids), leftX + 80, y);
+        // Floating em destaque (cor diferente)
+        pdf.setTextColor(74, 159, 224);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(c.floatingCars), leftX + 110, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(100, 116, 139);
+        pdf.text((c.avgQcScore * 100).toFixed(0) + '%', leftX + 145, y);
+        y += 5;
+      });
+      y += 4;
+    }
+
+    // ===== Idle Day Count (agregado) =====
+    if (idleAgg && idleAgg.total > 0) {
+      if (y > 230) { pdf.addPage(); y = 15; }
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportIdleCount'), leftX, y);
+      y += 6;
+
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(t('reportIdleSub') + ' ' + idleAgg.total + ' ' + t('reportIdleDays'), leftX, y);
+      y += 6;
+
+      // Render como mini-cards: Personal | Disks | Mech | Tech | Weather
+      const idleW = (pageW - 2 * leftX) / 5;
+      const drawIdleCard = (label, value, col, color) => {
+        const x = leftX + col * idleW;
+        pdf.setDrawColor(226, 232, 240);
+        pdf.roundedRect(x, y, idleW - 3, 16, 2, 2);
+        pdf.setFontSize(7);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(label, x + 2, y + 4);
+        pdf.setFontSize(13);
+        pdf.setTextColor(color[0], color[1], color[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(value), x + 2, y + 12);
+        pdf.setFont('helvetica', 'normal');
+      };
+      drawIdleCard(t('reportIdlePersonal'), idleAgg.personal, 0, [100, 116, 139]);
+      drawIdleCard(t('reportIdleDisks'), idleAgg.disks, 1, [100, 116, 139]);
+      drawIdleCard(t('reportIdleMech'), idleAgg.mech, 2, [239, 68, 68]);
+      drawIdleCard(t('reportIdleTech'), idleAgg.tech, 3, [245, 158, 11]);
+      drawIdleCard(t('reportIdleWeather'), idleAgg.weather, 4, [74, 159, 224]);
+      y += 22;
+    }
+
     // Top drivers: economia
     if (topSavings.length > 0) {
       if (y > 240) { pdf.addPage(); y = 15; }
@@ -4068,6 +4325,307 @@ async function exportSummaryPdf() {
     pdf.save(filename);
   } catch (err) {
     console.error('Erro ao exportar relatório:', err);
+    alert(t('exportError') + ': ' + err.message);
+  } finally {
+    showLoader(false);
+  }
+}
+
+/**
+ * Exporta resumo das abas DRIVER CALENDAR + VID CALENDAR como PDF.
+ * Foco em resumo visual — sem o calendário dia-a-dia.
+ */
+async function exportCalendarPdf() {
+  document.getElementById('export-menu').style.display = 'none';
+
+  if (typeof window.jspdf === 'undefined') {
+    alert(t('exportError'));
+    return;
+  }
+
+  showLoader(true, t('exportGenerating') + '...');
+
+  try {
+    // Busca dos 2 datasets (paralelo pra ganhar tempo)
+    const [dcRes, vcRes] = await Promise.all([
+      fetch(CONFIG.scriptUrl + '?action=getDriverCalendar').then(r => r.json()).catch(() => ({ success: false })),
+      fetch(CONFIG.scriptUrl + '?action=getVidCalendar').then(r => r.json()).catch(() => ({ success: false })),
+    ]);
+
+    if (!dcRes.success && !vcRes.success) {
+      throw new Error('Não foi possível buscar os dados de Calendar');
+    }
+
+    const driverCal = dcRes.success ? dcRes.data : null;
+    const vidCal = vcRes.success ? vcRes.data : null;
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    let y = 15;
+    const leftX = 15;
+    const pageW = pdf.internal.pageSize.getWidth();
+
+    // ===== Header =====
+    pdf.setFontSize(20);
+    pdf.setTextColor(26, 54, 93);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Calendar Summary · LATAM', leftX, y);
+    y += 7;
+
+    // Mês de referência
+    const month = (driverCal && driverCal.month) || (vidCal && vidCal.month);
+    const year = (driverCal && driverCal.year) || (vidCal && vidCal.year);
+    const monthNames = currentLang === 'pt'
+      ? ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+      : currentLang === 'es'
+      ? ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+      : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    pdf.setFontSize(10);
+    pdf.setTextColor(100, 116, 139);
+    pdf.setFont('helvetica', 'normal');
+    if (month && year) {
+      pdf.text((monthNames[month - 1] || month) + ' ' + year, leftX, y);
+    } else {
+      pdf.text('Atualizado em ' + new Date().toLocaleDateString(), leftX, y);
+    }
+    y += 4;
+
+    // Linha decorativa
+    pdf.setDrawColor(74, 159, 224);
+    pdf.setLineWidth(0.5);
+    pdf.line(leftX, y, pageW - leftX, y);
+    y += 8;
+    pdf.setLineWidth(0.2);
+
+    // ===== Seção 1: Resumo por país (DRIVER CALENDAR) =====
+    if (driverCal && driverCal.countries && driverCal.countries.length > 0) {
+      pdf.setFontSize(13);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportBaselineByCountry'), leftX, y);
+      y += 7;
+
+      // Header tabela
+      pdf.setFontSize(8);
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFillColor(44, 82, 130);
+      pdf.rect(leftX, y - 4, pageW - 2 * leftX, 6, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('thCountry'), leftX + 2, y);
+      pdf.text('TKM Price', leftX + 32, y);
+      pdf.text(t('reportBaseline'), leftX + 60, y);
+      pdf.text(t('reportThreshold'), leftX + 95, y);
+      pdf.text(t('reportMaximum'), leftX + 135, y);
+      pdf.text(t('reportFleet'), leftX + 168, y);
+      y += 4;
+
+      pdf.setFont('helvetica', 'normal');
+      driverCal.countries.forEach((c, i) => {
+        const rowBg = i % 2 === 0 ? null : [248, 250, 252];
+        if (rowBg) {
+          pdf.setFillColor(rowBg[0], rowBg[1], rowBg[2]);
+          pdf.rect(leftX, y - 4, pageW - 2 * leftX, 6, 'F');
+        }
+        pdf.setFontSize(9);
+        pdf.setTextColor(26, 54, 93);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(c.country), leftX + 2, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(100, 116, 139);
+        pdf.text('$' + c.tkmPrice.toFixed(2), leftX + 32, y);
+        pdf.text(Math.round(c.baseline).toLocaleString(), leftX + 60, y);
+        pdf.text(Math.round(c.threshold).toLocaleString(), leftX + 95, y);
+        pdf.text(Math.round(c.maximum).toLocaleString(), leftX + 135, y);
+        pdf.text(String(c.fleet), leftX + 168, y);
+        y += 6;
+      });
+      y += 5;
+    }
+
+    // ===== Seção 2: VIDs por país =====
+    if (vidCal && vidCal.countries && vidCal.countries.length > 0) {
+      if (y > 200) { pdf.addPage(); y = 15; }
+      pdf.setFontSize(13);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportVidsByCountry'), leftX, y);
+      y += 7;
+
+      // Header
+      pdf.setFontSize(8);
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFillColor(44, 82, 130);
+      pdf.rect(leftX, y - 4, pageW - 2 * leftX, 6, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('thCountry'), leftX + 2, y);
+      pdf.text(t('reportFleet'), leftX + 30, y);
+      pdf.text(t('reportActive'), leftX + 50, y);
+      pdf.text(t('reportNonActive'), leftX + 75, y);
+      pdf.text(t('reportFloating'), leftX + 105, y);
+      pdf.text('Avg TKM', leftX + 135, y);
+      pdf.text(t('reportQcAvg'), leftX + 165, y);
+      y += 4;
+
+      pdf.setFont('helvetica', 'normal');
+      vidCal.countries.forEach((c, i) => {
+        const rowBg = i % 2 === 0 ? null : [248, 250, 252];
+        if (rowBg) {
+          pdf.setFillColor(rowBg[0], rowBg[1], rowBg[2]);
+          pdf.rect(leftX, y - 4, pageW - 2 * leftX, 6, 'F');
+        }
+        pdf.setFontSize(9);
+        pdf.setTextColor(26, 54, 93);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(c.country), leftX + 2, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(String(c.fleet), leftX + 30, y);
+        pdf.setTextColor(34, 197, 94);
+        pdf.text(String(c.activeVids), leftX + 50, y);
+        pdf.setTextColor(239, 68, 68);
+        pdf.text(String(c.nonActiveVids), leftX + 75, y);
+        pdf.setTextColor(74, 159, 224);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(c.floatingCars), leftX + 105, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(c.avgTkm.toFixed(1), leftX + 135, y);
+        const qcPct = (c.avgQcScore * 100).toFixed(0);
+        pdf.setTextColor(c.avgQcScore >= 0.8 ? 34 : (c.avgQcScore >= 0.5 ? 245 : 239),
+                          c.avgQcScore >= 0.8 ? 197 : (c.avgQcScore >= 0.5 ? 158 : 68),
+                          c.avgQcScore >= 0.8 ? 94 : (c.avgQcScore >= 0.5 ? 11 : 68));
+        pdf.text(qcPct + '%', leftX + 165, y);
+        y += 6;
+      });
+      y += 5;
+    }
+
+    // ===== Seção 3: Idle Day Count agregado =====
+    if (driverCal && driverCal.drivers && driverCal.drivers.length > 0) {
+      if (y > 220) { pdf.addPage(); y = 15; }
+      const idleAgg = {
+        personal: 0, disks: 0, mech: 0, tech: 0, weather: 0, total: 0,
+      };
+      driverCal.drivers.forEach(d => {
+        idleAgg.personal += d.idlePersonal || 0;
+        idleAgg.disks += d.idleDisks || 0;
+        idleAgg.mech += d.idleMech || 0;
+        idleAgg.tech += d.idleTech || 0;
+        idleAgg.weather += d.idleWeather || 0;
+      });
+      idleAgg.total = idleAgg.personal + idleAgg.disks + idleAgg.mech + idleAgg.tech + idleAgg.weather;
+
+      pdf.setFontSize(13);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportIdleCount'), leftX, y);
+      y += 6;
+
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(t('reportIdleSub') + ' ' + idleAgg.total + ' ' + t('reportIdleDays'), leftX, y);
+      y += 6;
+
+      const idleW = (pageW - 2 * leftX) / 5;
+      const drawIdleCard = (label, value, col, color) => {
+        const x = leftX + col * idleW;
+        pdf.setDrawColor(226, 232, 240);
+        pdf.roundedRect(x, y, idleW - 3, 18, 2, 2);
+        pdf.setFontSize(7);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(label, x + 3, y + 5);
+        pdf.setFontSize(15);
+        pdf.setTextColor(color[0], color[1], color[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(value), x + 3, y + 13);
+        pdf.setFont('helvetica', 'normal');
+      };
+      drawIdleCard(t('reportIdlePersonal'), idleAgg.personal, 0, [100, 116, 139]);
+      drawIdleCard(t('reportIdleDisks'), idleAgg.disks, 1, [100, 116, 139]);
+      drawIdleCard(t('reportIdleMech'), idleAgg.mech, 2, [239, 68, 68]);
+      drawIdleCard(t('reportIdleTech'), idleAgg.tech, 3, [245, 158, 11]);
+      drawIdleCard(t('reportIdleWeather'), idleAgg.weather, 4, [74, 159, 224]);
+      y += 24;
+    }
+
+    // ===== Seção 4: Top drivers (TKM) =====
+    if (driverCal && driverCal.drivers && driverCal.drivers.length > 0) {
+      const topByTkm = [...driverCal.drivers]
+        .filter(d => d.tkm > 0)
+        .sort((a, b) => b.tkm - a.tkm)
+        .slice(0, 10);
+
+      if (topByTkm.length > 0) {
+        if (y > 220) { pdf.addPage(); y = 15; }
+        pdf.setFontSize(13);
+        pdf.setTextColor(26, 54, 93);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Top 10 — TKM no mês', leftX, y);
+        y += 7;
+
+        pdf.setFontSize(8);
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFillColor(44, 82, 130);
+        pdf.rect(leftX, y - 4, pageW - 2 * leftX, 6, 'F');
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('#', leftX + 2, y);
+        pdf.text(t('thDriver'), leftX + 8, y);
+        pdf.text(t('thCountry'), leftX + 90, y);
+        pdf.text('TKM', leftX + 120, y);
+        pdf.text('KM', leftX + 145, y);
+        pdf.text('Days', leftX + 165, y);
+        y += 4;
+
+        pdf.setFont('helvetica', 'normal');
+        topByTkm.forEach((d, i) => {
+          const rowBg = i % 2 === 0 ? null : [248, 250, 252];
+          if (rowBg) {
+            pdf.setFillColor(rowBg[0], rowBg[1], rowBg[2]);
+            pdf.rect(leftX, y - 4, pageW - 2 * leftX, 6, 'F');
+          }
+          pdf.setFontSize(9);
+          pdf.setTextColor(100, 116, 139);
+          pdf.text(String(i + 1), leftX + 2, y);
+          pdf.setTextColor(26, 54, 93);
+          pdf.setFont('helvetica', 'bold');
+          // Truncar nome se longo
+          const name = d.name.length > 35 ? d.name.slice(0, 35) + '…' : d.name;
+          pdf.text(name, leftX + 8, y);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(100, 116, 139);
+          pdf.text(d.country, leftX + 90, y);
+          pdf.setTextColor(34, 197, 94);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(d.tkm.toFixed(1), leftX + 120, y);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(100, 116, 139);
+          pdf.text(d.kmDriven.toFixed(0), leftX + 145, y);
+          pdf.text(String(d.mappingDays), leftX + 165, y);
+          y += 6;
+        });
+      }
+    }
+
+    // ===== Footer =====
+    const pageCount = pdf.internal.getNumberOfPages();
+    const now = new Date();
+    const locale = currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es-ES' : 'en-US');
+    for (let i = 1; i <= pageCount; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(7);
+      pdf.setTextColor(148, 163, 184);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Aceolution do Brasil · Calendar Summary · ' + now.toLocaleDateString(locale), leftX, 287);
+      pdf.text(String(i) + ' / ' + pageCount, pageW - leftX - 10, 287);
+    }
+
+    const filename = 'calendar-summary-' + formatDateForFilename() + '.pdf';
+    pdf.save(filename);
+  } catch (err) {
+    console.error('Erro ao exportar Calendar:', err);
     alert(t('exportError') + ': ' + err.message);
   } finally {
     showLoader(false);
