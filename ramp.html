@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Ramp Expenses · LATAM · Aceolution</title>
+  <link rel="icon" type="image/png" href="https://www.aceolution.com/img/logo2.png">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root {
+    --c-primary: #2C5282;
+    --c-primary-dark: #1A365D;
+    --c-accent: #4A9FE0;
+    --c-bg: #F8FAFC;
+    --c-bg-tint: #EBF4FB;
+    --c-border: #E2E8F0;
+    --c-border-strong: #CBD5E1;
+    --c-text: #1A202C;
+    --c-text-muted: #64748B;
+    --c-text-dim: #94A3B8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--c-text);
+    background: var(--c-bg);
+  }
+
+  /* LOGIN SCREEN (igual ao dashboard) */
+  .login-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1A365D 0%, #2C5282 50%, #4A9FE0 100%);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .login-box {
+    background: white;
+    padding: 40px 32px;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 380px;
+  }
+  .login-logo { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 24px; }
+  .login-logo img { height: 38px; }
+  .login-logo .product { font-size: 11px; color: var(--c-text-muted); letter-spacing: 1.2px; font-weight: 600; }
+  .login-logo .region { font-size: 16px; color: var(--c-primary); font-weight: 700; letter-spacing: 2px; }
+  .login-title { text-align: center; font-size: 18px; font-weight: 700; color: var(--c-primary-dark); margin: 0 0 6px; }
+  .login-subtitle { text-align: center; font-size: 13px; color: var(--c-text-muted); margin: 0 0 24px; }
+  .login-field { margin-bottom: 14px; }
+  .login-field label { display: block; font-size: 12px; color: var(--c-text-muted); margin-bottom: 6px; font-weight: 500; }
+  .login-field input { width: 100%; padding: 10px 14px; border: 1px solid var(--c-border); border-radius: 8px; font-size: 14px; font-family: inherit; transition: all 0.15s; box-sizing: border-box; }
+  .login-field input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74, 159, 224, 0.15); }
+  .login-button { width: 100%; padding: 11px; background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .login-button:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(44, 82, 130, 0.4); }
+  .login-button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .login-error { background: #FEF2F2; color: #991B1B; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; border-left: 3px solid #EF4444; display: none; }
+  .login-error.show { display: block; }
+
+  /* APP CONTAINER */
+  #app { display: none; }
+  #app.shown { display: block; }
+
+  /* HEADER */
+  .header {
+    background: white;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--c-border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand-wrap { display: flex; align-items: center; gap: 12px; }
+  .brand-logo { height: 32px; width: auto; }
+  .brand-divider { width: 1px; height: 28px; background: var(--c-border-strong); }
+  .brand-sub { font-size: 10px; font-weight: 600; color: var(--c-text-muted); letter-spacing: 1.2px; line-height: 1.2; }
+  .brand-title-line { font-size: 10px; color: var(--c-text-muted); letter-spacing: 1.2px; }
+  .brand-region-line { color: var(--c-primary); font-size: 18px; font-weight: 700; letter-spacing: 2px; margin-top: 2px; }
+  .header-right { display: flex; gap: 12px; align-items: center; font-size: 12px; flex-wrap: wrap; }
+  .nav-link {
+    padding: 6px 14px;
+    background: var(--c-bg-tint);
+    border: 1px solid var(--c-accent);
+    border-radius: 16px;
+    color: var(--c-primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 12px;
+    transition: all 0.15s;
+  }
+  .nav-link:hover { background: var(--c-primary); color: white; }
+  .user-pill {
+    padding: 5px 12px;
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .user-pill .logout-btn {
+    background: none;
+    border: none;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .user-pill .logout-btn:hover { color: #EF4444; }
+
+  /* FILTROS */
+  .filters {
+    background: white;
+    padding: 14px 24px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .filter-label { font-size: 12px; color: var(--c-text-muted); font-weight: 500; }
+  .filter-chip {
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--c-text);
+    font-family: inherit;
+    transition: all 0.1s;
+  }
+  .filter-chip:hover { border-color: var(--c-primary); color: var(--c-primary); }
+  .filter-chip.active {
+    background: var(--c-primary);
+    color: white;
+    border-color: var(--c-primary);
+  }
+
+  /* MONTH PICKER */
+  .month-picker-wrap { position: relative; display: inline-block; }
+  .month-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 999;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.15);
+    min-width: 220px;
+  }
+  .month-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .month-row label { color: var(--c-text-muted); font-weight: 600; min-width: 28px; }
+  .month-row input[type="date"] {
+    flex: 1;
+    padding: 5px 8px;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+  }
+  .month-actions { display: flex; gap: 8px; justify-content: space-between; padding-top: 8px; border-top: 1px solid var(--c-border); }
+  .month-action-btn {
+    padding: 5px 12px;
+    background: transparent;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--c-text-muted);
+  }
+  .month-action-btn:hover { border-color: var(--c-primary); color: var(--c-primary); }
+  .month-action-btn.primary {
+    color: var(--c-primary);
+    border-color: var(--c-accent);
+    font-weight: 600;
+  }
+
+  /* SCORECARDS */
+  .scorecards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    padding: 20px 24px;
+  }
+  .scorecard {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    border-left: 3px solid var(--c-primary);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  }
+  .scorecard.color-green { border-left-color: #16A34A; }
+  .scorecard.color-orange { border-left-color: #F59E0B; }
+  .scorecard.color-purple { border-left-color: #8B5CF6; }
+  .sc-label {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .sc-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin: 6px 0 4px;
+    line-height: 1.1;
+  }
+  .sc-sub {
+    font-size: 11px;
+    color: var(--c-text-muted);
+  }
+  .sc-sub strong { color: var(--c-primary); }
+
+  /* TABLE */
+  .table-section {
+    background: white;
+    margin: 0 24px 24px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+  }
+  .table-header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--c-border);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .table-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+  }
+  .table-search {
+    padding: 6px 12px;
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    font-size: 12px;
+    font-family: inherit;
+    width: 220px;
+    color: var(--c-text);
+  }
+  .table-search:focus { outline: none; border-color: var(--c-primary); }
+  .ramp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .ramp-table th {
+    text-align: left;
+    padding: 10px 16px;
+    color: var(--c-text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--c-border);
+    background: var(--c-bg);
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    white-space: nowrap;
+  }
+  .ramp-table th:hover { color: var(--c-primary); }
+  .ramp-table th.sort-asc::after { content: ' ▲'; font-size: 9px; color: var(--c-primary); }
+  .ramp-table th.sort-desc::after { content: ' ▼'; font-size: 9px; color: var(--c-primary); }
+  .ramp-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--c-border);
+    vertical-align: top;
+  }
+  .ramp-table tr:hover { background: var(--c-bg); }
+  .ramp-table tr:last-child td { border-bottom: none; }
+  .ramp-table .col-date { color: var(--c-text-muted); font-size: 12px; white-space: nowrap; }
+  .ramp-table .col-user { font-weight: 500; color: var(--c-primary-dark); }
+  .ramp-table .col-amount { font-weight: 600; color: var(--c-primary); text-align: right; white-space: nowrap; }
+  .ramp-table .col-amount.high { color: #DC2626; }
+  .ramp-table .col-merchant { color: var(--c-text); }
+  .ramp-table .country-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--c-bg);
+    border-radius: 8px;
+    font-size: 10px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 500;
+  }
+  .ramp-table .category-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  /* Cores das categorias mais comuns */
+  .cat-fuel { background: #FEF3C7; color: #92400E; }
+  .cat-restaurants { background: #FEE2E2; color: #991B1B; }
+  .cat-supermarkets { background: #DCFCE7; color: #14532D; }
+  .cat-lodging { background: #DBEAFE; color: #1E40AF; }
+  .cat-merchandise { background: #F3E8FF; color: #5B21B6; }
+  .cat-travel { background: #E0E7FF; color: #3730A3; }
+  .cat-taxi { background: #FFEDD5; color: #9A3412; }
+  .cat-other { background: var(--c-bg); color: var(--c-text-muted); }
+
+  .table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-top: 1px solid var(--c-border);
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .table-count {
+    color: var(--c-text-muted);
+  }
+  .table-count strong {
+    color: var(--c-primary-dark);
+  }
+  .table-pagination { display: flex; gap: 6px; }
+  .pg-btn {
+    padding: 6px 14px;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--c-primary);
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .pg-btn:hover { border-color: var(--c-primary); background: var(--c-bg-tint); }
+  .pg-btn.primary {
+    background: var(--c-bg-tint);
+    border-color: var(--c-accent);
+  }
+
+  .empty-state {
+    padding: 48px 20px;
+    text-align: center;
+    color: var(--c-text-muted);
+    font-size: 13px;
+  }
+  .empty-state .ic { font-size: 36px; opacity: 0.3; margin-bottom: 8px; }
+
+  /* LOADER */
+  .loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.85);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .loader-overlay.show { display: flex; }
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--c-border);
+    border-top-color: var(--c-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { font-size: 13px; color: var(--c-text-muted); }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--c-text-dim);
+    font-size: 11px;
+  }
+
+  @media (max-width: 720px) {
+    .scorecards { grid-template-columns: repeat(2, 1fr); }
+    .ramp-table { font-size: 12px; }
+    .ramp-table th, .ramp-table td { padding: 8px 10px; }
+  }
+  @media (max-width: 480px) {
+    .scorecards { grid-template-columns: 1fr; }
+    .table-search { width: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display='none'">
+      <div class="product">RAMP EXPENSES</div>
+      <div class="region">LATAM</div>
+    </div>
+    <h1 class="login-title">Login</h1>
+    <p class="login-subtitle">Acesse com suas credenciais</p>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-field">
+      <label>Usuário</label>
+      <input type="text" id="login-username" autocomplete="username" autofocus>
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="login-password" autocomplete="current-password">
+    </div>
+    <button class="login-button" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- LOADER -->
+<div id="loader" class="loader-overlay">
+  <div class="spinner"></div>
+  <div class="loader-text" id="loader-text">Carregando dados…</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <div class="brand-wrap">
+      <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
+      <div class="brand-divider"></div>
+      <div class="brand-sub">
+        <div class="brand-title-line">RAMP EXPENSES</div>
+        <div class="brand-region-line">LATAM</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="dashboard.html" class="nav-link">← Dashboard ops</a>
+      <button class="filter-chip" onclick="loadRampData()">⟳ Atualizar</button>
+      <div class="user-pill" id="user-pill"></div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <span class="filter-label">País:</span>
+    <button class="filter-chip active" data-country="all" onclick="setCountry('all')">Todos</button>
+    <button class="filter-chip" data-country="Brazil" onclick="setCountry('Brazil')">Brasil</button>
+    <button class="filter-chip" data-country="Argentina" onclick="setCountry('Argentina')">Argentina</button>
+    <button class="filter-chip" data-country="Chile" onclick="setCountry('Chile')">Chile</button>
+    <button class="filter-chip" data-country="Colombia" onclick="setCountry('Colombia')">Colombia</button>
+    <button class="filter-chip" data-country="Mexico" onclick="setCountry('Mexico')">México</button>
+    <button class="filter-chip" data-country="Peru" onclick="setCountry('Peru')">Peru</button>
+
+    <span class="filter-label" style="margin-left:16px;">Período:</span>
+    <button class="filter-chip active" id="period-current" onclick="setCurrentMonth()">Mês atual</button>
+    <div class="month-picker-wrap">
+      <button class="filter-chip" id="period-custom-btn" onclick="toggleMonthPicker(event)">📆 <span id="period-custom-label">Range custom</span></button>
+      <div class="month-popover" id="month-popover" style="display:none;">
+        <div class="month-row">
+          <label>De:</label>
+          <input type="date" id="range-start">
+        </div>
+        <div class="month-row">
+          <label>Até:</label>
+          <input type="date" id="range-end">
+        </div>
+        <div class="month-actions">
+          <button class="month-action-btn" onclick="closeMonthPicker()">Cancelar</button>
+          <button class="month-action-btn primary" onclick="applyCustomRange()">Aplicar</button>
+        </div>
+      </div>
+    </div>
+
+    <span style="flex:1;"></span>
+
+    <span class="filter-label" id="period-info">—</span>
+  </div>
+
+  <div class="scorecards">
+    <div class="scorecard">
+      <div class="sc-label">TOTAL DE GASTOS</div>
+      <div class="sc-value" id="sc-total">—</div>
+      <div class="sc-sub" id="sc-total-sub">—</div>
+    </div>
+    <div class="scorecard color-green">
+      <div class="sc-label">TRANSAÇÕES</div>
+      <div class="sc-value" id="sc-count">—</div>
+      <div class="sc-sub" id="sc-count-sub">—</div>
+    </div>
+    <div class="scorecard color-orange">
+      <div class="sc-label">TOP CATEGORIA</div>
+      <div class="sc-value" id="sc-cat" style="font-size:18px;">—</div>
+      <div class="sc-sub" id="sc-cat-sub">—</div>
+    </div>
+    <div class="scorecard color-purple">
+      <div class="sc-label">TOP USUÁRIO</div>
+      <div class="sc-value" id="sc-user" style="font-size:14px;">—</div>
+      <div class="sc-sub" id="sc-user-sub">—</div>
+    </div>
+  </div>
+
+  <div class="table-section">
+    <div class="table-header">
+      <div class="table-title">Transações <span id="filter-summary" style="font-weight:400;color:var(--c-text-muted);font-size:12px;"></span></div>
+      <input type="text" class="table-search" placeholder="Buscar por usuário, merchant…" id="search-input" oninput="onSearchInput()">
+    </div>
+    <div id="table-container">
+      <table class="ramp-table">
+        <thead>
+          <tr>
+            <th data-sort="date">Data</th>
+            <th data-sort="user">Usuário</th>
+            <th data-sort="country">País</th>
+            <th data-sort="category">Categoria</th>
+            <th data-sort="merchant">Estabelecimento</th>
+            <th data-sort="amount" style="text-align:right;">Valor</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="table-footer" id="table-footer" style="display:none;">
+      <span class="table-count" id="table-count">—</span>
+      <div class="table-pagination">
+        <button class="pg-btn" id="show-more-btn" onclick="showMore()">+ Ver mais 25</button>
+        <button class="pg-btn primary" id="show-all-btn" onclick="showAll()">Ver todas</button>
+        <button class="pg-btn" id="collapse-btn" onclick="collapse()" style="display:none;">↑ Recolher</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" style="height:24px;opacity:0.6;" onerror="this.style.display='none'"><br>
+    Aceolution do Brasil Ltda. · Ramp Expenses Dashboard
+  </footer>
+</div>
+
+<script>
+// ================================================================
+// LOGIN (SHA-256, mesmas credenciais do dashboard principal)
+// ================================================================
+const USERS = [
+  { username: 'fuss', passwordHash: '20fc17a5b2949b22e408a7f0748a07c46833654638dd6f4ae744ba74c3af476a', fullName: 'Fuss' },
+  { username: 'pankaj', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Pankaj' },
+  { username: 'bia', passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Bia' },
+  { username: 'lucas', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Outro Lucas' },
+];
+
+let currentUser = null;
+
+async function sha256(text) {
+  const buffer = new TextEncoder().encode(text);
+  const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
+  return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim().toLowerCase();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.classList.remove('show');
+
+  if (!username || !password) {
+    errEl.textContent = 'Preencha usuário e senha.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  try {
+    const passwordHash = await sha256(password);
+    const user = USERS.find(u =>
+      u.username.toLowerCase() === username && u.passwordHash === passwordHash
+    );
+    if (!user) {
+      errEl.textContent = 'Usuário ou senha inválidos.';
+      errEl.classList.add('show');
+      return;
+    }
+    currentUser = user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.add('shown');
+    document.getElementById('user-pill').innerHTML =
+      `<span>👤 ${user.fullName}</span><button class="logout-btn" onclick="doLogout()" title="Sair">✕</button>`;
+    initApp();
+  } catch (err) {
+    errEl.textContent = 'Erro ao validar credenciais.';
+    errEl.classList.add('show');
+    console.error(err);
+  }
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').classList.remove('shown');
+  document.getElementById('login-screen').style.display = '';
+  document.getElementById('login-password').value = '';
+}
+
+// Permitir Enter no login
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !document.getElementById('app').classList.contains('shown')) {
+    doLogin();
+  }
+});
+
+// ================================================================
+// CONFIG E STATE
+// ================================================================
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+};
+
+let state = {
+  transactions: [],     // dataset bruto do backend
+  filtered: [],         // após aplicar filtros (país, search)
+  filter: { country: 'all', search: '' },
+  sort: { column: 'date', direction: 'desc' },
+  pageLimit: 25,
+  period: null,         // { start, end } ou null (= mês atual)
+};
+
+// ================================================================
+// INIT + LOAD DATA
+// ================================================================
+function initApp() {
+  // Default: mês atual
+  setCurrentMonth();
+}
+
+function showLoader(show, msg) {
+  const ld = document.getElementById('loader');
+  if (msg) document.getElementById('loader-text').textContent = msg;
+  ld.classList.toggle('show', show);
+}
+
+function getPeriodRange() {
+  if (state.period) return state.period;
+  // Mês atual
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // último dia do mês
+  return {
+    start: formatDateYMD(start),
+    end: formatDateYMD(end),
+  };
+}
+
+async function loadRampData() {
+  const { start, end } = getPeriodRange();
+  showLoader(true, `Carregando ${start} → ${end}…`);
+
+  try {
+    const url = `${CONFIG.scriptUrl}?action=getRampData&startDate=${start}&endDate=${end}`;
+    const res = await fetch(url).then(r => r.json());
+    if (!res.success) throw new Error(res.error || 'Backend retornou erro');
+
+    state.transactions = res.data.transactions || [];
+
+    // Atualiza info de período
+    document.getElementById('period-info').textContent =
+      `${formatDateBR(start)} → ${formatDateBR(end)}  ·  ${state.transactions.length} transações`;
+
+    applyFiltersAndRender();
+  } catch (err) {
+    console.error('Erro ao buscar Ramp:', err);
+    alert('Erro ao buscar dados Ramp: ' + err.message);
+    state.transactions = [];
+    applyFiltersAndRender();
+  } finally {
+    showLoader(false);
+  }
+}
+
+// ================================================================
+// FILTROS
+// ================================================================
+function setCountry(country) {
+  state.filter.country = country;
+  state.pageLimit = 25;
+  document.querySelectorAll('[data-country]').forEach(b => {
+    b.classList.toggle('active', b.dataset.country === country);
+  });
+  applyFiltersAndRender();
+}
+
+function setCurrentMonth() {
+  state.period = null;
+  state.pageLimit = 25;
+  document.getElementById('period-current').classList.add('active');
+  document.getElementById('period-custom-btn').classList.remove('active');
+  document.getElementById('period-custom-label').textContent = 'Range custom';
+  loadRampData();
+}
+
+function toggleMonthPicker(evt) {
+  if (evt) evt.stopPropagation();
+  const popover = document.getElementById('month-popover');
+  const isOpen = popover.style.display !== 'none';
+
+  if (isOpen) {
+    popover.style.display = 'none';
+    return;
+  }
+
+  // Pre-fill com período atual
+  const { start, end } = getPeriodRange();
+  document.getElementById('range-start').value = start;
+  document.getElementById('range-end').value = end;
+  popover.style.display = '';
+}
+
+function closeMonthPicker() {
+  document.getElementById('month-popover').style.display = 'none';
+}
+
+function applyCustomRange() {
+  const start = document.getElementById('range-start').value;
+  const end = document.getElementById('range-end').value;
+
+  if (!start || !end) return;
+  if (start > end) {
+    alert('A data "De" deve ser anterior a "Até"');
+    return;
+  }
+
+  state.period = { start, end };
+  state.pageLimit = 25;
+  document.getElementById('period-current').classList.remove('active');
+  document.getElementById('period-custom-btn').classList.add('active');
+  document.getElementById('period-custom-label').textContent =
+    `${formatDateBR(start)} → ${formatDateBR(end)}`;
+  closeMonthPicker();
+  loadRampData();
+}
+
+// Click fora do month picker fecha
+document.addEventListener('click', (e) => {
+  const popover = document.getElementById('month-popover');
+  const wrap = document.querySelector('.month-picker-wrap');
+  if (popover.style.display !== 'none' && wrap && !wrap.contains(e.target)) {
+    popover.style.display = 'none';
+  }
+});
+
+// ================================================================
+// SEARCH
+// ================================================================
+let searchTimeout = null;
+function onSearchInput() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    state.filter.search = document.getElementById('search-input').value.trim().toLowerCase();
+    state.pageLimit = 25;
+    applyFiltersAndRender();
+  }, 200);
+}
+
+// ================================================================
+// SORT
+// ================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.ramp-table th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => handleSort(th.dataset.sort));
+  });
+});
+
+function handleSort(column) {
+  if (state.sort.column === column) {
+    state.sort.direction = state.sort.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    state.sort.column = column;
+    // Default desc pra valor/data, asc pra texto
+    state.sort.direction = (column === 'amount' || column === 'date') ? 'desc' : 'asc';
+  }
+  state.pageLimit = 25;
+  applyFiltersAndRender();
+}
+
+function sortTransactions(arr) {
+  const dir = state.sort.direction === 'asc' ? 1 : -1;
+  const col = state.sort.column;
+  return arr.slice().sort((a, b) => {
+    const va = a[col]; const vb = b[col];
+    if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+    return String(va || '').localeCompare(String(vb || '')) * dir;
+  });
+}
+
+// ================================================================
+// PAGINATION
+// ================================================================
+function showMore() {
+  state.pageLimit = (state.pageLimit === Infinity ? 25 : state.pageLimit) + 25;
+  applyFiltersAndRender();
+}
+function showAll() {
+  state.pageLimit = Infinity;
+  applyFiltersAndRender();
+}
+function collapse() {
+  state.pageLimit = 25;
+  applyFiltersAndRender();
+  document.querySelector('.table-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ================================================================
+// MAIN RENDER
+// ================================================================
+function applyFiltersAndRender() {
+  // 1) Filtra por país
+  let filtered = state.transactions.filter(t => {
+    if (state.filter.country !== 'all' && t.country !== state.filter.country) return false;
+    return true;
+  });
+
+  // 2) Filtra por search (user, merchant, category)
+  const term = state.filter.search;
+  if (term) {
+    filtered = filtered.filter(t => {
+      return (t.user || '').toLowerCase().includes(term)
+          || (t.merchant || '').toLowerCase().includes(term)
+          || (t.category || '').toLowerCase().includes(term);
+    });
+  }
+
+  state.filtered = filtered;
+
+  renderScorecards(filtered);
+  renderTable(filtered);
+  updateFilterSummary(filtered);
+}
+
+function renderScorecards(filtered) {
+  const totalAmount = filtered.reduce((s, t) => s + (t.amount || 0), 0);
+  const count = filtered.length;
+
+  // Top categoria por soma
+  const byCat = {};
+  filtered.forEach(t => {
+    const c = t.category || 'Other';
+    byCat[c] = (byCat[c] || 0) + (t.amount || 0);
+  });
+  const topCat = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
+
+  // Top usuário por soma
+  const byUser = {};
+  filtered.forEach(t => {
+    const u = t.user || '—';
+    byUser[u] = (byUser[u] || 0) + (t.amount || 0);
+  });
+  const topUser = Object.entries(byUser).sort((a, b) => b[1] - a[1])[0];
+
+  // Update DOM
+  document.getElementById('sc-total').textContent = '$' + Math.round(totalAmount).toLocaleString();
+  document.getElementById('sc-total-sub').innerHTML =
+    `Média: <strong>$${count > 0 ? (totalAmount / count).toFixed(0) : 0}</strong>/transação`;
+
+  document.getElementById('sc-count').textContent = count.toLocaleString();
+  document.getElementById('sc-count-sub').innerHTML =
+    state.filter.country === 'all' ? 'todos países' : `<strong>${state.filter.country}</strong>`;
+
+  if (topCat) {
+    document.getElementById('sc-cat').textContent = topCat[0];
+    document.getElementById('sc-cat-sub').innerHTML =
+      `<strong>$${Math.round(topCat[1]).toLocaleString()}</strong> · ${((topCat[1]/totalAmount)*100).toFixed(0)}% do total`;
+  } else {
+    document.getElementById('sc-cat').textContent = '—';
+    document.getElementById('sc-cat-sub').textContent = 'sem dados';
+  }
+
+  if (topUser) {
+    document.getElementById('sc-user').textContent = topUser[0];
+    document.getElementById('sc-user-sub').innerHTML =
+      `<strong>$${Math.round(topUser[1]).toLocaleString()}</strong> no período`;
+  } else {
+    document.getElementById('sc-user').textContent = '—';
+    document.getElementById('sc-user-sub').textContent = 'sem dados';
+  }
+}
+
+function renderTable(filtered) {
+  const tbody = document.getElementById('table-body');
+  const footer = document.getElementById('table-footer');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="ic">💸</div>Nenhuma transação no período/filtros aplicados</div></td></tr>`;
+    footer.style.display = 'none';
+    return;
+  }
+
+  // Update sort indicators
+  document.querySelectorAll('.ramp-table th[data-sort]').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (th.dataset.sort === state.sort.column) {
+      th.classList.add(state.sort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+    }
+  });
+
+  const sorted = sortTransactions(filtered);
+  const total = sorted.length;
+  const limit = state.pageLimit === Infinity ? total : Math.min(state.pageLimit, total);
+  const visible = sorted.slice(0, limit);
+
+  // Threshold pra destacar valores altos (top 10% das transações filtradas)
+  const amounts = sorted.map(t => t.amount).filter(a => a > 0).sort((a, b) => b - a);
+  const highThreshold = amounts.length > 10 ? amounts[Math.floor(amounts.length * 0.1)] : Infinity;
+
+  tbody.innerHTML = visible.map(t => {
+    const catSlug = (t.category || 'other').toLowerCase().replace(/[^a-z]/g, '').slice(0, 12);
+    let catClass = 'cat-other';
+    if (catSlug.includes('fuel')) catClass = 'cat-fuel';
+    else if (catSlug.includes('restaurant')) catClass = 'cat-restaurants';
+    else if (catSlug.includes('supermarket') || catSlug.includes('grocer')) catClass = 'cat-supermarkets';
+    else if (catSlug.includes('lodging')) catClass = 'cat-lodging';
+    else if (catSlug.includes('merchand')) catClass = 'cat-merchandise';
+    else if (catSlug.includes('travel')) catClass = 'cat-travel';
+    else if (catSlug.includes('taxi') || catSlug.includes('rideshare')) catClass = 'cat-taxi';
+
+    const isHigh = t.amount >= highThreshold;
+    const country = t.country || '—';
+
+    return `<tr>
+      <td class="col-date">${formatDateBR(t.date)}</td>
+      <td class="col-user">${escapeHtml(t.user || '—')}</td>
+      <td><span class="country-badge">${escapeHtml(country)}</span></td>
+      <td><span class="category-badge ${catClass}">${escapeHtml(t.category || 'Other')}</span></td>
+      <td class="col-merchant">${escapeHtml(t.merchant || '—')}</td>
+      <td class="col-amount ${isHigh ? 'high' : ''}">$${(t.amount || 0).toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+
+  // Footer
+  footer.style.display = '';
+  const countEl = document.getElementById('table-count');
+  if (limit >= total) {
+    countEl.innerHTML = `<strong>${total}</strong> transações`;
+  } else {
+    countEl.innerHTML = `Mostrando <strong>${limit}</strong> de <strong>${total}</strong> transações`;
+  }
+
+  const btnMore = document.getElementById('show-more-btn');
+  const btnAll = document.getElementById('show-all-btn');
+  const btnCollapse = document.getElementById('collapse-btn');
+
+  if (limit >= total) {
+    btnMore.style.display = 'none';
+    btnAll.style.display = 'none';
+    btnCollapse.style.display = total > 25 ? '' : 'none';
+  } else {
+    btnMore.style.display = '';
+    btnMore.textContent = `+ Ver mais ${Math.min(25, total - limit)}`;
+    btnAll.style.display = '';
+    btnAll.textContent = `Ver todas (${total})`;
+    btnCollapse.style.display = limit > 25 ? '' : 'none';
+  }
+}
+
+function updateFilterSummary(filtered) {
+  let parts = [];
+  if (state.filter.country !== 'all') parts.push(state.filter.country);
+  if (state.filter.search) parts.push(`busca: "${state.filter.search}"`);
+  document.getElementById('filter-summary').textContent = parts.length > 0 ? `· ${parts.join(' · ')}` : '';
+}
+
+// ================================================================
+// HELPERS
+// ================================================================
+function formatDateYMD(d) {
+  if (typeof d === 'string') return d;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function formatDateBR(ymd) {
+  if (!ymd) return '—';
+  const [y, m, d] = ymd.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+</script>
+
+</body>
+</html>
