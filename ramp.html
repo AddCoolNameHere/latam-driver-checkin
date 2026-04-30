@@ -328,6 +328,35 @@
   .cat-taxi { background: #FFEDD5; color: #9A3412; }
   .cat-other { background: var(--c-bg); color: var(--c-text-muted); }
 
+  /* Match confidence badges (só aparecem quando há baixa confiança) */
+  .match-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 9px;
+    font-weight: 600;
+    margin-left: 4px;
+    cursor: help;
+    vertical-align: middle;
+    line-height: 1.4;
+  }
+  .match-name { background: #FEF3C7; color: #92400E; }
+  .match-none { background: #FEE2E2; color: #991B1B; }
+  .inactive-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 9px;
+    font-weight: 600;
+    margin-left: 4px;
+    background: var(--c-bg);
+    color: var(--c-text-dim);
+    cursor: help;
+    vertical-align: middle;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
   .table-footer {
     display: flex;
     align-items: center;
@@ -877,8 +906,22 @@ function renderScorecards(filtered) {
     `Média: <strong>$${count > 0 ? (totalAmount / count).toFixed(0) : 0}</strong>/transação`;
 
   document.getElementById('sc-count').textContent = count.toLocaleString();
-  document.getElementById('sc-count-sub').innerHTML =
-    state.filter.country === 'all' ? 'todos países' : `<strong>${state.filter.country}</strong>`;
+  // Stats de match: quantos foram identificados por cartão (alta confiança)
+  const byCard = filtered.filter(t => t.matchSource === 'card').length;
+  const byName = filtered.filter(t => t.matchSource === 'name').length;
+  const noMatch = filtered.filter(t => t.matchSource === 'none').length;
+  let matchSubText = '';
+  if (count > 0) {
+    const cardPct = Math.round(byCard * 100 / count);
+    if (noMatch > 0) {
+      matchSubText = `<strong>${cardPct}%</strong> identificados · <strong style="color:#DC2626">${noMatch}</strong> sem match`;
+    } else if (byName > 0) {
+      matchSubText = `<strong>${cardPct}%</strong> via cartão · ${byName} via nome`;
+    } else {
+      matchSubText = `<strong>100%</strong> identificados via cartão ✓`;
+    }
+  }
+  document.getElementById('sc-count-sub').innerHTML = matchSubText || '—';
 
   if (topCat) {
     document.getElementById('sc-cat').textContent = topCat[0];
@@ -942,7 +985,11 @@ function renderTable(filtered) {
 
     return `<tr>
       <td class="col-date">${formatDateBR(t.date)}</td>
-      <td class="col-user">${escapeHtml(t.user || '—')}</td>
+      <td class="col-user">
+        ${escapeHtml(t.driverName || t.user || '—')}
+        ${renderMatchBadge(t.matchSource)}
+        ${!t.driverActive && t.driverEmail ? '<span class="inactive-badge" title="Ex-funcionário">ex</span>' : ''}
+      </td>
       <td><span class="country-badge">${escapeHtml(country)}</span></td>
       <td><span class="category-badge ${catClass}">${escapeHtml(t.category || 'Other')}</span></td>
       <td class="col-merchant">${escapeHtml(t.merchant || '—')}</td>
@@ -1008,6 +1055,23 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+/**
+ * Renderiza badge indicando confiabilidade do match driver.
+ * - card: match perfeito (cartão bate exato com HR) — silencioso, sem badge
+ * - name: cartão não bateu, match foi por nome — badge amarelo "~nome"
+ * - none: nenhum match — badge vermelho "?"
+ *
+ * Convenção: matches de alta confiança são invisíveis (default).
+ * Badges aparecem só quando há razão pra desconfiar do dado.
+ */
+function renderMatchBadge(matchSource) {
+  if (matchSource === 'card') return ''; // silencioso, alta confiança
+  if (matchSource === 'name') {
+    return ' <span class="match-badge match-name" title="Cartão não cadastrado na HR — match feito apenas por nome (menor confiabilidade)">~nome</span>';
+  }
+  return ' <span class="match-badge match-none" title="Driver não identificado: cartão e nome não batem com a HR Database">?</span>';
 }
 </script>
 
