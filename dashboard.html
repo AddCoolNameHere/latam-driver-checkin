@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard · Street View LATAM</title>
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1913,6 +1914,7 @@
       </div>
     </div>
     <button class="refresh-btn" onclick="loadData()" data-i18n="refresh">⟳ Atualizar</button>
+    <a href="ramp.html" class="refresh-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;" title="Ramp Expenses Dashboard">💳 <span data-i18n="rampLink">Ramp</span></a>
     <button class="refresh-btn admin-btn" id="admin-btn" onclick="openAdminPanel()" style="display:none;" title="Admin">⚙ <span data-i18n="adminBtn">Admin</span></button>
     <div class="user-pill" id="user-pill" style="display:none;">
       <div class="user-avatar" id="user-avatar">?</div>
@@ -2671,6 +2673,7 @@ const I18N = {
     tableOfCount: 'de',
     tableDriversWord: 'drivers',
     adminBtn: 'Admin',
+    rampLink: 'Ramp',
     adminTitle: 'Painel Admin',
     adminSub: 'Edite informações dos drivers sem abrir a planilha',
     adminSelectDriver: 'Selecione um driver à esquerda pra começar',
@@ -2882,6 +2885,7 @@ const I18N = {
     tableOfCount: 'de',
     tableDriversWord: 'conductores',
     adminBtn: 'Admin',
+    rampLink: 'Ramp',
     adminTitle: 'Panel Admin',
     adminSub: 'Edita información de conductores sin abrir la planilla',
     adminSelectDriver: 'Seleccione un conductor a la izquierda para comenzar',
@@ -3093,6 +3097,7 @@ const I18N = {
     tableOfCount: 'of',
     tableDriversWord: 'drivers',
     adminBtn: 'Admin',
+    rampLink: 'Ramp',
     adminTitle: 'Admin Panel',
     adminSub: 'Edit driver info without opening the spreadsheet',
     adminSelectDriver: 'Select a driver on the left to start',
