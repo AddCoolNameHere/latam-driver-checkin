@@ -812,11 +812,30 @@
       <div class="chart-header">
         <div>
           <div class="chart-title">Por motorista selecionado <span id="chart-driver-name" style="font-weight:400;color:var(--c-text-muted);font-size:12px;"></span></div>
-          <div class="chart-sub" id="chart-driver-sub">Selecione motoristas no filtro acima ou veja o total</div>
+          <div class="chart-sub" id="chart-driver-sub">Selecione motoristas ou veja o total</div>
         </div>
-        <div class="chart-toggle">
-          <button class="chart-toggle-btn active" id="chart-driver-mode-amount" onclick="setDriverChartMode('amount')">$ Valor</button>
-          <button class="chart-toggle-btn" id="chart-driver-mode-count" onclick="setDriverChartMode('count')"># Qtd</button>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <!-- Multi-select de drivers embutido no chart -->
+          <div class="multi-select-wrap">
+            <button class="filter-chip multi-select-toggle" id="chart-driver-toggle" onclick="toggleChartDriverDropdown(event)">
+              <span id="chart-driver-toggle-label">Todos</span>
+              <span class="multi-caret">▾</span>
+            </button>
+            <div class="multi-select-popover" id="chart-driver-popover" style="display:none; right:0; left:auto;">
+              <input type="text" class="multi-search" id="chart-driver-search" placeholder="Buscar motorista..." oninput="filterChartDriverList()">
+              <div class="multi-actions">
+                <button class="multi-action-btn" onclick="selectAllDrivers(true)">Selecionar todos</button>
+                <button class="multi-action-btn" onclick="selectAllDrivers(false)">Limpar</button>
+              </div>
+              <div class="multi-list" id="chart-driver-list">
+                <!-- Populado dinamicamente -->
+              </div>
+            </div>
+          </div>
+          <div class="chart-toggle">
+            <button class="chart-toggle-btn active" id="chart-driver-mode-amount" onclick="setDriverChartMode('amount')">$ Valor</button>
+            <button class="chart-toggle-btn" id="chart-driver-mode-count" onclick="setDriverChartMode('count')"># Qtd</button>
+          </div>
         </div>
       </div>
       <div class="chart-canvas-wrap" style="max-height:380px;">
@@ -1114,7 +1133,10 @@ function handleSort(column) {
     state.sort.direction = (column === 'amount' || column === 'date') ? 'desc' : 'asc';
   }
   state.pageLimit = 25;
-  applyFiltersAndRender();
+  // Sort só afeta visualização da tabela — gráficos e scorecards
+  // não mudam (totais matemáticos não dependem de ordem). Re-renderizar
+  // os charts só causaria flicker e desperdício.
+  renderTable(state.filtered);
 }
 
 function sortTransactions(arr) {
@@ -1132,15 +1154,15 @@ function sortTransactions(arr) {
 // ================================================================
 function showMore() {
   state.pageLimit = (state.pageLimit === Infinity ? 25 : state.pageLimit) + 25;
-  applyFiltersAndRender();
+  renderTable(state.filtered);
 }
 function showAll() {
   state.pageLimit = Infinity;
-  applyFiltersAndRender();
+  renderTable(state.filtered);
 }
 function collapse() {
   state.pageLimit = 25;
-  applyFiltersAndRender();
+  renderTable(state.filtered);
   document.querySelector('.table-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -1371,20 +1393,23 @@ function populateDriverList() {
   // Ordena por total desc (gastões primeiro)
   const drivers = Object.values(byKey).sort((a, b) => b.total - a.total);
 
-  const list = document.getElementById('driver-list');
-  if (drivers.length === 0) {
-    list.innerHTML = '<div class="multi-empty">Nenhum motorista no período</div>';
-    return;
-  }
+  // Renderiza HTML (mesma estrutura nas 2 listas: filtro principal + chart header)
+  const html = drivers.length === 0
+    ? '<div class="multi-empty">Nenhum motorista no período</div>'
+    : drivers.map(d => {
+        const checked = state.filter.drivers.includes(d.key) ? 'checked' : '';
+        return `<label class="multi-list-item">
+          <input type="checkbox" value="${escapeHtml(d.key)}" ${checked} onchange="toggleDriver(this)">
+          <span>${escapeHtml(d.name)}</span>
+          <span class="item-meta">$${Math.round(d.total).toLocaleString()}</span>
+        </label>`;
+      }).join('');
 
-  list.innerHTML = drivers.map(d => {
-    const checked = state.filter.drivers.includes(d.key) ? 'checked' : '';
-    return `<label class="multi-list-item">
-      <input type="checkbox" value="${escapeHtml(d.key)}" ${checked} onchange="toggleDriver(this)">
-      <span>${escapeHtml(d.name)}</span>
-      <span class="item-meta">$${Math.round(d.total).toLocaleString()}</span>
-    </label>`;
-  }).join('');
+  // Popula ambas as listas — estado é compartilhado
+  const list = document.getElementById('driver-list');
+  if (list) list.innerHTML = html;
+  const chartList = document.getElementById('chart-driver-list');
+  if (chartList) chartList.innerHTML = html;
 }
 
 function populateCategoryList() {
@@ -1442,6 +1467,11 @@ function toggleDriver(checkbox) {
     state.filter.drivers = state.filter.drivers.filter(k => k !== key);
   }
   state.pageLimit = 25;
+  // Re-popula AMBAS as listas pra manter checkboxes sincronizados — o usuário
+  // pode ter clicado em uma lista mas a outra precisa refletir o novo estado.
+  // (populateDriverList já é chamada por applyFiltersAndRender via updateMultiSelectLabels?
+  //  Não — chamamos explicitamente aqui pra garantir.)
+  populateDriverList();
   applyFiltersAndRender();
 }
 
@@ -1489,6 +1519,31 @@ function filterDriverList() {
   });
 }
 
+/**
+ * Toggle do dropdown de motoristas embutido no header do 3º gráfico.
+ * Compartilha o mesmo state.filter.drivers do filtro principal, então
+ * mexer aqui afeta tudo (tabela, scorecards, outros donuts) — esperado.
+ */
+function toggleChartDriverDropdown(evt) {
+  if (evt) evt.stopPropagation();
+  const popover = document.getElementById('chart-driver-popover');
+  const isOpen = popover.style.display !== 'none';
+
+  // Fecha os outros 2 popovers pra não competir
+  document.getElementById('driver-popover').style.display = 'none';
+  document.getElementById('category-popover').style.display = 'none';
+
+  popover.style.display = isOpen ? 'none' : '';
+}
+
+function filterChartDriverList() {
+  const term = document.getElementById('chart-driver-search').value.toLowerCase().trim();
+  document.querySelectorAll('#chart-driver-list .multi-list-item').forEach(item => {
+    const txt = item.textContent.toLowerCase();
+    item.style.display = (!term || txt.includes(term)) ? '' : 'none';
+  });
+}
+
 function clearExtraFilters() {
   state.filter.drivers = [];
   state.filter.categories = [];
@@ -1501,20 +1556,30 @@ function clearExtraFilters() {
 function updateMultiSelectLabels() {
   const dToggle = document.getElementById('driver-toggle');
   const dLabel = document.getElementById('driver-toggle-label');
+  // Label do dropdown embutido no chart (mesmo conteúdo)
+  const chartDLabel = document.getElementById('chart-driver-toggle-label');
+  const chartDToggle = document.getElementById('chart-driver-toggle');
+
+  let driverLabelText, hasSelection;
   if (state.filter.drivers.length === 0) {
-    dLabel.textContent = 'Todos';
-    dToggle.classList.remove('has-selection');
+    driverLabelText = 'Todos';
+    hasSelection = false;
   } else if (state.filter.drivers.length === 1) {
     // Acha nome do driver pelo email/key
     const key = state.filter.drivers[0];
     const t = state.transactions.find(x => (x.driverEmail || x.user) === key);
     const name = t ? (t.driverName || t.user || key) : key;
-    dLabel.textContent = name.length > 20 ? name.slice(0, 20) + '…' : name;
-    dToggle.classList.add('has-selection');
+    driverLabelText = name.length > 20 ? name.slice(0, 20) + '…' : name;
+    hasSelection = true;
   } else {
-    dLabel.textContent = `${state.filter.drivers.length} selecionados`;
-    dToggle.classList.add('has-selection');
+    driverLabelText = `${state.filter.drivers.length} selecionados`;
+    hasSelection = true;
   }
+
+  if (dLabel) dLabel.textContent = driverLabelText;
+  if (dToggle) dToggle.classList.toggle('has-selection', hasSelection);
+  if (chartDLabel) chartDLabel.textContent = driverLabelText;
+  if (chartDToggle) chartDToggle.classList.toggle('has-selection', hasSelection);
 
   const cToggle = document.getElementById('category-toggle');
   const cLabel = document.getElementById('category-toggle-label');
@@ -1532,7 +1597,7 @@ function updateMultiSelectLabels() {
 
 // Click-fora fecha os popovers
 document.addEventListener('click', (e) => {
-  ['driver-popover', 'category-popover'].forEach(id => {
+  ['driver-popover', 'category-popover', 'chart-driver-popover'].forEach(id => {
     const popover = document.getElementById(id);
     if (!popover) return;
     const wrap = popover.closest('.multi-select-wrap');
