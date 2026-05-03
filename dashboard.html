@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard · Street View LATAM</title>
-<link rel="icon" type="image/png" href="https://d1hbpr09pwz0sk.cloudfront.net/logo_url/aceolution-0c2d8724">
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -103,23 +103,6 @@
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
-  }
-  .demo-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: var(--c-warn-bg);
-    border: 1px solid var(--c-warn);
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 12px;
-    color: #854F0B;
-    font-weight: 500;
-  }
-  .demo-toggle.active {
-    background: var(--c-warn);
-    color: white;
   }
   .refresh-btn {
     background: none;
@@ -878,6 +861,15 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
+  }
+  .legend-emoji {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    font-size: 12px;
+    line-height: 1;
   }
 
   /* TABLE */
@@ -1835,7 +1827,7 @@
     </div>
 
     <div class="login-logo">
-      <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" id="login-logo-img" onerror="this.style.display='none'; document.getElementById('login-logo-fallback').style.display='inline-flex';">
+      <img src="https://d1hbpr09pwz0sk.cloudfront.net/logo_url/aceolution-0c2d8724" alt="Aceolution" id="login-logo-img" onerror="this.style.display='none'; document.getElementById('login-logo-fallback').style.display='inline-flex';">
       <div id="login-logo-fallback" class="login-logo-fallback" style="display:none;">
         <span class="login-logo-text">Aceolution</span>
       </div>
@@ -1871,7 +1863,7 @@
 
 <div class="header">
   <div class="brand-wrap">
-    <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
+    <img src="https://d1hbpr09pwz0sk.cloudfront.net/logo_url/aceolution-0c2d8724" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
     <div class="brand-divider"></div>
     <div class="brand-sub">
       <div class="brand-title-line" data-i18n="brandTitle">STREET VIEW DASHBOARD</div>
@@ -1884,10 +1876,6 @@
       <button data-lang="es">ES</button>
       <button data-lang="en">EN</button>
     </div>
-    <button class="demo-toggle" id="demo-toggle" onclick="toggleDemoMode()">
-      <span id="demo-icon">🎭</span>
-      <span id="demo-label" data-i18n="demoMode">Modo demo</span>
-    </button>
     <div class="last-updated">
       <div class="refresh-dot"></div>
       <span id="last-updated">—</span>
@@ -2133,7 +2121,8 @@
   </div>
   <div id="map"></div>
   <div class="map-legend">
-    <div class="legend-item"><span class="legend-dot" style="background:#2C5282;"></span> <span data-i18n="legendBase">Base (hotel/casa)</span></div>
+    <div class="legend-item"><span class="legend-emoji">🏠</span> <span data-i18n="legendHome">Casa</span></div>
+    <div class="legend-item"><span class="legend-emoji">🏨</span> <span data-i18n="legendHotel">Hotel</span></div>
     <div class="legend-item"><span class="legend-dot" style="background:#4A9FE0; opacity:0.4;"></span> <span data-i18n="legendArea">Área de mapeamento</span></div>
     <div class="legend-item"><span class="legend-dot" style="background:#22C55E;"></span> <span data-i18n="legendRecent">Check-in nas últimas 24h</span></div>
     <div class="legend-item"><span class="legend-dot" style="background:#F59E0B;"></span> <span data-i18n="legendOld">Sem check-in &gt; 24h</span></div>
@@ -2357,7 +2346,7 @@
 </aside>
 
 <footer>
-  <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display='none'"><br>
+  <img src="https://d1hbpr09pwz0sk.cloudfront.net/logo_url/aceolution-0c2d8724" alt="Aceolution" onerror="this.style.display='none'"><br>
   <span data-i18n="footerText">Plataforma interna — Aceolution do Brasil Ltda.</span>
 </footer>
 
@@ -2609,8 +2598,6 @@ const I18N = {
     loadingProgress: 'Carregando drivers',
     brandTitle: 'STREET VIEW DASHBOARD',
     brandRegion: 'LATAM',
-    demoMode: 'Modo demo',
-    demoModeActive: 'Modo demo ativo',
     refresh: '⟳ Atualizar',
     updatedAt: 'Atualizado',
     errorLoading: 'Erro ao carregar',
@@ -2712,7 +2699,8 @@ const I18N = {
     mapTitle: 'Mapa LATAM',
     mapSub: 'Base atual e área de mapeamento por driver',
     driversVisible: 'drivers visíveis',
-    legendBase: 'Base (hotel/casa)',
+    legendHome: 'Casa',
+    legendHotel: 'Hotel',
     legendArea: 'Área de mapeamento',
     legendRecent: 'Check-in nas últimas 24h',
     legendOld: 'Sem check-in > 24h',
@@ -2821,8 +2809,6 @@ const I18N = {
     loadingProgress: 'Cargando conductores',
     brandTitle: 'STREET VIEW DASHBOARD',
     brandRegion: 'LATAM',
-    demoMode: 'Modo demo',
-    demoModeActive: 'Modo demo activo',
     refresh: '⟳ Actualizar',
     updatedAt: 'Actualizado',
     errorLoading: 'Error al cargar',
@@ -2924,7 +2910,8 @@ const I18N = {
     mapTitle: 'Mapa LATAM',
     mapSub: 'Base actual y área de mapeo por conductor',
     driversVisible: 'conductores visibles',
-    legendBase: 'Base (hotel/casa)',
+    legendHome: 'Casa',
+    legendHotel: 'Hotel',
     legendArea: 'Área de mapeo',
     legendRecent: 'Check-in en las últimas 24h',
     legendOld: 'Sin check-in > 24h',
@@ -3033,8 +3020,6 @@ const I18N = {
     loadingProgress: 'Loading drivers',
     brandTitle: 'STREET VIEW DASHBOARD',
     brandRegion: 'LATAM',
-    demoMode: 'Demo mode',
-    demoModeActive: 'Demo mode on',
     refresh: '⟳ Refresh',
     updatedAt: 'Updated',
     errorLoading: 'Loading error',
@@ -3136,7 +3121,8 @@ const I18N = {
     mapTitle: 'LATAM Map',
     mapSub: 'Current base and mapping area per driver',
     driversVisible: 'drivers visible',
-    legendBase: 'Base (hotel/home)',
+    legendHome: 'Home',
+    legendHotel: 'Hotel',
     legendArea: 'Mapping area',
     legendRecent: 'Check-in within 24h',
     legendOld: 'No check-in > 24h',
@@ -3266,12 +3252,6 @@ function setLanguage(lang) {
   applyI18n();
   // Re-render dynamic content that's built via JS
   if (state.drivers && state.drivers.length) applyFiltersAndRender();
-  updateDemoLabel();
-}
-
-function updateDemoLabel() {
-  const label = document.getElementById('demo-label');
-  if (label) label.textContent = state.demoMode ? t('demoModeActive') : t('demoMode');
 }
 
 document.querySelectorAll('.lang-switch button').forEach(btn => {
@@ -3287,7 +3267,6 @@ document.addEventListener('click', (e) => {
 
 let state = {
   drivers: [],
-  demoMode: false,
   filter: { country: 'all', period: 1, specificDate: null, specificRange: null }, // specificDate='YYYY-MM-DD' (1 dia) | specificRange={start,end} (range) | period=1 (hoje)
   // v3 aux data
   hmByCountry: [],
@@ -3309,7 +3288,7 @@ let state = {
 //
 // Salva preferências do usuário (filtros, sort, etc) em localStorage
 // pra que recarregar a página ou voltar depois mantenha tudo igual.
-// NÃO salva: dados do servidor (drivers, métricas), demoMode.
+// NÃO salva: dados do servidor (drivers, métricas).
 
 const STATE_STORAGE_KEY = 'latam-dashboard-prefs-v1';
 
@@ -3490,12 +3469,15 @@ function renderMap(drivers) {
     const isRecent = d.hoursAgo !== null && d.hoursAgo <= 24;
     const baseColor = isRecent ? '#22C55E' : '#F59E0B';
 
-    // Ícone personalizado de base
+    // Emoji indicando tipo de base — visível com 1 olhada
+    const baseTypeIcon = d.base.type === 'Hotel' ? '🏨' : '🏠';
+
+    // Ícone personalizado de base — círculo colorido com emoji do tipo
     const baseIcon = L.divIcon({
       className: 'driver-marker',
-      html: `<div style="width:14px;height:14px;background:${baseColor};border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>`,
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
+      html: `<div style="width:22px;height:22px;background:${baseColor};border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;">${baseTypeIcon}</div>`,
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
     });
 
     const marker = L.marker([d.base.lat, d.base.lng], { icon: baseIcon });
@@ -3555,11 +3537,7 @@ async function loadData() {
   showLoader(true, t('loadingProgress') + '...');
 
   try {
-    if (state.demoMode) {
-      state.drivers = generateDemoData();
-    } else {
-      state.drivers = await fetchRealData();
-    }
+    state.drivers = await fetchRealData();
 
     applyFiltersAndRender();
     document.getElementById('last-updated').textContent = t('updatedAt') + ' ' + formatTime(new Date());
@@ -3698,148 +3676,6 @@ async function fetchWithTimeout(url, timeoutMs) {
     clearTimeout(timeout);
     throw err;
   }
-}
-
-// =================================================================
-// DEMO DATA GENERATOR
-// =================================================================
-
-function generateDemoData() {
-  const driverTemplates = [
-    { name: 'Andre Luiz Barbosa Lima', country: 'Brazil', city: 'Rio de Janeiro' },
-    { name: 'Ruan Mota Santana', country: 'Brazil', city: 'Salvador' },
-    { name: 'Igor Resende Da Macena', country: 'Brazil', city: 'Belo Horizonte' },
-    { name: 'Flávio Rafael Batista', country: 'Brazil', city: 'Recife' },
-    { name: 'Douglas da Silva Batista', country: 'Brazil', city: 'Porto Alegre' },
-    { name: 'Murilo Carlos Daltin', country: 'Brazil', city: 'São Paulo' },
-    { name: 'Edson Alves de Miranda', country: 'Brazil', city: 'Curitiba' },
-    { name: 'Deivide Nelson dos Santos', country: 'Brazil', city: 'Brasília' },
-    { name: 'Maximiliano Tadeu Brant', country: 'Brazil', city: 'Fortaleza' },
-    { name: 'Matías Daniel Moreira', country: 'Argentina', city: 'Buenos Aires' },
-    { name: 'Axel Augusto Gentilini', country: 'Argentina', city: 'Cordoba' },
-    { name: 'Mauro Leandro Canepa', country: 'Argentina', city: 'Rosario' },
-    { name: 'Leandro Martín Andreoli', country: 'Argentina', city: 'Mendoza' },
-    { name: 'Guillermo Amado Juarez', country: 'Argentina', city: 'Tucuman' },
-    { name: 'Mauricio Alejandro Gallero', country: 'Argentina', city: 'Buenos Aires' },
-    { name: 'Carlos Alberto Silva', country: 'Chile', city: 'Santiago' },
-    { name: 'Rodrigo Martinez', country: 'Chile', city: 'Valparaíso' },
-    { name: 'Felipe Gonzalez', country: 'Chile', city: 'Concepción' },
-    { name: 'Cesar Casallas', country: 'Colombia', city: 'Bogotá' },
-    { name: 'Andres Rodriguez', country: 'Colombia', city: 'Medellín' },
-    { name: 'Juan Pablo Torres', country: 'Colombia', city: 'Cali' },
-    { name: 'Rafael Roberto Naylor', country: 'México', city: 'Mexico City' },
-    { name: 'Montserrat Santos', country: 'México', city: 'Guadalajara' },
-    { name: 'Christian Jesus Fonseca', country: 'México', city: 'Monterrey' },
-    { name: 'Diego Garcia Llerenas', country: 'México', city: 'Puebla' },
-    { name: 'Jesus Vazquez', country: 'México', city: 'Mexico City' },
-    { name: 'Juan Carlos Mauricio', country: 'Peru', city: 'Lima' },
-    { name: 'Luis Fernando Castro', country: 'Peru', city: 'Arequipa' },
-    { name: 'Miguel Angel Vargas', country: 'Peru', city: 'Cusco' },
-    { name: 'Ricardo Alonso Mendoza', country: 'Peru', city: 'Trujillo' },
-  ];
-
-  return driverTemplates.map((d, i) => {
-    const cityCoords = CITY_COORDS[d.city] || COUNTRY_CENTERS[d.country] || [-15, -60];
-    const baseLat = cityCoords[0] + (Math.random() - 0.5) * 0.2;
-    const baseLng = cityCoords[1] + (Math.random() - 0.5) * 0.2;
-
-    // Área de mapeamento: 70% dos casos perto da base, 30% mais longe (hotel mode)
-    const isHotelMode = Math.random() > 0.3;
-    const distanceDeg = isHotelMode ? 0.3 + Math.random() * 0.8 : 0.05 + Math.random() * 0.2;
-    const angle = Math.random() * 2 * Math.PI;
-    const areaLat = baseLat + distanceDeg * Math.cos(angle);
-    const areaLng = baseLng + distanceDeg * Math.sin(angle);
-    const radius = 5 + Math.floor(Math.random() * 40);
-
-    // Alguns drivers sem check-in recente
-    const hoursAgo = i % 7 === 0 ? (30 + Math.floor(Math.random() * 80)) :
-                     i % 5 === 0 ? (3 + Math.floor(Math.random() * 18)) :
-                     Math.floor(Math.random() * 4);
-
-    // Alguns com issue
-    const vehicleStatus = i % 11 === 0 ? 'Minor Issue' :
-                          i % 17 === 0 ? 'Critical Issue' : 'OK';
-
-    const baseType = Math.random() > 0.4 ? 'Hotel' : 'Home';
-    const distBaseToEdge = Math.max(0, Math.round((haversine(baseLat, baseLng, areaLat, areaLng) - radius) * 10) / 10);
-
-    // Casa: se é Hotel mode, casa fica 200-400km longe. Se é Home, casa = base.
-    let homeLat, homeLng, distHomeToEdge, distHomeToCenter, savingsKm;
-    if (baseType === 'Hotel') {
-      // Home em outra cidade (simula long-distance worker)
-      const homeOffset = 1.8 + Math.random() * 2.2; // ~200-400km em graus aproximados
-      const homeAngle = Math.random() * 2 * Math.PI;
-      homeLat = baseLat + homeOffset * Math.cos(homeAngle);
-      homeLng = baseLng + homeOffset * Math.sin(homeAngle);
-      distHomeToCenter = Math.round(haversine(homeLat, homeLng, areaLat, areaLng) * 10) / 10;
-      distHomeToEdge = Math.max(0, Math.round((distHomeToCenter - radius) * 10) / 10);
-      savingsKm = Math.round((distHomeToEdge - distBaseToEdge) * 10) / 10;
-    } else {
-      homeLat = baseLat + (Math.random() - 0.5) * 0.05;
-      homeLng = baseLng + (Math.random() - 0.5) * 0.05;
-      distHomeToCenter = Math.round(haversine(homeLat, homeLng, areaLat, areaLng) * 10) / 10;
-      distHomeToEdge = distBaseToEdge;
-      savingsKm = 0;
-    }
-
-    const hmMonthly = (baseType === 'Hotel' && savingsKm > 50) ? 'Yes' : 'No';
-
-    // Gera 3-5 áreas históricas próximas à atual (simulando check-ins passados)
-    const historyCount = 3 + Math.floor(Math.random() * 3);
-    const historyAreas = [];
-    for (let h = 0; h < historyCount; h++) {
-      const jitter = 0.15;
-      historyAreas.push({
-        lat: areaLat + (Math.random() - 0.5) * jitter * 2,
-        lng: areaLng + (Math.random() - 0.5) * jitter * 2,
-        radius: Math.max(3, radius + Math.floor((Math.random() - 0.5) * 20)),
-        address: `Área · ${d.city}${h === 0 ? ' (norte)' : h === 1 ? ' (sul)' : h === 2 ? ' (centro)' : ' (leste)'}`,
-        dateLabel: h === 0 ? 'Ontem' : (h + 1) + ' dias atrás',
-      });
-    }
-
-    // Notas ocasionais (20% dos drivers)
-    const demoNotes = [
-      'Trânsito intenso na região, pode atrasar.',
-      'Obra fechando rua principal — rota alternativa.',
-      'Área nova, primeira vez mapeando aqui.',
-      'Clima instável previsto pra tarde.',
-      'Reabastecer combustível antes das 11h.',
-      'Hotel confirmado por mais 3 noites.',
-    ];
-    const notes = (i % 5 === 0) ? demoNotes[i % demoNotes.length] : '';
-
-    return {
-      name: d.name,
-      email: d.name.toLowerCase().replace(/\s/g, '.') + '@field-ops-xpe.com',
-      country: d.country,
-      city: d.city,
-      fullAddress: `Demo addr · ${d.city}`,
-      homeLat, homeLng,
-      base: {
-        type: baseType,
-        address: `${baseType === 'Hotel' ? 'Hotel ' : ''}${d.city} — Centro`,
-        lat: baseLat,
-        lng: baseLng,
-      },
-      area: {
-        lat: areaLat,
-        lng: areaLng,
-        radius: radius,
-        address: `Região de ${d.city}`,
-      },
-      hoursAgo,
-      vehicleStatus,
-      distBaseToEdge,
-      distHomeToEdge,
-      distHomeToCenter,
-      savingsKm,
-      hmMonthly,
-      breakevenPct: 0.5 + Math.random() * 1.2,
-      historyAreas,
-      notes,
-    };
-  });
 }
 
 // =================================================================
@@ -6446,22 +6282,6 @@ function renderPanelMap(d) {
 async function renderDriverHistory(d) {
   const container = document.getElementById('panel-history');
 
-  // Demo mode: usa historyAreas mockados
-  if (state.demoMode) {
-    if (!d.historyAreas || d.historyAreas.length === 0) {
-      container.innerHTML = `<div class="history-empty">${t('pHistoryEmpty')}</div>`;
-      return;
-    }
-    container.innerHTML = d.historyAreas.map(h => `
-      <div class="history-item">
-        <span class="history-radius">${h.radius} km</span>
-        <div class="history-date">${h.dateLabel}</div>
-        <div class="history-address">${h.address}</div>
-      </div>
-    `).join('');
-    return;
-  }
-
   // Modo real: busca histórico via getDriverHistory
   container.innerHTML = `<div class="history-empty">${t('loadingHistory')}...</div>`;
 
@@ -6632,15 +6452,6 @@ function showLoader(show, msg) {
     const textEl = loader.querySelector('.loader-text');
     if (textEl) textEl.textContent = msg;
   }
-}
-
-function toggleDemoMode() {
-  state.demoMode = !state.demoMode;
-  const btn = document.getElementById('demo-toggle');
-  const label = document.getElementById('demo-label');
-  btn.classList.toggle('active', state.demoMode);
-  label.textContent = state.demoMode ? t('demoModeActive') : t('demoMode');
-  loadData();
 }
 
 // =================================================================
