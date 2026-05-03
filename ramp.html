@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Ramp Expenses · LATAM · Aceolution</title>
-  <link rel="icon" type="image/png" href="https://d1hbpr09pwz0sk.cloudfront.net/logo_url/aceolution-0c2d8724">
+  <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   :root {
     --c-primary: #2C5282;
@@ -194,6 +195,195 @@
     color: var(--c-primary);
     border-color: var(--c-accent);
     font-weight: 600;
+  }
+
+  /* Segunda linha de filtros */
+  .filters-row2 {
+    border-top: 1px solid var(--c-bg);
+    padding-top: 10px;
+    padding-bottom: 14px;
+  }
+
+  /* Multi-select popovers (driver + categoria) */
+  .multi-select-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .multi-select-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 140px;
+    justify-content: space-between;
+  }
+  .multi-select-toggle.has-selection {
+    background: var(--c-bg-tint);
+    border-color: var(--c-accent);
+    color: var(--c-primary);
+    font-weight: 500;
+  }
+  .multi-caret {
+    font-size: 9px;
+    color: var(--c-text-muted);
+    margin-left: 4px;
+  }
+  .multi-select-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 999;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.15);
+    min-width: 280px;
+    max-width: 360px;
+  }
+  .multi-search {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: inherit;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+  }
+  .multi-search:focus { outline: none; border-color: var(--c-primary); }
+  .multi-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .multi-action-btn {
+    flex: 1;
+    padding: 4px 8px;
+    background: transparent;
+    border: 1px solid var(--c-border);
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--c-text-muted);
+  }
+  .multi-action-btn:hover { border-color: var(--c-primary); color: var(--c-primary); }
+  .multi-list {
+    max-height: 280px;
+    overflow-y: auto;
+  }
+  .multi-list-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--c-text);
+    user-select: none;
+  }
+  .multi-list-item:hover { background: var(--c-bg); }
+  .multi-list-item input[type="checkbox"] {
+    cursor: pointer;
+    accent-color: var(--c-primary);
+    flex-shrink: 0;
+  }
+  .multi-list-item .item-meta {
+    color: var(--c-text-muted);
+    font-size: 10px;
+    margin-left: auto;
+  }
+  .multi-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  /* CHARTS SECTION */
+  .charts-section {
+    padding: 0 24px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .chart-card {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
+  }
+  .chart-card.full-width {
+    grid-column: 1 / -1;
+  }
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .chart-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+  }
+  .chart-sub {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+  .chart-toggle {
+    display: inline-flex;
+    background: var(--c-bg);
+    border-radius: 16px;
+    padding: 2px;
+    gap: 0;
+  }
+  .chart-toggle-btn {
+    padding: 4px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--c-text-muted);
+    transition: all 0.15s;
+  }
+  .chart-toggle-btn.active {
+    background: white;
+    color: var(--c-primary);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .chart-canvas-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 240px;
+    max-height: 360px;
+  }
+  .chart-canvas-wrap canvas {
+    max-height: 360px;
+  }
+  .chart-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  @media (max-width: 980px) {
+    .charts-section { grid-template-columns: 1fr; }
   }
 
   /* SCORECARDS */
@@ -448,7 +638,7 @@
 <div class="login-screen" id="login-screen">
   <div class="login-box">
     <div class="login-logo">
-      <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display='none'">
+      <img src="https://d1hbpr09pwz0sk.cloudfront.net/logo_url/aceolution-0c2d8724" alt="Aceolution" onerror="this.style.display='none'">
       <div class="product">RAMP EXPENSES</div>
       <div class="region">LATAM</div>
     </div>
@@ -477,7 +667,7 @@
 <div id="app">
   <div class="header">
     <div class="brand-wrap">
-      <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
+      <img src="https://d1hbpr09pwz0sk.cloudfront.net/logo_url/aceolution-0c2d8724" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
       <div class="brand-divider"></div>
       <div class="brand-sub">
         <div class="brand-title-line">RAMP EXPENSES</div>
@@ -526,6 +716,46 @@
     <span class="filter-label" id="period-info">—</span>
   </div>
 
+  <!-- Segunda linha de filtros: Driver + Categoria (multi-select) -->
+  <div class="filters filters-row2">
+    <span class="filter-label">Motoristas:</span>
+    <div class="multi-select-wrap">
+      <button class="filter-chip multi-select-toggle" id="driver-toggle" onclick="toggleDriverDropdown(event)">
+        <span id="driver-toggle-label">Todos</span>
+        <span class="multi-caret">▾</span>
+      </button>
+      <div class="multi-select-popover" id="driver-popover" style="display:none;">
+        <input type="text" class="multi-search" id="driver-search" placeholder="Buscar motorista..." oninput="filterDriverList()">
+        <div class="multi-actions">
+          <button class="multi-action-btn" onclick="selectAllDrivers(true)">Selecionar todos</button>
+          <button class="multi-action-btn" onclick="selectAllDrivers(false)">Limpar</button>
+        </div>
+        <div class="multi-list" id="driver-list">
+          <!-- Populado dinamicamente -->
+        </div>
+      </div>
+    </div>
+
+    <span class="filter-label" style="margin-left:8px;">Categorias:</span>
+    <div class="multi-select-wrap">
+      <button class="filter-chip multi-select-toggle" id="category-toggle" onclick="toggleCategoryDropdown(event)">
+        <span id="category-toggle-label">Todas</span>
+        <span class="multi-caret">▾</span>
+      </button>
+      <div class="multi-select-popover" id="category-popover" style="display:none;">
+        <div class="multi-actions">
+          <button class="multi-action-btn" onclick="selectAllCategories(true)">Selecionar todas</button>
+          <button class="multi-action-btn" onclick="selectAllCategories(false)">Limpar</button>
+        </div>
+        <div class="multi-list" id="category-list">
+          <!-- Populado dinamicamente -->
+        </div>
+      </div>
+    </div>
+
+    <button class="filter-chip" onclick="clearExtraFilters()" style="margin-left:auto;font-size:11px;color:var(--c-text-muted);">↺ Reset filtros</button>
+  </div>
+
   <div class="scorecards">
     <div class="scorecard">
       <div class="sc-label">TOTAL DE GASTOS</div>
@@ -546,6 +776,52 @@
       <div class="sc-label">TOP USUÁRIO</div>
       <div class="sc-value" id="sc-user" style="font-size:14px;">—</div>
       <div class="sc-sub" id="sc-user-sub">—</div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <!-- Donut: gasto por categoria -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Valor gasto por categoria</div>
+          <div class="chart-sub" id="chart-amount-sub">—</div>
+        </div>
+      </div>
+      <div class="chart-canvas-wrap">
+        <canvas id="chart-amount-by-cat"></canvas>
+      </div>
+    </div>
+
+    <!-- Donut: qtd por categoria -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Quantidade por categoria</div>
+          <div class="chart-sub" id="chart-count-sub">—</div>
+        </div>
+      </div>
+      <div class="chart-canvas-wrap">
+        <canvas id="chart-count-by-cat"></canvas>
+      </div>
+    </div>
+
+    <!-- Donut: motoristas selecionados, breakdown por categoria -->
+    <div class="chart-card full-width">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Por motorista selecionado <span id="chart-driver-name" style="font-weight:400;color:var(--c-text-muted);font-size:12px;"></span></div>
+          <div class="chart-sub" id="chart-driver-sub">Selecione motoristas no filtro acima ou veja o total</div>
+        </div>
+        <div class="chart-toggle">
+          <button class="chart-toggle-btn active" id="chart-driver-mode-amount" onclick="setDriverChartMode('amount')">$ Valor</button>
+          <button class="chart-toggle-btn" id="chart-driver-mode-count" onclick="setDriverChartMode('count')"># Qtd</button>
+        </div>
+      </div>
+      <div class="chart-canvas-wrap" style="max-height:380px;">
+        <canvas id="chart-by-driver"></canvas>
+      </div>
     </div>
   </div>
 
@@ -580,7 +856,7 @@
   </div>
 
   <footer>
-    <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" style="height:24px;opacity:0.6;" onerror="this.style.display='none'"><br>
+    <img src="https://d1hbpr09pwz0sk.cloudfront.net/logo_url/aceolution-0c2d8724" alt="Aceolution" style="height:24px;opacity:0.6;" onerror="this.style.display='none'"><br>
     Aceolution do Brasil Ltda. · Ramp Expenses Dashboard
   </footer>
 </div>
@@ -663,11 +939,22 @@ const CONFIG = {
 let state = {
   transactions: [],     // dataset bruto do backend
   filtered: [],         // após aplicar filtros (país, search)
-  filter: { country: 'all', search: '' },
+  filter: {
+    country: 'all',
+    search: '',
+    drivers: [],          // array de emails (vazio = todos)
+    categories: [],       // array de categorias (vazio = todas)
+  },
   sort: { column: 'date', direction: 'desc' },
   pageLimit: 25,
   period: null,         // { start, end } ou null (= mês atual)
+  driverChartMode: 'amount',  // 'amount' | 'count'
 };
+
+// Refs aos Chart.js instances pra poder destruir/recriar
+let chartAmount = null;
+let chartCount = null;
+let chartByDriver = null;
 
 // ================================================================
 // INIT + LOAD DATA
@@ -709,6 +996,10 @@ async function loadRampData() {
     // Atualiza info de período
     document.getElementById('period-info').textContent =
       `${formatDateBR(start)} → ${formatDateBR(end)}  ·  ${state.transactions.length} transações`;
+
+    // Popula listas dos multi-selects (drivers + categorias) com base nos dados
+    populateDriverList();
+    populateCategoryList();
 
     applyFiltersAndRender();
   } catch (err) {
@@ -863,7 +1154,23 @@ function applyFiltersAndRender() {
     return true;
   });
 
-  // 2) Filtra por search (user, merchant, category)
+  // 2) Filtra por motoristas selecionados (vazio = todos)
+  if (state.filter.drivers.length > 0) {
+    const allowedSet = new Set(state.filter.drivers);
+    filtered = filtered.filter(t => {
+      // Match por email (mais confiável) ou nome bruto se sem email
+      const key = t.driverEmail || t.user || '';
+      return allowedSet.has(key);
+    });
+  }
+
+  // 3) Filtra por categorias selecionadas (vazio = todas)
+  if (state.filter.categories.length > 0) {
+    const catSet = new Set(state.filter.categories);
+    filtered = filtered.filter(t => catSet.has(t.category || 'Other'));
+  }
+
+  // 4) Filtra por search (user, merchant, category)
   const term = state.filter.search;
   if (term) {
     filtered = filtered.filter(t => {
@@ -876,8 +1183,10 @@ function applyFiltersAndRender() {
   state.filtered = filtered;
 
   renderScorecards(filtered);
+  renderCharts(filtered);
   renderTable(filtered);
   updateFilterSummary(filtered);
+  updateMultiSelectLabels();
 }
 
 function renderScorecards(filtered) {
@@ -1027,7 +1336,421 @@ function updateFilterSummary(filtered) {
   let parts = [];
   if (state.filter.country !== 'all') parts.push(state.filter.country);
   if (state.filter.search) parts.push(`busca: "${state.filter.search}"`);
+  if (state.filter.drivers.length > 0) parts.push(`${state.filter.drivers.length} motorista${state.filter.drivers.length > 1 ? 's' : ''}`);
+  if (state.filter.categories.length > 0) parts.push(`${state.filter.categories.length} categoria${state.filter.categories.length > 1 ? 's' : ''}`);
   document.getElementById('filter-summary').textContent = parts.length > 0 ? `· ${parts.join(' · ')}` : '';
+}
+
+// ================================================================
+// MULTI-SELECTS (drivers + categorias)
+// ================================================================
+
+/**
+ * Popula a lista do dropdown de motoristas com base nos dados carregados.
+ * Cada item: nome + email + total $ (pra ajudar a identificar).
+ */
+function populateDriverList() {
+  // Agrega por (driverEmail || user) pra ter unicidade real
+  const byKey = {};
+  state.transactions.forEach(t => {
+    const key = t.driverEmail || t.user || 'unknown';
+    if (!byKey[key]) {
+      byKey[key] = {
+        key: key,
+        name: t.driverName || t.user || 'Sem nome',
+        email: t.driverEmail || '',
+        count: 0,
+        total: 0,
+        matchSource: t.matchSource,
+      };
+    }
+    byKey[key].count++;
+    byKey[key].total += t.amount || 0;
+  });
+
+  // Ordena por total desc (gastões primeiro)
+  const drivers = Object.values(byKey).sort((a, b) => b.total - a.total);
+
+  const list = document.getElementById('driver-list');
+  if (drivers.length === 0) {
+    list.innerHTML = '<div class="multi-empty">Nenhum motorista no período</div>';
+    return;
+  }
+
+  list.innerHTML = drivers.map(d => {
+    const checked = state.filter.drivers.includes(d.key) ? 'checked' : '';
+    return `<label class="multi-list-item">
+      <input type="checkbox" value="${escapeHtml(d.key)}" ${checked} onchange="toggleDriver(this)">
+      <span>${escapeHtml(d.name)}</span>
+      <span class="item-meta">$${Math.round(d.total).toLocaleString()}</span>
+    </label>`;
+  }).join('');
+}
+
+function populateCategoryList() {
+  const byCat = {};
+  state.transactions.forEach(t => {
+    const c = t.category || 'Other';
+    if (!byCat[c]) byCat[c] = { name: c, count: 0, total: 0 };
+    byCat[c].count++;
+    byCat[c].total += t.amount || 0;
+  });
+  const cats = Object.values(byCat).sort((a, b) => b.total - a.total);
+
+  const list = document.getElementById('category-list');
+  if (cats.length === 0) {
+    list.innerHTML = '<div class="multi-empty">Nenhuma categoria no período</div>';
+    return;
+  }
+
+  list.innerHTML = cats.map(c => {
+    const checked = state.filter.categories.includes(c.name) ? 'checked' : '';
+    return `<label class="multi-list-item">
+      <input type="checkbox" value="${escapeHtml(c.name)}" ${checked} onchange="toggleCategory(this)">
+      <span>${escapeHtml(c.name)}</span>
+      <span class="item-meta">$${Math.round(c.total).toLocaleString()}</span>
+    </label>`;
+  }).join('');
+}
+
+function toggleDriverDropdown(evt) {
+  if (evt) evt.stopPropagation();
+  const popover = document.getElementById('driver-popover');
+  const isOpen = popover.style.display !== 'none';
+
+  // Fecha o outro dropdown
+  document.getElementById('category-popover').style.display = 'none';
+
+  popover.style.display = isOpen ? 'none' : '';
+}
+
+function toggleCategoryDropdown(evt) {
+  if (evt) evt.stopPropagation();
+  const popover = document.getElementById('category-popover');
+  const isOpen = popover.style.display !== 'none';
+
+  document.getElementById('driver-popover').style.display = 'none';
+
+  popover.style.display = isOpen ? 'none' : '';
+}
+
+function toggleDriver(checkbox) {
+  const key = checkbox.value;
+  if (checkbox.checked) {
+    if (!state.filter.drivers.includes(key)) state.filter.drivers.push(key);
+  } else {
+    state.filter.drivers = state.filter.drivers.filter(k => k !== key);
+  }
+  state.pageLimit = 25;
+  applyFiltersAndRender();
+}
+
+function toggleCategory(checkbox) {
+  const cat = checkbox.value;
+  if (checkbox.checked) {
+    if (!state.filter.categories.includes(cat)) state.filter.categories.push(cat);
+  } else {
+    state.filter.categories = state.filter.categories.filter(c => c !== cat);
+  }
+  state.pageLimit = 25;
+  applyFiltersAndRender();
+}
+
+function selectAllDrivers(select) {
+  if (select) {
+    // Pega todos do dataset atual
+    const allKeys = [...new Set(state.transactions.map(t => t.driverEmail || t.user || 'unknown'))];
+    state.filter.drivers = allKeys;
+  } else {
+    state.filter.drivers = [];
+  }
+  populateDriverList();
+  state.pageLimit = 25;
+  applyFiltersAndRender();
+}
+
+function selectAllCategories(select) {
+  if (select) {
+    const allCats = [...new Set(state.transactions.map(t => t.category || 'Other'))];
+    state.filter.categories = allCats;
+  } else {
+    state.filter.categories = [];
+  }
+  populateCategoryList();
+  state.pageLimit = 25;
+  applyFiltersAndRender();
+}
+
+function filterDriverList() {
+  const term = document.getElementById('driver-search').value.toLowerCase().trim();
+  document.querySelectorAll('#driver-list .multi-list-item').forEach(item => {
+    const txt = item.textContent.toLowerCase();
+    item.style.display = (!term || txt.includes(term)) ? '' : 'none';
+  });
+}
+
+function clearExtraFilters() {
+  state.filter.drivers = [];
+  state.filter.categories = [];
+  populateDriverList();
+  populateCategoryList();
+  state.pageLimit = 25;
+  applyFiltersAndRender();
+}
+
+function updateMultiSelectLabels() {
+  const dToggle = document.getElementById('driver-toggle');
+  const dLabel = document.getElementById('driver-toggle-label');
+  if (state.filter.drivers.length === 0) {
+    dLabel.textContent = 'Todos';
+    dToggle.classList.remove('has-selection');
+  } else if (state.filter.drivers.length === 1) {
+    // Acha nome do driver pelo email/key
+    const key = state.filter.drivers[0];
+    const t = state.transactions.find(x => (x.driverEmail || x.user) === key);
+    const name = t ? (t.driverName || t.user || key) : key;
+    dLabel.textContent = name.length > 20 ? name.slice(0, 20) + '…' : name;
+    dToggle.classList.add('has-selection');
+  } else {
+    dLabel.textContent = `${state.filter.drivers.length} selecionados`;
+    dToggle.classList.add('has-selection');
+  }
+
+  const cToggle = document.getElementById('category-toggle');
+  const cLabel = document.getElementById('category-toggle-label');
+  if (state.filter.categories.length === 0) {
+    cLabel.textContent = 'Todas';
+    cToggle.classList.remove('has-selection');
+  } else if (state.filter.categories.length === 1) {
+    cLabel.textContent = state.filter.categories[0];
+    cToggle.classList.add('has-selection');
+  } else {
+    cLabel.textContent = `${state.filter.categories.length} selecionadas`;
+    cToggle.classList.add('has-selection');
+  }
+}
+
+// Click-fora fecha os popovers
+document.addEventListener('click', (e) => {
+  ['driver-popover', 'category-popover'].forEach(id => {
+    const popover = document.getElementById(id);
+    if (!popover) return;
+    const wrap = popover.closest('.multi-select-wrap');
+    if (popover.style.display !== 'none' && wrap && !wrap.contains(e.target)) {
+      popover.style.display = 'none';
+    }
+  });
+});
+
+// ================================================================
+// CHARTS
+// ================================================================
+
+/**
+ * Paleta de cores Aceolution-friendly (azuis + tons quentes complementares).
+ * Reusada nos 3 gráficos pra consistência visual.
+ */
+const CHART_COLORS = [
+  '#2C5282', '#4A9FE0', '#16A34A', '#F59E0B', '#EF4444',
+  '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#6366F1',
+  '#84CC16', '#06B6D4', '#A855F7', '#F43F5E', '#0EA5E9',
+];
+
+function colorAt(i) {
+  return CHART_COLORS[i % CHART_COLORS.length];
+}
+
+function renderCharts(filtered) {
+  renderAmountByCategoryChart(filtered);
+  renderCountByCategoryChart(filtered);
+  renderByDriverChart(filtered);
+}
+
+/**
+ * Donut: $ gasto por categoria.
+ */
+function renderAmountByCategoryChart(filtered) {
+  const ctx = document.getElementById('chart-amount-by-cat');
+  if (!ctx) return;
+
+  // Agrega $ por categoria
+  const byCat = {};
+  filtered.forEach(t => {
+    const c = t.category || 'Other';
+    byCat[c] = (byCat[c] || 0) + (t.amount || 0);
+  });
+
+  // Ordena por valor desc
+  const entries = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((s, e) => s + e[1], 0);
+
+  document.getElementById('chart-amount-sub').textContent =
+    total > 0 ? `Total: $${Math.round(total).toLocaleString()} · ${entries.length} categorias` : '—';
+
+  const labels = entries.map(e => e[0]);
+  const data = entries.map(e => e[1]);
+  const colors = entries.map((_, i) => colorAt(i));
+
+  if (chartAmount) chartAmount.destroy();
+  chartAmount = renderDonut(ctx, labels, data, colors, total, '$');
+}
+
+/**
+ * Donut: qtd transações por categoria.
+ */
+function renderCountByCategoryChart(filtered) {
+  const ctx = document.getElementById('chart-count-by-cat');
+  if (!ctx) return;
+
+  const byCat = {};
+  filtered.forEach(t => {
+    const c = t.category || 'Other';
+    byCat[c] = (byCat[c] || 0) + 1;
+  });
+
+  const entries = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((s, e) => s + e[1], 0);
+
+  document.getElementById('chart-count-sub').textContent =
+    total > 0 ? `Total: ${total} transações · ${entries.length} categorias` : '—';
+
+  const labels = entries.map(e => e[0]);
+  const data = entries.map(e => e[1]);
+  const colors = entries.map((_, i) => colorAt(i));
+
+  if (chartCount) chartCount.destroy();
+  chartCount = renderDonut(ctx, labels, data, colors, total, '#');
+}
+
+/**
+ * Donut: motoristas selecionados (ou todos), breakdown por categoria.
+ * O dataset já vem filtrado de applyFiltersAndRender, então só precisa
+ * agregar como nos outros 2.
+ */
+function renderByDriverChart(filtered) {
+  const ctx = document.getElementById('chart-by-driver');
+  if (!ctx) return;
+
+  const isAmountMode = state.driverChartMode === 'amount';
+
+  // Atualiza nome do driver no header (se 1 selecionado)
+  const headerDriverEl = document.getElementById('chart-driver-name');
+  const subEl = document.getElementById('chart-driver-sub');
+  if (state.filter.drivers.length === 0) {
+    headerDriverEl.textContent = '(todos os motoristas)';
+    subEl.textContent = isAmountMode
+      ? 'Distribuição de $ por categoria'
+      : 'Distribuição de transações por categoria';
+  } else if (state.filter.drivers.length === 1) {
+    const key = state.filter.drivers[0];
+    const t = state.transactions.find(x => (x.driverEmail || x.user) === key);
+    headerDriverEl.textContent = t ? `(${t.driverName || t.user})` : '';
+    subEl.textContent = isAmountMode
+      ? 'Categorias de gasto desse motorista'
+      : 'Categorias de transações desse motorista';
+  } else {
+    headerDriverEl.textContent = `(${state.filter.drivers.length} motoristas)`;
+    subEl.textContent = `Combinação de ${state.filter.drivers.length} motoristas selecionados`;
+  }
+
+  // Agrega por categoria
+  const byCat = {};
+  filtered.forEach(t => {
+    const c = t.category || 'Other';
+    if (!byCat[c]) byCat[c] = 0;
+    byCat[c] += isAmountMode ? (t.amount || 0) : 1;
+  });
+
+  const entries = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((s, e) => s + e[1], 0);
+
+  const labels = entries.map(e => e[0]);
+  const data = entries.map(e => e[1]);
+  const colors = entries.map((_, i) => colorAt(i));
+
+  if (chartByDriver) chartByDriver.destroy();
+  chartByDriver = renderDonut(ctx, labels, data, colors, total, isAmountMode ? '$' : '#');
+}
+
+/**
+ * Helper genérico pra renderizar um donut.
+ * unitPrefix: '$' = formata como dólar, '#' = formata como inteiro
+ */
+function renderDonut(canvasEl, labels, data, colors, total, unitPrefix) {
+  if (!labels.length || total === 0) {
+    return new Chart(canvasEl, {
+      type: 'doughnut',
+      data: { labels: ['Sem dados'], datasets: [{ data: [1], backgroundColor: ['#E2E8F0'] }] },
+      options: { plugins: { legend: { display: false }, tooltip: { enabled: false } } },
+    });
+  }
+
+  return new Chart(canvasEl, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: colors,
+        borderWidth: 2,
+        borderColor: '#FFFFFF',
+        hoverOffset: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            font: { size: 11, family: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' },
+            padding: 8,
+            boxWidth: 12,
+            boxHeight: 12,
+            generateLabels: (chart) => {
+              const dataset = chart.data.datasets[0];
+              return chart.data.labels.map((label, i) => {
+                const value = dataset.data[i];
+                const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                const valStr = unitPrefix === '$'
+                  ? `$${Math.round(value).toLocaleString()}`
+                  : value.toLocaleString();
+                return {
+                  text: `${label} · ${pct}% (${valStr})`,
+                  fillStyle: dataset.backgroundColor[i],
+                  strokeStyle: dataset.backgroundColor[i],
+                  lineWidth: 0,
+                  hidden: false,
+                  index: i,
+                };
+              });
+            },
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const value = ctx.raw;
+              const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              const valStr = unitPrefix === '$'
+                ? `$${value.toFixed(2)}`
+                : value.toLocaleString();
+              return ` ${ctx.label}: ${valStr} (${pct}%)`;
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+function setDriverChartMode(mode) {
+  state.driverChartMode = mode;
+  document.getElementById('chart-driver-mode-amount').classList.toggle('active', mode === 'amount');
+  document.getElementById('chart-driver-mode-count').classList.toggle('active', mode === 'count');
+  renderByDriverChart(state.filtered);
 }
 
 // ================================================================
