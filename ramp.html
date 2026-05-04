@@ -382,8 +382,250 @@
     font-style: italic;
   }
 
+  /* "Outros" expandido inline (dentro do donut card) */
+  .others-detail {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--c-bg);
+    border-radius: 8px;
+    border: 1px solid var(--c-border);
+  }
+  .others-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .others-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--c-text-muted);
+    font-size: 14px;
+    padding: 0 4px;
+    line-height: 1;
+  }
+  .others-close:hover { color: #EF4444; }
+  .others-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    font-size: 12px;
+  }
+  .others-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 6px;
+    border-radius: 4px;
+  }
+  .others-item:hover { background: white; }
+  .others-item-name { color: var(--c-text); }
+  .others-item-value { color: var(--c-primary); font-weight: 500; }
+
+  /* Breadcrumb de drill-down */
+  .drill-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    margin: 0 24px 12px;
+    background: var(--c-bg-tint);
+    border: 1px solid var(--c-accent);
+    border-radius: 10px;
+    font-size: 13px;
+  }
+  .drill-icon { font-size: 14px; }
+  .drill-label { color: var(--c-text-muted); font-weight: 500; }
+  .drill-value { color: var(--c-primary-dark); font-weight: 700; }
+  .drill-clear {
+    margin-left: auto;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 14px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--c-text-muted);
+    transition: all 0.15s;
+  }
+  .drill-clear:hover { border-color: #EF4444; color: #EF4444; }
+
+  /* Side Panel (drill-down de driver) */
+  .side-panel-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .side-panel-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .side-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 480px;
+    max-width: 100vw;
+    background: white;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+    z-index: 999;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .side-panel.open {
+    transform: translateX(0);
+  }
+  .panel-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 2;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--c-border);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .panel-close {
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--c-text-muted);
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0;
+  }
+  .panel-close:hover { color: var(--c-primary-dark); border-color: var(--c-primary); }
+  .panel-title-wrap { flex: 1; min-width: 0; }
+  .panel-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    word-wrap: break-word;
+  }
+  .panel-meta {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+  .panel-body { padding: 16px 22px 24px; }
+
+  .panel-scorecards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .panel-card {
+    background: var(--c-bg);
+    border-radius: 8px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--c-primary);
+  }
+  .panel-card-label {
+    font-size: 9px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  .panel-card-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-top: 4px;
+    line-height: 1.1;
+  }
+
+  .panel-section {
+    margin-bottom: 18px;
+  }
+  .panel-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .panel-canvas-wrap {
+    position: relative;
+    height: 200px;
+  }
+  .panel-tx-list {
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+  }
+  .panel-tx-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--c-border);
+    gap: 10px;
+  }
+  .panel-tx-row:last-child { border-bottom: none; }
+  .panel-tx-row:hover { background: var(--c-bg); }
+  .panel-tx-info { flex: 1; min-width: 0; }
+  .panel-tx-merchant { color: var(--c-text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .panel-tx-meta { color: var(--c-text-muted); font-size: 10px; margin-top: 2px; }
+  .panel-tx-amount { color: var(--c-primary); font-weight: 600; white-space: nowrap; }
+
+  .panel-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .panel-action-btn {
+    width: 100%;
+    padding: 10px;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--c-text);
+    transition: all 0.15s;
+  }
+  .panel-action-btn:hover { border-color: var(--c-primary); color: var(--c-primary); }
+  .panel-action-btn.primary {
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    border-color: transparent;
+    font-weight: 600;
+  }
+  .panel-action-btn.primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(44, 82, 130, 0.4);
+    color: white;
+  }
+
   @media (max-width: 980px) {
     .charts-section { grid-template-columns: 1fr; }
+    .side-panel { width: 100vw; }
   }
 
   /* SCORECARDS */
@@ -781,41 +1023,57 @@
 
   <!-- Charts Section -->
   <div class="charts-section">
-    <!-- Donut: gasto por categoria -->
+    <!-- Donut: categorias fundido (toggle $ / #) -->
     <div class="chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">Valor gasto por categoria</div>
-          <div class="chart-sub" id="chart-amount-sub">—</div>
+          <div class="chart-title">Categorias <span id="chart-cat-mode-label" style="font-weight:400;color:var(--c-text-muted);font-size:11px;">(por valor)</span></div>
+          <div class="chart-sub" id="chart-cat-sub">—</div>
+        </div>
+        <div class="chart-toggle">
+          <button class="chart-toggle-btn active" id="chart-cat-mode-amount" onclick="setCatChartMode('amount')">$ Valor</button>
+          <button class="chart-toggle-btn" id="chart-cat-mode-count" onclick="setCatChartMode('count')"># Qtd</button>
         </div>
       </div>
       <div class="chart-canvas-wrap">
-        <canvas id="chart-amount-by-cat"></canvas>
+        <canvas id="chart-categories"></canvas>
+      </div>
+      <!-- "Outros" expandido (inicialmente oculto) -->
+      <div class="others-detail" id="cat-others-detail" style="display:none;">
+        <div class="others-header">
+          <span>Detalhamento de "Outros"</span>
+          <button class="others-close" onclick="toggleOthersDetail('cat', false)">✕</button>
+        </div>
+        <div id="cat-others-list" class="others-list"></div>
       </div>
     </div>
 
-    <!-- Donut: qtd por categoria -->
+    <!-- Barras horizontais: top 10 drivers (toggle $ / #) -->
     <div class="chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">Quantidade por categoria</div>
-          <div class="chart-sub" id="chart-count-sub">—</div>
+          <div class="chart-title">Top motoristas <span id="chart-drivers-mode-label" style="font-weight:400;color:var(--c-text-muted);font-size:11px;">(por valor)</span></div>
+          <div class="chart-sub" id="chart-drivers-sub">—</div>
+        </div>
+        <div class="chart-toggle">
+          <button class="chart-toggle-btn active" id="chart-drivers-mode-amount" onclick="setDriversChartMode('amount')">$ Valor</button>
+          <button class="chart-toggle-btn" id="chart-drivers-mode-count" onclick="setDriversChartMode('count')"># Qtd</button>
         </div>
       </div>
       <div class="chart-canvas-wrap">
-        <canvas id="chart-count-by-cat"></canvas>
+        <canvas id="chart-top-drivers"></canvas>
       </div>
     </div>
 
-    <!-- Donut: motoristas selecionados, breakdown por categoria -->
+    <!-- Comparação: motoristas selecionados (estado independente!) -->
     <div class="chart-card full-width">
       <div class="chart-header">
         <div>
-          <div class="chart-title">Por motorista selecionado <span id="chart-driver-name" style="font-weight:400;color:var(--c-text-muted);font-size:12px;"></span></div>
-          <div class="chart-sub" id="chart-driver-sub">Selecione motoristas ou veja o total</div>
+          <div class="chart-title">Comparação por motorista <span id="chart-driver-name" style="font-weight:400;color:var(--c-text-muted);font-size:12px;"></span></div>
+          <div class="chart-sub" id="chart-driver-sub">Use o seletor → e compare com os totais acima</div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <!-- Multi-select de drivers embutido no chart -->
+          <!-- Multi-select INDEPENDENTE (não mexe no filtro principal) -->
           <div class="multi-select-wrap">
             <button class="filter-chip multi-select-toggle" id="chart-driver-toggle" onclick="toggleChartDriverDropdown(event)">
               <span id="chart-driver-toggle-label">Todos</span>
@@ -824,8 +1082,8 @@
             <div class="multi-select-popover" id="chart-driver-popover" style="display:none; right:0; left:auto;">
               <input type="text" class="multi-search" id="chart-driver-search" placeholder="Buscar motorista..." oninput="filterChartDriverList()">
               <div class="multi-actions">
-                <button class="multi-action-btn" onclick="selectAllDrivers(true)">Selecionar todos</button>
-                <button class="multi-action-btn" onclick="selectAllDrivers(false)">Limpar</button>
+                <button class="multi-action-btn" onclick="selectAllChartDrivers(true)">Selecionar todos</button>
+                <button class="multi-action-btn" onclick="selectAllChartDrivers(false)">Limpar</button>
               </div>
               <div class="multi-list" id="chart-driver-list">
                 <!-- Populado dinamicamente -->
@@ -842,6 +1100,31 @@
         <canvas id="chart-by-driver"></canvas>
       </div>
     </div>
+
+    <!-- Tendência temporal full-width -->
+    <div class="chart-card full-width">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Tendência ao longo do tempo</div>
+          <div class="chart-sub" id="chart-trend-sub">—</div>
+        </div>
+        <div class="chart-toggle">
+          <button class="chart-toggle-btn active" id="chart-trend-mode-amount" onclick="setTrendChartMode('amount')">$ Valor</button>
+          <button class="chart-toggle-btn" id="chart-trend-mode-count" onclick="setTrendChartMode('count')"># Qtd</button>
+        </div>
+      </div>
+      <div class="chart-canvas-wrap" style="max-height:280px;">
+        <canvas id="chart-trend"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breadcrumb de drill-down (visível só quando há filtro de drill ativo) -->
+  <div class="drill-breadcrumb" id="drill-breadcrumb" style="display:none;">
+    <span class="drill-icon">🔍</span>
+    <span class="drill-label">Filtrado por:</span>
+    <span class="drill-value" id="drill-value">—</span>
+    <button class="drill-clear" onclick="clearDrillFilter()" title="Limpar filtro">✕</button>
   </div>
 
   <div class="table-section">
@@ -873,6 +1156,61 @@
       </div>
     </div>
   </div>
+
+  <!-- Side Panel: detalhes do driver (drill-down ao clicar no chart) -->
+  <div class="side-panel-backdrop" id="panel-backdrop" onclick="closeDriverPanel()"></div>
+  <aside class="side-panel" id="side-panel" aria-hidden="true">
+    <div class="panel-header">
+      <button class="panel-close" onclick="closeDriverPanel()" aria-label="Fechar">✕</button>
+      <div class="panel-title-wrap">
+        <div class="panel-name" id="panel-driver-name">—</div>
+        <div class="panel-meta" id="panel-driver-meta">—</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <!-- 4 mini-scorecards do driver -->
+      <div class="panel-scorecards">
+        <div class="panel-card">
+          <div class="panel-card-label">Total gasto</div>
+          <div class="panel-card-value" id="panel-driver-total">—</div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-card-label">Transações</div>
+          <div class="panel-card-value" id="panel-driver-count">—</div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-card-label">Categoria principal</div>
+          <div class="panel-card-value" id="panel-driver-topcat" style="font-size:14px;">—</div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-card-label">Média/transação</div>
+          <div class="panel-card-value" id="panel-driver-avg">—</div>
+        </div>
+      </div>
+
+      <!-- Donut categorias do driver -->
+      <div class="panel-section">
+        <div class="panel-section-title">Categorias de gasto</div>
+        <div class="panel-canvas-wrap">
+          <canvas id="panel-cat-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Tabela compacta de transações -->
+      <div class="panel-section">
+        <div class="panel-section-title">
+          Últimas transações
+          <span id="panel-tx-count" style="font-weight:400;color:var(--c-text-muted);font-size:11px;"></span>
+        </div>
+        <div class="panel-tx-list" id="panel-tx-list"></div>
+      </div>
+
+      <!-- Botão pra fechar e filtrar a página principal -->
+      <div class="panel-actions">
+        <button class="panel-action-btn primary" onclick="filterPageByPanelDriver()">📋 Filtrar página por este motorista</button>
+      </div>
+    </div>
+  </aside>
 
   <footer>
     <img src="https://d1hbpr09pwz0sk.cloudfront.net/logo_url/aceolution-0c2d8724" alt="Aceolution" style="height:24px;opacity:0.6;" onerror="this.style.display='none'"><br>
@@ -957,23 +1295,46 @@ const CONFIG = {
 
 let state = {
   transactions: [],     // dataset bruto do backend
-  filtered: [],         // após aplicar filtros (país, search)
+  filtered: [],         // após aplicar filtros principais
   filter: {
     country: 'all',
     search: '',
-    drivers: [],          // array de emails (vazio = todos)
+    drivers: [],          // array de emails/keys (vazio = todos)
     categories: [],       // array de categorias (vazio = todas)
   },
+  // Drill-down: clicar numa categoria/driver no gráfico filtra a página
+  // (mostra breadcrumb pra clear). Independente dos filtros normais —
+  // se o user manualmente filtra "Brasil", drillFilter ainda pode ser
+  // "Fuel and Gas" e tudo se compõe.
+  drillFilter: { category: null, driver: null },
+
+  // Estado INDEPENDENTE do gráfico de comparação (chart-by-driver):
+  // não é o mesmo state.filter.drivers — esse é dele só.
+  chartDriversFilter: [],
+
   sort: { column: 'date', direction: 'desc' },
   pageLimit: 25,
   period: null,         // { start, end } ou null (= mês atual)
-  driverChartMode: 'amount',  // 'amount' | 'count'
+
+  // Modos de cada gráfico (cada um com seu toggle $/#)
+  catChartMode: 'amount',      // donut categorias
+  driversChartMode: 'amount',  // barras top drivers
+  driverChartMode: 'amount',   // chart de comparação driver
+  trendChartMode: 'amount',    // tendência temporal
+
+  // Driver selecionado no painel lateral (drill via click no chart)
+  panelDriverKey: null,
 };
 
 // Refs aos Chart.js instances pra poder destruir/recriar
-let chartAmount = null;
-let chartCount = null;
+let chartCategories = null;
+let chartTopDrivers = null;
 let chartByDriver = null;
+let chartTrend = null;
+let chartPanelCat = null;
+
+// Constantes
+const TOP_N = 10;  // Top 10 categorias / drivers (resto vai pra "Outros")
 
 // ================================================================
 // INIT + LOAD DATA
@@ -1019,6 +1380,9 @@ async function loadRampData() {
     // Popula listas dos multi-selects (drivers + categorias) com base nos dados
     populateDriverList();
     populateCategoryList();
+    // Lista do gráfico de comparação (estado independente)
+    populateChartDriverList();
+    updateChartDriverLabel();
 
     applyFiltersAndRender();
   } catch (err) {
@@ -1192,7 +1556,16 @@ function applyFiltersAndRender() {
     filtered = filtered.filter(t => catSet.has(t.category || 'Other'));
   }
 
-  // 4) Filtra por search (user, merchant, category)
+  // 4) Drill-down: clicar numa categoria/driver no gráfico filtra TUDO
+  // Aplicado ANTES do search pra que breadcrumb e search se componham
+  if (state.drillFilter.category) {
+    filtered = filtered.filter(t => (t.category || 'Other') === state.drillFilter.category);
+  }
+  if (state.drillFilter.driver) {
+    filtered = filtered.filter(t => (t.driverEmail || t.user) === state.drillFilter.driver);
+  }
+
+  // 5) Filtra por search (user, merchant, category)
   const term = state.filter.search;
   if (term) {
     filtered = filtered.filter(t => {
@@ -1209,6 +1582,38 @@ function applyFiltersAndRender() {
   renderTable(filtered);
   updateFilterSummary(filtered);
   updateMultiSelectLabels();
+  updateDrillBreadcrumb();
+}
+
+/**
+ * Mostra/atualiza a breadcrumb de drill-down acima da tabela.
+ */
+function updateDrillBreadcrumb() {
+  const bar = document.getElementById('drill-breadcrumb');
+  const valueEl = document.getElementById('drill-value');
+  const drill = state.drillFilter;
+
+  if (!drill.category && !drill.driver) {
+    bar.style.display = 'none';
+    return;
+  }
+
+  let parts = [];
+  if (drill.category) parts.push(`Categoria: ${drill.category}`);
+  if (drill.driver) {
+    // Acha nome do driver
+    const t = state.transactions.find(x => (x.driverEmail || x.user) === drill.driver);
+    const name = t ? (t.driverName || t.user || drill.driver) : drill.driver;
+    parts.push(`Motorista: ${name}`);
+  }
+  valueEl.textContent = parts.join('  ·  ');
+  bar.style.display = '';
+}
+
+function clearDrillFilter() {
+  state.drillFilter = { category: null, driver: null };
+  state.pageLimit = 25;
+  applyFiltersAndRender();
 }
 
 function renderScorecards(filtered) {
@@ -1393,23 +1798,23 @@ function populateDriverList() {
   // Ordena por total desc (gastões primeiro)
   const drivers = Object.values(byKey).sort((a, b) => b.total - a.total);
 
-  // Renderiza HTML (mesma estrutura nas 2 listas: filtro principal + chart header)
-  const html = drivers.length === 0
-    ? '<div class="multi-empty">Nenhum motorista no período</div>'
-    : drivers.map(d => {
-        const checked = state.filter.drivers.includes(d.key) ? 'checked' : '';
-        return `<label class="multi-list-item">
-          <input type="checkbox" value="${escapeHtml(d.key)}" ${checked} onchange="toggleDriver(this)">
-          <span>${escapeHtml(d.name)}</span>
-          <span class="item-meta">$${Math.round(d.total).toLocaleString()}</span>
-        </label>`;
-      }).join('');
-
-  // Popula ambas as listas — estado é compartilhado
+  // Popula só a lista do filtro principal (state.filter.drivers).
+  // A lista do chart-by-driver é preenchida por populateChartDriverList()
+  // — estados separados agora.
   const list = document.getElementById('driver-list');
-  if (list) list.innerHTML = html;
-  const chartList = document.getElementById('chart-driver-list');
-  if (chartList) chartList.innerHTML = html;
+  if (!list) return;
+  if (drivers.length === 0) {
+    list.innerHTML = '<div class="multi-empty">Nenhum motorista no período</div>';
+    return;
+  }
+  list.innerHTML = drivers.map(d => {
+    const checked = state.filter.drivers.includes(d.key) ? 'checked' : '';
+    return `<label class="multi-list-item">
+      <input type="checkbox" value="${escapeHtml(d.key)}" ${checked} onchange="toggleDriver(this)">
+      <span>${escapeHtml(d.name)}</span>
+      <span class="item-meta">$${Math.round(d.total).toLocaleString()}</span>
+    </label>`;
+  }).join('');
 }
 
 function populateCategoryList() {
@@ -1467,11 +1872,6 @@ function toggleDriver(checkbox) {
     state.filter.drivers = state.filter.drivers.filter(k => k !== key);
   }
   state.pageLimit = 25;
-  // Re-popula AMBAS as listas pra manter checkboxes sincronizados — o usuário
-  // pode ter clicado em uma lista mas a outra precisa refletir o novo estado.
-  // (populateDriverList já é chamada por applyFiltersAndRender via updateMultiSelectLabels?
-  //  Não — chamamos explicitamente aqui pra garantir.)
-  populateDriverList();
   applyFiltersAndRender();
 }
 
@@ -1556,9 +1956,6 @@ function clearExtraFilters() {
 function updateMultiSelectLabels() {
   const dToggle = document.getElementById('driver-toggle');
   const dLabel = document.getElementById('driver-toggle-label');
-  // Label do dropdown embutido no chart (mesmo conteúdo)
-  const chartDLabel = document.getElementById('chart-driver-toggle-label');
-  const chartDToggle = document.getElementById('chart-driver-toggle');
 
   let driverLabelText, hasSelection;
   if (state.filter.drivers.length === 0) {
@@ -1578,8 +1975,6 @@ function updateMultiSelectLabels() {
 
   if (dLabel) dLabel.textContent = driverLabelText;
   if (dToggle) dToggle.classList.toggle('has-selection', hasSelection);
-  if (chartDLabel) chartDLabel.textContent = driverLabelText;
-  if (chartDToggle) chartDToggle.classList.toggle('has-selection', hasSelection);
 
   const cToggle = document.getElementById('category-toggle');
   const cLabel = document.getElementById('category-toggle-label');
@@ -1626,101 +2021,307 @@ function colorAt(i) {
 }
 
 function renderCharts(filtered) {
-  renderAmountByCategoryChart(filtered);
-  renderCountByCategoryChart(filtered);
-  renderByDriverChart(filtered);
+  // Atualiza dataset que o chart-by-driver e o painel lateral usam
+  // (o filtered passado aqui é o "principal" — o chart-by-driver usa
+  // o dataset com filtro independente próprio)
+  renderCategoriesChart(filtered);
+  renderTopDriversChart(filtered);
+  renderByDriverChart(filtered);  // usa state.chartDriversFilter, não o filtro principal
+  renderTrendChart(filtered);
 }
 
 /**
- * Donut: $ gasto por categoria.
+ * Agrega dataset por categoria, agrupando categorias após top N em "Outros".
+ * Retorna: { entries: [{label, value, isOthers, otherItems}], total }
+ *   otherItems só aparece na entrada "Outros" — contém detalhamento.
  */
-function renderAmountByCategoryChart(filtered) {
-  const ctx = document.getElementById('chart-amount-by-cat');
-  if (!ctx) return;
-
-  // Agrega $ por categoria
+function aggregateByCategory(filtered, mode) {
   const byCat = {};
   filtered.forEach(t => {
     const c = t.category || 'Other';
-    byCat[c] = (byCat[c] || 0) + (t.amount || 0);
+    if (!byCat[c]) byCat[c] = 0;
+    byCat[c] += mode === 'amount' ? (t.amount || 0) : 1;
   });
 
-  // Ordena por valor desc
-  const entries = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
-  const total = entries.reduce((s, e) => s + e[1], 0);
+  const sorted = Object.entries(byCat)
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value);
 
-  document.getElementById('chart-amount-sub').textContent =
-    total > 0 ? `Total: $${Math.round(total).toLocaleString()} · ${entries.length} categorias` : '—';
+  const total = sorted.reduce((s, e) => s + e.value, 0);
 
-  const labels = entries.map(e => e[0]);
-  const data = entries.map(e => e[1]);
-  const colors = entries.map((_, i) => colorAt(i));
+  if (sorted.length <= TOP_N) {
+    return { entries: sorted, total };
+  }
 
-  if (chartAmount) chartAmount.destroy();
-  chartAmount = renderDonut(ctx, labels, data, colors, total, '$');
+  // Pega top N e agrupa restante em "Outros"
+  const top = sorted.slice(0, TOP_N);
+  const others = sorted.slice(TOP_N);
+  const othersValue = others.reduce((s, e) => s + e.value, 0);
+
+  top.push({
+    label: 'Outros',
+    value: othersValue,
+    isOthers: true,
+    otherItems: others, // pra detalhamento expandido
+  });
+
+  return { entries: top, total };
 }
 
 /**
- * Donut: qtd transações por categoria.
+ * Donut categorias (com top 10 + Outros).
+ * Click na categoria → drill-down (filtra tudo).
+ * Click em "Outros" → expande inline mostrando o detalhamento.
  */
-function renderCountByCategoryChart(filtered) {
-  const ctx = document.getElementById('chart-count-by-cat');
+function renderCategoriesChart(filtered) {
+  const ctx = document.getElementById('chart-categories');
   if (!ctx) return;
 
-  const byCat = {};
-  filtered.forEach(t => {
-    const c = t.category || 'Other';
-    byCat[c] = (byCat[c] || 0) + 1;
+  const isAmountMode = state.catChartMode === 'amount';
+  const { entries, total } = aggregateByCategory(filtered, state.catChartMode);
+
+  // Header sub
+  const subEl = document.getElementById('chart-cat-sub');
+  if (subEl) {
+    if (entries.length === 0 || total === 0) {
+      subEl.textContent = 'Sem dados no período';
+    } else {
+      const totalStr = isAmountMode
+        ? `$${Math.round(total).toLocaleString()}`
+        : `${total.toLocaleString()} transações`;
+      const totalCats = filtered.reduce((s, t) => s.add(t.category || 'Other'), new Set()).size;
+      subEl.textContent = `Total: ${totalStr}  ·  ${totalCats} categorias`;
+    }
+  }
+
+  // Atualiza label do mode
+  const modeLabel = document.getElementById('chart-cat-mode-label');
+  if (modeLabel) modeLabel.textContent = isAmountMode ? '(por valor)' : '(por quantidade)';
+
+  const labels = entries.map(e => e.label);
+  const data = entries.map(e => e.value);
+  const colors = entries.map((e, i) => e.isOthers ? '#94A3B8' : colorAt(i));
+
+  if (chartCategories) chartCategories.destroy();
+  chartCategories = renderDonutWithClick(ctx, labels, data, colors, total, isAmountMode ? '$' : '#', (idx) => {
+    const entry = entries[idx];
+    if (!entry) return;
+    if (entry.isOthers) {
+      // Toggle expansão inline do "Outros"
+      const visible = document.getElementById('cat-others-detail').style.display !== 'none';
+      toggleOthersDetail('cat', !visible);
+    } else {
+      // Drill-down nessa categoria
+      state.drillFilter.category = entry.label;
+      state.pageLimit = 25;
+      applyFiltersAndRender();
+    }
   });
-
-  const entries = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
-  const total = entries.reduce((s, e) => s + e[1], 0);
-
-  document.getElementById('chart-count-sub').textContent =
-    total > 0 ? `Total: ${total} transações · ${entries.length} categorias` : '—';
-
-  const labels = entries.map(e => e[0]);
-  const data = entries.map(e => e[1]);
-  const colors = entries.map((_, i) => colorAt(i));
-
-  if (chartCount) chartCount.destroy();
-  chartCount = renderDonut(ctx, labels, data, colors, total, '#');
 }
 
 /**
- * Donut: motoristas selecionados (ou todos), breakdown por categoria.
- * O dataset já vem filtrado de applyFiltersAndRender, então só precisa
- * agregar como nos outros 2.
+ * Toggle do detalhamento inline de "Outros".
  */
-function renderByDriverChart(filtered) {
+function toggleOthersDetail(which, show) {
+  const detail = document.getElementById(which + '-others-detail');
+  if (!detail) return;
+
+  if (!show) {
+    detail.style.display = 'none';
+    return;
+  }
+
+  // Reconstrói a lista a partir do dataset atual (que pode ter mudado)
+  const filtered = state.filtered;
+  const mode = which === 'cat' ? state.catChartMode : state.driversChartMode;
+  const isAmountMode = mode === 'amount';
+  const { entries } = aggregateByCategory(filtered, mode);
+  const others = entries.find(e => e.isOthers);
+  if (!others || !others.otherItems) {
+    detail.style.display = 'none';
+    return;
+  }
+
+  const list = document.getElementById(which + '-others-list');
+  list.innerHTML = others.otherItems.map(item => {
+    const valStr = isAmountMode
+      ? `$${Math.round(item.value).toLocaleString()}`
+      : `${item.value} tx`;
+    return `<div class="others-item" onclick="drillIntoCategory('${escapeHtml(item.label).replace(/'/g, "\\'")}')" style="cursor:pointer;">
+      <span class="others-item-name">${escapeHtml(item.label)}</span>
+      <span class="others-item-value">${valStr}</span>
+    </div>`;
+  }).join('');
+
+  detail.style.display = '';
+}
+
+function drillIntoCategory(catName) {
+  state.drillFilter.category = catName;
+  state.pageLimit = 25;
+  document.getElementById('cat-others-detail').style.display = 'none';
+  applyFiltersAndRender();
+}
+
+/**
+ * Barras horizontais: top 10 motoristas (com toggle $/#).
+ * Click → abre painel lateral com detalhes do driver.
+ */
+function renderTopDriversChart(filtered) {
+  const ctx = document.getElementById('chart-top-drivers');
+  if (!ctx) return;
+
+  const isAmountMode = state.driversChartMode === 'amount';
+
+  // Agrega por driver
+  const byKey = {};
+  filtered.forEach(t => {
+    const key = t.driverEmail || t.user || 'unknown';
+    if (!byKey[key]) {
+      byKey[key] = {
+        key,
+        name: t.driverName || t.user || 'Sem nome',
+        amount: 0,
+        count: 0,
+      };
+    }
+    byKey[key].amount += t.amount || 0;
+    byKey[key].count += 1;
+  });
+
+  const sorted = Object.values(byKey).sort((a, b) =>
+    isAmountMode ? b.amount - a.amount : b.count - a.count
+  );
+  const top10 = sorted.slice(0, TOP_N);
+  const totalDrivers = sorted.length;
+  const totalValue = top10.reduce((s, d) => s + (isAmountMode ? d.amount : d.count), 0);
+
+  // Header sub
+  const subEl = document.getElementById('chart-drivers-sub');
+  if (subEl) {
+    if (top10.length === 0) {
+      subEl.textContent = 'Sem dados no período';
+    } else {
+      subEl.textContent = `Top ${top10.length} de ${totalDrivers} motoristas`;
+    }
+  }
+  const modeLabel = document.getElementById('chart-drivers-mode-label');
+  if (modeLabel) modeLabel.textContent = isAmountMode ? '(por valor)' : '(por quantidade)';
+
+  const labels = top10.map(d => d.name);
+  const data = top10.map(d => isAmountMode ? d.amount : d.count);
+  const driverKeys = top10.map(d => d.key); // pra click handler
+
+  if (chartTopDrivers) chartTopDrivers.destroy();
+
+  if (top10.length === 0) {
+    chartTopDrivers = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: ['Sem dados'], datasets: [{ data: [0], backgroundColor: '#E2E8F0' }] },
+      options: { plugins: { legend: { display: false } } },
+    });
+    return;
+  }
+
+  chartTopDrivers = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: top10.map((_, i) => colorAt(i)),
+        borderWidth: 0,
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      indexAxis: 'y',  // Barras horizontais
+      responsive: true,
+      maintainAspectRatio: false,
+      onClick: (evt, elements) => {
+        if (!elements.length) return;
+        const idx = elements[0].index;
+        const driverKey = driverKeys[idx];
+        openDriverPanel(driverKey);
+      },
+      onHover: (evt, elements) => {
+        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
+      scales: {
+        x: {
+          ticks: {
+            callback: (v) => isAmountMode ? '$' + (v/1000).toFixed(0) + 'k' : v,
+            font: { size: 11 },
+          },
+          grid: { color: '#F1F5F9' },
+        },
+        y: {
+          ticks: { font: { size: 11 } },
+          grid: { display: false },
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const value = ctx.raw;
+              return isAmountMode
+                ? ' $' + value.toFixed(2)
+                : ' ' + value + ' transações';
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Donut: motoristas selecionados (estado INDEPENDENTE), breakdown por categoria.
+ * Não usa state.filter.drivers — usa state.chartDriversFilter (próprio dele).
+ * Mas RESPEITA outros filtros (país, drillFilter, categoria, search).
+ */
+function renderByDriverChart(mainFiltered) {
   const ctx = document.getElementById('chart-by-driver');
   if (!ctx) return;
 
   const isAmountMode = state.driverChartMode === 'amount';
+  const driversFilter = state.chartDriversFilter;
 
-  // Atualiza nome do driver no header (se 1 selecionado)
+  // Filtra mainFiltered POR drivers do estado independente do chart
+  let chartData;
+  if (driversFilter.length === 0) {
+    // "Todos" — usa o mainFiltered cru
+    chartData = mainFiltered;
+  } else {
+    const allowedSet = new Set(driversFilter);
+    chartData = mainFiltered.filter(t => allowedSet.has(t.driverEmail || t.user || ''));
+  }
+
+  // Atualiza header
   const headerDriverEl = document.getElementById('chart-driver-name');
   const subEl = document.getElementById('chart-driver-sub');
-  if (state.filter.drivers.length === 0) {
+  if (driversFilter.length === 0) {
     headerDriverEl.textContent = '(todos os motoristas)';
     subEl.textContent = isAmountMode
       ? 'Distribuição de $ por categoria'
       : 'Distribuição de transações por categoria';
-  } else if (state.filter.drivers.length === 1) {
-    const key = state.filter.drivers[0];
+  } else if (driversFilter.length === 1) {
+    const key = driversFilter[0];
     const t = state.transactions.find(x => (x.driverEmail || x.user) === key);
     headerDriverEl.textContent = t ? `(${t.driverName || t.user})` : '';
     subEl.textContent = isAmountMode
       ? 'Categorias de gasto desse motorista'
       : 'Categorias de transações desse motorista';
   } else {
-    headerDriverEl.textContent = `(${state.filter.drivers.length} motoristas)`;
-    subEl.textContent = `Combinação de ${state.filter.drivers.length} motoristas selecionados`;
+    headerDriverEl.textContent = `(${driversFilter.length} motoristas)`;
+    subEl.textContent = `Combinação de ${driversFilter.length} motoristas selecionados`;
   }
 
-  // Agrega por categoria
+  // Agrega por categoria do dataset filtrado
   const byCat = {};
-  filtered.forEach(t => {
+  chartData.forEach(t => {
     const c = t.category || 'Other';
     if (!byCat[c]) byCat[c] = 0;
     byCat[c] += isAmountMode ? (t.amount || 0) : 1;
@@ -1734,14 +2335,122 @@ function renderByDriverChart(filtered) {
   const colors = entries.map((_, i) => colorAt(i));
 
   if (chartByDriver) chartByDriver.destroy();
-  chartByDriver = renderDonut(ctx, labels, data, colors, total, isAmountMode ? '$' : '#');
+  chartByDriver = renderDonutWithClick(ctx, labels, data, colors, total, isAmountMode ? '$' : '#', null);
 }
 
 /**
- * Helper genérico pra renderizar um donut.
- * unitPrefix: '$' = formata como dólar, '#' = formata como inteiro
+ * Tendência temporal: agrega por dia (ou semana se range > 60 dias).
  */
-function renderDonut(canvasEl, labels, data, colors, total, unitPrefix) {
+function renderTrendChart(filtered) {
+  const ctx = document.getElementById('chart-trend');
+  if (!ctx) return;
+
+  const isAmountMode = state.trendChartMode === 'amount';
+
+  // Decide granularidade baseado no range (se >60 dias usa semana)
+  if (filtered.length === 0) {
+    document.getElementById('chart-trend-sub').textContent = 'Sem dados no período';
+    if (chartTrend) chartTrend.destroy();
+    chartTrend = new Chart(ctx, {
+      type: 'line',
+      data: { labels: [], datasets: [{ data: [] }] },
+      options: { plugins: { legend: { display: false } } },
+    });
+    return;
+  }
+
+  const dates = filtered.map(t => t.date).sort();
+  const minDate = dates[0];
+  const maxDate = dates[dates.length - 1];
+  const dayCount = (new Date(maxDate) - new Date(minDate)) / 86400000;
+
+  const useWeekly = dayCount > 60;
+  const granularity = useWeekly ? 'semana' : 'dia';
+
+  // Agrega
+  const byPeriod = {};
+  filtered.forEach(t => {
+    let key = t.date;
+    if (useWeekly) {
+      // Aproximação: tira o dia da semana, fica com o início da semana ISO
+      const d = new Date(t.date);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1); // segunda
+      d.setDate(diff);
+      key = formatDateYMD(d);
+    }
+    if (!byPeriod[key]) byPeriod[key] = 0;
+    byPeriod[key] += isAmountMode ? (t.amount || 0) : 1;
+  });
+
+  // Ordena por data
+  const sortedKeys = Object.keys(byPeriod).sort();
+  const labels = sortedKeys.map(k => formatDateBR(k));
+  const data = sortedKeys.map(k => byPeriod[k]);
+
+  document.getElementById('chart-trend-sub').textContent =
+    `Granularidade: ${granularity}  ·  ${sortedKeys.length} pontos`;
+
+  if (chartTrend) chartTrend.destroy();
+  chartTrend = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: isAmountMode ? 'Valor ($)' : 'Transações',
+        data,
+        borderColor: '#2C5282',
+        backgroundColor: 'rgba(74, 159, 224, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3,
+        pointBackgroundColor: '#2C5282',
+        pointHoverRadius: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          ticks: {
+            font: { size: 10 },
+            maxRotation: 45,
+            minRotation: 45,
+            autoSkip: true,
+            maxTicksLimit: 12,
+          },
+          grid: { display: false },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (v) => isAmountMode ? '$' + (v/1000).toFixed(1) + 'k' : v,
+            font: { size: 11 },
+          },
+          grid: { color: '#F1F5F9' },
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const v = ctx.raw;
+              return isAmountMode ? ' $' + v.toFixed(2) : ' ' + v + ' transações';
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Helper genérico pra donut, com click handler opcional.
+ */
+function renderDonutWithClick(canvasEl, labels, data, colors, total, unitPrefix, clickHandler) {
   if (!labels.length || total === 0) {
     return new Chart(canvasEl, {
       type: 'doughnut',
@@ -1753,9 +2462,9 @@ function renderDonut(canvasEl, labels, data, colors, total, unitPrefix) {
   return new Chart(canvasEl, {
     type: 'doughnut',
     data: {
-      labels: labels,
+      labels,
       datasets: [{
-        data: data,
+        data,
         backgroundColor: colors,
         borderWidth: 2,
         borderColor: '#FFFFFF',
@@ -1766,6 +2475,13 @@ function renderDonut(canvasEl, labels, data, colors, total, unitPrefix) {
       responsive: true,
       maintainAspectRatio: false,
       cutout: '60%',
+      onClick: clickHandler ? (evt, elements) => {
+        if (!elements.length) return;
+        clickHandler(elements[0].index);
+      } : null,
+      onHover: clickHandler ? (evt, elements) => {
+        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      } : null,
       plugins: {
         legend: {
           position: 'right',
@@ -1811,12 +2527,202 @@ function renderDonut(canvasEl, labels, data, colors, total, unitPrefix) {
   });
 }
 
+// ================================================================
+// CHART MODES (toggles $ / #)
+// ================================================================
+function setCatChartMode(mode) {
+  state.catChartMode = mode;
+  document.getElementById('chart-cat-mode-amount').classList.toggle('active', mode === 'amount');
+  document.getElementById('chart-cat-mode-count').classList.toggle('active', mode === 'count');
+  // Fecha "Outros" expandido (porque os top N podem mudar com a métrica)
+  document.getElementById('cat-others-detail').style.display = 'none';
+  renderCategoriesChart(state.filtered);
+}
+
+function setDriversChartMode(mode) {
+  state.driversChartMode = mode;
+  document.getElementById('chart-drivers-mode-amount').classList.toggle('active', mode === 'amount');
+  document.getElementById('chart-drivers-mode-count').classList.toggle('active', mode === 'count');
+  renderTopDriversChart(state.filtered);
+}
+
 function setDriverChartMode(mode) {
   state.driverChartMode = mode;
   document.getElementById('chart-driver-mode-amount').classList.toggle('active', mode === 'amount');
   document.getElementById('chart-driver-mode-count').classList.toggle('active', mode === 'count');
   renderByDriverChart(state.filtered);
 }
+
+function setTrendChartMode(mode) {
+  state.trendChartMode = mode;
+  document.getElementById('chart-trend-mode-amount').classList.toggle('active', mode === 'amount');
+  document.getElementById('chart-trend-mode-count').classList.toggle('active', mode === 'count');
+  renderTrendChart(state.filtered);
+}
+
+// ================================================================
+// CHART-DRIVER FILTER (independente do filtro principal)
+// ================================================================
+function selectAllChartDrivers(select) {
+  if (select) {
+    const allKeys = [...new Set(state.transactions.map(t => t.driverEmail || t.user || 'unknown'))];
+    state.chartDriversFilter = allKeys;
+  } else {
+    state.chartDriversFilter = [];
+  }
+  populateChartDriverList();
+  renderByDriverChart(state.filtered);
+  updateChartDriverLabel();
+}
+
+function toggleChartDriverFilter(checkbox) {
+  const key = checkbox.value;
+  if (checkbox.checked) {
+    if (!state.chartDriversFilter.includes(key)) state.chartDriversFilter.push(key);
+  } else {
+    state.chartDriversFilter = state.chartDriversFilter.filter(k => k !== key);
+  }
+  renderByDriverChart(state.filtered);
+  updateChartDriverLabel();
+}
+
+function populateChartDriverList() {
+  const byKey = {};
+  state.transactions.forEach(t => {
+    const key = t.driverEmail || t.user || 'unknown';
+    if (!byKey[key]) {
+      byKey[key] = { key, name: t.driverName || t.user || 'Sem nome', total: 0 };
+    }
+    byKey[key].total += t.amount || 0;
+  });
+  const drivers = Object.values(byKey).sort((a, b) => b.total - a.total);
+
+  const list = document.getElementById('chart-driver-list');
+  if (!list) return;
+  if (drivers.length === 0) {
+    list.innerHTML = '<div class="multi-empty">Nenhum motorista no período</div>';
+    return;
+  }
+  list.innerHTML = drivers.map(d => {
+    const checked = state.chartDriversFilter.includes(d.key) ? 'checked' : '';
+    return `<label class="multi-list-item">
+      <input type="checkbox" value="${escapeHtml(d.key)}" ${checked} onchange="toggleChartDriverFilter(this)">
+      <span>${escapeHtml(d.name)}</span>
+      <span class="item-meta">$${Math.round(d.total).toLocaleString()}</span>
+    </label>`;
+  }).join('');
+}
+
+function updateChartDriverLabel() {
+  const label = document.getElementById('chart-driver-toggle-label');
+  const toggle = document.getElementById('chart-driver-toggle');
+  const sel = state.chartDriversFilter;
+
+  if (sel.length === 0) {
+    label.textContent = 'Todos';
+    toggle.classList.remove('has-selection');
+  } else if (sel.length === 1) {
+    const key = sel[0];
+    const t = state.transactions.find(x => (x.driverEmail || x.user) === key);
+    const name = t ? (t.driverName || t.user || key) : key;
+    label.textContent = name.length > 20 ? name.slice(0, 20) + '…' : name;
+    toggle.classList.add('has-selection');
+  } else {
+    label.textContent = `${sel.length} selecionados`;
+    toggle.classList.add('has-selection');
+  }
+}
+
+// ================================================================
+// SIDE PANEL (drill-down do driver via click no chart)
+// ================================================================
+function openDriverPanel(driverKey) {
+  state.panelDriverKey = driverKey;
+
+  // Acha info do driver
+  const txs = state.filtered.filter(t => (t.driverEmail || t.user) === driverKey);
+  if (txs.length === 0) return;
+
+  const sample = txs[0];
+  const driverName = sample.driverName || sample.user || 'Sem nome';
+  const driverEmail = sample.driverEmail || '';
+  const country = sample.country || '—';
+  const cardLast4 = sample.cardLast4 || '—';
+
+  // Calcula stats
+  const totalAmount = txs.reduce((s, t) => s + (t.amount || 0), 0);
+  const count = txs.length;
+  const avg = count > 0 ? totalAmount / count : 0;
+
+  // Top categoria
+  const byCat = {};
+  txs.forEach(t => {
+    const c = t.category || 'Other';
+    byCat[c] = (byCat[c] || 0) + (t.amount || 0);
+  });
+  const topCatEntry = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
+  const topCatName = topCatEntry ? topCatEntry[0] : '—';
+
+  // Popula header
+  document.getElementById('panel-driver-name').textContent = driverName;
+  document.getElementById('panel-driver-meta').textContent =
+    `${country}  ·  ${driverEmail || 'sem email'}  ·  Cartão ****${cardLast4}`;
+
+  // Scorecards
+  document.getElementById('panel-driver-total').textContent = '$' + Math.round(totalAmount).toLocaleString();
+  document.getElementById('panel-driver-count').textContent = count.toLocaleString();
+  document.getElementById('panel-driver-topcat').textContent = topCatName;
+  document.getElementById('panel-driver-avg').textContent = '$' + avg.toFixed(0);
+
+  // Donut categorias
+  const ctx = document.getElementById('panel-cat-chart');
+  const entries = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  const labels = entries.map(e => e[0]);
+  const data = entries.map(e => e[1]);
+  const colors = entries.map((_, i) => colorAt(i));
+  if (chartPanelCat) chartPanelCat.destroy();
+  chartPanelCat = renderDonutWithClick(ctx, labels, data, colors, totalAmount, '$', null);
+
+  // Lista de transações
+  const list = document.getElementById('panel-tx-list');
+  const sortedTxs = txs.slice().sort((a, b) => b.date.localeCompare(a.date));
+  document.getElementById('panel-tx-count').textContent = `${sortedTxs.length} no período`;
+  list.innerHTML = sortedTxs.slice(0, 50).map(t => `
+    <div class="panel-tx-row">
+      <div class="panel-tx-info">
+        <div class="panel-tx-merchant" title="${escapeHtml(t.merchant || '')}">${escapeHtml(t.merchant || '—')}</div>
+        <div class="panel-tx-meta">${formatDateBR(t.date)} · ${escapeHtml(t.category || 'Other')}</div>
+      </div>
+      <div class="panel-tx-amount">$${(t.amount || 0).toFixed(2)}</div>
+    </div>
+  `).join('');
+
+  // Abre painel
+  document.getElementById('side-panel').classList.add('open');
+  document.getElementById('side-panel').setAttribute('aria-hidden', 'false');
+  document.getElementById('panel-backdrop').classList.add('open');
+}
+
+function closeDriverPanel() {
+  document.getElementById('side-panel').classList.remove('open');
+  document.getElementById('side-panel').setAttribute('aria-hidden', 'true');
+  document.getElementById('panel-backdrop').classList.remove('open');
+}
+
+function filterPageByPanelDriver() {
+  if (!state.panelDriverKey) return;
+  state.drillFilter.driver = state.panelDriverKey;
+  state.pageLimit = 25;
+  closeDriverPanel();
+  applyFiltersAndRender();
+}
+
+// Esc fecha o painel
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('side-panel').classList.contains('open')) {
+    closeDriverPanel();
+  }
+});
 
 // ================================================================
 // HELPERS
