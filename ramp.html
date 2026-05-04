@@ -98,6 +98,30 @@
     transition: all 0.15s;
   }
   .nav-link:hover { background: var(--c-primary); color: white; }
+  .lang-switch {
+    display: flex;
+    background: var(--c-bg);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 0;
+  }
+  .lang-switch button {
+    background: none;
+    border: none;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+  }
+  .lang-switch button.active {
+    background: white;
+    color: var(--c-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
   .user-pill {
     padding: 5px 12px;
     background: var(--c-bg);
@@ -881,28 +905,28 @@
   <div class="login-box">
     <div class="login-logo">
       <img src="https://d1hbpr09pwz0sk.cloudfront.net/logo_url/aceolution-0c2d8724" alt="Aceolution" onerror="this.style.display='none'">
-      <div class="product">RAMP EXPENSES</div>
+      <div class="product" data-i18n="loginProduct">RAMP EXPENSES</div>
       <div class="region">LATAM</div>
     </div>
-    <h1 class="login-title">Login</h1>
-    <p class="login-subtitle">Acesse com suas credenciais</p>
+    <h1 class="login-title" data-i18n="loginTitle">Login</h1>
+    <p class="login-subtitle" data-i18n="loginSubtitle">Acesse com suas credenciais</p>
     <div class="login-error" id="login-error"></div>
     <div class="login-field">
-      <label>Usuário</label>
+      <label data-i18n="loginUser">Usuário</label>
       <input type="text" id="login-username" autocomplete="username" autofocus>
     </div>
     <div class="login-field">
-      <label>Senha</label>
+      <label data-i18n="loginPass">Senha</label>
       <input type="password" id="login-password" autocomplete="current-password">
     </div>
-    <button class="login-button" onclick="doLogin()">Entrar</button>
+    <button class="login-button" onclick="doLogin()" data-i18n="loginButton">Entrar</button>
   </div>
 </div>
 
 <!-- LOADER -->
 <div id="loader" class="loader-overlay">
   <div class="spinner"></div>
-  <div class="loader-text" id="loader-text">Carregando dados…</div>
+  <div class="loader-text" id="loader-text" data-i18n="loading">Carregando dados…</div>
 </div>
 
 <!-- APP -->
@@ -917,15 +941,20 @@
       </div>
     </div>
     <div class="header-right">
-      <a href="dashboard.html" class="nav-link">← Dashboard ops</a>
-      <button class="filter-chip" onclick="loadRampData()">⟳ Atualizar</button>
+      <a href="dashboard.html" class="nav-link" data-i18n="navDashboard">← Dashboard ops</a>
+      <div class="lang-switch">
+        <button data-lang="pt">PT</button>
+        <button data-lang="es">ES</button>
+        <button data-lang="en">EN</button>
+      </div>
+      <button class="filter-chip" onclick="loadRampData()" data-i18n="refreshBtn">⟳ Atualizar</button>
       <div class="user-pill" id="user-pill"></div>
     </div>
   </div>
 
   <div class="filters">
-    <span class="filter-label">País:</span>
-    <button class="filter-chip active" data-country="all" onclick="setCountry('all')">Todos</button>
+    <span class="filter-label" data-i18n="filterCountry">País:</span>
+    <button class="filter-chip active" data-country="all" onclick="setCountry('all')" data-i18n="all">Todos</button>
     <button class="filter-chip" data-country="Brazil" onclick="setCountry('Brazil')">Brasil</button>
     <button class="filter-chip" data-country="Argentina" onclick="setCountry('Argentina')">Argentina</button>
     <button class="filter-chip" data-country="Chile" onclick="setCountry('Chile')">Chile</button>
@@ -933,22 +962,22 @@
     <button class="filter-chip" data-country="Mexico" onclick="setCountry('Mexico')">México</button>
     <button class="filter-chip" data-country="Peru" onclick="setCountry('Peru')">Peru</button>
 
-    <span class="filter-label" style="margin-left:16px;">Período:</span>
-    <button class="filter-chip active" id="period-current" onclick="setCurrentMonth()">Mês atual</button>
+    <span class="filter-label" style="margin-left:16px;" data-i18n="filterPeriod">Período:</span>
+    <button class="filter-chip active" id="period-current" onclick="setCurrentMonth()" data-i18n="currentMonth">Mês atual</button>
     <div class="month-picker-wrap">
-      <button class="filter-chip" id="period-custom-btn" onclick="toggleMonthPicker(event)">📆 <span id="period-custom-label">Range custom</span></button>
+      <button class="filter-chip" id="period-custom-btn" onclick="toggleMonthPicker(event)">📆 <span id="period-custom-label" data-i18n="customRange">Range custom</span></button>
       <div class="month-popover" id="month-popover" style="display:none;">
         <div class="month-row">
-          <label>De:</label>
+          <label data-i18n="rangeFrom">De:</label>
           <input type="date" id="range-start">
         </div>
         <div class="month-row">
-          <label>Até:</label>
+          <label data-i18n="rangeTo">Até:</label>
           <input type="date" id="range-end">
         </div>
         <div class="month-actions">
-          <button class="month-action-btn" onclick="closeMonthPicker()">Cancelar</button>
-          <button class="month-action-btn primary" onclick="applyCustomRange()">Aplicar</button>
+          <button class="month-action-btn" onclick="closeMonthPicker()" data-i18n="cancel">Cancelar</button>
+          <button class="month-action-btn primary" onclick="applyCustomRange()" data-i18n="apply">Aplicar</button>
         </div>
       </div>
     </div>
@@ -960,17 +989,17 @@
 
   <!-- Segunda linha de filtros: Driver + Categoria (multi-select) -->
   <div class="filters filters-row2">
-    <span class="filter-label">Motoristas:</span>
+    <span class="filter-label" data-i18n="filterDrivers">Motoristas:</span>
     <div class="multi-select-wrap">
       <button class="filter-chip multi-select-toggle" id="driver-toggle" onclick="toggleDriverDropdown(event)">
         <span id="driver-toggle-label">Todos</span>
         <span class="multi-caret">▾</span>
       </button>
       <div class="multi-select-popover" id="driver-popover" style="display:none;">
-        <input type="text" class="multi-search" id="driver-search" placeholder="Buscar motorista..." oninput="filterDriverList()">
+        <input type="text" class="multi-search" id="driver-search" placeholder="Buscar motorista..." data-i18n-placeholder="searchDriverPlaceholder" oninput="filterDriverList()">
         <div class="multi-actions">
-          <button class="multi-action-btn" onclick="selectAllDrivers(true)">Selecionar todos</button>
-          <button class="multi-action-btn" onclick="selectAllDrivers(false)">Limpar</button>
+          <button class="multi-action-btn" onclick="selectAllDrivers(true)" data-i18n="selectAll">Selecionar todos</button>
+          <button class="multi-action-btn" onclick="selectAllDrivers(false)" data-i18n="clearAll">Limpar</button>
         </div>
         <div class="multi-list" id="driver-list">
           <!-- Populado dinamicamente -->
@@ -978,7 +1007,7 @@
       </div>
     </div>
 
-    <span class="filter-label" style="margin-left:8px;">Categorias:</span>
+    <span class="filter-label" style="margin-left:8px;" data-i18n="filterCategories">Categorias:</span>
     <div class="multi-select-wrap">
       <button class="filter-chip multi-select-toggle" id="category-toggle" onclick="toggleCategoryDropdown(event)">
         <span id="category-toggle-label">Todas</span>
@@ -986,8 +1015,8 @@
       </button>
       <div class="multi-select-popover" id="category-popover" style="display:none;">
         <div class="multi-actions">
-          <button class="multi-action-btn" onclick="selectAllCategories(true)">Selecionar todas</button>
-          <button class="multi-action-btn" onclick="selectAllCategories(false)">Limpar</button>
+          <button class="multi-action-btn" onclick="selectAllCategories(true)" data-i18n="selectAll">Selecionar todas</button>
+          <button class="multi-action-btn" onclick="selectAllCategories(false)" data-i18n="clearAll">Limpar</button>
         </div>
         <div class="multi-list" id="category-list">
           <!-- Populado dinamicamente -->
@@ -995,27 +1024,27 @@
       </div>
     </div>
 
-    <button class="filter-chip" onclick="clearExtraFilters()" style="margin-left:auto;font-size:11px;color:var(--c-text-muted);">↺ Reset filtros</button>
+    <button class="filter-chip" onclick="clearExtraFilters()" style="margin-left:auto;font-size:11px;color:var(--c-text-muted);" data-i18n="resetFilters">↺ Reset filtros</button>
   </div>
 
   <div class="scorecards">
     <div class="scorecard">
-      <div class="sc-label">TOTAL DE GASTOS</div>
+      <div class="sc-label" data-i18n="scTotal">TOTAL DE GASTOS</div>
       <div class="sc-value" id="sc-total">—</div>
       <div class="sc-sub" id="sc-total-sub">—</div>
     </div>
     <div class="scorecard color-green">
-      <div class="sc-label">TRANSAÇÕES</div>
+      <div class="sc-label" data-i18n="scTransactions">TRANSAÇÕES</div>
       <div class="sc-value" id="sc-count">—</div>
       <div class="sc-sub" id="sc-count-sub">—</div>
     </div>
     <div class="scorecard color-orange">
-      <div class="sc-label">TOP CATEGORIA</div>
+      <div class="sc-label" data-i18n="scTopCategory">TOP CATEGORIA</div>
       <div class="sc-value" id="sc-cat" style="font-size:18px;">—</div>
       <div class="sc-sub" id="sc-cat-sub">—</div>
     </div>
     <div class="scorecard color-purple">
-      <div class="sc-label">TOP USUÁRIO</div>
+      <div class="sc-label" data-i18n="scTopUser">TOP USUÁRIO</div>
       <div class="sc-value" id="sc-user" style="font-size:14px;">—</div>
       <div class="sc-sub" id="sc-user-sub">—</div>
     </div>
@@ -1027,12 +1056,12 @@
     <div class="chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">Categorias <span id="chart-cat-mode-label" style="font-weight:400;color:var(--c-text-muted);font-size:11px;">(por valor)</span></div>
+          <div class="chart-title"><span data-i18n="chartCategories">Categorias</span> <span id="chart-cat-mode-label" style="font-weight:400;color:var(--c-text-muted);font-size:11px;"></span></div>
           <div class="chart-sub" id="chart-cat-sub">—</div>
         </div>
         <div class="chart-toggle">
-          <button class="chart-toggle-btn active" id="chart-cat-mode-amount" onclick="setCatChartMode('amount')">$ Valor</button>
-          <button class="chart-toggle-btn" id="chart-cat-mode-count" onclick="setCatChartMode('count')"># Qtd</button>
+          <button class="chart-toggle-btn active" id="chart-cat-mode-amount" onclick="setCatChartMode('amount')"><span data-i18n="modeValue">$ Valor</span></button>
+          <button class="chart-toggle-btn" id="chart-cat-mode-count" onclick="setCatChartMode('count')"><span data-i18n="modeCount"># Qtd</span></button>
         </div>
       </div>
       <div class="chart-canvas-wrap">
@@ -1041,7 +1070,7 @@
       <!-- "Outros" expandido (inicialmente oculto) -->
       <div class="others-detail" id="cat-others-detail" style="display:none;">
         <div class="others-header">
-          <span>Detalhamento de "Outros"</span>
+          <span data-i18n="othersDetail">Detalhamento de "Outros"</span>
           <button class="others-close" onclick="toggleOthersDetail('cat', false)">✕</button>
         </div>
         <div id="cat-others-list" class="others-list"></div>
@@ -1052,12 +1081,12 @@
     <div class="chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">Top motoristas <span id="chart-drivers-mode-label" style="font-weight:400;color:var(--c-text-muted);font-size:11px;">(por valor)</span></div>
+          <div class="chart-title"><span data-i18n="chartTopDrivers">Top motoristas</span> <span id="chart-drivers-mode-label" style="font-weight:400;color:var(--c-text-muted);font-size:11px;"></span></div>
           <div class="chart-sub" id="chart-drivers-sub">—</div>
         </div>
         <div class="chart-toggle">
-          <button class="chart-toggle-btn active" id="chart-drivers-mode-amount" onclick="setDriversChartMode('amount')">$ Valor</button>
-          <button class="chart-toggle-btn" id="chart-drivers-mode-count" onclick="setDriversChartMode('count')"># Qtd</button>
+          <button class="chart-toggle-btn active" id="chart-drivers-mode-amount" onclick="setDriversChartMode('amount')"><span data-i18n="modeValue">$ Valor</span></button>
+          <button class="chart-toggle-btn" id="chart-drivers-mode-count" onclick="setDriversChartMode('count')"><span data-i18n="modeCount"># Qtd</span></button>
         </div>
       </div>
       <div class="chart-canvas-wrap">
@@ -1069,8 +1098,8 @@
     <div class="chart-card full-width">
       <div class="chart-header">
         <div>
-          <div class="chart-title">Comparação por motorista <span id="chart-driver-name" style="font-weight:400;color:var(--c-text-muted);font-size:12px;"></span></div>
-          <div class="chart-sub" id="chart-driver-sub">Use o seletor → e compare com os totais acima</div>
+          <div class="chart-title"><span data-i18n="chartCompareDrivers">Comparação por motorista</span> <span id="chart-driver-name" style="font-weight:400;color:var(--c-text-muted);font-size:12px;"></span></div>
+          <div class="chart-sub" id="chart-driver-sub" data-i18n="chartCompareSub">Use o seletor → e compare com os totais acima</div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           <!-- Multi-select INDEPENDENTE (não mexe no filtro principal) -->
@@ -1080,10 +1109,10 @@
               <span class="multi-caret">▾</span>
             </button>
             <div class="multi-select-popover" id="chart-driver-popover" style="display:none; right:0; left:auto;">
-              <input type="text" class="multi-search" id="chart-driver-search" placeholder="Buscar motorista..." oninput="filterChartDriverList()">
+              <input type="text" class="multi-search" id="chart-driver-search" placeholder="Buscar motorista..." data-i18n-placeholder="searchDriverPlaceholder" oninput="filterChartDriverList()">
               <div class="multi-actions">
-                <button class="multi-action-btn" onclick="selectAllChartDrivers(true)">Selecionar todos</button>
-                <button class="multi-action-btn" onclick="selectAllChartDrivers(false)">Limpar</button>
+                <button class="multi-action-btn" onclick="selectAllChartDrivers(true)" data-i18n="selectAll">Selecionar todos</button>
+                <button class="multi-action-btn" onclick="selectAllChartDrivers(false)" data-i18n="clearAll">Limpar</button>
               </div>
               <div class="multi-list" id="chart-driver-list">
                 <!-- Populado dinamicamente -->
@@ -1091,8 +1120,8 @@
             </div>
           </div>
           <div class="chart-toggle">
-            <button class="chart-toggle-btn active" id="chart-driver-mode-amount" onclick="setDriverChartMode('amount')">$ Valor</button>
-            <button class="chart-toggle-btn" id="chart-driver-mode-count" onclick="setDriverChartMode('count')"># Qtd</button>
+            <button class="chart-toggle-btn active" id="chart-driver-mode-amount" onclick="setDriverChartMode('amount')"><span data-i18n="modeValue">$ Valor</span></button>
+            <button class="chart-toggle-btn" id="chart-driver-mode-count" onclick="setDriverChartMode('count')"><span data-i18n="modeCount"># Qtd</span></button>
           </div>
         </div>
       </div>
@@ -1100,48 +1129,31 @@
         <canvas id="chart-by-driver"></canvas>
       </div>
     </div>
-
-    <!-- Tendência temporal full-width -->
-    <div class="chart-card full-width">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">Tendência ao longo do tempo</div>
-          <div class="chart-sub" id="chart-trend-sub">—</div>
-        </div>
-        <div class="chart-toggle">
-          <button class="chart-toggle-btn active" id="chart-trend-mode-amount" onclick="setTrendChartMode('amount')">$ Valor</button>
-          <button class="chart-toggle-btn" id="chart-trend-mode-count" onclick="setTrendChartMode('count')"># Qtd</button>
-        </div>
-      </div>
-      <div class="chart-canvas-wrap" style="max-height:280px;">
-        <canvas id="chart-trend"></canvas>
-      </div>
-    </div>
   </div>
 
   <!-- Breadcrumb de drill-down (visível só quando há filtro de drill ativo) -->
   <div class="drill-breadcrumb" id="drill-breadcrumb" style="display:none;">
     <span class="drill-icon">🔍</span>
-    <span class="drill-label">Filtrado por:</span>
+    <span class="drill-label" data-i18n="drillFiltered">Filtrado por:</span>
     <span class="drill-value" id="drill-value">—</span>
     <button class="drill-clear" onclick="clearDrillFilter()" title="Limpar filtro">✕</button>
   </div>
 
   <div class="table-section">
     <div class="table-header">
-      <div class="table-title">Transações <span id="filter-summary" style="font-weight:400;color:var(--c-text-muted);font-size:12px;"></span></div>
-      <input type="text" class="table-search" placeholder="Buscar por usuário, merchant…" id="search-input" oninput="onSearchInput()">
+      <div class="table-title"><span data-i18n="tableTitle">Transações</span> <span id="filter-summary" style="font-weight:400;color:var(--c-text-muted);font-size:12px;"></span></div>
+      <input type="text" class="table-search" placeholder="Buscar por usuário, merchant…" data-i18n-placeholder="searchPlaceholder" id="search-input" oninput="onSearchInput()">
     </div>
     <div id="table-container">
       <table class="ramp-table">
         <thead>
           <tr>
-            <th data-sort="date">Data</th>
-            <th data-sort="user">Usuário</th>
-            <th data-sort="country">País</th>
-            <th data-sort="category">Categoria</th>
-            <th data-sort="merchant">Estabelecimento</th>
-            <th data-sort="amount" style="text-align:right;">Valor</th>
+            <th data-sort="date" data-i18n="colDate">Data</th>
+            <th data-sort="user" data-i18n="colUser">Usuário</th>
+            <th data-sort="country" data-i18n="colCountry">País</th>
+            <th data-sort="category" data-i18n="colCategory">Categoria</th>
+            <th data-sort="merchant" data-i18n="colMerchant">Estabelecimento</th>
+            <th data-sort="amount" style="text-align:right;" data-i18n="colAmount">Valor</th>
           </tr>
         </thead>
         <tbody id="table-body"></tbody>
@@ -1171,26 +1183,26 @@
       <!-- 4 mini-scorecards do driver -->
       <div class="panel-scorecards">
         <div class="panel-card">
-          <div class="panel-card-label">Total gasto</div>
+          <div class="panel-card-label" data-i18n="panelTotal">Total gasto</div>
           <div class="panel-card-value" id="panel-driver-total">—</div>
         </div>
         <div class="panel-card">
-          <div class="panel-card-label">Transações</div>
+          <div class="panel-card-label" data-i18n="panelCount">Transações</div>
           <div class="panel-card-value" id="panel-driver-count">—</div>
         </div>
         <div class="panel-card">
-          <div class="panel-card-label">Categoria principal</div>
+          <div class="panel-card-label" data-i18n="panelTopCat">Categoria principal</div>
           <div class="panel-card-value" id="panel-driver-topcat" style="font-size:14px;">—</div>
         </div>
         <div class="panel-card">
-          <div class="panel-card-label">Média/transação</div>
+          <div class="panel-card-label" data-i18n="panelAvg">Média/transação</div>
           <div class="panel-card-value" id="panel-driver-avg">—</div>
         </div>
       </div>
 
       <!-- Donut categorias do driver -->
       <div class="panel-section">
-        <div class="panel-section-title">Categorias de gasto</div>
+        <div class="panel-section-title" data-i18n="panelCatSection">Categorias de gasto</div>
         <div class="panel-canvas-wrap">
           <canvas id="panel-cat-chart"></canvas>
         </div>
@@ -1199,7 +1211,7 @@
       <!-- Tabela compacta de transações -->
       <div class="panel-section">
         <div class="panel-section-title">
-          Últimas transações
+          <span data-i18n="panelTxSection">Últimas transações</span>
           <span id="panel-tx-count" style="font-weight:400;color:var(--c-text-muted);font-size:11px;"></span>
         </div>
         <div class="panel-tx-list" id="panel-tx-list"></div>
@@ -1207,18 +1219,466 @@
 
       <!-- Botão pra fechar e filtrar a página principal -->
       <div class="panel-actions">
-        <button class="panel-action-btn primary" onclick="filterPageByPanelDriver()">📋 Filtrar página por este motorista</button>
+        <button class="panel-action-btn primary" onclick="filterPageByPanelDriver()" data-i18n="panelFilterAction">📋 Filtrar página por este motorista</button>
       </div>
     </div>
   </aside>
 
   <footer>
     <img src="https://d1hbpr09pwz0sk.cloudfront.net/logo_url/aceolution-0c2d8724" alt="Aceolution" style="height:24px;opacity:0.6;" onerror="this.style.display='none'"><br>
-    Aceolution do Brasil Ltda. · Ramp Expenses Dashboard
+    <span data-i18n="footer">Aceolution do Brasil Ltda. · Ramp Expenses Dashboard</span>
   </footer>
 </div>
 
 <script>
+// ================================================================
+// I18N — Sistema de tradução (PT/ES/EN)
+// ================================================================
+// Strings tagged com data-i18n="key" no HTML são preenchidas via applyI18n().
+// Strings dinâmicas (geradas em JS) usam t('key').
+// O idioma é persistido em localStorage (mesma chave do dashboard).
+const I18N = {
+  pt: {
+    // Header
+    navDashboard: '← Dashboard ops',
+    refreshBtn: '⟳ Atualizar',
+    loginProduct: 'RAMP EXPENSES',
+    loginTitle: 'Login',
+    loginSubtitle: 'Acesse com suas credenciais',
+    loginUser: 'Usuário',
+    loginPass: 'Senha',
+    loginButton: 'Entrar',
+    loginError: 'Usuário ou senha inválidos.',
+    loginFillFields: 'Preencha usuário e senha.',
+    loginValidateError: 'Erro ao validar credenciais.',
+    loading: 'Carregando dados…',
+    loadingPeriod: 'Carregando',
+
+    // Filtros
+    filterCountry: 'País:',
+    filterPeriod: 'Período:',
+    filterDrivers: 'Motoristas:',
+    filterCategories: 'Categorias:',
+    all: 'Todos',
+    allFem: 'Todas',
+    currentMonth: 'Mês atual',
+    customRange: 'Range custom',
+    rangeFrom: 'De:',
+    rangeTo: 'Até:',
+    rangeInvalid: 'A data "De" deve ser anterior a "Até"',
+    cancel: 'Cancelar',
+    apply: 'Aplicar',
+    selectAll: 'Selecionar todos',
+    clearAll: 'Limpar',
+    resetFilters: '↺ Reset filtros',
+    searchPlaceholder: 'Buscar por usuário, merchant…',
+    searchDriverPlaceholder: 'Buscar motorista...',
+    nDrivers: 'motoristas',
+    nDriversSel: 'selecionados',
+    nCatsSel: 'selecionadas',
+    selSingle: 'selecionado',
+    selPlural: 'selecionados',
+
+    // Scorecards
+    scTotal: 'TOTAL DE GASTOS',
+    scTransactions: 'TRANSAÇÕES',
+    scTopCategory: 'TOP CATEGORIA',
+    scTopUser: 'TOP USUÁRIO',
+    scAvg: 'Média',
+    scPerTx: '/transação',
+    scAllCountries: 'todos países',
+    scNoData: 'sem dados',
+    scOfTotal: 'do total',
+    scInPeriod: 'no período',
+    scIdentified: 'identificados',
+    scNoMatch: 'sem match',
+    scViaCard: 'via cartão',
+    scViaName: 'via nome',
+    scIdentifiedAll: 'identificados via cartão ✓',
+
+    // Charts
+    chartCategories: 'Categorias',
+    chartTopDrivers: 'Top motoristas',
+    chartCompareDrivers: 'Comparação por motorista',
+    chartCompareSub: 'Use o seletor → e compare com os totais acima',
+    modeValue: '$ Valor',
+    modeCount: '# Qtd',
+    chartByValue: '(por valor)',
+    chartByCount: '(por quantidade)',
+    chartTotal: 'Total',
+    chartCategoriesCount: 'categorias',
+    chartTransactions: 'transações',
+    chartNoDataPeriod: 'Sem dados no período',
+    chartTopOf: 'Top {n} de {total} motoristas',
+    chartAllDrivers: '(todos os motoristas)',
+    chartXDrivers: '({n} motoristas)',
+    chartByCategoryAmount: 'Distribuição de $ por categoria',
+    chartByCategoryCount: 'Distribuição de transações por categoria',
+    chartDriverCatsAmount: 'Categorias de gasto desse motorista',
+    chartDriverCatsCount: 'Categorias de transações desse motorista',
+    chartCombination: 'Combinação de {n} motoristas selecionados',
+    chartGranularity: 'Granularidade',
+    chartGranDay: 'dia',
+    chartGranWeek: 'semana',
+    chartPoints: 'pontos',
+    chartValueLabel: 'Valor ($)',
+    othersDetail: 'Detalhamento de "Outros"',
+
+    // Drill breadcrumb
+    drillFiltered: 'Filtrado por:',
+    drillCategory: 'Categoria',
+    drillDriver: 'Motorista',
+
+    // Tabela
+    tableTitle: 'Transações',
+    colDate: 'Data',
+    colUser: 'Usuário',
+    colCountry: 'País',
+    colCategory: 'Categoria',
+    colMerchant: 'Estabelecimento',
+    colAmount: 'Valor',
+    tableShowing: 'Mostrando',
+    tableOf: 'de',
+    tableTransactions: 'transações',
+    tableShowMore: '+ Ver mais {n}',
+    tableShowAll: 'Ver todas ({n})',
+    tableCollapse: '↑ Recolher',
+    tableEmptyTitle: 'Nenhuma transação no período/filtros aplicados',
+    tableSearch: 'busca',
+    matchByName: '~nome',
+    matchByNameTitle: 'Cartão não cadastrado na HR — match feito apenas por nome (menor confiabilidade)',
+    matchNone: '?',
+    matchNoneTitle: 'Driver não identificado: cartão e nome não batem com a HR Database',
+    matchInactive: 'ex',
+    matchInactiveTitle: 'Ex-funcionário',
+
+    // Painel
+    panelTotal: 'Total gasto',
+    panelCount: 'Transações',
+    panelTopCat: 'Categoria principal',
+    panelAvg: 'Média/transação',
+    panelCatSection: 'Categorias de gasto',
+    panelTxSection: 'Últimas transações',
+    panelInPeriod: 'no período',
+    panelFilterAction: '📋 Filtrar página por este motorista',
+    panelNoEmail: 'sem email',
+    panelCard: 'Cartão ****',
+    multiEmpty: 'Nenhum motorista no período',
+    multiEmptyCat: 'Nenhuma categoria no período',
+
+    // Footer
+    footer: 'Aceolution do Brasil Ltda. · Ramp Expenses Dashboard',
+
+    // Errors
+    errorFetch: 'Erro ao buscar dados Ramp:',
+  },
+
+  es: {
+    navDashboard: '← Dashboard ops',
+    refreshBtn: '⟳ Actualizar',
+    loginProduct: 'RAMP EXPENSES',
+    loginTitle: 'Iniciar sesión',
+    loginSubtitle: 'Accede con tus credenciales',
+    loginUser: 'Usuario',
+    loginPass: 'Contraseña',
+    loginButton: 'Entrar',
+    loginError: 'Usuario o contraseña inválidos.',
+    loginFillFields: 'Completa usuario y contraseña.',
+    loginValidateError: 'Error al validar credenciales.',
+    loading: 'Cargando datos…',
+    loadingPeriod: 'Cargando',
+
+    filterCountry: 'País:',
+    filterPeriod: 'Período:',
+    filterDrivers: 'Conductores:',
+    filterCategories: 'Categorías:',
+    all: 'Todos',
+    allFem: 'Todas',
+    currentMonth: 'Mes actual',
+    customRange: 'Rango personalizado',
+    rangeFrom: 'Desde:',
+    rangeTo: 'Hasta:',
+    rangeInvalid: 'La fecha "Desde" debe ser anterior a "Hasta"',
+    cancel: 'Cancelar',
+    apply: 'Aplicar',
+    selectAll: 'Seleccionar todos',
+    clearAll: 'Limpiar',
+    resetFilters: '↺ Resetear filtros',
+    searchPlaceholder: 'Buscar por usuario, comercio…',
+    searchDriverPlaceholder: 'Buscar conductor...',
+    nDrivers: 'conductores',
+    nDriversSel: 'seleccionados',
+    nCatsSel: 'seleccionadas',
+    selSingle: 'seleccionado',
+    selPlural: 'seleccionados',
+
+    scTotal: 'TOTAL DE GASTOS',
+    scTransactions: 'TRANSACCIONES',
+    scTopCategory: 'TOP CATEGORÍA',
+    scTopUser: 'TOP USUARIO',
+    scAvg: 'Promedio',
+    scPerTx: '/transacción',
+    scAllCountries: 'todos países',
+    scNoData: 'sin datos',
+    scOfTotal: 'del total',
+    scInPeriod: 'en el período',
+    scIdentified: 'identificados',
+    scNoMatch: 'sin match',
+    scViaCard: 'vía tarjeta',
+    scViaName: 'vía nombre',
+    scIdentifiedAll: 'identificados vía tarjeta ✓',
+
+    chartCategories: 'Categorías',
+    chartTopDrivers: 'Top conductores',
+    chartCompareDrivers: 'Comparación por conductor',
+    chartCompareSub: 'Usa el selector → y compara con los totales arriba',
+    modeValue: '$ Valor',
+    modeCount: '# Cant.',
+    chartByValue: '(por valor)',
+    chartByCount: '(por cantidad)',
+    chartTotal: 'Total',
+    chartCategoriesCount: 'categorías',
+    chartTransactions: 'transacciones',
+    chartNoDataPeriod: 'Sin datos en el período',
+    chartTopOf: 'Top {n} de {total} conductores',
+    chartAllDrivers: '(todos los conductores)',
+    chartXDrivers: '({n} conductores)',
+    chartByCategoryAmount: 'Distribución de $ por categoría',
+    chartByCategoryCount: 'Distribución de transacciones por categoría',
+    chartDriverCatsAmount: 'Categorías de gasto de este conductor',
+    chartDriverCatsCount: 'Categorías de transacciones de este conductor',
+    chartCombination: 'Combinación de {n} conductores seleccionados',
+    chartGranularity: 'Granularidad',
+    chartGranDay: 'día',
+    chartGranWeek: 'semana',
+    chartPoints: 'puntos',
+    chartValueLabel: 'Valor ($)',
+    othersDetail: 'Detalle de "Otros"',
+
+    drillFiltered: 'Filtrado por:',
+    drillCategory: 'Categoría',
+    drillDriver: 'Conductor',
+
+    tableTitle: 'Transacciones',
+    colDate: 'Fecha',
+    colUser: 'Usuario',
+    colCountry: 'País',
+    colCategory: 'Categoría',
+    colMerchant: 'Comercio',
+    colAmount: 'Valor',
+    tableShowing: 'Mostrando',
+    tableOf: 'de',
+    tableTransactions: 'transacciones',
+    tableShowMore: '+ Ver más {n}',
+    tableShowAll: 'Ver todas ({n})',
+    tableCollapse: '↑ Plegar',
+    tableEmptyTitle: 'Sin transacciones en el período/filtros aplicados',
+    tableSearch: 'búsqueda',
+    matchByName: '~nombre',
+    matchByNameTitle: 'Tarjeta no registrada en HR — match solo por nombre (menor confiabilidad)',
+    matchNone: '?',
+    matchNoneTitle: 'Conductor no identificado: tarjeta y nombre no coinciden con HR',
+    matchInactive: 'ex',
+    matchInactiveTitle: 'Ex-empleado',
+
+    panelTotal: 'Total gastado',
+    panelCount: 'Transacciones',
+    panelTopCat: 'Categoría principal',
+    panelAvg: 'Promedio/transacción',
+    panelCatSection: 'Categorías de gasto',
+    panelTxSection: 'Últimas transacciones',
+    panelInPeriod: 'en el período',
+    panelFilterAction: '📋 Filtrar página por este conductor',
+    panelNoEmail: 'sin email',
+    panelCard: 'Tarjeta ****',
+    multiEmpty: 'Sin conductores en el período',
+    multiEmptyCat: 'Sin categorías en el período',
+
+    footer: 'Aceolution do Brasil Ltda. · Ramp Expenses Dashboard',
+
+    errorFetch: 'Error al obtener datos Ramp:',
+  },
+
+  en: {
+    navDashboard: '← Ops Dashboard',
+    refreshBtn: '⟳ Refresh',
+    loginProduct: 'RAMP EXPENSES',
+    loginTitle: 'Login',
+    loginSubtitle: 'Sign in with your credentials',
+    loginUser: 'Username',
+    loginPass: 'Password',
+    loginButton: 'Sign in',
+    loginError: 'Invalid username or password.',
+    loginFillFields: 'Fill in username and password.',
+    loginValidateError: 'Error validating credentials.',
+    loading: 'Loading data…',
+    loadingPeriod: 'Loading',
+
+    filterCountry: 'Country:',
+    filterPeriod: 'Period:',
+    filterDrivers: 'Drivers:',
+    filterCategories: 'Categories:',
+    all: 'All',
+    allFem: 'All',
+    currentMonth: 'Current month',
+    customRange: 'Custom range',
+    rangeFrom: 'From:',
+    rangeTo: 'To:',
+    rangeInvalid: '"From" date must be before "To"',
+    cancel: 'Cancel',
+    apply: 'Apply',
+    selectAll: 'Select all',
+    clearAll: 'Clear',
+    resetFilters: '↺ Reset filters',
+    searchPlaceholder: 'Search by user, merchant…',
+    searchDriverPlaceholder: 'Search driver...',
+    nDrivers: 'drivers',
+    nDriversSel: 'selected',
+    nCatsSel: 'selected',
+    selSingle: 'selected',
+    selPlural: 'selected',
+
+    scTotal: 'TOTAL SPEND',
+    scTransactions: 'TRANSACTIONS',
+    scTopCategory: 'TOP CATEGORY',
+    scTopUser: 'TOP USER',
+    scAvg: 'Avg',
+    scPerTx: '/transaction',
+    scAllCountries: 'all countries',
+    scNoData: 'no data',
+    scOfTotal: 'of total',
+    scInPeriod: 'in period',
+    scIdentified: 'identified',
+    scNoMatch: 'no match',
+    scViaCard: 'via card',
+    scViaName: 'via name',
+    scIdentifiedAll: 'identified via card ✓',
+
+    chartCategories: 'Categories',
+    chartTopDrivers: 'Top drivers',
+    chartCompareDrivers: 'Driver comparison',
+    chartCompareSub: 'Use selector → to compare with totals above',
+    modeValue: '$ Value',
+    modeCount: '# Count',
+    chartByValue: '(by value)',
+    chartByCount: '(by count)',
+    chartTotal: 'Total',
+    chartCategoriesCount: 'categories',
+    chartTransactions: 'transactions',
+    chartNoDataPeriod: 'No data in period',
+    chartTopOf: 'Top {n} of {total} drivers',
+    chartAllDrivers: '(all drivers)',
+    chartXDrivers: '({n} drivers)',
+    chartByCategoryAmount: '$ distribution by category',
+    chartByCategoryCount: 'Transaction distribution by category',
+    chartDriverCatsAmount: 'Spend categories of this driver',
+    chartDriverCatsCount: 'Transaction categories of this driver',
+    chartCombination: 'Combination of {n} selected drivers',
+    chartGranularity: 'Granularity',
+    chartGranDay: 'day',
+    chartGranWeek: 'week',
+    chartPoints: 'points',
+    chartValueLabel: 'Value ($)',
+    othersDetail: '"Others" details',
+
+    drillFiltered: 'Filtered by:',
+    drillCategory: 'Category',
+    drillDriver: 'Driver',
+
+    tableTitle: 'Transactions',
+    colDate: 'Date',
+    colUser: 'User',
+    colCountry: 'Country',
+    colCategory: 'Category',
+    colMerchant: 'Merchant',
+    colAmount: 'Amount',
+    tableShowing: 'Showing',
+    tableOf: 'of',
+    tableTransactions: 'transactions',
+    tableShowMore: '+ Show {n} more',
+    tableShowAll: 'Show all ({n})',
+    tableCollapse: '↑ Collapse',
+    tableEmptyTitle: 'No transactions in the applied period/filters',
+    tableSearch: 'search',
+    matchByName: '~name',
+    matchByNameTitle: 'Card not in HR — matched only by name (lower confidence)',
+    matchNone: '?',
+    matchNoneTitle: 'Driver not identified: card and name don\'t match HR Database',
+    matchInactive: 'ex',
+    matchInactiveTitle: 'Former employee',
+
+    panelTotal: 'Total spent',
+    panelCount: 'Transactions',
+    panelTopCat: 'Top category',
+    panelAvg: 'Avg/transaction',
+    panelCatSection: 'Spend categories',
+    panelTxSection: 'Recent transactions',
+    panelInPeriod: 'in period',
+    panelFilterAction: '📋 Filter page by this driver',
+    panelNoEmail: 'no email',
+    panelCard: 'Card ****',
+    multiEmpty: 'No drivers in period',
+    multiEmptyCat: 'No categories in period',
+
+    footer: 'Aceolution do Brasil Ltda. · Ramp Expenses Dashboard',
+
+    errorFetch: 'Error fetching Ramp data:',
+  },
+};
+
+let currentLang = localStorage.getItem('dashboardLang') || 'pt';
+
+function t(key, params) {
+  const lang = I18N[currentLang] || I18N.pt;
+  let text = lang[key] != null ? lang[key] : (I18N.pt[key] != null ? I18N.pt[key] : key);
+  // Substitui {placeholders} se params for objeto
+  if (params && typeof text === 'string') {
+    Object.keys(params).forEach(k => {
+      text = text.replace(new RegExp('\\{' + k + '\\}', 'g'), params[k]);
+    });
+  }
+  return text;
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    el.placeholder = t(key);
+  });
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : currentLang;
+}
+
+function setLanguage(lang) {
+  if (!I18N[lang]) return;
+  currentLang = lang;
+  localStorage.setItem('dashboardLang', lang);
+  document.querySelectorAll('.lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  applyI18n();
+  // Re-renderiza conteúdo dinâmico (charts, tabela, scorecards) se já carregou
+  if (state.transactions && state.transactions.length) {
+    populateDriverList();
+    populateCategoryList();
+    populateChartDriverList();
+    updateChartDriverLabel();
+    applyFiltersAndRender();
+  }
+}
+
+// Wire up dos botões de idioma assim que carrega
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.lang-switch button').forEach(btn => {
+    btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
+  applyI18n();
+});
+
 // ================================================================
 // LOGIN (SHA-256, mesmas credenciais do dashboard principal)
 // ================================================================
@@ -1244,7 +1704,7 @@ async function doLogin() {
   errEl.classList.remove('show');
 
   if (!username || !password) {
-    errEl.textContent = 'Preencha usuário e senha.';
+    errEl.textContent = t('loginFillFields');
     errEl.classList.add('show');
     return;
   }
@@ -1255,7 +1715,7 @@ async function doLogin() {
       u.username.toLowerCase() === username && u.passwordHash === passwordHash
     );
     if (!user) {
-      errEl.textContent = 'Usuário ou senha inválidos.';
+      errEl.textContent = t('loginError');
       errEl.classList.add('show');
       return;
     }
@@ -1266,7 +1726,7 @@ async function doLogin() {
       `<span>👤 ${user.fullName}</span><button class="logout-btn" onclick="doLogout()" title="Sair">✕</button>`;
     initApp();
   } catch (err) {
-    errEl.textContent = 'Erro ao validar credenciais.';
+    errEl.textContent = t('loginValidateError');
     errEl.classList.add('show');
     console.error(err);
   }
@@ -1320,7 +1780,6 @@ let state = {
   catChartMode: 'amount',      // donut categorias
   driversChartMode: 'amount',  // barras top drivers
   driverChartMode: 'amount',   // chart de comparação driver
-  trendChartMode: 'amount',    // tendência temporal
 
   // Driver selecionado no painel lateral (drill via click no chart)
   panelDriverKey: null,
@@ -1330,7 +1789,6 @@ let state = {
 let chartCategories = null;
 let chartTopDrivers = null;
 let chartByDriver = null;
-let chartTrend = null;
 let chartPanelCat = null;
 
 // Constantes
@@ -1364,7 +1822,7 @@ function getPeriodRange() {
 
 async function loadRampData() {
   const { start, end } = getPeriodRange();
-  showLoader(true, `Carregando ${start} → ${end}…`);
+  showLoader(true, `${t('loadingPeriod')} ${start} → ${end}…`);
 
   try {
     const url = `${CONFIG.scriptUrl}?action=getRampData&startDate=${start}&endDate=${end}`;
@@ -1375,7 +1833,7 @@ async function loadRampData() {
 
     // Atualiza info de período
     document.getElementById('period-info').textContent =
-      `${formatDateBR(start)} → ${formatDateBR(end)}  ·  ${state.transactions.length} transações`;
+      `${formatDateBR(start)} → ${formatDateBR(end)}  ·  ${state.transactions.length} ${t('chartTransactions')}`;
 
     // Popula listas dos multi-selects (drivers + categorias) com base nos dados
     populateDriverList();
@@ -1387,7 +1845,7 @@ async function loadRampData() {
     applyFiltersAndRender();
   } catch (err) {
     console.error('Erro ao buscar Ramp:', err);
-    alert('Erro ao buscar dados Ramp: ' + err.message);
+    alert(t('errorFetch') + ' ' + err.message);
     state.transactions = [];
     applyFiltersAndRender();
   } finally {
@@ -1443,7 +1901,7 @@ function applyCustomRange() {
 
   if (!start || !end) return;
   if (start > end) {
-    alert('A data "De" deve ser anterior a "Até"');
+    alert(t('rangeInvalid'));
     return;
   }
 
@@ -1599,12 +2057,12 @@ function updateDrillBreadcrumb() {
   }
 
   let parts = [];
-  if (drill.category) parts.push(`Categoria: ${drill.category}`);
+  if (drill.category) parts.push(`${t('drillCategory')}: ${drill.category}`);
   if (drill.driver) {
     // Acha nome do driver
-    const t = state.transactions.find(x => (x.driverEmail || x.user) === drill.driver);
-    const name = t ? (t.driverName || t.user || drill.driver) : drill.driver;
-    parts.push(`Motorista: ${name}`);
+    const tx = state.transactions.find(x => (x.driverEmail || x.user) === drill.driver);
+    const name = tx ? (tx.driverName || tx.user || drill.driver) : drill.driver;
+    parts.push(`${t('drillDriver')}: ${name}`);
   }
   valueEl.textContent = parts.join('  ·  ');
   bar.style.display = '';
@@ -1639,7 +2097,7 @@ function renderScorecards(filtered) {
   // Update DOM
   document.getElementById('sc-total').textContent = '$' + Math.round(totalAmount).toLocaleString();
   document.getElementById('sc-total-sub').innerHTML =
-    `Média: <strong>$${count > 0 ? (totalAmount / count).toFixed(0) : 0}</strong>/transação`;
+    `${t('scAvg')}: <strong>$${count > 0 ? (totalAmount / count).toFixed(0) : 0}</strong>${t('scPerTx')}`;
 
   document.getElementById('sc-count').textContent = count.toLocaleString();
   // Stats de match: quantos foram identificados por cartão (alta confiança)
@@ -1650,11 +2108,11 @@ function renderScorecards(filtered) {
   if (count > 0) {
     const cardPct = Math.round(byCard * 100 / count);
     if (noMatch > 0) {
-      matchSubText = `<strong>${cardPct}%</strong> identificados · <strong style="color:#DC2626">${noMatch}</strong> sem match`;
+      matchSubText = `<strong>${cardPct}%</strong> ${t('scIdentified')} · <strong style="color:#DC2626">${noMatch}</strong> ${t('scNoMatch')}`;
     } else if (byName > 0) {
-      matchSubText = `<strong>${cardPct}%</strong> via cartão · ${byName} via nome`;
+      matchSubText = `<strong>${cardPct}%</strong> ${t('scViaCard')} · ${byName} ${t('scViaName')}`;
     } else {
-      matchSubText = `<strong>100%</strong> identificados via cartão ✓`;
+      matchSubText = `<strong>100%</strong> ${t('scIdentifiedAll')}`;
     }
   }
   document.getElementById('sc-count-sub').innerHTML = matchSubText || '—';
@@ -1662,19 +2120,19 @@ function renderScorecards(filtered) {
   if (topCat) {
     document.getElementById('sc-cat').textContent = topCat[0];
     document.getElementById('sc-cat-sub').innerHTML =
-      `<strong>$${Math.round(topCat[1]).toLocaleString()}</strong> · ${((topCat[1]/totalAmount)*100).toFixed(0)}% do total`;
+      `<strong>$${Math.round(topCat[1]).toLocaleString()}</strong> · ${((topCat[1]/totalAmount)*100).toFixed(0)}% ${t('scOfTotal')}`;
   } else {
     document.getElementById('sc-cat').textContent = '—';
-    document.getElementById('sc-cat-sub').textContent = 'sem dados';
+    document.getElementById('sc-cat-sub').textContent = t('scNoData');
   }
 
   if (topUser) {
     document.getElementById('sc-user').textContent = topUser[0];
     document.getElementById('sc-user-sub').innerHTML =
-      `<strong>$${Math.round(topUser[1]).toLocaleString()}</strong> no período`;
+      `<strong>$${Math.round(topUser[1]).toLocaleString()}</strong> ${t('scInPeriod')}`;
   } else {
     document.getElementById('sc-user').textContent = '—';
-    document.getElementById('sc-user-sub').textContent = 'sem dados';
+    document.getElementById('sc-user-sub').textContent = t('scNoData');
   }
 }
 
@@ -1683,7 +2141,7 @@ function renderTable(filtered) {
   const footer = document.getElementById('table-footer');
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="ic">💸</div>Nenhuma transação no período/filtros aplicados</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="ic">💸</div>${t('tableEmptyTitle')}</div></td></tr>`;
     footer.style.display = 'none';
     return;
   }
@@ -1705,8 +2163,8 @@ function renderTable(filtered) {
   const amounts = sorted.map(t => t.amount).filter(a => a > 0).sort((a, b) => b - a);
   const highThreshold = amounts.length > 10 ? amounts[Math.floor(amounts.length * 0.1)] : Infinity;
 
-  tbody.innerHTML = visible.map(t => {
-    const catSlug = (t.category || 'other').toLowerCase().replace(/[^a-z]/g, '').slice(0, 12);
+  tbody.innerHTML = visible.map(tx => {
+    const catSlug = (tx.category || 'other').toLowerCase().replace(/[^a-z]/g, '').slice(0, 12);
     let catClass = 'cat-other';
     if (catSlug.includes('fuel')) catClass = 'cat-fuel';
     else if (catSlug.includes('restaurant')) catClass = 'cat-restaurants';
@@ -1716,20 +2174,20 @@ function renderTable(filtered) {
     else if (catSlug.includes('travel')) catClass = 'cat-travel';
     else if (catSlug.includes('taxi') || catSlug.includes('rideshare')) catClass = 'cat-taxi';
 
-    const isHigh = t.amount >= highThreshold;
-    const country = t.country || '—';
+    const isHigh = tx.amount >= highThreshold;
+    const country = tx.country || '—';
 
     return `<tr>
-      <td class="col-date">${formatDateBR(t.date)}</td>
+      <td class="col-date">${formatDateBR(tx.date)}</td>
       <td class="col-user">
-        ${escapeHtml(t.driverName || t.user || '—')}
-        ${renderMatchBadge(t.matchSource)}
-        ${!t.driverActive && t.driverEmail ? '<span class="inactive-badge" title="Ex-funcionário">ex</span>' : ''}
+        ${escapeHtml(tx.driverName || tx.user || '—')}
+        ${renderMatchBadge(tx.matchSource)}
+        ${!tx.driverActive && tx.driverEmail ? '<span class="inactive-badge" title="' + t('matchInactiveTitle') + '">' + t('matchInactive') + '</span>' : ''}
       </td>
       <td><span class="country-badge">${escapeHtml(country)}</span></td>
-      <td><span class="category-badge ${catClass}">${escapeHtml(t.category || 'Other')}</span></td>
-      <td class="col-merchant">${escapeHtml(t.merchant || '—')}</td>
-      <td class="col-amount ${isHigh ? 'high' : ''}">$${(t.amount || 0).toFixed(2)}</td>
+      <td><span class="category-badge ${catClass}">${escapeHtml(tx.category || 'Other')}</span></td>
+      <td class="col-merchant">${escapeHtml(tx.merchant || '—')}</td>
+      <td class="col-amount ${isHigh ? 'high' : ''}">$${(tx.amount || 0).toFixed(2)}</td>
     </tr>`;
   }).join('');
 
@@ -1737,9 +2195,9 @@ function renderTable(filtered) {
   footer.style.display = '';
   const countEl = document.getElementById('table-count');
   if (limit >= total) {
-    countEl.innerHTML = `<strong>${total}</strong> transações`;
+    countEl.innerHTML = `<strong>${total}</strong> ${t('tableTransactions')}`;
   } else {
-    countEl.innerHTML = `Mostrando <strong>${limit}</strong> de <strong>${total}</strong> transações`;
+    countEl.innerHTML = `${t('tableShowing')} <strong>${limit}</strong> ${t('tableOf')} <strong>${total}</strong> ${t('tableTransactions')}`;
   }
 
   const btnMore = document.getElementById('show-more-btn');
@@ -1752,9 +2210,9 @@ function renderTable(filtered) {
     btnCollapse.style.display = total > 25 ? '' : 'none';
   } else {
     btnMore.style.display = '';
-    btnMore.textContent = `+ Ver mais ${Math.min(25, total - limit)}`;
+    btnMore.textContent = t('tableShowMore', { n: Math.min(25, total - limit) });
     btnAll.style.display = '';
-    btnAll.textContent = `Ver todas (${total})`;
+    btnAll.textContent = t('tableShowAll', { n: total });
     btnCollapse.style.display = limit > 25 ? '' : 'none';
   }
 }
@@ -1762,9 +2220,9 @@ function renderTable(filtered) {
 function updateFilterSummary(filtered) {
   let parts = [];
   if (state.filter.country !== 'all') parts.push(state.filter.country);
-  if (state.filter.search) parts.push(`busca: "${state.filter.search}"`);
-  if (state.filter.drivers.length > 0) parts.push(`${state.filter.drivers.length} motorista${state.filter.drivers.length > 1 ? 's' : ''}`);
-  if (state.filter.categories.length > 0) parts.push(`${state.filter.categories.length} categoria${state.filter.categories.length > 1 ? 's' : ''}`);
+  if (state.filter.search) parts.push(`${t('tableSearch')}: "${state.filter.search}"`);
+  if (state.filter.drivers.length > 0) parts.push(`${state.filter.drivers.length} ${t('nDrivers')}`);
+  if (state.filter.categories.length > 0) parts.push(`${state.filter.categories.length} ${t('chartCategoriesCount')}`);
   document.getElementById('filter-summary').textContent = parts.length > 0 ? `· ${parts.join(' · ')}` : '';
 }
 
@@ -1804,7 +2262,7 @@ function populateDriverList() {
   const list = document.getElementById('driver-list');
   if (!list) return;
   if (drivers.length === 0) {
-    list.innerHTML = '<div class="multi-empty">Nenhum motorista no período</div>';
+    list.innerHTML = '<div class="multi-empty">' + t('multiEmpty') + '</div>';
     return;
   }
   list.innerHTML = drivers.map(d => {
@@ -1829,7 +2287,7 @@ function populateCategoryList() {
 
   const list = document.getElementById('category-list');
   if (cats.length === 0) {
-    list.innerHTML = '<div class="multi-empty">Nenhuma categoria no período</div>';
+    list.innerHTML = '<div class="multi-empty">' + t('multiEmptyCat') + '</div>';
     return;
   }
 
@@ -1959,17 +2417,17 @@ function updateMultiSelectLabels() {
 
   let driverLabelText, hasSelection;
   if (state.filter.drivers.length === 0) {
-    driverLabelText = 'Todos';
+    driverLabelText = t('all');
     hasSelection = false;
   } else if (state.filter.drivers.length === 1) {
     // Acha nome do driver pelo email/key
     const key = state.filter.drivers[0];
-    const t = state.transactions.find(x => (x.driverEmail || x.user) === key);
-    const name = t ? (t.driverName || t.user || key) : key;
+    const tx = state.transactions.find(x => (x.driverEmail || x.user) === key);
+    const name = tx ? (tx.driverName || tx.user || key) : key;
     driverLabelText = name.length > 20 ? name.slice(0, 20) + '…' : name;
     hasSelection = true;
   } else {
-    driverLabelText = `${state.filter.drivers.length} selecionados`;
+    driverLabelText = `${state.filter.drivers.length} ${t('nDriversSel')}`;
     hasSelection = true;
   }
 
@@ -1979,13 +2437,13 @@ function updateMultiSelectLabels() {
   const cToggle = document.getElementById('category-toggle');
   const cLabel = document.getElementById('category-toggle-label');
   if (state.filter.categories.length === 0) {
-    cLabel.textContent = 'Todas';
+    cLabel.textContent = t('allFem');
     cToggle.classList.remove('has-selection');
   } else if (state.filter.categories.length === 1) {
     cLabel.textContent = state.filter.categories[0];
     cToggle.classList.add('has-selection');
   } else {
-    cLabel.textContent = `${state.filter.categories.length} selecionadas`;
+    cLabel.textContent = `${state.filter.categories.length} ${t('nCatsSel')}`;
     cToggle.classList.add('has-selection');
   }
 }
@@ -2027,7 +2485,6 @@ function renderCharts(filtered) {
   renderCategoriesChart(filtered);
   renderTopDriversChart(filtered);
   renderByDriverChart(filtered);  // usa state.chartDriversFilter, não o filtro principal
-  renderTrendChart(filtered);
 }
 
 /**
@@ -2084,19 +2541,19 @@ function renderCategoriesChart(filtered) {
   const subEl = document.getElementById('chart-cat-sub');
   if (subEl) {
     if (entries.length === 0 || total === 0) {
-      subEl.textContent = 'Sem dados no período';
+      subEl.textContent = t('chartNoDataPeriod');
     } else {
       const totalStr = isAmountMode
         ? `$${Math.round(total).toLocaleString()}`
-        : `${total.toLocaleString()} transações`;
-      const totalCats = filtered.reduce((s, t) => s.add(t.category || 'Other'), new Set()).size;
-      subEl.textContent = `Total: ${totalStr}  ·  ${totalCats} categorias`;
+        : `${total.toLocaleString()} ${t('chartTransactions')}`;
+      const totalCats = filtered.reduce((s, tx) => s.add(tx.category || 'Other'), new Set()).size;
+      subEl.textContent = `${t('chartTotal')}: ${totalStr}  ·  ${totalCats} ${t('chartCategoriesCount')}`;
     }
   }
 
   // Atualiza label do mode
   const modeLabel = document.getElementById('chart-cat-mode-label');
-  if (modeLabel) modeLabel.textContent = isAmountMode ? '(por valor)' : '(por quantidade)';
+  if (modeLabel) modeLabel.textContent = isAmountMode ? t('chartByValue') : t('chartByCount');
 
   const labels = entries.map(e => e.label);
   const data = entries.map(e => e.value);
@@ -2200,13 +2657,13 @@ function renderTopDriversChart(filtered) {
   const subEl = document.getElementById('chart-drivers-sub');
   if (subEl) {
     if (top10.length === 0) {
-      subEl.textContent = 'Sem dados no período';
+      subEl.textContent = t('chartNoDataPeriod');
     } else {
-      subEl.textContent = `Top ${top10.length} de ${totalDrivers} motoristas`;
+      subEl.textContent = t('chartTopOf', { n: top10.length, total: totalDrivers });
     }
   }
   const modeLabel = document.getElementById('chart-drivers-mode-label');
-  if (modeLabel) modeLabel.textContent = isAmountMode ? '(por valor)' : '(por quantidade)';
+  if (modeLabel) modeLabel.textContent = isAmountMode ? t('chartByValue') : t('chartByCount');
 
   const labels = top10.map(d => d.name);
   const data = top10.map(d => isAmountMode ? d.amount : d.count);
@@ -2217,7 +2674,7 @@ function renderTopDriversChart(filtered) {
   if (top10.length === 0) {
     chartTopDrivers = new Chart(ctx, {
       type: 'bar',
-      data: { labels: ['Sem dados'], datasets: [{ data: [0], backgroundColor: '#E2E8F0' }] },
+      data: { labels: [t('chartNoDataPeriod')], datasets: [{ data: [0], backgroundColor: '#E2E8F0' }] },
       options: { plugins: { legend: { display: false } } },
     });
     return;
@@ -2268,7 +2725,7 @@ function renderTopDriversChart(filtered) {
               const value = ctx.raw;
               return isAmountMode
                 ? ' $' + value.toFixed(2)
-                : ' ' + value + ' transações';
+                : ' ' + value + ' ' + t('chartTransactions');
             },
           },
         },
@@ -2303,20 +2760,16 @@ function renderByDriverChart(mainFiltered) {
   const headerDriverEl = document.getElementById('chart-driver-name');
   const subEl = document.getElementById('chart-driver-sub');
   if (driversFilter.length === 0) {
-    headerDriverEl.textContent = '(todos os motoristas)';
-    subEl.textContent = isAmountMode
-      ? 'Distribuição de $ por categoria'
-      : 'Distribuição de transações por categoria';
+    headerDriverEl.textContent = t('chartAllDrivers');
+    subEl.textContent = isAmountMode ? t('chartByCategoryAmount') : t('chartByCategoryCount');
   } else if (driversFilter.length === 1) {
     const key = driversFilter[0];
-    const t = state.transactions.find(x => (x.driverEmail || x.user) === key);
-    headerDriverEl.textContent = t ? `(${t.driverName || t.user})` : '';
-    subEl.textContent = isAmountMode
-      ? 'Categorias de gasto desse motorista'
-      : 'Categorias de transações desse motorista';
+    const tx = state.transactions.find(x => (x.driverEmail || x.user) === key);
+    headerDriverEl.textContent = tx ? `(${tx.driverName || tx.user})` : '';
+    subEl.textContent = isAmountMode ? t('chartDriverCatsAmount') : t('chartDriverCatsCount');
   } else {
-    headerDriverEl.textContent = `(${driversFilter.length} motoristas)`;
-    subEl.textContent = `Combinação de ${driversFilter.length} motoristas selecionados`;
+    headerDriverEl.textContent = t('chartXDrivers', { n: driversFilter.length });
+    subEl.textContent = t('chartCombination', { n: driversFilter.length });
   }
 
   // Agrega por categoria do dataset filtrado
@@ -2339,122 +2792,13 @@ function renderByDriverChart(mainFiltered) {
 }
 
 /**
- * Tendência temporal: agrega por dia (ou semana se range > 60 dias).
- */
-function renderTrendChart(filtered) {
-  const ctx = document.getElementById('chart-trend');
-  if (!ctx) return;
-
-  const isAmountMode = state.trendChartMode === 'amount';
-
-  // Decide granularidade baseado no range (se >60 dias usa semana)
-  if (filtered.length === 0) {
-    document.getElementById('chart-trend-sub').textContent = 'Sem dados no período';
-    if (chartTrend) chartTrend.destroy();
-    chartTrend = new Chart(ctx, {
-      type: 'line',
-      data: { labels: [], datasets: [{ data: [] }] },
-      options: { plugins: { legend: { display: false } } },
-    });
-    return;
-  }
-
-  const dates = filtered.map(t => t.date).sort();
-  const minDate = dates[0];
-  const maxDate = dates[dates.length - 1];
-  const dayCount = (new Date(maxDate) - new Date(minDate)) / 86400000;
-
-  const useWeekly = dayCount > 60;
-  const granularity = useWeekly ? 'semana' : 'dia';
-
-  // Agrega
-  const byPeriod = {};
-  filtered.forEach(t => {
-    let key = t.date;
-    if (useWeekly) {
-      // Aproximação: tira o dia da semana, fica com o início da semana ISO
-      const d = new Date(t.date);
-      const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1); // segunda
-      d.setDate(diff);
-      key = formatDateYMD(d);
-    }
-    if (!byPeriod[key]) byPeriod[key] = 0;
-    byPeriod[key] += isAmountMode ? (t.amount || 0) : 1;
-  });
-
-  // Ordena por data
-  const sortedKeys = Object.keys(byPeriod).sort();
-  const labels = sortedKeys.map(k => formatDateBR(k));
-  const data = sortedKeys.map(k => byPeriod[k]);
-
-  document.getElementById('chart-trend-sub').textContent =
-    `Granularidade: ${granularity}  ·  ${sortedKeys.length} pontos`;
-
-  if (chartTrend) chartTrend.destroy();
-  chartTrend = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: isAmountMode ? 'Valor ($)' : 'Transações',
-        data,
-        borderColor: '#2C5282',
-        backgroundColor: 'rgba(74, 159, 224, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.3,
-        pointRadius: 3,
-        pointBackgroundColor: '#2C5282',
-        pointHoverRadius: 6,
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          ticks: {
-            font: { size: 10 },
-            maxRotation: 45,
-            minRotation: 45,
-            autoSkip: true,
-            maxTicksLimit: 12,
-          },
-          grid: { display: false },
-        },
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: (v) => isAmountMode ? '$' + (v/1000).toFixed(1) + 'k' : v,
-            font: { size: 11 },
-          },
-          grid: { color: '#F1F5F9' },
-        },
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => {
-              const v = ctx.raw;
-              return isAmountMode ? ' $' + v.toFixed(2) : ' ' + v + ' transações';
-            },
-          },
-        },
-      },
-    },
-  });
-}
-
-/**
  * Helper genérico pra donut, com click handler opcional.
  */
 function renderDonutWithClick(canvasEl, labels, data, colors, total, unitPrefix, clickHandler) {
   if (!labels.length || total === 0) {
     return new Chart(canvasEl, {
       type: 'doughnut',
-      data: { labels: ['Sem dados'], datasets: [{ data: [1], backgroundColor: ['#E2E8F0'] }] },
+      data: { labels: [t('chartNoDataPeriod')], datasets: [{ data: [1], backgroundColor: ['#E2E8F0'] }] },
       options: { plugins: { legend: { display: false }, tooltip: { enabled: false } } },
     });
   }
@@ -2553,13 +2897,6 @@ function setDriverChartMode(mode) {
   renderByDriverChart(state.filtered);
 }
 
-function setTrendChartMode(mode) {
-  state.trendChartMode = mode;
-  document.getElementById('chart-trend-mode-amount').classList.toggle('active', mode === 'amount');
-  document.getElementById('chart-trend-mode-count').classList.toggle('active', mode === 'count');
-  renderTrendChart(state.filtered);
-}
-
 // ================================================================
 // CHART-DRIVER FILTER (independente do filtro principal)
 // ================================================================
@@ -2600,7 +2937,7 @@ function populateChartDriverList() {
   const list = document.getElementById('chart-driver-list');
   if (!list) return;
   if (drivers.length === 0) {
-    list.innerHTML = '<div class="multi-empty">Nenhum motorista no período</div>';
+    list.innerHTML = '<div class="multi-empty">' + t('multiEmpty') + '</div>';
     return;
   }
   list.innerHTML = drivers.map(d => {
@@ -2619,16 +2956,16 @@ function updateChartDriverLabel() {
   const sel = state.chartDriversFilter;
 
   if (sel.length === 0) {
-    label.textContent = 'Todos';
+    label.textContent = t('all');
     toggle.classList.remove('has-selection');
   } else if (sel.length === 1) {
     const key = sel[0];
-    const t = state.transactions.find(x => (x.driverEmail || x.user) === key);
-    const name = t ? (t.driverName || t.user || key) : key;
+    const tx = state.transactions.find(x => (x.driverEmail || x.user) === key);
+    const name = tx ? (tx.driverName || tx.user || key) : key;
     label.textContent = name.length > 20 ? name.slice(0, 20) + '…' : name;
     toggle.classList.add('has-selection');
   } else {
-    label.textContent = `${sel.length} selecionados`;
+    label.textContent = `${sel.length} ${t('nDriversSel')}`;
     toggle.classList.add('has-selection');
   }
 }
@@ -2666,7 +3003,7 @@ function openDriverPanel(driverKey) {
   // Popula header
   document.getElementById('panel-driver-name').textContent = driverName;
   document.getElementById('panel-driver-meta').textContent =
-    `${country}  ·  ${driverEmail || 'sem email'}  ·  Cartão ****${cardLast4}`;
+    `${country}  ·  ${driverEmail || t('panelNoEmail')}  ·  ${t('panelCard')}${cardLast4}`;
 
   // Scorecards
   document.getElementById('panel-driver-total').textContent = '$' + Math.round(totalAmount).toLocaleString();
@@ -2686,7 +3023,7 @@ function openDriverPanel(driverKey) {
   // Lista de transações
   const list = document.getElementById('panel-tx-list');
   const sortedTxs = txs.slice().sort((a, b) => b.date.localeCompare(a.date));
-  document.getElementById('panel-tx-count').textContent = `${sortedTxs.length} no período`;
+  document.getElementById('panel-tx-count').textContent = `${sortedTxs.length} ${t('panelInPeriod')}`;
   list.innerHTML = sortedTxs.slice(0, 50).map(t => `
     <div class="panel-tx-row">
       <div class="panel-tx-info">
@@ -2763,9 +3100,9 @@ function escapeHtml(s) {
 function renderMatchBadge(matchSource) {
   if (matchSource === 'card') return ''; // silencioso, alta confiança
   if (matchSource === 'name') {
-    return ' <span class="match-badge match-name" title="Cartão não cadastrado na HR — match feito apenas por nome (menor confiabilidade)">~nome</span>';
+    return ' <span class="match-badge match-name" title="' + t('matchByNameTitle') + '">' + t('matchByName') + '</span>';
   }
-  return ' <span class="match-badge match-none" title="Driver não identificado: cartão e nome não batem com a HR Database">?</span>';
+  return ' <span class="match-badge match-none" title="' + t('matchNoneTitle') + '">' + t('matchNone') + '</span>';
 }
 </script>
 
