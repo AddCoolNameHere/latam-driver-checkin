@@ -753,6 +753,17 @@
   .ramp-table tr:last-child td { border-bottom: none; }
   .ramp-table .col-date { color: var(--c-text-muted); font-size: 12px; white-space: nowrap; }
   .ramp-table .col-user { font-weight: 500; color: var(--c-primary-dark); }
+  /* Quando o nome do user é clicável (tem painel disponível): cursor + hover sutil */
+  .ramp-table .col-user.clickable {
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .ramp-table .col-user.clickable:hover {
+    color: var(--c-accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
   .ramp-table .col-amount { font-weight: 600; color: var(--c-primary); text-align: right; white-space: nowrap; }
   .ramp-table .col-amount.high { color: #DC2626; }
   .ramp-table .col-merchant { color: var(--c-text); }
@@ -1351,6 +1362,7 @@ const I18N = {
     matchNoneTitle: 'Driver não identificado: cartão e nome não batem com a HR Database',
     matchInactive: 'ex',
     matchInactiveTitle: 'Ex-funcionário',
+    clickToSeeDetails: 'Clique para ver detalhes',
 
     // Painel
     panelTotal: 'Total gasto',
@@ -1480,6 +1492,7 @@ const I18N = {
     matchNoneTitle: 'Conductor no identificado: tarjeta y nombre no coinciden con HR',
     matchInactive: 'ex',
     matchInactiveTitle: 'Ex-empleado',
+    clickToSeeDetails: 'Click para ver detalles',
 
     panelTotal: 'Total gastado',
     panelCount: 'Transacciones',
@@ -1606,6 +1619,7 @@ const I18N = {
     matchNoneTitle: 'Driver not identified: card and name don\'t match HR Database',
     matchInactive: 'ex',
     matchInactiveTitle: 'Former employee',
+    clickToSeeDetails: 'Click to see details',
 
     panelTotal: 'Total spent',
     panelCount: 'Transactions',
@@ -2176,10 +2190,17 @@ function renderTable(filtered) {
 
     const isHigh = tx.amount >= highThreshold;
     const country = tx.country || '—';
+    // Driver key (mesmo usado no chart de top drivers) — usado pra abrir painel
+    const driverKey = tx.driverEmail || tx.user || '';
+    // Drivers sem match não têm painel pra mostrar (info insuficiente)
+    const canOpenPanel = tx.matchSource !== 'none' && driverKey;
+    const userCellAttrs = canOpenPanel
+      ? `class="col-user clickable" onclick="openDriverPanel('${escapeHtml(driverKey)}')" title="${t('clickToSeeDetails')}"`
+      : `class="col-user"`;
 
     return `<tr>
       <td class="col-date">${formatDateBR(tx.date)}</td>
-      <td class="col-user">
+      <td ${userCellAttrs}>
         ${escapeHtml(tx.driverName || tx.user || '—')}
         ${renderMatchBadge(tx.matchSource)}
         ${!tx.driverActive && tx.driverEmail ? '<span class="inactive-badge" title="' + t('matchInactiveTitle') + '">' + t('matchInactive') + '</span>' : ''}
