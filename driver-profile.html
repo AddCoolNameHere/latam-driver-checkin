@@ -356,6 +356,23 @@
   .ranking-eff.good { color: var(--c-good); }
   .ranking-eff.warn { color: var(--c-warn); }
   .ranking-eff.bad { color: var(--c-bad); }
+  /* Botão "Mostrar Top 10" */
+  .ranking-expand-btn {
+    width: 100%;
+    padding: 10px 16px;
+    background: var(--c-bg);
+    border: none;
+    border-top: 1px solid var(--c-border);
+    color: var(--c-primary);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .ranking-expand-btn:hover {
+    background: var(--c-bg-tint);
+  }
 
   /* PROFILE CONTENT (quando driver selecionado) */
   .profile-section {
@@ -438,6 +455,28 @@
   }
   .hero-status-active { color: #BBF7D0; font-weight: 600; }
   .hero-status-inactive { color: #FECACA; font-weight: 600; }
+  /* Botão X pra fechar perfil e voltar pra busca */
+  .hero-close {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+  }
+  .hero-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+  }
 
   /* SCORECARDS */
   .profile-scorecards {
@@ -876,6 +915,9 @@
       <ul class="ranking-list" id="ranking-list">
         <!-- Populado via JS -->
       </ul>
+      <button class="ranking-expand-btn" id="ranking-expand-btn" onclick="toggleRankingExpanded()" style="display:none;">
+        <span data-i18n="rankingShowMore">Mostrar Top 10 ↓</span>
+      </button>
     </div>
   </div>
 
@@ -893,6 +935,7 @@
         <div class="hero-name" id="hero-name">—</div>
         <div class="hero-meta" id="hero-meta">—</div>
       </div>
+      <button class="hero-close" onclick="goBackToSearch()" title="Fechar e voltar para busca" aria-label="Fechar">×</button>
     </div>
 
     <!-- Scorecards -->
@@ -1068,6 +1111,7 @@ let state = {
   selectedEmail: null,  // email do driver atualmente sendo exibido
   profile: null,        // payload de getDriverProfile do driver atual
   rankingMode: 'top',   // 'top' | 'bottom'
+  rankingExpanded: false, // false = Top 5, true = Top 10
   searchHighlightIdx: -1, // pra navegação por teclado
   visibleSuggestions: [],
   openedViaLink: false, // true se veio via ?email= na URL (mostra banner)
@@ -1091,6 +1135,10 @@ const I18N = {
     welcomeSubtitle: 'Use a busca acima ou clique em um dos rankings abaixo',
     rankingTopTitle: '🏆 Top 5 — maior eficiência',
     rankingBottomTitle: '⚠ Bottom 5 — menor eficiência',
+    rankingTop10Title: '🏆 Top 10 — maior eficiência',
+    rankingBottom10Title: '⚠ Bottom 10 — menor eficiência',
+    rankingShowMore: 'Mostrar Top 10 ↓',
+    rankingShowLess: 'Mostrar só Top 5 ↑',
     rankingTop: 'Top 5',
     rankingBottom: 'Bottom 5',
     rankingEmpty: 'Sem dados de eficiência disponíveis',
@@ -1145,6 +1193,10 @@ const I18N = {
     welcomeSubtitle: 'Usa la búsqueda arriba o haz clic en uno de los rankings abajo',
     rankingTopTitle: '🏆 Top 5 — mayor eficiencia',
     rankingBottomTitle: '⚠ Bottom 5 — menor eficiencia',
+    rankingTop10Title: '🏆 Top 10 — mayor eficiencia',
+    rankingBottom10Title: '⚠ Bottom 10 — menor eficiencia',
+    rankingShowMore: 'Mostrar Top 10 ↓',
+    rankingShowLess: 'Mostrar solo Top 5 ↑',
     rankingTop: 'Top 5',
     rankingBottom: 'Bottom 5',
     rankingEmpty: 'Sin datos de eficiencia disponibles',
@@ -1199,6 +1251,10 @@ const I18N = {
     welcomeSubtitle: 'Use the search above or click one of the rankings below',
     rankingTopTitle: '🏆 Top 5 — highest efficiency',
     rankingBottomTitle: '⚠ Bottom 5 — lowest efficiency',
+    rankingTop10Title: '🏆 Top 10 — highest efficiency',
+    rankingBottom10Title: '⚠ Bottom 10 — lowest efficiency',
+    rankingShowMore: 'Show Top 10 ↓',
+    rankingShowLess: 'Show only Top 5 ↑',
     rankingTop: 'Top 5',
     rankingBottom: 'Bottom 5',
     rankingEmpty: 'No efficiency data available',
@@ -1478,8 +1534,7 @@ function setRankingMode(mode) {
   state.rankingMode = mode;
   document.getElementById('rank-mode-top').classList.toggle('active', mode === 'top');
   document.getElementById('rank-mode-bottom').classList.toggle('active', mode === 'bottom');
-  document.getElementById('ranking-title').textContent =
-    mode === 'top' ? t('rankingTopTitle') : t('rankingBottomTitle');
+  // renderRanking() atualiza o título considerando rankingExpanded
   renderRanking();
 }
 
@@ -1505,14 +1560,15 @@ function renderRanking() {
   const sorted = withEff.slice().sort((a, b) =>
     state.rankingMode === 'top' ? b.efficiency - a.efficiency : a.efficiency - b.efficiency
   );
-  const top5 = sorted.slice(0, 5);
+  const limit = state.rankingExpanded ? 10 : 5;
+  const top = sorted.slice(0, limit);
 
-  if (top5.length === 0) {
+  if (top.length === 0) {
     list.innerHTML = `<li class="ranking-item"><div class="ranking-info"><div class="ranking-meta">${t('rankingEmpty')}<br><small>${t('rankingEmptyHint')}</small></div></div></li>`;
     return;
   }
 
-  list.innerHTML = top5.map((d, i) => {
+  list.innerHTML = top.map((d, i) => {
     const pct = (d.efficiency * 100).toFixed(0);
     let cls = 'good';
     if (d.efficiency < 0.5) cls = 'bad';
@@ -1526,6 +1582,35 @@ function renderRanking() {
       <div class="ranking-eff ${cls}">${pct}%</div>
     </li>`;
   }).join('');
+
+  // Botão "Mostrar mais / menos" só aparece se há mais de 5
+  const expander = document.getElementById('ranking-expand-btn');
+  if (expander) {
+    if (sorted.length > 5) {
+      expander.style.display = '';
+      expander.textContent = state.rankingExpanded
+        ? t('rankingShowLess')
+        : t('rankingShowMore');
+    } else {
+      expander.style.display = 'none';
+    }
+  }
+
+  // Atualiza o título com a quantidade real
+  const titleEl = document.getElementById('ranking-title');
+  if (titleEl) {
+    titleEl.textContent = state.rankingMode === 'top'
+      ? (state.rankingExpanded ? t('rankingTop10Title') : t('rankingTopTitle'))
+      : (state.rankingExpanded ? t('rankingBottom10Title') : t('rankingBottomTitle'));
+  }
+}
+
+/**
+ * Toggle entre Top 5 e Top 10.
+ */
+function toggleRankingExpanded() {
+  state.rankingExpanded = !state.rankingExpanded;
+  renderRanking();
 }
 
 // ================================================================
@@ -1583,8 +1668,20 @@ function renderProfile(p) {
     <span class="hero-meta-item">📧 ${escapeHtml(p.driver.email || '—')}</span>
     <span class="hero-meta-item ${statusClass}">${escapeHtml(statusLabel)}</span>
   `;
-  if (p.vid && p.vid.vid) {
-    metaHtml += `<span class="hero-meta-item">🚗 VID ${p.vid.vid}${p.vid.isFloating === 'Yes' ? ' (Floating)' : ''}</span>`;
+  // VID atual: prioriza o do mês corrente (RAW CTS DATA), fallback pra VID CALENDAR.
+  let currentVid = null;
+  let isFloating = false;
+  if (p.metrics && p.metrics.vid) {
+    currentVid = p.metrics.vid;
+  }
+  if (!currentVid && p.vid && p.vid.vid) {
+    currentVid = p.vid.vid;
+  }
+  if (p.vid && p.vid.isFloating === 'Yes') {
+    isFloating = true;
+  }
+  if (currentVid) {
+    metaHtml += `<span class="hero-meta-item">🚗 VID ${currentVid}${isFloating ? ' (Floating)' : ''}</span>`;
   }
   document.getElementById('hero-meta').innerHTML = metaHtml;
 
