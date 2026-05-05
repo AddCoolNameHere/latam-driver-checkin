@@ -612,6 +612,64 @@
   }
 
   /* PLACEHOLDER (sessão B) */
+  /* HISTÓRICO MENSAL */
+  #history-card { margin-bottom: 18px; }
+  .history-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 80px;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-month {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    font-weight: 500;
+  }
+  .history-bar-track {
+    height: 8px;
+    background: var(--c-bg);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .history-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  .history-bar-fill.good { background: linear-gradient(90deg, var(--c-good), #10B981); }
+  .history-bar-fill.warn { background: linear-gradient(90deg, var(--c-warn), #FBBF24); }
+  .history-bar-fill.bad { background: linear-gradient(90deg, var(--c-bad), #EF4444); }
+  .history-eff {
+    text-align: right;
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .history-eff.good { color: var(--c-good); }
+  .history-eff.warn { color: var(--c-warn); }
+  .history-eff.bad { color: var(--c-bad); }
+  .history-meta {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+  .history-summary {
+    background: var(--c-bg-tint);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--c-text);
+    line-height: 1.5;
+  }
+  .history-summary strong { color: var(--c-primary-dark); }
+  .history-trend-up { color: var(--c-good); font-weight: 600; }
+  .history-trend-down { color: var(--c-bad); font-weight: 600; }
+  .history-trend-flat { color: var(--c-text-muted); font-weight: 600; }
+
   .placeholder-section {
     background: white;
     border: 2px dashed var(--c-border);
@@ -623,6 +681,71 @@
     font-style: italic;
   }
   .placeholder-section .ph-icon { font-size: 32px; opacity: 0.4; margin-bottom: 8px; }
+
+  /* === CALENDÁRIO === */
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+  .cal-weekday {
+    font-size: 10px;
+    text-align: center;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 4px 0;
+    letter-spacing: 0.5px;
+  }
+  .cal-day {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--c-bg);
+    color: var(--c-text-muted);
+    font-size: 11px;
+    cursor: default;
+    transition: transform 0.15s;
+    position: relative;
+  }
+  .cal-day:hover { transform: scale(1.06); z-index: 2; }
+  .cal-day-num { font-weight: 600; line-height: 1; }
+  .cal-day-icon { font-size: 13px; text-align: center; }
+  .cal-empty { background: transparent; }
+  /* Status colors */
+  .cal-mapping { background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; }
+  .cal-mech { background: #FEE2E2; color: #B91C1C; border: 1px solid #FECACA; }
+  .cal-tech { background: #FFE4E6; color: #BE123C; border: 1px solid #FECDD3; }
+  .cal-personal { background: #E0E7FF; color: #4338CA; border: 1px solid #C7D2FE; }
+  .cal-weather { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+  .cal-disks { background: #F3E8FF; color: #6B21A8; border: 1px solid #E9D5FF; }
+  .cal-travelling { background: #CFFAFE; color: #155E75; border: 1px solid #A5F3FC; }
+  .cal-holiday { background: #FFE4E6; color: #BE185D; border: 1px solid #FBCFE8; }
+  .cal-other { background: #F1F5F9; color: var(--c-text-muted); border: 1px solid var(--c-border); }
+  .cal-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 10px;
+    color: var(--c-text-muted);
+    padding-top: 12px;
+    border-top: 1px solid var(--c-border);
+  }
+  .cal-legend-item { display: inline-flex; align-items: center; gap: 4px; }
+  .cal-swatch { width: 10px; height: 10px; border-radius: 2px; }
+  .cal-swatch.cal-mapping { background: #DCFCE7; border-color: #BBF7D0; }
+  .cal-swatch.cal-mech { background: #FEE2E2; border-color: #FECACA; }
+  .cal-swatch.cal-tech { background: #FFE4E6; border-color: #FECDD3; }
+  .cal-swatch.cal-personal { background: #E0E7FF; border-color: #C7D2FE; }
+  .cal-swatch.cal-weather { background: #FEF3C7; border-color: #FDE68A; }
+  .cal-swatch.cal-disks { background: #F3E8FF; border-color: #E9D5FF; }
+  .cal-swatch.cal-travelling { background: #CFFAFE; border-color: #A5F3FC; }
+  .cal-swatch.cal-holiday { background: #FFE4E6; border-color: #FBCFE8; }
+  .cal-swatch.cal-other { background: #F1F5F9; border-color: var(--c-border); }
 
   /* LOADER */
   .loader-overlay {
@@ -834,23 +957,30 @@
       </div>
     </div>
 
-    <!-- Placeholders para Sessão B -->
+    <!-- Histórico mensal (dados reais da RAW CTS DATA) -->
+    <div class="detail-card" id="history-card" style="display:none;">
+      <div class="detail-card-title">📊 <span data-i18n="historyCardTitle">Histórico mensal</span></div>
+      <div id="history-content"></div>
+    </div>
+
+    <!-- Calendário visual do mês (RAW CTS DATA) -->
+    <div class="detail-card" style="margin-bottom:18px;">
+      <div class="detail-card-title">📅 <span data-i18n="calendarTitle">Calendário do mês</span></div>
+      <div id="calendar-content"></div>
+    </div>
+
+    <!-- Placeholder Sessão B: Mapa -->
     <div class="placeholder-section">
       <div class="ph-icon">🗺</div>
-      <div><strong>Mapa com histórico de mapeamento e base</strong> — em breve</div>
-      <div style="margin-top:6px;font-size:11px;">Próxima sessão: visualização geográfica do driver</div>
+      <div><strong data-i18n="placeholderMap">Mapa com histórico de mapeamento e base</strong> <span data-i18n="comingSoon">— em breve</span></div>
+      <div style="margin-top:6px;font-size:11px;"><span data-i18n="nextSession">Próxima sessão:</span> visualização geográfica do driver</div>
     </div>
 
-    <div class="placeholder-section" style="margin-top:14px;">
-      <div class="ph-icon">📅</div>
-      <div><strong>Calendário visual do mês</strong> — em breve</div>
-      <div style="margin-top:6px;font-size:11px;">Próxima sessão: grid 7×5 com cor por dia (mapeando, idle, etc)</div>
-    </div>
-
+    <!-- Placeholder Sessão B: Comentários -->
     <div class="placeholder-section" style="margin-top:14px;">
       <div class="ph-icon">💡</div>
-      <div><strong>Comentários inteligentes</strong> — em breve</div>
-      <div style="margin-top:6px;font-size:11px;">Próxima sessão: alertas como "considerar hotel mode", "mapeamentos repetidos", etc</div>
+      <div><strong data-i18n="placeholderComments">Comentários inteligentes</strong> <span data-i18n="comingSoon">— em breve</span></div>
+      <div style="margin-top:6px;font-size:11px;"><span data-i18n="nextSession">Próxima sessão:</span> alertas como "considerar hotel mode", "mapeamentos repetidos", etc</div>
     </div>
   </div>
 
@@ -991,8 +1121,15 @@ const I18N = {
     placeholderComments: 'Comentários inteligentes',
     comingSoon: '— em breve',
     nextSession: 'Próxima sessão:',
+    calendarTitle: 'Calendário do mês',
+    historyTitle: 'Histórico mensal',
     fromLinkText: 'Aberto via link externo (Dashboard ou Ramp)',
     fromLinkBack: '← Voltar pra busca',
+    historyCardTitle: 'Histórico mensal',
+    historyBestMonth: 'Mês mais alto',
+    historyTrendUp: 'tendência ↗ {diff}pp últimos 3 meses',
+    historyTrendDown: 'tendência ↘ {diff}pp últimos 3 meses',
+    historyTrendFlat: 'tendência → estável',
   },
   es: {
     loginTitle: 'Login',
@@ -1038,8 +1175,15 @@ const I18N = {
     placeholderComments: 'Comentarios inteligentes',
     comingSoon: '— próximamente',
     nextSession: 'Próxima sesión:',
+    calendarTitle: 'Calendario del mes',
+    historyTitle: 'Historial mensual',
     fromLinkText: 'Abierto vía enlace externo (Dashboard o Ramp)',
     fromLinkBack: '← Volver a la búsqueda',
+    historyCardTitle: 'Historial mensual',
+    historyBestMonth: 'Mes más alto',
+    historyTrendUp: 'tendencia ↗ {diff}pp últimos 3 meses',
+    historyTrendDown: 'tendencia ↘ {diff}pp últimos 3 meses',
+    historyTrendFlat: 'tendencia → estable',
   },
   en: {
     loginTitle: 'Login',
@@ -1085,8 +1229,15 @@ const I18N = {
     placeholderComments: 'Smart comments',
     comingSoon: '— coming soon',
     nextSession: 'Next session:',
+    calendarTitle: 'Monthly calendar',
+    historyTitle: 'Monthly history',
     fromLinkText: 'Opened via external link (Dashboard or Ramp)',
     fromLinkBack: '← Back to search',
+    historyCardTitle: 'Monthly history',
+    historyBestMonth: 'Best month',
+    historyTrendUp: 'trend ↗ {diff}pp last 3 months',
+    historyTrendDown: 'trend ↘ {diff}pp last 3 months',
+    historyTrendFlat: 'trend → stable',
   },
 };
 
@@ -1446,6 +1597,53 @@ function renderProfile(p) {
   // Detail cards
   renderEfficiencyDetail(p);
   renderIdleDetail(p);
+  renderMonthlyHistory(p);
+  renderMonthCalendar(p);
+  renderMonthlyHistory(p);
+}
+
+/**
+ * Helper: pega métricas do mês corrente (priorizando RAW CTS, fallback VID).
+ * Retorna: { tkm, km, efficiency, mappingDays, idle: {personal, disks, mech, tech, weather, travelling, holiday, other, total} }
+ * Ou null se não tiver dado nenhum.
+ */
+function getDriverMetrics(p) {
+  if (p.metrics && p.metrics.km > 0) {
+    // Fonte primária: RAW CTS DATA
+    const idle = p.metrics.idleDays;
+    return {
+      source: 'cts',
+      tkm: p.metrics.tkm,
+      km: p.metrics.km,
+      efficiency: p.metrics.efficiency,
+      mappingDays: p.metrics.mappingDays,
+      billableHours: p.metrics.billableHours,
+      idle: {
+        personal: idle.Personal || 0,
+        disks: idle.Disks || 0,
+        mech: idle['Mech.'] || 0,
+        tech: idle['Tech.'] || 0,
+        weather: idle.Weather || 0,
+        travelling: idle.Travelling || 0,
+        holiday: idle.Holiday || 0,
+        other: idle.Other || 0,
+        total: idle.total || 0,
+      },
+    };
+  }
+  if (p.vid && p.vid.vidCalendarEfficiency > 0) {
+    // Fallback: VID CALENDAR (sem breakdown de idle)
+    return {
+      source: 'vid',
+      tkm: p.vid.vidCalendarTkm,
+      km: p.vid.vidCalendarKm,
+      efficiency: p.vid.vidCalendarEfficiency,
+      mappingDays: 0,
+      billableHours: 0,
+      idle: { personal: 0, disks: 0, mech: 0, tech: 0, weather: 0, travelling: 0, holiday: 0, other: 0, total: 0 },
+    };
+  }
+  return null;
 }
 
 function renderEfficiencyScorecard(p) {
@@ -1454,13 +1652,14 @@ function renderEfficiencyScorecard(p) {
   const subEl = document.getElementById('sc-eff-sub');
   card.classList.remove('color-good', 'color-warn', 'color-bad');
 
-  if (!p.vid || p.vid.efficiency === null || p.vid.efficiency === 0) {
+  const m = getDriverMetrics(p);
+  if (!m || !m.efficiency) {
     valEl.textContent = '—';
     subEl.textContent = t('noVid');
     return;
   }
 
-  const eff = p.vid.efficiency;
+  const eff = m.efficiency;
   const pct = (eff * 100).toFixed(0);
   valEl.textContent = pct + '%';
 
@@ -1469,35 +1668,37 @@ function renderEfficiencyScorecard(p) {
   else card.classList.add('color-bad');
 
   // Comparação com baseline
-  if (p.baseline.countryAvgEfficiency) {
+  if (p.baseline && p.baseline.countryAvgEfficiency) {
     const baselinePct = (p.baseline.countryAvgEfficiency * 100).toFixed(0);
     const diff = eff - p.baseline.countryAvgEfficiency;
     const diffPct = (diff * 100).toFixed(0);
     if (Math.abs(diff) < 0.02) {
-      subEl.innerHTML = `Próximo do baseline (<strong>${baselinePct}%</strong>)`;
+      subEl.innerHTML = `${t('nearBaseline')} (<strong>${baselinePct}%</strong>)`;
     } else if (diff > 0) {
-      subEl.innerHTML = `<strong style="color:var(--c-good)">+${diffPct}pp</strong> vs baseline ${baselinePct}%`;
+      subEl.innerHTML = `<strong style="color:var(--c-good)">+${diffPct}pp</strong> vs ${baselinePct}%`;
     } else {
-      subEl.innerHTML = `<strong style="color:var(--c-bad)">${diffPct}pp</strong> vs baseline ${baselinePct}%`;
+      subEl.innerHTML = `<strong style="color:var(--c-bad)">${diffPct}pp</strong> vs ${baselinePct}%`;
     }
   } else {
-    subEl.textContent = 'Sem baseline disponível';
+    subEl.textContent = t('noBaseline');
   }
 }
 
 function renderTkmScorecard(p) {
   const valEl = document.getElementById('sc-tkm-value');
   const subEl = document.getElementById('sc-tkm-sub');
-  if (!p.vid || !p.vid.tkm) {
+  const m = getDriverMetrics(p);
+  if (!m || !m.tkm) {
     valEl.textContent = '—';
     subEl.textContent = '—';
     return;
   }
-  valEl.textContent = Math.round(p.vid.tkm).toLocaleString();
-  if (p.vid.mappingDays > 0 && p.vid.avgTkmPerDay) {
-    subEl.innerHTML = `<strong>${p.vid.avgTkmPerDay.toFixed(0)}</strong> TKM/dia · ${p.vid.mappingDays} dias`;
+  valEl.textContent = Math.round(m.tkm).toLocaleString();
+  if (m.mappingDays > 0) {
+    const avg = m.tkm / m.mappingDays;
+    subEl.innerHTML = `<strong>${avg.toFixed(0)}</strong> TKM/dia · ${m.mappingDays} dias mapeando`;
   } else {
-    subEl.textContent = `${p.vid.kmDriven ? Math.round(p.vid.kmDriven).toLocaleString() : 0} KM dirigidos`;
+    subEl.textContent = `${Math.round(m.km).toLocaleString()} KM dirigidos`;
   }
 }
 
@@ -1507,17 +1708,18 @@ function renderIdleScorecard(p) {
   const subEl = document.getElementById('sc-idle-sub');
   card.classList.remove('color-good', 'color-warn', 'color-bad');
 
-  const total = p.idle.total;
+  const m = getDriverMetrics(p);
+  const total = m ? m.idle.total : 0;
   valEl.textContent = total;
   if (total === 0) {
     card.classList.add('color-good');
     subEl.textContent = t('zeroIdleDays');
   } else if (total <= 3) {
     card.classList.add('color-warn');
-    subEl.textContent = total + ' ' + (total === 1 ? 'dia' : 'dias') + ' parado';
+    subEl.textContent = total + ' ' + (total === 1 ? t('dayParked') : t('daysParked'));
   } else {
     card.classList.add('color-bad');
-    subEl.textContent = total + ' dias parados — atenção';
+    subEl.textContent = total + ' ' + t('needsAttention');
   }
 }
 
@@ -1529,7 +1731,7 @@ function renderQcScorecard(p) {
 
   if (!p.vid || p.vid.qcScore === null || p.vid.qcScore === 0) {
     valEl.textContent = '—';
-    subEl.textContent = 'Sem QC disponível';
+    subEl.textContent = t('noQc');
     return;
   }
 
@@ -1540,9 +1742,9 @@ function renderQcScorecard(p) {
   else if (qc >= 0.7) card.classList.add('color-warn');
   else card.classList.add('color-bad');
 
-  if (p.baseline.countryAvgQc) {
+  if (p.baseline && p.baseline.countryAvgQc) {
     const baselinePct = (p.baseline.countryAvgQc * 100).toFixed(0);
-    subEl.innerHTML = `Baseline país: <strong>${baselinePct}%</strong>`;
+    subEl.innerHTML = `Baseline: <strong>${baselinePct}%</strong>`;
   } else {
     subEl.textContent = '—';
   }
@@ -1555,7 +1757,8 @@ function renderEfficiencyDetail(p) {
   const barFill = document.getElementById('eff-bar-fill');
   const baselineMarker = document.getElementById('eff-baseline-marker');
 
-  if (!p.vid || !p.vid.efficiency) {
+  const m = getDriverMetrics(p);
+  if (!m || !m.efficiency) {
     valEl.textContent = '—';
     valEl.className = 'eff-value';
     vsEl.textContent = '';
@@ -1565,7 +1768,7 @@ function renderEfficiencyDetail(p) {
     return;
   }
 
-  const eff = p.vid.efficiency;
+  const eff = m.efficiency;
   const pct = (eff * 100).toFixed(1);
   valEl.textContent = pct + '%';
 
@@ -1577,7 +1780,7 @@ function renderEfficiencyDetail(p) {
   barFill.style.width = Math.min(100, eff * 100) + '%';
 
   // Baseline marker
-  if (p.baseline.countryAvgEfficiency) {
+  if (p.baseline && p.baseline.countryAvgEfficiency) {
     baselineMarker.style.display = '';
     baselineMarker.style.left = Math.min(100, p.baseline.countryAvgEfficiency * 100) + '%';
     baselineMarker.title = 'Baseline ' + p.driver.country + ': ' + (p.baseline.countryAvgEfficiency * 100).toFixed(0) + '%';
@@ -1586,17 +1789,17 @@ function renderEfficiencyDetail(p) {
   }
 
   // VS baseline label
-  if (p.baseline.countryAvgEfficiency) {
+  if (p.baseline && p.baseline.countryAvgEfficiency) {
     const diff = eff - p.baseline.countryAvgEfficiency;
     const baselinePct = (p.baseline.countryAvgEfficiency * 100).toFixed(0);
     if (diff > 0.02) {
-      vsEl.innerHTML = `acima do baseline <strong>${baselinePct}%</strong> (${p.driver.country})`;
+      vsEl.innerHTML = `${t('aboveBaseline')} <strong>${baselinePct}%</strong> (${p.driver.country})`;
       vsEl.className = 'eff-vs-baseline good';
     } else if (diff < -0.02) {
-      vsEl.innerHTML = `abaixo do baseline <strong>${baselinePct}%</strong> (${p.driver.country})`;
+      vsEl.innerHTML = `${t('belowBaseline')} <strong>${baselinePct}%</strong> (${p.driver.country})`;
       vsEl.className = 'eff-vs-baseline bad';
     } else {
-      vsEl.innerHTML = `próximo do baseline <strong>${baselinePct}%</strong> (${p.driver.country})`;
+      vsEl.innerHTML = `${t('nearBaseline')} <strong>${baselinePct}%</strong> (${p.driver.country})`;
       vsEl.className = 'eff-vs-baseline';
     }
   } else {
@@ -1604,12 +1807,16 @@ function renderEfficiencyDetail(p) {
   }
 
   // Fórmula explicada
-  const tkm = Math.round(p.vid.tkm).toLocaleString();
-  const km = Math.round(p.vid.kmDriven).toLocaleString();
+  const tkm = Math.round(m.tkm).toLocaleString();
+  const km = Math.round(m.km).toLocaleString();
+  const sourceNote = m.source === 'cts'
+    ? `<small style="color:var(--c-text-dim);">Fonte: RAW CTS DATA · mês ${p.currentMonth}</small>`
+    : `<small style="color:var(--c-text-dim);">Fonte: VID CALENDAR (RAW CTS sem dados pra esse driver)</small>`;
   formulaEl.innerHTML = `
-    <strong>Cálculo:</strong> <code>TKM ÷ KM Driven</code> · ${pct}% deste mês<br>
-    <strong>Valores:</strong> ${tkm} TKM ÷ ${km} KM = ${pct}%<br>
-    <strong>Significado:</strong> a cada km dirigido, ${(eff * 100).toFixed(0)}% efetivamente "valeu" pro mapeamento (TKM = trackable km).
+    <strong>${t('formula')}</strong> <code>TKM ÷ KM Driven</code><br>
+    <strong>${t('values')}</strong> ${tkm} TKM ÷ ${km} KM = ${pct}%<br>
+    <strong>${t('meaning')}</strong> ${t('meaningText').replace('{pct}', (eff * 100).toFixed(0))}<br>
+    ${sourceNote}
   `;
 }
 
@@ -1618,11 +1825,14 @@ function renderIdleDetail(p) {
   const labelEl = document.getElementById('idle-total-label');
   const breakdownEl = document.getElementById('idle-breakdown');
 
-  totalEl.textContent = p.idle.total;
-  totalEl.classList.toggle('zero', p.idle.total === 0);
-  labelEl.textContent = p.idle.total === 1 ? 'dia parado neste mês' : 'dias parados neste mês';
+  const m = getDriverMetrics(p);
+  const idle = m ? m.idle : { personal: 0, disks: 0, mech: 0, tech: 0, weather: 0, total: 0 };
 
-  // 5 cells
+  totalEl.textContent = idle.total;
+  totalEl.classList.toggle('zero', idle.total === 0);
+  labelEl.textContent = idle.total === 1 ? t('dayParked') : t('daysParked');
+
+  // 5 cells principais
   const categories = [
     { key: 'personal', label: 'Personal', icon: '🏠' },
     { key: 'disks', label: 'Disks', icon: '💾' },
@@ -1630,13 +1840,113 @@ function renderIdleDetail(p) {
     { key: 'tech', label: 'Tech.', icon: '💻' },
     { key: 'weather', label: 'Weather', icon: '⛅' },
   ];
-  breakdownEl.innerHTML = categories.map(cat => {
-    const value = p.idle[cat.key];
+  let html = categories.map(cat => {
+    const value = idle[cat.key];
     return `<div class="idle-cell ${value > 0 ? 'has-value' : ''}">
       <div class="idle-cell-value">${value}</div>
       <div class="idle-cell-label">${cat.label}</div>
     </div>`;
   }).join('');
+
+  // Travelling/Holiday/Other como linha extra se > 0
+  const extras = [];
+  if (idle.travelling > 0) extras.push(`✈ Travelling: ${idle.travelling}`);
+  if (idle.holiday > 0) extras.push(`🎉 Holiday: ${idle.holiday}`);
+  if (idle.other > 0) extras.push(`❓ Other: ${idle.other}`);
+  if (extras.length > 0) {
+    html += `<div style="grid-column:1/-1;font-size:11px;color:var(--c-text-muted);padding:8px 0 0;border-top:1px solid var(--c-border);margin-top:6px;">${extras.join(' · ')}</div>`;
+  }
+  breakdownEl.innerHTML = html;
+}
+
+/**
+ * Renderiza histórico mensal (TKM, eficiência, idle por mês passado).
+ * Mostra todos os meses do driver no formato barra horizontal + summary.
+ */
+function renderMonthlyHistory(p) {
+  const card = document.getElementById('history-card');
+  const container = document.getElementById('history-content');
+  if (!card || !container) return;
+
+  // Esconde o card se só tem 1 mês (não há histórico, só o atual)
+  if (!p.monthlyHistory || p.monthlyHistory.length < 2) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+
+  // p.monthlyHistory já vem ordenado do mais antigo pro mais recente.
+  // Pra exibição: mostra na ordem do mais recente primeiro
+  const history = p.monthlyHistory.slice().reverse();
+
+  // Summary em cima: melhor mês + tendência últimos 3 meses
+  const withEff = history.filter(h => h.efficiency !== null && h.efficiency > 0);
+  let summaryHtml = '';
+  if (withEff.length > 0) {
+    const best = withEff.reduce((a, b) => a.efficiency > b.efficiency ? a : b);
+    const bestPct = (best.efficiency * 100).toFixed(0);
+
+    // Tendência: compara últimos meses com anteriores
+    let trendHtml = '';
+    if (withEff.length >= 3) {
+      // Os 3 mais recentes (lembrando que history está ordem reversa, então slice(0, 3))
+      const recent3 = history.slice(0, 3).filter(h => h.efficiency !== null);
+      if (recent3.length >= 2) {
+        const newest = recent3[0].efficiency;
+        const oldest = recent3[recent3.length - 1].efficiency;
+        const diff = (newest - oldest) * 100;
+        if (diff > 5) {
+          trendHtml = ` · ${t('historyTrendUp').replace('{diff}', '+' + diff.toFixed(0))}`;
+        } else if (diff < -5) {
+          trendHtml = ` · ${t('historyTrendDown').replace('{diff}', diff.toFixed(0))}`;
+        } else {
+          trendHtml = ` · ${t('historyTrendFlat')}`;
+        }
+      }
+    }
+
+    summaryHtml = `<div class="history-summary">
+      ${t('historyBestMonth')}: <strong>${bestPct}%</strong> (${formatMonth(best.month)})${trendHtml}
+    </div>`;
+  }
+
+  // Linhas: 1 por mês com [mês] [barra] [eff %]
+  const rowsHtml = history.map(h => {
+    const effPct = h.efficiency !== null ? (h.efficiency * 100).toFixed(0) : '—';
+    let cls = 'good';
+    if (h.efficiency === null) cls = '';
+    else if (h.efficiency < 0.5) cls = 'bad';
+    else if (h.efficiency < 0.7) cls = 'warn';
+
+    const barWidth = h.efficiency !== null ? Math.min(100, h.efficiency * 100) : 0;
+    return `<div class="history-row">
+      <div>
+        <div class="history-month">${formatMonth(h.month)}</div>
+        <div class="history-meta">${h.mappingDays}d · ${Math.round(h.tkm).toLocaleString()} TKM</div>
+      </div>
+      <div class="history-bar-track">
+        <div class="history-bar-fill ${cls}" style="width:${barWidth}%;"></div>
+      </div>
+      <div class="history-eff ${cls}">${h.efficiency !== null ? effPct + '%' : '—'}</div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = summaryHtml + rowsHtml;
+}
+
+/**
+ * Formata 'M.YYYY' (ex 5.2026) em algo mais legível por idioma.
+ */
+function formatMonth(monthKey) {
+  if (!monthKey) return '—';
+  const [m, y] = monthKey.split('.').map(Number);
+  const monthNames = {
+    pt: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+    es: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+    en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+  };
+  const names = monthNames[currentLang] || monthNames.pt;
+  return `${names[m - 1]}/${y}`;
 }
 
 // ================================================================
