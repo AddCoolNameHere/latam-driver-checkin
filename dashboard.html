@@ -1275,6 +1275,28 @@
     background: var(--c-bg);
     color: var(--c-text);
   }
+  /* Botão "Ver perfil completo" no fim do painel */
+  .panel-profile-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 11px;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .panel-profile-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(44, 82, 130, 0.4);
+    color: white;
+  }
   .panel-body {
     padding: 16px 20px 24px;
   }
@@ -2342,6 +2364,13 @@
       <div class="panel-section-title" data-i18n="pHistory">Histórico de áreas</div>
       <div id="panel-history"></div>
     </div>
+
+    <!-- Link pro perfil completo do driver (driver-profile.html) -->
+    <div class="panel-section" style="border-top:1px solid var(--c-border); padding-top:14px; margin-top:8px;">
+      <a href="#" id="panel-profile-link" class="panel-profile-btn" onclick="goToDriverProfile(event)">
+        👤 <span data-i18n="pProfileBtn">Ver perfil completo</span> →
+      </a>
+    </div>
   </div>
 </aside>
 
@@ -2451,7 +2480,8 @@ const USERS = [
   // SUBSTITUA estas senhas de exemplo antes de publicar
   { username: 'fuss', passwordHash: '20fc17a5b2949b22e408a7f0748a07c46833654638dd6f4ae744ba74c3af476a', fullName: 'Fuss' },
   { username: 'pankaj', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Pankaj' },
-   
+   { username: 'bia', passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Bia' },
+  { username: 'lucas', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Outro Lucas' },
   // Adicione mais conforme necessário:
   // { username: 'joao', passwordHash: '...', fullName: 'João Silva' },
 ];
@@ -2784,6 +2814,7 @@ const I18N = {
     pVehicle: 'Status veículo',
     pNotes: 'Observações',
     pHistory: 'Histórico de áreas',
+    pProfileBtn: 'Ver perfil completo',
     loadingHistory: 'Carregando histórico',
     yesterday: 'Ontem',
     daysAgoLabel: 'dias atrás',
@@ -2995,6 +3026,7 @@ const I18N = {
     pVehicle: 'Estado vehículo',
     pNotes: 'Observaciones',
     pHistory: 'Historial de áreas',
+    pProfileBtn: 'Ver perfil completo',
     pNoLocation: 'Sin ubicación disponible',
     pNoBase: 'Sin base registrada',
     pNoArea: 'Sin área registrada',
@@ -3206,6 +3238,7 @@ const I18N = {
     pVehicle: 'Vehicle status',
     pNotes: 'Notes',
     pHistory: 'Area history',
+    pProfileBtn: 'See full profile',
     pNoLocation: 'No location available',
     pNoBase: 'No base registered',
     pNoArea: 'No area registered',
@@ -3267,6 +3300,8 @@ document.addEventListener('click', (e) => {
 let state = {
   drivers: [],
   filter: { country: 'all', period: 1, specificDate: null, specificRange: null }, // specificDate='YYYY-MM-DD' (1 dia) | specificRange={start,end} (range) | period=1 (hoje)
+  // Driver atualmente aberto no painel lateral (pra link "Ver perfil completo")
+  currentPanelDriver: null,
   // v3 aux data
   hmByCountry: [],
   hmByDriver: [],
@@ -5829,6 +5864,9 @@ function openDriverPanel(d) {
   const panel = document.getElementById('side-panel');
   const backdrop = document.getElementById('panel-backdrop');
 
+  // Armazena driver atual pra "Ver perfil completo" saber pra qual driver ir
+  state.currentPanelDriver = d;
+
   // Cabeçalho
   document.getElementById('panel-name').textContent = d.name;
   document.getElementById('panel-subtitle').textContent = `${d.country} · ${d.city || '—'} · ${d.email}`;
@@ -6140,6 +6178,21 @@ function closeDriverPanel() {
   document.getElementById('side-panel').classList.remove('open');
   document.getElementById('side-panel').setAttribute('aria-hidden', 'true');
   document.getElementById('panel-backdrop').classList.remove('open');
+}
+
+/**
+ * Navega pra página de perfil completo do driver atualmente aberto no painel.
+ * Passa o email via querystring pra a página driver-profile.html abrir
+ * já carregada com esse driver.
+ */
+function goToDriverProfile(evt) {
+  if (evt) evt.preventDefault();
+  if (!state.currentPanelDriver || !state.currentPanelDriver.email) {
+    console.warn('Sem driver no painel — não posso ir pro perfil');
+    return;
+  }
+  const email = encodeURIComponent(state.currentPanelDriver.email);
+  window.location.href = 'driver-profile.html?email=' + email;
 }
 
 function renderPanelMap(d) {
