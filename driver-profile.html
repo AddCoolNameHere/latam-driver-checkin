@@ -364,6 +364,33 @@
   }
   .profile-section.shown { display: block; }
 
+  /* Banner quando vem via ?email (link externo) */
+  .from-link-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    background: #FEF3C7;
+    border: 1px solid #FDE68A;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #92400E;
+  }
+  .from-link-back {
+    background: white;
+    border: 1px solid #FDE68A;
+    color: #92400E;
+    padding: 4px 10px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .from-link-back:hover { background: #FDE68A; }
+
   /* HERO */
   .profile-hero {
     background: linear-gradient(135deg, #1A365D 0%, #2C5282 50%, #4A9FE0 100%);
@@ -731,6 +758,11 @@
 
   <!-- Profile (quando driver selecionado) -->
   <div class="profile-section" id="profile-section">
+    <!-- Banner que aparece quando perfil foi aberto via ?email= (link externo) -->
+    <div class="from-link-banner" id="from-link-banner" style="display:none;">
+      <span>🔗 <span data-i18n="fromLinkText">Aberto via link externo (Dashboard ou Ramp)</span></span>
+      <button onclick="goBackToSearch()" class="from-link-back" data-i18n="fromLinkBack">← Voltar pra busca</button>
+    </div>
     <!-- Hero -->
     <div class="profile-hero">
       <div class="hero-avatar" id="hero-avatar">?</div>
@@ -908,6 +940,7 @@ let state = {
   rankingMode: 'top',   // 'top' | 'bottom'
   searchHighlightIdx: -1, // pra navegação por teclado
   visibleSuggestions: [],
+  openedViaLink: false, // true se veio via ?email= na URL (mostra banner)
 };
 
 // ================================================================
@@ -958,6 +991,8 @@ const I18N = {
     placeholderComments: 'Comentários inteligentes',
     comingSoon: '— em breve',
     nextSession: 'Próxima sessão:',
+    fromLinkText: 'Aberto via link externo (Dashboard ou Ramp)',
+    fromLinkBack: '← Voltar pra busca',
   },
   es: {
     loginTitle: 'Login',
@@ -1003,6 +1038,8 @@ const I18N = {
     placeholderComments: 'Comentarios inteligentes',
     comingSoon: '— próximamente',
     nextSession: 'Próxima sesión:',
+    fromLinkText: 'Abierto vía enlace externo (Dashboard o Ramp)',
+    fromLinkBack: '← Volver a la búsqueda',
   },
   en: {
     loginTitle: 'Login',
@@ -1048,6 +1085,8 @@ const I18N = {
     placeholderComments: 'Smart comments',
     comingSoon: '— coming soon',
     nextSession: 'Next session:',
+    fromLinkText: 'Opened via external link (Dashboard or Ramp)',
+    fromLinkBack: '← Back to search',
   },
 };
 
@@ -1096,6 +1135,9 @@ document.querySelectorAll('.lang-switch button').forEach(btn => {
 async function initApp() {
   // Aplica idioma logo de cara (do localStorage ou default PT)
   applyI18n();
+
+  // Loga a URL completa pra debug — útil pra ver se ?email vem da URL
+  console.log('[Driver Profile] URL completa:', window.location.href);
 
   showLoader(true, t('loadingDrivers'));
   try {
@@ -1149,6 +1191,8 @@ async function initApp() {
     const emailParam = params.get('email');
     if (emailParam) {
       console.log('[Driver Profile] URL tem ?email=', emailParam, '— abrindo perfil automático');
+      // Mostra o banner amarelo informando que veio via link
+      state.openedViaLink = true;
       const found = state.drivers.find(d =>
         d.email && d.email.toLowerCase() === emailParam.toLowerCase()
       );
@@ -1288,6 +1332,22 @@ function setRankingMode(mode) {
   renderRanking();
 }
 
+/**
+ * Volta pra tela de busca (limpa profile + URL + state).
+ * Útil quando perfil foi aberto via ?email=  e o user quer voltar.
+ */
+function goBackToSearch() {
+  state.openedViaLink = false;
+  state.profile = null;
+  state.selectedEmail = null;
+  document.getElementById('profile-section').classList.remove('shown');
+  document.getElementById('welcome-section').style.display = '';
+  // Limpa ?email da URL sem recarregar a página
+  if (window.history && window.history.replaceState) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
 function renderRanking() {
   const list = document.getElementById('ranking-list');
   const withEff = state.drivers.filter(d => d.efficiency !== null && d.efficiency > 0);
@@ -1353,6 +1413,12 @@ function renderProfile(p) {
   // Switch das views
   document.getElementById('welcome-section').style.display = 'none';
   document.getElementById('profile-section').classList.add('shown');
+
+  // Banner "aberto via link" (se veio via ?email= na URL)
+  const linkBanner = document.getElementById('from-link-banner');
+  if (linkBanner) {
+    linkBanner.style.display = state.openedViaLink ? '' : 'none';
+  }
 
   // Hero
   const initials = p.driver.name.split(' ').slice(0, 2).map(s => s[0] || '').join('').toUpperCase();
