@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard · Street View LATAM</title>
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -68,10 +69,17 @@
     letter-spacing: 1.2px;
     line-height: 1.2;
   }
-  .brand-sub span {
-    display: block;
+  .brand-title-line {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    letter-spacing: 1.2px;
+  }
+  .brand-region-line {
     color: var(--c-primary);
-    font-size: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-top: 2px;
   }
   .header-right {
     display: flex;
@@ -95,23 +103,6 @@
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
-  }
-  .demo-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: var(--c-warn-bg);
-    border: 1px solid var(--c-warn);
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 12px;
-    color: #854F0B;
-    font-weight: 500;
-  }
-  .demo-toggle.active {
-    background: var(--c-warn);
-    color: white;
   }
   .refresh-btn {
     background: none;
@@ -586,6 +577,170 @@
     color: white;
     border-color: var(--c-primary);
   }
+  /* Mini-calendário (filtro de dia específico) */
+  .datepicker-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .datepicker-toggle {
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .datepicker-toggle.has-date {
+    background: var(--c-primary);
+    color: white;
+    border-color: var(--c-primary);
+  }
+  .datepicker-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 999;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.15);
+    min-width: 260px;
+  }
+  .datepicker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .datepicker-nav {
+    background: transparent;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    color: var(--c-primary);
+    font-size: 16px;
+    line-height: 1;
+    font-family: inherit;
+    transition: all 0.1s;
+  }
+  .datepicker-nav:hover { background: var(--c-bg-tint); }
+  .datepicker-month-label {
+    font-weight: 600;
+    color: var(--c-primary-dark);
+    font-size: 13px;
+    text-transform: capitalize;
+  }
+  .datepicker-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 4px;
+  }
+  .datepicker-weekdays > div {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    padding: 4px 0;
+    text-transform: uppercase;
+  }
+  .datepicker-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .datepicker-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--c-text);
+    transition: all 0.1s;
+  }
+  .datepicker-day:hover:not(:disabled):not(.empty) {
+    background: var(--c-bg-tint);
+    border-color: var(--c-accent);
+  }
+  .datepicker-day.empty {
+    visibility: hidden;
+  }
+  .datepicker-day.today {
+    font-weight: 700;
+    color: var(--c-primary);
+  }
+  .datepicker-day.selected {
+    background: var(--c-primary);
+    color: white !important;
+    border-color: var(--c-primary);
+    font-weight: 600;
+  }
+  .datepicker-day.future {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .datepicker-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--c-border);
+  }
+  .datepicker-action {
+    padding: 5px 10px;
+    background: transparent;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--c-text-muted);
+    transition: all 0.1s;
+  }
+  .datepicker-action:hover {
+    border-color: var(--c-primary);
+    color: var(--c-primary);
+  }
+  .datepicker-action.primary {
+    color: var(--c-primary);
+    border-color: var(--c-accent);
+  }
+
+  /* Range picker (Período específico) — reusa estilo do datepicker */
+  .rangepicker-popover {
+    min-width: 220px;
+    padding: 10px 12px 10px 12px;
+  }
+  .rangepicker-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .rangepicker-row label {
+    color: var(--c-text-muted);
+    font-weight: 600;
+    min-width: 28px;
+  }
+  .rangepicker-row input[type="date"] {
+    flex: 1;
+    padding: 5px 8px;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--c-text);
+  }
+  .rangepicker-row input[type="date"]:focus {
+    outline: none;
+    border-color: var(--c-primary);
+  }
+
   .filter-reset {
     margin-left: auto;
     padding: 6px 12px;
@@ -597,11 +752,19 @@
     color: var(--c-text-muted);
     font-family: inherit;
     transition: all 0.15s;
+    opacity: 0.5;
+  }
+  .filter-reset.has-filters {
+    opacity: 1;
+    border-color: var(--c-accent);
+    color: var(--c-primary);
+    border-style: solid;
   }
   .filter-reset:hover {
     border-style: solid;
     border-color: #EF4444;
     color: #EF4444;
+    opacity: 1;
   }
 
   /* SCORECARDS */
@@ -698,6 +861,15 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
+  }
+  .legend-emoji {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    font-size: 12px;
+    line-height: 1;
   }
 
   /* TABLE */
@@ -912,6 +1084,56 @@
   }
   .driver-table tr:last-child td { border-bottom: none; }
 
+  /* Paginação da tabela de drivers */
+  .table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 12px 8px;
+    border-top: 1px solid var(--c-border);
+    margin-top: 4px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .table-count {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    font-weight: 500;
+  }
+  .table-count strong {
+    color: var(--c-primary-dark);
+    font-weight: 600;
+  }
+  .table-pagination {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .table-page-btn {
+    padding: 6px 14px;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--c-primary);
+    font-family: inherit;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .table-page-btn:hover {
+    border-color: var(--c-primary);
+    background: var(--c-bg-tint);
+  }
+  .table-page-btn.primary {
+    background: var(--c-bg-tint);
+    border-color: var(--c-accent);
+  }
+  .table-page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .status-pill {
     display: inline-flex;
     align-items: center;
@@ -936,6 +1158,102 @@
   }
 
   /* LOADER */
+  /* MODAL — Seletor de mês pro PDF Calendar */
+  .month-picker-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 9000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(2px);
+  }
+  .month-picker-overlay.show { display: flex; }
+  .month-picker-box {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.3);
+    width: 100%;
+    max-width: 380px;
+    overflow: hidden;
+  }
+  .month-picker-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--c-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .month-picker-header h3 {
+    margin: 0;
+    font-size: 15px;
+    color: var(--c-primary-dark);
+    font-weight: 700;
+  }
+  .month-picker-close {
+    background: none;
+    border: 1px solid var(--c-border);
+    color: var(--c-text-muted);
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .month-picker-close:hover { background: var(--c-bg); color: var(--c-text); }
+  .month-picker-body { padding: 18px 20px 20px; }
+  .month-picker-body p {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: var(--c-text-muted);
+  }
+  .month-picker-select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    margin-bottom: 16px;
+    background: white;
+  }
+  .month-picker-select:focus {
+    outline: none;
+    border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(74, 159, 224, 0.15);
+  }
+  .month-picker-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .month-picker-cancel,
+  .month-picker-confirm {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    border: 1px solid var(--c-border);
+    background: white;
+    color: var(--c-text-muted);
+    transition: all 0.15s;
+  }
+  .month-picker-cancel:hover { background: var(--c-bg); }
+  .month-picker-confirm {
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    border: none;
+  }
+  .month-picker-confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(44, 82, 130, 0.4);
+  }
+
   .loader-overlay {
     position: fixed;
     inset: 0;
@@ -1002,6 +1320,15 @@
   .side-panel.open {
     transform: translateX(0);
   }
+  /* Garante que o mapa principal e seus controles (attribution etc)
+     ficam abaixo do painel lateral quando aberto. Leaflet usa z-index 400-1000
+     em vários elementos internos, sobrepondo o painel sem essa regra. */
+  #map .leaflet-control-container,
+  #map .leaflet-pane,
+  #map .leaflet-top,
+  #map .leaflet-bottom {
+    z-index: 400 !important;
+  }
   .panel-header {
     position: sticky;
     top: 0;
@@ -1043,6 +1370,28 @@
   .panel-close:hover {
     background: var(--c-bg);
     color: var(--c-text);
+  }
+  /* Botão "Ver perfil completo" no fim do painel */
+  .panel-profile-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 11px;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .panel-profile-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(44, 82, 130, 0.4);
+    color: white;
   }
   .panel-body {
     padding: 16px 20px 24px;
@@ -1108,6 +1457,82 @@
     font-size: 13px;
   }
   .info-row:last-child { border-bottom: none; }
+
+  /* Idle mini-grid (no painel lateral do driver) */
+  .panel-idle-section {
+    background: var(--c-bg);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .idle-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .idle-mini-cell {
+    text-align: center;
+    padding: 6px 2px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid var(--c-border);
+  }
+  .idle-mini-cell .idle-mini-label {
+    font-size: 8px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+  }
+  .idle-mini-cell .idle-mini-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--c-text);
+    line-height: 1.1;
+  }
+  .idle-mini-cell.has-value-low .idle-mini-value { color: #64748B; }
+  .idle-mini-cell.has-value-high .idle-mini-value { color: #DC2626; }
+  .idle-mini-cell.has-value-medium .idle-mini-value { color: #D97706; }
+  .idle-empty-msg {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 8px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  /* VID badge floating (Yes/No) */
+  .vid-floating-yes {
+    display: inline-block;
+    padding: 2px 10px;
+    background: #DBEAFE;
+    color: #1E40AF;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .vid-floating-no {
+    display: inline-block;
+    padding: 2px 10px;
+    background: #F1F5F9;
+    color: #475569;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .vid-status-active {
+    color: #16A34A;
+    font-weight: 600;
+  }
+  .vid-status-half {
+    color: #D97706;
+    font-weight: 500;
+  }
+  .vid-status-inactive {
+    color: #DC2626;
+    font-weight: 500;
+  }
   .info-label {
     color: var(--c-text-muted);
     flex-shrink: 0;
@@ -1520,7 +1945,7 @@
     </div>
 
     <div class="login-logo">
-      <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" id="login-logo-img" onerror="this.style.display='none'; document.getElementById('login-logo-fallback').style.display='inline-flex';">
+      <img src="https://www.greatplacetowork.in/great/api/assets/uploads/13040/logo/logo.png" alt="Aceolution" id="login-logo-img" onerror="this.style.display='none'; document.getElementById('login-logo-fallback').style.display='inline-flex';">
       <div id="login-logo-fallback" class="login-logo-fallback" style="display:none;">
         <span class="login-logo-text">Aceolution</span>
       </div>
@@ -1556,11 +1981,11 @@
 
 <div class="header">
   <div class="brand-wrap">
-    <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
+    <img src="https://www.greatplacetowork.in/great/api/assets/uploads/13040/logo/logo.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
     <div class="brand-divider"></div>
-    <div class="brand-sub" data-i18n="brandTitle">
-      STREET VIEW DASHBOARD
-      <span data-i18n="brandRegion">LATAM</span>
+    <div class="brand-sub">
+      <div class="brand-title-line" data-i18n="brandTitle">STREET VIEW DASHBOARD</div>
+      <div class="brand-region-line" data-i18n="brandRegion">LATAM</div>
     </div>
   </div>
   <div class="header-right">
@@ -1569,10 +1994,6 @@
       <button data-lang="es">ES</button>
       <button data-lang="en">EN</button>
     </div>
-    <button class="demo-toggle" id="demo-toggle" onclick="toggleDemoMode()">
-      <span id="demo-icon">🎭</span>
-      <span id="demo-label" data-i18n="demoMode">Modo demo</span>
-    </button>
     <div class="last-updated">
       <div class="refresh-dot"></div>
       <span id="last-updated">—</span>
@@ -1592,9 +2013,14 @@
           <div class="export-title" data-i18n="exportTimesheet">Folha de ponto</div>
           <div class="export-sub" data-i18n="exportTimesheetSub">Excel por driver/dia (com horas e km)</div>
         </button>
+        <button onclick="openMonthPickerForCalendar()">
+          <div class="export-title" data-i18n="exportCalendar">Resumo Calendar</div>
+          <div class="export-sub" data-i18n="exportCalendarSub">PDF visual do Driver/VID Calendar (mês)</div>
+        </button>
       </div>
     </div>
     <button class="refresh-btn" onclick="loadData()" data-i18n="refresh">⟳ Atualizar</button>
+    <a href="ramp.html" class="refresh-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;" title="Ramp Expenses Dashboard">💳 <span data-i18n="rampLink">Ramp</span></a>
     <button class="refresh-btn admin-btn" id="admin-btn" onclick="openAdminPanel()" style="display:none;" title="Admin">⚙ <span data-i18n="adminBtn">Admin</span></button>
     <div class="user-pill" id="user-pill" style="display:none;">
       <div class="user-avatar" id="user-avatar">?</div>
@@ -1729,9 +2155,48 @@
   <button class="filter-chip" data-country="Peru" onclick="setFilter('country', 'Peru')">Peru</button>
 
   <span class="filter-label" style="margin-left:16px;" data-i18n="filterPeriod">Período:</span>
-  <button class="filter-chip" data-period="1" onclick="setFilter('period', 1)" data-i18n="today">Hoje</button>
-  <button class="filter-chip active" data-period="7" onclick="setFilter('period', 7)" data-i18n="sevenDays">7 dias</button>
-  <button class="filter-chip" data-period="30" onclick="setFilter('period', 30)" data-i18n="thirtyDays">30 dias</button>
+  <button class="filter-chip active" data-period="1" onclick="setFilter('period', 1)" data-i18n="today">Hoje</button>
+
+  <!-- Botão pra abrir o mini-calendário (dia único) -->
+  <div class="datepicker-wrap">
+    <button class="filter-chip datepicker-toggle" id="datepicker-toggle" onclick="toggleDatePicker(event)">
+      📅 <span id="datepicker-label" data-i18n="specificDay">Dia específico</span>
+    </button>
+    <div class="datepicker-popover" id="datepicker-popover" style="display:none;">
+      <div class="datepicker-header">
+        <button class="datepicker-nav" onclick="navDatePicker(-1)" title="Mês anterior">‹</button>
+        <span class="datepicker-month-label" id="datepicker-month-label">—</span>
+        <button class="datepicker-nav" onclick="navDatePicker(1)" title="Próximo mês">›</button>
+      </div>
+      <div class="datepicker-weekdays" id="datepicker-weekdays"></div>
+      <div class="datepicker-grid" id="datepicker-grid"></div>
+      <div class="datepicker-footer">
+        <button class="datepicker-action" onclick="clearSpecificDate()" data-i18n="datePickerClear">Limpar</button>
+        <button class="datepicker-action primary" onclick="setSpecificDateToToday()" data-i18n="datePickerToday">Hoje</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão pra abrir o seletor de range (período específico) -->
+  <div class="datepicker-wrap">
+    <button class="filter-chip datepicker-toggle" id="rangepicker-toggle" onclick="toggleRangePicker(event)">
+      📆 <span id="rangepicker-label" data-i18n="specificRange">Período específico</span>
+    </button>
+    <div class="datepicker-popover rangepicker-popover" id="rangepicker-popover" style="display:none;">
+      <div class="rangepicker-row">
+        <label data-i18n="rangeFrom">De:</label>
+        <input type="date" id="rangepicker-start">
+      </div>
+      <div class="rangepicker-row">
+        <label data-i18n="rangeTo">Até:</label>
+        <input type="date" id="rangepicker-end">
+      </div>
+      <div class="datepicker-footer">
+        <button class="datepicker-action" onclick="clearSpecificRange()" data-i18n="datePickerClear">Limpar</button>
+        <button class="datepicker-action primary" onclick="applySpecificRange()" data-i18n="rangeApply">Aplicar</button>
+      </div>
+    </div>
+  </div>
 
   <button class="filter-reset" onclick="resetPreferences()" title="Resetar filtros e preferências" data-i18n="resetFilters">↺ Resetar</button>
 </div>
@@ -1774,7 +2239,8 @@
   </div>
   <div id="map"></div>
   <div class="map-legend">
-    <div class="legend-item"><span class="legend-dot" style="background:#2C5282;"></span> <span data-i18n="legendBase">Base (hotel/casa)</span></div>
+    <div class="legend-item"><span class="legend-emoji">🏠</span> <span data-i18n="legendHome">Casa</span></div>
+    <div class="legend-item"><span class="legend-emoji">🏨</span> <span data-i18n="legendHotel">Hotel</span></div>
     <div class="legend-item"><span class="legend-dot" style="background:#4A9FE0; opacity:0.4;"></span> <span data-i18n="legendArea">Área de mapeamento</span></div>
     <div class="legend-item"><span class="legend-dot" style="background:#22C55E;"></span> <span data-i18n="legendRecent">Check-in nas últimas 24h</span></div>
     <div class="legend-item"><span class="legend-dot" style="background:#F59E0B;"></span> <span data-i18n="legendOld">Sem check-in &gt; 24h</span></div>
@@ -1818,6 +2284,14 @@
     <tbody id="driver-tbody">
     </tbody>
   </table>
+  <div class="table-footer" id="table-footer" style="display:none;">
+    <span class="table-count" id="table-count">—</span>
+    <div class="table-pagination">
+      <button class="table-page-btn" id="show-more-btn" onclick="showMoreDrivers()" data-i18n="showMore10">+ Ver mais 10</button>
+      <button class="table-page-btn primary" id="show-all-btn" onclick="showAllDrivers()" data-i18n="showAllDrivers">Ver todos</button>
+      <button class="table-page-btn" id="collapse-btn" onclick="collapseDrivers()" style="display:none;" data-i18n="collapseTable">↑ Recolher</button>
+    </div>
+  </div>
 </div>
 
 <div class="rankings-section" id="rankings-section" style="display:none;">
@@ -1878,6 +2352,35 @@
       <div class="info-row">
         <span class="info-label" data-i18n="pAddress">Endereço</span>
         <span class="info-value small" id="panel-base-address">—</span>
+      </div>
+    </div>
+
+    <!-- Current VID (do VID Calendar) -->
+    <div class="panel-section" id="panel-vid-section" style="display:none;">
+      <div class="panel-section-title" data-i18n="pCurrentVid">Current VID</div>
+      <div class="info-row">
+        <span class="info-label">VID</span>
+        <span class="info-value" id="panel-vid-id" style="font-weight:600;">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pVidFloating">Floating?</span>
+        <span class="info-value" id="panel-vid-floating">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pVidStatus">Status (Google)</span>
+        <span class="info-value" id="panel-vid-status">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label" data-i18n="pVidQc">QC Score</span>
+        <span class="info-value" id="panel-vid-qc" style="font-weight:600;">—</span>
+      </div>
+    </div>
+
+    <!-- Idle Count do mês (compacto) -->
+    <div class="panel-section panel-idle-section" id="panel-idle-section" style="display:none;">
+      <div class="panel-section-title" data-i18n="pIdleCount">Idle Days (mês)</div>
+      <div class="idle-mini-grid" id="panel-idle-grid">
+        <!-- preenchido dinamicamente -->
       </div>
     </div>
 
@@ -1957,11 +2460,18 @@
       <div class="panel-section-title" data-i18n="pHistory">Histórico de áreas</div>
       <div id="panel-history"></div>
     </div>
+
+    <!-- Link pro perfil completo do driver (driver-profile.html) -->
+    <div class="panel-section" style="border-top:1px solid var(--c-border); padding-top:14px; margin-top:8px;">
+      <a href="#" id="panel-profile-link" class="panel-profile-btn" onclick="goToDriverProfile(event)">
+        👤 <span data-i18n="pProfileBtn">Ver perfil completo</span> →
+      </a>
+    </div>
   </div>
 </aside>
 
 <footer>
-  <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display='none'"><br>
+  <img src="https://www.greatplacetowork.in/great/api/assets/uploads/13040/logo/logo.png" alt="Aceolution" onerror="this.style.display='none'"><br>
   <span data-i18n="footerText">Plataforma interna — Aceolution do Brasil Ltda.</span>
 </footer>
 
@@ -2213,8 +2723,6 @@ const I18N = {
     loadingProgress: 'Carregando drivers',
     brandTitle: 'STREET VIEW DASHBOARD',
     brandRegion: 'LATAM',
-    demoMode: 'Modo demo',
-    demoModeActive: 'Modo demo ativo',
     refresh: '⟳ Atualizar',
     updatedAt: 'Atualizado',
     errorLoading: 'Erro ao carregar',
@@ -2231,7 +2739,53 @@ const I18N = {
     resetFilters: '↺ Resetar',
     hHistoryNoCheckin: 'Sem check-in matinal',
     hHistoryNoCheckout: 'sem checkout',
+    showMore10: '+ Ver mais 10',
+    reportDriversByCountry: 'Drivers por país',
+    reportTotal: 'Total:',
+    reportDriversWord: 'drivers',
+    reportBaselineByCountry: 'Baseline TKM por país',
+    reportBaseline: 'Baseline',
+    reportThreshold: 'Threshold (50%)',
+    reportMaximum: 'Maximum (25%)',
+    reportVidsByCountry: 'VIDs por país',
+    reportFleet: 'Fleet',
+    reportActive: 'Ativos',
+    reportNonActive: 'Inativos',
+    reportFloating: 'Floating',
+    reportQcAvg: 'QC Avg',
+    reportIdleCount: 'Idle Day Count (mês atual)',
+    reportIdleSub: 'Total parado:',
+    reportIdleDays: 'dias',
+    reportIdlePersonal: 'PERSONAL',
+    reportIdleDisks: 'DISKS',
+    reportIdleMech: 'MECH',
+    reportIdleTech: 'TECH',
+    reportIdleWeather: 'WEATHER',
+    exportCalendar: 'Resumo Calendar',
+    pCurrentVid: 'VID atual',
+    pVidFloating: 'Floating?',
+    pVidStatus: 'Status (Google)',
+    pVidQc: 'QC Score',
+    pIdleCount: 'Idle Days (mês)',
+    pIdleNone: 'Nenhum dia parado',
+    pNoVid: 'Sem VID atribuído',
+    specificDay: 'Dia específico',
+    datePickerClear: 'Limpar',
+    datePickerToday: 'Hoje',
+    specificRange: 'Período específico',
+    rangeFrom: 'De:',
+    rangeTo: 'Até:',
+    rangeApply: 'Aplicar',
+    rangeInvalid: 'Datas inválidas — De deve vir antes de Até',
+    rangeLoading: 'Carregando dados do período…',
+    exportCalendarSub: 'PDF visual do Driver/VID Calendar (mês)',
+    showAllDrivers: 'Ver todos',
+    collapseTable: '↑ Recolher',
+    tableShowingCount: 'Mostrando',
+    tableOfCount: 'de',
+    tableDriversWord: 'drivers',
     adminBtn: 'Admin',
+    rampLink: 'Ramp',
     adminTitle: 'Painel Admin',
     adminSub: 'Edite informações dos drivers sem abrir a planilha',
     adminSelectDriver: 'Selecione um driver à esquerda pra começar',
@@ -2270,7 +2824,8 @@ const I18N = {
     mapTitle: 'Mapa LATAM',
     mapSub: 'Base atual e área de mapeamento por driver',
     driversVisible: 'drivers visíveis',
-    legendBase: 'Base (hotel/casa)',
+    legendHome: 'Casa',
+    legendHotel: 'Hotel',
     legendArea: 'Área de mapeamento',
     legendRecent: 'Check-in nas últimas 24h',
     legendOld: 'Sem check-in > 24h',
@@ -2303,6 +2858,12 @@ const I18N = {
     exportSummarySub: 'Scorecards + CTS + top drivers',
     exportGenerating: 'Gerando PDF',
     exportError: 'Erro ao gerar PDF',
+    exportErrorBackend: 'Não foi possível buscar dados do backend para gerar o PDF.',
+    monthPickerTitle: 'Exportar Resumo Calendar',
+    monthPickerSub: 'Escolha o mês de referência:',
+    monthPickerCancel: 'Cancelar',
+    monthPickerConfirm: 'Gerar PDF',
+    currentLabel: 'atual',
     exportTimesheet: 'Folha de ponto',
     exportTimesheetSub: 'Excel por driver/dia (com horas e km)',
     timesheetTitle: 'Folha de Ponto',
@@ -2355,6 +2916,7 @@ const I18N = {
     pVehicle: 'Status veículo',
     pNotes: 'Observações',
     pHistory: 'Histórico de áreas',
+    pProfileBtn: 'Ver perfil completo',
     loadingHistory: 'Carregando histórico',
     yesterday: 'Ontem',
     daysAgoLabel: 'dias atrás',
@@ -2362,7 +2924,6 @@ const I18N = {
     pNoBase: 'Sem base cadastrada',
     pNoArea: 'Sem área registrada',
     pHistoryEmpty: 'Sem histórico disponível',
-    pHistoryEmptyReal: ' — feature completa após atualização do backend',
     classNear: 'Próximo da base',
     classEfficient: 'Hotel mode eficiente',
     classHigh: 'Distância alta',
@@ -2380,8 +2941,6 @@ const I18N = {
     loadingProgress: 'Cargando conductores',
     brandTitle: 'STREET VIEW DASHBOARD',
     brandRegion: 'LATAM',
-    demoMode: 'Modo demo',
-    demoModeActive: 'Modo demo activo',
     refresh: '⟳ Actualizar',
     updatedAt: 'Actualizado',
     errorLoading: 'Error al cargar',
@@ -2398,7 +2957,53 @@ const I18N = {
     resetFilters: '↺ Restablecer',
     hHistoryNoCheckin: 'Sin check-in matutino',
     hHistoryNoCheckout: 'sin checkout',
+    showMore10: '+ Ver más 10',
+    reportDriversByCountry: 'Conductores por país',
+    reportTotal: 'Total:',
+    reportDriversWord: 'conductores',
+    reportBaselineByCountry: 'Baseline TKM por país',
+    reportBaseline: 'Baseline',
+    reportThreshold: 'Threshold (50%)',
+    reportMaximum: 'Maximum (25%)',
+    reportVidsByCountry: 'VIDs por país',
+    reportFleet: 'Flota',
+    reportActive: 'Activos',
+    reportNonActive: 'Inactivos',
+    reportFloating: 'Floating',
+    reportQcAvg: 'QC Avg',
+    reportIdleCount: 'Idle Day Count (mes actual)',
+    reportIdleSub: 'Total parado:',
+    reportIdleDays: 'días',
+    reportIdlePersonal: 'PERSONAL',
+    reportIdleDisks: 'DISKS',
+    reportIdleMech: 'MECH',
+    reportIdleTech: 'TECH',
+    reportIdleWeather: 'WEATHER',
+    exportCalendar: 'Resumen Calendar',
+    pCurrentVid: 'VID actual',
+    pVidFloating: '¿Floating?',
+    pVidStatus: 'Estado (Google)',
+    pVidQc: 'QC Score',
+    pIdleCount: 'Días parado (mes)',
+    pIdleNone: 'Ningún día parado',
+    pNoVid: 'Sin VID asignado',
+    specificDay: 'Día específico',
+    datePickerClear: 'Limpiar',
+    datePickerToday: 'Hoy',
+    specificRange: 'Período específico',
+    rangeFrom: 'De:',
+    rangeTo: 'Hasta:',
+    rangeApply: 'Aplicar',
+    rangeInvalid: 'Fechas inválidas — De debe ser antes de Hasta',
+    rangeLoading: 'Cargando datos del período…',
+    exportCalendarSub: 'PDF visual del Driver/VID Calendar (mes)',
+    showAllDrivers: 'Ver todos',
+    collapseTable: '↑ Contraer',
+    tableShowingCount: 'Mostrando',
+    tableOfCount: 'de',
+    tableDriversWord: 'conductores',
     adminBtn: 'Admin',
+    rampLink: 'Ramp',
     adminTitle: 'Panel Admin',
     adminSub: 'Edita información de conductores sin abrir la planilla',
     adminSelectDriver: 'Seleccione un conductor a la izquierda para comenzar',
@@ -2437,7 +3042,8 @@ const I18N = {
     mapTitle: 'Mapa LATAM',
     mapSub: 'Base actual y área de mapeo por conductor',
     driversVisible: 'conductores visibles',
-    legendBase: 'Base (hotel/casa)',
+    legendHome: 'Casa',
+    legendHotel: 'Hotel',
     legendArea: 'Área de mapeo',
     legendRecent: 'Check-in en las últimas 24h',
     legendOld: 'Sin check-in > 24h',
@@ -2470,6 +3076,12 @@ const I18N = {
     exportSummarySub: 'Scorecards + CTS + top conductores',
     exportGenerating: 'Generando PDF',
     exportError: 'Error al generar PDF',
+    exportErrorBackend: 'No se pudo obtener datos del backend para generar el PDF.',
+    monthPickerTitle: 'Exportar Resumen Calendar',
+    monthPickerSub: 'Selecciona el mes de referencia:',
+    monthPickerCancel: 'Cancelar',
+    monthPickerConfirm: 'Generar PDF',
+    currentLabel: 'actual',
     exportTimesheet: 'Hoja de asistencia',
     exportTimesheetSub: 'Excel por conductor/día (con horas y km)',
     timesheetTitle: 'Hoja de Asistencia',
@@ -2522,11 +3134,14 @@ const I18N = {
     pVehicle: 'Estado vehículo',
     pNotes: 'Observaciones',
     pHistory: 'Historial de áreas',
+    pProfileBtn: 'Ver perfil completo',
     pNoLocation: 'Sin ubicación disponible',
     pNoBase: 'Sin base registrada',
     pNoArea: 'Sin área registrada',
+    loadingHistory: 'Cargando historial',
+    yesterday: 'Ayer',
+    daysAgoLabel: 'días atrás',
     pHistoryEmpty: 'Sin historial disponible',
-    pHistoryEmptyReal: ' — función completa tras actualización del backend',
     classNear: 'Cerca de la base',
     classEfficient: 'Hotel mode eficiente',
     classHigh: 'Distancia alta',
@@ -2544,8 +3159,6 @@ const I18N = {
     loadingProgress: 'Loading drivers',
     brandTitle: 'STREET VIEW DASHBOARD',
     brandRegion: 'LATAM',
-    demoMode: 'Demo mode',
-    demoModeActive: 'Demo mode on',
     refresh: '⟳ Refresh',
     updatedAt: 'Updated',
     errorLoading: 'Loading error',
@@ -2562,7 +3175,53 @@ const I18N = {
     resetFilters: '↺ Reset',
     hHistoryNoCheckin: 'No morning check-in',
     hHistoryNoCheckout: 'no checkout',
+    showMore10: '+ Show 10 more',
+    reportDriversByCountry: 'Drivers by country',
+    reportTotal: 'Total:',
+    reportDriversWord: 'drivers',
+    reportBaselineByCountry: 'Baseline TKM by country',
+    reportBaseline: 'Baseline',
+    reportThreshold: 'Threshold (50%)',
+    reportMaximum: 'Maximum (25%)',
+    reportVidsByCountry: 'VIDs by country',
+    reportFleet: 'Fleet',
+    reportActive: 'Active',
+    reportNonActive: 'Inactive',
+    reportFloating: 'Floating',
+    reportQcAvg: 'QC Avg',
+    reportIdleCount: 'Idle Day Count (current month)',
+    reportIdleSub: 'Total idle:',
+    reportIdleDays: 'days',
+    reportIdlePersonal: 'PERSONAL',
+    reportIdleDisks: 'DISKS',
+    reportIdleMech: 'MECH',
+    reportIdleTech: 'TECH',
+    reportIdleWeather: 'WEATHER',
+    exportCalendar: 'Calendar Summary',
+    pCurrentVid: 'Current VID',
+    pVidFloating: 'Floating?',
+    pVidStatus: 'Status (Google)',
+    pVidQc: 'QC Score',
+    pIdleCount: 'Idle Days (month)',
+    pIdleNone: 'No idle days',
+    pNoVid: 'No VID assigned',
+    specificDay: 'Specific day',
+    datePickerClear: 'Clear',
+    datePickerToday: 'Today',
+    specificRange: 'Specific period',
+    rangeFrom: 'From:',
+    rangeTo: 'To:',
+    rangeApply: 'Apply',
+    rangeInvalid: 'Invalid dates — From must be before To',
+    rangeLoading: 'Loading period data…',
+    exportCalendarSub: 'Visual PDF of Driver/VID Calendar (month)',
+    showAllDrivers: 'Show all',
+    collapseTable: '↑ Collapse',
+    tableShowingCount: 'Showing',
+    tableOfCount: 'of',
+    tableDriversWord: 'drivers',
     adminBtn: 'Admin',
+    rampLink: 'Ramp',
     adminTitle: 'Admin Panel',
     adminSub: 'Edit driver info without opening the spreadsheet',
     adminSelectDriver: 'Select a driver on the left to start',
@@ -2601,7 +3260,8 @@ const I18N = {
     mapTitle: 'LATAM Map',
     mapSub: 'Current base and mapping area per driver',
     driversVisible: 'drivers visible',
-    legendBase: 'Base (hotel/home)',
+    legendHome: 'Home',
+    legendHotel: 'Hotel',
     legendArea: 'Mapping area',
     legendRecent: 'Check-in within 24h',
     legendOld: 'No check-in > 24h',
@@ -2634,6 +3294,12 @@ const I18N = {
     exportSummarySub: 'Scorecards + CTS + top drivers',
     exportGenerating: 'Generating PDF',
     exportError: 'Error generating PDF',
+    exportErrorBackend: 'Could not fetch backend data to generate the PDF.',
+    monthPickerTitle: 'Export Calendar Summary',
+    monthPickerSub: 'Select reference month:',
+    monthPickerCancel: 'Cancel',
+    monthPickerConfirm: 'Generate PDF',
+    currentLabel: 'current',
     exportTimesheet: 'Timesheet',
     exportTimesheetSub: 'Excel by driver/day (with hours and km)',
     timesheetTitle: 'Timesheet',
@@ -2686,11 +3352,14 @@ const I18N = {
     pVehicle: 'Vehicle status',
     pNotes: 'Notes',
     pHistory: 'Area history',
+    pProfileBtn: 'See full profile',
     pNoLocation: 'No location available',
     pNoBase: 'No base registered',
     pNoArea: 'No area registered',
+    loadingHistory: 'Loading history',
+    yesterday: 'Yesterday',
+    daysAgoLabel: 'days ago',
     pHistoryEmpty: 'No history available',
-    pHistoryEmptyReal: ' — full feature available after backend update',
     classNear: 'Close to base',
     classEfficient: 'Efficient hotel mode',
     classHigh: 'High distance',
@@ -2715,13 +3384,6 @@ function t(key) {
 function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
-    // Skip elements that have complex children (brand-sub has a span child)
-    if (key === 'brandTitle') {
-      // Only replace text node, preserve span
-      const span = el.querySelector('span');
-      el.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = t(key) + ' '; });
-      return;
-    }
     el.textContent = t(key);
   });
   document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : currentLang;
@@ -2736,12 +3398,6 @@ function setLanguage(lang) {
   applyI18n();
   // Re-render dynamic content that's built via JS
   if (state.drivers && state.drivers.length) applyFiltersAndRender();
-  updateDemoLabel();
-}
-
-function updateDemoLabel() {
-  const label = document.getElementById('demo-label');
-  if (label) label.textContent = state.demoMode ? t('demoModeActive') : t('demoMode');
 }
 
 document.querySelectorAll('.lang-switch button').forEach(btn => {
@@ -2757,8 +3413,9 @@ document.addEventListener('click', (e) => {
 
 let state = {
   drivers: [],
-  demoMode: false,
-  filter: { country: 'all', period: 7 },
+  filter: { country: 'all', period: 1, specificDate: null, specificRange: null }, // specificDate='YYYY-MM-DD' (1 dia) | specificRange={start,end} (range) | period=1 (hoje)
+  // Driver atualmente aberto no painel lateral (pra link "Ver perfil completo")
+  currentPanelDriver: null,
   // v3 aux data
   hmByCountry: [],
   hmByDriver: [],
@@ -2769,6 +3426,8 @@ let state = {
   ctsSelectedPeriod: null, // null = mês mais recente
   // Top N expandido?
   topExpanded: false,
+  // Paginação progressiva da tabela: 10 inicial, +10 por click, ou Infinity
+  tableLimit: 10,
 };
 
 // ================================================================
@@ -2777,7 +3436,7 @@ let state = {
 //
 // Salva preferências do usuário (filtros, sort, etc) em localStorage
 // pra que recarregar a página ou voltar depois mantenha tudo igual.
-// NÃO salva: dados do servidor (drivers, métricas), demoMode.
+// NÃO salva: dados do servidor (drivers, métricas).
 
 const STATE_STORAGE_KEY = 'latam-dashboard-prefs-v1';
 
@@ -2839,10 +3498,13 @@ function loadPreferences() {
  * Útil quando usuário se confunde com filtros aplicados.
  */
 function resetPreferences() {
-  state.filter = { country: 'all', period: 7 };
+  state.filter = { country: 'all', period: 1, specificDate: null, specificRange: null };
   state.sort = { column: 'name', direction: 'asc' };
   state.ctsSelectedPeriod = null;
   state.topExpanded = false;
+  state.tableLimit = 10;
+  // Limpa cache de checkins de período (vai re-buscar quando precisar)
+  periodCheckinsCache = null;
   savePreferences();
 
   // Re-aplica visualmente os filtros nos botões
@@ -2858,9 +3520,29 @@ function syncFilterButtonsUI() {
   document.querySelectorAll('.filter-chip[data-country]').forEach(b => {
     b.classList.toggle('active', b.dataset.country === state.filter.country);
   });
+  // Active no botão "Hoje" só quando não há filtros específicos ativos
+  const periodActive = !state.filter.specificDate && !state.filter.specificRange;
   document.querySelectorAll('.filter-chip[data-period]').forEach(b => {
-    b.classList.toggle('active', Number(b.dataset.period) === state.filter.period);
+    b.classList.toggle('active', periodActive && Number(b.dataset.period) === state.filter.period);
   });
+
+  // Atualiza visual do datepicker e range picker (mostra data se selecionada)
+  if (typeof updateDatePickerLabel === 'function') updateDatePickerLabel();
+  if (typeof updateRangePickerLabel === 'function') updateRangePickerLabel();
+
+  // Destaca botão reset se algum filtro tá em estado não-default
+  const isDefault = (
+    state.filter.country === 'all' &&
+    state.filter.period === 1 &&
+    !state.filter.specificDate &&
+    !state.filter.specificRange &&
+    state.sort.column === 'name' &&
+    state.sort.direction === 'asc' &&
+    state.ctsSelectedPeriod === null &&
+    !state.topExpanded
+  );
+  const resetBtn = document.querySelector('.filter-reset');
+  if (resetBtn) resetBtn.classList.toggle('has-filters', !isDefault);
 }
 
 let map = null;
@@ -2935,12 +3617,15 @@ function renderMap(drivers) {
     const isRecent = d.hoursAgo !== null && d.hoursAgo <= 24;
     const baseColor = isRecent ? '#22C55E' : '#F59E0B';
 
-    // Ícone personalizado de base
+    // Emoji indicando tipo de base — visível com 1 olhada
+    const baseTypeIcon = d.base.type === 'Hotel' ? '🏨' : '🏠';
+
+    // Ícone personalizado de base — círculo colorido com emoji do tipo
     const baseIcon = L.divIcon({
       className: 'driver-marker',
-      html: `<div style="width:14px;height:14px;background:${baseColor};border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>`,
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
+      html: `<div style="width:22px;height:22px;background:${baseColor};border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;">${baseTypeIcon}</div>`,
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
     });
 
     const marker = L.marker([d.base.lat, d.base.lng], { icon: baseIcon });
@@ -3000,11 +3685,7 @@ async function loadData() {
   showLoader(true, t('loadingProgress') + '...');
 
   try {
-    if (state.demoMode) {
-      state.drivers = generateDemoData();
-    } else {
-      state.drivers = await fetchRealData();
-    }
+    state.drivers = await fetchRealData();
 
     applyFiltersAndRender();
     document.getElementById('last-updated').textContent = t('updatedAt') + ' ' + formatTime(new Date());
@@ -3106,6 +3787,8 @@ async function fetchRealData() {
       base,
       area,
       hoursAgo: checkin ? checkin.hoursAgo : null,
+      // v5.3: data do último check-in formatada (pra filtro de dia específico)
+      lastCheckinDate: checkin && checkin.timestamp ? formatDateYMD(new Date(checkin.timestamp)) : null,
       vehicleStatus: checkin ? (checkin.vehicleStatus || 'OK') : 'OK',
       vehicleIssue: checkin ? checkin.vehicleIssue : '',
       notes: checkin ? checkin.notes : '',
@@ -3127,7 +3810,6 @@ async function fetchRealData() {
     };
   });
 
-  console.log('Drivers consolidados:', enriched.length);
   return enriched;
 }
 
@@ -3145,148 +3827,6 @@ async function fetchWithTimeout(url, timeoutMs) {
 }
 
 // =================================================================
-// DEMO DATA GENERATOR
-// =================================================================
-
-function generateDemoData() {
-  const driverTemplates = [
-    { name: 'Andre Luiz Barbosa Lima', country: 'Brazil', city: 'Rio de Janeiro' },
-    { name: 'Ruan Mota Santana', country: 'Brazil', city: 'Salvador' },
-    { name: 'Igor Resende Da Macena', country: 'Brazil', city: 'Belo Horizonte' },
-    { name: 'Flávio Rafael Batista', country: 'Brazil', city: 'Recife' },
-    { name: 'Douglas da Silva Batista', country: 'Brazil', city: 'Porto Alegre' },
-    { name: 'Murilo Carlos Daltin', country: 'Brazil', city: 'São Paulo' },
-    { name: 'Edson Alves de Miranda', country: 'Brazil', city: 'Curitiba' },
-    { name: 'Deivide Nelson dos Santos', country: 'Brazil', city: 'Brasília' },
-    { name: 'Maximiliano Tadeu Brant', country: 'Brazil', city: 'Fortaleza' },
-    { name: 'Matías Daniel Moreira', country: 'Argentina', city: 'Buenos Aires' },
-    { name: 'Axel Augusto Gentilini', country: 'Argentina', city: 'Cordoba' },
-    { name: 'Mauro Leandro Canepa', country: 'Argentina', city: 'Rosario' },
-    { name: 'Leandro Martín Andreoli', country: 'Argentina', city: 'Mendoza' },
-    { name: 'Guillermo Amado Juarez', country: 'Argentina', city: 'Tucuman' },
-    { name: 'Mauricio Alejandro Gallero', country: 'Argentina', city: 'Buenos Aires' },
-    { name: 'Carlos Alberto Silva', country: 'Chile', city: 'Santiago' },
-    { name: 'Rodrigo Martinez', country: 'Chile', city: 'Valparaíso' },
-    { name: 'Felipe Gonzalez', country: 'Chile', city: 'Concepción' },
-    { name: 'Cesar Casallas', country: 'Colombia', city: 'Bogotá' },
-    { name: 'Andres Rodriguez', country: 'Colombia', city: 'Medellín' },
-    { name: 'Juan Pablo Torres', country: 'Colombia', city: 'Cali' },
-    { name: 'Rafael Roberto Naylor', country: 'México', city: 'Mexico City' },
-    { name: 'Montserrat Santos', country: 'México', city: 'Guadalajara' },
-    { name: 'Christian Jesus Fonseca', country: 'México', city: 'Monterrey' },
-    { name: 'Diego Garcia Llerenas', country: 'México', city: 'Puebla' },
-    { name: 'Jesus Vazquez', country: 'México', city: 'Mexico City' },
-    { name: 'Juan Carlos Mauricio', country: 'Peru', city: 'Lima' },
-    { name: 'Luis Fernando Castro', country: 'Peru', city: 'Arequipa' },
-    { name: 'Miguel Angel Vargas', country: 'Peru', city: 'Cusco' },
-    { name: 'Ricardo Alonso Mendoza', country: 'Peru', city: 'Trujillo' },
-  ];
-
-  return driverTemplates.map((d, i) => {
-    const cityCoords = CITY_COORDS[d.city] || COUNTRY_CENTERS[d.country] || [-15, -60];
-    const baseLat = cityCoords[0] + (Math.random() - 0.5) * 0.2;
-    const baseLng = cityCoords[1] + (Math.random() - 0.5) * 0.2;
-
-    // Área de mapeamento: 70% dos casos perto da base, 30% mais longe (hotel mode)
-    const isHotelMode = Math.random() > 0.3;
-    const distanceDeg = isHotelMode ? 0.3 + Math.random() * 0.8 : 0.05 + Math.random() * 0.2;
-    const angle = Math.random() * 2 * Math.PI;
-    const areaLat = baseLat + distanceDeg * Math.cos(angle);
-    const areaLng = baseLng + distanceDeg * Math.sin(angle);
-    const radius = 5 + Math.floor(Math.random() * 40);
-
-    // Alguns drivers sem check-in recente
-    const hoursAgo = i % 7 === 0 ? (30 + Math.floor(Math.random() * 80)) :
-                     i % 5 === 0 ? (3 + Math.floor(Math.random() * 18)) :
-                     Math.floor(Math.random() * 4);
-
-    // Alguns com issue
-    const vehicleStatus = i % 11 === 0 ? 'Minor Issue' :
-                          i % 17 === 0 ? 'Critical Issue' : 'OK';
-
-    const baseType = Math.random() > 0.4 ? 'Hotel' : 'Home';
-    const distBaseToEdge = Math.max(0, Math.round((haversine(baseLat, baseLng, areaLat, areaLng) - radius) * 10) / 10);
-
-    // Casa: se é Hotel mode, casa fica 200-400km longe. Se é Home, casa = base.
-    let homeLat, homeLng, distHomeToEdge, distHomeToCenter, savingsKm;
-    if (baseType === 'Hotel') {
-      // Home em outra cidade (simula long-distance worker)
-      const homeOffset = 1.8 + Math.random() * 2.2; // ~200-400km em graus aproximados
-      const homeAngle = Math.random() * 2 * Math.PI;
-      homeLat = baseLat + homeOffset * Math.cos(homeAngle);
-      homeLng = baseLng + homeOffset * Math.sin(homeAngle);
-      distHomeToCenter = Math.round(haversine(homeLat, homeLng, areaLat, areaLng) * 10) / 10;
-      distHomeToEdge = Math.max(0, Math.round((distHomeToCenter - radius) * 10) / 10);
-      savingsKm = Math.round((distHomeToEdge - distBaseToEdge) * 10) / 10;
-    } else {
-      homeLat = baseLat + (Math.random() - 0.5) * 0.05;
-      homeLng = baseLng + (Math.random() - 0.5) * 0.05;
-      distHomeToCenter = Math.round(haversine(homeLat, homeLng, areaLat, areaLng) * 10) / 10;
-      distHomeToEdge = distBaseToEdge;
-      savingsKm = 0;
-    }
-
-    const hmMonthly = (baseType === 'Hotel' && savingsKm > 50) ? 'Yes' : 'No';
-
-    // Gera 3-5 áreas históricas próximas à atual (simulando check-ins passados)
-    const historyCount = 3 + Math.floor(Math.random() * 3);
-    const historyAreas = [];
-    for (let h = 0; h < historyCount; h++) {
-      const jitter = 0.15;
-      historyAreas.push({
-        lat: areaLat + (Math.random() - 0.5) * jitter * 2,
-        lng: areaLng + (Math.random() - 0.5) * jitter * 2,
-        radius: Math.max(3, radius + Math.floor((Math.random() - 0.5) * 20)),
-        address: `Área · ${d.city}${h === 0 ? ' (norte)' : h === 1 ? ' (sul)' : h === 2 ? ' (centro)' : ' (leste)'}`,
-        dateLabel: h === 0 ? 'Ontem' : (h + 1) + ' dias atrás',
-      });
-    }
-
-    // Notas ocasionais (20% dos drivers)
-    const demoNotes = [
-      'Trânsito intenso na região, pode atrasar.',
-      'Obra fechando rua principal — rota alternativa.',
-      'Área nova, primeira vez mapeando aqui.',
-      'Clima instável previsto pra tarde.',
-      'Reabastecer combustível antes das 11h.',
-      'Hotel confirmado por mais 3 noites.',
-    ];
-    const notes = (i % 5 === 0) ? demoNotes[i % demoNotes.length] : '';
-
-    return {
-      name: d.name,
-      email: d.name.toLowerCase().replace(/\s/g, '.') + '@field-ops-xpe.com',
-      country: d.country,
-      city: d.city,
-      fullAddress: `Demo addr · ${d.city}`,
-      homeLat, homeLng,
-      base: {
-        type: baseType,
-        address: `${baseType === 'Hotel' ? 'Hotel ' : ''}${d.city} — Centro`,
-        lat: baseLat,
-        lng: baseLng,
-      },
-      area: {
-        lat: areaLat,
-        lng: areaLng,
-        radius: radius,
-        address: `Região de ${d.city}`,
-      },
-      hoursAgo,
-      vehicleStatus,
-      distBaseToEdge,
-      distHomeToEdge,
-      distHomeToCenter,
-      savingsKm,
-      hmMonthly,
-      breakevenPct: 0.5 + Math.random() * 1.2,
-      historyAreas,
-      notes,
-    };
-  });
-}
-
-// =================================================================
 // FILTERS & RENDER
 // =================================================================
 
@@ -3299,29 +3839,165 @@ function setFilter(type, value) {
       el.classList.toggle('active', el.dataset.country === value);
     });
   } else if (type === 'period') {
+    // Clicar em "Hoje" desativa filtros específicos (mutuamente exclusivos)
+    state.filter.specificDate = null;
+    state.filter.specificRange = null;
+    periodCheckinsCache = null;
     document.querySelectorAll('[data-period]').forEach(el => {
       el.classList.toggle('active', parseInt(el.dataset.period) === value);
     });
   }
 
+  // Reset paginação ao filtrar (ordem mudou, top 10 anterior não é mais o mesmo)
+  state.tableLimit = 10;
+
   savePreferences();
   applyFiltersAndRender();
 }
 
+/**
+ * Cache em memória dos check-ins do período (specificDate ou specificRange).
+ * Vira null quando o filtro é limpo. Repopulado por loadPeriodCheckins().
+ *
+ * Estrutura:
+ *   {
+ *     dateRange: 'YYYY-MM-DD' ou {start, end}, // pra validar cache
+ *     // Map de email -> último check-in DELE no período
+ *     // (já que o backend retorna 1 por dia, escolhemos o mais recente do range)
+ *     byEmail: { 'email@x.com': { timestamp, destLat, destLng, destAddress, destRadius, ... } }
+ *   }
+ */
+let periodCheckinsCache = null;
+
+/**
+ * Busca check-ins do período via backend e popula cache. Chama applyFiltersAndRender ao fim.
+ * Usa o filtro atual (specificDate ou specificRange) pra montar a query.
+ */
+async function loadPeriodCheckins() {
+  let startDate, endDate;
+  if (state.filter.specificDate) {
+    startDate = endDate = state.filter.specificDate;
+  } else if (state.filter.specificRange) {
+    startDate = state.filter.specificRange.start;
+    endDate = state.filter.specificRange.end;
+  } else {
+    // Sem filtro específico — limpa cache
+    periodCheckinsCache = null;
+    applyFiltersAndRender();
+    return;
+  }
+
+  // Cache hit?
+  if (periodCheckinsCache && periodCheckinsCache.startDate === startDate && periodCheckinsCache.endDate === endDate) {
+    applyFiltersAndRender();
+    return;
+  }
+
+  showLoader(true, t('rangeLoading'));
+
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getCheckinsByPeriod&startDate=' + startDate + '&endDate=' + endDate)
+      .then(r => r.json());
+    if (!res.success) throw new Error('Falhou getCheckinsByPeriod');
+
+    // Pra cada driver, mantém só o mais recente check-in do range (pra ter "onde estava por último")
+    const byEmail = {};
+    res.checkins.forEach(c => {
+      const ts = new Date(c.timestamp);
+      if (!byEmail[c.driverEmail] || ts > new Date(byEmail[c.driverEmail].timestamp)) {
+        byEmail[c.driverEmail] = c;
+      }
+    });
+
+    periodCheckinsCache = { startDate, endDate, byEmail };
+  } catch (err) {
+    console.error('Erro ao buscar check-ins do período:', err);
+    alert('Erro ao buscar dados do período: ' + err.message);
+    periodCheckinsCache = null;
+  } finally {
+    showLoader(false);
+  }
+
+  applyFiltersAndRender();
+}
+
 function applyFiltersAndRender() {
-  const filtered = state.drivers.filter(d => {
+  // Sincroniza estado visual dos botões (incluindo destaque do reset)
+  syncFilterButtonsUI();
+
+  // Filtra por país (sempre)
+  const byCountry = state.drivers.filter(d => {
     if (state.filter.country !== 'all' && d.country !== state.filter.country) return false;
     return true;
   });
 
-  // Filtro de período aplica diferente: drivers sem check-in no período ainda aparecem como "sem check-in"
-  const periodHours = state.filter.period * 24;
+  // ---- Decide qual conjunto de drivers + métricas mostrar ----
+  // Modo 1: SEM filtro específico → usa estado normal (último check-in geral)
+  // Modo 2: COM filtro específico → reescreve drivers usando check-ins do período
+  let driversForView;
+  let isSpecificMode = false;
 
-  renderScorecards(filtered, periodHours);
-  renderMap(filtered);
-  renderCtsGoals(filtered);
-  renderTable(filtered, periodHours);
-  renderRankings(filtered);
+  if ((state.filter.specificDate || state.filter.specificRange) && periodCheckinsCache) {
+    isSpecificMode = true;
+    // Reescreve cada driver substituindo dados do último check-in pelos do período
+    driversForView = byCountry.map(d => {
+      const periodCheckin = periodCheckinsCache.byEmail[d.email];
+      if (!periodCheckin) {
+        // Driver não fez check-in no período — vai ser filtrado abaixo
+        return { ...d, _skipFromView: true };
+      }
+      // Recalcula distância base→área e casa→área com check-in do período
+      let distBaseToEdge = null;
+      if (d.base && periodCheckin.destLat && periodCheckin.destRadius) {
+        distBaseToEdge = Math.max(0,
+          Math.round((haversine(d.base.lat, d.base.lng, periodCheckin.destLat, periodCheckin.destLng) - periodCheckin.destRadius) * 10) / 10
+        );
+      }
+      let distHomeToEdge = null;
+      if (isValidCoord(d.homeLat, d.homeLng) && periodCheckin.destLat) {
+        const c = Math.round(haversine(d.homeLat, d.homeLng, periodCheckin.destLat, periodCheckin.destLng) * 10) / 10;
+        distHomeToEdge = Math.max(0, Math.round((c - (periodCheckin.destRadius || 0)) * 10) / 10);
+      }
+      let savingsKm = null;
+      if (d.base && d.base.type === 'Hotel' && distHomeToEdge !== null && distBaseToEdge !== null) {
+        savingsKm = Math.round((distHomeToEdge - distBaseToEdge) * 10) / 10;
+      }
+      const ts = new Date(periodCheckin.timestamp);
+      return {
+        ...d,
+        // Override com dados do período
+        hoursAgo: (Date.now() - ts.getTime()) / 3600000,
+        lastCheckinDate: formatDateYMD(ts),
+        vehicleStatus: periodCheckin.vehicleStatus || 'OK',
+        vehicleIssue: periodCheckin.vehicleIssue || '',
+        notes: periodCheckin.notes || '',
+        area: {
+          lat: periodCheckin.destLat,
+          lng: periodCheckin.destLng,
+          address: periodCheckin.destAddress,
+          radius: periodCheckin.destRadius || 10,
+        },
+        distBaseToEdge,
+        distHomeToEdge,
+        savingsKm,
+      };
+    }).filter(d => !d._skipFromView);
+  } else {
+    // Modo normal — usa state.drivers como tá
+    driversForView = byCountry;
+  }
+
+  // Filtro de período aplica diferente: drivers sem check-in no período ainda aparecem como "sem check-in"
+  // No modo específico, todos já têm check-in (já filtrado acima)
+  const periodHours = isSpecificMode ? Infinity : state.filter.period * 24;
+
+  // No modo específico, TUDO usa a mesma lista (mapa, scorecards, tabela)
+  // No modo normal, mantém comportamento original
+  renderScorecards(driversForView, periodHours);
+  renderMap(driversForView);
+  renderCtsGoals(byCountry);  // CTS é mensal, sempre usa lista completa por país
+  renderTable(driversForView, periodHours);
+  renderRankings(driversForView);
 }
 
 function renderRankings(drivers) {
@@ -3407,13 +4083,300 @@ function setCtsPeriod(period) {
 }
 
 // =================================================================
+// MINI-CALENDÁRIO (Filtro de dia específico)
+// =================================================================
+//
+// Permite filtrar a tabela de drivers pra mostrar só quem fez check-in
+// num dia específico. Filtro estrito: drivers que não fizeram check-in
+// nesse dia somem da lista.
+//
+// Estado interno do calendário (separado do state global pra não persistir).
+let datePickerState = {
+  // Mês visível no calendário (não confundir com data selecionada)
+  visibleYear: new Date().getFullYear(),
+  visibleMonth: new Date().getMonth(), // 0-indexed
+};
+
+/**
+ * Abre/fecha o popover do calendário.
+ * Recebe event pra parar propagação (evita fechar por clique-fora imediato).
+ */
+function toggleDatePicker(evt) {
+  if (evt) evt.stopPropagation();
+  const popover = document.getElementById('datepicker-popover');
+  const isOpen = popover.style.display !== 'none';
+
+  if (isOpen) {
+    popover.style.display = 'none';
+    return;
+  }
+
+  // Sincroniza mês visível com data selecionada (se houver)
+  if (state.filter.specificDate) {
+    const [y, m, d] = state.filter.specificDate.split('-').map(Number);
+    datePickerState.visibleYear = y;
+    datePickerState.visibleMonth = m - 1;
+  } else {
+    const today = new Date();
+    datePickerState.visibleYear = today.getFullYear();
+    datePickerState.visibleMonth = today.getMonth();
+  }
+
+  renderDatePicker();
+  popover.style.display = '';
+}
+
+/**
+ * Navega o mês visível: dir = -1 (prev) ou +1 (next).
+ */
+function navDatePicker(dir) {
+  datePickerState.visibleMonth += dir;
+  if (datePickerState.visibleMonth < 0) {
+    datePickerState.visibleMonth = 11;
+    datePickerState.visibleYear--;
+  } else if (datePickerState.visibleMonth > 11) {
+    datePickerState.visibleMonth = 0;
+    datePickerState.visibleYear++;
+  }
+  renderDatePicker();
+}
+
+/**
+ * Renderiza o conteúdo do calendário (header + dias da semana + grid).
+ * Chamado toda vez que abre, navega, ou seleciona.
+ */
+function renderDatePicker() {
+  const year = datePickerState.visibleYear;
+  const month = datePickerState.visibleMonth;
+
+  // Nome do mês (locale-aware)
+  const locale = currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es-ES' : 'en-US');
+  const monthName = new Date(year, month, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  document.getElementById('datepicker-month-label').textContent = monthName;
+
+  // Dias da semana (Dom a Sáb)
+  const wdayLabels = currentLang === 'pt'
+    ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+    : currentLang === 'es'
+    ? ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+    : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  document.getElementById('datepicker-weekdays').innerHTML =
+    wdayLabels.map(d => `<div>${d}</div>`).join('');
+
+  // Grid de dias
+  const firstDay = new Date(year, month, 1).getDay();      // 0=domingo
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  const todayStr = formatDateYMD(today);
+  const selectedStr = state.filter.specificDate;
+
+  let html = '';
+
+  // Slots vazios antes do dia 1 (alinhar com a coluna do dia da semana correto)
+  for (let i = 0; i < firstDay; i++) {
+    html += '<button class="datepicker-day empty" disabled></button>';
+  }
+
+  // Dias do mês
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dDate = new Date(year, month, day);
+    const isFuture = dDate > today && dStr !== todayStr;
+    const classes = ['datepicker-day'];
+    if (dStr === todayStr) classes.push('today');
+    if (dStr === selectedStr) classes.push('selected');
+    if (isFuture) classes.push('future');
+    html += `<button class="${classes.join(' ')}" ${isFuture ? 'disabled' : ''} onclick="selectDatePickerDay('${dStr}')">${day}</button>`;
+  }
+
+  document.getElementById('datepicker-grid').innerHTML = html;
+}
+
+/**
+ * Seleciona um dia no calendário, fecha o popover e re-renderiza dashboard.
+ */
+function selectDatePickerDay(dateStr) {
+  state.filter.specificDate = dateStr;
+  // Limpa specificRange se estava setado (mutuamente exclusivos)
+  state.filter.specificRange = null;
+  document.getElementById('datepicker-popover').style.display = 'none';
+  updateDatePickerLabel();
+  state.tableLimit = 10;  // Reset paginação ao mudar filtro
+  // Busca check-ins do dia escolhido (e atualiza tudo via loadPeriodCheckins)
+  loadPeriodCheckins();
+}
+
+/**
+ * Limpa data selecionada (volta a usar period normal).
+ */
+function clearSpecificDate() {
+  state.filter.specificDate = null;
+  periodCheckinsCache = null;
+  document.getElementById('datepicker-popover').style.display = 'none';
+  updateDatePickerLabel();
+  state.tableLimit = 10;
+  applyFiltersAndRender();
+}
+
+/**
+ * Atalho: seleciona hoje.
+ */
+function setSpecificDateToToday() {
+  selectDatePickerDay(formatDateYMD(new Date()));
+}
+
+/**
+ * Atualiza visual do botão "Dia específico" no filtro:
+ * - Sem data: texto padrão, sem destaque
+ * - Com data: mostra a data formatada e destaca o botão
+ */
+function updateDatePickerLabel() {
+  const btn = document.getElementById('datepicker-toggle');
+  const label = document.getElementById('datepicker-label');
+  if (!btn || !label) return;
+
+  if (state.filter.specificDate) {
+    btn.classList.add('has-date');
+    // Formato amigável: "15/04/2026" em PT, "04/15/2026" em EN
+    const [y, m, d] = state.filter.specificDate.split('-');
+    const formatted = currentLang === 'en' ? `${m}/${d}/${y}` : `${d}/${m}/${y}`;
+    label.textContent = '📅 ' + formatted;
+  } else {
+    btn.classList.remove('has-date');
+    label.textContent = t('specificDay');
+  }
+}
+
+/**
+ * Helper: 'YYYY-MM-DD' a partir de Date object (em fuso local, sem UTC weirdness).
+ */
+function formatDateYMD(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// =================================================================
+// RANGE PICKER (Período Específico)
+// =================================================================
+//
+// Permite filtrar a tabela + mapa + scorecards pra um range de datas.
+// Quando ativo, faz uma chamada nova ao backend pra buscar todos os
+// check-ins do período (`getCheckinsByPeriod`) e atualiza tudo.
+
+function toggleRangePicker(evt) {
+  if (evt) evt.stopPropagation();
+  const popover = document.getElementById('rangepicker-popover');
+  const isOpen = popover.style.display !== 'none';
+
+  // Fecha datepicker se estiver aberto pra não conflitar
+  document.getElementById('datepicker-popover').style.display = 'none';
+
+  if (isOpen) {
+    popover.style.display = 'none';
+    return;
+  }
+
+  // Sincroniza inputs com state atual
+  const startInput = document.getElementById('rangepicker-start');
+  const endInput = document.getElementById('rangepicker-end');
+  if (state.filter.specificRange) {
+    startInput.value = state.filter.specificRange.start;
+    endInput.value = state.filter.specificRange.end;
+  } else {
+    // Default: últimos 7 dias
+    const today = new Date();
+    const week = new Date();
+    week.setDate(week.getDate() - 6);
+    startInput.value = formatDateYMD(week);
+    endInput.value = formatDateYMD(today);
+  }
+
+  popover.style.display = '';
+}
+
+/**
+ * Aplica range de datas escolhido. Valida e dispara filtro.
+ */
+async function applySpecificRange() {
+  const start = document.getElementById('rangepicker-start').value;
+  const end = document.getElementById('rangepicker-end').value;
+
+  if (!start || !end) return; // input vazio, ignora
+  if (start > end) {
+    alert(t('rangeInvalid'));
+    return;
+  }
+
+  state.filter.specificRange = { start, end };
+  // Limpa specificDate se estava setado (mutuamente exclusivos)
+  state.filter.specificDate = null;
+  state.tableLimit = 10;
+
+  document.getElementById('rangepicker-popover').style.display = 'none';
+
+  // Busca check-ins do período (e atualiza tudo via applyFiltersAndRender)
+  await loadPeriodCheckins();
+}
+
+function clearSpecificRange() {
+  state.filter.specificRange = null;
+  periodCheckinsCache = null;
+  document.getElementById('rangepicker-popover').style.display = 'none';
+  state.tableLimit = 10;
+  applyFiltersAndRender();
+}
+
+/**
+ * Atualiza visual do botão "Período específico" no filtro.
+ */
+function updateRangePickerLabel() {
+  const btn = document.getElementById('rangepicker-toggle');
+  const label = document.getElementById('rangepicker-label');
+  if (!btn || !label) return;
+
+  if (state.filter.specificRange) {
+    btn.classList.add('has-date');
+    const [ys, ms, ds] = state.filter.specificRange.start.split('-');
+    const [ye, me, de] = state.filter.specificRange.end.split('-');
+    const fmt = (y, m, d) => currentLang === 'en' ? `${m}/${d}` : `${d}/${m}`;
+    label.textContent = '📆 ' + fmt(ys, ms, ds) + ' → ' + fmt(ye, me, de);
+  } else {
+    btn.classList.remove('has-date');
+    label.textContent = t('specificRange');
+  }
+}
+
+// Fecha popovers se clicar fora deles
+document.addEventListener('click', (e) => {
+  const popover = document.getElementById('datepicker-popover');
+  const wrap = document.querySelector('.datepicker-wrap');
+  if (!popover || !wrap) return;
+  if (popover.style.display !== 'none' && !wrap.contains(e.target)) {
+    popover.style.display = 'none';
+  }
+});
+
+// Fecha range picker se clicar fora dele
+document.addEventListener('click', (e) => {
+  const popover = document.getElementById('rangepicker-popover');
+  if (!popover) return;
+  // .datepicker-wrap engloba ambos popovers — mas só fecha se clicou fora do wrap específico
+  const insideAnyWrap = e.target.closest('.datepicker-wrap');
+  if (popover.style.display !== 'none' && !insideAnyWrap) {
+    popover.style.display = 'none';
+  }
+});
+
+// =================================================================
 // ADMIN PANEL (Feature 1.3)
 // =================================================================
 //
 // Permite edição de drivers (base type, endereço, email, observações)
 // sem precisar abrir a Google Sheet. Visível só pro user 'fuss'.
 
-const ADMIN_USERNAMES = ['fuss']; // hardcoded por enquanto, simples
+const ADMIN_USERNAMES = ['fuss', 'lucas']; // hardcoded por enquanto, simples
 
 let adminState = {
   selectedDriver: null,    // driver atualmente sendo editado
@@ -3754,6 +4717,19 @@ async function exportSummaryPdf() {
   showLoader(true, t('exportGenerating') + '...');
 
   try {
+    // Busca dados extras (driver calendar + VID calendar) — mostra alerta se falhar
+    let driverCal = null, vidCal = null;
+    try {
+      const [dcRes, vcRes] = await Promise.all([
+        fetch(CONFIG.scriptUrl + '?action=getDriverCalendar').then(r => r.json()).catch(() => ({ success: false })),
+        fetch(CONFIG.scriptUrl + '?action=getVidCalendar').then(r => r.json()).catch(() => ({ success: false })),
+      ]);
+      if (dcRes.success) driverCal = dcRes.data;
+      if (vcRes.success) vidCal = vcRes.data;
+    } catch (err) {
+      console.warn('Falhou buscar Driver/VID Calendar:', err);
+    }
+
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
@@ -3762,6 +4738,30 @@ async function exportSummaryPdf() {
       return true;
     });
     const periodHours = state.filter.period * 24;
+
+    // Drivers por país — contagem
+    const byCountry = {};
+    filtered.forEach(d => {
+      const c = d.country || '—';
+      byCountry[c] = (byCountry[c] || 0) + 1;
+    });
+    const countriesSorted = Object.entries(byCountry).sort((a, b) => b[1] - a[1]);
+
+    // Idle counts agregados (do Driver Calendar) — só se filtro de país bate
+    let idleAgg = null;
+    if (driverCal && driverCal.drivers) {
+      const idleDrivers = state.filter.country === 'all'
+        ? driverCal.drivers
+        : driverCal.drivers.filter(d => d.country === state.filter.country);
+      idleAgg = {
+        personal: idleDrivers.reduce((s, d) => s + (d.idlePersonal || 0), 0),
+        disks: idleDrivers.reduce((s, d) => s + (d.idleDisks || 0), 0),
+        mech: idleDrivers.reduce((s, d) => s + (d.idleMech || 0), 0),
+        tech: idleDrivers.reduce((s, d) => s + (d.idleTech || 0), 0),
+        weather: idleDrivers.reduce((s, d) => s + (d.idleWeather || 0), 0),
+      };
+      idleAgg.total = idleAgg.personal + idleAgg.disks + idleAgg.mech + idleAgg.tech + idleAgg.weather;
+    }
 
     // Métricas do topo
     const total = filtered.length;
@@ -3893,6 +4893,153 @@ async function exportSummaryPdf() {
       y += 5;
     }
 
+    // ===== Drivers por país =====
+    if (countriesSorted.length > 0) {
+      if (y > 240) { pdf.addPage(); y = 15; }
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportDriversByCountry'), leftX, y);
+      y += 6;
+
+      // Render como linha de chips: BR: 45  ·  AR: 9  ·  CL: 7
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(26, 54, 93);
+      const chipsText = countriesSorted
+        .map(([country, count]) => `${country}: ${count}`)
+        .join('   ·   ');
+      pdf.text(chipsText, leftX, y);
+      y += 6;
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(t('reportTotal') + ' ' + total + ' ' + t('reportDriversWord'), leftX, y);
+      y += 8;
+    }
+
+    // ===== Baseline TKM por país (do Driver Calendar) =====
+    if (driverCal && driverCal.countries && driverCal.countries.length > 0) {
+      if (y > 230) { pdf.addPage(); y = 15; }
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportBaselineByCountry'), leftX, y);
+      y += 6;
+
+      // Mini-tabela: Country | Baseline | Threshold | Maximum
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 116, 139);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('thCountry'), leftX, y);
+      pdf.text(t('reportBaseline'), leftX + 35, y);
+      pdf.text(t('reportThreshold'), leftX + 75, y);
+      pdf.text(t('reportMaximum'), leftX + 120, y);
+      y += 4;
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(leftX, y, pageW - leftX, y);
+      y += 3;
+
+      pdf.setFont('helvetica', 'normal');
+      driverCal.countries.forEach(c => {
+        pdf.setTextColor(26, 54, 93);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(c.country), leftX, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(Math.round(c.baseline).toLocaleString() + ' TKM', leftX + 35, y);
+        pdf.text(Math.round(c.threshold).toLocaleString() + ' TKM', leftX + 75, y);
+        pdf.text(Math.round(c.maximum).toLocaleString() + ' TKM', leftX + 120, y);
+        y += 5;
+      });
+      y += 4;
+    }
+
+    // ===== VIDs por país (Active / Non Active / Floating + QC Score) =====
+    if (vidCal && vidCal.countries && vidCal.countries.length > 0) {
+      if (y > 215) { pdf.addPage(); y = 15; }
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportVidsByCountry'), leftX, y);
+      y += 6;
+
+      // Headers
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 116, 139);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('thCountry'), leftX, y);
+      pdf.text(t('reportFleet'), leftX + 32, y);
+      pdf.text(t('reportActive'), leftX + 55, y);
+      pdf.text(t('reportNonActive'), leftX + 80, y);
+      pdf.text(t('reportFloating'), leftX + 110, y);
+      pdf.text(t('reportQcAvg'), leftX + 145, y);
+      y += 4;
+      pdf.setDrawColor(226, 232, 240);
+      pdf.line(leftX, y, pageW - leftX, y);
+      y += 3;
+
+      pdf.setFont('helvetica', 'normal');
+      vidCal.countries.forEach(c => {
+        pdf.setTextColor(26, 54, 93);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(c.country), leftX, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(String(c.fleet), leftX + 32, y);
+        pdf.setTextColor(34, 197, 94);
+        pdf.text(String(c.activeVids), leftX + 55, y);
+        pdf.setTextColor(239, 68, 68);
+        pdf.text(String(c.nonActiveVids), leftX + 80, y);
+        // Floating em destaque (cor diferente)
+        pdf.setTextColor(74, 159, 224);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(c.floatingCars), leftX + 110, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(100, 116, 139);
+        pdf.text((c.avgQcScore * 100).toFixed(0) + '%', leftX + 145, y);
+        y += 5;
+      });
+      y += 4;
+    }
+
+    // ===== Idle Day Count (agregado) =====
+    if (idleAgg && idleAgg.total > 0) {
+      if (y > 230) { pdf.addPage(); y = 15; }
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportIdleCount'), leftX, y);
+      y += 6;
+
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(t('reportIdleSub') + ' ' + idleAgg.total + ' ' + t('reportIdleDays'), leftX, y);
+      y += 6;
+
+      // Render como mini-cards: Personal | Disks | Mech | Tech | Weather
+      const idleW = (pageW - 2 * leftX) / 5;
+      const drawIdleCard = (label, value, col, color) => {
+        const x = leftX + col * idleW;
+        pdf.setDrawColor(226, 232, 240);
+        pdf.roundedRect(x, y, idleW - 3, 16, 2, 2);
+        pdf.setFontSize(7);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(label, x + 2, y + 4);
+        pdf.setFontSize(13);
+        pdf.setTextColor(color[0], color[1], color[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(value), x + 2, y + 12);
+        pdf.setFont('helvetica', 'normal');
+      };
+      drawIdleCard(t('reportIdlePersonal'), idleAgg.personal, 0, [100, 116, 139]);
+      drawIdleCard(t('reportIdleDisks'), idleAgg.disks, 1, [100, 116, 139]);
+      drawIdleCard(t('reportIdleMech'), idleAgg.mech, 2, [239, 68, 68]);
+      drawIdleCard(t('reportIdleTech'), idleAgg.tech, 3, [245, 158, 11]);
+      drawIdleCard(t('reportIdleWeather'), idleAgg.weather, 4, [74, 159, 224]);
+      y += 22;
+    }
+
     // Top drivers: economia
     if (topSavings.length > 0) {
       if (y > 240) { pdf.addPage(); y = 15; }
@@ -3962,6 +5109,451 @@ async function exportSummaryPdf() {
     pdf.save(filename);
   } catch (err) {
     console.error('Erro ao exportar relatório:', err);
+    alert(t('exportError') + ': ' + err.message);
+  } finally {
+    showLoader(false);
+  }
+}
+
+/**
+ * Exporta resumo das abas DRIVER CALENDAR + VID CALENDAR como PDF.
+ * Foco em resumo visual — sem o calendário dia-a-dia.
+ */
+
+/**
+ * Abre o modal de seleção de mês e popula com meses disponíveis (RAW CTS DATA).
+ * Após user escolher, chama exportCalendarPdf(monthYear).
+ */
+async function openMonthPickerForCalendar() {
+  document.getElementById('export-menu').style.display = 'none';
+  const overlay = document.getElementById('month-picker-overlay');
+  const select = document.getElementById('month-picker-select');
+
+  // Loading inicial
+  select.innerHTML = `<option>${t('loading') || 'Carregando…'}</option>`;
+  select.disabled = true;
+  overlay.classList.add('show');
+
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getAvailableMonths').then(r => r.json());
+    console.log('[Calendar Export] Available months:', res);
+
+    if (!res.success || !res.months || res.months.length === 0) {
+      // Fallback: assume mês atual se backend não tiver getAvailableMonths
+      // (isso acontece se o user não fez deploy do backend novo ainda)
+      console.warn('[Calendar Export] getAvailableMonths não retornou dados — usando fallback do mês atual');
+      const now = new Date();
+      const currentKey = (now.getMonth() + 1) + '.' + now.getFullYear();
+      select.innerHTML = `<option value="${currentKey}">${formatMonthOption(currentKey)} (atual)</option>`;
+      select.disabled = false;
+      return;
+    }
+
+    // Popula com meses (mais recente primeiro, marca o atual)
+    const now = new Date();
+    const currentKey = (now.getMonth() + 1) + '.' + now.getFullYear();
+    select.innerHTML = res.months.map(m => {
+      const isCurrent = m === currentKey;
+      const label = formatMonthOption(m) + (isCurrent ? ' (' + (t('currentLabel') || 'atual') + ')' : '');
+      return `<option value="${m}"${isCurrent ? ' selected' : ''}>${label}</option>`;
+    }).join('');
+    select.disabled = false;
+  } catch (err) {
+    console.error('[Calendar Export] Erro ao buscar meses:', err);
+    // Fallback igual: mês atual
+    const now = new Date();
+    const currentKey = (now.getMonth() + 1) + '.' + now.getFullYear();
+    select.innerHTML = `<option value="${currentKey}">${formatMonthOption(currentKey)} (atual)</option>`;
+    select.disabled = false;
+  }
+}
+
+function closeMonthPicker(evt) {
+  if (evt && evt.target.id !== 'month-picker-overlay') return;  // só fecha se clicou no overlay
+  document.getElementById('month-picker-overlay').classList.remove('show');
+}
+
+function confirmMonthAndExport() {
+  const select = document.getElementById('month-picker-select');
+  const monthYear = select.value;
+  document.getElementById('month-picker-overlay').classList.remove('show');
+  exportCalendarPdf(monthYear);
+}
+
+/**
+ * Formata 'M.YYYY' (ex: '4.2026') em 'Abril 2026' (com locale).
+ */
+function formatMonthOption(monthKey) {
+  if (!monthKey) return '—';
+  const [m, y] = monthKey.split('.').map(Number);
+  const monthNames = currentLang === 'pt'
+    ? ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+    : currentLang === 'es'
+    ? ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+    : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return (monthNames[m - 1] || m) + ' ' + y;
+}
+
+/**
+ * Gera PDF Calendar Summary do mês especificado.
+ * Se monthYear não for passado, usa o mês corrente do backend.
+ */
+async function exportCalendarPdf(monthYear) {
+  document.getElementById('export-menu').style.display = 'none';
+
+  if (typeof window.jspdf === 'undefined') {
+    alert(t('exportError'));
+    return;
+  }
+
+  showLoader(true, t('exportGenerating') + '...');
+
+  try {
+    // Constrói URLs com param month se especificado
+    const dcUrl = CONFIG.scriptUrl + '?action=getDriverCalendar' + (monthYear ? '&month=' + encodeURIComponent(monthYear) : '');
+    const vcUrl = CONFIG.scriptUrl + '?action=getVidCalendar' + (monthYear ? '&month=' + encodeURIComponent(monthYear) : '');
+    console.log('[Calendar Export] Fetching:', { dcUrl, vcUrl, monthYear });
+
+    // IMPORTANTE: NÃO esconder erros silenciosamente — capturar e logar.
+    // Antes o código tinha .catch(() => ({success: false})) que escondia tudo
+    // e fazia o PDF sair vazio sem aviso. Agora qualquer falha é visível.
+    let dcRes, vcRes;
+    let dcError = null, vcError = null;
+    try {
+      dcRes = await fetch(dcUrl).then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status + ' em getDriverCalendar');
+        return r.json();
+      });
+      console.log('[Calendar Export] DriverCalendar response:', dcRes);
+    } catch (err) {
+      dcError = err;
+      console.error('[Calendar Export] DriverCalendar FALHOU:', err);
+      dcRes = { success: false, error: String(err) };
+    }
+    try {
+      vcRes = await fetch(vcUrl).then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status + ' em getVidCalendar');
+        return r.json();
+      });
+      console.log('[Calendar Export] VidCalendar response:', vcRes);
+    } catch (err) {
+      vcError = err;
+      console.error('[Calendar Export] VidCalendar FALHOU:', err);
+      vcRes = { success: false, error: String(err) };
+    }
+
+    // Se ambos falharam, ERRO VISÍVEL e não gera PDF vazio
+    if (!dcRes.success && !vcRes.success) {
+      const msg = (t('exportErrorBackend') || 'Não foi possível buscar dados do backend para gerar o PDF.') +
+        '\n\nDriver Calendar: ' + (dcError ? dcError.message : (dcRes.error || 'sem detalhe')) +
+        '\nVID Calendar: ' + (vcError ? vcError.message : (vcRes.error || 'sem detalhe')) +
+        '\n\nVerifique no console (F12) e confirme que o Apps Script foi atualizado.';
+      throw new Error(msg);
+    }
+
+    const driverCal = dcRes.success ? dcRes.data : null;
+    const vidCal = vcRes.success ? vcRes.data : null;
+
+    // Diagnóstico: se driverCal sem drivers e sem countries → também é "vazio"
+    const driverCalEmpty = !driverCal || (
+      (!driverCal.countries || driverCal.countries.length === 0) &&
+      (!driverCal.drivers || driverCal.drivers.length === 0)
+    );
+    const vidCalEmpty = !vidCal || (
+      (!vidCal.countries || vidCal.countries.length === 0) &&
+      (!vidCal.vids || vidCal.vids.length === 0)
+    );
+    if (driverCalEmpty && vidCalEmpty) {
+      const monthLabel = monthYear ? formatMonthOption(monthYear) : 'mês atual';
+      throw new Error('Backend retornou dados vazios para ' + monthLabel + '.\n\nIsso pode significar:\n• A aba RAW CTS DATA não tem dados desse mês\n• O Apps Script não foi atualizado (reimplante "Nova versão")\n\nVerifique o console (F12) pra detalhes.');
+    }
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    let y = 15;
+    const leftX = 15;
+    const pageW = pdf.internal.pageSize.getWidth();
+
+    // ===== Header =====
+    pdf.setFontSize(20);
+    pdf.setTextColor(26, 54, 93);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Calendar Summary · LATAM', leftX, y);
+    y += 7;
+
+    // Mês de referência
+    const month = (driverCal && driverCal.month) || (vidCal && vidCal.month);
+    const year = (driverCal && driverCal.year) || (vidCal && vidCal.year);
+    const monthNames = currentLang === 'pt'
+      ? ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+      : currentLang === 'es'
+      ? ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+      : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    pdf.setFontSize(10);
+    pdf.setTextColor(100, 116, 139);
+    pdf.setFont('helvetica', 'normal');
+    if (month && year) {
+      pdf.text((monthNames[month - 1] || month) + ' ' + year, leftX, y);
+    } else {
+      pdf.text('Atualizado em ' + new Date().toLocaleDateString(), leftX, y);
+    }
+    y += 4;
+
+    // Linha decorativa
+    pdf.setDrawColor(74, 159, 224);
+    pdf.setLineWidth(0.5);
+    pdf.line(leftX, y, pageW - leftX, y);
+    y += 8;
+    pdf.setLineWidth(0.2);
+
+    // ===== Seção 1: Resumo por país (DRIVER CALENDAR) =====
+    if (driverCal && driverCal.countries && driverCal.countries.length > 0) {
+      pdf.setFontSize(13);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportBaselineByCountry'), leftX, y);
+      y += 7;
+
+      // Header tabela
+      pdf.setFontSize(8);
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFillColor(44, 82, 130);
+      pdf.rect(leftX, y - 4, pageW - 2 * leftX, 7, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('thCountry'), leftX + 2, y);
+      pdf.text('TKM Price', leftX + 32, y);
+      pdf.text(t('reportBaseline'), leftX + 60, y);
+      pdf.text(t('reportThreshold'), leftX + 95, y);
+      pdf.text(t('reportMaximum'), leftX + 135, y);
+      pdf.text(t('reportFleet'), leftX + 168, y);
+      y += 8;
+
+      pdf.setFont('helvetica', 'normal');
+      driverCal.countries.forEach((c, i) => {
+        const rowBg = i % 2 === 0 ? null : [248, 250, 252];
+        if (rowBg) {
+          pdf.setFillColor(rowBg[0], rowBg[1], rowBg[2]);
+          pdf.rect(leftX, y - 4, pageW - 2 * leftX, 6, 'F');
+        }
+        pdf.setFontSize(9);
+        pdf.setTextColor(26, 54, 93);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(c.country), leftX + 2, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(71, 85, 105);
+        pdf.text('$' + c.tkmPrice.toFixed(2), leftX + 32, y);
+        pdf.text(Math.round(c.baseline).toLocaleString(), leftX + 60, y);
+        pdf.text(Math.round(c.threshold).toLocaleString(), leftX + 95, y);
+        pdf.text(Math.round(c.maximum).toLocaleString(), leftX + 135, y);
+        pdf.text(String(c.fleet), leftX + 168, y);
+        y += 6;
+      });
+      y += 5;
+    }
+
+    // ===== Seção 2: VIDs por país =====
+    if (vidCal && vidCal.countries && vidCal.countries.length > 0) {
+      if (y > 200) { pdf.addPage(); y = 15; }
+      pdf.setFontSize(13);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportVidsByCountry'), leftX, y);
+      y += 6;
+
+      // Aviso: se o user pediu mês passado mas VID CALENDAR só tem o atual
+      if (vidCal._monthMismatch) {
+        pdf.setFontSize(8);
+        pdf.setTextColor(146, 64, 14);  // amber
+        pdf.setFont('helvetica', 'italic');
+        pdf.text(
+          '⚠ VID CALENDAR mostra sempre o mês atual — dados abaixo não são de ' + (vidCal._requestedMonth || ''),
+          leftX, y
+        );
+        y += 5;
+        pdf.setFont('helvetica', 'normal');
+      } else {
+        y += 1;
+      }
+
+      // Header
+      pdf.setFontSize(8);
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFillColor(44, 82, 130);
+      pdf.rect(leftX, y - 4, pageW - 2 * leftX, 7, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('thCountry'), leftX + 2, y);
+      pdf.text(t('reportFleet'), leftX + 30, y);
+      pdf.text(t('reportActive'), leftX + 50, y);
+      pdf.text(t('reportNonActive'), leftX + 75, y);
+      pdf.text(t('reportFloating'), leftX + 105, y);
+      pdf.text('Avg TKM', leftX + 135, y);
+      pdf.text(t('reportQcAvg'), leftX + 165, y);
+      y += 8;
+
+      pdf.setFont('helvetica', 'normal');
+      vidCal.countries.forEach((c, i) => {
+        const rowBg = i % 2 === 0 ? null : [248, 250, 252];
+        if (rowBg) {
+          pdf.setFillColor(rowBg[0], rowBg[1], rowBg[2]);
+          pdf.rect(leftX, y - 4, pageW - 2 * leftX, 6, 'F');
+        }
+        pdf.setFontSize(9);
+        pdf.setTextColor(26, 54, 93);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(c.country), leftX + 2, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(71, 85, 105);
+        pdf.text(String(c.fleet), leftX + 30, y);
+        pdf.setTextColor(22, 163, 74);
+        pdf.text(String(c.activeVids), leftX + 50, y);
+        pdf.setTextColor(220, 38, 38);
+        pdf.text(String(c.nonActiveVids), leftX + 75, y);
+        pdf.setTextColor(74, 159, 224);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(c.floatingCars), leftX + 105, y);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(71, 85, 105);
+        pdf.text(c.avgTkm.toFixed(1), leftX + 135, y);
+        const qcPct = (c.avgQcScore * 100).toFixed(0);
+        if (c.avgQcScore >= 0.8) pdf.setTextColor(22, 163, 74);
+        else if (c.avgQcScore >= 0.5) pdf.setTextColor(217, 119, 6);
+        else pdf.setTextColor(220, 38, 38);
+        pdf.text(qcPct + '%', leftX + 165, y);
+        y += 6;
+      });
+      y += 5;
+    }
+
+    // ===== Seção 3: Idle Day Count agregado =====
+    if (driverCal && driverCal.drivers && driverCal.drivers.length > 0) {
+      if (y > 220) { pdf.addPage(); y = 15; }
+      const idleAgg = {
+        personal: 0, disks: 0, mech: 0, tech: 0, weather: 0, total: 0,
+      };
+      driverCal.drivers.forEach(d => {
+        idleAgg.personal += d.idlePersonal || 0;
+        idleAgg.disks += d.idleDisks || 0;
+        idleAgg.mech += d.idleMech || 0;
+        idleAgg.tech += d.idleTech || 0;
+        idleAgg.weather += d.idleWeather || 0;
+      });
+      idleAgg.total = idleAgg.personal + idleAgg.disks + idleAgg.mech + idleAgg.tech + idleAgg.weather;
+
+      pdf.setFontSize(13);
+      pdf.setTextColor(26, 54, 93);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(t('reportIdleCount'), leftX, y);
+      y += 6;
+
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(t('reportIdleSub') + ' ' + idleAgg.total + ' ' + t('reportIdleDays'), leftX, y);
+      y += 6;
+
+      const idleW = (pageW - 2 * leftX) / 5;
+      const drawIdleCard = (label, value, col, color) => {
+        const x = leftX + col * idleW;
+        pdf.setDrawColor(226, 232, 240);
+        pdf.roundedRect(x, y, idleW - 3, 18, 2, 2);
+        pdf.setFontSize(7);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(label, x + 3, y + 5);
+        pdf.setFontSize(15);
+        pdf.setTextColor(color[0], color[1], color[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(String(value), x + 3, y + 13);
+        pdf.setFont('helvetica', 'normal');
+      };
+      drawIdleCard(t('reportIdlePersonal'), idleAgg.personal, 0, [100, 116, 139]);
+      drawIdleCard(t('reportIdleDisks'), idleAgg.disks, 1, [100, 116, 139]);
+      drawIdleCard(t('reportIdleMech'), idleAgg.mech, 2, [239, 68, 68]);
+      drawIdleCard(t('reportIdleTech'), idleAgg.tech, 3, [245, 158, 11]);
+      drawIdleCard(t('reportIdleWeather'), idleAgg.weather, 4, [74, 159, 224]);
+      y += 24;
+    }
+
+    // ===== Seção 4: Top drivers (TKM) =====
+    if (driverCal && driverCal.drivers && driverCal.drivers.length > 0) {
+      const topByTkm = [...driverCal.drivers]
+        .filter(d => d.tkm > 0)
+        .sort((a, b) => b.tkm - a.tkm)
+        .slice(0, 10);
+
+      if (topByTkm.length > 0) {
+        if (y > 220) { pdf.addPage(); y = 15; }
+        pdf.setFontSize(13);
+        pdf.setTextColor(26, 54, 93);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Top 10 — TKM no mês', leftX, y);
+        y += 7;
+
+        pdf.setFontSize(8);
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFillColor(44, 82, 130);
+        pdf.rect(leftX, y - 4, pageW - 2 * leftX, 7, 'F');
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('#', leftX + 2, y);
+        pdf.text(t('thDriver'), leftX + 8, y);
+        pdf.text(t('thCountry'), leftX + 90, y);
+        pdf.text('TKM', leftX + 120, y);
+        pdf.text('KM', leftX + 145, y);
+        pdf.text('Days', leftX + 165, y);
+        y += 8;
+
+        pdf.setFont('helvetica', 'normal');
+        topByTkm.forEach((d, i) => {
+          const rowBg = i % 2 === 0 ? null : [248, 250, 252];
+          if (rowBg) {
+            pdf.setFillColor(rowBg[0], rowBg[1], rowBg[2]);
+            pdf.rect(leftX, y - 4, pageW - 2 * leftX, 6, 'F');
+          }
+          pdf.setFontSize(9);
+          pdf.setTextColor(71, 85, 105);
+          pdf.text(String(i + 1), leftX + 2, y);
+          pdf.setTextColor(26, 54, 93);
+          pdf.setFont('helvetica', 'bold');
+          // Truncar nome se longo
+          const name = d.name.length > 35 ? d.name.slice(0, 35) + '…' : d.name;
+          pdf.text(name, leftX + 8, y);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(71, 85, 105);
+          pdf.text(d.country, leftX + 90, y);
+          pdf.setTextColor(22, 163, 74);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(d.tkm.toFixed(1), leftX + 120, y);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(71, 85, 105);
+          pdf.text(d.kmDriven.toFixed(0), leftX + 145, y);
+          pdf.text(String(d.mappingDays), leftX + 165, y);
+          y += 6;
+        });
+      }
+    }
+
+    // ===== Footer =====
+    const pageCount = pdf.internal.getNumberOfPages();
+    const now = new Date();
+    const locale = currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es-ES' : 'en-US');
+    for (let i = 1; i <= pageCount; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(7);
+      pdf.setTextColor(148, 163, 184);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Aceolution do Brasil · Calendar Summary · ' + now.toLocaleDateString(locale), leftX, 287);
+      pdf.text(String(i) + ' / ' + pageCount, pageW - leftX - 10, 287);
+    }
+
+    // Filename inclui o mês escolhido (ex: calendar-summary-4-2026.pdf)
+    const filenameMonth = monthYear
+      ? monthYear.replace('.', '-')
+      : (month && year ? month + '-' + year : formatDateForFilename());
+    const filename = 'calendar-summary-' + filenameMonth + '.pdf';
+    pdf.save(filename);
+  } catch (err) {
+    console.error('Erro ao exportar Calendar:', err);
     alert(t('exportError') + ': ' + err.message);
   } finally {
     showLoader(false);
@@ -4344,7 +5936,12 @@ function renderTable(drivers, periodHours) {
     }
   });
 
-  sorted.forEach(d => {
+  // Aplica paginação — só mostra os primeiros N (state.tableLimit)
+  const total = sorted.length;
+  const limit = state.tableLimit === Infinity ? total : Math.min(state.tableLimit, total);
+  const visible = sorted.slice(0, limit);
+
+  visible.forEach(d => {
     const row = document.createElement('tr');
     const statusPill = getStatusPill(d, periodHours);
     const hoursDisplay = d.hoursAgo === null ? '—' : formatHoursAgo(d.hoursAgo);
@@ -4377,6 +5974,69 @@ function renderTable(drivers, periodHours) {
     row.addEventListener('click', () => openDriverPanel(d));
     tbody.appendChild(row);
   });
+
+  // Atualiza footer da paginação
+  updateTableFooter(total, limit);
+}
+
+/**
+ * Atualiza textos e visibilidade dos botões de paginação.
+ */
+function updateTableFooter(total, shown) {
+  const footer = document.getElementById('table-footer');
+  if (!footer) return;
+
+  if (total === 0) {
+    footer.style.display = 'none';
+    return;
+  }
+
+  footer.style.display = '';
+
+  // Conta atual
+  const countEl = document.getElementById('table-count');
+  if (shown >= total) {
+    countEl.innerHTML = `<strong>${total}</strong> ${t('tableDriversWord')}`;
+  } else {
+    countEl.innerHTML = `${t('tableShowingCount')} <strong>${shown}</strong> ${t('tableOfCount')} <strong>${total}</strong> ${t('tableDriversWord')}`;
+  }
+
+  // Botões: visibilidade depende de quanto tá mostrando
+  const btnMore = document.getElementById('show-more-btn');
+  const btnAll = document.getElementById('show-all-btn');
+  const btnCollapse = document.getElementById('collapse-btn');
+
+  if (shown >= total) {
+    // Tudo mostrando — só dá pra recolher
+    btnMore.style.display = 'none';
+    btnAll.style.display = 'none';
+    btnCollapse.style.display = total > 10 ? '' : 'none';
+  } else {
+    // Tem mais pra ver — botões "mais" e "tudo"
+    btnMore.style.display = '';
+    btnMore.textContent = `+ ${t('showMore10').replace(/^\+ ?/, '').replace(/\d+/, Math.min(10, total - shown))}`;
+    btnAll.style.display = '';
+    btnAll.textContent = `${t('showAllDrivers')} (${total})`;
+    btnCollapse.style.display = shown > 10 ? '' : 'none';
+  }
+}
+
+function showMoreDrivers() {
+  state.tableLimit = (state.tableLimit === Infinity ? 10 : state.tableLimit) + 10;
+  applyFiltersAndRender();
+}
+
+function showAllDrivers() {
+  state.tableLimit = Infinity;
+  applyFiltersAndRender();
+}
+
+function collapseDrivers() {
+  state.tableLimit = 10;
+  applyFiltersAndRender();
+  // Scroll suave de volta pro topo da tabela
+  const tableSection = document.querySelector('.table-section');
+  if (tableSection) tableSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /**
@@ -4432,6 +6092,8 @@ function handleSortClick(column) {
     const numericColumns = ['hoursAgo', 'distBaseToEdge', 'savingsKm', 'hmMonthly', 'status'];
     state.sort.direction = numericColumns.includes(column) ? 'desc' : 'asc';
   }
+  // Reset paginação ao reordenar (top 10 muda)
+  state.tableLimit = 10;
   savePreferences();
   applyFiltersAndRender();
 }
@@ -4459,6 +6121,9 @@ function openDriverPanelByEmail(email) {
 function openDriverPanel(d) {
   const panel = document.getElementById('side-panel');
   const backdrop = document.getElementById('panel-backdrop');
+
+  // Armazena driver atual pra "Ver perfil completo" saber pra qual driver ir
+  state.currentPanelDriver = d;
 
   // Cabeçalho
   document.getElementById('panel-name').textContent = d.name;
@@ -4494,6 +6159,9 @@ function openDriverPanel(d) {
   // Seção Desempenho do mês — aparece se tiver dados da mastersheet
   const perfSection = document.getElementById('panel-performance-section');
   const hasPerf = typeof d.efficiency === 'number' || typeof d.tkm === 'number' || typeof d.kmDriven === 'number';
+
+  // VID e Idle (do Driver Calendar / VID Calendar) — chamada async, popula quando chegar
+  populateVidAndIdleSections(d);
 
   if (hasPerf) {
     perfSection.style.display = '';
@@ -4623,10 +6291,166 @@ function openDriverPanel(d) {
   setTimeout(() => renderPanelMap(d), 320);
 }
 
+// Cache em memória dos dados do Driver/VID Calendar pra não chamar API toda vez
+// que abrir um driver. Carregado em background no loadData(), reutilizado aqui.
+let calendarCache = { driverCal: null, vidCal: null, loadedAt: 0 };
+
+async function ensureCalendarLoaded() {
+  // Cache válido por 5 minutos (TTL pequeno pra refletir mudanças do colega na planilha)
+  const FRESH_MS = 5 * 60 * 1000;
+  if (calendarCache.loadedAt && (Date.now() - calendarCache.loadedAt) < FRESH_MS) {
+    return calendarCache;
+  }
+  try {
+    const [dcRes, vcRes] = await Promise.all([
+      fetch(CONFIG.scriptUrl + '?action=getDriverCalendar').then(r => r.json()).catch(() => ({ success: false })),
+      fetch(CONFIG.scriptUrl + '?action=getVidCalendar').then(r => r.json()).catch(() => ({ success: false })),
+    ]);
+    calendarCache = {
+      driverCal: dcRes.success ? dcRes.data : null,
+      vidCal: vcRes.success ? vcRes.data : null,
+      loadedAt: Date.now(),
+    };
+  } catch (err) {
+    console.warn('Falhou buscar Calendar:', err);
+  }
+  return calendarCache;
+}
+
+/**
+ * Popula seções de Current VID e Idle Count no painel lateral.
+ * Async porque pode precisar buscar dados se ainda não estão em cache.
+ *
+ * - VID: match pelo email do driver na lista de VIDs (currentDriver)
+ * - Idle: match pelo email do driver na lista de drivers do calendar
+ */
+async function populateVidAndIdleSections(driver) {
+  const vidSection = document.getElementById('panel-vid-section');
+  const idleSection = document.getElementById('panel-idle-section');
+
+  // Default: esconder enquanto não tem dados
+  vidSection.style.display = 'none';
+  idleSection.style.display = 'none';
+
+  const cache = await ensureCalendarLoaded();
+
+  // ---- VID Calendar ----
+  if (cache.vidCal && cache.vidCal.vids) {
+    // Match: pelo email primeiro (mais comum), com fallback para nome
+    // (alguns drivers podem ter email digitado diferente na VID CALENDAR
+    // ou estar como "no driver" / nome em vez de email)
+    const driverEmailLower = (driver.email || '').toLowerCase();
+    const driverNameLower = (driver.name || '').toLowerCase();
+
+    const matched = cache.vidCal.vids.find(v => {
+      const cd = (v.currentDriver || '').toLowerCase();
+      if (!cd || cd === 'no driver') return false;
+      // Match exato por email
+      if (driverEmailLower && cd === driverEmailLower) return true;
+      // Fallback: match por nome (caso na planilha o currentDriver tenha nome em vez de email)
+      if (driverNameLower && cd === driverNameLower) return true;
+      return false;
+    });
+
+    // Sempre mostra a seção VID — diferencia entre "tem VID" e "sem VID"
+    vidSection.style.display = '';
+
+    if (matched) {
+      document.getElementById('panel-vid-id').textContent = String(matched.vid || '—');
+
+      // Floating badge
+      const flEl = document.getElementById('panel-vid-floating');
+      if (matched.isFloating === 'Yes') {
+        flEl.innerHTML = '<span class="vid-floating-yes">Yes</span>';
+      } else if (matched.isFloating === 'No') {
+        flEl.innerHTML = '<span class="vid-floating-no">No</span>';
+      } else {
+        flEl.textContent = '—';
+      }
+
+      // Status (Active / Half Active / Not Active)
+      const stEl = document.getElementById('panel-vid-status');
+      const status = matched.statusPerGoogle || '—';
+      stEl.textContent = status;
+      if (status === 'Active') stEl.className = 'info-value vid-status-active';
+      else if (status.toLowerCase().includes('half')) stEl.className = 'info-value vid-status-half';
+      else if (status.toLowerCase().includes('not')) stEl.className = 'info-value vid-status-inactive';
+      else stEl.className = 'info-value';
+
+      // QC Score (0-1 → percentual com cor)
+      const qcEl = document.getElementById('panel-vid-qc');
+      if (typeof matched.qcScore === 'number' && matched.qcScore > 0) {
+        const pct = Math.round(matched.qcScore * 100);
+        qcEl.textContent = pct + '%';
+        if (pct >= 90) qcEl.style.color = '#16A34A';
+        else if (pct >= 70) qcEl.style.color = '#F59E0B';
+        else qcEl.style.color = '#EF4444';
+      } else {
+        qcEl.textContent = '—';
+        qcEl.style.color = '';
+      }
+    } else {
+      // Driver não tem VID atribuído na VID CALENDAR
+      // Mostra a seção mesmo assim com mensagem clara, pra evitar a dúvida
+      // "por que esse driver não tem VID?" — agora fica explícito
+      document.getElementById('panel-vid-id').textContent = '—';
+      document.getElementById('panel-vid-floating').innerHTML =
+        '<span class="vid-floating-no">' + t('pNoVid') + '</span>';
+      const stEl = document.getElementById('panel-vid-status');
+      stEl.textContent = '—';
+      stEl.className = 'info-value';
+      const qcEl = document.getElementById('panel-vid-qc');
+      qcEl.textContent = '—';
+      qcEl.style.color = '';
+    }
+  }
+
+  // ---- Driver Calendar (idle counts) ----
+  if (cache.driverCal && cache.driverCal.drivers) {
+    const dcDriver = cache.driverCal.drivers.find(x =>
+      x.email && x.email.toLowerCase() === driver.email.toLowerCase()
+    );
+    if (dcDriver && dcDriver.totalIdle > 0) {
+      idleSection.style.display = '';
+
+      const grid = document.getElementById('panel-idle-grid');
+      const cells = [
+        { label: t('reportIdlePersonal'), value: dcDriver.idlePersonal, severity: 'low' },
+        { label: t('reportIdleDisks'), value: dcDriver.idleDisks, severity: 'low' },
+        { label: t('reportIdleMech'), value: dcDriver.idleMech, severity: 'high' },
+        { label: t('reportIdleTech'), value: dcDriver.idleTech, severity: 'medium' },
+        { label: t('reportIdleWeather'), value: dcDriver.idleWeather, severity: 'medium' },
+      ];
+      grid.innerHTML = cells.map(c => {
+        const sevClass = c.value > 0 ? ('has-value-' + c.severity) : '';
+        return `<div class="idle-mini-cell ${sevClass}">
+                  <div class="idle-mini-label">${c.label}</div>
+                  <div class="idle-mini-value">${c.value || 0}</div>
+                </div>`;
+      }).join('');
+    }
+  }
+}
+
 function closeDriverPanel() {
   document.getElementById('side-panel').classList.remove('open');
   document.getElementById('side-panel').setAttribute('aria-hidden', 'true');
   document.getElementById('panel-backdrop').classList.remove('open');
+}
+
+/**
+ * Navega pra página de perfil completo do driver atualmente aberto no painel.
+ * Passa o email via querystring pra a página driver-profile.html abrir
+ * já carregada com esse driver.
+ */
+function goToDriverProfile(evt) {
+  if (evt) evt.preventDefault();
+  if (!state.currentPanelDriver || !state.currentPanelDriver.email) {
+    console.warn('Sem driver no painel — não posso ir pro perfil');
+    return;
+  }
+  const email = encodeURIComponent(state.currentPanelDriver.email);
+  window.location.href = 'driver-profile.html?email=' + email;
 }
 
 function renderPanelMap(d) {
@@ -4767,22 +6591,6 @@ function renderPanelMap(d) {
 
 async function renderDriverHistory(d) {
   const container = document.getElementById('panel-history');
-
-  // Demo mode: usa historyAreas mockados
-  if (state.demoMode) {
-    if (!d.historyAreas || d.historyAreas.length === 0) {
-      container.innerHTML = `<div class="history-empty">${t('pHistoryEmpty')}</div>`;
-      return;
-    }
-    container.innerHTML = d.historyAreas.map(h => `
-      <div class="history-item">
-        <span class="history-radius">${h.radius} km</span>
-        <div class="history-date">${h.dateLabel}</div>
-        <div class="history-address">${h.address}</div>
-      </div>
-    `).join('');
-    return;
-  }
 
   // Modo real: busca histórico via getDriverHistory
   container.innerHTML = `<div class="history-empty">${t('loadingHistory')}...</div>`;
@@ -4956,15 +6764,6 @@ function showLoader(show, msg) {
   }
 }
 
-function toggleDemoMode() {
-  state.demoMode = !state.demoMode;
-  const btn = document.getElementById('demo-toggle');
-  const label = document.getElementById('demo-label');
-  btn.classList.toggle('active', state.demoMode);
-  label.textContent = state.demoMode ? t('demoModeActive') : t('demoMode');
-  loadData();
-}
-
 // =================================================================
 // INIT
 // =================================================================
@@ -4979,6 +6778,24 @@ setLanguage(currentLang);
 </script>
 
 </div> <!-- /app-content -->
+
+<!-- Modal: seletor de mês pra export PDF Calendar -->
+<div class="month-picker-overlay" id="month-picker-overlay" onclick="closeMonthPicker(event)">
+  <div class="month-picker-box" onclick="event.stopPropagation();">
+    <div class="month-picker-header">
+      <h3 data-i18n="monthPickerTitle">Exportar Resumo Calendar</h3>
+      <button class="month-picker-close" onclick="closeMonthPicker()" aria-label="Fechar">×</button>
+    </div>
+    <div class="month-picker-body">
+      <p data-i18n="monthPickerSub">Escolha o mês de referência:</p>
+      <select id="month-picker-select" class="month-picker-select"></select>
+      <div class="month-picker-actions">
+        <button class="month-picker-cancel" onclick="closeMonthPicker()" data-i18n="monthPickerCancel">Cancelar</button>
+        <button class="month-picker-confirm" onclick="confirmMonthAndExport()" data-i18n="monthPickerConfirm">Gerar PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
