@@ -98,6 +98,31 @@
     transition: all 0.15s;
   }
   .nav-link:hover { background: var(--c-primary); color: white; }
+  .lang-switch {
+    display: inline-flex;
+    background: var(--c-bg);
+    border-radius: 16px;
+    padding: 2px;
+    border: 1px solid var(--c-border);
+  }
+  .lang-switch button {
+    padding: 4px 10px;
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    color: var(--c-text-muted);
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .lang-switch button.active {
+    background: white;
+    color: var(--c-primary);
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
   .user-pill {
     padding: 5px 12px;
     background: var(--c-bg);
@@ -624,25 +649,25 @@
       <div class="product">DRIVER PROFILE</div>
       <div class="region">LATAM</div>
     </div>
-    <h1 class="login-title">Login</h1>
-    <p class="login-subtitle">Acesse com suas credenciais</p>
+    <h1 class="login-title" data-i18n="loginTitle">Login</h1>
+    <p class="login-subtitle" data-i18n="loginSubtitle">Acesse com suas credenciais</p>
     <div class="login-error" id="login-error"></div>
     <div class="login-field">
-      <label>Usuário</label>
+      <label data-i18n="loginUser">Usuário</label>
       <input type="text" id="login-username" autocomplete="username" autofocus>
     </div>
     <div class="login-field">
-      <label>Senha</label>
+      <label data-i18n="loginPass">Senha</label>
       <input type="password" id="login-password" autocomplete="current-password">
     </div>
-    <button class="login-button" onclick="doLogin()">Entrar</button>
+    <button class="login-button" onclick="doLogin()" data-i18n="loginBtn">Entrar</button>
   </div>
 </div>
 
 <!-- LOADER -->
 <div id="loader" class="loader-overlay">
   <div class="spinner"></div>
-  <div class="loader-text" id="loader-text">Carregando…</div>
+  <div class="loader-text" id="loader-text" data-i18n="loading">Carregando…</div>
 </div>
 
 <!-- APP -->
@@ -657,6 +682,11 @@
       </div>
     </div>
     <div class="header-right">
+      <div class="lang-switch">
+        <button data-lang="pt">PT</button>
+        <button data-lang="es">ES</button>
+        <button data-lang="en">EN</button>
+      </div>
       <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
       <a href="ramp.html" class="nav-link">💳 Ramp</a>
       <div class="user-pill" id="user-pill"></div>
@@ -671,10 +701,9 @@
         type="text"
         class="search-input"
         id="search-input"
-        placeholder="Buscar motorista por nome…"
+        placeholder="Buscar motorista por nome…" data-i18n-placeholder="searchPlaceholder"
         autocomplete="off"
         oninput="onSearchInput()"
-        onfocus="showSuggestions()"
       >
       <div class="search-suggestions" id="search-suggestions"></div>
     </div>
@@ -683,15 +712,15 @@
   <!-- Welcome (quando nenhum driver selecionado) -->
   <div class="welcome-section" id="welcome-section">
     <div class="welcome-icon">👤</div>
-    <div class="welcome-title">Selecione um motorista</div>
-    <div class="welcome-subtitle">Use a busca acima ou clique em um dos rankings abaixo</div>
+    <div class="welcome-title" data-i18n="welcomeTitle">Selecione um motorista</div>
+    <div class="welcome-subtitle" data-i18n="welcomeSubtitle">Use a busca acima ou clique em um dos rankings abaixo</div>
 
     <div class="ranking-card">
       <div class="ranking-header">
-        <div class="ranking-title" id="ranking-title">🏆 Top 5 — maior eficiência</div>
+        <div class="ranking-title" id="ranking-title" data-i18n="rankingTopTitle">🏆 Top 5 — maior eficiência</div>
         <div class="ranking-toggle">
-          <button class="ranking-toggle-btn active" id="rank-mode-top" onclick="setRankingMode('top')">Top 5</button>
-          <button class="ranking-toggle-btn" id="rank-mode-bottom" onclick="setRankingMode('bottom')">Bottom 5</button>
+          <button class="ranking-toggle-btn active" id="rank-mode-top" onclick="setRankingMode('top')" data-i18n="rankingTop">Top 5</button>
+          <button class="ranking-toggle-btn" id="rank-mode-bottom" onclick="setRankingMode('bottom')" data-i18n="rankingBottom">Bottom 5</button>
         </div>
       </div>
       <ul class="ranking-list" id="ranking-list">
@@ -714,22 +743,22 @@
     <!-- Scorecards -->
     <div class="profile-scorecards">
       <div class="scorecard" id="sc-eff">
-        <div class="sc-label">Eficiência</div>
+        <div class="sc-label" data-i18n="scEff">Eficiência</div>
         <div class="sc-value" id="sc-eff-value">—</div>
         <div class="sc-sub" id="sc-eff-sub">—</div>
       </div>
       <div class="scorecard" id="sc-tkm">
-        <div class="sc-label">TKM mês</div>
+        <div class="sc-label" data-i18n="scTkm">TKM mês</div>
         <div class="sc-value" id="sc-tkm-value">—</div>
         <div class="sc-sub" id="sc-tkm-sub">—</div>
       </div>
       <div class="scorecard" id="sc-idle">
-        <div class="sc-label">Idle days</div>
+        <div class="sc-label" data-i18n="scIdle">Idle days</div>
         <div class="sc-value" id="sc-idle-value">—</div>
         <div class="sc-sub" id="sc-idle-sub">—</div>
       </div>
       <div class="scorecard" id="sc-qc">
-        <div class="sc-label">QC Score</div>
+        <div class="sc-label" data-i18n="scQc">QC Score</div>
         <div class="sc-value" id="sc-qc-value">—</div>
         <div class="sc-sub" id="sc-qc-sub">—</div>
       </div>
@@ -739,7 +768,7 @@
     <div class="detail-row">
       <!-- Eficiência detalhada -->
       <div class="detail-card">
-        <div class="detail-card-title">📈 Como foi calculada a eficiência?</div>
+        <div class="detail-card-title" data-i18n="effCardTitle">📈 Como foi calculada a eficiência?</div>
         <div class="eff-display">
           <div class="eff-value" id="eff-detail-value">—</div>
           <div class="eff-vs-baseline" id="eff-vs-baseline">—</div>
@@ -763,7 +792,7 @@
 
       <!-- Idle days detalhado -->
       <div class="detail-card">
-        <div class="detail-card-title">🔧 Idle days do mês</div>
+        <div class="detail-card-title" data-i18n="idleCardTitle">🔧 Idle days do mês</div>
         <div class="idle-total" id="idle-total">—</div>
         <div class="idle-total-label" id="idle-total-label">dias parados neste mês</div>
 
@@ -882,14 +911,236 @@ let state = {
 };
 
 // ================================================================
+// I18N (PT / ES / EN)
+// ================================================================
+const I18N = {
+  pt: {
+    loginTitle: 'Login',
+    loginSubtitle: 'Acesse com suas credenciais',
+    loginUser: 'Usuário',
+    loginPass: 'Senha',
+    loginBtn: 'Entrar',
+    loading: 'Carregando…',
+    loadingDrivers: 'Carregando lista de motoristas…',
+    loadingProfile: 'Carregando perfil…',
+    searchPlaceholder: 'Buscar motorista por nome…',
+    welcomeTitle: 'Selecione um motorista',
+    welcomeSubtitle: 'Use a busca acima ou clique em um dos rankings abaixo',
+    rankingTopTitle: '🏆 Top 5 — maior eficiência',
+    rankingBottomTitle: '⚠ Bottom 5 — menor eficiência',
+    rankingTop: 'Top 5',
+    rankingBottom: 'Bottom 5',
+    rankingEmpty: 'Sem dados de eficiência disponíveis',
+    rankingEmptyHint: 'O backend pode não ter sido atualizado. Verifique no console (F12).',
+    scEff: 'Eficiência',
+    scTkm: 'TKM mês',
+    scIdle: 'Idle days',
+    scQc: 'QC Score',
+    effCardTitle: '📈 Como foi calculada a eficiência?',
+    idleCardTitle: '🔧 Idle days do mês',
+    noVid: 'Sem VID atribuída',
+    noQc: 'Sem QC disponível',
+    noBaseline: 'Sem baseline disponível',
+    daysParked: 'dias parados neste mês',
+    dayParked: 'dia parado neste mês',
+    zeroIdleDays: 'Sem dias parados ✓',
+    needsAttention: 'dias parados — atenção',
+    aboveBaseline: 'acima do baseline',
+    belowBaseline: 'abaixo do baseline',
+    nearBaseline: 'próximo do baseline',
+    formula: 'Cálculo:',
+    values: 'Valores:',
+    meaning: 'Significado:',
+    meaningText: 'a cada km dirigido, {pct}% efetivamente "valeu" pro mapeamento (TKM = trackable km).',
+    noVidNoEff: 'Sem VID atribuída — não há dados de eficiência pra calcular.',
+    placeholderMap: 'Mapa com histórico de mapeamento e base',
+    placeholderCalendar: 'Calendário visual do mês',
+    placeholderComments: 'Comentários inteligentes',
+    comingSoon: '— em breve',
+    nextSession: 'Próxima sessão:',
+  },
+  es: {
+    loginTitle: 'Login',
+    loginSubtitle: 'Accede con tus credenciales',
+    loginUser: 'Usuario',
+    loginPass: 'Contraseña',
+    loginBtn: 'Entrar',
+    loading: 'Cargando…',
+    loadingDrivers: 'Cargando lista de conductores…',
+    loadingProfile: 'Cargando perfil…',
+    searchPlaceholder: 'Buscar conductor por nombre…',
+    welcomeTitle: 'Selecciona un conductor',
+    welcomeSubtitle: 'Usa la búsqueda arriba o haz clic en uno de los rankings abajo',
+    rankingTopTitle: '🏆 Top 5 — mayor eficiencia',
+    rankingBottomTitle: '⚠ Bottom 5 — menor eficiencia',
+    rankingTop: 'Top 5',
+    rankingBottom: 'Bottom 5',
+    rankingEmpty: 'Sin datos de eficiencia disponibles',
+    rankingEmptyHint: 'El backend puede no haber sido actualizado. Revisa la consola (F12).',
+    scEff: 'Eficiencia',
+    scTkm: 'TKM mes',
+    scIdle: 'Idle days',
+    scQc: 'QC Score',
+    effCardTitle: '📈 ¿Cómo se calculó la eficiencia?',
+    idleCardTitle: '🔧 Idle days del mes',
+    noVid: 'Sin VID asignada',
+    noQc: 'Sin QC disponible',
+    noBaseline: 'Sin baseline disponible',
+    daysParked: 'días parados este mes',
+    dayParked: 'día parado este mes',
+    zeroIdleDays: 'Sin días parados ✓',
+    needsAttention: 'días parados — atención',
+    aboveBaseline: 'arriba del baseline',
+    belowBaseline: 'abajo del baseline',
+    nearBaseline: 'cerca del baseline',
+    formula: 'Cálculo:',
+    values: 'Valores:',
+    meaning: 'Significado:',
+    meaningText: 'por cada km manejado, {pct}% efectivamente "valió" para el mapeo (TKM = trackable km).',
+    noVidNoEff: 'Sin VID asignada — no hay datos de eficiencia para calcular.',
+    placeholderMap: 'Mapa con historial de mapeo y base',
+    placeholderCalendar: 'Calendario visual del mes',
+    placeholderComments: 'Comentarios inteligentes',
+    comingSoon: '— próximamente',
+    nextSession: 'Próxima sesión:',
+  },
+  en: {
+    loginTitle: 'Login',
+    loginSubtitle: 'Sign in with your credentials',
+    loginUser: 'Username',
+    loginPass: 'Password',
+    loginBtn: 'Sign in',
+    loading: 'Loading…',
+    loadingDrivers: 'Loading drivers list…',
+    loadingProfile: 'Loading profile…',
+    searchPlaceholder: 'Search driver by name…',
+    welcomeTitle: 'Select a driver',
+    welcomeSubtitle: 'Use the search above or click one of the rankings below',
+    rankingTopTitle: '🏆 Top 5 — highest efficiency',
+    rankingBottomTitle: '⚠ Bottom 5 — lowest efficiency',
+    rankingTop: 'Top 5',
+    rankingBottom: 'Bottom 5',
+    rankingEmpty: 'No efficiency data available',
+    rankingEmptyHint: 'The backend may not have been updated. Check the console (F12).',
+    scEff: 'Efficiency',
+    scTkm: 'TKM month',
+    scIdle: 'Idle days',
+    scQc: 'QC Score',
+    effCardTitle: '📈 How was efficiency calculated?',
+    idleCardTitle: '🔧 Idle days this month',
+    noVid: 'No VID assigned',
+    noQc: 'No QC available',
+    noBaseline: 'No baseline available',
+    daysParked: 'days idle this month',
+    dayParked: 'day idle this month',
+    zeroIdleDays: 'No idle days ✓',
+    needsAttention: 'idle days — attention',
+    aboveBaseline: 'above baseline',
+    belowBaseline: 'below baseline',
+    nearBaseline: 'near baseline',
+    formula: 'Formula:',
+    values: 'Values:',
+    meaning: 'Meaning:',
+    meaningText: 'for every km driven, {pct}% effectively "counted" for mapping (TKM = trackable km).',
+    noVidNoEff: 'No VID assigned — no efficiency data to calculate.',
+    placeholderMap: 'Map with mapping history and base',
+    placeholderCalendar: 'Visual calendar of the month',
+    placeholderComments: 'Smart comments',
+    comingSoon: '— coming soon',
+    nextSession: 'Next session:',
+  },
+};
+
+let currentLang = localStorage.getItem('driverProfileLang') || 'pt';
+
+function t(key) {
+  if (I18N[currentLang] && key in I18N[currentLang]) return I18N[currentLang][key];
+  return I18N.pt[key] || key;
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.setAttribute('placeholder', t(key));
+  });
+  // Atualiza botões de língua (active class)
+  document.querySelectorAll('.lang-switch button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
+  // Atualiza textos dinâmicos que mudam baseado em estado
+  document.getElementById('ranking-title').textContent =
+    state.rankingMode === 'top' ? t('rankingTopTitle') : t('rankingBottomTitle');
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('driverProfileLang', lang);
+  applyI18n();
+  // Re-renderiza conteúdo dinâmico (que tem strings hardcoded em JS)
+  if (state.drivers.length > 0) renderRanking();
+  if (state.profile) renderProfile(state.profile);
+}
+
+// Wire up dos botões de língua
+document.querySelectorAll('.lang-switch button').forEach(btn => {
+  btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+});
+
+// ================================================================
 // INIT
 // ================================================================
 async function initApp() {
-  showLoader(true, 'Carregando lista de motoristas…');
+  // Aplica idioma logo de cara (do localStorage ou default PT)
+  applyI18n();
+
+  showLoader(true, t('loadingDrivers'));
   try {
-    const res = await fetch(CONFIG.scriptUrl + '?action=getDriversList').then(r => r.json());
-    if (!res.success) throw new Error(res.error || 'Erro carregando lista');
+    // 1) Ping de saúde primeiro — confirma que o deploy do backend tem v5.6
+    console.log('[Driver Profile] Testing backend ping…');
+    try {
+      const pingRes = await fetch(CONFIG.scriptUrl + '?action=ping').then(r => r.json());
+      console.log('[Driver Profile] Backend ping:', pingRes);
+      if (pingRes && pingRes.version) {
+        console.log(`[Driver Profile] ✓ Backend version ${pingRes.version} deployed`);
+      } else {
+        console.warn('[Driver Profile] ⚠ Backend respondeu mas sem versão — provavelmente é versão antiga (não tem ping). Você precisa fazer deploy do Apps Script novo.');
+      }
+    } catch (pingErr) {
+      console.error('[Driver Profile] Ping falhou:', pingErr);
+    }
+
+    // 2) Busca lista de drivers
+    const url = CONFIG.scriptUrl + '?action=getDriversList';
+    console.log('[Driver Profile] Fetching:', url);
+    const res = await fetch(url).then(r => r.json());
+    console.log('[Driver Profile] getDriversList Response:', res);
+
+    if (!res.success) {
+      throw new Error(res.error || 'Backend retornou success=false');
+    }
     state.drivers = res.drivers || [];
+
+    if (state.drivers.length === 0) {
+      // Backend OK mas lista vazia — mostra erro claro
+      const list = document.getElementById('ranking-list');
+      list.innerHTML = `<li class="ranking-item">
+        <div class="ranking-info">
+          <div class="ranking-name" style="color:var(--c-bad);">⚠ Lista vazia</div>
+          <div class="ranking-meta">O backend não retornou nenhum motorista. Verifique se o Apps Script foi atualizado e republicado.</div>
+        </div>
+      </li>`;
+      console.warn('[Driver Profile] Backend retornou lista vazia');
+      return;
+    }
+
+    // Conta quantos têm eficiência válida (debug útil)
+    const withEff = state.drivers.filter(d => d.efficiency !== null && d.efficiency > 0);
+    console.log(`[Driver Profile] ${state.drivers.length} drivers carregados, ${withEff.length} com eficiência válida`);
+
     renderRanking();
 
     // Se a URL tem ?email=xxx, abre direto o perfil desse driver
@@ -897,7 +1148,7 @@ async function initApp() {
     const params = new URLSearchParams(window.location.search);
     const emailParam = params.get('email');
     if (emailParam) {
-      // Confirma que o driver existe na lista (se não, mostra welcome)
+      console.log('[Driver Profile] URL tem ?email=', emailParam, '— abrindo perfil automático');
       const found = state.drivers.find(d =>
         d.email && d.email.toLowerCase() === emailParam.toLowerCase()
       );
@@ -908,10 +1159,19 @@ async function initApp() {
         // Tenta mesmo assim — getDriverProfile aceita qualquer email da HR
         selectDriver(emailParam);
       }
+    } else {
+      console.log('[Driver Profile] URL sem ?email — aguardando user selecionar driver');
     }
   } catch (err) {
-    console.error('Erro initApp:', err);
-    alert('Erro ao carregar lista de motoristas: ' + err.message);
+    console.error('[Driver Profile] Erro ao buscar lista:', err);
+    // Erro VISÍVEL no ranking — sem alert intrusivo
+    const list = document.getElementById('ranking-list');
+    list.innerHTML = `<li class="ranking-item">
+      <div class="ranking-info">
+        <div class="ranking-name" style="color:var(--c-bad);">⚠ Erro ao carregar dados</div>
+        <div class="ranking-meta">${escapeHtml(err.message)}<br>Verifique no console (F12) e confirme que o Apps Script foi atualizado.</div>
+      </div>
+    </li>`;
   } finally {
     showLoader(false);
   }
@@ -929,7 +1189,9 @@ function showLoader(show, msg) {
 function onSearchInput() {
   const term = document.getElementById('search-input').value.trim().toLowerCase();
   if (!term) {
-    showSuggestions();  // mostra todos (default)
+    // Input vazio → fecha sugestões (não mostra todas alfabeticamente,
+    // pra evitar o user clicar em algo sem querer)
+    hideSuggestions();
     return;
   }
   // Filtra por substring no nome
@@ -937,10 +1199,15 @@ function onSearchInput() {
   renderSuggestions(filtered.slice(0, 8));  // top 8
 }
 
+/**
+ * @deprecated mantida só pra compatibilidade — não é mais chamada por onfocus.
+ * O usuário precisa digitar algo pra ver sugestões.
+ */
 function showSuggestions() {
-  // Sem termo: mostra primeiros 8 (ordem alfabética)
-  const sorted = state.drivers.slice().sort((a, b) => a.name.localeCompare(b.name));
-  renderSuggestions(sorted.slice(0, 8));
+  // Não faz nada — comportamento removido pra evitar selects acidentais.
+  // Se quiser voltar o comportamento antigo, basta chamar:
+  //   const sorted = state.drivers.slice().sort((a, b) => a.name.localeCompare(b.name));
+  //   renderSuggestions(sorted.slice(0, 8));
 }
 
 function renderSuggestions(drivers) {
@@ -1017,7 +1284,7 @@ function setRankingMode(mode) {
   document.getElementById('rank-mode-top').classList.toggle('active', mode === 'top');
   document.getElementById('rank-mode-bottom').classList.toggle('active', mode === 'bottom');
   document.getElementById('ranking-title').textContent =
-    mode === 'top' ? '🏆 Top 5 — maior eficiência' : '⚠ Bottom 5 — menor eficiência';
+    mode === 'top' ? t('rankingTopTitle') : t('rankingBottomTitle');
   renderRanking();
 }
 
@@ -1030,7 +1297,7 @@ function renderRanking() {
   const top5 = sorted.slice(0, 5);
 
   if (top5.length === 0) {
-    list.innerHTML = '<li class="ranking-item"><div class="ranking-info"><div class="ranking-meta">Sem dados de eficiência disponíveis</div></div></li>';
+    list.innerHTML = `<li class="ranking-item"><div class="ranking-info"><div class="ranking-meta">${t('rankingEmpty')}<br><small>${t('rankingEmptyHint')}</small></div></div></li>`;
     return;
   }
 
@@ -1054,11 +1321,15 @@ function renderRanking() {
 // DRIVER PROFILE (quando seleciona)
 // ================================================================
 async function selectDriver(email) {
+  console.log('[Driver Profile] selectDriver chamado com email:', email);
+  // Stack trace pra ajudar a debugar quem disparou (acidentalmente ou não)
+  console.trace('[Driver Profile] origem da chamada selectDriver');
+
   state.selectedEmail = email;
   hideSuggestions();
   document.getElementById('search-input').value = '';
 
-  showLoader(true, 'Carregando perfil…');
+  showLoader(true, t('loadingProfile'));
   try {
     const res = await fetch(CONFIG.scriptUrl + '?action=getDriverProfile&email=' + encodeURIComponent(email))
       .then(r => r.json());
@@ -1066,7 +1337,7 @@ async function selectDriver(email) {
     state.profile = res.profile;
     renderProfile(res.profile);
   } catch (err) {
-    console.error('Erro selectDriver:', err);
+    console.error('[Driver Profile] Erro selectDriver:', err);
     alert('Erro ao carregar perfil: ' + err.message);
   } finally {
     showLoader(false);
@@ -1119,7 +1390,7 @@ function renderEfficiencyScorecard(p) {
 
   if (!p.vid || p.vid.efficiency === null || p.vid.efficiency === 0) {
     valEl.textContent = '—';
-    subEl.textContent = 'Sem VID atribuída';
+    subEl.textContent = t('noVid');
     return;
   }
 
@@ -1174,7 +1445,7 @@ function renderIdleScorecard(p) {
   valEl.textContent = total;
   if (total === 0) {
     card.classList.add('color-good');
-    subEl.textContent = 'Sem dias parados ✓';
+    subEl.textContent = t('zeroIdleDays');
   } else if (total <= 3) {
     card.classList.add('color-warn');
     subEl.textContent = total + ' ' + (total === 1 ? 'dia' : 'dias') + ' parado';
@@ -1222,7 +1493,7 @@ function renderEfficiencyDetail(p) {
     valEl.textContent = '—';
     valEl.className = 'eff-value';
     vsEl.textContent = '';
-    formulaEl.innerHTML = '<em>Sem VID atribuída — não há dados de eficiência pra calcular.</em>';
+    formulaEl.innerHTML = `<em>${t('noVidNoEff')}</em>`;
     barFill.style.width = '0%';
     baselineMarker.style.display = 'none';
     return;
