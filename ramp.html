@@ -1228,9 +1228,10 @@
         <div class="panel-tx-list" id="panel-tx-list"></div>
       </div>
 
-      <!-- Botão pra fechar e filtrar a página principal -->
+      <!-- Botões de ação do painel -->
       <div class="panel-actions">
         <button class="panel-action-btn primary" onclick="filterPageByPanelDriver()" data-i18n="panelFilterAction">📋 Filtrar página por este motorista</button>
+        <button class="panel-action-btn" onclick="goToDriverProfile()" data-i18n="panelProfileAction">👤 Ver perfil completo →</button>
       </div>
     </div>
   </aside>
@@ -1373,6 +1374,7 @@ const I18N = {
     panelTxSection: 'Últimas transações',
     panelInPeriod: 'no período',
     panelFilterAction: '📋 Filtrar página por este motorista',
+    panelProfileAction: '👤 Ver perfil completo →',
     panelNoEmail: 'sem email',
     panelCard: 'Cartão ****',
     multiEmpty: 'Nenhum motorista no período',
@@ -1502,6 +1504,7 @@ const I18N = {
     panelTxSection: 'Últimas transacciones',
     panelInPeriod: 'en el período',
     panelFilterAction: '📋 Filtrar página por este conductor',
+    panelProfileAction: '👤 Ver perfil completo →',
     panelNoEmail: 'sin email',
     panelCard: 'Tarjeta ****',
     multiEmpty: 'Sin conductores en el período',
@@ -1629,6 +1632,7 @@ const I18N = {
     panelTxSection: 'Recent transactions',
     panelInPeriod: 'in period',
     panelFilterAction: '📋 Filter page by this driver',
+    panelProfileAction: '👤 See full profile →',
     panelNoEmail: 'no email',
     panelCard: 'Card ****',
     multiEmpty: 'No drivers in period',
@@ -1699,6 +1703,8 @@ document.addEventListener('DOMContentLoaded', () => {
 const USERS = [
   { username: 'fuss', passwordHash: '20fc17a5b2949b22e408a7f0748a07c46833654638dd6f4ae744ba74c3af476a', fullName: 'Fuss' },
   { username: 'pankaj', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Pankaj' },
+  { username: 'bia', passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Bia' },
+  { username: 'lucas', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Outro Lucas' },
 ];
 
 let currentUser = null;
@@ -3071,6 +3077,29 @@ function filterPageByPanelDriver() {
   state.pageLimit = 25;
   closeDriverPanel();
   applyFiltersAndRender();
+}
+
+/**
+ * Navega pra página de perfil completo do driver atualmente aberto no painel.
+ * Pega o email a partir das transações (panelDriverKey pode ser email ou nome bruto;
+ * pra navegar pro profile preciso especificamente do email).
+ */
+function goToDriverProfile() {
+  if (!state.panelDriverKey) return;
+  // Se panelDriverKey for um email (tem @), usa direto. Senão tenta achar
+  // o email do driver olhando nas transações.
+  let email = null;
+  if (state.panelDriverKey.includes('@')) {
+    email = state.panelDriverKey;
+  } else {
+    const t = state.transactions.find(x => (x.driverEmail || x.user) === state.panelDriverKey);
+    email = t && t.driverEmail ? t.driverEmail : null;
+  }
+  if (!email) {
+    alert('Esse motorista não tem email cadastrado na HR — não dá pra abrir o perfil. Veja se ele está na HR DATABASE.');
+    return;
+  }
+  window.location.href = 'driver-profile.html?email=' + encodeURIComponent(email);
 }
 
 // Esc fecha o painel
