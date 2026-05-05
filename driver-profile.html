@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Driver Profile · LATAM · Aceolution</title>
+  <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<style>
+  :root {
+    --c-primary: #2C5282;
+    --c-primary-dark: #1A365D;
+    --c-accent: #4A9FE0;
+    --c-bg: #F8FAFC;
+    --c-bg-tint: #EBF4FB;
+    --c-border: #E2E8F0;
+    --c-border-strong: #CBD5E1;
+    --c-text: #1A202C;
+    --c-text-muted: #64748B;
+    --c-text-dim: #94A3B8;
+    --c-good: #16A34A;
+    --c-warn: #F59E0B;
+    --c-bad: #DC2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--c-text);
+    background: var(--c-bg);
+  }
+
+  /* LOGIN — mesma estética dos outros */
+  .login-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1A365D 0%, #2C5282 50%, #4A9FE0 100%);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .login-box {
+    background: white;
+    padding: 40px 32px;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 380px;
+  }
+  .login-logo { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 24px; }
+  .login-logo img { height: 38px; }
+  .login-logo .product { font-size: 11px; color: var(--c-text-muted); letter-spacing: 1.2px; font-weight: 600; }
+  .login-logo .region { font-size: 16px; color: var(--c-primary); font-weight: 700; letter-spacing: 2px; }
+  .login-title { text-align: center; font-size: 18px; font-weight: 700; color: var(--c-primary-dark); margin: 0 0 6px; }
+  .login-subtitle { text-align: center; font-size: 13px; color: var(--c-text-muted); margin: 0 0 24px; }
+  .login-field { margin-bottom: 14px; }
+  .login-field label { display: block; font-size: 12px; color: var(--c-text-muted); margin-bottom: 6px; font-weight: 500; }
+  .login-field input { width: 100%; padding: 10px 14px; border: 1px solid var(--c-border); border-radius: 8px; font-size: 14px; font-family: inherit; box-sizing: border-box; }
+  .login-field input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74, 159, 224, 0.15); }
+  .login-button { width: 100%; padding: 11px; background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .login-button:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(44, 82, 130, 0.4); }
+  .login-error { background: #FEF2F2; color: #991B1B; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; border-left: 3px solid #EF4444; display: none; }
+  .login-error.show { display: block; }
+
+  /* APP */
+  #app { display: none; }
+  #app.shown { display: block; }
+
+  /* HEADER */
+  .header {
+    background: white;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--c-border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand-wrap { display: flex; align-items: center; gap: 12px; }
+  .brand-logo { height: 32px; width: auto; }
+  .brand-divider { width: 1px; height: 28px; background: var(--c-border-strong); }
+  .brand-sub { font-size: 10px; font-weight: 600; color: var(--c-text-muted); letter-spacing: 1.2px; line-height: 1.2; }
+  .brand-title-line { font-size: 10px; color: var(--c-text-muted); letter-spacing: 1.2px; }
+  .brand-region-line { color: var(--c-primary); font-size: 18px; font-weight: 700; letter-spacing: 2px; margin-top: 2px; }
+  .header-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .nav-link {
+    padding: 6px 14px;
+    background: var(--c-bg-tint);
+    border: 1px solid var(--c-accent);
+    border-radius: 16px;
+    color: var(--c-primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 12px;
+    transition: all 0.15s;
+  }
+  .nav-link:hover { background: var(--c-primary); color: white; }
+  .user-pill {
+    padding: 5px 12px;
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .user-pill .logout-btn {
+    background: none;
+    border: none;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .user-pill .logout-btn:hover { color: #EF4444; }
+
+  /* SEARCH BAR */
+  .search-section {
+    background: white;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .search-wrap {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .search-input {
+    width: 100%;
+    padding: 12px 18px 12px 42px;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: all 0.15s;
+  }
+  .search-input:focus {
+    outline: none;
+    border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(74, 159, 224, 0.15);
+  }
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--c-text-muted);
+    font-size: 16px;
+    pointer-events: none;
+  }
+  .search-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.15);
+    max-height: 320px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+  }
+  .search-suggestions.show { display: block; }
+  .suggestion-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--c-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .suggestion-item:last-child { border-bottom: none; }
+  .suggestion-item:hover, .suggestion-item.highlighted {
+    background: var(--c-bg-tint);
+  }
+  .suggestion-name { font-weight: 500; color: var(--c-primary-dark); }
+  .suggestion-meta {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    display: flex;
+    gap: 8px;
+  }
+  .suggestion-meta .country {
+    background: var(--c-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .suggestion-meta .eff {
+    color: var(--c-good);
+    font-weight: 600;
+  }
+  .suggestion-meta .eff.warn { color: var(--c-warn); }
+  .suggestion-meta .eff.bad { color: var(--c-bad); }
+  .suggestion-empty {
+    padding: 16px;
+    text-align: center;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  /* WELCOME / RANKING (quando nenhum driver selecionado) */
+  .welcome-section {
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .welcome-icon {
+    font-size: 48px;
+    opacity: 0.4;
+    margin-bottom: 12px;
+  }
+  .welcome-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 6px;
+  }
+  .welcome-subtitle {
+    font-size: 13px;
+    color: var(--c-text-muted);
+    margin-bottom: 28px;
+  }
+  .ranking-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    max-width: 720px;
+    margin: 0 auto;
+    overflow: hidden;
+    text-align: left;
+  }
+  .ranking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--c-border);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .ranking-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+  }
+  .ranking-toggle {
+    display: inline-flex;
+    background: var(--c-bg);
+    border-radius: 16px;
+    padding: 2px;
+    gap: 0;
+  }
+  .ranking-toggle-btn {
+    padding: 5px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--c-text-muted);
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .ranking-toggle-btn.active {
+    background: white;
+    color: var(--c-primary);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .ranking-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .ranking-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--c-border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .ranking-item:last-child { border-bottom: none; }
+  .ranking-item:hover { background: var(--c-bg-tint); }
+  .ranking-position {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    background: var(--c-bg);
+    border-radius: 50%;
+  }
+  .ranking-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .ranking-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-primary-dark);
+  }
+  .ranking-meta {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+  .ranking-eff {
+    flex-shrink: 0;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .ranking-eff.good { color: var(--c-good); }
+  .ranking-eff.warn { color: var(--c-warn); }
+  .ranking-eff.bad { color: var(--c-bad); }
+
+  /* PROFILE CONTENT (quando driver selecionado) */
+  .profile-section {
+    display: none;
+    padding: 24px;
+  }
+  .profile-section.shown { display: block; }
+
+  /* HERO */
+  .profile-hero {
+    background: linear-gradient(135deg, #1A365D 0%, #2C5282 50%, #4A9FE0 100%);
+    color: white;
+    padding: 22px 24px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .hero-avatar {
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .hero-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .hero-name {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+  .hero-meta {
+    font-size: 12px;
+    opacity: 0.85;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .hero-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .hero-status-active { color: #BBF7D0; font-weight: 600; }
+  .hero-status-inactive { color: #FECACA; font-weight: 600; }
+
+  /* SCORECARDS */
+  .profile-scorecards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .scorecard {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    border-left: 3px solid var(--c-primary);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  }
+  .scorecard.color-good { border-left-color: var(--c-good); }
+  .scorecard.color-warn { border-left-color: var(--c-warn); }
+  .scorecard.color-bad { border-left-color: var(--c-bad); }
+  .sc-label {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .sc-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin: 6px 0 4px;
+    line-height: 1.1;
+  }
+  .sc-sub {
+    font-size: 11px;
+    color: var(--c-text-muted);
+  }
+  .sc-sub strong { color: var(--c-primary); }
+
+  /* DETAIL CARDS (eficiência + idle) */
+  .detail-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .detail-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  }
+  .detail-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* EFICIÊNCIA */
+  .eff-display {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .eff-value {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    line-height: 1;
+  }
+  .eff-value.good { color: var(--c-good); }
+  .eff-value.warn { color: var(--c-warn); }
+  .eff-value.bad { color: var(--c-bad); }
+  .eff-vs-baseline {
+    font-size: 12px;
+    color: var(--c-text-muted);
+  }
+  .eff-vs-baseline strong { color: var(--c-primary-dark); }
+  .eff-vs-baseline.good strong { color: var(--c-good); }
+  .eff-vs-baseline.bad strong { color: var(--c-bad); }
+  .eff-formula {
+    background: var(--c-bg);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--c-text-muted);
+    line-height: 1.6;
+  }
+  .eff-formula code {
+    background: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', Monaco, Menlo, monospace;
+    color: var(--c-primary);
+    font-size: 11px;
+  }
+  .eff-bar {
+    height: 8px;
+    background: var(--c-bg);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0 12px;
+    position: relative;
+  }
+  .eff-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+  .eff-bar-fill.good { background: linear-gradient(90deg, var(--c-good), #10B981); }
+  .eff-bar-fill.warn { background: linear-gradient(90deg, var(--c-warn), #FBBF24); }
+  .eff-bar-fill.bad { background: linear-gradient(90deg, var(--c-bad), #EF4444); }
+  .eff-baseline-marker {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 2px;
+    background: var(--c-primary-dark);
+    z-index: 2;
+  }
+  .eff-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--c-text-muted);
+  }
+
+  /* IDLE DAYS */
+  .idle-total {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .idle-total.zero { color: var(--c-good); }
+  .idle-total-label {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    margin-bottom: 14px;
+  }
+  .idle-breakdown {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .idle-cell {
+    background: var(--c-bg);
+    border-radius: 8px;
+    padding: 10px 6px;
+    text-align: center;
+  }
+  .idle-cell.has-value { border-left: 3px solid var(--c-warn); padding-left: 3px; }
+  .idle-cell-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    line-height: 1;
+  }
+  .idle-cell.has-value .idle-cell-value { color: var(--c-warn); }
+  .idle-cell-label {
+    font-size: 9px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    margin-top: 4px;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+  }
+
+  /* PLACEHOLDER (sessão B) */
+  .placeholder-section {
+    background: white;
+    border: 2px dashed var(--c-border);
+    padding: 32px;
+    border-radius: 12px;
+    text-align: center;
+    color: var(--c-text-muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+  .placeholder-section .ph-icon { font-size: 32px; opacity: 0.4; margin-bottom: 8px; }
+
+  /* LOADER */
+  .loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.85);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .loader-overlay.show { display: flex; }
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--c-border);
+    border-top-color: var(--c-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { font-size: 13px; color: var(--c-text-muted); }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--c-text-dim);
+    font-size: 11px;
+  }
+
+  @media (max-width: 760px) {
+    .profile-scorecards { grid-template-columns: repeat(2, 1fr); }
+    .detail-row { grid-template-columns: 1fr; }
+    .idle-breakdown { grid-template-columns: repeat(5, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .profile-scorecards { grid-template-columns: 1fr; }
+    .hero-name { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="https://www.greatplacetowork.in/great/api/assets/uploads/13040/logo/logo.png" alt="Aceolution" onerror="this.style.display='none'">
+      <div class="product">DRIVER PROFILE</div>
+      <div class="region">LATAM</div>
+    </div>
+    <h1 class="login-title">Login</h1>
+    <p class="login-subtitle">Acesse com suas credenciais</p>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-field">
+      <label>Usuário</label>
+      <input type="text" id="login-username" autocomplete="username" autofocus>
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="login-password" autocomplete="current-password">
+    </div>
+    <button class="login-button" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- LOADER -->
+<div id="loader" class="loader-overlay">
+  <div class="spinner"></div>
+  <div class="loader-text" id="loader-text">Carregando…</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <div class="brand-wrap">
+      <img src="https://www.greatplacetowork.in/great/api/assets/uploads/13040/logo/logo.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
+      <div class="brand-divider"></div>
+      <div class="brand-sub">
+        <div class="brand-title-line">DRIVER PROFILE</div>
+        <div class="brand-region-line">LATAM</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+      <a href="ramp.html" class="nav-link">💳 Ramp</a>
+      <div class="user-pill" id="user-pill"></div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        class="search-input"
+        id="search-input"
+        placeholder="Buscar motorista por nome…"
+        autocomplete="off"
+        oninput="onSearchInput()"
+        onfocus="showSuggestions()"
+      >
+      <div class="search-suggestions" id="search-suggestions"></div>
+    </div>
+  </div>
+
+  <!-- Welcome (quando nenhum driver selecionado) -->
+  <div class="welcome-section" id="welcome-section">
+    <div class="welcome-icon">👤</div>
+    <div class="welcome-title">Selecione um motorista</div>
+    <div class="welcome-subtitle">Use a busca acima ou clique em um dos rankings abaixo</div>
+
+    <div class="ranking-card">
+      <div class="ranking-header">
+        <div class="ranking-title" id="ranking-title">🏆 Top 5 — maior eficiência</div>
+        <div class="ranking-toggle">
+          <button class="ranking-toggle-btn active" id="rank-mode-top" onclick="setRankingMode('top')">Top 5</button>
+          <button class="ranking-toggle-btn" id="rank-mode-bottom" onclick="setRankingMode('bottom')">Bottom 5</button>
+        </div>
+      </div>
+      <ul class="ranking-list" id="ranking-list">
+        <!-- Populado via JS -->
+      </ul>
+    </div>
+  </div>
+
+  <!-- Profile (quando driver selecionado) -->
+  <div class="profile-section" id="profile-section">
+    <!-- Hero -->
+    <div class="profile-hero">
+      <div class="hero-avatar" id="hero-avatar">?</div>
+      <div class="hero-info">
+        <div class="hero-name" id="hero-name">—</div>
+        <div class="hero-meta" id="hero-meta">—</div>
+      </div>
+    </div>
+
+    <!-- Scorecards -->
+    <div class="profile-scorecards">
+      <div class="scorecard" id="sc-eff">
+        <div class="sc-label">Eficiência</div>
+        <div class="sc-value" id="sc-eff-value">—</div>
+        <div class="sc-sub" id="sc-eff-sub">—</div>
+      </div>
+      <div class="scorecard" id="sc-tkm">
+        <div class="sc-label">TKM mês</div>
+        <div class="sc-value" id="sc-tkm-value">—</div>
+        <div class="sc-sub" id="sc-tkm-sub">—</div>
+      </div>
+      <div class="scorecard" id="sc-idle">
+        <div class="sc-label">Idle days</div>
+        <div class="sc-value" id="sc-idle-value">—</div>
+        <div class="sc-sub" id="sc-idle-sub">—</div>
+      </div>
+      <div class="scorecard" id="sc-qc">
+        <div class="sc-label">QC Score</div>
+        <div class="sc-value" id="sc-qc-value">—</div>
+        <div class="sc-sub" id="sc-qc-sub">—</div>
+      </div>
+    </div>
+
+    <!-- Detail row: eficiência + idle -->
+    <div class="detail-row">
+      <!-- Eficiência detalhada -->
+      <div class="detail-card">
+        <div class="detail-card-title">📈 Como foi calculada a eficiência?</div>
+        <div class="eff-display">
+          <div class="eff-value" id="eff-detail-value">—</div>
+          <div class="eff-vs-baseline" id="eff-vs-baseline">—</div>
+        </div>
+
+        <!-- Barra com marcador do baseline -->
+        <div class="eff-bar">
+          <div class="eff-bar-fill" id="eff-bar-fill" style="width:0%;"></div>
+          <div class="eff-baseline-marker" id="eff-baseline-marker" style="display:none;"></div>
+        </div>
+        <div class="eff-bar-labels">
+          <span>0%</span>
+          <span>50%</span>
+          <span>100%</span>
+        </div>
+
+        <div class="eff-formula" id="eff-formula" style="margin-top:14px;">
+          —
+        </div>
+      </div>
+
+      <!-- Idle days detalhado -->
+      <div class="detail-card">
+        <div class="detail-card-title">🔧 Idle days do mês</div>
+        <div class="idle-total" id="idle-total">—</div>
+        <div class="idle-total-label" id="idle-total-label">dias parados neste mês</div>
+
+        <div class="idle-breakdown" id="idle-breakdown">
+          <!-- Populado via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Placeholders para Sessão B -->
+    <div class="placeholder-section">
+      <div class="ph-icon">🗺</div>
+      <div><strong>Mapa com histórico de mapeamento e base</strong> — em breve</div>
+      <div style="margin-top:6px;font-size:11px;">Próxima sessão: visualização geográfica do driver</div>
+    </div>
+
+    <div class="placeholder-section" style="margin-top:14px;">
+      <div class="ph-icon">📅</div>
+      <div><strong>Calendário visual do mês</strong> — em breve</div>
+      <div style="margin-top:6px;font-size:11px;">Próxima sessão: grid 7×5 com cor por dia (mapeando, idle, etc)</div>
+    </div>
+
+    <div class="placeholder-section" style="margin-top:14px;">
+      <div class="ph-icon">💡</div>
+      <div><strong>Comentários inteligentes</strong> — em breve</div>
+      <div style="margin-top:6px;font-size:11px;">Próxima sessão: alertas como "considerar hotel mode", "mapeamentos repetidos", etc</div>
+    </div>
+  </div>
+
+  <footer>
+    <img src="https://www.greatplacetowork.in/great/api/assets/uploads/13040/logo/logo.png" alt="Aceolution" style="height:24px;opacity:0.6;" onerror="this.style.display='none'"><br>
+    Aceolution do Brasil Ltda. · Driver Profile · Sessão A
+  </footer>
+</div>
+
+<script>
+// ================================================================
+// LOGIN — credenciais compartilhadas com dashboard/ramp
+// ================================================================
+const USERS = [
+  { username: 'fuss', passwordHash: '20fc17a5b2949b22e408a7f0748a07c46833654638dd6f4ae744ba74c3af476a', fullName: 'Fuss' },
+  { username: 'pankaj', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Pankaj' },
+  { username: 'bia', passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Bia' },
+  { username: 'lucas', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Outro Lucas' },
+];
+
+let currentUser = null;
+
+async function sha256(text) {
+  const buffer = new TextEncoder().encode(text);
+  const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
+  return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim().toLowerCase();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.classList.remove('show');
+
+  if (!username || !password) {
+    errEl.textContent = 'Preencha usuário e senha.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  try {
+    const passwordHash = await sha256(password);
+    const user = USERS.find(u =>
+      u.username.toLowerCase() === username && u.passwordHash === passwordHash
+    );
+    if (!user) {
+      errEl.textContent = 'Usuário ou senha inválidos.';
+      errEl.classList.add('show');
+      return;
+    }
+    currentUser = user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.add('shown');
+    document.getElementById('user-pill').innerHTML =
+      `<span>👤 ${user.fullName}</span><button class="logout-btn" onclick="doLogout()" title="Sair">✕</button>`;
+    initApp();
+  } catch (err) {
+    errEl.textContent = 'Erro ao validar credenciais.';
+    errEl.classList.add('show');
+  }
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').classList.remove('shown');
+  document.getElementById('login-screen').style.display = '';
+  document.getElementById('login-password').value = '';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !document.getElementById('app').classList.contains('shown')) {
+    doLogin();
+  }
+});
+
+// ================================================================
+// CONFIG E STATE
+// ================================================================
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+};
+
+let state = {
+  drivers: [],          // lista completa carregada do backend
+  selectedEmail: null,  // email do driver atualmente sendo exibido
+  profile: null,        // payload de getDriverProfile do driver atual
+  rankingMode: 'top',   // 'top' | 'bottom'
+  searchHighlightIdx: -1, // pra navegação por teclado
+  visibleSuggestions: [],
+};
+
+// ================================================================
+// INIT
+// ================================================================
+async function initApp() {
+  showLoader(true, 'Carregando lista de motoristas…');
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getDriversList').then(r => r.json());
+    if (!res.success) throw new Error(res.error || 'Erro carregando lista');
+    state.drivers = res.drivers || [];
+    renderRanking();
+
+    // Se a URL tem ?email=xxx, abre direto o perfil desse driver
+    // (vindo do dashboard ou ramp via "Ver perfil completo")
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get('email');
+    if (emailParam) {
+      // Confirma que o driver existe na lista (se não, mostra welcome)
+      const found = state.drivers.find(d =>
+        d.email && d.email.toLowerCase() === emailParam.toLowerCase()
+      );
+      if (found) {
+        selectDriver(found.email);
+      } else {
+        // Driver pode estar inativo (não está em getDriversList que filtra Active)
+        // Tenta mesmo assim — getDriverProfile aceita qualquer email da HR
+        selectDriver(emailParam);
+      }
+    }
+  } catch (err) {
+    console.error('Erro initApp:', err);
+    alert('Erro ao carregar lista de motoristas: ' + err.message);
+  } finally {
+    showLoader(false);
+  }
+}
+
+function showLoader(show, msg) {
+  const ld = document.getElementById('loader');
+  if (msg) document.getElementById('loader-text').textContent = msg;
+  ld.classList.toggle('show', show);
+}
+
+// ================================================================
+// SEARCH AUTOCOMPLETE
+// ================================================================
+function onSearchInput() {
+  const term = document.getElementById('search-input').value.trim().toLowerCase();
+  if (!term) {
+    showSuggestions();  // mostra todos (default)
+    return;
+  }
+  // Filtra por substring no nome
+  const filtered = state.drivers.filter(d => d.name.toLowerCase().includes(term));
+  renderSuggestions(filtered.slice(0, 8));  // top 8
+}
+
+function showSuggestions() {
+  // Sem termo: mostra primeiros 8 (ordem alfabética)
+  const sorted = state.drivers.slice().sort((a, b) => a.name.localeCompare(b.name));
+  renderSuggestions(sorted.slice(0, 8));
+}
+
+function renderSuggestions(drivers) {
+  const box = document.getElementById('search-suggestions');
+  state.visibleSuggestions = drivers;
+  state.searchHighlightIdx = -1;
+
+  if (drivers.length === 0) {
+    box.innerHTML = '<div class="suggestion-empty">Nenhum motorista encontrado</div>';
+    box.classList.add('show');
+    return;
+  }
+
+  box.innerHTML = drivers.map((d, i) => {
+    const effPct = d.efficiency !== null ? (d.efficiency * 100).toFixed(0) : '—';
+    let effClass = '';
+    if (d.efficiency !== null) {
+      if (d.efficiency >= 0.7) effClass = 'good';
+      else if (d.efficiency >= 0.5) effClass = 'warn';
+      else effClass = 'bad';
+    }
+    return `<div class="suggestion-item" data-idx="${i}" onclick="selectDriver('${escapeAttr(d.email)}')">
+      <div>
+        <div class="suggestion-name">${escapeHtml(d.name)}</div>
+      </div>
+      <div class="suggestion-meta">
+        <span class="country">${escapeHtml(d.country || '—')}</span>
+        ${d.vid ? `<span>VID ${d.vid}</span>` : ''}
+        ${d.efficiency !== null ? `<span class="eff ${effClass}">${effPct}%</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  box.classList.add('show');
+}
+
+function hideSuggestions() {
+  document.getElementById('search-suggestions').classList.remove('show');
+}
+
+// Click fora fecha sugestões
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-wrap')) hideSuggestions();
+});
+
+// Navegação por teclado nas sugestões
+document.getElementById('search-input').addEventListener('keydown', (e) => {
+  const items = document.querySelectorAll('.suggestion-item');
+  if (items.length === 0) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    state.searchHighlightIdx = Math.min(state.searchHighlightIdx + 1, items.length - 1);
+    items.forEach((item, i) => item.classList.toggle('highlighted', i === state.searchHighlightIdx));
+    items[state.searchHighlightIdx].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    state.searchHighlightIdx = Math.max(state.searchHighlightIdx - 1, 0);
+    items.forEach((item, i) => item.classList.toggle('highlighted', i === state.searchHighlightIdx));
+    items[state.searchHighlightIdx].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter' && state.searchHighlightIdx >= 0) {
+    e.preventDefault();
+    const driver = state.visibleSuggestions[state.searchHighlightIdx];
+    if (driver) selectDriver(driver.email);
+  } else if (e.key === 'Escape') {
+    hideSuggestions();
+  }
+});
+
+// ================================================================
+// RANKING (Top/Bottom 5)
+// ================================================================
+function setRankingMode(mode) {
+  state.rankingMode = mode;
+  document.getElementById('rank-mode-top').classList.toggle('active', mode === 'top');
+  document.getElementById('rank-mode-bottom').classList.toggle('active', mode === 'bottom');
+  document.getElementById('ranking-title').textContent =
+    mode === 'top' ? '🏆 Top 5 — maior eficiência' : '⚠ Bottom 5 — menor eficiência';
+  renderRanking();
+}
+
+function renderRanking() {
+  const list = document.getElementById('ranking-list');
+  const withEff = state.drivers.filter(d => d.efficiency !== null && d.efficiency > 0);
+  const sorted = withEff.slice().sort((a, b) =>
+    state.rankingMode === 'top' ? b.efficiency - a.efficiency : a.efficiency - b.efficiency
+  );
+  const top5 = sorted.slice(0, 5);
+
+  if (top5.length === 0) {
+    list.innerHTML = '<li class="ranking-item"><div class="ranking-info"><div class="ranking-meta">Sem dados de eficiência disponíveis</div></div></li>';
+    return;
+  }
+
+  list.innerHTML = top5.map((d, i) => {
+    const pct = (d.efficiency * 100).toFixed(0);
+    let cls = 'good';
+    if (d.efficiency < 0.5) cls = 'bad';
+    else if (d.efficiency < 0.7) cls = 'warn';
+    return `<li class="ranking-item" onclick="selectDriver('${escapeAttr(d.email)}')">
+      <div class="ranking-position">#${i + 1}</div>
+      <div class="ranking-info">
+        <div class="ranking-name">${escapeHtml(d.name)}</div>
+        <div class="ranking-meta">${escapeHtml(d.country)} · VID ${d.vid || '—'}</div>
+      </div>
+      <div class="ranking-eff ${cls}">${pct}%</div>
+    </li>`;
+  }).join('');
+}
+
+// ================================================================
+// DRIVER PROFILE (quando seleciona)
+// ================================================================
+async function selectDriver(email) {
+  state.selectedEmail = email;
+  hideSuggestions();
+  document.getElementById('search-input').value = '';
+
+  showLoader(true, 'Carregando perfil…');
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getDriverProfile&email=' + encodeURIComponent(email))
+      .then(r => r.json());
+    if (!res.success) throw new Error(res.error || 'Erro carregando perfil');
+    state.profile = res.profile;
+    renderProfile(res.profile);
+  } catch (err) {
+    console.error('Erro selectDriver:', err);
+    alert('Erro ao carregar perfil: ' + err.message);
+  } finally {
+    showLoader(false);
+  }
+}
+
+function renderProfile(p) {
+  if (!p || !p.driver) {
+    alert('Perfil não encontrado pra esse motorista.');
+    return;
+  }
+
+  // Switch das views
+  document.getElementById('welcome-section').style.display = 'none';
+  document.getElementById('profile-section').classList.add('shown');
+
+  // Hero
+  const initials = p.driver.name.split(' ').slice(0, 2).map(s => s[0] || '').join('').toUpperCase();
+  document.getElementById('hero-avatar').textContent = initials;
+  document.getElementById('hero-name').textContent = p.driver.name;
+
+  const statusClass = p.driver.status === 'Active' ? 'hero-status-active' : 'hero-status-inactive';
+  const statusLabel = p.driver.status || '—';
+  let metaHtml = `
+    <span class="hero-meta-item">📍 ${escapeHtml(p.driver.country || '—')}</span>
+    <span class="hero-meta-item">📧 ${escapeHtml(p.driver.email || '—')}</span>
+    <span class="hero-meta-item ${statusClass}">${escapeHtml(statusLabel)}</span>
+  `;
+  if (p.vid && p.vid.vid) {
+    metaHtml += `<span class="hero-meta-item">🚗 VID ${p.vid.vid}${p.vid.isFloating === 'Yes' ? ' (Floating)' : ''}</span>`;
+  }
+  document.getElementById('hero-meta').innerHTML = metaHtml;
+
+  // Scorecards
+  renderEfficiencyScorecard(p);
+  renderTkmScorecard(p);
+  renderIdleScorecard(p);
+  renderQcScorecard(p);
+
+  // Detail cards
+  renderEfficiencyDetail(p);
+  renderIdleDetail(p);
+}
+
+function renderEfficiencyScorecard(p) {
+  const card = document.getElementById('sc-eff');
+  const valEl = document.getElementById('sc-eff-value');
+  const subEl = document.getElementById('sc-eff-sub');
+  card.classList.remove('color-good', 'color-warn', 'color-bad');
+
+  if (!p.vid || p.vid.efficiency === null || p.vid.efficiency === 0) {
+    valEl.textContent = '—';
+    subEl.textContent = 'Sem VID atribuída';
+    return;
+  }
+
+  const eff = p.vid.efficiency;
+  const pct = (eff * 100).toFixed(0);
+  valEl.textContent = pct + '%';
+
+  if (eff >= 0.7) card.classList.add('color-good');
+  else if (eff >= 0.5) card.classList.add('color-warn');
+  else card.classList.add('color-bad');
+
+  // Comparação com baseline
+  if (p.baseline.countryAvgEfficiency) {
+    const baselinePct = (p.baseline.countryAvgEfficiency * 100).toFixed(0);
+    const diff = eff - p.baseline.countryAvgEfficiency;
+    const diffPct = (diff * 100).toFixed(0);
+    if (Math.abs(diff) < 0.02) {
+      subEl.innerHTML = `Próximo do baseline (<strong>${baselinePct}%</strong>)`;
+    } else if (diff > 0) {
+      subEl.innerHTML = `<strong style="color:var(--c-good)">+${diffPct}pp</strong> vs baseline ${baselinePct}%`;
+    } else {
+      subEl.innerHTML = `<strong style="color:var(--c-bad)">${diffPct}pp</strong> vs baseline ${baselinePct}%`;
+    }
+  } else {
+    subEl.textContent = 'Sem baseline disponível';
+  }
+}
+
+function renderTkmScorecard(p) {
+  const valEl = document.getElementById('sc-tkm-value');
+  const subEl = document.getElementById('sc-tkm-sub');
+  if (!p.vid || !p.vid.tkm) {
+    valEl.textContent = '—';
+    subEl.textContent = '—';
+    return;
+  }
+  valEl.textContent = Math.round(p.vid.tkm).toLocaleString();
+  if (p.vid.mappingDays > 0 && p.vid.avgTkmPerDay) {
+    subEl.innerHTML = `<strong>${p.vid.avgTkmPerDay.toFixed(0)}</strong> TKM/dia · ${p.vid.mappingDays} dias`;
+  } else {
+    subEl.textContent = `${p.vid.kmDriven ? Math.round(p.vid.kmDriven).toLocaleString() : 0} KM dirigidos`;
+  }
+}
+
+function renderIdleScorecard(p) {
+  const card = document.getElementById('sc-idle');
+  const valEl = document.getElementById('sc-idle-value');
+  const subEl = document.getElementById('sc-idle-sub');
+  card.classList.remove('color-good', 'color-warn', 'color-bad');
+
+  const total = p.idle.total;
+  valEl.textContent = total;
+  if (total === 0) {
+    card.classList.add('color-good');
+    subEl.textContent = 'Sem dias parados ✓';
+  } else if (total <= 3) {
+    card.classList.add('color-warn');
+    subEl.textContent = total + ' ' + (total === 1 ? 'dia' : 'dias') + ' parado';
+  } else {
+    card.classList.add('color-bad');
+    subEl.textContent = total + ' dias parados — atenção';
+  }
+}
+
+function renderQcScorecard(p) {
+  const card = document.getElementById('sc-qc');
+  const valEl = document.getElementById('sc-qc-value');
+  const subEl = document.getElementById('sc-qc-sub');
+  card.classList.remove('color-good', 'color-warn', 'color-bad');
+
+  if (!p.vid || p.vid.qcScore === null || p.vid.qcScore === 0) {
+    valEl.textContent = '—';
+    subEl.textContent = 'Sem QC disponível';
+    return;
+  }
+
+  const qc = p.vid.qcScore;
+  const pct = (qc * 100).toFixed(0);
+  valEl.textContent = pct + '%';
+  if (qc >= 0.9) card.classList.add('color-good');
+  else if (qc >= 0.7) card.classList.add('color-warn');
+  else card.classList.add('color-bad');
+
+  if (p.baseline.countryAvgQc) {
+    const baselinePct = (p.baseline.countryAvgQc * 100).toFixed(0);
+    subEl.innerHTML = `Baseline país: <strong>${baselinePct}%</strong>`;
+  } else {
+    subEl.textContent = '—';
+  }
+}
+
+function renderEfficiencyDetail(p) {
+  const valEl = document.getElementById('eff-detail-value');
+  const vsEl = document.getElementById('eff-vs-baseline');
+  const formulaEl = document.getElementById('eff-formula');
+  const barFill = document.getElementById('eff-bar-fill');
+  const baselineMarker = document.getElementById('eff-baseline-marker');
+
+  if (!p.vid || !p.vid.efficiency) {
+    valEl.textContent = '—';
+    valEl.className = 'eff-value';
+    vsEl.textContent = '';
+    formulaEl.innerHTML = '<em>Sem VID atribuída — não há dados de eficiência pra calcular.</em>';
+    barFill.style.width = '0%';
+    baselineMarker.style.display = 'none';
+    return;
+  }
+
+  const eff = p.vid.efficiency;
+  const pct = (eff * 100).toFixed(1);
+  valEl.textContent = pct + '%';
+
+  let cls = 'good';
+  if (eff < 0.5) cls = 'bad';
+  else if (eff < 0.7) cls = 'warn';
+  valEl.className = 'eff-value ' + cls;
+  barFill.className = 'eff-bar-fill ' + cls;
+  barFill.style.width = Math.min(100, eff * 100) + '%';
+
+  // Baseline marker
+  if (p.baseline.countryAvgEfficiency) {
+    baselineMarker.style.display = '';
+    baselineMarker.style.left = Math.min(100, p.baseline.countryAvgEfficiency * 100) + '%';
+    baselineMarker.title = 'Baseline ' + p.driver.country + ': ' + (p.baseline.countryAvgEfficiency * 100).toFixed(0) + '%';
+  } else {
+    baselineMarker.style.display = 'none';
+  }
+
+  // VS baseline label
+  if (p.baseline.countryAvgEfficiency) {
+    const diff = eff - p.baseline.countryAvgEfficiency;
+    const baselinePct = (p.baseline.countryAvgEfficiency * 100).toFixed(0);
+    if (diff > 0.02) {
+      vsEl.innerHTML = `acima do baseline <strong>${baselinePct}%</strong> (${p.driver.country})`;
+      vsEl.className = 'eff-vs-baseline good';
+    } else if (diff < -0.02) {
+      vsEl.innerHTML = `abaixo do baseline <strong>${baselinePct}%</strong> (${p.driver.country})`;
+      vsEl.className = 'eff-vs-baseline bad';
+    } else {
+      vsEl.innerHTML = `próximo do baseline <strong>${baselinePct}%</strong> (${p.driver.country})`;
+      vsEl.className = 'eff-vs-baseline';
+    }
+  } else {
+    vsEl.textContent = '';
+  }
+
+  // Fórmula explicada
+  const tkm = Math.round(p.vid.tkm).toLocaleString();
+  const km = Math.round(p.vid.kmDriven).toLocaleString();
+  formulaEl.innerHTML = `
+    <strong>Cálculo:</strong> <code>TKM ÷ KM Driven</code> · ${pct}% deste mês<br>
+    <strong>Valores:</strong> ${tkm} TKM ÷ ${km} KM = ${pct}%<br>
+    <strong>Significado:</strong> a cada km dirigido, ${(eff * 100).toFixed(0)}% efetivamente "valeu" pro mapeamento (TKM = trackable km).
+  `;
+}
+
+function renderIdleDetail(p) {
+  const totalEl = document.getElementById('idle-total');
+  const labelEl = document.getElementById('idle-total-label');
+  const breakdownEl = document.getElementById('idle-breakdown');
+
+  totalEl.textContent = p.idle.total;
+  totalEl.classList.toggle('zero', p.idle.total === 0);
+  labelEl.textContent = p.idle.total === 1 ? 'dia parado neste mês' : 'dias parados neste mês';
+
+  // 5 cells
+  const categories = [
+    { key: 'personal', label: 'Personal', icon: '🏠' },
+    { key: 'disks', label: 'Disks', icon: '💾' },
+    { key: 'mech', label: 'Mech.', icon: '🔧' },
+    { key: 'tech', label: 'Tech.', icon: '💻' },
+    { key: 'weather', label: 'Weather', icon: '⛅' },
+  ];
+  breakdownEl.innerHTML = categories.map(cat => {
+    const value = p.idle[cat.key];
+    return `<div class="idle-cell ${value > 0 ? 'has-value' : ''}">
+      <div class="idle-cell-value">${value}</div>
+      <div class="idle-cell-label">${cat.label}</div>
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// HELPERS
+// ================================================================
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function escapeAttr(s) {
+  return String(s || '')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '&quot;');
+}
+</script>
+
+</body>
+</html>
