@@ -1158,6 +1158,102 @@
   }
 
   /* LOADER */
+  /* MODAL — Seletor de mês pro PDF Calendar */
+  .month-picker-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 9000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(2px);
+  }
+  .month-picker-overlay.show { display: flex; }
+  .month-picker-box {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.3);
+    width: 100%;
+    max-width: 380px;
+    overflow: hidden;
+  }
+  .month-picker-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--c-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .month-picker-header h3 {
+    margin: 0;
+    font-size: 15px;
+    color: var(--c-primary-dark);
+    font-weight: 700;
+  }
+  .month-picker-close {
+    background: none;
+    border: 1px solid var(--c-border);
+    color: var(--c-text-muted);
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .month-picker-close:hover { background: var(--c-bg); color: var(--c-text); }
+  .month-picker-body { padding: 18px 20px 20px; }
+  .month-picker-body p {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: var(--c-text-muted);
+  }
+  .month-picker-select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    margin-bottom: 16px;
+    background: white;
+  }
+  .month-picker-select:focus {
+    outline: none;
+    border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(74, 159, 224, 0.15);
+  }
+  .month-picker-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .month-picker-cancel,
+  .month-picker-confirm {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    border: 1px solid var(--c-border);
+    background: white;
+    color: var(--c-text-muted);
+    transition: all 0.15s;
+  }
+  .month-picker-cancel:hover { background: var(--c-bg); }
+  .month-picker-confirm {
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    border: none;
+  }
+  .month-picker-confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(44, 82, 130, 0.4);
+  }
+
   .loader-overlay {
     position: fixed;
     inset: 0;
@@ -1917,7 +2013,7 @@
           <div class="export-title" data-i18n="exportTimesheet">Folha de ponto</div>
           <div class="export-sub" data-i18n="exportTimesheetSub">Excel por driver/dia (com horas e km)</div>
         </button>
-        <button onclick="exportCalendarPdf()">
+        <button onclick="openMonthPickerForCalendar()">
           <div class="export-title" data-i18n="exportCalendar">Resumo Calendar</div>
           <div class="export-sub" data-i18n="exportCalendarSub">PDF visual do Driver/VID Calendar (mês)</div>
         </button>
@@ -2479,7 +2575,9 @@ setLoginLang(currentLoginLang);
 const USERS = [
   // SUBSTITUA estas senhas de exemplo antes de publicar
   { username: 'fuss', passwordHash: '20fc17a5b2949b22e408a7f0748a07c46833654638dd6f4ae744ba74c3af476a', fullName: 'Fuss' },
-
+  { username: 'pankaj', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Pankaj' },
+   { username: 'bia', passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Bia' },
+  { username: 'lucas', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Outro Lucas' },
   // Adicione mais conforme necessário:
   // { username: 'joao', passwordHash: '...', fullName: 'João Silva' },
 ];
@@ -2760,6 +2858,12 @@ const I18N = {
     exportSummarySub: 'Scorecards + CTS + top drivers',
     exportGenerating: 'Gerando PDF',
     exportError: 'Erro ao gerar PDF',
+    exportErrorBackend: 'Não foi possível buscar dados do backend para gerar o PDF.',
+    monthPickerTitle: 'Exportar Resumo Calendar',
+    monthPickerSub: 'Escolha o mês de referência:',
+    monthPickerCancel: 'Cancelar',
+    monthPickerConfirm: 'Gerar PDF',
+    currentLabel: 'atual',
     exportTimesheet: 'Folha de ponto',
     exportTimesheetSub: 'Excel por driver/dia (com horas e km)',
     timesheetTitle: 'Folha de Ponto',
@@ -2972,6 +3076,12 @@ const I18N = {
     exportSummarySub: 'Scorecards + CTS + top conductores',
     exportGenerating: 'Generando PDF',
     exportError: 'Error al generar PDF',
+    exportErrorBackend: 'No se pudo obtener datos del backend para generar el PDF.',
+    monthPickerTitle: 'Exportar Resumen Calendar',
+    monthPickerSub: 'Selecciona el mes de referencia:',
+    monthPickerCancel: 'Cancelar',
+    monthPickerConfirm: 'Generar PDF',
+    currentLabel: 'actual',
     exportTimesheet: 'Hoja de asistencia',
     exportTimesheetSub: 'Excel por conductor/día (con horas y km)',
     timesheetTitle: 'Hoja de Asistencia',
@@ -3184,6 +3294,12 @@ const I18N = {
     exportSummarySub: 'Scorecards + CTS + top drivers',
     exportGenerating: 'Generating PDF',
     exportError: 'Error generating PDF',
+    exportErrorBackend: 'Could not fetch backend data to generate the PDF.',
+    monthPickerTitle: 'Export Calendar Summary',
+    monthPickerSub: 'Select reference month:',
+    monthPickerCancel: 'Cancel',
+    monthPickerConfirm: 'Generate PDF',
+    currentLabel: 'current',
     exportTimesheet: 'Timesheet',
     exportTimesheetSub: 'Excel by driver/day (with hours and km)',
     timesheetTitle: 'Timesheet',
@@ -5003,7 +5119,86 @@ async function exportSummaryPdf() {
  * Exporta resumo das abas DRIVER CALENDAR + VID CALENDAR como PDF.
  * Foco em resumo visual — sem o calendário dia-a-dia.
  */
-async function exportCalendarPdf() {
+
+/**
+ * Abre o modal de seleção de mês e popula com meses disponíveis (RAW CTS DATA).
+ * Após user escolher, chama exportCalendarPdf(monthYear).
+ */
+async function openMonthPickerForCalendar() {
+  document.getElementById('export-menu').style.display = 'none';
+  const overlay = document.getElementById('month-picker-overlay');
+  const select = document.getElementById('month-picker-select');
+
+  // Loading inicial
+  select.innerHTML = `<option>${t('loading') || 'Carregando…'}</option>`;
+  select.disabled = true;
+  overlay.classList.add('show');
+
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getAvailableMonths').then(r => r.json());
+    console.log('[Calendar Export] Available months:', res);
+
+    if (!res.success || !res.months || res.months.length === 0) {
+      // Fallback: assume mês atual se backend não tiver getAvailableMonths
+      // (isso acontece se o user não fez deploy do backend novo ainda)
+      console.warn('[Calendar Export] getAvailableMonths não retornou dados — usando fallback do mês atual');
+      const now = new Date();
+      const currentKey = (now.getMonth() + 1) + '.' + now.getFullYear();
+      select.innerHTML = `<option value="${currentKey}">${formatMonthOption(currentKey)} (atual)</option>`;
+      select.disabled = false;
+      return;
+    }
+
+    // Popula com meses (mais recente primeiro, marca o atual)
+    const now = new Date();
+    const currentKey = (now.getMonth() + 1) + '.' + now.getFullYear();
+    select.innerHTML = res.months.map(m => {
+      const isCurrent = m === currentKey;
+      const label = formatMonthOption(m) + (isCurrent ? ' (' + (t('currentLabel') || 'atual') + ')' : '');
+      return `<option value="${m}"${isCurrent ? ' selected' : ''}>${label}</option>`;
+    }).join('');
+    select.disabled = false;
+  } catch (err) {
+    console.error('[Calendar Export] Erro ao buscar meses:', err);
+    // Fallback igual: mês atual
+    const now = new Date();
+    const currentKey = (now.getMonth() + 1) + '.' + now.getFullYear();
+    select.innerHTML = `<option value="${currentKey}">${formatMonthOption(currentKey)} (atual)</option>`;
+    select.disabled = false;
+  }
+}
+
+function closeMonthPicker(evt) {
+  if (evt && evt.target.id !== 'month-picker-overlay') return;  // só fecha se clicou no overlay
+  document.getElementById('month-picker-overlay').classList.remove('show');
+}
+
+function confirmMonthAndExport() {
+  const select = document.getElementById('month-picker-select');
+  const monthYear = select.value;
+  document.getElementById('month-picker-overlay').classList.remove('show');
+  exportCalendarPdf(monthYear);
+}
+
+/**
+ * Formata 'M.YYYY' (ex: '4.2026') em 'Abril 2026' (com locale).
+ */
+function formatMonthOption(monthKey) {
+  if (!monthKey) return '—';
+  const [m, y] = monthKey.split('.').map(Number);
+  const monthNames = currentLang === 'pt'
+    ? ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+    : currentLang === 'es'
+    ? ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+    : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return (monthNames[m - 1] || m) + ' ' + y;
+}
+
+/**
+ * Gera PDF Calendar Summary do mês especificado.
+ * Se monthYear não for passado, usa o mês corrente do backend.
+ */
+async function exportCalendarPdf(monthYear) {
   document.getElementById('export-menu').style.display = 'none';
 
   if (typeof window.jspdf === 'undefined') {
@@ -5014,18 +5209,64 @@ async function exportCalendarPdf() {
   showLoader(true, t('exportGenerating') + '...');
 
   try {
-    // Busca dos 2 datasets (paralelo pra ganhar tempo)
-    const [dcRes, vcRes] = await Promise.all([
-      fetch(CONFIG.scriptUrl + '?action=getDriverCalendar').then(r => r.json()).catch(() => ({ success: false })),
-      fetch(CONFIG.scriptUrl + '?action=getVidCalendar').then(r => r.json()).catch(() => ({ success: false })),
-    ]);
+    // Constrói URLs com param month se especificado
+    const dcUrl = CONFIG.scriptUrl + '?action=getDriverCalendar' + (monthYear ? '&month=' + encodeURIComponent(monthYear) : '');
+    const vcUrl = CONFIG.scriptUrl + '?action=getVidCalendar' + (monthYear ? '&month=' + encodeURIComponent(monthYear) : '');
+    console.log('[Calendar Export] Fetching:', { dcUrl, vcUrl, monthYear });
 
+    // IMPORTANTE: NÃO esconder erros silenciosamente — capturar e logar.
+    // Antes o código tinha .catch(() => ({success: false})) que escondia tudo
+    // e fazia o PDF sair vazio sem aviso. Agora qualquer falha é visível.
+    let dcRes, vcRes;
+    let dcError = null, vcError = null;
+    try {
+      dcRes = await fetch(dcUrl).then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status + ' em getDriverCalendar');
+        return r.json();
+      });
+      console.log('[Calendar Export] DriverCalendar response:', dcRes);
+    } catch (err) {
+      dcError = err;
+      console.error('[Calendar Export] DriverCalendar FALHOU:', err);
+      dcRes = { success: false, error: String(err) };
+    }
+    try {
+      vcRes = await fetch(vcUrl).then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status + ' em getVidCalendar');
+        return r.json();
+      });
+      console.log('[Calendar Export] VidCalendar response:', vcRes);
+    } catch (err) {
+      vcError = err;
+      console.error('[Calendar Export] VidCalendar FALHOU:', err);
+      vcRes = { success: false, error: String(err) };
+    }
+
+    // Se ambos falharam, ERRO VISÍVEL e não gera PDF vazio
     if (!dcRes.success && !vcRes.success) {
-      throw new Error('Não foi possível buscar os dados de Calendar');
+      const msg = (t('exportErrorBackend') || 'Não foi possível buscar dados do backend para gerar o PDF.') +
+        '\n\nDriver Calendar: ' + (dcError ? dcError.message : (dcRes.error || 'sem detalhe')) +
+        '\nVID Calendar: ' + (vcError ? vcError.message : (vcRes.error || 'sem detalhe')) +
+        '\n\nVerifique no console (F12) e confirme que o Apps Script foi atualizado.';
+      throw new Error(msg);
     }
 
     const driverCal = dcRes.success ? dcRes.data : null;
     const vidCal = vcRes.success ? vcRes.data : null;
+
+    // Diagnóstico: se driverCal sem drivers e sem countries → também é "vazio"
+    const driverCalEmpty = !driverCal || (
+      (!driverCal.countries || driverCal.countries.length === 0) &&
+      (!driverCal.drivers || driverCal.drivers.length === 0)
+    );
+    const vidCalEmpty = !vidCal || (
+      (!vidCal.countries || vidCal.countries.length === 0) &&
+      (!vidCal.vids || vidCal.vids.length === 0)
+    );
+    if (driverCalEmpty && vidCalEmpty) {
+      const monthLabel = monthYear ? formatMonthOption(monthYear) : 'mês atual';
+      throw new Error('Backend retornou dados vazios para ' + monthLabel + '.\n\nIsso pode significar:\n• A aba RAW CTS DATA não tem dados desse mês\n• O Apps Script não foi atualizado (reimplante "Nova versão")\n\nVerifique o console (F12) pra detalhes.');
+    }
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -5119,7 +5360,22 @@ async function exportCalendarPdf() {
       pdf.setTextColor(26, 54, 93);
       pdf.setFont('helvetica', 'bold');
       pdf.text(t('reportVidsByCountry'), leftX, y);
-      y += 7;
+      y += 6;
+
+      // Aviso: se o user pediu mês passado mas VID CALENDAR só tem o atual
+      if (vidCal._monthMismatch) {
+        pdf.setFontSize(8);
+        pdf.setTextColor(146, 64, 14);  // amber
+        pdf.setFont('helvetica', 'italic');
+        pdf.text(
+          '⚠ VID CALENDAR mostra sempre o mês atual — dados abaixo não são de ' + (vidCal._requestedMonth || ''),
+          leftX, y
+        );
+        y += 5;
+        pdf.setFont('helvetica', 'normal');
+      } else {
+        y += 1;
+      }
 
       // Header
       pdf.setFontSize(8);
@@ -5290,7 +5546,11 @@ async function exportCalendarPdf() {
       pdf.text(String(i) + ' / ' + pageCount, pageW - leftX - 10, 287);
     }
 
-    const filename = 'calendar-summary-' + formatDateForFilename() + '.pdf';
+    // Filename inclui o mês escolhido (ex: calendar-summary-4-2026.pdf)
+    const filenameMonth = monthYear
+      ? monthYear.replace('.', '-')
+      : (month && year ? month + '-' + year : formatDateForFilename());
+    const filename = 'calendar-summary-' + filenameMonth + '.pdf';
     pdf.save(filename);
   } catch (err) {
     console.error('Erro ao exportar Calendar:', err);
@@ -6518,6 +6778,24 @@ setLanguage(currentLang);
 </script>
 
 </div> <!-- /app-content -->
+
+<!-- Modal: seletor de mês pra export PDF Calendar -->
+<div class="month-picker-overlay" id="month-picker-overlay" onclick="closeMonthPicker(event)">
+  <div class="month-picker-box" onclick="event.stopPropagation();">
+    <div class="month-picker-header">
+      <h3 data-i18n="monthPickerTitle">Exportar Resumo Calendar</h3>
+      <button class="month-picker-close" onclick="closeMonthPicker()" aria-label="Fechar">×</button>
+    </div>
+    <div class="month-picker-body">
+      <p data-i18n="monthPickerSub">Escolha o mês de referência:</p>
+      <select id="month-picker-select" class="month-picker-select"></select>
+      <div class="month-picker-actions">
+        <button class="month-picker-cancel" onclick="closeMonthPicker()" data-i18n="monthPickerCancel">Cancelar</button>
+        <button class="month-picker-confirm" onclick="confirmMonthAndExport()" data-i18n="monthPickerConfirm">Gerar PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
