@@ -1757,6 +1757,17 @@ async function selectDriver(email) {
     const res = await fetch(CONFIG.scriptUrl + '?action=getDriverProfile&email=' + encodeURIComponent(email))
       .then(r => r.json());
     if (!res.success) throw new Error(res.error || 'Erro carregando perfil');
+
+    // ============ DEBUG: payload completo do backend ============
+    console.group('[Driver Profile] Backend payload');
+    console.log('Profile completo:', res.profile);
+    console.log('  → currentBase:', res.profile.currentBase);
+    console.log('  → driverHome:', res.profile.driverHome);
+    console.log('  → vid:', res.profile.vid);
+    console.log('  → metrics:', res.profile.metrics);
+    console.groupEnd();
+    // =============================================================
+
     state.profile = res.profile;
     renderProfile(res.profile);
   } catch (err) {
@@ -2194,6 +2205,17 @@ async function renderProfileMap(p) {
   const periodLabel = document.getElementById('map-period-label');
   if (!container) return;
 
+  // ============ DEBUG: o que o backend mandou pra esse driver ============
+  console.group('[Driver Profile MAP] Diagnóstico de coordenadas');
+  console.log('Driver:', p.driver.name, '(' + p.driver.email + ')');
+  console.log('p.currentBase:', p.currentBase);
+  console.log('  → hasBase?', !!(p.currentBase && p.currentBase.lat));
+  console.log('p.driverHome:', p.driverHome);
+  console.log('  → hasHome?', !!(p.driverHome && p.driverHome.lat));
+  console.log('p.lastCheckin:', p.lastCheckin);
+  console.groupEnd();
+  // =======================================================================
+
   // Cleanup: se já tinha mapa renderizado, destrói antes
   if (profileMap) {
     profileMap.remove();
@@ -2272,30 +2294,39 @@ async function renderProfileMap(p) {
       .bindPopup(baseTooltip)
       .addTo(profileMapLayer);
     bounds.push([p.currentBase.lat, p.currentBase.lng]);
+  }
 
-    // Se base = Hotel e tem origin (casa do driver no histórico mais recente), liga as duas
-    if (isHotel && lastCheckin && lastCheckin.originLat && lastCheckin.originLng) {
-      // Verifica que o origin é diferente da base (não duplica)
-      const distFromBase = haversineKm(
-        lastCheckin.originLat, lastCheckin.originLng,
-        p.currentBase.lat, p.currentBase.lng
-      );
-      if (distFromBase > 1) {  // mais de 1km de distância
-        // Pin da CASA
-        const homeIcon = L.divIcon({
-          className: 'driver-marker',
-          html: `<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:white;border:2px solid #22C55E;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:14px;">🏠</div>`,
-          iconSize: [28, 28],
-          iconAnchor: [14, 14],
-        });
-        L.marker([lastCheckin.originLat, lastCheckin.originLng], { icon: homeIcon })
-          .bindPopup(`<strong>${t('mapHome') || 'Casa do driver'}</strong>`)
-          .addTo(profileMapLayer);
-        bounds.push([lastCheckin.originLat, lastCheckin.originLng]);
+  // ---- Pin da CASA (homeLat/homeLng da HR — fonte primária e confiável) ----
+  // Fallback: se HR não tem coords, usa originLat/Lng do último check-in.
+  let homeCoords = null;
+  if (p.driverHome && p.driverHome.lat && p.driverHome.lng) {
+    homeCoords = { lat: p.driverHome.lat, lng: p.driverHome.lng, address: p.driverHome.address || '' };
+  } else if (lastCheckin && lastCheckin.originLat && lastCheckin.originLng) {
+    homeCoords = { lat: lastCheckin.originLat, lng: lastCheckin.originLng, address: '' };
+  }
 
-        // Linha verde tracejada casa → hotel (indicando hotel mode)
+  if (homeCoords) {
+    // Não duplica se a base é Home E está bem perto (< 1km)
+    const tooClose = hasBase && (p.currentBase.type || '').toLowerCase() === 'home' &&
+      haversineKm(homeCoords.lat, homeCoords.lng, p.currentBase.lat, p.currentBase.lng) < 1;
+
+    if (!tooClose) {
+      const homeIcon = L.divIcon({
+        className: 'driver-marker',
+        html: `<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:white;border:2px solid #22C55E;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:14px;">🏠</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+      const homeTooltip = `<strong>${t('mapHome') || 'Casa do driver'}</strong>${homeCoords.address ? '<br>' + escapeHtml(homeCoords.address) : ''}`;
+      L.marker([homeCoords.lat, homeCoords.lng], { icon: homeIcon })
+        .bindPopup(homeTooltip)
+        .addTo(profileMapLayer);
+      bounds.push([homeCoords.lat, homeCoords.lng]);
+
+      // Linha verde tracejada casa → hotel (se base é Hotel)
+      if (hasBase && (p.currentBase.type || '').toLowerCase().includes('hotel')) {
         L.polyline([
-          [lastCheckin.originLat, lastCheckin.originLng],
+          [homeCoords.lat, homeCoords.lng],
           [p.currentBase.lat, p.currentBase.lng]
         ], {
           color: '#22C55E',
