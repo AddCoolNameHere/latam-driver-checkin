@@ -9,6 +9,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
+<script src="auth.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2572,30 +2574,9 @@ function setLoginLang(lang) {
 // Aplica idioma salvo logo na carga da página
 setLoginLang(currentLoginLang);
 
-const USERS = [
-  // SUBSTITUA estas senhas de exemplo antes de publicar
-  { username: 'fuss', passwordHash: '20fc17a5b2949b22e408a7f0748a07c46833654638dd6f4ae744ba74c3af476a', fullName: 'Fuss' },
-  { username: 'pankaj', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Pankaj' },
-   { username: 'bia', passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Bia' },
-  { username: 'lucas', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Outro Lucas' },
-  // Adicione mais conforme necessário:
-  // { username: 'joao', passwordHash: '...', fullName: 'João Silva' },
-];
+// USERS, sha256() e validateLogin() vêm de auth.js (carregado no <head>)
 
 let currentUser = null;
-
-/**
- * Calcula SHA-256 hex de uma string.
- * Usa a Web Crypto API nativa (não precisa de bibliotecas externas).
- */
-async function sha256(text) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
 
 /**
  * Handler do submit do form de login.
@@ -2622,10 +2603,7 @@ async function doLogin(event) {
   errorEl.classList.remove('visible');
 
   try {
-    const passwordHash = await sha256(password);
-    const user = USERS.find(u =>
-      u.username.toLowerCase() === username && u.passwordHash === passwordHash
-    );
+    const user = await validateLogin(username, password);
 
     if (!user) {
       // Pequeno delay anti-brute-force visual (não é segurança real)
@@ -4376,7 +4354,7 @@ document.addEventListener('click', (e) => {
 // Permite edição de drivers (base type, endereço, email, observações)
 // sem precisar abrir a Google Sheet. Visível só pro user 'fuss'.
 
-const ADMIN_USERNAMES = ['fuss', 'lucas']; // hardcoded por enquanto, simples
+// ADMIN_USERNAMES vem de auth.js (carregado no <head>)
 
 let adminState = {
   selectedDriver: null,    // driver atualmente sendo editado
