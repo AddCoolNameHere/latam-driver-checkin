@@ -6,6 +6,8 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Driver Profile · LATAM · Aceolution</title>
   <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+  <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
+  <script src="auth.js"></script>
 <style>
   :root {
     --c-primary: #2C5282;
@@ -1035,22 +1037,10 @@
 
 <script>
 // ================================================================
-// LOGIN — credenciais compartilhadas com dashboard/ramp
+// LOGIN — USERS, sha256() e validateLogin() vêm de auth.js
 // ================================================================
-const USERS = [
-  { username: 'fuss', passwordHash: '20fc17a5b2949b22e408a7f0748a07c46833654638dd6f4ae744ba74c3af476a', fullName: 'Fuss' },
-  { username: 'pankaj', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Pankaj' },
-  { username: 'bia', passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Bia' },
-  { username: 'lucas', passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec', fullName: 'Outro Lucas' },
-];
 
 let currentUser = null;
-
-async function sha256(text) {
-  const buffer = new TextEncoder().encode(text);
-  const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
-  return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
 
 async function doLogin() {
   const username = document.getElementById('login-username').value.trim().toLowerCase();
@@ -1065,10 +1055,7 @@ async function doLogin() {
   }
 
   try {
-    const passwordHash = await sha256(password);
-    const user = USERS.find(u =>
-      u.username.toLowerCase() === username && u.passwordHash === passwordHash
-    );
+    const user = await validateLogin(username, password);
     if (!user) {
       errEl.textContent = 'Usuário ou senha inválidos.';
       errEl.classList.add('show');
