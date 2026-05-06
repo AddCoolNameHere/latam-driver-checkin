@@ -6,6 +6,9 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Driver Profile · LATAM · Aceolution</title>
   <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+  <!-- Leaflet pra mapa de histórico do driver (mesma lib do dashboard) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
   <script src="auth.js"></script>
 <style>
@@ -540,6 +543,94 @@
     gap: 6px;
   }
 
+  /* MAPA — driver-profile geographic activity */
+  .map-card { margin-bottom: 18px; }
+  .map-card .detail-card-title { margin-bottom: 10px; }
+  .map-period {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--c-text-muted);
+  }
+  .profile-map {
+    width: 100%;
+    height: 450px;
+    border-radius: 8px;
+    background: var(--c-bg);
+    overflow: hidden;
+    border: 1px solid var(--c-border);
+  }
+  .profile-map .leaflet-popup-content-wrapper {
+    border-radius: 6px;
+  }
+  .profile-map .leaflet-popup-content {
+    margin: 8px 10px;
+    font-family: inherit;
+    font-size: 12px;
+  }
+  .map-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--c-text-muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+  }
+  .map-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    flex-direction: column;
+    gap: 10px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+  }
+  .map-loading .spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--c-border);
+    border-top-color: var(--c-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .map-legend {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 11px;
+    color: var(--c-text-muted);
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+  .legend-circle {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border-width: 2px;
+    border-style: solid;
+  }
+  .legend-line {
+    display: inline-block;
+    width: 16px;
+    height: 0;
+    border-top: 2px dashed #4A9FE0;
+  }
+
   /* EFICIÊNCIA */
   .eff-display {
     display: flex;
@@ -1014,11 +1105,18 @@
       <div id="calendar-content"></div>
     </div>
 
-    <!-- Placeholder Sessão B: Mapa -->
-    <div class="placeholder-section">
-      <div class="ph-icon">🗺</div>
-      <div><strong data-i18n="placeholderMap">Mapa com histórico de mapeamento e base</strong> <span data-i18n="comingSoon">— em breve</span></div>
-      <div style="margin-top:6px;font-size:11px;"><span data-i18n="nextSession">Próxima sessão:</span> visualização geográfica do driver</div>
+    <!-- Mapa: histórico geográfico do driver (Sessão B) -->
+    <div class="detail-card map-card">
+      <div class="detail-card-title">🗺 <span data-i18n="mapCardTitle">Mapa de atividade</span>
+        <span class="map-period" id="map-period-label">— últimos 60 dias</span>
+      </div>
+      <div id="profile-map" class="profile-map"></div>
+      <div class="map-legend" id="map-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#2C5282;"></span> <span data-i18n="legendBase">Base atual</span></span>
+        <span class="legend-item"><span class="legend-dot" style="background:white;border:2px solid #22C55E;"></span> 🏠 <span data-i18n="legendHome">Casa</span></span>
+        <span class="legend-item"><span class="legend-circle" style="border-color:#2C5282;background:rgba(74,159,224,0.2);"></span> <span data-i18n="legendArea">Área de mapeamento</span></span>
+        <span class="legend-item"><span class="legend-line"></span> <span data-i18n="legendHistory">Histórico (mais transparente = mais antigo)</span></span>
+      </div>
     </div>
 
     <!-- Placeholder Sessão B: Comentários -->
@@ -1165,6 +1263,20 @@ const I18N = {
     historyTrendUp: 'tendência ↗ {diff}pp últimos 3 meses',
     historyTrendDown: 'tendência ↘ {diff}pp últimos 3 meses',
     historyTrendFlat: 'tendência → estável',
+    mapCardTitle: 'Mapa de atividade',
+    mapPeriod: 'últimos {days} dias',
+    mapLastDays: 'últimos {days} dias',
+    mapLoading: 'Carregando histórico…',
+    mapNoData: 'Sem dados de localização disponíveis',
+    mapBase: 'Base',
+    mapHome: 'Casa do driver',
+    mapLatestArea: 'Área mais recente',
+    mapPastArea: 'Área histórica',
+    mapRadius: 'Raio',
+    legendBase: 'Base atual',
+    legendHome: 'Casa',
+    legendArea: 'Área de mapeamento',
+    legendHistory: 'Histórico (mais transparente = mais antigo)',
   },
   es: {
     loginTitle: 'Login',
@@ -1223,6 +1335,20 @@ const I18N = {
     historyTrendUp: 'tendencia ↗ {diff}pp últimos 3 meses',
     historyTrendDown: 'tendencia ↘ {diff}pp últimos 3 meses',
     historyTrendFlat: 'tendencia → estable',
+    mapCardTitle: 'Mapa de actividad',
+    mapPeriod: 'últimos {days} días',
+    mapLastDays: 'últimos {days} días',
+    mapLoading: 'Cargando historial…',
+    mapNoData: 'Sin datos de ubicación disponibles',
+    mapBase: 'Base',
+    mapHome: 'Casa del conductor',
+    mapLatestArea: 'Área más reciente',
+    mapPastArea: 'Área histórica',
+    mapRadius: 'Radio',
+    legendBase: 'Base actual',
+    legendHome: 'Casa',
+    legendArea: 'Área de mapeo',
+    legendHistory: 'Historial (más transparente = más antiguo)',
   },
   en: {
     loginTitle: 'Login',
@@ -1281,6 +1407,20 @@ const I18N = {
     historyTrendUp: 'trend ↗ {diff}pp last 3 months',
     historyTrendDown: 'trend ↘ {diff}pp last 3 months',
     historyTrendFlat: 'trend → stable',
+    mapCardTitle: 'Activity map',
+    mapPeriod: 'last {days} days',
+    mapLastDays: 'last {days} days',
+    mapLoading: 'Loading history…',
+    mapNoData: 'No location data available',
+    mapBase: 'Base',
+    mapHome: 'Driver home',
+    mapLatestArea: 'Latest area',
+    mapPastArea: 'Past area',
+    mapRadius: 'Radius',
+    legendBase: 'Current base',
+    legendHome: 'Home',
+    legendArea: 'Mapping area',
+    legendHistory: 'History (more transparent = older)',
   },
 };
 
@@ -1682,8 +1822,7 @@ function renderProfile(p) {
   renderEfficiencyDetail(p);
   renderIdleDetail(p);
   renderMonthlyHistory(p);
-  renderMonthCalendar(p);
-  renderMonthlyHistory(p);
+  renderProfileMap(p);
 }
 
 /**
@@ -2031,6 +2170,234 @@ function formatMonth(monthKey) {
   };
   const names = monthNames[currentLang] || monthNames.pt;
   return `${names[m - 1]}/${y}`;
+}
+
+// ================================================================
+// MAPA — visualização geográfica (adaptado de renderPanelMap do dashboard)
+// ================================================================
+let profileMap = null;
+let profileMapLayer = null;
+
+/**
+ * Renderiza o mapa do driver. Mostra:
+ *   - Pin azul: base atual (Hotel/Home/Mixed)
+ *   - Pin verde 🏠: casa (se diferente da base)
+ *   - Círculo azul: área de mapeamento mais recente
+ *   - Círculos azuis com fade: histórico de áreas (mais antigo = mais transparente)
+ *   - Linha tracejada: base → área de mapeamento mais recente
+ *   - Linha verde tracejada: casa → hotel (se em hotel mode)
+ *
+ * Busca histórico via getDriverHistory (60 dias) — não precisa endpoint novo.
+ */
+async function renderProfileMap(p) {
+  const container = document.getElementById('profile-map');
+  const periodLabel = document.getElementById('map-period-label');
+  if (!container) return;
+
+  // Cleanup: se já tinha mapa renderizado, destrói antes
+  if (profileMap) {
+    profileMap.remove();
+    profileMap = null;
+    profileMapLayer = null;
+  }
+
+  // Loading state
+  container.innerHTML = `
+    <div class="map-loading">
+      <div class="spinner"></div>
+      <div>${t('mapLoading') || 'Carregando histórico…'}</div>
+    </div>
+  `;
+
+  // Busca histórico (reusa endpoint que o dashboard já usa)
+  const days = 60;
+  let history = [];
+  try {
+    const res = await fetch(
+      CONFIG.scriptUrl + '?action=getDriverHistory&email=' + encodeURIComponent(p.driver.email) + '&days=' + days
+    ).then(r => r.json());
+    if (res.success && res.history) {
+      history = res.history;
+    }
+    console.log(`[Driver Profile] Histórico (${days} dias):`, history.length, 'check-ins');
+  } catch (err) {
+    console.warn('[Driver Profile] Falha ao buscar histórico:', err);
+    // Continua sem histórico — pode ser que driver não tenha check-ins
+  }
+
+  // Atualiza label do período
+  if (periodLabel) {
+    periodLabel.textContent = '— ' + (t('mapLastDays') || 'últimos {days} dias').replace('{days}', days);
+  }
+
+  // Decide se tem QUALQUER coordenada pra mostrar
+  const hasBase = p.currentBase && p.currentBase.lat;
+  const lastCheckin = history.length > 0 ? history[0] : null;  // mais recente
+  const hasArea = lastCheckin && lastCheckin.destLat && lastCheckin.destLng;
+
+  if (!hasBase && !hasArea && history.length === 0) {
+    container.innerHTML = `<div class="map-empty">📍 ${t('mapNoData') || 'Sem dados de localização disponíveis'}</div>`;
+    return;
+  }
+
+  container.innerHTML = ''; // limpa loading
+
+  // Define centro inicial: base > última área
+  let initialCenter;
+  if (hasBase) initialCenter = [p.currentBase.lat, p.currentBase.lng];
+  else initialCenter = [lastCheckin.destLat, lastCheckin.destLng];
+
+  profileMap = L.map('profile-map').setView(initialCenter, 10);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(profileMap);
+
+  profileMapLayer = L.layerGroup().addTo(profileMap);
+  const bounds = [];
+
+  // ---- Pin da BASE (atual) ----
+  if (hasBase) {
+    const baseType = p.currentBase.type || '—';
+    const isHotel = baseType.toLowerCase().includes('hotel');
+    const baseIcon = L.divIcon({
+      className: 'driver-marker',
+      html: `<div style="width:18px;height:18px;background:#2C5282;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+      iconSize: [18, 18],
+      iconAnchor: [9, 9],
+    });
+    const baseTooltip = `<strong>${t('mapBase') || 'Base'}: ${escapeHtml(baseType)}</strong><br>${escapeHtml(p.currentBase.address || '')}`;
+    L.marker([p.currentBase.lat, p.currentBase.lng], { icon: baseIcon })
+      .bindPopup(baseTooltip)
+      .addTo(profileMapLayer);
+    bounds.push([p.currentBase.lat, p.currentBase.lng]);
+
+    // Se base = Hotel e tem origin (casa do driver no histórico mais recente), liga as duas
+    if (isHotel && lastCheckin && lastCheckin.originLat && lastCheckin.originLng) {
+      // Verifica que o origin é diferente da base (não duplica)
+      const distFromBase = haversineKm(
+        lastCheckin.originLat, lastCheckin.originLng,
+        p.currentBase.lat, p.currentBase.lng
+      );
+      if (distFromBase > 1) {  // mais de 1km de distância
+        // Pin da CASA
+        const homeIcon = L.divIcon({
+          className: 'driver-marker',
+          html: `<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:white;border:2px solid #22C55E;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:14px;">🏠</div>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
+        });
+        L.marker([lastCheckin.originLat, lastCheckin.originLng], { icon: homeIcon })
+          .bindPopup(`<strong>${t('mapHome') || 'Casa do driver'}</strong>`)
+          .addTo(profileMapLayer);
+        bounds.push([lastCheckin.originLat, lastCheckin.originLng]);
+
+        // Linha verde tracejada casa → hotel (indicando hotel mode)
+        L.polyline([
+          [lastCheckin.originLat, lastCheckin.originLng],
+          [p.currentBase.lat, p.currentBase.lng]
+        ], {
+          color: '#22C55E',
+          weight: 1.5,
+          opacity: 0.6,
+          dashArray: '3 6',
+        }).addTo(profileMapLayer);
+      }
+    }
+  }
+
+  // ---- Histórico de áreas (fade gradual) ----
+  // Pega áreas únicas (deduplica por proximidade) das últimas check-ins
+  const areas = [];
+  history.forEach(h => {
+    if (!h.destLat || !h.destLng) return;
+    // Verifica se essa área já foi adicionada (deduplica em raio de 5km)
+    const exists = areas.some(a =>
+      haversineKm(a.lat, a.lng, h.destLat, h.destLng) < 5
+    );
+    if (!exists) {
+      areas.push({
+        lat: h.destLat,
+        lng: h.destLng,
+        radius: h.destRadius || 10,
+        address: h.destAddress || '',
+        date: h.timestamp,
+      });
+    }
+  });
+
+  // Mais recente primeiro (i=0). Mais antigo = mais transparente.
+  areas.forEach((area, idx) => {
+    const isLatest = idx === 0;
+    const fadeOpacity = Math.max(0.15, 0.85 - idx * 0.1);
+
+    // Círculo da área (raio em km × 1000 = metros)
+    const circle = L.circle([area.lat, area.lng], {
+      radius: (area.radius || 10) * 1000,
+      color: isLatest ? '#1A365D' : '#4A9FE0',
+      fillColor: '#4A9FE0',
+      fillOpacity: isLatest ? 0.25 : fadeOpacity * 0.15,
+      weight: isLatest ? 2 : 1,
+      opacity: isLatest ? 1 : fadeOpacity * 0.7,
+      dashArray: isLatest ? null : '3 4',
+    }).addTo(profileMapLayer);
+
+    // Tooltip com data e endereço
+    const dateStr = new Date(area.date).toLocaleDateString(
+      currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR')
+    );
+    const labelPrefix = isLatest
+      ? (t('mapLatestArea') || 'Área mais recente')
+      : (t('mapPastArea') || 'Área #' + (idx + 1));
+    circle.bindPopup(
+      `<strong>${labelPrefix}</strong><br>` +
+      `📅 ${dateStr}<br>` +
+      `${escapeHtml(area.address)}<br>` +
+      `<small>${t('mapRadius') || 'Raio'}: ${area.radius} km</small>`
+    );
+
+    bounds.push([area.lat, area.lng]);
+  });
+
+  // Linha tracejada base → área mais recente (se ambos existem e são diferentes)
+  if (hasBase && areas.length > 0) {
+    const dist = haversineKm(p.currentBase.lat, p.currentBase.lng, areas[0].lat, areas[0].lng);
+    if (dist > 0.5) {
+      L.polyline([
+        [p.currentBase.lat, p.currentBase.lng],
+        [areas[0].lat, areas[0].lng]
+      ], {
+        color: '#2C5282',
+        weight: 1.5,
+        opacity: 0.5,
+        dashArray: '5 5',
+      }).addTo(profileMapLayer);
+    }
+  }
+
+  // Ajusta viewport
+  setTimeout(() => {
+    profileMap.invalidateSize();
+    if (bounds.length > 1) {
+      profileMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 11 });
+    } else if (bounds.length === 1) {
+      profileMap.setView(bounds[0], 12);
+    }
+  }, 200);
+}
+
+/**
+ * Distância entre 2 coordenadas em km (Haversine).
+ */
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 // ================================================================
