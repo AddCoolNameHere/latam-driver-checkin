@@ -543,6 +543,116 @@
     gap: 6px;
   }
 
+  /* AI ANALYSIS CARD */
+  .ai-card { margin-bottom: 18px; }
+  .ai-card .detail-card-title { display: flex; align-items: center; gap: 8px; }
+  .ai-analyze-btn {
+    margin-left: auto;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .ai-analyze-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(44, 82, 130, 0.4);
+  }
+  .ai-analyze-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .ai-content { min-height: 80px; }
+  .ai-empty {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 14px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .ai-empty-icon { font-size: 24px; opacity: 0.5; }
+  .ai-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 30px 14px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+  }
+  .ai-loading .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--c-border);
+    border-top-color: var(--c-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .ai-error {
+    background: #FEF2F2;
+    border-left: 3px solid var(--c-bad);
+    padding: 12px 14px;
+    border-radius: 4px;
+    color: #991B1B;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .ai-error strong { display: block; margin-bottom: 4px; }
+  .ai-section {
+    margin-bottom: 14px;
+  }
+  .ai-section:last-child { margin-bottom: 0; }
+  .ai-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ai-item {
+    background: var(--c-bg);
+    border-left: 3px solid var(--c-border-strong);
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+  .ai-item:last-child { margin-bottom: 0; }
+  .ai-item.severity-high { border-left-color: var(--c-bad); background: #FEF2F2; }
+  .ai-item.severity-medium { border-left-color: var(--c-warn); background: #FFFBEB; }
+  .ai-item.severity-low { border-left-color: var(--c-accent); background: var(--c-bg-tint); }
+  .ai-item.kind-suggestion { border-left-color: #8B5CF6; background: #F5F3FF; }
+  .ai-item.kind-strength { border-left-color: var(--c-good); background: #F0FDF4; }
+  .ai-item-title {
+    font-weight: 600;
+    color: var(--c-primary-dark);
+    margin-bottom: 3px;
+  }
+  .ai-item-desc {
+    color: var(--c-text);
+    line-height: 1.5;
+  }
+  .ai-meta {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--c-border);
+    font-size: 10px;
+    color: var(--c-text-dim);
+    text-align: right;
+  }
+
   /* MAPA — driver-profile geographic activity */
   .map-card { margin-bottom: 18px; }
   .map-card .detail-card-title { margin-bottom: 10px; }
@@ -1119,11 +1229,20 @@
       </div>
     </div>
 
-    <!-- Placeholder Sessão B: Comentários -->
-    <div class="placeholder-section" style="margin-top:14px;">
-      <div class="ph-icon">💡</div>
-      <div><strong data-i18n="placeholderComments">Comentários inteligentes</strong> <span data-i18n="comingSoon">— em breve</span></div>
-      <div style="margin-top:6px;font-size:11px;"><span data-i18n="nextSession">Próxima sessão:</span> alertas como "considerar hotel mode", "mapeamentos repetidos", etc</div>
+    <!-- AI Analysis card (substitui o placeholder Smart comments) -->
+    <div class="detail-card ai-card" id="ai-card">
+      <div class="detail-card-title">
+        🤖 <span data-i18n="aiCardTitle">AI Analysis</span>
+        <button class="ai-analyze-btn" id="ai-analyze-btn" onclick="runAiAnalysis()">
+          <span data-i18n="aiAnalyzeBtn">Analyze with AI</span>
+        </button>
+      </div>
+      <div id="ai-content" class="ai-content">
+        <div class="ai-empty">
+          <div class="ai-empty-icon">💡</div>
+          <div data-i18n="aiEmptyText">Click the button above to generate AI-powered insights about this driver — alerts, suggestions, and strengths based on the data above.</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1277,6 +1396,16 @@ const I18N = {
     legendHome: 'Casa',
     legendArea: 'Área de mapeamento',
     legendHistory: 'Histórico (mais transparente = mais antigo)',
+    aiCardTitle: 'Análise IA',
+    aiAnalyzeBtn: 'Analisar com IA',
+    aiEmptyText: 'Clique no botão acima para gerar insights via IA sobre este motorista — alertas, sugestões e pontos positivos baseados nos dados acima.',
+    aiLoading: 'Analisando dados do motorista com IA… (5-15s)',
+    aiErrorTitle: 'Não foi possível executar a análise',
+    aiNothingToReport: 'A IA não retornou observações específicas. Tente novamente em alguns instantes.',
+    aiAlertsTitle: 'Pontos de atenção',
+    aiSuggestionsTitle: 'Sugestões operacionais',
+    aiStrengthsTitle: 'Pontos positivos',
+    aiGenerated: 'Gerado em',
   },
   es: {
     loginTitle: 'Login',
@@ -1349,6 +1478,16 @@ const I18N = {
     legendHome: 'Casa',
     legendArea: 'Área de mapeo',
     legendHistory: 'Historial (más transparente = más antiguo)',
+    aiCardTitle: 'Análisis IA',
+    aiAnalyzeBtn: 'Analizar con IA',
+    aiEmptyText: 'Haz clic en el botón arriba para generar insights vía IA sobre este conductor — alertas, sugerencias y puntos positivos basados en los datos.',
+    aiLoading: 'Analizando datos del conductor con IA… (5-15s)',
+    aiErrorTitle: 'No se pudo ejecutar el análisis',
+    aiNothingToReport: 'La IA no devolvió observaciones específicas. Intenta de nuevo en unos momentos.',
+    aiAlertsTitle: 'Puntos de atención',
+    aiSuggestionsTitle: 'Sugerencias operativas',
+    aiStrengthsTitle: 'Puntos positivos',
+    aiGenerated: 'Generado el',
   },
   en: {
     loginTitle: 'Login',
@@ -1421,6 +1560,16 @@ const I18N = {
     legendHome: 'Home',
     legendArea: 'Mapping area',
     legendHistory: 'History (more transparent = older)',
+    aiCardTitle: 'AI Analysis',
+    aiAnalyzeBtn: 'Analyze with AI',
+    aiEmptyText: 'Click the button above to generate AI-powered insights about this driver — alerts, suggestions, and strengths based on the data above.',
+    aiLoading: 'Analyzing driver data with AI… (5-15s)',
+    aiErrorTitle: 'Could not run AI analysis',
+    aiNothingToReport: 'AI returned no specific observations. Try again in a moment.',
+    aiAlertsTitle: 'Points of attention',
+    aiSuggestionsTitle: 'Operational suggestions',
+    aiStrengthsTitle: 'Strengths',
+    aiGenerated: 'Generated',
   },
 };
 
@@ -1834,7 +1983,21 @@ function renderProfile(p) {
   renderIdleDetail(p);
   renderMonthlyHistory(p);
   renderProfileMap(p);
+  resetAiCard();
 }
+
+/**
+ * Reseta o card de AI ao trocar de driver (limpa análise antiga, mostra estado vazio).
+ */
+function resetAiCard() {
+  const content = document.getElementById('ai-content');
+  if (!content) return;
+  content.innerHTML = `
+    <div class="ai-empty">
+      <div class="ai-empty-icon">💡</div>
+      <div>${t('aiEmptyText') || 'Click the button above to generate AI-powered insights about this driver — alerts, suggestions, and strengths based on the data above.'}</div>
+    </div>
+  `;
 
 /**
  * Helper: pega métricas do mês corrente (priorizando RAW CTS, fallback VID).
@@ -2421,6 +2584,138 @@ async function renderProfileMap(p) {
 /**
  * Distância entre 2 coordenadas em km (Haversine).
  */
+// ================================================================
+// AI ANALYSIS — chama backend que chama Claude API
+// ================================================================
+
+let aiAnalysisInFlight = false;
+
+/**
+ * Roda análise IA do driver atualmente selecionado.
+ * POST pro Apps Script com {type: 'analyzeDriver', email}.
+ */
+async function runAiAnalysis() {
+  if (aiAnalysisInFlight) return;
+  if (!state.profile || !state.profile.driver) {
+    console.warn('[Driver Profile AI] Nenhum driver selecionado');
+    return;
+  }
+
+  const email = state.profile.driver.email;
+  const btn = document.getElementById('ai-analyze-btn');
+  const content = document.getElementById('ai-content');
+
+  aiAnalysisInFlight = true;
+  btn.disabled = true;
+  content.innerHTML = `
+    <div class="ai-loading">
+      <div class="spinner"></div>
+      <div>${t('aiLoading') || 'Analyzing driver data with AI… (5-15s)'}</div>
+    </div>
+  `;
+
+  try {
+    console.log('[Driver Profile AI] Calling backend for', email);
+    const res = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      // Apps Script Web Apps não suportam preflight CORS com Content-Type custom.
+      // Mandamos como text/plain — o backend faz JSON.parse(e.postData.contents).
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ type: 'analyzeDriver', email: email }),
+    }).then(r => r.json());
+
+    console.log('[Driver Profile AI] Response:', res);
+
+    if (!res.success) {
+      renderAiError(res.error || 'Unknown error');
+      return;
+    }
+
+    renderAiAnalysis(res.analysis, res.model, res.timestamp);
+  } catch (err) {
+    console.error('[Driver Profile AI] Fetch failed:', err);
+    renderAiError(err.message);
+  } finally {
+    aiAnalysisInFlight = false;
+    btn.disabled = false;
+  }
+}
+
+function renderAiError(message) {
+  const content = document.getElementById('ai-content');
+  content.innerHTML = `
+    <div class="ai-error">
+      <strong>⚠ ${t('aiErrorTitle') || 'Could not run AI analysis'}</strong>
+      ${escapeHtml(message)}
+    </div>
+  `;
+}
+
+function renderAiAnalysis(analysis, model, timestamp) {
+  const content = document.getElementById('ai-content');
+
+  if (!analysis ||
+      ((analysis.alerts || []).length === 0 &&
+       (analysis.suggestions || []).length === 0 &&
+       (analysis.strengths || []).length === 0)) {
+    content.innerHTML = `<div class="ai-empty">
+      <div class="ai-empty-icon">✓</div>
+      <div>${t('aiNothingToReport') || 'AI returned no specific observations for this driver. Try again later or check the data.'}</div>
+    </div>`;
+    return;
+  }
+
+  let html = '';
+
+  // Alerts
+  if (analysis.alerts && analysis.alerts.length > 0) {
+    html += `<div class="ai-section">
+      <div class="ai-section-title">⚠ ${t('aiAlertsTitle') || 'Points of attention'}</div>`;
+    analysis.alerts.forEach(item => {
+      const sev = (item.severity || 'medium').toLowerCase();
+      html += `<div class="ai-item severity-${sev}">
+        <div class="ai-item-title">${escapeHtml(item.title || '')}</div>
+        <div class="ai-item-desc">${escapeHtml(item.description || '')}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Suggestions
+  if (analysis.suggestions && analysis.suggestions.length > 0) {
+    html += `<div class="ai-section">
+      <div class="ai-section-title">💡 ${t('aiSuggestionsTitle') || 'Operational suggestions'}</div>`;
+    analysis.suggestions.forEach(item => {
+      html += `<div class="ai-item kind-suggestion">
+        <div class="ai-item-title">${escapeHtml(item.title || '')}</div>
+        <div class="ai-item-desc">${escapeHtml(item.description || '')}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Strengths
+  if (analysis.strengths && analysis.strengths.length > 0) {
+    html += `<div class="ai-section">
+      <div class="ai-section-title">✅ ${t('aiStrengthsTitle') || 'Strengths'}</div>`;
+    analysis.strengths.forEach(item => {
+      html += `<div class="ai-item kind-strength">
+        <div class="ai-item-title">${escapeHtml(item.title || '')}</div>
+        <div class="ai-item-desc">${escapeHtml(item.description || '')}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Meta
+  const dateStr = new Date(timestamp).toLocaleString(
+    currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR')
+  );
+  html += `<div class="ai-meta">${t('aiGenerated') || 'Generated'} ${dateStr} · ${escapeHtml(model || 'Claude')}</div>`;
+
+  content.innerHTML = html;
+}
+
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
