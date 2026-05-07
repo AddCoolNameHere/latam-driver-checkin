@@ -543,6 +543,325 @@
     gap: 6px;
   }
 
+  /* ASSETS CARD */
+  .assets-card { margin-bottom: 18px; }
+  .assets-update {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--c-text-muted);
+  }
+  .assets-content { font-size: 12px; }
+  .assets-empty {
+    padding: 18px 14px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .assets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .assets-stat {
+    background: var(--c-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--c-primary);
+  }
+  .assets-stat-label {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+    font-weight: 600;
+  }
+  .assets-stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    line-height: 1.2;
+  }
+  .assets-stat-value.small { font-size: 13px; }
+  .assets-stat-sub {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+  .assets-discs-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--c-border);
+  }
+  .assets-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .assets-disc-chip {
+    display: inline-block;
+    background: white;
+    border: 1px solid var(--c-border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin: 0 4px 4px 0;
+    font-size: 11px;
+    font-family: 'SF Mono', Monaco, Menlo, monospace;
+    color: var(--c-text);
+  }
+  .assets-disc-chip.in-use {
+    background: #EBF4FB;
+    border-color: var(--c-accent);
+    color: var(--c-primary-dark);
+    font-weight: 600;
+    position: relative;
+  }
+  .assets-disc-chip.in-use::before {
+    content: '▶';
+    margin-right: 4px;
+    color: var(--c-accent);
+    font-size: 9px;
+  }
+  .assets-comments {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: var(--c-bg-tint, #FFFBEB);
+    border-left: 3px solid var(--c-warn);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--c-text-muted);
+    font-style: italic;
+  }
+
+  /* COMPLIANCE CARD */
+  .compliance-card { margin-bottom: 18px; }
+  .compliance-content { font-size: 12px; }
+  .compliance-empty {
+    padding: 24px 14px;
+    text-align: center;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .compliance-empty-icon {
+    font-size: 30px;
+    opacity: 0.4;
+    margin-bottom: 8px;
+  }
+  .compliance-summary {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .compliance-summary-item {
+    flex: 1;
+    min-width: 110px;
+    background: var(--c-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--c-border-strong);
+  }
+  .compliance-summary-item.has-pending { border-left-color: var(--c-warn); background: #FFFBEB; }
+  .compliance-summary-item.has-paid { border-left-color: var(--c-good); background: #F0FDF4; }
+  .compliance-summary-label {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .compliance-summary-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+  }
+  .compliance-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 14px;
+    margin-bottom: 8px;
+  }
+  .fine-item {
+    background: var(--c-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--c-border-strong);
+    font-size: 11px;
+  }
+  .fine-item.status-open { border-left-color: var(--c-warn); }
+  .fine-item.status-paid { border-left-color: var(--c-good); }
+  .fine-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+    gap: 8px;
+  }
+  .fine-item-reason {
+    font-weight: 600;
+    color: var(--c-primary-dark);
+    font-size: 12px;
+  }
+  .fine-item-amount {
+    font-weight: 700;
+    font-family: 'SF Mono', Monaco, Menlo, monospace;
+    white-space: nowrap;
+  }
+  .fine-item-amount.open { color: var(--c-warn); }
+  .fine-item-amount.paid { color: var(--c-good); }
+  .fine-item-meta {
+    color: var(--c-text-muted);
+    line-height: 1.5;
+  }
+  .fine-item-status-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .fine-item-status-badge.open { background: #FEF3C7; color: #92400E; }
+  .fine-item-status-badge.paid { background: #D1FAE5; color: #065F46; }
+  .fine-item-link {
+    color: var(--c-primary);
+    text-decoration: none;
+    font-size: 10px;
+  }
+  .fine-item-link:hover { text-decoration: underline; }
+
+  /* PMO Notes section (placeholder estruturado, vira render real depois) */
+  .pmo-section-title {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pmo-coming-soon {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--c-text-muted);
+    background: var(--c-bg);
+    padding: 1px 6px;
+    border-radius: 3px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .pmo-notes-preview {
+    margin-top: 8px;
+    padding: 14px;
+    background: linear-gradient(180deg, var(--c-bg) 0%, white 100%);
+    border-radius: 8px;
+    border: 1px dashed var(--c-border-strong);
+    opacity: 0.85;
+    position: relative;
+  }
+  .pmo-preview-header {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .pmo-preview-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .pmo-preview-header strong {
+    color: var(--c-primary-dark);
+    font-size: 12px;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .pmo-preview-sub {
+    color: var(--c-text-muted);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .pmo-note-example {
+    background: white;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--c-border-strong);
+    filter: grayscale(0.3);  /* indica que é exemplo */
+  }
+  .pmo-note-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .pmo-category {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--c-bg);
+    color: var(--c-text);
+  }
+  .pmo-category.accident { background: #FEE2E2; color: #991B1B; }
+  .pmo-category.conduct { background: #FEF3C7; color: #92400E; }
+  .pmo-category.vehicle { background: #DBEAFE; color: #1E40AF; }
+  .pmo-category.note { background: #F3F4F6; color: #374151; }
+  .pmo-category.positive { background: #D1FAE5; color: #065F46; }
+  .pmo-meta {
+    font-size: 10px;
+    color: var(--c-text-muted);
+  }
+  .pmo-note-body {
+    font-size: 11px;
+    color: var(--c-text);
+    line-height: 1.5;
+  }
+  .pmo-preview-footer {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--c-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+  }
+  .pmo-preview-cats {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  .pmo-cat-chip {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--c-bg);
+  }
+  .pmo-cat-chip.accident { background: #FEE2E2; color: #991B1B; }
+  .pmo-cat-chip.conduct { background: #FEF3C7; color: #92400E; }
+  .pmo-cat-chip.vehicle { background: #DBEAFE; color: #1E40AF; }
+  .pmo-cat-chip.note { background: #F3F4F6; color: #374151; }
+  .pmo-cat-chip.positive { background: #D1FAE5; color: #065F46; }
+
   /* AI ANALYSIS CARD */
   .ai-card { margin-bottom: 18px; }
   .ai-card .detail-card-title { display: flex; align-items: center; gap: 8px; }
@@ -1229,6 +1548,23 @@
       </div>
     </div>
 
+    <!-- Assets card: SSDs, telefone, placa, odômetro -->
+    <div class="detail-card assets-card" id="assets-card">
+      <div class="detail-card-title">
+        💾 <span data-i18n="assetsCardTitle">Assets</span>
+        <span class="assets-update" id="assets-update-label"></span>
+      </div>
+      <div id="assets-content" class="assets-content"></div>
+    </div>
+
+    <!-- Compliance & Notes card: multas + notas dos gerentes -->
+    <div class="detail-card compliance-card" id="compliance-card">
+      <div class="detail-card-title">
+        📋 <span data-i18n="complianceCardTitle">Compliance & Notes</span>
+      </div>
+      <div id="compliance-content" class="compliance-content"></div>
+    </div>
+
     <!-- AI Analysis card (substitui o placeholder Smart comments) -->
     <div class="detail-card ai-card" id="ai-card">
       <div class="detail-card-title">
@@ -1406,6 +1742,42 @@ const I18N = {
     aiSuggestionsTitle: 'Sugestões operacionais',
     aiStrengthsTitle: 'Pontos positivos',
     aiGenerated: 'Gerado em',
+    assetsCardTitle: 'Assets',
+    assetsLastUpdate: 'atualizado em',
+    assetsEmpty: 'Sem dados de assets registrados ainda.',
+    assetsDiscs: 'Discos',
+    assetsInUse: 'em uso',
+    assetsPlate: 'Placa',
+    assetsPhone: 'Celular',
+    assetsCity: 'Cidade',
+    assetsHotelYes: 'Hotel mode',
+    assetsHotelNo: 'Home mode',
+    assetsAllDiscs: 'Códigos dos discos',
+    complianceCardTitle: 'Compliance & Notas',
+    complianceFinesOpen: 'Multas em aberto',
+    complianceFinesPaid: 'Multas pagas',
+    complianceFinesList: 'Histórico de multas',
+    complianceFineDoc: 'documento',
+    complianceNoFines: 'Nenhuma multa registrada para este motorista.',
+    compliancePmoNotes: 'Notas dos PMOs',
+    compliancePmoSoon: 'em breve',
+    compliancePmoPreviewTitle: 'Preview do sistema futuro',
+    compliancePmoPreviewSub: 'Os PMOs registrarão observações semanais sobre acidentes, conduta, incidentes e elogios. Aqui aparecerão assim:',
+    compliancePmoCategories: 'Categorias previstas',
+    compliancePmoCatAccident: 'Acidente',
+    compliancePmoCatConduct: 'Conduta',
+    compliancePmoCatVehicle: 'Veículo',
+    compliancePmoCatGeneral: 'Observação',
+    compliancePmoCatPositive: 'Elogio',
+    compliancePmoExampleAuthor1: 'Lucas (Brazil PMO)',
+    compliancePmoExampleAuthor2: 'Bia (LATAM PMO)',
+    compliancePmoExampleAuthor3: 'Pankaj',
+    compliancePmoExampleDate1: '15/04/2026',
+    compliancePmoExampleDate2: '08/04/2026',
+    compliancePmoExampleDate3: '01/04/2026',
+    compliancePmoExample1: 'Pequena colisão traseira em Curitiba, sem feridos. Carro levado pro mecânico, retorno previsto em 3 dias. Driver fez o B.O. corretamente.',
+    compliancePmoExample2: 'Atraso de 2h no check-in sem aviso prévio. Conversamos por telefone, justificativa aceita mas alertado sobre comunicação proativa.',
+    compliancePmoExample3: 'Top performer do mês — eficiência 90%+, zero idle days, comunicação exemplar.',
   },
   es: {
     loginTitle: 'Login',
@@ -1488,6 +1860,42 @@ const I18N = {
     aiSuggestionsTitle: 'Sugerencias operativas',
     aiStrengthsTitle: 'Puntos positivos',
     aiGenerated: 'Generado el',
+    assetsCardTitle: 'Assets',
+    assetsLastUpdate: 'actualizado el',
+    assetsEmpty: 'Aún no hay datos de assets registrados.',
+    assetsDiscs: 'Discos',
+    assetsInUse: 'en uso',
+    assetsPlate: 'Placa',
+    assetsPhone: 'Celular',
+    assetsCity: 'Ciudad',
+    assetsHotelYes: 'Hotel mode',
+    assetsHotelNo: 'Home mode',
+    assetsAllDiscs: 'Códigos de los discos',
+    complianceCardTitle: 'Compliance & Notas',
+    complianceFinesOpen: 'Multas abiertas',
+    complianceFinesPaid: 'Multas pagadas',
+    complianceFinesList: 'Historial de multas',
+    complianceFineDoc: 'documento',
+    complianceNoFines: 'Ninguna multa registrada para este conductor.',
+    compliancePmoNotes: 'Notas de los PMOs',
+    compliancePmoSoon: 'próximamente',
+    compliancePmoPreviewTitle: 'Vista previa del sistema futuro',
+    compliancePmoPreviewSub: 'Los PMOs registrarán observaciones semanales sobre accidentes, conducta, incidentes y elogios. Así aparecerán:',
+    compliancePmoCategories: 'Categorías previstas',
+    compliancePmoCatAccident: 'Accidente',
+    compliancePmoCatConduct: 'Conducta',
+    compliancePmoCatVehicle: 'Vehículo',
+    compliancePmoCatGeneral: 'Observación',
+    compliancePmoCatPositive: 'Elogio',
+    compliancePmoExampleAuthor1: 'Lucas (Brazil PMO)',
+    compliancePmoExampleAuthor2: 'Bia (LATAM PMO)',
+    compliancePmoExampleAuthor3: 'Pankaj',
+    compliancePmoExampleDate1: '15/04/2026',
+    compliancePmoExampleDate2: '08/04/2026',
+    compliancePmoExampleDate3: '01/04/2026',
+    compliancePmoExample1: 'Pequeña colisión trasera en Curitiba, sin heridos. Auto llevado al mecánico, regreso previsto en 3 días. Driver hizo el reporte correctamente.',
+    compliancePmoExample2: 'Retraso de 2h en el check-in sin aviso. Hablamos por teléfono, justificación aceptada pero alertado sobre comunicación proactiva.',
+    compliancePmoExample3: 'Top performer del mes — eficiencia 90%+, cero días idle, comunicación ejemplar.',
   },
   en: {
     loginTitle: 'Login',
@@ -1570,6 +1978,42 @@ const I18N = {
     aiSuggestionsTitle: 'Operational suggestions',
     aiStrengthsTitle: 'Strengths',
     aiGenerated: 'Generated',
+    assetsCardTitle: 'Assets',
+    assetsLastUpdate: 'updated on',
+    assetsEmpty: 'No assets data registered yet.',
+    assetsDiscs: 'Discs',
+    assetsInUse: 'in use',
+    assetsPlate: 'Plate',
+    assetsPhone: 'Phone',
+    assetsCity: 'City',
+    assetsHotelYes: 'Hotel mode',
+    assetsHotelNo: 'Home mode',
+    assetsAllDiscs: 'Disc codes',
+    complianceCardTitle: 'Compliance & Notes',
+    complianceFinesOpen: 'Open fines',
+    complianceFinesPaid: 'Paid fines',
+    complianceFinesList: 'Fines history',
+    complianceFineDoc: 'document',
+    complianceNoFines: 'No fines registered for this driver.',
+    compliancePmoNotes: 'PMO Notes',
+    compliancePmoSoon: 'coming soon',
+    compliancePmoPreviewTitle: 'Preview of the future system',
+    compliancePmoPreviewSub: 'PMOs will record weekly observations about accidents, conduct, incidents and praise. They will appear like this:',
+    compliancePmoCategories: 'Planned categories',
+    compliancePmoCatAccident: 'Accident',
+    compliancePmoCatConduct: 'Conduct',
+    compliancePmoCatVehicle: 'Vehicle',
+    compliancePmoCatGeneral: 'General Note',
+    compliancePmoCatPositive: 'Positive',
+    compliancePmoExampleAuthor1: 'Lucas (Brazil PMO)',
+    compliancePmoExampleAuthor2: 'Bia (LATAM PMO)',
+    compliancePmoExampleAuthor3: 'Pankaj',
+    compliancePmoExampleDate1: '04/15/2026',
+    compliancePmoExampleDate2: '04/08/2026',
+    compliancePmoExampleDate3: '04/01/2026',
+    compliancePmoExample1: 'Minor rear collision in Curitiba, no injuries. Vehicle taken to mechanic, expected back in 3 days. Driver filed the report correctly.',
+    compliancePmoExample2: '2-hour delay on check-in without prior notice. Called and discussed; justification accepted but alerted on proactive communication.',
+    compliancePmoExample3: 'Top performer of the month — 90%+ efficiency, zero idle days, exemplary communication.',
   },
 };
 
@@ -1983,6 +2427,8 @@ function renderProfile(p) {
   renderIdleDetail(p);
   renderMonthlyHistory(p);
   renderProfileMap(p);
+  renderAssets(p);
+  renderCompliance(p);
   resetAiCard();
 }
 
@@ -1998,6 +2444,232 @@ function resetAiCard() {
       <div>${t('aiEmptyText') || 'Click the button above to generate AI-powered insights about this driver — alerts, suggestions, and strengths based on the data above.'}</div>
     </div>
   `;
+}
+
+// ================================================================
+// ASSETS — discos (SSDs), celular, placa, odômetro
+// ================================================================
+
+function renderAssets(p) {
+  const content = document.getElementById('assets-content');
+  const updateLabel = document.getElementById('assets-update-label');
+  if (!content) return;
+
+  const a = p.assets;
+
+  if (!a) {
+    content.innerHTML = `
+      <div class="assets-empty">
+        ${t('assetsEmpty') || 'Sem dados de assets registrados ainda. Aguardando primeiro check-in semanal.'}
+      </div>
+    `;
+    if (updateLabel) updateLabel.textContent = '';
+    return;
+  }
+
+  // Label de última atualização
+  if (updateLabel) {
+    const dateStr = a.lastUpdate
+      ? new Date(a.lastUpdate).toLocaleDateString(
+          currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR')
+        )
+      : '—';
+    updateLabel.textContent = `— ${t('assetsLastUpdate') || 'atualizado em'} ${dateStr}`;
+  }
+
+  let html = '<div class="assets-grid">';
+
+  // Card de discos (destaque)
+  if (a.discCount || a.discInUse) {
+    html += `
+      <div class="assets-stat">
+        <div class="assets-stat-label">💽 ${t('assetsDiscs') || 'Discos'}</div>
+        <div class="assets-stat-value">${a.discCount || '?'}</div>
+        ${a.discInUse ? `<div class="assets-stat-sub">${t('assetsInUse') || 'em uso'}: ${escapeHtml(a.discInUse)}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // Placa do carro
+  if (a.plate) {
+    html += `
+      <div class="assets-stat">
+        <div class="assets-stat-label">🚗 ${t('assetsPlate') || 'Placa'}</div>
+        <div class="assets-stat-value small">${escapeHtml(a.plate)}</div>
+        ${a.odometer > 0 ? `<div class="assets-stat-sub">${a.odometer.toLocaleString()} km</div>` : ''}
+      </div>
+    `;
+  }
+
+  // Celular
+  if (a.phoneModel) {
+    html += `
+      <div class="assets-stat">
+        <div class="assets-stat-label">📱 ${t('assetsPhone') || 'Celular'}</div>
+        <div class="assets-stat-value small">${escapeHtml(a.phoneModel)}</div>
+        ${a.phoneImei ? `<div class="assets-stat-sub">IMEI: ${escapeHtml(a.phoneImei.split(/[\s\/]/)[0])}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // Cidade atual + hotel mode
+  if (a.city) {
+    const isHotel = String(a.hotelMode).toLowerCase().includes('sí') || String(a.hotelMode).toLowerCase().includes('sim');
+    html += `
+      <div class="assets-stat">
+        <div class="assets-stat-label">📍 ${t('assetsCity') || 'Cidade'}</div>
+        <div class="assets-stat-value small">${escapeHtml(a.city)}</div>
+        <div class="assets-stat-sub">${isHotel ? '🏨 ' + (t('assetsHotelYes') || 'Hotel mode') : '🏠 ' + (t('assetsHotelNo') || 'Home mode')}</div>
+      </div>
+    `;
+  }
+
+  html += '</div>';
+
+  // Lista detalhada dos discos (em uso + outros)
+  const allDiscs = [];
+  if (a.discInUse) allDiscs.push({ code: a.discInUse, inUse: true });
+  if (a.otherDiscs && a.otherDiscs.length) {
+    a.otherDiscs.forEach(d => allDiscs.push({ code: d, inUse: false }));
+  }
+
+  if (allDiscs.length > 0) {
+    html += `<div class="assets-discs-section">
+      <div class="assets-section-title">💽 ${t('assetsAllDiscs') || 'Códigos dos discos'} (${allDiscs.length})</div>
+      <div>`;
+    allDiscs.forEach(d => {
+      html += `<span class="assets-disc-chip ${d.inUse ? 'in-use' : ''}">${escapeHtml(d.code)}</span>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Comentários do último check-in (se houver)
+  if (a.comments && a.comments.length > 1) {
+    html += `<div class="assets-comments">💬 "${escapeHtml(a.comments)}"</div>`;
+  }
+
+  content.innerHTML = html;
+}
+
+// ================================================================
+// COMPLIANCE — multas (Fines LATAM) + placeholder pra notas futuras
+// ================================================================
+
+function renderCompliance(p) {
+  const content = document.getElementById('compliance-content');
+  if (!content) return;
+
+  const fines = p.fines || [];
+
+  let html = '';
+
+  // Resumo: contagem + valor pendente
+  if (fines.length > 0) {
+    const openFines = fines.filter(f => String(f.status).toLowerCase() === 'open');
+    const paidFines = fines.filter(f => String(f.status).toLowerCase() !== 'open');
+    const totalPendingUsd = openFines.reduce((s, f) => s + (f.usdAmount || 0), 0);
+    const totalPaidUsd = paidFines.reduce((s, f) => s + (f.usdAmount || 0), 0);
+
+    html += `<div class="compliance-summary">
+      <div class="compliance-summary-item ${openFines.length > 0 ? 'has-pending' : ''}">
+        <div class="compliance-summary-label">${t('complianceFinesOpen') || 'Multas em aberto'}</div>
+        <div class="compliance-summary-value">${openFines.length}</div>
+        ${totalPendingUsd > 0 ? `<div class="assets-stat-sub">$${totalPendingUsd.toFixed(2)} USD</div>` : ''}
+      </div>
+      <div class="compliance-summary-item ${paidFines.length > 0 ? 'has-paid' : ''}">
+        <div class="compliance-summary-label">${t('complianceFinesPaid') || 'Multas pagas'}</div>
+        <div class="compliance-summary-value">${paidFines.length}</div>
+        ${totalPaidUsd > 0 ? `<div class="assets-stat-sub">$${totalPaidUsd.toFixed(2)} USD</div>` : ''}
+      </div>
+    </div>`;
+
+    // Lista de multas (mais recentes primeiro)
+    html += `<div class="compliance-section-title">⚠ ${t('complianceFinesList') || 'Histórico de multas'}</div>`;
+    fines.forEach(f => {
+      const isOpen = String(f.status).toLowerCase() === 'open';
+      const statusClass = isOpen ? 'status-open' : 'status-paid';
+      const dateStr = f.issueDate
+        ? new Date(f.issueDate).toLocaleDateString(
+            currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR')
+          )
+        : '—';
+
+      html += `<div class="fine-item ${statusClass}">
+        <div class="fine-item-header">
+          <div class="fine-item-reason">
+            ${escapeHtml(f.reason || f.code || '—')}
+            <span class="fine-item-status-badge ${isOpen ? 'open' : 'paid'}">${escapeHtml(f.status || '—')}</span>
+          </div>
+          <div class="fine-item-amount ${isOpen ? 'open' : 'paid'}">$${(f.usdAmount || 0).toFixed(2)}</div>
+        </div>
+        <div class="fine-item-meta">
+          📅 ${dateStr} · 🚗 ${escapeHtml(f.plate || '—')} · 📍 ${escapeHtml(f.location || f.country || '—')}
+          ${f.responsibleOfPayment ? ` · 💼 ${escapeHtml(f.responsibleOfPayment)}` : ''}
+          ${f.copyLink ? ` · <a href="${escapeAttr(f.copyLink)}" target="_blank" class="fine-item-link">📎 ${t('complianceFineDoc') || 'doc'}</a>` : ''}
+        </div>
+      </div>`;
+    });
+  } else {
+    // Sem multas
+    html += `<div class="compliance-empty">
+      <div class="compliance-empty-icon">✅</div>
+      <div>${t('complianceNoFines') || 'Nenhuma multa registrada para este motorista.'}</div>
+    </div>`;
+  }
+
+  // Placeholder das notas dos PMOs (sistema futuro)
+  // Mostra a estrutura visual real com exemplos cinza translúcidos pra
+  // visualização. Quando o backend estiver pronto, substitui o conteúdo
+  // por dados reais de p.pmoNotes (mesmo CSS).
+  html += `<div class="compliance-section-title pmo-section-title">
+    📝 ${t('compliancePmoNotes') || 'Notas dos PMOs'}
+    <span class="pmo-coming-soon">— ${t('compliancePmoSoon') || 'em breve'}</span>
+  </div>`;
+
+  html += `<div class="pmo-notes-preview">
+    <div class="pmo-preview-header">
+      <span class="pmo-preview-icon">🔮</span>
+      <div>
+        <strong>${t('compliancePmoPreviewTitle') || 'Preview do sistema futuro'}</strong>
+        <div class="pmo-preview-sub">${t('compliancePmoPreviewSub') || 'Os PMOs registrarão observações semanais sobre acidentes, conduta, incidentes e elogios. Aqui aparecerão assim:'}</div>
+      </div>
+    </div>
+
+    <div class="pmo-note-example">
+      <div class="pmo-note-header">
+        <span class="pmo-category accident">🚨 ${t('compliancePmoCatAccident') || 'Acidente'}</span>
+        <span class="pmo-meta">— ${t('compliancePmoExampleAuthor1') || 'Lucas (Brazil PMO)'} · ${t('compliancePmoExampleDate1') || '15/04/2026'}</span>
+      </div>
+      <div class="pmo-note-body">${t('compliancePmoExample1') || 'Pequena colisão traseira em Curitiba, sem feridos. Carro levado pro mecânico, retorno previsto em 3 dias. Driver fez o B.O. corretamente.'}</div>
+    </div>
+
+    <div class="pmo-note-example">
+      <div class="pmo-note-header">
+        <span class="pmo-category conduct">⚠️ ${t('compliancePmoCatConduct') || 'Conduta'}</span>
+        <span class="pmo-meta">— ${t('compliancePmoExampleAuthor2') || 'Bia (LATAM PMO)'} · ${t('compliancePmoExampleDate2') || '08/04/2026'}</span>
+      </div>
+      <div class="pmo-note-body">${t('compliancePmoExample2') || 'Atraso de 2h no check-in sem aviso prévio. Conversamos por telefone, justificativa aceita mas alertado sobre comunicação proativa.'}</div>
+    </div>
+
+    <div class="pmo-note-example">
+      <div class="pmo-note-header">
+        <span class="pmo-category positive">✅ ${t('compliancePmoCatPositive') || 'Elogio'}</span>
+        <span class="pmo-meta">— ${t('compliancePmoExampleAuthor3') || 'Pankaj'} · ${t('compliancePmoExampleDate3') || '01/04/2026'}</span>
+      </div>
+      <div class="pmo-note-body">${t('compliancePmoExample3') || 'Top performer do mês — eficiência 90%+, zero idle days, comunicação exemplar.'}</div>
+    </div>
+
+    <div class="pmo-preview-footer">
+      <span class="pmo-preview-cats">${t('compliancePmoCategories') || 'Categorias previstas'}:</span>
+      <span class="pmo-cat-chip accident">🚨 ${t('compliancePmoCatAccident') || 'Acidente'}</span>
+      <span class="pmo-cat-chip conduct">⚠️ ${t('compliancePmoCatConduct') || 'Conduta'}</span>
+      <span class="pmo-cat-chip vehicle">🛠 ${t('compliancePmoCatVehicle') || 'Veículo'}</span>
+      <span class="pmo-cat-chip note">📝 ${t('compliancePmoCatGeneral') || 'Observação'}</span>
+      <span class="pmo-cat-chip positive">✅ ${t('compliancePmoCatPositive') || 'Elogio'}</span>
+    </div>
+  </div>`;
+
+  content.innerHTML = html;
 }
 
 /**
