@@ -796,6 +796,58 @@
   }
   .fine-item-link:hover { text-decoration: underline; }
 
+  /* v5.14: Vehicle Issues (acidentes, mech, tech) */
+  .vehicle-issue-item {
+    background: var(--c-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--c-border-strong);
+    font-size: 12px;
+  }
+  .vehicle-issue-item.critical { border-left-color: #DC2626; background: #FEF2F2; }
+  .vehicle-issue-item.minor { border-left-color: #F59E0B; background: #FFFBEB; }
+  .vehicle-issue-item.closed { border-left-color: var(--c-good); background: #F0FDF4; opacity: 0.85; }
+  .vi-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .vi-severity {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .vi-severity.critical { background: #FEE2E2; color: #991B1B; }
+  .vi-severity.minor { background: #FEF3C7; color: #92400E; }
+  .vi-severity.closed { background: #D1FAE5; color: #065F46; }
+  .vi-status-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--c-bg);
+  }
+  .vi-status-badge.not-started { background: #DBEAFE; color: #1E40AF; }
+  .vi-status-badge.in-progress { background: #FEF3C7; color: #92400E; }
+  .vi-status-badge.awaiting-payment { background: #FFE4E6; color: #9F1239; }
+  .vi-status-badge.picked-up { background: #D1FAE5; color: #065F46; }
+  .vi-status-badge.done { background: #D1FAE5; color: #065F46; }
+  .vi-description {
+    color: var(--c-text);
+    font-size: 12px;
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .vi-meta {
+    color: var(--c-text-muted);
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
   /* PMO Notes section (placeholder estruturado, vira render real depois) */
   .pmo-section-title {
     margin-top: 18px;
@@ -1832,6 +1884,18 @@ const I18N = {
     compliancePmoExample1: 'Pequena colisão traseira em Curitiba, sem feridos. Carro levado pro mecânico, retorno previsto em 3 dias. Driver fez o B.O. corretamente.',
     compliancePmoExample2: 'Atraso de 2h no check-in sem aviso prévio. Conversamos por telefone, justificativa aceita mas alertado sobre comunicação proativa.',
     compliancePmoExample3: 'Top performer do mês — eficiência 90%+, zero idle days, comunicação exemplar.',
+    vehicleIssuesOpen: 'Issues do veículo em aberto',
+    vehicleIssuesClosed: 'Issues encerradas',
+    vehicleIssueCritical: 'Crítico',
+    vehicleIssueMinor: 'Alerta',
+    vehicleIssueNotStarted: 'Não começou',
+    vehicleIssueInProgress: 'Em andamento',
+    vehicleIssueAwaitingPayment: 'Aguardando pagamento',
+    vehicleIssuePickedUp: 'Carro pego',
+    vehicleIssueDone: 'Resolvido',
+    vehicleIssueStopped: 'Parou',
+    vehicleIssueExpected: 'Previsão',
+    vehicleIssueDaysOff: 'dia(s) parado',
   },
   es: {
     loginTitle: 'Login',
@@ -1952,6 +2016,18 @@ const I18N = {
     compliancePmoExample1: 'Pequeña colisión trasera en Curitiba, sin heridos. Auto llevado al mecánico, regreso previsto en 3 días. Driver hizo el reporte correctamente.',
     compliancePmoExample2: 'Retraso de 2h en el check-in sin aviso. Hablamos por teléfono, justificación aceptada pero alertado sobre comunicación proactiva.',
     compliancePmoExample3: 'Top performer del mes — eficiencia 90%+, cero días idle, comunicación ejemplar.',
+    vehicleIssuesOpen: 'Issues del vehículo abiertas',
+    vehicleIssuesClosed: 'Issues cerradas',
+    vehicleIssueCritical: 'Crítico',
+    vehicleIssueMinor: 'Alerta',
+    vehicleIssueNotStarted: 'No empezó',
+    vehicleIssueInProgress: 'En curso',
+    vehicleIssueAwaitingPayment: 'Esperando pago',
+    vehicleIssuePickedUp: 'Auto retirado',
+    vehicleIssueDone: 'Resuelto',
+    vehicleIssueStopped: 'Paró',
+    vehicleIssueExpected: 'Previsión',
+    vehicleIssueDaysOff: 'día(s) parado',
   },
   en: {
     loginTitle: 'Login',
@@ -2072,6 +2148,18 @@ const I18N = {
     compliancePmoExample1: 'Minor rear collision in Curitiba, no injuries. Vehicle taken to mechanic, expected back in 3 days. Driver filed the report correctly.',
     compliancePmoExample2: '2-hour delay on check-in without prior notice. Called and discussed; justification accepted but alerted on proactive communication.',
     compliancePmoExample3: 'Top performer of the month — 90%+ efficiency, zero idle days, exemplary communication.',
+    vehicleIssuesOpen: 'Open vehicle issues',
+    vehicleIssuesClosed: 'Closed issues',
+    vehicleIssueCritical: 'Critical',
+    vehicleIssueMinor: 'Minor',
+    vehicleIssueNotStarted: 'Not started',
+    vehicleIssueInProgress: 'In progress',
+    vehicleIssueAwaitingPayment: 'Awaiting payment',
+    vehicleIssuePickedUp: 'Picked up',
+    vehicleIssueDone: 'Done',
+    vehicleIssueStopped: 'Stopped',
+    vehicleIssueExpected: 'Expected',
+    vehicleIssueDaysOff: 'day(s) stopped',
   },
 };
 
@@ -2660,8 +2748,35 @@ function renderCompliance(p) {
   if (!content) return;
 
   const fines = p.fines || [];
+  const vehicleIssues = p.vehicleIssues || [];
 
   let html = '';
+
+  // === v5.14: Vehicle Issues (acidentes, mech, tech tracking) ===
+  // Mostra issues abertas/em-andamento primeiro, antes das multas
+  if (vehicleIssues.length > 0) {
+    const openIssues = vehicleIssues.filter(i =>
+      i.serviceStatus !== 'finished' || i.endStatus === 'awaiting_payment'
+    );
+    const closedIssues = vehicleIssues.filter(i =>
+      i.serviceStatus === 'finished' && i.endStatus !== 'awaiting_payment'
+    );
+
+    if (openIssues.length > 0) {
+      html += `<div class="compliance-section-title" style="margin-top:0;">
+        🚗 ${t('vehicleIssuesOpen') || 'Issues do veículo em aberto'} (${openIssues.length})
+      </div>`;
+      openIssues.forEach(iss => { html += renderVehicleIssue(iss, false); });
+    }
+
+    if (closedIssues.length > 0) {
+      html += `<div class="compliance-section-title">
+        ✅ ${t('vehicleIssuesClosed') || 'Issues encerradas'} (${closedIssues.length})
+      </div>`;
+      // Mostra só os 3 mais recentes
+      closedIssues.slice(0, 3).forEach(iss => { html += renderVehicleIssue(iss, true); });
+    }
+  }
 
   // Resumo: contagem + valor pendente
   if (fines.length > 0) {
@@ -2670,7 +2785,7 @@ function renderCompliance(p) {
     const totalPendingUsd = openFines.reduce((s, f) => s + (f.usdAmount || 0), 0);
     const totalPaidUsd = paidFines.reduce((s, f) => s + (f.usdAmount || 0), 0);
 
-    html += `<div class="compliance-summary">
+    html += `<div class="compliance-summary"${vehicleIssues.length > 0 ? ' style="margin-top:14px;"' : ''}>
       <div class="compliance-summary-item ${openFines.length > 0 ? 'has-pending' : ''}">
         <div class="compliance-summary-label">${t('complianceFinesOpen') || 'Multas em aberto'}</div>
         <div class="compliance-summary-value">${openFines.length}</div>
@@ -2770,6 +2885,69 @@ function renderCompliance(p) {
   </div>`;
 
   content.innerHTML = html;
+}
+
+/**
+ * Renderiza um item de Vehicle Issue.
+ * @param {Object} iss - { id, created, severity, description, stopDate, serviceStatus,
+ *                         expectedEndDate, endStatus, resolvedDate, lastUpdate }
+ * @param {boolean} isClosed - se já foi resolvido (afeta cor)
+ */
+function renderVehicleIssue(iss, isClosed) {
+  const fmtDate = (iso) => iso
+    ? new Date(iso).toLocaleDateString(
+        currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR')
+      )
+    : '—';
+
+  const isCritical = String(iss.severity).toLowerCase().includes('critical');
+  const sevClass = isClosed ? 'closed' : (isCritical ? 'critical' : 'minor');
+  const sevLabel = isCritical
+    ? '🚨 ' + (t('vehicleIssueCritical') || 'Crítico')
+    : '⚠ ' + (t('vehicleIssueMinor') || 'Alerta');
+
+  // Status do serviço
+  let statusBadge = '';
+  if (iss.serviceStatus === 'not_started') {
+    statusBadge = `<span class="vi-status-badge not-started">🔵 ${t('vehicleIssueNotStarted') || 'Não começou'}</span>`;
+  } else if (iss.serviceStatus === 'in_progress') {
+    statusBadge = `<span class="vi-status-badge in-progress">🟡 ${t('vehicleIssueInProgress') || 'Em andamento'}</span>`;
+  } else if (iss.serviceStatus === 'finished') {
+    if (iss.endStatus === 'awaiting_payment') {
+      statusBadge = `<span class="vi-status-badge awaiting-payment">💰 ${t('vehicleIssueAwaitingPayment') || 'Aguardando pagamento'}</span>`;
+    } else if (iss.endStatus === 'picked_up') {
+      statusBadge = `<span class="vi-status-badge picked-up">🚗 ${t('vehicleIssuePickedUp') || 'Carro pego'}</span>`;
+    } else {
+      statusBadge = `<span class="vi-status-badge done">✅ ${t('vehicleIssueDone') || 'Resolvido'}</span>`;
+    }
+  }
+
+  // Datas relevantes
+  const stopStr = iss.stopDate ? fmtDate(iss.stopDate) : '—';
+  const expectedStr = iss.expectedEndDate ? fmtDate(iss.expectedEndDate) : null;
+
+  // Calcula dias parado (se aplicável)
+  let daysOffStr = '';
+  if (iss.stopDate && !isClosed) {
+    const stopMs = new Date(iss.stopDate).getTime();
+    const refMs = iss.resolvedDate ? new Date(iss.resolvedDate).getTime() : Date.now();
+    const days = Math.max(0, Math.round((refMs - stopMs) / (1000 * 60 * 60 * 24)));
+    if (days > 0) {
+      daysOffStr = ` · <span style="color:var(--c-warn);font-weight:600;">${days} ${t('vehicleIssueDaysOff') || 'dia(s) parado'}</span>`;
+    }
+  }
+
+  return `<div class="vehicle-issue-item ${sevClass}">
+    <div class="vi-header">
+      <span class="vi-severity ${sevClass}">${sevLabel}</span>
+      ${statusBadge}
+    </div>
+    ${iss.description ? `<div class="vi-description">${escapeHtml(iss.description)}</div>` : ''}
+    <div class="vi-meta">
+      📅 ${t('vehicleIssueStopped') || 'Parou'}: <strong>${stopStr}</strong>${daysOffStr}
+      ${expectedStr && !isClosed ? `<br>🎯 ${t('vehicleIssueExpected') || 'Previsão'}: ${expectedStr}` : ''}
+    </div>
+  </div>`;
 }
 
 /**
