@@ -17,53 +17,78 @@
   header {
     background: linear-gradient(135deg, #1E3A5F 0%, #2C5282 100%);
     color: white;
-    padding: 18px 16px 14px;
+    padding: 0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-bottom: 3px solid #5BA0DC;
   }
-  header h1 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 700;
+  .header-inner {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 14px 16px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    gap: 14px;
   }
-  header h1 .title-text { display: flex; align-items: center; gap: 10px; }
-  header .header-logo {
-    height: 28px;
-    width: auto;
+  .header-logo-wrap {
     background: white;
-    padding: 4px 8px;
+    padding: 8px 12px;
     border-radius: 6px;
     flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  .header-logo {
+    height: 32px;
+    width: auto;
+    display: block;
+  }
+  .header-divider {
+    width: 1px;
+    height: 38px;
+    background: rgba(255,255,255,0.2);
+    flex-shrink: 0;
+  }
+  .header-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .header-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: white;
+    line-height: 1.2;
+  }
+  .header-subtitle {
+    font-size: 11px;
+    opacity: 0.75;
+    margin-top: 3px;
+    font-weight: 400;
+    letter-spacing: 0.2px;
   }
   header .lang-toggle {
     display: flex;
-    gap: 4px;
-    background: rgba(255,255,255,0.15);
-    border-radius: 6px;
-    padding: 3px;
+    gap: 2px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 5px;
+    padding: 2px;
+    flex-shrink: 0;
   }
   header .lang-toggle button {
     background: transparent;
     border: none;
-    color: rgba(255,255,255,0.7);
+    color: rgba(255,255,255,0.65);
     padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
     cursor: pointer;
     font-family: inherit;
+    letter-spacing: 0.5px;
   }
   header .lang-toggle button.active {
     background: white;
     color: #1A365D;
-  }
-  header .subtitle {
-    font-size: 12px;
-    opacity: 0.9;
-    margin-top: 4px;
   }
   main {
     max-width: 580px;
@@ -387,17 +412,20 @@
 <body>
 
 <header>
-  <h1>
-    <span class="title-text">
-      <img src="https://www.greatplacetowork.in/great/api/assets/uploads/13040/logo/logo.png" alt="Aceolution" class="header-logo" onerror="this.style.display='none'">
-      💰 <span data-i18n="appTitle">Cash Flow LATAM</span>
-    </span>
+  <div class="header-inner">
+    <div class="header-logo-wrap">
+      <img src="https://www.greatplacetowork.in/great/api/assets/uploads/13040/logo/logo.png" alt="Aceolution" class="header-logo" onerror="this.parentElement.innerHTML='<span style=&quot;font-weight:700;color:#1A365D;font-size:14px;&quot;>Aceolution</span>'">
+    </div>
+    <div class="header-divider"></div>
+    <div class="header-text">
+      <h1 class="header-title" data-i18n="appTitle">Cash Flow LATAM</h1>
+      <div class="header-subtitle" data-i18n="appSubtitle">Pedidos de dinheiro e recibos para o time LATAM</div>
+    </div>
     <span class="lang-toggle">
       <button class="active" data-lang="pt" onclick="setLang('pt')">PT</button>
       <button data-lang="es" onclick="setLang('es')">ES</button>
     </span>
-  </h1>
-  <div class="subtitle" data-i18n="appSubtitle">Pedidos de dinheiro e recibos para o time LATAM</div>
+  </div>
 </header>
 
 <main>
