@@ -297,6 +297,43 @@
   .status-option.warn.selected { background: #fef4e0; border-color: #ba7517; color: #854f0b; }
   .status-option.bad.selected { background: #fdecec; border-color: #a32d2d; color: #791f1f; }
 
+  /* v5.14: SSD fill level (5 buttons gradient) */
+  .ssd-fill-opt {
+    padding: 12px 4px;
+    font-size: 12px;
+    text-align: center;
+  }
+  .ssd-fill-opt[data-ssd-fill="empty"].selected { background: #D1FAE5; border-color: #16A34A; color: #14532D; }
+  .ssd-fill-opt[data-ssd-fill="low"].selected { background: #BBF7D0; border-color: #15803D; color: #14532D; }
+  .ssd-fill-opt[data-ssd-fill="half"].selected { background: #FEF3C7; border-color: #CA8A04; color: #78350F; }
+  .ssd-fill-opt[data-ssd-fill="high"].selected { background: #FED7AA; border-color: #C2410C; color: #7C2D12; }
+  .ssd-fill-opt[data-ssd-fill="full"].selected { background: #FEE2E2; border-color: #B91C1C; color: #7F1D1D; }
+
+  /* v5.14: select pra SSD dropdown */
+  select#ssd-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d5d7db;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    font-family: inherit;
+  }
+  select#ssd-select:focus {
+    outline: none;
+    border-color: #2C5282;
+  }
+
+  /* v5.14: botão de toggle pros detalhes do issue */
+  .btn-issue-toggle {
+    background: rgba(245, 158, 11, 0.1) !important;
+    border-color: #F59E0B !important;
+    color: #92400E !important;
+  }
+  .btn-issue-toggle:hover {
+    background: rgba(245, 158, 11, 0.2) !important;
+  }
+
   .hidden { display: none; }
 
   .base-status {
@@ -539,9 +576,30 @@
     <div id="dest-coords" class="coords-display hidden"></div>
   </div>
 
-  <div id="extras-card" class="card hidden">
+  <!-- v5.14: Hodômetro inicial + SSD em uso (obrigatórios no check-in) -->
+  <div id="vehicle-card" class="card hidden">
     <div class="step-header">
       <div class="step-num">5</div>
+      <div class="step-title" data-i18n="vehicleStepTitle">Veículo e SSD</div>
+    </div>
+
+    <label data-i18n="odometerStart">Hodômetro agora (km)</label>
+    <input type="number" id="odometer-start" inputmode="decimal" step="1" min="0" placeholder="Ex: 65467">
+    <div style="font-size:11px;color:#94A3B8;margin-top:4px;" data-i18n="odometerStartHint">Anote o valor que está no painel do carro agora</div>
+
+    <label style="margin-top:14px;" data-i18n="ssdInUse">Disco (SSD) em uso hoje</label>
+    <select id="ssd-select">
+      <option value="" data-i18n="ssdLoading">Carregando seus discos...</option>
+    </select>
+    <div id="ssd-manual-wrap" class="hidden" style="margin-top:8px;">
+      <input type="text" id="ssd-manual" data-i18n-placeholder="ssdManualPlaceholder" placeholder="Digite o código do disco">
+      <div style="font-size:11px;color:#94A3B8;margin-top:4px;" data-i18n="ssdManualHint">Use só se o disco não está na lista acima</div>
+    </div>
+  </div>
+
+  <div id="extras-card" class="card hidden">
+    <div class="step-header">
+      <div class="step-num">6</div>
       <div class="step-title" data-i18n="step5">Status e observações</div>
     </div>
 
@@ -555,6 +613,40 @@
     <div id="vehicle-issue-wrap" class="hidden" style="margin-bottom:12px;">
       <label data-i18n="describeIssue">Descreva o problema</label>
       <textarea id="vehicle-issue" rows="2"></textarea>
+
+      <!-- v5.14: detalhes opcionais pro tracking de tech/mech -->
+      <div style="margin-top:10px;">
+        <button type="button" class="btn-action btn-issue-toggle" id="issue-details-toggle" onclick="toggleIssueDetails()" style="width:100%;font-size:12px;padding:8px;">
+          <span id="issue-details-toggle-label" data-i18n="issueDetailsExpand">📋 Registrar detalhes (opcional)</span>
+        </button>
+      </div>
+
+      <div id="issue-details-wrap" class="hidden" style="margin-top:10px;padding:12px;background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:6px;">
+        <div style="font-size:11px;color:#92400E;margin-bottom:8px;" data-i18n="issueDetailsIntro">Estes dados ajudam a equipe a acompanhar tech/mech e prazos de pagamento.</div>
+
+        <label data-i18n="issueStopDate">Data que o carro parou</label>
+        <input type="date" id="issue-stop-date">
+
+        <label style="margin-top:10px;" data-i18n="issueServiceStatus">Status do serviço</label>
+        <div class="radio-group" style="margin-bottom:8px;">
+          <div class="radio-option" data-issue-status="not_started" data-i18n="issueStatusNotStarted">🔵 Não começou</div>
+          <div class="radio-option" data-issue-status="in_progress" data-i18n="issueStatusInProgress">🟡 Em andamento</div>
+          <div class="radio-option" data-issue-status="finished" data-i18n="issueStatusFinished">🟢 Acabou</div>
+        </div>
+
+        <div id="issue-expected-end-wrap" class="hidden">
+          <label data-i18n="issueExpectedEnd">Data prevista de conclusão</label>
+          <input type="date" id="issue-expected-end">
+        </div>
+
+        <div id="issue-end-status-wrap" class="hidden">
+          <label data-i18n="issueEndStatus">Situação final</label>
+          <div class="radio-group">
+            <div class="radio-option" data-issue-end="picked_up" data-i18n="issueEndPickedUp">🚗 Carro pego</div>
+            <div class="radio-option" data-issue-end="awaiting_payment" data-i18n="issueEndAwaitingPayment">💰 Aguardando pagamento</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <label data-i18n="notes">Observações <span class="label-sub" data-i18n="notesOptional">(opcional)</span></label>
@@ -586,6 +678,20 @@
 
     <label style="margin-top:10px;" data-i18n="kmDriven">Total de KM dirigidos hoje</label>
     <input type="number" id="checkout-km" inputmode="decimal" step="0.01" min="0" placeholder="Ex: 320.0">
+
+    <!-- v5.14: hodômetro final + nível do SSD -->
+    <label style="margin-top:14px;" data-i18n="odometerEnd">Hodômetro agora (km)</label>
+    <input type="number" id="checkout-odometer-end" inputmode="decimal" step="1" min="0" placeholder="Ex: 65789">
+    <div id="odometer-hint" style="font-size:11px;color:#94A3B8;margin-top:4px;display:none;"></div>
+
+    <label style="margin-top:14px;" data-i18n="ssdFillLevel">Quão cheio está o disco que você usou hoje?</label>
+    <div class="radio-group ssd-fill-group" style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;">
+      <div class="radio-option ssd-fill-opt" data-ssd-fill="empty" data-i18n="ssdFillEmpty">Vazio</div>
+      <div class="radio-option ssd-fill-opt" data-ssd-fill="low" data-i18n="ssdFillLow">Pouco</div>
+      <div class="radio-option ssd-fill-opt" data-ssd-fill="half" data-i18n="ssdFillHalf">Metade</div>
+      <div class="radio-option ssd-fill-opt" data-ssd-fill="high" data-i18n="ssdFillHigh">Muito</div>
+      <div class="radio-option ssd-fill-opt" data-ssd-fill="full" data-i18n="ssdFillFull">Cheio</div>
+    </div>
 
     <label style="margin-top:10px;" data-i18n="checkoutNotesLabel">Observações <span class="label-sub" data-i18n="notesOptional">(opcional)</span></label>
     <textarea id="checkout-notes" rows="3" data-i18n-placeholder="checkoutNotesPlaceholder" placeholder="Ex: parei mais cedo por chuva, problema de bateria no carro..."></textarea>
@@ -675,6 +781,44 @@ const I18N = {
     gpsLabel: 'GPS',
     searchLabel: 'Endereço',
     footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+    // v5.14
+    vehicleStepTitle: 'Veículo e SSD',
+    odometerStart: '🚗 Hodômetro agora (km)',
+    odometerStartHint: 'Anote o valor que está no painel do carro agora',
+    ssdInUse: '💾 Disco (SSD) em uso hoje',
+    ssdLoading: 'Carregando seus discos...',
+    ssdSelectPlaceholder: '-- Escolha o disco --',
+    ssdNoneFound: 'Nenhum disco cadastrado no seu nome',
+    ssdInUseLabel: '(em uso)',
+    ssdOther: '➕ Outro / não está na lista',
+    ssdManualPlaceholder: 'Digite o código do disco',
+    ssdManualHint: 'Use só se o disco não está na lista acima',
+    odometerEnd: '🚗 Hodômetro agora (km)',
+    ssdFillLevel: '💾 Quão cheio está o disco que você usou hoje?',
+    ssdFillEmpty: 'Vazio',
+    ssdFillLow: 'Pouco',
+    ssdFillHalf: 'Metade',
+    ssdFillHigh: 'Muito',
+    ssdFillFull: 'Cheio',
+    issueDetailsExpand: '📋 Registrar detalhes (opcional)',
+    issueDetailsCollapse: '🔼 Recolher detalhes',
+    issueDetailsIntro: 'Estes dados ajudam a equipe a acompanhar tech/mech e prazos de pagamento.',
+    issueStopDate: 'Data que o carro parou',
+    issueServiceStatus: 'Status do serviço',
+    issueStatusNotStarted: '🔵 Não começou',
+    issueStatusInProgress: '🟡 Em andamento',
+    issueStatusFinished: '🟢 Acabou',
+    issueExpectedEnd: 'Data prevista de conclusão',
+    issueEndStatus: 'Situação final',
+    issueEndPickedUp: '🚗 Carro pego',
+    issueEndAwaitingPayment: '💰 Aguardando pagamento',
+    fillOdometerStart: 'Informe o hodômetro inicial',
+    fillSsd: 'Selecione qual disco está usando',
+    fillIssueDetails: 'Preencha data e status do serviço',
+    fillIssueEndStatus: 'Selecione a situação final',
+    fillOdometerEnd: 'Informe o hodômetro final',
+    fillSsdFill: 'Selecione quão cheio está o disco',
+    odometerHint: 'Você começou em {start} km — dirigiu {diff} km hoje',
   },
   es: {
     title: 'Check-in Diario',
@@ -739,6 +883,44 @@ const I18N = {
     gpsLabel: 'GPS',
     searchLabel: 'Dirección',
     footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+    // v5.14
+    vehicleStepTitle: 'Vehículo y SSD',
+    odometerStart: '🚗 Odómetro ahora (km)',
+    odometerStartHint: 'Anote el valor que está en el tablero del auto ahora',
+    ssdInUse: '💾 Disco (SSD) en uso hoy',
+    ssdLoading: 'Cargando sus discos...',
+    ssdSelectPlaceholder: '-- Elija el disco --',
+    ssdNoneFound: 'Ningún disco registrado a su nombre',
+    ssdInUseLabel: '(en uso)',
+    ssdOther: '➕ Otro / no está en la lista',
+    ssdManualPlaceholder: 'Escriba el código del disco',
+    ssdManualHint: 'Use solo si el disco no está en la lista de arriba',
+    odometerEnd: '🚗 Odómetro ahora (km)',
+    ssdFillLevel: '💾 ¿Qué tan lleno está el disco que usó hoy?',
+    ssdFillEmpty: 'Vacío',
+    ssdFillLow: 'Poco',
+    ssdFillHalf: 'Medio',
+    ssdFillHigh: 'Mucho',
+    ssdFillFull: 'Lleno',
+    issueDetailsExpand: '📋 Registrar detalles (opcional)',
+    issueDetailsCollapse: '🔼 Ocultar detalles',
+    issueDetailsIntro: 'Estos datos ayudan al equipo a seguir tech/mech y plazos de pago.',
+    issueStopDate: 'Fecha en que el auto paró',
+    issueServiceStatus: 'Estado del servicio',
+    issueStatusNotStarted: '🔵 No empezó',
+    issueStatusInProgress: '🟡 En curso',
+    issueStatusFinished: '🟢 Terminó',
+    issueExpectedEnd: 'Fecha prevista de conclusión',
+    issueEndStatus: 'Situación final',
+    issueEndPickedUp: '🚗 Auto retirado',
+    issueEndAwaitingPayment: '💰 Esperando pago',
+    fillOdometerStart: 'Informe el odómetro inicial',
+    fillSsd: 'Seleccione qué disco está usando',
+    fillIssueDetails: 'Complete fecha y estado del servicio',
+    fillIssueEndStatus: 'Seleccione la situación final',
+    fillOdometerEnd: 'Informe el odómetro final',
+    fillSsdFill: 'Seleccione qué tan lleno está el disco',
+    odometerHint: 'Empezó en {start} km — manejó {diff} km hoy',
   },
 };
 
@@ -760,6 +942,20 @@ let state = {
   // v5: checkout
   mode: null,           // 'checkin' | 'checkout' | null
   checkoutGps: null,    // {lat, lng}
+  // v5.14: novos campos
+  odometerStart: null,      // hodômetro inicial (check-in)
+  ssdInUse: '',             // código do SSD escolhido
+  ssdSource: '',            // 'dropdown' | 'manual'
+  driverSsds: [],           // lista carregada do backend
+  // v5.14: vehicle issue tracking
+  issueDetailsOpen: false,
+  issueStopDate: '',
+  issueServiceStatus: null,    // 'not_started' | 'in_progress' | 'finished'
+  issueExpectedEndDate: '',
+  issueEndStatus: null,        // 'picked_up' | 'awaiting_payment'
+  // v5.14: checkout extras
+  odometerEnd: null,
+  ssdFillLevel: null,       // 'empty' | 'low' | 'half' | 'high' | 'full'
 };
 let maps = {};
 let destCircle = null;
@@ -851,17 +1047,199 @@ function selectMode(mode) {
     document.getElementById('checkout-card').classList.add('hidden');
     document.getElementById('submit-checkout-btn').classList.add('hidden');
     document.getElementById('base-card').classList.remove('hidden');
+    // v5.14: pré-carrega lista de SSDs do driver pra usar no dropdown depois
+    loadDriverSsds();
     loadBase();
   } else {
     // Modo checkout: esconde tudo do checkin, mostra só card de checkout
     document.getElementById('base-card').classList.add('hidden');
     document.getElementById('origin-card')?.classList.add('hidden');
     document.getElementById('dest-card')?.classList.add('hidden');
+    document.getElementById('vehicle-card')?.classList.add('hidden');  // v5.14
+    document.getElementById('extras-card')?.classList.add('hidden');
     document.getElementById('status-card')?.classList.add('hidden');
     document.getElementById('submit-btn').classList.add('hidden');
     document.getElementById('checkout-card').classList.remove('hidden');
     document.getElementById('submit-checkout-btn').classList.remove('hidden');
+    // v5.14: pré-carrega SSDs pra usar no checkout também (pra hint do hodômetro)
+    loadDriverSsds();
     checkExistingCheckin();
+  }
+}
+
+/**
+ * Carrega SSDs do driver via backend e popula dropdown.
+ * Falha silenciosamente — driver pode digitar manualmente.
+ */
+async function loadDriverSsds() {
+  if (!state.driver || !state.driver.email) return;
+  const select = document.getElementById('ssd-select');
+  if (!select) return;
+
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getDriverSsds&email=' + encodeURIComponent(state.driver.email));
+    const data = await res.json();
+    state.driverSsds = (data.success && data.ssds) ? data.ssds : [];
+    populateSsdSelect();
+  } catch (err) {
+    console.warn('[Check-in] Falhou ao carregar SSDs:', err);
+    state.driverSsds = [];
+    populateSsdSelect();
+  }
+}
+
+function populateSsdSelect() {
+  const select = document.getElementById('ssd-select');
+  if (!select) return;
+
+  select.innerHTML = '';
+
+  // Placeholder
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = t('ssdSelectPlaceholder');
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  select.appendChild(placeholder);
+
+  // Discos do driver
+  if (state.driverSsds.length === 0) {
+    const optNone = document.createElement('option');
+    optNone.value = '__manual__';
+    optNone.textContent = t('ssdNoneFound');
+    select.appendChild(optNone);
+  } else {
+    state.driverSsds.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.code;
+      opt.textContent = s.code + (s.inUse ? ' ✓ ' + t('ssdInUseLabel') : '');
+      select.appendChild(opt);
+    });
+  }
+
+  // Opção "outro"
+  const optOther = document.createElement('option');
+  optOther.value = '__manual__';
+  optOther.textContent = t('ssdOther');
+  select.appendChild(optOther);
+
+  // Listener
+  select.addEventListener('change', onSsdSelectChange);
+}
+
+function onSsdSelectChange() {
+  const select = document.getElementById('ssd-select');
+  const manualWrap = document.getElementById('ssd-manual-wrap');
+  const manualInput = document.getElementById('ssd-manual');
+
+  if (select.value === '__manual__') {
+    manualWrap.classList.remove('hidden');
+    state.ssdSource = 'manual';
+    state.ssdInUse = manualInput.value.trim();
+    manualInput.focus();
+  } else {
+    manualWrap.classList.add('hidden');
+    state.ssdSource = 'dropdown';
+    state.ssdInUse = select.value;
+  }
+  validateForm();
+}
+
+// Listeners pra inputs novos (registrados após DOM pronto)
+function setupV514Listeners() {
+  // Hodômetro inicial
+  const odoStart = document.getElementById('odometer-start');
+  if (odoStart) {
+    odoStart.addEventListener('input', e => {
+      state.odometerStart = e.target.value ? Number(e.target.value) : null;
+      validateForm();
+    });
+  }
+  // SSD manual
+  const ssdManual = document.getElementById('ssd-manual');
+  if (ssdManual) {
+    ssdManual.addEventListener('input', e => {
+      state.ssdInUse = e.target.value.trim();
+      validateForm();
+    });
+  }
+  // Hodômetro final (checkout)
+  const odoEnd = document.getElementById('checkout-odometer-end');
+  if (odoEnd) {
+    odoEnd.addEventListener('input', e => {
+      state.odometerEnd = e.target.value ? Number(e.target.value) : null;
+      validateCheckout();
+    });
+  }
+  // SSD fill level (checkout)
+  document.querySelectorAll('.ssd-fill-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('.ssd-fill-opt').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      state.ssdFillLevel = opt.dataset.ssdFill;
+      validateCheckout();
+    });
+  });
+  // Issue details — radio status
+  document.querySelectorAll('[data-issue-status]').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('[data-issue-status]').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      state.issueServiceStatus = opt.dataset.issueStatus;
+      // Mostra/esconde campos condicionais
+      const expectedWrap = document.getElementById('issue-expected-end-wrap');
+      const endWrap = document.getElementById('issue-end-status-wrap');
+      if (state.issueServiceStatus === 'finished') {
+        expectedWrap.classList.add('hidden');
+        endWrap.classList.remove('hidden');
+      } else {
+        expectedWrap.classList.remove('hidden');
+        endWrap.classList.add('hidden');
+        state.issueEndStatus = null;
+        document.querySelectorAll('[data-issue-end]').forEach(o => o.classList.remove('selected'));
+      }
+    });
+  });
+  // Issue details — radio end status
+  document.querySelectorAll('[data-issue-end]').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('[data-issue-end]').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      state.issueEndStatus = opt.dataset.issueEnd;
+    });
+  });
+  // Issue stop date
+  const stopDate = document.getElementById('issue-stop-date');
+  if (stopDate) {
+    stopDate.addEventListener('change', e => {
+      state.issueStopDate = e.target.value;
+    });
+  }
+  // Issue expected end
+  const expectedEnd = document.getElementById('issue-expected-end');
+  if (expectedEnd) {
+    expectedEnd.addEventListener('change', e => {
+      state.issueExpectedEndDate = e.target.value;
+    });
+  }
+}
+
+function toggleIssueDetails() {
+  const wrap = document.getElementById('issue-details-wrap');
+  const label = document.getElementById('issue-details-toggle-label');
+  state.issueDetailsOpen = !state.issueDetailsOpen;
+  if (state.issueDetailsOpen) {
+    wrap.classList.remove('hidden');
+    label.textContent = t('issueDetailsCollapse');
+    // Pré-popula stop date com hoje
+    const stopDate = document.getElementById('issue-stop-date');
+    if (stopDate && !stopDate.value) {
+      stopDate.value = new Date().toISOString().split('T')[0];
+      state.issueStopDate = stopDate.value;
+    }
+  } else {
+    wrap.classList.add('hidden');
+    label.textContent = t('issueDetailsExpand');
   }
 }
 
@@ -944,9 +1322,20 @@ document.getElementById('submit-checkout-btn').addEventListener('click', async (
   const tkm = document.getElementById('checkout-tkm').value.trim();
   const km = document.getElementById('checkout-km').value.trim();
   const notes = document.getElementById('checkout-notes').value.trim();
+  const odoEnd = document.getElementById('checkout-odometer-end').value.trim();
 
   if (!tkm || !km) {
     toast(t('fillAll'), 'error');
+    return;
+  }
+
+  // v5.14: hodômetro final + ssd fill obrigatórios
+  if (!odoEnd || Number(odoEnd) <= 0) {
+    toast(t('fillOdometerEnd'), 'error');
+    return;
+  }
+  if (!state.ssdFillLevel) {
+    toast(t('fillSsdFill'), 'error');
     return;
   }
 
@@ -965,6 +1354,9 @@ document.getElementById('submit-checkout-btn').addEventListener('click', async (
       tkmMapped: parseFloat(tkm),
       totalKmDriven: parseFloat(km),
       notes: notes,
+      // v5.14: campos novos
+      odometerEnd: parseFloat(odoEnd),
+      ssdFillLevel: state.ssdFillLevel,
     };
 
     // Fire-and-forget como o checkin normal — não tenta ler JSON da resposta,
@@ -1290,8 +1682,15 @@ function showDestCard() {
   setTimeout(initDestMap, 50);
 }
 function showExtrasCard() {
+  // v5.14: mostra vehicle-card (hodômetro+SSD) primeiro
+  document.getElementById('vehicle-card').classList.remove('hidden');
   document.getElementById('extras-card').classList.remove('hidden');
   document.getElementById('submit-btn').classList.remove('hidden');
+  // Foca o input do hodômetro pra agilizar
+  setTimeout(() => {
+    const odoStart = document.getElementById('odometer-start');
+    if (odoStart && !odoStart.value) odoStart.focus();
+  }, 100);
 }
 
 document.querySelectorAll('[data-status]').forEach(el => {
@@ -1310,6 +1709,31 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
   }
   const effectiveBase = state.baseNew || state.base;
   if (!effectiveBase) return toast(t('fillAll'), 'error');
+
+  // v5.14: valida hodômetro + SSD (obrigatórios)
+  if (!state.odometerStart || state.odometerStart <= 0) {
+    return toast(t('fillOdometerStart'), 'error');
+  }
+  if (!state.ssdInUse) {
+    return toast(t('fillSsd'), 'error');
+  }
+
+  // v5.14: se status é Minor/Critical e detalhes foram abertos, valida
+  let issueDetails = null;
+  if (state.vehicleStatus !== 'OK' && state.issueDetailsOpen) {
+    if (!state.issueStopDate || !state.issueServiceStatus) {
+      return toast(t('fillIssueDetails'), 'error');
+    }
+    if (state.issueServiceStatus === 'finished' && !state.issueEndStatus) {
+      return toast(t('fillIssueEndStatus'), 'error');
+    }
+    issueDetails = {
+      stopDate: state.issueStopDate,
+      serviceStatus: state.issueServiceStatus,
+      expectedEndDate: state.issueExpectedEndDate || '',
+      endStatus: state.issueEndStatus || '',
+    };
+  }
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
@@ -1353,6 +1777,11 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
         vehicleStatus: state.vehicleStatus,
         vehicleIssue: state.vehicleIssue,
         notes: state.notes,
+        // v5.14: novos campos
+        odometerStart: state.odometerStart,
+        ssdInUse: state.ssdInUse,
+        ssdSource: state.ssdSource,
+        vehicleIssueDetails: issueDetails,  // null se driver não preencheu
       }),
     });
 
@@ -1367,6 +1796,7 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
 
 applyI18n();
 loadDrivers();
+setupV514Listeners();  // v5.14: registra handlers dos campos novos
 
 </script>
 
