@@ -624,6 +624,12 @@
       <div id="issue-details-wrap" class="hidden" style="margin-top:10px;padding:12px;background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:6px;">
         <div style="font-size:11px;color:#92400E;margin-bottom:8px;" data-i18n="issueDetailsIntro">Estes dados ajudam a equipe a acompanhar tech/mech e prazos de pagamento.</div>
 
+        <label data-i18n="issueCategoryLabel">Tipo do problema</label>
+        <div class="radio-group" style="margin-bottom:8px;grid-template-columns:repeat(2,1fr);">
+          <div class="radio-option" data-issue-category="mech" data-i18n="issueCategoryMech">🔧 Mecânico</div>
+          <div class="radio-option" data-issue-category="tech" data-i18n="issueCategoryTech">💻 Técnico</div>
+        </div>
+
         <label data-i18n="issueStopDate">Data que o carro parou</label>
         <input type="date" id="issue-stop-date">
 
@@ -801,6 +807,10 @@ const I18N = {
     ssdFillHigh: 'Muito',
     ssdFillFull: 'Cheio',
     issueDetailsExpand: '📋 Registrar detalhes (opcional)',
+    issueCategoryLabel: 'Tipo do problema',
+    issueCategoryMech: '🔧 Mecânico',
+    issueCategoryTech: '💻 Técnico',
+    fillIssueCategory: 'Selecione se é mecânico ou técnico',
     issueDetailsCollapse: '🔼 Recolher detalhes',
     issueDetailsIntro: 'Estes dados ajudam a equipe a acompanhar tech/mech e prazos de pagamento.',
     issueStopDate: 'Data que o carro parou',
@@ -903,6 +913,10 @@ const I18N = {
     ssdFillHigh: 'Mucho',
     ssdFillFull: 'Lleno',
     issueDetailsExpand: '📋 Registrar detalles (opcional)',
+    issueCategoryLabel: 'Tipo del problema',
+    issueCategoryMech: '🔧 Mecánico',
+    issueCategoryTech: '💻 Técnico',
+    fillIssueCategory: 'Seleccione si es mecánico o técnico',
     issueDetailsCollapse: '🔼 Ocultar detalles',
     issueDetailsIntro: 'Estos datos ayudan al equipo a seguir tech/mech y plazos de pago.',
     issueStopDate: 'Fecha en que el auto paró',
@@ -949,6 +963,7 @@ let state = {
   driverSsds: [],           // lista carregada do backend
   // v5.14: vehicle issue tracking
   issueDetailsOpen: false,
+  issueCategory: null,         // 'mech' | 'tech' (v5.14.1)
   issueStopDate: '',
   issueServiceStatus: null,    // 'not_started' | 'in_progress' | 'finished'
   issueExpectedEndDate: '',
@@ -1178,6 +1193,14 @@ function setupV514Listeners() {
       opt.classList.add('selected');
       state.ssdFillLevel = opt.dataset.ssdFill;
       validateCheckout();
+    });
+  });
+  // Issue details — radio category (Mech/Tech) — v5.14.1
+  document.querySelectorAll('[data-issue-category]').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('[data-issue-category]').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      state.issueCategory = opt.dataset.issueCategory;
     });
   });
   // Issue details — radio status
@@ -1721,6 +1744,9 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
   // v5.14: se status é Minor/Critical e detalhes foram abertos, valida
   let issueDetails = null;
   if (state.vehicleStatus !== 'OK' && state.issueDetailsOpen) {
+    if (!state.issueCategory) {
+      return toast(t('fillIssueCategory'), 'error');
+    }
     if (!state.issueStopDate || !state.issueServiceStatus) {
       return toast(t('fillIssueDetails'), 'error');
     }
@@ -1728,6 +1754,7 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
       return toast(t('fillIssueEndStatus'), 'error');
     }
     issueDetails = {
+      category: state.issueCategory,           // 'mech' | 'tech' (v5.14.1)
       stopDate: state.issueStopDate,
       serviceStatus: state.issueServiceStatus,
       expectedEndDate: state.issueExpectedEndDate || '',
