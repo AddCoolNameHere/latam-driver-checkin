@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Cash Flow LATAM — Aceolution</title>
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <style>
   * { box-sizing: border-box; }
   body {
@@ -28,7 +29,15 @@
     justify-content: space-between;
     gap: 8px;
   }
-  header h1 .title-text { display: flex; align-items: center; gap: 8px; }
+  header h1 .title-text { display: flex; align-items: center; gap: 10px; }
+  header .header-logo {
+    height: 28px;
+    width: auto;
+    background: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
   header .lang-toggle {
     display: flex;
     gap: 4px;
@@ -276,6 +285,54 @@
 
   .hidden { display: none !important; }
 
+  /* GPS button (Fluxo A categoria + GPS) */
+  .btn-gps {
+    width: 100%;
+    padding: 11px;
+    background: white;
+    color: #2C5282;
+    border: 1px solid #d5d7db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .btn-gps:hover {
+    background: #F7FAFC;
+    border-color: #2C5282;
+  }
+  .btn-gps.captured {
+    background: #F0FDF4;
+    border-color: #16A34A;
+    color: #15803D;
+  }
+  .btn-gps:disabled { opacity: 0.7; cursor: not-allowed; }
+  .gps-status {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .gps-status.success {
+    background: #F0FDF4;
+    color: #15803D;
+    border-left: 3px solid #16A34A;
+  }
+  .gps-status.error {
+    background: #FEF2F2;
+    color: #991B1B;
+    border-left: 3px solid #DC2626;
+  }
+  .gps-status .gps-coords {
+    font-family: 'SF Mono', Monaco, Menlo, monospace;
+    font-size: 11px;
+    color: #64748B;
+    margin-top: 2px;
+  }
+
   /* Receipt preview */
   .receipt-preview {
     margin-top: 8px;
@@ -331,7 +388,10 @@
 
 <header>
   <h1>
-    <span class="title-text">💰 <span data-i18n="appTitle">Cash Flow LATAM</span></span>
+    <span class="title-text">
+      <img src="https://www.greatplacetowork.in/great/api/assets/uploads/13040/logo/logo.png" alt="Aceolution" class="header-logo" onerror="this.style.display='none'">
+      💰 <span data-i18n="appTitle">Cash Flow LATAM</span>
+    </span>
     <span class="lang-toggle">
       <button class="active" data-lang="pt" onclick="setLang('pt')">PT</button>
       <button data-lang="es" onclick="setLang('es')">ES</button>
@@ -395,10 +455,35 @@
       </div>
     </div>
 
-    <div class="card">
+    <!-- Step 3: Categoria + GPS (apenas pra "Operational Spends") -->
+    <div id="req-category-card" class="card hidden">
       <div class="step-header">
         <div class="step-num">3</div>
-        <div class="step-title" data-i18n="reqStep3">Quanto e quando</div>
+        <div class="step-title" data-i18n="reqStep3Cat">Categoria e localização</div>
+      </div>
+
+      <label data-i18n="reqCategoryLabel">Para quê especificamente? <span class="required">*</span></label>
+      <select id="req-category">
+        <option value="" data-i18n="selectPlaceholder">-- Selecione --</option>
+        <!-- Opções populadas dinamicamente -->
+      </select>
+      <div class="field-hint" data-i18n="reqCategoryHint">Categoria do gasto que você vai fazer com esse dinheiro</div>
+
+      <label style="margin-top:14px;" data-i18n="reqLocationLabel">Onde você está agora? <span class="required">*</span></label>
+      <button type="button" class="btn-gps" id="req-gps-btn" onclick="captureGpsForRequest()">
+        📍 <span data-i18n="reqGpsBtn">Capturar minha localização</span>
+      </button>
+      <div id="req-gps-status" class="gps-status hidden"></div>
+      <div id="req-gps-fallback" class="hidden" style="margin-top:8px;">
+        <input type="text" id="req-location-manual" data-i18n-placeholder="reqLocationManualPlaceholder" placeholder="Cidade, estado (ex: Curitiba, PR)">
+        <div class="field-hint" data-i18n="reqLocationManualHint">GPS bloqueado? Digite onde você está manualmente.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num" id="req-step-amount-num">4</div>
+        <div class="step-title" data-i18n="reqStep4">Quanto e quando</div>
       </div>
 
       <label><span data-i18n="amountLabel">Valor</span> <span class="required">*</span></label>
@@ -515,6 +600,20 @@ const I18N = {
     reqReasonLabel: 'Para quê você precisa?',
     reqReasonSalary: '💵 Adiantamento de salário',
     reqReasonOps: '⛽ Gastos do projeto',
+    reqStep3Cat: 'Categoria e localização',
+    reqStep4: 'Quanto e quando',
+    reqCategoryLabel: 'Para quê especificamente?',
+    reqCategoryHint: 'Categoria do gasto que você vai fazer com esse dinheiro',
+    reqLocationLabel: 'Onde você está agora?',
+    reqGpsBtn: 'Capturar minha localização',
+    reqLocationManualPlaceholder: 'Cidade, estado (ex: Curitiba, PR)',
+    reqLocationManualHint: 'GPS bloqueado? Digite onde você está manualmente.',
+    gpsCapturing: 'Capturando localização...',
+    gpsCaptured: 'Localização capturada',
+    gpsDenied: '❌ Permissão de GPS negada. Use o campo manual abaixo.',
+    gpsError: '❌ Erro capturando GPS. Use o campo manual abaixo.',
+    gpsNotSupported: '❌ Navegador não suporta GPS. Use o campo manual abaixo.',
+    captureLocation: 'Capture sua localização ou digite manualmente',
     reqStep3: 'Quanto e quando',
     amountLabel: 'Valor',
     amountHint: 'Pode usar vírgula ou ponto. Ex: 1500,50 ou 1500.50',
@@ -578,6 +677,20 @@ const I18N = {
     reqReasonLabel: '¿Para qué necesitas?',
     reqReasonSalary: '💵 Adelanto de salario',
     reqReasonOps: '⛽ Gastos del proyecto',
+    reqStep3Cat: 'Categoría y ubicación',
+    reqStep4: 'Cuánto y cuándo',
+    reqCategoryLabel: '¿Para qué específicamente?',
+    reqCategoryHint: 'Categoría del gasto que harás con este dinero',
+    reqLocationLabel: '¿Dónde estás ahora?',
+    reqGpsBtn: 'Capturar mi ubicación',
+    reqLocationManualPlaceholder: 'Ciudad, estado (ej: Buenos Aires, BA)',
+    reqLocationManualHint: '¿GPS bloqueado? Escribe dónde estás manualmente.',
+    gpsCapturing: 'Capturando ubicación...',
+    gpsCaptured: 'Ubicación capturada',
+    gpsDenied: '❌ Permiso de GPS denegado. Usa el campo manual abajo.',
+    gpsError: '❌ Error capturando GPS. Usa el campo manual abajo.',
+    gpsNotSupported: '❌ Navegador no soporta GPS. Usa el campo manual abajo.',
+    captureLocation: 'Captura tu ubicación o escribe manualmente',
     reqStep3: 'Cuánto y cuándo',
     amountLabel: 'Valor',
     amountHint: 'Puede usar coma o punto. Ej: 1500,50 ó 1500.50',
@@ -678,6 +791,9 @@ let state = {
   driversByCountry: {},          // grouped data from backend
   // Request flow
   reqReason: null,
+  reqCategory: '',         // v2: categoria do gasto previsto
+  reqLocation: null,       // v2: {lat, lng, address} ou {address} se manual
+  reqLocationMethod: '',   // 'gps' | 'manual'
   reqAmountRaw: '',
   reqAmountNum: 0,
   reqNeededBy: '',
@@ -873,6 +989,10 @@ document.addEventListener('input', (e) => {
     state.reqNeededBy = e.target.value;
   } else if (e.target.id === 'req-notes') {
     state.reqNotes = e.target.value;
+  } else if (e.target.id === 'req-location-manual') {
+    // v2: GPS fallback manual
+    state.reqLocation = { lat: null, lng: null, address: e.target.value.trim() };
+    state.reqLocationMethod = 'manual';
   } else if (e.target.id === 'rec-payment-date') {
     state.recPaymentDate = e.target.value;
   } else if (e.target.id === 'rec-establishment') {
@@ -894,8 +1014,105 @@ document.addEventListener('click', (e) => {
     document.querySelectorAll('[data-req-reason]').forEach(o => o.classList.remove('selected'));
     opt.classList.add('selected');
     state.reqReason = opt.dataset.reqReason;
+
+    // v2: pra "Operational Spends" mostra step 3 (categoria + GPS)
+    // Pra "Salary" pula direto pro step 4 (não faz sentido categorizar adiantamento de salário)
+    const catCard = document.getElementById('req-category-card');
+    const stepNum = document.getElementById('req-step-amount-num');
+    if (state.reqReason === 'Operational Spends') {
+      catCard.classList.remove('hidden');
+      if (stepNum) stepNum.textContent = '4';
+      populateRequestCategoryDropdown();
+    } else {
+      catCard.classList.add('hidden');
+      if (stepNum) stepNum.textContent = '3';
+      // Limpa campos da categoria/GPS
+      state.reqCategory = '';
+      state.reqLocation = null;
+      state.reqLocationMethod = '';
+    }
   }
 });
+
+/**
+ * Popula categorias do request flow (mesmas do receipt flow + Salary se quiser).
+ */
+function populateRequestCategoryDropdown() {
+  const select = document.getElementById('req-category');
+  if (!select) return;
+  const cats = CATEGORIES_BY_LANG[currentLang];
+  let html = '<option value="">' + t('selectPlaceholder') + '</option>';
+  cats.forEach(c => {
+    html += `<option value="${escapeHtml(c.value)}">${t(c.i18n)}</option>`;
+  });
+  select.innerHTML = html;
+  select.onchange = (e) => { state.reqCategory = e.target.value; };
+}
+
+/**
+ * Captura GPS pra request flow.
+ */
+function captureGpsForRequest() {
+  const btn = document.getElementById('req-gps-btn');
+  const status = document.getElementById('req-gps-status');
+  const fallback = document.getElementById('req-gps-fallback');
+
+  if (!navigator.geolocation) {
+    status.className = 'gps-status error';
+    status.textContent = t('gpsNotSupported');
+    status.classList.remove('hidden');
+    fallback.classList.remove('hidden');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner" style="border-color:rgba(44,82,130,0.3);border-top-color:#2C5282;"></span>' + t('gpsCapturing');
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      state.reqLocation = { lat, lng, address: '' };
+      state.reqLocationMethod = 'gps';
+
+      // Tenta reverse geocode (OpenStreetMap Nominatim, free)
+      let addr = '';
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14&accept-language=${currentLang}`;
+        const res = await fetch(url, { headers: { 'User-Agent': 'AceolutionLATAM/1.0' } });
+        const data = await res.json();
+        if (data && data.display_name) {
+          // Pega cidade + região (mais limpo que endereço completo)
+          addr = data.address && (data.address.city || data.address.town || data.address.village || data.address.county)
+            ? [data.address.city || data.address.town || data.address.village || data.address.county,
+               data.address.state, data.address.country].filter(Boolean).join(', ')
+            : data.display_name.split(',').slice(0, 3).join(', ').trim();
+          state.reqLocation.address = addr;
+        }
+      } catch (err) {
+        console.warn('[Cash] Reverse geocode falhou:', err);
+      }
+
+      btn.disabled = false;
+      btn.classList.add('captured');
+      btn.innerHTML = '✓ ' + t('gpsCaptured');
+      status.className = 'gps-status success';
+      status.innerHTML = (addr ? `<strong>${escapeHtml(addr)}</strong><br>` : '') +
+        `<span class="gps-coords">📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}</span>`;
+      status.classList.remove('hidden');
+      fallback.classList.add('hidden');
+    },
+    (err) => {
+      btn.disabled = false;
+      btn.innerHTML = '📍 ' + t('reqGpsBtn');
+      status.className = 'gps-status error';
+      status.textContent = err.code === 1 ? t('gpsDenied') : t('gpsError');
+      status.classList.remove('hidden');
+      fallback.classList.remove('hidden');
+    },
+    { enableHighAccuracy: false, timeout: 12000, maximumAge: 60000 }
+  );
+}
 
 // ================================================================
 // Receipt upload (base64)
@@ -959,6 +1176,17 @@ async function submitCashRequest() {
   if (!state.reqReason) {
     return toast(t('selectReason'), 'error');
   }
+  // v2: pra Operational Spends, exige categoria + localização
+  if (state.reqReason === 'Operational Spends') {
+    if (!state.reqCategory) {
+      return toast(t('selectCategory'), 'error');
+    }
+    const hasLocation = state.reqLocation &&
+      (state.reqLocation.address || (state.reqLocation.lat && state.reqLocation.lng));
+    if (!hasLocation) {
+      return toast(t('captureLocation'), 'error');
+    }
+  }
   if (!state.reqAmountNum || state.reqAmountNum <= 0) {
     return toast(t('invalidAmount'), 'error');
   }
@@ -980,6 +1208,12 @@ async function submitCashRequest() {
     reason: state.reqReason,
     neededByDate: state.reqNeededBy,
     notes: state.reqNotes,
+    // v2: categoria + localização (vazios pra Salary, preenchidos pra Operational)
+    category: state.reqCategory || '',
+    locationLat: state.reqLocation ? state.reqLocation.lat : null,
+    locationLng: state.reqLocation ? state.reqLocation.lng : null,
+    locationAddress: state.reqLocation ? state.reqLocation.address : '',
+    locationMethod: state.reqLocationMethod || '',
   };
 
   try {
