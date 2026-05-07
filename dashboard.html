@@ -2019,6 +2019,10 @@
           <div class="export-title" data-i18n="exportCalendar">Resumo Calendar</div>
           <div class="export-sub" data-i18n="exportCalendarSub">PDF visual do Driver/VID Calendar (mês)</div>
         </button>
+        <button onclick="openMbrModal()" style="border-top:2px solid var(--c-border);">
+          <div class="export-title" data-i18n="exportMbr">📊 Monthly Business Review</div>
+          <div class="export-sub" data-i18n="exportMbrSub">PowerPoint completo pra reunião do mês</div>
+        </button>
       </div>
     </div>
     <button class="refresh-btn" onclick="loadData()" data-i18n="refresh">⟳ Atualizar</button>
@@ -2145,6 +2149,49 @@
     <div id="ts-status" style="margin-top:12px; font-size:13px; color:var(--c-text-muted); text-align:center;"></div>
   </div>
 </div>
+
+<!-- v5.15: Monthly Business Review modal -->
+<div id="mbr-modal" class="ts-modal" style="display:none;" onclick="closeMbrModalIfBackdrop(event)">
+  <div class="ts-modal-content" style="max-width:560px;">
+    <div class="ts-modal-header">
+      <h2 data-i18n="mbrModalTitle">📊 Monthly Business Review</h2>
+      <button class="ts-modal-close" onclick="closeMbrModal()">×</button>
+    </div>
+    <p style="color:var(--c-text-muted); font-size:13px; margin-bottom:16px;" data-i18n="mbrModalSub">
+      Gera apresentação PowerPoint completa do mês para reunião com o time.
+    </p>
+
+    <div class="ts-form-row">
+      <label data-i18n="mbrSelectMonth">Mês/Ano:</label>
+      <select id="mbr-month-select" style="flex:1;padding:8px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;">
+        <option value="" data-i18n="mbrLoadingMonths">Carregando meses...</option>
+      </select>
+    </div>
+
+    <div style="margin-top:18px;">
+      <label style="display:block;font-weight:600;font-size:12px;margin-bottom:6px;color:var(--c-primary-dark);" data-i18n="mbrInsightsTitle">📝 Key Operations Insights</label>
+      <div style="font-size:11px;color:var(--c-text-muted);margin-bottom:8px;" data-i18n="mbrInsightsSub">Os 3 textos abaixo aparecem no slide 3. Pode editar depois no PowerPoint.</div>
+
+      <label style="display:block;font-size:11px;font-weight:600;color:#92400E;margin-top:10px;margin-bottom:4px;">⭐ <span data-i18n="mbrHighlights">Highlights</span></label>
+      <textarea id="mbr-highlights" rows="3" placeholder="Ex: Achieved 89% of LATAM target. Mexico was the only country below target." style="width:100%;padding:8px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical;"></textarea>
+
+      <label style="display:block;font-size:11px;font-weight:600;color:#1E40AF;margin-top:10px;margin-bottom:4px;">💡 <span data-i18n="mbrOpportunities">Opportunities</span></label>
+      <textarea id="mbr-opportunities" rows="3" placeholder="Ex: Move VIDs to other locations and implement floating drivers..." style="width:100%;padding:8px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical;"></textarea>
+
+      <label style="display:block;font-size:11px;font-weight:600;color:#065F46;margin-top:10px;margin-bottom:4px;">🎯 <span data-i18n="mbrFocusAreas">Focus Areas</span></label>
+      <textarea id="mbr-focus" rows="3" placeholder="Ex: Increase engagement and productivity follow-ups, reinforce daily tracking with drivers..." style="width:100%;padding:8px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical;"></textarea>
+    </div>
+
+    <div class="ts-modal-actions" style="margin-top:18px;">
+      <button onclick="closeMbrModal()" data-i18n="cancel">Cancelar</button>
+      <button class="primary" id="mbr-generate-btn" onclick="generateMbr()" data-i18n="mbrGenerate">Gerar PowerPoint</button>
+    </div>
+    <div id="mbr-status" style="margin-top:12px; font-size:13px; color:var(--c-text-muted); text-align:center;"></div>
+  </div>
+</div>
+
+<!-- v5.15: pptxgenjs CDN pra geração PPTX no client -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.min.js"></script>
 
 <div class="filters">
   <span class="filter-label" data-i18n="filterCountry">País:</span>
@@ -2757,6 +2804,22 @@ const I18N = {
     rangeInvalid: 'Datas inválidas — De deve vir antes de Até',
     rangeLoading: 'Carregando dados do período…',
     exportCalendarSub: 'PDF visual do Driver/VID Calendar (mês)',
+    exportMbr: '📊 Monthly Business Review',
+    exportMbrSub: 'PowerPoint completo pra reunião do mês',
+    mbrModalTitle: '📊 Monthly Business Review',
+    mbrModalSub: 'Gera apresentação PowerPoint completa do mês para reunião com o time.',
+    mbrSelectMonth: 'Mês/Ano:',
+    mbrLoadingMonths: 'Carregando meses...',
+    mbrInsightsTitle: '📝 Key Operations Insights',
+    mbrInsightsSub: 'Os 3 textos abaixo aparecem no slide 3. Pode editar depois no PowerPoint.',
+    mbrHighlights: 'Highlights',
+    mbrOpportunities: 'Opportunities',
+    mbrFocusAreas: 'Focus Areas',
+    mbrGenerate: 'Gerar PowerPoint',
+    mbrLoadingData: 'Buscando dados do mês...',
+    mbrBuilding: 'Montando os slides...',
+    mbrSuccess: 'PowerPoint baixado!',
+    mbrLibError: 'Biblioteca de PPT não carregou. Verifique sua conexão.',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Recolher',
     tableShowingCount: 'Mostrando',
@@ -2975,6 +3038,22 @@ const I18N = {
     rangeInvalid: 'Fechas inválidas — De debe ser antes de Hasta',
     rangeLoading: 'Cargando datos del período…',
     exportCalendarSub: 'PDF visual del Driver/VID Calendar (mes)',
+    exportMbr: '📊 Monthly Business Review',
+    exportMbrSub: 'PowerPoint completo para reunión del mes',
+    mbrModalTitle: '📊 Monthly Business Review',
+    mbrModalSub: 'Genera presentación PowerPoint completa del mes para reunión con el equipo.',
+    mbrSelectMonth: 'Mes/Año:',
+    mbrLoadingMonths: 'Cargando meses...',
+    mbrInsightsTitle: '📝 Key Operations Insights',
+    mbrInsightsSub: 'Los 3 textos aparecerán en el slide 3. Puede editar luego en PowerPoint.',
+    mbrHighlights: 'Highlights',
+    mbrOpportunities: 'Opportunities',
+    mbrFocusAreas: 'Focus Areas',
+    mbrGenerate: 'Generar PowerPoint',
+    mbrLoadingData: 'Buscando datos del mes...',
+    mbrBuilding: 'Montando los slides...',
+    mbrSuccess: '¡PowerPoint descargado!',
+    mbrLibError: 'La biblioteca PPT no cargó. Verifique su conexión.',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Contraer',
     tableShowingCount: 'Mostrando',
@@ -3193,6 +3272,22 @@ const I18N = {
     rangeInvalid: 'Invalid dates — From must be before To',
     rangeLoading: 'Loading period data…',
     exportCalendarSub: 'Visual PDF of Driver/VID Calendar (month)',
+    exportMbr: '📊 Monthly Business Review',
+    exportMbrSub: 'Full PowerPoint for the monthly meeting',
+    mbrModalTitle: '📊 Monthly Business Review',
+    mbrModalSub: 'Generates a complete PowerPoint presentation for the team meeting.',
+    mbrSelectMonth: 'Month/Year:',
+    mbrLoadingMonths: 'Loading months...',
+    mbrInsightsTitle: '📝 Key Operations Insights',
+    mbrInsightsSub: 'The 3 texts below appear on slide 3. You can edit later in PowerPoint.',
+    mbrHighlights: 'Highlights',
+    mbrOpportunities: 'Opportunities',
+    mbrFocusAreas: 'Focus Areas',
+    mbrGenerate: 'Generate PowerPoint',
+    mbrLoadingData: 'Fetching month data...',
+    mbrBuilding: 'Building slides...',
+    mbrSuccess: 'PowerPoint downloaded!',
+    mbrLibError: 'PPT library did not load. Check your connection.',
     showAllDrivers: 'Show all',
     collapseTable: '↑ Collapse',
     tableShowingCount: 'Showing',
@@ -5171,6 +5266,584 @@ function formatMonthOption(monthKey) {
     : ['January','February','March','April','May','June','July','August','September','October','November','December'];
   return (monthNames[m - 1] || m) + ' ' + y;
 }
+
+
+// ================================================================
+// v5.15: Monthly Business Review (PPTX) — geração no client com pptxgenjs
+// ================================================================
+
+/**
+ * Abre o modal MBR. Carrega os meses disponíveis do backend.
+ */
+async function openMbrModal() {
+  document.getElementById('export-menu').style.display = 'none';
+  const modal = document.getElementById('mbr-modal');
+  modal.style.display = 'flex';
+
+  // Carrega meses (reutiliza o endpoint getAvailableMonths)
+  const select = document.getElementById('mbr-month-select');
+  select.innerHTML = `<option>${t('mbrLoadingMonths') || 'Carregando meses...'}</option>`;
+  select.disabled = true;
+
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getAvailableMonths').then(r => r.json());
+    const now = new Date();
+    const currentKey = (now.getMonth() + 1) + '.' + now.getFullYear();
+
+    let months = (res.success && res.months) ? res.months : [currentKey];
+    if (!months.includes(currentKey)) months.unshift(currentKey);
+
+    select.innerHTML = months.map(m => {
+      const isCurrent = m === currentKey;
+      const label = formatMonthOption(m) + (isCurrent ? ' (' + (t('currentLabel') || 'atual') + ')' : '');
+      return `<option value="${m}"${isCurrent ? ' selected' : ''}>${label}</option>`;
+    }).join('');
+    select.disabled = false;
+  } catch (err) {
+    console.error('[MBR] Erro carregando meses:', err);
+    const now = new Date();
+    const currentKey = (now.getMonth() + 1) + '.' + now.getFullYear();
+    select.innerHTML = `<option value="${currentKey}">${formatMonthOption(currentKey)}</option>`;
+    select.disabled = false;
+  }
+}
+
+function closeMbrModal() {
+  document.getElementById('mbr-modal').style.display = 'none';
+}
+
+function closeMbrModalIfBackdrop(evt) {
+  if (evt.target.id === 'mbr-modal') closeMbrModal();
+}
+
+/**
+ * Orquestra a geração do PPTX:
+ * 1) Pega dados do backend
+ * 2) Pega insights digitados pelo user
+ * 3) Chama buildMbrPptx() pra montar o arquivo
+ * 4) Faz download
+ */
+async function generateMbr() {
+  const monthYear = document.getElementById('mbr-month-select').value;
+  if (!monthYear) {
+    alert('Selecione o mês.');
+    return;
+  }
+
+  const [month, year] = monthYear.split('.').map(Number);
+  const insights = {
+    highlights: document.getElementById('mbr-highlights').value.trim(),
+    opportunities: document.getElementById('mbr-opportunities').value.trim(),
+    focus: document.getElementById('mbr-focus').value.trim(),
+  };
+
+  // Verifica se pptxgenjs carregou
+  if (typeof PptxGenJS === 'undefined') {
+    setMbrStatus('❌ ' + (t('mbrLibError') || 'Biblioteca de PPT não carregou. Verifique sua conexão.'), true);
+    return;
+  }
+
+  const btn = document.getElementById('mbr-generate-btn');
+  btn.disabled = true;
+  setMbrStatus('⏳ ' + (t('mbrLoadingData') || 'Buscando dados do mês...'));
+
+  try {
+    // 1) Busca dados consolidados
+    const url = `${CONFIG.scriptUrl}?action=getMonthlyReportData&month=${month}&year=${year}`;
+    const res = await fetch(url).then(r => r.json());
+    if (!res.success) {
+      throw new Error(res.error || 'Erro ao buscar dados');
+    }
+    const data = res.data;
+
+    setMbrStatus('🎨 ' + (t('mbrBuilding') || 'Montando os slides...'));
+
+    // 2) Constrói o PPTX
+    const pptx = buildMbrPptx(data, insights);
+
+    // 3) Download
+    const fileName = `LATAM_MBR_${data.monthName}_${data.year}.pptx`;
+    await pptx.writeFile({ fileName });
+
+    setMbrStatus('✅ ' + (t('mbrSuccess') || 'PowerPoint baixado!'));
+    setTimeout(() => closeMbrModal(), 1500);
+  } catch (err) {
+    console.error('[MBR] Erro:', err);
+    setMbrStatus('❌ ' + (err.message || 'Erro ao gerar'), true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function setMbrStatus(msg, isError) {
+  const el = document.getElementById('mbr-status');
+  el.textContent = msg;
+  el.style.color = isError ? '#DC2626' : 'var(--c-text-muted)';
+}
+
+
+// ================================================================
+// v5.15: BUILD PPTX — usa pptxgenjs com paleta Aceolution
+// ================================================================
+
+/**
+ * Paleta Aceolution custom (azul navy + accent blue da marca):
+ *   Primary: #1E3A5F (navy escuro pra títulos)
+ *   Brand:   #5BA0DC (azul Aceolution pra acentos)
+ *   Light:   #E8F0F7 (azul super claro pra fundos)
+ *   Success: #16A34A (verde achievement)
+ *   Warning: #DC2626 (vermelho abaixo target)
+ *   Neutral: #64748B (cinza pra texto secundário)
+ *   Text:    #1E293B (texto principal)
+ *   Border:  #CBD5E1 (bordas suaves)
+ */
+const MBR_COLORS = {
+  primary: '1E3A5F',
+  brand: '5BA0DC',
+  light: 'E8F0F7',
+  success: '16A34A',
+  warning: 'DC2626',
+  neutral: '64748B',
+  text: '1E293B',
+  border: 'CBD5E1',
+  white: 'FFFFFF',
+  bgGray: 'F8FAFC',
+};
+
+const MBR_FONT_HEAD = 'Calibri';   // títulos
+const MBR_FONT_BODY = 'Calibri';   // corpo
+
+function buildMbrPptx(data, insights) {
+  const pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_WIDE';  // 13.33 x 7.5"
+  pptx.title = `LATAM Monthly Business Review — ${data.monthName} ${data.year}`;
+  pptx.author = 'Aceolution LATAM';
+
+  buildSlideCover(pptx, data);
+  buildSlideDivider(pptx, data);
+  buildSlideInsights(pptx, data, insights);
+  buildSlideTkmReport(pptx, data);
+  buildSlideTopDrivers(pptx, data);
+  buildSlideVidManagement(pptx, data);
+  buildSlideIdleness(pptx, data);
+
+  return pptx;
+}
+
+// ---------- Slide 1: Cover ----------
+function buildSlideCover(pptx, data) {
+  const s = pptx.addSlide();
+  s.background = { color: MBR_COLORS.primary };
+
+  // Faixa diagonal decorativa
+  s.addShape('rect', {
+    x: 0, y: 0, w: 4.5, h: 7.5, fill: { color: MBR_COLORS.brand }, line: { type: 'none' }
+  });
+
+  // SV badge
+  s.addShape('ellipse', {
+    x: 0.4, y: 0.4, w: 1.2, h: 0.7, fill: { color: MBR_COLORS.white }, line: { type: 'none' }
+  });
+  s.addText('SV', {
+    x: 0.4, y: 0.4, w: 1.2, h: 0.7,
+    fontFace: MBR_FONT_HEAD, fontSize: 22, bold: true, color: MBR_COLORS.brand,
+    align: 'center', valign: 'middle'
+  });
+
+  // Aceolution branding
+  s.addText('Aceolution', {
+    x: 5.0, y: 0.4, w: 8.0, h: 0.7,
+    fontFace: MBR_FONT_HEAD, fontSize: 36, bold: true, color: MBR_COLORS.white,
+    align: 'right'
+  });
+  s.addText('IT SERVICES  |  MEDIA SOLUTIONS  |  CONSULTANCY', {
+    x: 5.0, y: 1.0, w: 8.0, h: 0.3,
+    fontFace: MBR_FONT_BODY, fontSize: 11, color: MBR_COLORS.brand,
+    align: 'right', charSpacing: 2
+  });
+
+  // Título principal
+  s.addText('LATAM', {
+    x: 5.0, y: 2.5, w: 8.0, h: 1.0,
+    fontFace: MBR_FONT_HEAD, fontSize: 64, bold: true, color: MBR_COLORS.white,
+    align: 'right'
+  });
+  s.addText('Monthly Business Review', {
+    x: 5.0, y: 3.6, w: 8.0, h: 0.7,
+    fontFace: MBR_FONT_HEAD, fontSize: 32, color: MBR_COLORS.brand,
+    align: 'right', italic: true
+  });
+
+  // Período + data
+  s.addText(`${data.monthName} ${data.year}`, {
+    x: 5.0, y: 5.5, w: 8.0, h: 0.6,
+    fontFace: MBR_FONT_HEAD, fontSize: 24, bold: true, color: MBR_COLORS.white,
+    align: 'right'
+  });
+  const today = new Date().toLocaleDateString('en-GB');  // dd/mm/yyyy
+  s.addText(`Generated: ${today}`, {
+    x: 5.0, y: 6.8, w: 8.0, h: 0.3,
+    fontFace: MBR_FONT_BODY, fontSize: 10, color: MBR_COLORS.brand,
+    align: 'right'
+  });
+}
+
+// ---------- Slide 2: Divider ----------
+function buildSlideDivider(pptx, data) {
+  const s = pptx.addSlide();
+  s.background = { color: MBR_COLORS.white };
+
+  // Faixa lateral fina
+  s.addShape('rect', {
+    x: 0, y: 3.5, w: 13.33, h: 0.5, fill: { color: MBR_COLORS.brand }, line: { type: 'none' }
+  });
+
+  // Aceolution top right
+  s.addText('Aceolution', {
+    x: 9.0, y: 0.4, w: 4.0, h: 0.5,
+    fontFace: MBR_FONT_HEAD, fontSize: 22, bold: true, color: MBR_COLORS.text,
+    align: 'right'
+  });
+
+  // Big title centralizado
+  const title = `${data.monthName.toUpperCase()} ${data.year} DATA ANALYSIS`;
+  s.addText(title, {
+    x: 0.5, y: 3.0, w: 12.33, h: 1.5,
+    fontFace: MBR_FONT_HEAD, fontSize: 54, bold: true, color: MBR_COLORS.primary,
+    align: 'center', valign: 'middle'
+  });
+}
+
+// ---------- Slide 3: Key Operations Insights ----------
+function buildSlideInsights(pptx, data, insights) {
+  const s = pptx.addSlide();
+  s.background = { color: MBR_COLORS.white };
+
+  // Título
+  s.addText('Key Operations Insights — LATAM', {
+    x: 0.5, y: 0.4, w: 12.33, h: 0.6,
+    fontFace: MBR_FONT_HEAD, fontSize: 28, bold: true, color: MBR_COLORS.primary
+  });
+
+  // Faixa "KEY UPDATES"
+  s.addShape('rect', {
+    x: 0.5, y: 1.2, w: 12.33, h: 0.4,
+    fill: { color: MBR_COLORS.primary }, line: { type: 'none' }
+  });
+  s.addText('KEY UPDATES', {
+    x: 0.5, y: 1.2, w: 12.33, h: 0.4,
+    fontFace: MBR_FONT_HEAD, fontSize: 14, bold: true, color: MBR_COLORS.white,
+    align: 'center', valign: 'middle', charSpacing: 3
+  });
+
+  const sections = [
+    { title: '⭐ HIGHLIGHTS', color: '92400E', bg: 'FEF3C7', text: insights.highlights || '(adicione highlights aqui antes de exportar)' },
+    { title: '💡 OPPORTUNITIES', color: '1E40AF', bg: 'DBEAFE', text: insights.opportunities || '(adicione oportunidades aqui antes de exportar)' },
+    { title: '🎯 FOCUS AREAS', color: '065F46', bg: 'D1FAE5', text: insights.focus || '(adicione focus areas aqui antes de exportar)' },
+  ];
+
+  let y = 1.85;
+  const sectionH = 1.65;
+  sections.forEach(sec => {
+    // Header com ícone
+    s.addShape('rect', {
+      x: 0.5, y: y, w: 12.33, h: 0.35,
+      fill: { color: sec.bg }, line: { color: MBR_COLORS.border, width: 0.5 }
+    });
+    s.addText(sec.title, {
+      x: 0.7, y: y, w: 12.0, h: 0.35,
+      fontFace: MBR_FONT_HEAD, fontSize: 12, bold: true, color: sec.color,
+      valign: 'middle', charSpacing: 2
+    });
+
+    // Conteúdo
+    s.addText(sec.text, {
+      x: 0.7, y: y + 0.4, w: 12.0, h: sectionH - 0.5,
+      fontFace: MBR_FONT_BODY, fontSize: 13, color: MBR_COLORS.text,
+      valign: 'top'
+    });
+    y += sectionH;
+  });
+}
+
+// ---------- Slide 4: TKM Report ----------
+function buildSlideTkmReport(pptx, data) {
+  const s = pptx.addSlide();
+  s.background = { color: MBR_COLORS.white };
+
+  s.addText('TKM Report', {
+    x: 0.5, y: 0.4, w: 12.33, h: 0.6,
+    fontFace: MBR_FONT_HEAD, fontSize: 32, bold: true, color: MBR_COLORS.primary
+  });
+
+  s.addText(`${data.monthName} ${data.year} — CTS Goal Achievement`, {
+    x: 0.5, y: 1.0, w: 12.33, h: 0.3,
+    fontFace: MBR_FONT_BODY, fontSize: 13, color: MBR_COLORS.neutral, italic: true
+  });
+
+  // Tabela
+  const headers = ['Country', 'CTS Goal (Target)', 'Achievement %', 'TKM (done)', 'KM Driven', 'Efficiency', 'Baseline %', 'QC Score'];
+  const rows = data.tkmReport || [];
+  const sumRow = data.tkmReportSum;
+
+  const tableRows = [];
+
+  // Header
+  tableRows.push(headers.map(h => ({
+    text: h,
+    options: {
+      bold: true, color: MBR_COLORS.white, fill: { color: MBR_COLORS.primary },
+      align: 'center', valign: 'middle', fontSize: 11, fontFace: MBR_FONT_HEAD
+    }
+  })));
+
+  // Country rows
+  rows.forEach(r => {
+    const achPct = (r.achievementPct || 0) * 100;
+    const achColor = achPct >= 100 ? MBR_COLORS.success : (achPct >= 80 ? 'F59E0B' : MBR_COLORS.warning);
+    tableRows.push([
+      { text: r.country, options: { bold: true, fontSize: 11, valign: 'middle' } },
+      { text: formatNumber(r.ctsGoal, 0), options: { fontSize: 11, align: 'right', valign: 'middle' } },
+      { text: achPct.toFixed(0) + '%', options: { fontSize: 11, bold: true, align: 'center', valign: 'middle', color: MBR_COLORS.white, fill: { color: achColor } } },
+      { text: formatNumber(r.tkmDone, 0), options: { fontSize: 11, align: 'right', valign: 'middle' } },
+      { text: formatNumber(r.kmDriven, 0), options: { fontSize: 11, align: 'right', valign: 'middle' } },
+      { text: ((r.efficiency || 0) * 100).toFixed(1) + '%', options: { fontSize: 11, align: 'right', valign: 'middle' } },
+      { text: ((r.baselinePct || 0) * 100).toFixed(0) + '%', options: { fontSize: 11, align: 'right', valign: 'middle' } },
+      { text: ((r.qcScore || 0) * 100).toFixed(1) + '%', options: { fontSize: 11, align: 'right', valign: 'middle' } },
+    ]);
+  });
+
+  // Sum row
+  if (sumRow) {
+    const totalAchPct = (sumRow.achievementPct || 0) * 100;
+    const totalAchColor = totalAchPct >= 100 ? MBR_COLORS.success : (totalAchPct >= 80 ? 'F59E0B' : MBR_COLORS.warning);
+    tableRows.push([
+      { text: 'TOTAL', options: { bold: true, fontSize: 12, valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: formatNumber(sumRow.ctsGoal, 0), options: { bold: true, fontSize: 12, align: 'right', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: totalAchPct.toFixed(0) + '%', options: { bold: true, fontSize: 12, align: 'center', valign: 'middle', color: MBR_COLORS.white, fill: { color: totalAchColor } } },
+      { text: formatNumber(sumRow.tkmDone, 0), options: { bold: true, fontSize: 12, align: 'right', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: formatNumber(sumRow.kmDriven, 0), options: { bold: true, fontSize: 12, align: 'right', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: ((sumRow.efficiency || 0) * 100).toFixed(1) + '%', options: { bold: true, fontSize: 12, align: 'right', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: ((sumRow.baselinePct || 0) * 100).toFixed(0) + '%', options: { bold: true, fontSize: 12, align: 'right', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: ((sumRow.qcScore || 0) * 100).toFixed(1) + '%', options: { bold: true, fontSize: 12, align: 'right', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+    ]);
+  }
+
+  s.addTable(tableRows, {
+    x: 0.5, y: 1.6, w: 12.33,
+    colW: [1.7, 1.7, 1.5, 1.6, 1.6, 1.4, 1.4, 1.43],
+    border: { type: 'solid', color: MBR_COLORS.border, pt: 0.5 },
+    rowH: 0.42,
+  });
+}
+
+// ---------- Slide 5: Top 10 Best Drivers ----------
+function buildSlideTopDrivers(pptx, data) {
+  const s = pptx.addSlide();
+  s.background = { color: MBR_COLORS.white };
+
+  s.addText('🏆 Top 10 Best Drivers', {
+    x: 0.5, y: 0.4, w: 12.33, h: 0.6,
+    fontFace: MBR_FONT_HEAD, fontSize: 32, bold: true, color: MBR_COLORS.primary
+  });
+
+  s.addText(`${data.monthName} ${data.year} — Ranked by Baseline %`, {
+    x: 0.5, y: 1.0, w: 12.33, h: 0.3,
+    fontFace: MBR_FONT_BODY, fontSize: 13, color: MBR_COLORS.neutral, italic: true
+  });
+
+  const headers = ['#', 'Driver Name', 'Country', 'TKM', 'KM Driven', 'Efficiency', 'Baseline %', 'QC Score', 'Mapping Days'];
+  const rows = data.topDrivers || [];
+
+  const tableRows = [];
+  tableRows.push(headers.map(h => ({
+    text: h,
+    options: {
+      bold: true, color: MBR_COLORS.white, fill: { color: MBR_COLORS.primary },
+      align: 'center', valign: 'middle', fontSize: 11, fontFace: MBR_FONT_HEAD
+    }
+  })));
+
+  rows.forEach((d, idx) => {
+    // Top 3 com destaque dourado
+    const isTop3 = idx < 3;
+    const rankColor = idx === 0 ? 'F59E0B' : (idx === 1 ? '94A3B8' : (idx === 2 ? 'B45309' : MBR_COLORS.neutral));
+    const baselinePct = (d.baseline || 0) * 100;
+
+    tableRows.push([
+      { text: '#' + (idx + 1), options: { bold: true, fontSize: 12, align: 'center', valign: 'middle', color: MBR_COLORS.white, fill: { color: rankColor } } },
+      { text: d.name || '—', options: { bold: isTop3, fontSize: 11, valign: 'middle' } },
+      { text: d.country || '—', options: { fontSize: 11, valign: 'middle' } },
+      { text: formatNumber(d.tkm, 0), options: { fontSize: 11, align: 'right', valign: 'middle' } },
+      { text: formatNumber(d.km, 0), options: { fontSize: 11, align: 'right', valign: 'middle' } },
+      { text: ((d.efficiency || 0) * 100).toFixed(1) + '%', options: { fontSize: 11, align: 'right', valign: 'middle' } },
+      { text: baselinePct.toFixed(0) + '%', options: { fontSize: 11, bold: true, align: 'right', valign: 'middle', color: MBR_COLORS.success, fill: { color: 'F0FDF4' } } },
+      { text: ((d.qcScore || 0) * 100).toFixed(1) + '%', options: { fontSize: 11, align: 'right', valign: 'middle' } },
+      { text: String(d.mappingDays || 0), options: { fontSize: 11, align: 'center', valign: 'middle' } },
+    ]);
+  });
+
+  s.addTable(tableRows, {
+    x: 0.3, y: 1.6, w: 12.73,
+    colW: [0.6, 3.2, 1.1, 1.1, 1.2, 1.2, 1.3, 1.1, 1.93],
+    border: { type: 'solid', color: MBR_COLORS.border, pt: 0.5 },
+    rowH: 0.4,
+  });
+}
+
+// ---------- Slide 6: VID Management ----------
+function buildSlideVidManagement(pptx, data) {
+  const s = pptx.addSlide();
+  s.background = { color: MBR_COLORS.white };
+
+  s.addText('VID Management', {
+    x: 0.5, y: 0.4, w: 12.33, h: 0.6,
+    fontFace: MBR_FONT_HEAD, fontSize: 32, bold: true, color: MBR_COLORS.primary
+  });
+
+  s.addText(`${data.monthName} ${data.year} — Fleet utilization by country`, {
+    x: 0.5, y: 1.0, w: 12.33, h: 0.3,
+    fontFace: MBR_FONT_BODY, fontSize: 13, color: MBR_COLORS.neutral, italic: true
+  });
+
+  const headers = ['Country', 'Fleet', 'Baseline', 'Active', 'Half Active', 'Not Active', 'Floating', 'Avg TKM/Day', 'Avg KM/Day', 'Avg Eff', 'Avg QC', 'Fleet Base %'];
+  const rows = data.vidManagement || [];
+  const totals = data.vidManagementTotals;
+
+  const tableRows = [];
+  tableRows.push(headers.map(h => ({
+    text: h,
+    options: {
+      bold: true, color: MBR_COLORS.white, fill: { color: MBR_COLORS.primary },
+      align: 'center', valign: 'middle', fontSize: 10, fontFace: MBR_FONT_HEAD
+    }
+  })));
+
+  rows.forEach(r => {
+    tableRows.push([
+      { text: r.country, options: { bold: true, fontSize: 10, valign: 'middle' } },
+      { text: String(r.fleet || 0), options: { fontSize: 10, align: 'center', valign: 'middle' } },
+      { text: formatNumber(r.baseline, 0), options: { fontSize: 10, align: 'right', valign: 'middle' } },
+      { text: String(r.activeVids || 0), options: { fontSize: 10, align: 'center', valign: 'middle', color: MBR_COLORS.success, bold: true } },
+      { text: String(r.halfActive || 0), options: { fontSize: 10, align: 'center', valign: 'middle', color: 'CA8A04' } },
+      { text: String(r.notActive || 0), options: { fontSize: 10, align: 'center', valign: 'middle', color: MBR_COLORS.warning, bold: true } },
+      { text: String(r.floatingCars || 0), options: { fontSize: 10, align: 'center', valign: 'middle' } },
+      { text: formatNumber(r.avgTkmPerDay, 1), options: { fontSize: 10, align: 'right', valign: 'middle' } },
+      { text: formatNumber(r.avgKmPerDay, 1), options: { fontSize: 10, align: 'right', valign: 'middle' } },
+      { text: ((r.avgEfficiency || 0) * 100).toFixed(1) + '%', options: { fontSize: 10, align: 'right', valign: 'middle' } },
+      { text: ((r.avgQcScore || 0) * 100).toFixed(1) + '%', options: { fontSize: 10, align: 'right', valign: 'middle' } },
+      { text: ((r.fleetBaselinePct || 0) * 100).toFixed(0) + '%', options: { fontSize: 10, align: 'right', valign: 'middle' } },
+    ]);
+  });
+
+  // Totals
+  if (totals) {
+    tableRows.push([
+      { text: 'TOTAL', options: { bold: true, fontSize: 11, valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: String(totals.fleet), options: { bold: true, fontSize: 11, align: 'center', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: '—', options: { fontSize: 10, align: 'center', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: String(totals.activeVids), options: { bold: true, fontSize: 11, align: 'center', valign: 'middle', color: MBR_COLORS.success, fill: { color: MBR_COLORS.light } } },
+      { text: String(totals.halfActive), options: { bold: true, fontSize: 11, align: 'center', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: String(totals.notActive), options: { bold: true, fontSize: 11, align: 'center', valign: 'middle', color: MBR_COLORS.warning, fill: { color: MBR_COLORS.light } } },
+      { text: String(totals.floatingCars), options: { bold: true, fontSize: 11, align: 'center', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: formatNumber(totals.avgTkmPerDay, 1), options: { bold: true, fontSize: 11, align: 'right', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: formatNumber(totals.avgKmPerDay, 1), options: { bold: true, fontSize: 11, align: 'right', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: ((totals.avgEfficiency || 0) * 100).toFixed(1) + '%', options: { bold: true, fontSize: 11, align: 'right', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: ((totals.avgQcScore || 0) * 100).toFixed(1) + '%', options: { bold: true, fontSize: 11, align: 'right', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: ((totals.fleetBaselinePct || 0) * 100).toFixed(0) + '%', options: { bold: true, fontSize: 11, align: 'right', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+    ]);
+  }
+
+  s.addTable(tableRows, {
+    x: 0.3, y: 1.6, w: 12.73,
+    colW: [1.3, 0.8, 1.0, 0.85, 1.0, 1.0, 0.95, 1.2, 1.2, 0.95, 0.95, 1.13],
+    border: { type: 'solid', color: MBR_COLORS.border, pt: 0.5 },
+    rowH: 0.4,
+  });
+
+  // Footer com legend
+  s.addText('Half Active = some TKM but less than 10 mapping days OR less than 30km daily.', {
+    x: 0.5, y: 6.6, w: 12.33, h: 0.4,
+    fontFace: MBR_FONT_BODY, fontSize: 11, color: MBR_COLORS.neutral, italic: true,
+    align: 'left'
+  });
+}
+
+// ---------- Slide 7: VID Idleness ----------
+function buildSlideIdleness(pptx, data) {
+  const s = pptx.addSlide();
+  s.background = { color: MBR_COLORS.white };
+
+  s.addText('VID Idleness', {
+    x: 0.5, y: 0.4, w: 12.33, h: 0.6,
+    fontFace: MBR_FONT_HEAD, fontSize: 32, bold: true, color: MBR_COLORS.primary
+  });
+
+  s.addText(`${data.monthName} ${data.year} — Idle days breakdown by reason`, {
+    x: 0.5, y: 1.0, w: 12.33, h: 0.3,
+    fontFace: MBR_FONT_BODY, fontSize: 13, color: MBR_COLORS.neutral, italic: true
+  });
+
+  const headers = ['Country', '🏠 Personal', '💾 Disks', '🔧 Mech.', '💻 Tech.', '⛅ Weather'];
+  const rows = data.idleness || [];
+  const totals = data.idlenessTotals;
+
+  const tableRows = [];
+  tableRows.push(headers.map(h => ({
+    text: h,
+    options: {
+      bold: true, color: MBR_COLORS.white, fill: { color: MBR_COLORS.warning },
+      align: 'center', valign: 'middle', fontSize: 12, fontFace: MBR_FONT_HEAD
+    }
+  })));
+
+  rows.forEach(r => {
+    tableRows.push([
+      { text: r.country, options: { bold: true, fontSize: 12, valign: 'middle' } },
+      { text: String(r.personal || 0), options: { fontSize: 12, align: 'center', valign: 'middle' } },
+      { text: String(r.disks || 0), options: { fontSize: 12, align: 'center', valign: 'middle' } },
+      { text: String(r.mech || 0), options: { fontSize: 12, align: 'center', valign: 'middle', color: r.mech > 20 ? MBR_COLORS.warning : MBR_COLORS.text, bold: r.mech > 20 } },
+      { text: String(r.tech || 0), options: { fontSize: 12, align: 'center', valign: 'middle' } },
+      { text: String(r.weather || 0), options: { fontSize: 12, align: 'center', valign: 'middle', color: r.weather > 50 ? '1E40AF' : MBR_COLORS.text, bold: r.weather > 50 } },
+    ]);
+  });
+
+  if (totals) {
+    tableRows.push([
+      { text: 'TOTAL', options: { bold: true, fontSize: 13, valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: String(totals.personal), options: { bold: true, fontSize: 13, align: 'center', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: String(totals.disks), options: { bold: true, fontSize: 13, align: 'center', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: String(totals.mech), options: { bold: true, fontSize: 13, align: 'center', valign: 'middle', fill: { color: MBR_COLORS.light }, color: MBR_COLORS.warning } },
+      { text: String(totals.tech), options: { bold: true, fontSize: 13, align: 'center', valign: 'middle', fill: { color: MBR_COLORS.light } } },
+      { text: String(totals.weather), options: { bold: true, fontSize: 13, align: 'center', valign: 'middle', fill: { color: MBR_COLORS.light }, color: '1E40AF' } },
+    ]);
+  }
+
+  s.addTable(tableRows, {
+    x: 2.0, y: 2.0, w: 9.33,
+    colW: [2.0, 1.5, 1.2, 1.5, 1.3, 1.83],
+    border: { type: 'solid', color: MBR_COLORS.border, pt: 0.5 },
+    rowH: 0.5,
+  });
+
+  // Insight no rodapé
+  if (totals) {
+    const totalIdle = (totals.personal || 0) + (totals.disks || 0) + (totals.mech || 0) + (totals.tech || 0) + (totals.weather || 0);
+    s.addText(`Total idle days across LATAM: ${totalIdle}`, {
+      x: 0.5, y: 6.5, w: 12.33, h: 0.4,
+      fontFace: MBR_FONT_HEAD, fontSize: 14, bold: true, color: MBR_COLORS.primary,
+      align: 'center'
+    });
+  }
+}
+
+// Helper: formata número com locale BR (1.234,56)
+function formatNumber(n, decimals) {
+  if (n === null || n === undefined || isNaN(n)) return '0';
+  decimals = decimals !== undefined ? decimals : 2;
+  return Number(n).toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
 
 /**
  * Gera PDF Calendar Summary do mês especificado.
