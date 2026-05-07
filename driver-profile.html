@@ -1276,6 +1276,72 @@
     font-weight: 600;
   }
 
+  /* v5.14.1: Issues do mês cruzadas com Mech/Tech */
+  .idle-issues-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--c-border);
+  }
+  .idle-issue-block {
+    background: var(--c-bg);
+    border-radius: 6px;
+    padding: 8px 10px;
+    border-left: 3px solid var(--c-border-strong);
+  }
+  .idle-issue-block.mech { border-left-color: #DC2626; background: #FEF2F2; }
+  .idle-issue-block.tech { border-left-color: #6366F1; background: #EEF2FF; }
+  .idle-issue-block-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
+  }
+  .idle-issue-row {
+    background: white;
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .idle-issue-row:last-child { margin-bottom: 0; }
+  .idle-issue-row.closed { opacity: 0.7; }
+  .ii-line1 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .ii-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--c-bg);
+    white-space: nowrap;
+  }
+  .ii-badge.not-started { background: #DBEAFE; color: #1E40AF; }
+  .ii-badge.in-progress { background: #FEF3C7; color: #92400E; }
+  .ii-badge.awaiting-payment { background: #FFE4E6; color: #9F1239; }
+  .ii-badge.done { background: #D1FAE5; color: #065F46; }
+  .ii-meta {
+    font-size: 10px;
+    color: var(--c-text-muted);
+  }
+  .ii-meta strong { color: var(--c-warn); font-weight: 700; }
+  .ii-desc {
+    font-size: 11px;
+    color: var(--c-text);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+
   /* PLACEHOLDER (sessão B) */
   /* HISTÓRICO MENSAL */
   #history-card { margin-bottom: 18px; }
@@ -1896,6 +1962,8 @@ const I18N = {
     vehicleIssueStopped: 'Parou',
     vehicleIssueExpected: 'Previsão',
     vehicleIssueDaysOff: 'dia(s) parado',
+    idleIssuesMech: 'Detalhes mecânicos',
+    idleIssuesTech: 'Detalhes técnicos',
   },
   es: {
     loginTitle: 'Login',
@@ -2028,6 +2096,8 @@ const I18N = {
     vehicleIssueStopped: 'Paró',
     vehicleIssueExpected: 'Previsión',
     vehicleIssueDaysOff: 'día(s) parado',
+    idleIssuesMech: 'Detalles mecánicos',
+    idleIssuesTech: 'Detalles técnicos',
   },
   en: {
     loginTitle: 'Login',
@@ -2160,6 +2230,8 @@ const I18N = {
     vehicleIssueStopped: 'Stopped',
     vehicleIssueExpected: 'Expected',
     vehicleIssueDaysOff: 'day(s) stopped',
+    idleIssuesMech: 'Mechanical details',
+    idleIssuesTech: 'Technical details',
   },
 };
 
@@ -3204,7 +3276,97 @@ function renderIdleDetail(p) {
   if (extras.length > 0) {
     html += `<div style="grid-column:1/-1;font-size:11px;color:var(--c-text-muted);padding:8px 0 0;border-top:1px solid var(--c-border);margin-top:6px;">${extras.join(' · ')}</div>`;
   }
+
+  // === v5.14.1: Issues do mês corrente, separadas por categoria ===
+  // Filtra issues do mês atual (do payload do profile)
+  const allIssues = p.vehicleIssues || [];
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const issuesThisMonth = allIssues.filter(iss => {
+    // Usa stopDate se tiver (mais relevante), senão created
+    const refDate = iss.stopDate || iss.created;
+    if (!refDate) return false;
+    const d = new Date(refDate);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
+  const mechIssues = issuesThisMonth.filter(i => i.category === 'mech');
+  const techIssues = issuesThisMonth.filter(i => i.category === 'tech');
+
+  if (mechIssues.length > 0 || techIssues.length > 0) {
+    html += `<div class="idle-issues-row">`;
+    if (mechIssues.length > 0) {
+      html += renderIdleIssuesBlock(mechIssues, 'mech');
+    }
+    if (techIssues.length > 0) {
+      html += renderIdleIssuesBlock(techIssues, 'tech');
+    }
+    html += `</div>`;
+  }
+
   breakdownEl.innerHTML = html;
+}
+
+/**
+ * v5.14.1: Renderiza bloco de issues (Mech ou Tech) abaixo do grid de idle days.
+ */
+function renderIdleIssuesBlock(issues, category) {
+  const icon = category === 'mech' ? '🔧' : '💻';
+  const label = category === 'mech'
+    ? (t('idleIssuesMech') || 'Detalhes mecânicos')
+    : (t('idleIssuesTech') || 'Detalhes técnicos');
+
+  const fmtDate = (iso) => iso
+    ? new Date(iso).toLocaleDateString(
+        currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR'),
+        { day: '2-digit', month: '2-digit' }
+      )
+    : '—';
+
+  let html = `<div class="idle-issue-block ${category}">
+    <div class="idle-issue-block-title">${icon} ${label} (${issues.length})</div>`;
+
+  issues.forEach(iss => {
+    const isOpen = iss.serviceStatus !== 'finished' || iss.endStatus === 'awaiting_payment';
+    const stopStr = fmtDate(iss.stopDate);
+
+    let statusBadge = '';
+    if (iss.serviceStatus === 'not_started') {
+      statusBadge = `<span class="ii-badge not-started">🔵 ${t('vehicleIssueNotStarted') || 'Não começou'}</span>`;
+    } else if (iss.serviceStatus === 'in_progress') {
+      statusBadge = `<span class="ii-badge in-progress">🟡 ${t('vehicleIssueInProgress') || 'Em andamento'}</span>`;
+    } else if (iss.serviceStatus === 'finished') {
+      if (iss.endStatus === 'awaiting_payment') {
+        statusBadge = `<span class="ii-badge awaiting-payment">💰 ${t('vehicleIssueAwaitingPayment') || 'Aguardando pagamento'}</span>`;
+      } else {
+        statusBadge = `<span class="ii-badge done">✅ ${t('vehicleIssueDone') || 'Resolvido'}</span>`;
+      }
+    }
+
+    // Calcula dias parado
+    let daysOff = '';
+    if (iss.stopDate && isOpen) {
+      const stopMs = new Date(iss.stopDate).getTime();
+      const refMs = iss.resolvedDate ? new Date(iss.resolvedDate).getTime() : Date.now();
+      const days = Math.max(0, Math.round((refMs - stopMs) / (1000 * 60 * 60 * 24)));
+      if (days > 0) daysOff = ` · <strong>${days}d</strong>`;
+    }
+
+    const expectedStr = iss.expectedEndDate && isOpen
+      ? ` · 🎯 ${fmtDate(iss.expectedEndDate)}`
+      : '';
+
+    html += `<div class="idle-issue-row ${isOpen ? 'open' : 'closed'}">
+      <div class="ii-line1">
+        ${statusBadge}
+        <span class="ii-meta">📅 ${stopStr}${daysOff}${expectedStr}</span>
+      </div>
+      ${iss.description ? `<div class="ii-desc">${escapeHtml(iss.description)}</div>` : ''}
+    </div>`;
+  });
+
+  html += '</div>';
+  return html;
 }
 
 /**
