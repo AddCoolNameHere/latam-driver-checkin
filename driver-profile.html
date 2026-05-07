@@ -605,7 +605,9 @@
     margin-bottom: 8px;
   }
   .assets-disc-chip {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     background: white;
     border: 1px solid var(--c-border);
     border-radius: 4px;
@@ -620,13 +622,63 @@
     border-color: var(--c-accent);
     color: var(--c-primary-dark);
     font-weight: 600;
-    position: relative;
   }
-  .assets-disc-chip.in-use::before {
-    content: '▶';
-    margin-right: 4px;
+  .assets-disc-chip.in-use .disc-arrow {
     color: var(--c-accent);
     font-size: 9px;
+  }
+  .disc-fill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  /* Barra estilo "bateria horizontal" */
+  .disc-fill-bar {
+    display: inline-block;
+    width: 28px;
+    height: 8px;
+    background: #E2E8F0;
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .disc-fill-bar-inner {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    background: #94A3B8;
+    transition: width 0.3s;
+  }
+  .disc-fill-bar.fill-low .disc-fill-bar-inner { background: #22C55E; }
+  .disc-fill-bar.fill-mid .disc-fill-bar-inner { background: #F59E0B; }
+  .disc-fill-bar.fill-high .disc-fill-bar-inner { background: #EF4444; }
+  .disc-fill-bar.fill-unknown {
+    background: repeating-linear-gradient(
+      45deg,
+      #E2E8F0,
+      #E2E8F0 4px,
+      #F1F5F9 4px,
+      #F1F5F9 8px
+    );
+  }
+  .disc-fill-pct {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    font-weight: 500;
+    font-family: -apple-system, sans-serif;
+    min-width: 26px;
+  }
+  .disc-fill-pct.unknown {
+    color: #CBD5E1;
+    font-style: italic;
+  }
+  .disc-fill-note {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--c-text-dim);
+    font-size: 10px;
+    font-style: italic;
+    margin-left: 4px;
   }
   .assets-comments {
     margin-top: 10px;
@@ -1753,6 +1805,8 @@ const I18N = {
     assetsHotelYes: 'Hotel mode',
     assetsHotelNo: 'Home mode',
     assetsAllDiscs: 'Códigos dos discos',
+    assetsDiscFillSoon: 'ocupação será coletada no novo check-in',
+    assetsDiscFillUnknown: 'Ocupação ainda não medida',
     complianceCardTitle: 'Compliance & Notas',
     complianceFinesOpen: 'Multas em aberto',
     complianceFinesPaid: 'Multas pagas',
@@ -1871,6 +1925,8 @@ const I18N = {
     assetsHotelYes: 'Hotel mode',
     assetsHotelNo: 'Home mode',
     assetsAllDiscs: 'Códigos de los discos',
+    assetsDiscFillSoon: 'ocupación se medirá en el nuevo check-in',
+    assetsDiscFillUnknown: 'Ocupación aún no medida',
     complianceCardTitle: 'Compliance & Notas',
     complianceFinesOpen: 'Multas abiertas',
     complianceFinesPaid: 'Multas pagadas',
@@ -1989,6 +2045,8 @@ const I18N = {
     assetsHotelYes: 'Hotel mode',
     assetsHotelNo: 'Home mode',
     assetsAllDiscs: 'Disc codes',
+    assetsDiscFillSoon: 'fill % will be collected in the new check-in',
+    assetsDiscFillUnknown: 'Fill % not yet measured',
     complianceCardTitle: 'Compliance & Notes',
     complianceFinesOpen: 'Open fines',
     complianceFinesPaid: 'Paid fines',
@@ -2534,11 +2592,18 @@ function renderAssets(p) {
   }
 
   if (allDiscs.length > 0) {
+    // Conta quantos têm % conhecido (futuro: contagem real). Por enquanto sempre 0
+    // já que ainda não coletamos esse dado — mostramos placeholder cinza tracejado.
+    const knownCount = allDiscs.filter(d => typeof d.fillPct === 'number').length;
+    const fillNote = knownCount === 0
+      ? ` <span class="disc-fill-note">— ${t('assetsDiscFillSoon') || 'ocupação será coletada no novo check-in'}</span>`
+      : '';
+
     html += `<div class="assets-discs-section">
-      <div class="assets-section-title">💽 ${t('assetsAllDiscs') || 'Códigos dos discos'} (${allDiscs.length})</div>
+      <div class="assets-section-title">💽 ${t('assetsAllDiscs') || 'Códigos dos discos'} (${allDiscs.length})${fillNote}</div>
       <div>`;
     allDiscs.forEach(d => {
-      html += `<span class="assets-disc-chip ${d.inUse ? 'in-use' : ''}">${escapeHtml(d.code)}</span>`;
+      html += renderDiscChip(d);
     });
     html += `</div></div>`;
   }
@@ -2549,6 +2614,41 @@ function renderAssets(p) {
   }
 
   content.innerHTML = html;
+}
+
+/**
+ * Renderiza um chip de disco com indicador de ocupação.
+ *
+ * @param {Object} d - {code, inUse, fillPct?}
+ *   fillPct é opcional. Se ausente → placeholder hachurado cinza (dado ainda não coletado).
+ *   Quando o check-in diário com % de ocupação for implementado, o backend
+ *   passará fillPct (0-100) e a barra será colorida automaticamente:
+ *     <40% verde · 40-80% amarelo · ≥80% vermelho
+ */
+function renderDiscChip(d) {
+  const arrow = d.inUse ? '<span class="disc-arrow">▶</span>' : '';
+  let fillBarClass = 'fill-unknown';
+  let pctText = '?';
+  let pctClass = 'unknown';
+  let innerStyle = 'width: 0%';
+
+  if (typeof d.fillPct === 'number') {
+    const pct = Math.max(0, Math.min(100, Math.round(d.fillPct)));
+    pctText = pct + '%';
+    pctClass = '';
+    innerStyle = `width: ${pct}%`;
+    if (pct >= 80) fillBarClass = 'fill-high';
+    else if (pct >= 40) fillBarClass = 'fill-mid';
+    else fillBarClass = 'fill-low';
+  }
+
+  return `<span class="assets-disc-chip ${d.inUse ? 'in-use' : ''}">
+    ${arrow}<span>${escapeHtml(d.code)}</span>
+    <span class="disc-fill" title="${pctText === '?' ? (t('assetsDiscFillUnknown') || 'Ocupação ainda não medida') : pctText}">
+      <span class="disc-fill-bar ${fillBarClass}"><span class="disc-fill-bar-inner" style="${innerStyle}"></span></span>
+      <span class="disc-fill-pct ${pctClass}">${pctText}</span>
+    </span>
+  </span>`;
 }
 
 // ================================================================
