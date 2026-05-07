@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Cash Flow LATAM — Aceolution</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f5f7;
+    color: #1A365D;
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, #1E3A5F 0%, #2C5282 100%);
+    color: white;
+    padding: 18px 16px 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  header h1 .title-text { display: flex; align-items: center; gap: 8px; }
+  header .lang-toggle {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 3px;
+  }
+  header .lang-toggle button {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  header .lang-toggle button.active {
+    background: white;
+    color: #1A365D;
+  }
+  header .subtitle {
+    font-size: 12px;
+    opacity: 0.9;
+    margin-top: 4px;
+  }
+  main {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 14px;
+  }
+  .card {
+    background: white;
+    border-radius: 10px;
+    padding: 18px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .step-num {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: #2C5282;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .step-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  /* Mode picker (cards iniciais) */
+  .mode-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .mode-card {
+    background: white;
+    border: 2px solid #d5d7db;
+    border-radius: 10px;
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    text-align: left;
+    font-family: inherit;
+    width: 100%;
+  }
+  .mode-card:hover {
+    border-color: #2C5282;
+    background: #F7FAFC;
+    transform: translateY(-1px);
+  }
+  .mode-card-icon {
+    font-size: 38px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .mode-card-content { flex: 1; }
+  .mode-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1A365D;
+    margin-bottom: 4px;
+  }
+  .mode-card-sub {
+    font-size: 12px;
+    color: #64748B;
+    line-height: 1.5;
+  }
+
+  /* Inputs */
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1A365D;
+    margin-bottom: 6px;
+  }
+  label .required { color: #DC2626; }
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="date"],
+  input[type="file"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d5d7db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #2C5282;
+    box-shadow: 0 0 0 3px rgba(44,82,130,0.12);
+  }
+  textarea { resize: vertical; min-height: 70px; }
+
+  .input-group {
+    display: flex;
+    gap: 6px;
+    align-items: stretch;
+  }
+  .input-group select {
+    flex: 0 0 95px;
+    background: #F7FAFC;
+    font-weight: 600;
+  }
+  .input-group input {
+    flex: 1;
+  }
+
+  .field-hint {
+    font-size: 11px;
+    color: #94A3B8;
+    margin-top: 4px;
+  }
+  .field-hint.error { color: #DC2626; }
+
+  /* Radio cards */
+  .radio-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .radio-option {
+    background: white;
+    border: 1px solid #d5d7db;
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: center;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .radio-option:hover { background: #F7FAFC; }
+  .radio-option.selected {
+    background: #EBF4FB;
+    border-color: #2C5282;
+    color: #1A365D;
+    font-weight: 600;
+  }
+
+  /* Driver dropdown groups */
+  select.driver-select optgroup {
+    font-weight: 700;
+    color: #2C5282;
+  }
+  select.driver-select option {
+    font-weight: 400;
+    color: #1A365D;
+  }
+
+  /* Submit button */
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #2C5282 0%, #1A365D 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(44,82,130,0.25); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1A365D;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .toast.success { background: #16A34A; }
+  .toast.error { background: #DC2626; }
+
+  /* Loading spinner */
+  .loading-spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hidden { display: none !important; }
+
+  /* Receipt preview */
+  .receipt-preview {
+    margin-top: 8px;
+    padding: 10px;
+    background: #F7FAFC;
+    border: 1px dashed #CBD5E1;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #64748B;
+  }
+  .receipt-preview img {
+    max-width: 100%;
+    max-height: 180px;
+    border-radius: 6px;
+    margin-top: 6px;
+  }
+  .receipt-preview .file-name {
+    font-weight: 600;
+    color: #1A365D;
+  }
+  .receipt-preview .remove-btn {
+    color: #DC2626;
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 6px;
+    display: inline-block;
+    text-decoration: underline;
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: #94A3B8;
+    padding: 20px 14px 30px;
+  }
+
+  /* Back button */
+  .back-btn {
+    background: none;
+    border: none;
+    color: #2C5282;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 0 12px;
+    font-family: inherit;
+  }
+  .back-btn:hover { color: #1A365D; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>
+    <span class="title-text">💰 <span data-i18n="appTitle">Cash Flow LATAM</span></span>
+    <span class="lang-toggle">
+      <button class="active" data-lang="pt" onclick="setLang('pt')">PT</button>
+      <button data-lang="es" onclick="setLang('es')">ES</button>
+    </span>
+  </h1>
+  <div class="subtitle" data-i18n="appSubtitle">Pedidos de dinheiro e recibos para o time LATAM</div>
+</header>
+
+<main>
+
+  <!-- Mode picker (tela inicial) -->
+  <div id="mode-picker" class="card">
+    <div class="step-header">
+      <div class="step-num">?</div>
+      <div class="step-title" data-i18n="modeTitle">O que você precisa fazer?</div>
+    </div>
+    <div class="mode-cards">
+      <button type="button" class="mode-card" onclick="selectMode('request')">
+        <div class="mode-card-icon">📥</div>
+        <div class="mode-card-content">
+          <div class="mode-card-title" data-i18n="modeRequest">Pedir dinheiro</div>
+          <div class="mode-card-sub" data-i18n="modeRequestSub">Solicitar adiantamento de salário ou para gastos do projeto</div>
+        </div>
+      </button>
+      <button type="button" class="mode-card" onclick="selectMode('receipt')">
+        <div class="mode-card-icon">🧾</div>
+        <div class="mode-card-content">
+          <div class="mode-card-title" data-i18n="modeReceipt">Subir recibo</div>
+          <div class="mode-card-sub" data-i18n="modeReceiptSub">Enviar comprovante de gasto (reembolso ou justificativa)</div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Driver selector (compartilhado entre os 2 modos) -->
+  <div id="driver-card" class="card hidden">
+    <button type="button" class="back-btn" onclick="resetMode()">← <span data-i18n="back">Voltar</span></button>
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title" data-i18n="step1">Quem é você?</div>
+    </div>
+    <label data-i18n="driverLabel">Selecione seu nome <span class="required">*</span></label>
+    <select id="driver-select" class="driver-select" onchange="onDriverChange()">
+      <option value="" data-i18n="driverLoading">Carregando motoristas...</option>
+    </select>
+    <div class="field-hint" data-i18n="driverHint">Os motoristas estão agrupados por país.</div>
+  </div>
+
+  <!-- ============ FLUXO A: REQUEST ============ -->
+  <div id="request-flow" class="hidden">
+
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div class="step-title" data-i18n="reqStep2">Motivo do pedido</div>
+      </div>
+      <label data-i18n="reqReasonLabel">Para quê você precisa? <span class="required">*</span></label>
+      <div class="radio-group">
+        <div class="radio-option" data-req-reason="Salary" data-i18n="reqReasonSalary">💵 Adiantamento de salário</div>
+        <div class="radio-option" data-req-reason="Operational Spends" data-i18n="reqReasonOps">⛽ Gastos do projeto</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <div class="step-title" data-i18n="reqStep3">Quanto e quando</div>
+      </div>
+
+      <label><span data-i18n="amountLabel">Valor</span> <span class="required">*</span></label>
+      <div class="input-group">
+        <select id="req-currency" disabled>
+          <option value="">—</option>
+        </select>
+        <input type="text" id="req-amount" inputmode="decimal" placeholder="0,00" autocomplete="off">
+      </div>
+      <div class="field-hint" data-i18n="amountHint">Pode usar vírgula ou ponto. Ex: 1500,50 ou 1500.50</div>
+
+      <label style="margin-top:14px;" data-i18n="neededByLabel">Precisa até quando? <span class="required">*</span></label>
+      <input type="date" id="req-needed-by">
+
+      <label style="margin-top:14px;" data-i18n="notesLabel">Observações <span style="color:#94A3B8;font-weight:400;" data-i18n="optional">(opcional)</span></label>
+      <textarea id="req-notes" rows="2" data-i18n-placeholder="reqNotesPlaceholder" placeholder="Detalhes adicionais sobre o pedido"></textarea>
+    </div>
+
+    <button type="button" class="btn-submit" id="req-submit-btn" onclick="submitCashRequest()">
+      <span data-i18n="submitRequest">Enviar pedido</span>
+    </button>
+  </div>
+
+  <!-- ============ FLUXO B: RECEIPT ============ -->
+  <div id="receipt-flow" class="hidden">
+
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div class="step-title" data-i18n="recStep2">Detalhes do gasto</div>
+      </div>
+
+      <label data-i18n="categoryLabel">Categoria <span class="required">*</span></label>
+      <select id="rec-category">
+        <option value="" data-i18n="selectPlaceholder">-- Selecione --</option>
+        <!-- Opções populadas dinamicamente conforme idioma -->
+      </select>
+
+      <label style="margin-top:14px;" data-i18n="paymentDateLabel">Quando foi o pagamento? <span class="required">*</span></label>
+      <input type="date" id="rec-payment-date">
+
+      <label style="margin-top:14px;"><span data-i18n="amountLabel">Valor pago</span> <span class="required">*</span></label>
+      <div class="input-group">
+        <select id="rec-currency" disabled>
+          <option value="">—</option>
+        </select>
+        <input type="text" id="rec-amount" inputmode="decimal" placeholder="0,00" autocomplete="off">
+      </div>
+      <div class="field-hint" data-i18n="amountHint">Pode usar vírgula ou ponto. Ex: 1500,50 ou 1500.50</div>
+
+      <label style="margin-top:14px;" data-i18n="establishmentLabel">Nome do estabelecimento</label>
+      <input type="text" id="rec-establishment" data-i18n-placeholder="establishmentPlaceholder" placeholder="Ex: Posto Shell, Hotel ABC, etc">
+
+      <div id="rec-hotel-dates-wrap" class="hidden">
+        <label style="margin-top:14px;" data-i18n="hotelDatesLabel">Datas do hotel (check-in / check-out)</label>
+        <input type="text" id="rec-hotel-dates" data-i18n-placeholder="hotelDatesPlaceholder" placeholder="Ex: 12/05/2026 a 14/05/2026">
+      </div>
+
+      <label style="margin-top:14px;" data-i18n="notesLabel">Observações <span style="color:#94A3B8;font-weight:400;" data-i18n="optional">(opcional)</span></label>
+      <textarea id="rec-notes" rows="2" data-i18n-placeholder="recNotesPlaceholder" placeholder="Comentários ou explicações adicionais"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <div class="step-title" data-i18n="recStep3">Foto do recibo</div>
+      </div>
+
+      <label data-i18n="receiptUploadLabel">Envie a foto do recibo <span class="required">*</span></label>
+      <input type="file" id="rec-file" accept="image/*,application/pdf" onchange="onReceiptFileChange(event)">
+      <div class="field-hint" data-i18n="receiptHint">Aceita foto ou PDF. Máximo 5MB.</div>
+
+      <div id="receipt-preview-wrap" class="hidden"></div>
+    </div>
+
+    <button type="button" class="btn-submit" id="rec-submit-btn" onclick="submitCashReceipt()">
+      <span data-i18n="submitReceipt">Enviar recibo</span>
+    </button>
+  </div>
+
+</main>
+
+<footer>
+  <span data-i18n="footerText">Plataforma interna — Aceolution do Brasil Ltda.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+};
+
+// ================================================================
+// I18N — PT (default) + ES (drivers latam não-brasileiros)
+// ================================================================
+
+const I18N = {
+  pt: {
+    appTitle: 'Cash Flow LATAM',
+    appSubtitle: 'Pedidos de dinheiro e recibos para o time LATAM',
+    modeTitle: 'O que você precisa fazer?',
+    modeRequest: 'Pedir dinheiro',
+    modeRequestSub: 'Solicitar adiantamento de salário ou para gastos do projeto',
+    modeReceipt: 'Subir recibo',
+    modeReceiptSub: 'Enviar comprovante de gasto (reembolso ou justificativa)',
+    back: 'Voltar',
+    step1: 'Quem é você?',
+    driverLabel: 'Selecione seu nome',
+    driverLoading: 'Carregando motoristas...',
+    driverHint: 'Os motoristas estão agrupados por país.',
+    // Request flow
+    reqStep2: 'Motivo do pedido',
+    reqReasonLabel: 'Para quê você precisa?',
+    reqReasonSalary: '💵 Adiantamento de salário',
+    reqReasonOps: '⛽ Gastos do projeto',
+    reqStep3: 'Quanto e quando',
+    amountLabel: 'Valor',
+    amountHint: 'Pode usar vírgula ou ponto. Ex: 1500,50 ou 1500.50',
+    neededByLabel: 'Precisa até quando?',
+    notesLabel: 'Observações',
+    optional: '(opcional)',
+    reqNotesPlaceholder: 'Detalhes adicionais sobre o pedido',
+    submitRequest: 'Enviar pedido',
+    // Receipt flow
+    recStep2: 'Detalhes do gasto',
+    categoryLabel: 'Categoria',
+    selectPlaceholder: '-- Selecione --',
+    paymentDateLabel: 'Quando foi o pagamento?',
+    establishmentLabel: 'Nome do estabelecimento',
+    establishmentPlaceholder: 'Ex: Posto Shell, Hotel ABC, etc',
+    hotelDatesLabel: 'Datas do hotel (check-in / check-out)',
+    hotelDatesPlaceholder: 'Ex: 12/05/2026 a 14/05/2026',
+    recNotesPlaceholder: 'Comentários ou explicações adicionais',
+    recStep3: 'Foto do recibo',
+    receiptUploadLabel: 'Envie a foto do recibo',
+    receiptHint: 'Aceita foto ou PDF. Máximo 5MB.',
+    submitReceipt: 'Enviar recibo',
+    // Mensagens
+    sending: 'Enviando...',
+    successRequest: '✓ Pedido enviado com sucesso!',
+    successReceipt: '✓ Recibo enviado com sucesso!',
+    errorSend: 'Erro ao enviar. Tente novamente.',
+    fillAllRequired: 'Preencha os campos obrigatórios (*)',
+    invalidAmount: 'Valor inválido — verifique o número',
+    invalidFile: 'Arquivo inválido (máx 5MB)',
+    fileTooLarge: 'Arquivo muito grande (máximo 5MB)',
+    selectCategory: 'Selecione uma categoria',
+    selectReason: 'Selecione um motivo',
+    selectDriver: 'Selecione seu nome primeiro',
+    uploadReceipt: 'Envie a foto do recibo',
+    removeFile: 'Remover',
+    footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+    // Categorias (em PT pra Brasil)
+    catFood: '🍽 Alimentação',
+    catTolls: '🛣 Pedágio',
+    catFuel: '⛽ Combustível',
+    catParking: '🅿 Estacionamento',
+    catHotel: '🏨 Hotel',
+    catVehicle: '🔧 Manutenção do Carro',
+    catOther: '📝 Outros',
+  },
+  es: {
+    appTitle: 'Cash Flow LATAM',
+    appSubtitle: 'Pedidos de dinero y recibos para el equipo LATAM',
+    modeTitle: '¿Qué necesitas hacer?',
+    modeRequest: 'Pedir dinero',
+    modeRequestSub: 'Solicitar adelanto de salario o para gastos del proyecto',
+    modeReceipt: 'Subir recibo',
+    modeReceiptSub: 'Enviar comprobante de gasto (reembolso o justificación)',
+    back: 'Volver',
+    step1: '¿Quién eres?',
+    driverLabel: 'Selecciona tu nombre',
+    driverLoading: 'Cargando conductores...',
+    driverHint: 'Los conductores están agrupados por país.',
+    reqStep2: 'Motivo del pedido',
+    reqReasonLabel: '¿Para qué necesitas?',
+    reqReasonSalary: '💵 Adelanto de salario',
+    reqReasonOps: '⛽ Gastos del proyecto',
+    reqStep3: 'Cuánto y cuándo',
+    amountLabel: 'Valor',
+    amountHint: 'Puede usar coma o punto. Ej: 1500,50 ó 1500.50',
+    neededByLabel: '¿Hasta cuándo necesitas?',
+    notesLabel: 'Observaciones',
+    optional: '(opcional)',
+    reqNotesPlaceholder: 'Detalles adicionales sobre el pedido',
+    submitRequest: 'Enviar pedido',
+    recStep2: 'Detalles del gasto',
+    categoryLabel: 'Categoría',
+    selectPlaceholder: '-- Selecciona --',
+    paymentDateLabel: '¿Cuándo fue el pago?',
+    establishmentLabel: 'Nombre del establecimiento',
+    establishmentPlaceholder: 'Ej: Estación Shell, Hotel ABC, etc',
+    hotelDatesLabel: 'Fechas del hotel (entrada / salida)',
+    hotelDatesPlaceholder: 'Ej: 12/05/2026 al 14/05/2026',
+    recNotesPlaceholder: 'Comentarios o explicaciones adicionales',
+    recStep3: 'Foto del recibo',
+    receiptUploadLabel: 'Envía la foto del recibo',
+    receiptHint: 'Acepta foto o PDF. Máximo 5MB.',
+    submitReceipt: 'Enviar recibo',
+    sending: 'Enviando...',
+    successRequest: '✓ ¡Pedido enviado con éxito!',
+    successReceipt: '✓ ¡Recibo enviado con éxito!',
+    errorSend: 'Error al enviar. Intenta de nuevo.',
+    fillAllRequired: 'Completa los campos obligatorios (*)',
+    invalidAmount: 'Valor inválido — revisa el número',
+    invalidFile: 'Archivo inválido (máx 5MB)',
+    fileTooLarge: 'Archivo muy grande (máximo 5MB)',
+    selectCategory: 'Selecciona una categoría',
+    selectReason: 'Selecciona un motivo',
+    selectDriver: 'Selecciona tu nombre primero',
+    uploadReceipt: 'Envía la foto del recibo',
+    removeFile: 'Quitar',
+    footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+    catFood: '🍽 Comida',
+    catTolls: '🛣 Peajes',
+    catFuel: '⛽ Combustible',
+    catParking: '🅿 Estacionamiento',
+    catHotel: '🏨 Hotel',
+    catVehicle: '🔧 Reparo del vehículo',
+    catOther: '📝 Otros',
+  },
+};
+
+// Map de categorias por idioma → o que é gravado na planilha (deve bater com forms originais)
+// PT (Brasil) usa termos brasileiros; ES (HC) usa termos espanhóis das categorias originais
+const CATEGORIES_BY_LANG = {
+  pt: [
+    { value: 'Alimentação', i18n: 'catFood' },
+    { value: 'Pedágio', i18n: 'catTolls' },
+    { value: 'Combustível', i18n: 'catFuel' },
+    { value: 'Estacionamento', i18n: 'catParking' },
+    { value: 'Hotel', i18n: 'catHotel' },
+    { value: 'Manutenção do Carro', i18n: 'catVehicle' },
+    { value: 'Outros', i18n: 'catOther' },
+  ],
+  es: [
+    { value: 'Comida', i18n: 'catFood' },
+    { value: 'Peajes', i18n: 'catTolls' },
+    { value: 'Combustible', i18n: 'catFuel' },
+    { value: 'Estacionamiento', i18n: 'catParking' },
+    { value: 'Hotel', i18n: 'catHotel' },
+    { value: 'Reparo del vehículo', i18n: 'catVehicle' },
+    { value: 'Otros', i18n: 'catOther' },
+  ],
+};
+
+let currentLang = 'pt';
+
+function t(key) { return I18N[currentLang][key] || key; }
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  applyI18n();
+  populateCategoryDropdown();
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+}
+
+// ================================================================
+// State
+// ================================================================
+
+let state = {
+  mode: null,                    // 'request' | 'receipt'
+  selectedDriver: null,          // {name, email, country, currency}
+  driversByCountry: {},          // grouped data from backend
+  // Request flow
+  reqReason: null,
+  reqAmountRaw: '',
+  reqAmountNum: 0,
+  reqNeededBy: '',
+  reqNotes: '',
+  // Receipt flow
+  recCategory: '',
+  recPaymentDate: '',
+  recAmountRaw: '',
+  recAmountNum: 0,
+  recEstablishment: '',
+  recHotelDates: '',
+  recNotes: '',
+  recReceiptBase64: null,
+  recReceiptFilename: '',
+};
+
+// ================================================================
+// Mode picker
+// ================================================================
+
+function selectMode(mode) {
+  state.mode = mode;
+  document.getElementById('mode-picker').classList.add('hidden');
+  document.getElementById('driver-card').classList.remove('hidden');
+
+  // Mostra fluxo escolhido
+  if (mode === 'request') {
+    document.getElementById('request-flow').classList.remove('hidden');
+    document.getElementById('receipt-flow').classList.add('hidden');
+  } else {
+    document.getElementById('receipt-flow').classList.remove('hidden');
+    document.getElementById('request-flow').classList.add('hidden');
+  }
+
+  // Carrega drivers se ainda não carregou
+  if (Object.keys(state.driversByCountry).length === 0) {
+    loadDrivers();
+  }
+}
+
+function resetMode() {
+  // Volta pra tela inicial
+  state.mode = null;
+  document.getElementById('mode-picker').classList.remove('hidden');
+  document.getElementById('driver-card').classList.add('hidden');
+  document.getElementById('request-flow').classList.add('hidden');
+  document.getElementById('receipt-flow').classList.add('hidden');
+}
+
+// ================================================================
+// Drivers — carrega + popula dropdown agrupado por país
+// ================================================================
+
+async function loadDrivers() {
+  const select = document.getElementById('driver-select');
+  select.innerHTML = '<option>' + t('driverLoading') + '</option>';
+
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getActiveDriversByCountry').then(r => r.json());
+    if (res.success && res.drivers) {
+      state.driversByCountry = res.drivers;
+      populateDriverSelect();
+    } else {
+      select.innerHTML = '<option>' + t('errorSend') + '</option>';
+    }
+  } catch (err) {
+    console.error('[Cash] Erro carregando drivers:', err);
+    select.innerHTML = '<option>' + t('errorSend') + '</option>';
+  }
+}
+
+function populateDriverSelect() {
+  const select = document.getElementById('driver-select');
+  const countries = Object.keys(state.driversByCountry).sort();
+
+  // Flag emojis
+  const flags = {
+    'Argentina': '🇦🇷',
+    'Brazil': '🇧🇷', 'Brasil': '🇧🇷',
+    'Chile': '🇨🇱',
+    'Colombia': '🇨🇴',
+    'Mexico': '🇲🇽', 'México': '🇲🇽',
+    'Peru': '🇵🇪', 'Perú': '🇵🇪',
+  };
+
+  let html = '<option value="">-- ' + t('driverLabel') + ' --</option>';
+  countries.forEach(country => {
+    const flag = flags[country] || '🌎';
+    const drivers = state.driversByCountry[country];
+    html += `<optgroup label="${flag} ${country} (${drivers.length})">`;
+    drivers.forEach(d => {
+      const data = JSON.stringify(d).replace(/'/g, '&apos;').replace(/"/g, '&quot;');
+      html += `<option value="${data}">${escapeHtml(d.name)}</option>`;
+    });
+    html += '</optgroup>';
+  });
+  select.innerHTML = html;
+}
+
+function onDriverChange() {
+  const select = document.getElementById('driver-select');
+  if (!select.value) {
+    state.selectedDriver = null;
+    return;
+  }
+  try {
+    state.selectedDriver = JSON.parse(select.value);
+  } catch (e) {
+    console.error('Erro parse driver:', e);
+    return;
+  }
+
+  // Atualiza dropdowns de moeda
+  const reqCurrency = document.getElementById('req-currency');
+  const recCurrency = document.getElementById('rec-currency');
+  const cur = state.selectedDriver.currency;
+  [reqCurrency, recCurrency].forEach(sel => {
+    sel.innerHTML = `<option value="${cur}" selected>${cur}</option>`;
+    sel.disabled = false;
+  });
+}
+
+// ================================================================
+// Categoria — popula dinâmico por idioma + auto-show hotel dates
+// ================================================================
+
+function populateCategoryDropdown() {
+  const select = document.getElementById('rec-category');
+  if (!select) return;
+
+  const cats = CATEGORIES_BY_LANG[currentLang];
+  let html = '<option value="">' + t('selectPlaceholder') + '</option>';
+  cats.forEach(c => {
+    html += `<option value="${escapeHtml(c.value)}">${t(c.i18n)}</option>`;
+  });
+  select.innerHTML = html;
+
+  // Re-attach listener
+  select.onchange = onCategoryChange;
+}
+
+function onCategoryChange() {
+  const select = document.getElementById('rec-category');
+  state.recCategory = select.value;
+
+  // Mostra campo de datas se for hotel
+  const hotelWrap = document.getElementById('rec-hotel-dates-wrap');
+  const isHotel = state.recCategory.toLowerCase() === 'hotel';
+  hotelWrap.classList.toggle('hidden', !isHotel);
+}
+
+// ================================================================
+// Amount input — aceita ponto OU vírgula, normaliza pra número
+// ================================================================
+
+/**
+ * Parser robusto: aceita "1500", "1500,50", "1.500,50", "1500.50", "1,500.50"
+ * Heurística: o último separador (. ou ,) é o decimal, os outros são separadores de milhar.
+ */
+function parseLocalNumber(raw) {
+  if (!raw) return 0;
+  raw = String(raw).trim().replace(/[^\d.,]/g, '');
+  if (!raw) return 0;
+
+  const lastComma = raw.lastIndexOf(',');
+  const lastDot = raw.lastIndexOf('.');
+
+  if (lastComma === -1 && lastDot === -1) {
+    return parseFloat(raw) || 0;
+  }
+
+  // Determina qual é decimal (o que vem por último)
+  const decimalSep = lastComma > lastDot ? ',' : '.';
+  const thousandSep = decimalSep === ',' ? '.' : ',';
+
+  // Remove milhar, troca decimal por ponto
+  const normalized = raw
+    .split(thousandSep).join('')
+    .replace(decimalSep, '.');
+
+  const num = parseFloat(normalized);
+  return isNaN(num) ? 0 : num;
+}
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'req-amount') {
+    state.reqAmountRaw = e.target.value;
+    state.reqAmountNum = parseLocalNumber(e.target.value);
+  } else if (e.target.id === 'rec-amount') {
+    state.recAmountRaw = e.target.value;
+    state.recAmountNum = parseLocalNumber(e.target.value);
+  } else if (e.target.id === 'req-needed-by') {
+    state.reqNeededBy = e.target.value;
+  } else if (e.target.id === 'req-notes') {
+    state.reqNotes = e.target.value;
+  } else if (e.target.id === 'rec-payment-date') {
+    state.recPaymentDate = e.target.value;
+  } else if (e.target.id === 'rec-establishment') {
+    state.recEstablishment = e.target.value;
+  } else if (e.target.id === 'rec-hotel-dates') {
+    state.recHotelDates = e.target.value;
+  } else if (e.target.id === 'rec-notes') {
+    state.recNotes = e.target.value;
+  }
+});
+
+// ================================================================
+// Radio options (motivo do pedido)
+// ================================================================
+
+document.addEventListener('click', (e) => {
+  const opt = e.target.closest('[data-req-reason]');
+  if (opt) {
+    document.querySelectorAll('[data-req-reason]').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+    state.reqReason = opt.dataset.reqReason;
+  }
+});
+
+// ================================================================
+// Receipt upload (base64)
+// ================================================================
+
+function onReceiptFileChange(evt) {
+  const file = evt.target.files[0];
+  const wrap = document.getElementById('receipt-preview-wrap');
+  if (!file) {
+    state.recReceiptBase64 = null;
+    state.recReceiptFilename = '';
+    wrap.classList.add('hidden');
+    wrap.innerHTML = '';
+    return;
+  }
+
+  // Limita 5MB
+  if (file.size > 5 * 1024 * 1024) {
+    toast(t('fileTooLarge'), 'error');
+    evt.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    state.recReceiptBase64 = e.target.result;
+    state.recReceiptFilename = file.name;
+
+    // Preview
+    let previewHtml = `<div class="receipt-preview">
+      <div class="file-name">📎 ${escapeHtml(file.name)}</div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:2px;">${(file.size / 1024).toFixed(0)} KB</div>`;
+    if (file.type.startsWith('image/')) {
+      previewHtml += `<img src="${e.target.result}" alt="Preview">`;
+    }
+    previewHtml += `<span class="remove-btn" onclick="removeReceiptFile()">${t('removeFile')}</span>
+    </div>`;
+    wrap.innerHTML = previewHtml;
+    wrap.classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeReceiptFile() {
+  state.recReceiptBase64 = null;
+  state.recReceiptFilename = '';
+  document.getElementById('rec-file').value = '';
+  const wrap = document.getElementById('receipt-preview-wrap');
+  wrap.classList.add('hidden');
+  wrap.innerHTML = '';
+}
+
+// ================================================================
+// Submit Cash Request (Fluxo A — pedir dinheiro)
+// ================================================================
+
+async function submitCashRequest() {
+  if (!state.selectedDriver) {
+    return toast(t('selectDriver'), 'error');
+  }
+  if (!state.reqReason) {
+    return toast(t('selectReason'), 'error');
+  }
+  if (!state.reqAmountNum || state.reqAmountNum <= 0) {
+    return toast(t('invalidAmount'), 'error');
+  }
+  if (!state.reqNeededBy) {
+    return toast(t('fillAllRequired'), 'error');
+  }
+
+  const btn = document.getElementById('req-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span>' + t('sending');
+
+  const payload = {
+    type: 'saveCashRequest',
+    driverName: state.selectedDriver.name,
+    driverEmail: state.selectedDriver.email,
+    country: state.selectedDriver.country,
+    currency: state.selectedDriver.currency,
+    localAmount: state.reqAmountNum,
+    reason: state.reqReason,
+    neededByDate: state.reqNeededBy,
+    notes: state.reqNotes,
+  };
+
+  try {
+    // Fire-and-forget (CORS limita ler resposta no Apps Script)
+    await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    toast(t('successRequest'), 'success');
+    setTimeout(() => location.reload(), 2000);
+  } catch (err) {
+    console.error('[Cash] Erro:', err);
+    toast(t('errorSend'), 'error');
+    btn.disabled = false;
+    btn.innerHTML = t('submitRequest');
+  }
+}
+
+// ================================================================
+// Submit Cash Receipt (Fluxo B — subir recibo)
+// ================================================================
+
+async function submitCashReceipt() {
+  if (!state.selectedDriver) {
+    return toast(t('selectDriver'), 'error');
+  }
+  if (!state.recCategory) {
+    return toast(t('selectCategory'), 'error');
+  }
+  if (!state.recPaymentDate) {
+    return toast(t('fillAllRequired'), 'error');
+  }
+  if (!state.recAmountNum || state.recAmountNum <= 0) {
+    return toast(t('invalidAmount'), 'error');
+  }
+  if (!state.recReceiptBase64) {
+    return toast(t('uploadReceipt'), 'error');
+  }
+
+  const btn = document.getElementById('rec-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span>' + t('sending');
+
+  const payload = {
+    type: 'saveCashReceipt',
+    driverName: state.selectedDriver.name,
+    driverEmail: state.selectedDriver.email,
+    country: state.selectedDriver.country,
+    currency: state.selectedDriver.currency,
+    category: state.recCategory,
+    paymentDate: state.recPaymentDate,
+    localAmount: state.recAmountNum,
+    establishment: state.recEstablishment,
+    hotelDates: state.recHotelDates,
+    notes: state.recNotes,
+    receiptBase64: state.recReceiptBase64,
+    receiptFilename: state.recReceiptFilename,
+  };
+
+  try {
+    await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    toast(t('successReceipt'), 'success');
+    setTimeout(() => location.reload(), 2500);
+  } catch (err) {
+    console.error('[Cash] Erro:', err);
+    toast(t('errorSend'), 'error');
+    btn.disabled = false;
+    btn.innerHTML = t('submitReceipt');
+  }
+}
+
+// ================================================================
+// Helpers
+// ================================================================
+
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (type || '');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ================================================================
+// Init
+// ================================================================
+
+applyI18n();
+populateCategoryDropdown();
+</script>
+</body>
+</html>
