@@ -199,6 +199,240 @@
     color: var(--c-primary);
   }
   .hidden { display: none !important; }
+
+  /* v5.19: Modal de transação Cash */
+  .tx-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .tx-modal-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .tx-modal {
+    background: white;
+    border-radius: 12px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+    transform: scale(0.96);
+    transition: transform 0.2s;
+  }
+  .tx-modal-backdrop.open .tx-modal {
+    transform: scale(1);
+  }
+  .tx-modal-header {
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--c-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+  }
+  .tx-modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    line-height: 1.3;
+  }
+  .tx-modal-subtitle {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    margin-top: 4px;
+  }
+  .tx-modal-close {
+    background: var(--c-bg);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--c-text-muted);
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .tx-modal-close:hover {
+    background: #FECACA;
+    color: #DC2626;
+  }
+  .tx-modal-body {
+    padding: 18px 22px;
+  }
+  .tx-section {
+    margin-bottom: 18px;
+  }
+  .tx-section:last-child {
+    margin-bottom: 0;
+  }
+  .tx-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tx-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+  }
+  .tx-grid.full {
+    grid-template-columns: 1fr;
+  }
+  .tx-field {
+    font-size: 13px;
+  }
+  .tx-field-label {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-bottom: 2px;
+  }
+  .tx-field-value {
+    color: var(--c-text);
+    font-weight: 500;
+    word-break: break-word;
+  }
+  .tx-field-value.big {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+  }
+  .tx-field-value.usd {
+    color: #16A34A;
+    font-weight: 700;
+  }
+  .tx-status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .tx-modal-map {
+    width: 100%;
+    height: 240px;
+    border-radius: 8px;
+    border: 1px solid var(--c-border);
+    overflow: hidden;
+    background: #F8FAFC;
+  }
+  .tx-modal-attachment {
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #F8FAFC;
+  }
+  .tx-modal-attachment img {
+    width: 100%;
+    max-height: 360px;
+    object-fit: contain;
+    background: #1E293B;
+    display: block;
+  }
+  .tx-modal-attachment-link {
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+  .tx-modal-actions {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--c-border);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  .tx-action-btn {
+    padding: 8px 16px;
+    border: 1px solid var(--c-border);
+    background: white;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-text);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .tx-action-btn:hover {
+    background: var(--c-bg);
+  }
+  .tx-action-btn.primary {
+    background: var(--c-primary);
+    border-color: var(--c-primary);
+    color: white;
+  }
+  .tx-action-btn.primary:hover {
+    background: var(--c-primary-dark);
+  }
+  .tx-action-btn.danger {
+    background: white;
+    border-color: #FCA5A5;
+    color: #DC2626;
+  }
+  .tx-action-btn.danger:hover {
+    background: #FEF2F2;
+  }
+  .tx-row-clickable {
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .tx-row-clickable:hover {
+    background: #EBF4FB !important;
+  }
+
+  /* v5.19: Toggle Modo Admin no header (rosa quando ativo) */
+  .admin-toggle {
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    color: var(--c-text-muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+  }
+  .admin-toggle:hover {
+    background: #FCE7F3;
+    border-color: #EC4899;
+    color: #BE185D;
+  }
+  .admin-toggle.active {
+    background: #EC4899;
+    border-color: #EC4899;
+    color: white;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
+  }
   .user-pill {
     padding: 5px 12px;
     background: var(--c-bg);
@@ -1035,6 +1269,11 @@
         <button class="mode-btn active" id="mode-ramp" onclick="setMode('ramp')">💳 <span data-i18n="modeRamp">Ramp</span></button>
         <button class="mode-btn" id="mode-cash" onclick="setMode('cash')">💰 <span data-i18n="modeCash">Cash</span></button>
       </div>
+
+      <!-- v5.19: toggle Modo Admin (só aparece pra fuss) -->
+      <button class="admin-toggle hidden" id="admin-toggle" onclick="toggleAdminMode()">
+        🔒 <span data-i18n="adminMode">Modo Admin</span>
+      </button>
       <div class="lang-switch">
         <button data-lang="pt">PT</button>
         <button data-lang="es">ES</button>
@@ -1397,6 +1636,7 @@ const I18N = {
     refreshBtn: '⟳ Atualizar',
     modeRamp: 'Ramp',
     modeCash: 'Cash',
+    adminMode: 'Modo Admin',
     cashTabRequests: 'Pedidos',
     cashTabReceipts: 'Recibos',
     cashColDate: 'Data Pedido',
@@ -1549,6 +1789,7 @@ const I18N = {
     refreshBtn: '⟳ Actualizar',
     modeRamp: 'Ramp',
     modeCash: 'Cash',
+    adminMode: 'Modo Admin',
     cashTabRequests: 'Pedidos',
     cashTabReceipts: 'Recibos',
     cashColDate: 'Fecha Pedido',
@@ -1693,6 +1934,7 @@ const I18N = {
     refreshBtn: '⟳ Refresh',
     modeRamp: 'Ramp',
     modeCash: 'Cash',
+    adminMode: 'Admin Mode',
     cashTabRequests: 'Requests',
     cashTabReceipts: 'Receipts',
     cashColDate: 'Request Date',
@@ -1953,6 +2195,12 @@ let state = {
   // v5.18: dados carregados de Cash Transactions
   cashRequests: [],
   cashReceipts: [],
+  // v5.19: itens visíveis na tabela cash (pra clique abrir modal)
+  cashVisibleRows: [],
+  // v5.19: modo admin (só ativo se user é admin de cash)
+  adminMode: false,
+  // v5.19: cache de bases dos drivers (pro mapa do modal)
+  driverBaseCache: {},
 
   transactions: [],     // dataset bruto do backend (Ramp)
   filtered: [],         // após aplicar filtros principais
@@ -2004,6 +2252,8 @@ const TOP_N = 10;  // Top 10 categorias / drivers (resto vai pra "Outros")
 function initApp() {
   // Default: mês atual
   setCurrentMonth();
+  // v5.19: mostra/esconde botão Modo Admin baseado no usuário logado
+  setupAdminToggle();
 }
 
 function showLoader(show, msg) {
@@ -2529,9 +2779,13 @@ function renderCashTable(dataset) {
   }
   html += '</tr></thead><tbody>';
 
-  filtered.slice(0, state.pageLimit).forEach(item => {
+  // v5.19: salva referência aos itens visíveis pra abrir modal
+  state.cashVisibleRows = filtered.slice(0, state.pageLimit);
+
+  state.cashVisibleRows.forEach((item, idx) => {
+    const clickable = `class="tx-row-clickable" data-cash-tx-idx="${idx}"`;
     if (state.cashTab === 'requests') {
-      html += `<tr>
+      html += `<tr ${clickable}>
         <td class="col-date">${formatDateBR((item.dateRequest || '').split(' ')[0])}</td>
         <td class="col-user">${escapeHtml(item.driverName)}</td>
         <td><span class="country-badge">${escapeHtml(item.country)}</span></td>
@@ -2540,10 +2794,10 @@ function renderCashTable(dataset) {
         <td class="col-amount">${item.currency} ${formatNum(item.localAmount)}</td>
         <td class="col-amount">${item.usdAmount !== null ? '$' + formatNum(item.usdAmount) : '—'}</td>
         <td>${renderStatusBadge(item.status)}</td>
-        <td>${item.attachmentUrl ? `<a href="${item.attachmentUrl}" target="_blank">📎</a>` : '—'}</td>
+        <td>${item.attachmentUrl ? '📎' : '—'}</td>
       </tr>`;
     } else {
-      html += `<tr>
+      html += `<tr ${clickable}>
         <td class="col-date">${formatDateBR((item.timestamp || '').split(' ')[0])}</td>
         <td class="col-user">${escapeHtml(item.driverName)}</td>
         <td><span class="country-badge">${escapeHtml(item.country)}</span></td>
@@ -2551,7 +2805,7 @@ function renderCashTable(dataset) {
         <td>${escapeHtml(item.establishment || '—')}</td>
         <td class="col-amount">${item.currency} ${formatNum(item.localAmount)}</td>
         <td class="col-amount">${item.usdAmount !== null ? '$' + formatNum(item.usdAmount) : '—'}</td>
-        <td>${item.receiptUrl ? `<a href="${item.receiptUrl}" target="_blank">📎</a>` : '—'}</td>
+        <td>${item.receiptUrl ? '📎' : '—'}</td>
       </tr>`;
     }
   });
@@ -2561,6 +2815,15 @@ function renderCashTable(dataset) {
     html += `<div style="padding:12px;text-align:center;color:var(--c-text-muted);font-size:12px;">Mostrando ${state.pageLimit} de ${filtered.length}</div>`;
   }
   container.innerHTML = html;
+
+  // Wire click handler — usa addEventListener pra ser mais seguro
+  container.querySelectorAll('[data-cash-tx-idx]').forEach(tr => {
+    tr.addEventListener('click', () => {
+      const idx = parseInt(tr.dataset.cashTxIdx, 10);
+      const item = state.cashVisibleRows[idx];
+      if (item) openTxModal(item);
+    });
+  });
 }
 
 function renderStatusBadge(status) {
@@ -3934,7 +4197,437 @@ function renderMatchBadge(matchSource) {
   }
   return ' <span class="match-badge match-none" title="' + t('matchNoneTitle') + '">' + t('matchNone') + '</span>';
 }
+
+
+// ==========================================================================
+// v5.19: Modal de transação (Cash) + Modo Admin toggle
+// ==========================================================================
+
+// Lista de admins que podem editar/deletar Cash transactions
+const CASH_ADMIN_USERNAMES = ['fuss'];
+
+let txModalMap = null;       // instância Leaflet (pra destruir ao fechar)
+let txModalCurrent = null;   // item atualmente aberto
+
+function isCashAdmin() {
+  if (typeof currentUser === 'undefined' || !currentUser) return false;
+  const username = (currentUser.username || '').toLowerCase();
+  return CASH_ADMIN_USERNAMES.includes(username);
+}
+
+function setupAdminToggle() {
+  const btn = document.getElementById('admin-toggle');
+  if (!btn) return;
+  if (isCashAdmin()) {
+    btn.classList.remove('hidden');
+  } else {
+    btn.classList.add('hidden');
+    state.adminMode = false;
+  }
+}
+
+function toggleAdminMode() {
+  if (!isCashAdmin()) return;
+  state.adminMode = !state.adminMode;
+  document.getElementById('admin-toggle').classList.toggle('active', state.adminMode);
+
+  // Se modal estiver aberto, re-renderiza pra mostrar/esconder botões
+  if (txModalCurrent) {
+    openTxModal(txModalCurrent);
+  }
+}
+
+/**
+ * Abre o modal com detalhes completos de uma transação cash.
+ * @param {Object} item - item de cashRequests ou cashReceipts
+ */
+function openTxModal(item) {
+  txModalCurrent = item;
+  const isRequest = state.cashTab === 'requests';
+
+  // Header
+  const titleEl = document.getElementById('tx-modal-title');
+  const subtitleEl = document.getElementById('tx-modal-subtitle');
+  if (isRequest) {
+    titleEl.innerHTML = `📥 ${escapeHtml(item.driverName)} <span style="color:var(--c-text-muted);font-weight:400;">— ${escapeHtml(item.country)}</span>`;
+    subtitleEl.textContent = `Pedido de ${item.currency} ${formatNum(item.localAmount)} • ${formatDateBR((item.dateRequest || '').split(' ')[0])}`;
+  } else {
+    titleEl.innerHTML = `🧾 ${escapeHtml(item.driverName)} <span style="color:var(--c-text-muted);font-weight:400;">— ${escapeHtml(item.country)}</span>`;
+    subtitleEl.textContent = `${escapeHtml(item.category)} • ${item.currency} ${formatNum(item.localAmount)} • ${formatDateBR(item.paymentDate || (item.timestamp || '').split(' ')[0])}`;
+  }
+
+  // Body
+  const body = document.getElementById('tx-modal-body');
+  body.innerHTML = isRequest ? renderTxRequestBody(item) : renderTxReceiptBody(item);
+
+  // Mostra
+  document.getElementById('tx-modal-backdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Renderiza mapa após DOM atualizar
+  setTimeout(() => renderTxModalMap(item), 100);
+}
+
+function closeTxModal() {
+  document.getElementById('tx-modal-backdrop').classList.remove('open');
+  document.body.style.overflow = '';
+  if (txModalMap) {
+    txModalMap.remove();
+    txModalMap = null;
+  }
+  txModalCurrent = null;
+}
+
+function closeTxModalIfBackdrop(evt) {
+  if (evt.target.id === 'tx-modal-backdrop') closeTxModal();
+}
+
+// ESC fecha
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('tx-modal-backdrop').classList.contains('open')) {
+    closeTxModal();
+  }
+});
+
+/**
+ * Renderiza body do modal pra um Pedido (Cash Request).
+ */
+function renderTxRequestBody(item) {
+  const adminMode = state.adminMode && isCashAdmin();
+
+  let html = '';
+
+  // Driver section
+  html += `<div class="tx-section">
+    <div class="tx-section-title">👤 Motorista</div>
+    <div class="tx-grid">
+      <div class="tx-field">
+        <div class="tx-field-label">Nome</div>
+        <div class="tx-field-value">${escapeHtml(item.driverName)}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">País</div>
+        <div class="tx-field-value">${escapeHtml(item.country)}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Pedido section
+  html += `<div class="tx-section">
+    <div class="tx-section-title">💰 Pedido</div>
+    <div class="tx-grid">
+      <div class="tx-field">
+        <div class="tx-field-label">Motivo</div>
+        <div class="tx-field-value">${escapeHtml(item.reason || '—')}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Categoria</div>
+        <div class="tx-field-value">${item.category ? escapeHtml(item.category) : '<em style="color:var(--c-text-muted);font-weight:400;">—</em>'}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Valor Local</div>
+        <div class="tx-field-value big">${item.currency} ${formatNum(item.localAmount)}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Equivalente USD</div>
+        <div class="tx-field-value big usd">${item.usdAmount !== null ? '$' + formatNum(item.usdAmount) : '—'}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Data Pedido</div>
+        <div class="tx-field-value">${formatDateBR((item.dateRequest || '').split(' ')[0])}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Precisa Até</div>
+        <div class="tx-field-value">${item.dateNeeded ? formatDateBR(item.dateNeeded) : '—'}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Status</div>
+        <div class="tx-field-value">${renderStatusBadge(item.status || 'Pending')}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Responsável</div>
+        <div class="tx-field-value">${item.responsible ? escapeHtml(item.responsible) : '<em style="color:var(--c-text-muted);font-weight:400;">não atribuído</em>'}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Localização (mapa) — sempre mostra (base no mínimo)
+  html += `<div class="tx-section">
+    <div class="tx-section-title">📍 Localização</div>
+    ${item.locationAddress ? `<div style="font-size:13px;color:var(--c-text);margin-bottom:8px;">${escapeHtml(item.locationAddress)}</div>` : ''}
+    <div class="tx-modal-map" id="tx-modal-map"></div>
+  </div>`;
+
+  // Anexo
+  if (item.attachmentUrl) {
+    html += `<div class="tx-section">
+      <div class="tx-section-title">📎 Anexo</div>
+      <div class="tx-modal-attachment">
+        <div class="tx-modal-attachment-link">
+          <span>Comprovante anexado pelo motorista</span>
+          <a href="${item.attachmentUrl}" target="_blank" class="tx-action-btn primary" style="text-decoration:none;">↗ Abrir no Drive</a>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Admin actions
+  if (adminMode) {
+    html += `<div class="tx-modal-actions">
+      <button class="tx-action-btn danger" onclick="onDeleteTx()">🗑 Deletar</button>
+      <button class="tx-action-btn primary" onclick="onEditTx()">✏ Editar</button>
+    </div>`;
+  }
+
+  return html;
+}
+
+/**
+ * Renderiza body do modal pra um Recibo (Cash Receipt).
+ */
+function renderTxReceiptBody(item) {
+  const adminMode = state.adminMode && isCashAdmin();
+
+  let html = '';
+
+  // Driver
+  html += `<div class="tx-section">
+    <div class="tx-section-title">👤 Motorista</div>
+    <div class="tx-grid">
+      <div class="tx-field">
+        <div class="tx-field-label">Nome</div>
+        <div class="tx-field-value">${escapeHtml(item.driverName)}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Email</div>
+        <div class="tx-field-value" style="font-size:12px;">${escapeHtml(item.driverEmail || '—')}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">País</div>
+        <div class="tx-field-value">${escapeHtml(item.country)}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Origem</div>
+        <div class="tx-field-value">Cash Receipts ${item.source}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Recibo
+  html += `<div class="tx-section">
+    <div class="tx-section-title">🧾 Recibo</div>
+    <div class="tx-grid">
+      <div class="tx-field">
+        <div class="tx-field-label">Categoria</div>
+        <div class="tx-field-value">${escapeHtml(item.category)}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Estabelecimento</div>
+        <div class="tx-field-value">${escapeHtml(item.establishment || '—')}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Valor Local</div>
+        <div class="tx-field-value big">${item.currency} ${formatNum(item.localAmount)}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Equivalente USD</div>
+        <div class="tx-field-value big usd">${item.usdAmount !== null ? '$' + formatNum(item.usdAmount) : '—'}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Data Pagamento</div>
+        <div class="tx-field-value">${item.paymentDate ? formatDateBR(item.paymentDate) : '—'}</div>
+      </div>
+      <div class="tx-field">
+        <div class="tx-field-label">Submetido em</div>
+        <div class="tx-field-value">${(item.timestamp || '').replace('T', ' ')}</div>
+      </div>
+      ${item.hotelDates ? `
+      <div class="tx-field" style="grid-column:1/-1;">
+        <div class="tx-field-label">Datas do Hotel</div>
+        <div class="tx-field-value">${escapeHtml(item.hotelDates)}</div>
+      </div>` : ''}
+    </div>
+  </div>`;
+
+  // Mapa (só base do driver — recibos não têm GPS próprio)
+  html += `<div class="tx-section">
+    <div class="tx-section-title">📍 Base do Motorista</div>
+    <div class="tx-modal-map" id="tx-modal-map"></div>
+  </div>`;
+
+  // Foto do recibo
+  if (item.receiptUrl) {
+    html += `<div class="tx-section">
+      <div class="tx-section-title">📸 Foto do Recibo</div>
+      <div class="tx-modal-attachment">
+        <div class="tx-modal-attachment-link">
+          <span>Comprovante</span>
+          <a href="${item.receiptUrl}" target="_blank" class="tx-action-btn primary" style="text-decoration:none;">↗ Abrir no Drive</a>
+        </div>
+      </div>
+    </div>`;
+  } else {
+    html += `<div class="tx-section">
+      <div class="tx-section-title">📸 Foto do Recibo</div>
+      <div style="padding:14px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;color:#991B1B;font-size:13px;">
+        ⚠ Recibo não foi anexado.
+      </div>
+    </div>`;
+  }
+
+  // Observações
+  if (item.notes) {
+    html += `<div class="tx-section">
+      <div class="tx-section-title">📝 Observações</div>
+      <div style="padding:10px 14px;background:var(--c-bg);border-radius:8px;font-size:13px;white-space:pre-wrap;">${escapeHtml(item.notes)}</div>
+    </div>`;
+  }
+
+  // Admin actions
+  if (adminMode) {
+    html += `<div class="tx-modal-actions">
+      <button class="tx-action-btn danger" onclick="onDeleteTx()">🗑 Deletar</button>
+      <button class="tx-action-btn primary" onclick="onEditTx()">✏ Editar</button>
+    </div>`;
+  }
+
+  return html;
+}
+
+/**
+ * Renderiza mapa Leaflet no modal.
+ * Pedidos com GPS: 2 markers (base + GPS pedido) + linha
+ * Recibos / pedidos sem GPS: só base
+ */
+async function renderTxModalMap(item) {
+  const mapEl = document.getElementById('tx-modal-map');
+  if (!mapEl || typeof L === 'undefined') return;
+
+  if (txModalMap) {
+    txModalMap.remove();
+    txModalMap = null;
+  }
+
+  // Busca base do driver (do dataset)
+  const driverBase = await getDriverBaseForCashModal_(item);
+
+  // Define markers
+  const markers = [];
+
+  if (driverBase && driverBase.lat && driverBase.lng) {
+    markers.push({
+      lat: driverBase.lat,
+      lng: driverBase.lng,
+      label: 'Base do motorista',
+      color: '#5BA0DC',
+      detail: driverBase.address || '',
+    });
+  }
+
+  // GPS do pedido (se Operational)
+  if (item.locationLat && item.locationLng) {
+    markers.push({
+      lat: item.locationLat,
+      lng: item.locationLng,
+      label: item.locationMethod === 'gps' ? 'GPS do pedido' : 'Local informado',
+      color: '#EC4899',
+      detail: item.locationAddress || '',
+    });
+  }
+
+  if (markers.length === 0) {
+    mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--c-text-muted);font-size:13px;">📍 Sem localização disponível</div>';
+    return;
+  }
+
+  // Cria mapa
+  txModalMap = L.map(mapEl, { zoomControl: true, scrollWheelZoom: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 18,
+  }).addTo(txModalMap);
+
+  // Adiciona markers
+  markers.forEach(m => {
+    const icon = L.divIcon({
+      className: 'tx-modal-marker',
+      html: `<div style="background:${m.color};width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    });
+    L.marker([m.lat, m.lng], { icon })
+      .addTo(txModalMap)
+      .bindPopup(`<strong>${m.label}</strong>${m.detail ? '<br><small>' + escapeHtml(m.detail) + '</small>' : ''}`);
+  });
+
+  // Linha entre os 2 (se aplicável)
+  if (markers.length === 2) {
+    L.polyline([[markers[0].lat, markers[0].lng], [markers[1].lat, markers[1].lng]], {
+      color: '#5BA0DC',
+      weight: 2,
+      dashArray: '5,8',
+      opacity: 0.6,
+    }).addTo(txModalMap);
+
+    txModalMap.fitBounds([
+      [markers[0].lat, markers[0].lng],
+      [markers[1].lat, markers[1].lng],
+    ], { padding: [30, 30] });
+  } else {
+    txModalMap.setView([markers[0].lat, markers[0].lng], 13);
+  }
+}
+
+/**
+ * Busca a base do driver via backend (uma vez por modal abre).
+ * Retorna {lat, lng, address} ou null.
+ */
+async function getDriverBaseForCashModal_(item) {
+  // Cache no state pra evitar refetch
+  state.driverBaseCache = state.driverBaseCache || {};
+  const key = (item.driverEmail || item.driverName || '').toLowerCase();
+  if (state.driverBaseCache[key]) return state.driverBaseCache[key];
+
+  if (!item.driverEmail) return null;
+
+  try {
+    const url = `${CONFIG.scriptUrl}?action=getDriverBase&email=${encodeURIComponent(item.driverEmail)}`;
+    const res = await fetch(url).then(r => r.json());
+    if (res.success && res.base) {
+      state.driverBaseCache[key] = res.base;
+      return res.base;
+    }
+  } catch (err) {
+    console.warn('[Cash modal] Erro buscando base:', err);
+  }
+  return null;
+}
+
+// Stubs pra Fase 4 (admin edit/delete)
+function onEditTx() {
+  alert('Edição de transação será implementada na Fase 4.');
+}
+function onDeleteTx() {
+  alert('Exclusão de transação será implementada na Fase 4.');
+}
 </script>
+
+<!-- v5.19: Modal de transação Cash + Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<div class="tx-modal-backdrop" id="tx-modal-backdrop" onclick="closeTxModalIfBackdrop(event)">
+  <div class="tx-modal" id="tx-modal" role="dialog" aria-modal="true">
+    <div class="tx-modal-header">
+      <div>
+        <div class="tx-modal-title" id="tx-modal-title">—</div>
+        <div class="tx-modal-subtitle" id="tx-modal-subtitle">—</div>
+      </div>
+      <button class="tx-modal-close" onclick="closeTxModal()" aria-label="Fechar">×</button>
+    </div>
+    <div class="tx-modal-body" id="tx-modal-body"></div>
+  </div>
+</div>
 
 </body>
 </html>
