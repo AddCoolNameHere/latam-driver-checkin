@@ -1250,6 +1250,45 @@
   <!-- v5.18: container só do CASH (scorecards próprios) -->
   <div id="cash-view" class="hidden">
     <div class="scorecards" id="cash-scorecards"></div>
+
+    <!-- v5.18: charts do cash (3 canvases) -->
+    <div class="charts-section">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title" id="cash-chart-1-title">Categorias</div>
+            <div class="chart-sub" id="cash-chart-1-sub">—</div>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chart-cash-categories"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title" data-i18n="chartTopDrivers">Top 10 Motoristas</div>
+            <div class="chart-sub" id="cash-chart-2-sub">—</div>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chart-cash-top-drivers"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title" id="cash-chart-3-title">Status</div>
+            <div class="chart-sub" id="cash-chart-3-sub">—</div>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chart-cash-third"></canvas>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="table-section">
@@ -1949,6 +1988,10 @@ let state = {
 // Refs aos Chart.js instances pra poder destruir/recriar
 let chartCategories = null;
 let chartTopDrivers = null;
+// v5.18: chart instances pro cash (separados)
+let chartCashCategories = null;
+let chartCashTopDrivers = null;
+let chartCashThird = null;
 let chartByDriver = null;
 let chartPanelCat = null;
 
@@ -2184,6 +2227,261 @@ function renderCurrentView() {
   const dataset = state.cashTab === 'requests' ? state.cashRequests : state.cashReceipts;
   renderCashTable(dataset);
   renderCashScorecards(dataset);
+  renderCashCharts(dataset);
+}
+
+/**
+ * v5.18: Renderiza os 3 charts do modo Cash.
+ *
+ * Layout:
+ *   1. Donut de categorias (sempre)
+ *   2. Top 10 drivers em barras horizontais (sempre)
+ *   3. Pra Pedidos: donut de Status (Pending/Approved/Paid/Rejected)
+ *      Pra Recibos: linha temporal últimos 30 dias
+ */
+function renderCashCharts(dataset) {
+  // Aplica os mesmos filtros da tabela
+  const filtered = dataset.filter(item => {
+    if (state.filter.country !== 'all' && item.country !== state.filter.country) return false;
+    if (state.filter.drivers.length > 0 && !state.filter.drivers.includes(item.driverName)) return false;
+    if (state.filter.categories.length > 0 && !state.filter.categories.includes(item.category)) return false;
+    return true;
+  });
+
+  // ============ Chart 1: Donut de categorias (USD) ============
+  renderCashCategoriesChart(filtered);
+
+  // ============ Chart 2: Top 10 drivers ============
+  renderCashTopDriversChart(filtered);
+
+  // ============ Chart 3: Status (pedidos) OU Linha temporal (recibos) ============
+  if (state.cashTab === 'requests') {
+    renderCashStatusChart(filtered);
+  } else {
+    renderCashTimelineChart(filtered);
+  }
+}
+
+function renderCashCategoriesChart(filtered) {
+  const ctx = document.getElementById('chart-cash-categories');
+  if (!ctx) return;
+  if (chartCashCategories) chartCashCategories.destroy();
+
+  // Agrega por categoria (Pedidos pode ter category vazia se for Salary; usa reason nesse caso)
+  const groups = new Map();
+  filtered.forEach(item => {
+    const cat = item.category || (state.cashTab === 'requests' ? (item.reason || 'Outros') : 'Outros');
+    const usd = item.usdAmount || 0;
+    groups.set(cat, (groups.get(cat) || 0) + usd);
+  });
+
+  const sorted = [...groups.entries()].sort((a, b) => b[1] - a[1]);
+  const labels = sorted.map(e => e[0]);
+  const data = sorted.map(e => e[1]);
+  const total = data.reduce((s, n) => s + n, 0);
+
+  // Paleta usada no ramp (consistência visual)
+  const palette = ['#5BA0DC', '#16A34A', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#EC4899', '#84CC16', '#F97316', '#6366F1'];
+  const colors = labels.map((_, i) => palette[i % palette.length]);
+
+  document.getElementById('cash-chart-1-title').textContent = state.cashTab === 'requests' ? 'Categorias / Motivos' : 'Categorias';
+  document.getElementById('cash-chart-1-sub').textContent = `$${formatNum(total)} · ${labels.length} ${labels.length === 1 ? 'categoria' : 'categorias'}`;
+
+  chartCashCategories = renderDonutWithClick(ctx, labels, data, colors, total, '$', null);
+}
+
+function renderCashTopDriversChart(filtered) {
+  const ctx = document.getElementById('chart-cash-top-drivers');
+  if (!ctx) return;
+  if (chartCashTopDrivers) chartCashTopDrivers.destroy();
+
+  const groups = new Map();
+  filtered.forEach(item => {
+    const name = item.driverName || '—';
+    const usd = item.usdAmount || 0;
+    groups.set(name, (groups.get(name) || 0) + usd);
+  });
+
+  const top = [...groups.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+
+  if (top.length === 0) {
+    chartCashTopDrivers = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: [t('chartNoDataPeriod') || 'Sem dados'], datasets: [{ data: [0], backgroundColor: '#E2E8F0' }] },
+      options: { plugins: { legend: { display: false } } },
+    });
+    document.getElementById('cash-chart-2-sub').textContent = '—';
+    return;
+  }
+
+  const labels = top.map(e => e[0]);
+  const data = top.map(e => e[1]);
+  const total = data.reduce((s, n) => s + n, 0);
+  document.getElementById('cash-chart-2-sub').textContent = `Top ${top.length} · $${formatNum(total)} total`;
+
+  chartCashTopDrivers = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: '#5BA0DC',
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `$${formatNum(ctx.parsed.x)}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: {
+            callback: (v) => '$' + formatNum(v),
+            font: { size: 10 },
+          },
+        },
+        y: {
+          ticks: {
+            font: { size: 11 },
+          },
+        },
+      },
+    },
+  });
+}
+
+function renderCashStatusChart(filtered) {
+  const ctx = document.getElementById('chart-cash-third');
+  if (!ctx) return;
+  if (chartCashThird) chartCashThird.destroy();
+
+  document.getElementById('cash-chart-3-title').textContent = 'Status dos Pedidos';
+
+  const statusOrder = ['Pending', 'Approved', 'Paid', 'Rejected'];
+  const statusColors = {
+    'Pending': '#F59E0B',
+    'Approved': '#16A34A',
+    'Paid': '#0EA5E9',
+    'Rejected': '#DC2626',
+  };
+
+  const groups = new Map();
+  filtered.forEach(item => {
+    const status = item.status || 'Pending';
+    groups.set(status, (groups.get(status) || 0) + 1);
+  });
+
+  // Ordena conforme statusOrder primeiro, depois outros
+  const labels = [];
+  const data = [];
+  const colors = [];
+  statusOrder.forEach(s => {
+    if (groups.has(s)) {
+      labels.push(s);
+      data.push(groups.get(s));
+      colors.push(statusColors[s]);
+    }
+  });
+  // Outros status (não previstos)
+  groups.forEach((count, s) => {
+    if (!statusOrder.includes(s)) {
+      labels.push(s);
+      data.push(count);
+      colors.push('#64748B');
+    }
+  });
+
+  const total = data.reduce((s, n) => s + n, 0);
+  document.getElementById('cash-chart-3-sub').textContent = `${total} ${total === 1 ? 'pedido' : 'pedidos'}`;
+
+  chartCashThird = renderDonutWithClick(ctx, labels, data, colors, total, '', null);
+}
+
+function renderCashTimelineChart(filtered) {
+  const ctx = document.getElementById('chart-cash-third');
+  if (!ctx) return;
+  if (chartCashThird) chartCashThird.destroy();
+
+  document.getElementById('cash-chart-3-title').textContent = 'Recibos por dia';
+
+  // Agrega por dia (timestamp YYYY-MM-DD)
+  const byDay = new Map();
+  filtered.forEach(item => {
+    const day = (item.timestamp || '').split(' ')[0];
+    if (!day) return;
+    byDay.set(day, (byDay.get(day) || 0) + (item.usdAmount || 0));
+  });
+
+  const sorted = [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  const labels = sorted.map(e => e[0]);
+  const data = sorted.map(e => e[1]);
+  const total = data.reduce((s, n) => s + n, 0);
+
+  document.getElementById('cash-chart-3-sub').textContent = `${labels.length} ${labels.length === 1 ? 'dia' : 'dias'} · $${formatNum(total)}`;
+
+  if (labels.length === 0) {
+    chartCashThird = new Chart(ctx, {
+      type: 'line',
+      data: { labels: [t('chartNoDataPeriod') || 'Sem dados'], datasets: [{ data: [0], borderColor: '#E2E8F0' }] },
+      options: { plugins: { legend: { display: false } } },
+    });
+    return;
+  }
+
+  chartCashThird = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'USD',
+        data,
+        borderColor: '#5BA0DC',
+        backgroundColor: 'rgba(91, 160, 220, 0.15)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3,
+        pointBackgroundColor: '#5BA0DC',
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `$${formatNum(ctx.parsed.y)}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            font: { size: 10 },
+            maxRotation: 45,
+          },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (v) => '$' + formatNum(v),
+            font: { size: 10 },
+          },
+        },
+      },
+    },
+  });
 }
 
 /**
