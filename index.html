@@ -480,6 +480,72 @@
     </div>
   </div>
 
+  <!-- v5.17: Card "vai mapear hoje?" - aparece após escolher driver -->
+  <div id="will-map-card" class="card hidden">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title" data-i18n="willMapTitle">Você vai mapear hoje?</div>
+    </div>
+    <div class="radio-group" style="grid-template-columns:1fr 1fr;">
+      <div class="radio-option" data-will-map="yes" data-i18n="willMapYes">✅ Sim, vou mapear</div>
+      <div class="radio-option" data-will-map="no" data-i18n="willMapNo">❌ Não vou mapear hoje</div>
+    </div>
+  </div>
+
+  <!-- v5.17: Card motivo (aparece se "Não vai mapear") -->
+  <div id="dnm-reason-card" class="card hidden">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title" data-i18n="dnmReasonTitle">Qual o motivo?</div>
+    </div>
+    <div class="radio-group" style="grid-template-columns:1fr 1fr;">
+      <div class="radio-option" data-dnm-reason="weather" data-i18n="dnmReasonWeather">☁ Clima</div>
+      <div class="radio-option" data-dnm-reason="mech" data-i18n="dnmReasonMech">🔧 Problema com carro</div>
+      <div class="radio-option" data-dnm-reason="tech" data-i18n="dnmReasonTech">📷 Câmera / dispositivos</div>
+      <div class="radio-option" data-dnm-reason="disks" data-i18n="dnmReasonDisks">💾 Discos</div>
+    </div>
+  </div>
+
+  <!-- v5.17: Card detalhes obrigatórios (mech/tech/disks) -->
+  <div id="dnm-details-card" class="card hidden">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div class="step-title" data-i18n="dnmDetailsTitle">Detalhes do problema</div>
+    </div>
+    <div style="font-size:11px;color:#92400E;margin-bottom:10px;padding:8px 10px;background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:6px;" data-i18n="dnmDetailsIntro">Estes dados ajudam a equipe a acompanhar tech/mech e prazos de pagamento.</div>
+
+    <label data-i18n="issueStopDate">Data que o carro parou</label>
+    <input type="date" id="dnm-stop-date">
+
+    <label style="margin-top:12px;" data-i18n="issueServiceStatus">Status do serviço</label>
+    <div class="radio-group" style="margin-bottom:8px;">
+      <div class="radio-option" data-dnm-status="not_started" data-i18n="issueStatusNotStarted">🔵 Não começou</div>
+      <div class="radio-option" data-dnm-status="in_progress" data-i18n="issueStatusInProgress">🟡 Em andamento</div>
+      <div class="radio-option" data-dnm-status="finished" data-i18n="issueStatusFinished">🟢 Acabou</div>
+    </div>
+
+    <div id="dnm-expected-end-wrap" class="hidden">
+      <label data-i18n="issueExpectedEnd">Data prevista de conclusão</label>
+      <input type="date" id="dnm-expected-end">
+    </div>
+
+    <div id="dnm-end-status-wrap" class="hidden">
+      <label data-i18n="issueEndStatus">Situação final</label>
+      <div class="radio-group">
+        <div class="radio-option" data-dnm-end="picked_up" data-i18n="issueEndPickedUp">🚗 Carro pego</div>
+        <div class="radio-option" data-dnm-end="awaiting_payment" data-i18n="issueEndAwaitingPayment">💰 Aguardando pagamento</div>
+      </div>
+    </div>
+
+    <label style="margin-top:12px;" data-i18n="describeIssue">Descreva o problema</label>
+    <textarea id="dnm-description" rows="2" data-i18n-placeholder="dnmDescriptionPlaceholder" placeholder="Ex: Pneu furou, mecânico chamado..."></textarea>
+  </div>
+
+  <!-- v5.17: Botão de submit pro fluxo "não vou mapear" -->
+  <button type="button" id="dnm-submit-btn" class="btn-submit hidden" onclick="submitDidNotMap()">
+    <span data-i18n="dnmSubmit">Registrar dia parado</span>
+  </button>
+
   <div id="base-card" class="card hidden">
     <div class="step-header">
       <div class="step-num">2</div>
@@ -738,6 +804,22 @@ const I18N = {
     modeStartingSub: 'Check-in completo (base, área, status)',
     modeFinishing: 'Terminando o dia',
     modeFinishingSub: 'Checkout rápido (km mapeados + observações)',
+    // v5.17: Did Not Map flow
+    willMapTitle: 'Você vai mapear hoje?',
+    willMapYes: '✅ Sim, vou mapear',
+    willMapNo: '❌ Não vou mapear hoje',
+    dnmReasonTitle: 'Qual o motivo?',
+    dnmReasonWeather: '☁ Clima',
+    dnmReasonMech: '🔧 Problema com carro',
+    dnmReasonTech: '📷 Câmera / dispositivos',
+    dnmReasonDisks: '💾 Discos',
+    dnmDetailsTitle: 'Detalhes do problema',
+    dnmDetailsIntro: 'Estes dados ajudam a equipe a acompanhar tech/mech e prazos de pagamento.',
+    dnmDescriptionPlaceholder: 'Ex: Pneu furou, mecânico chamado...',
+    dnmSubmit: 'Registrar dia parado',
+    dnmSuccess: '✓ Dia parado registrado!',
+    selectReason: 'Selecione o motivo',
+    selectDriver: 'Selecione seu nome primeiro',
     checkoutTitle: 'Fim do dia',
     checkoutCheckinFound: '✓ Check-in da manhã encontrado, vou atualizar a mesma linha.',
     checkoutNoCheckin: '⚠ Não encontrei seu check-in da manhã. Vou registrar como "checkout sem check-in".',
@@ -844,6 +926,22 @@ const I18N = {
     modeStartingSub: 'Check-in completo (base, área, estado)',
     modeFinishing: 'Terminando el día',
     modeFinishingSub: 'Checkout rápido (km mapeados + observaciones)',
+    // v5.17: Did Not Map flow
+    willMapTitle: '¿Vas a mapear hoy?',
+    willMapYes: '✅ Sí, voy a mapear',
+    willMapNo: '❌ No voy a mapear hoy',
+    dnmReasonTitle: '¿Cuál es el motivo?',
+    dnmReasonWeather: '☁ Clima',
+    dnmReasonMech: '🔧 Problema con el auto',
+    dnmReasonTech: '📷 Cámara / dispositivos',
+    dnmReasonDisks: '💾 Discos',
+    dnmDetailsTitle: 'Detalles del problema',
+    dnmDetailsIntro: 'Estos datos ayudan al equipo a seguir tech/mech y plazos de pago.',
+    dnmDescriptionPlaceholder: 'Ej: Pinchazo, mecánico llamado...',
+    dnmSubmit: 'Registrar día parado',
+    dnmSuccess: '✓ ¡Día parado registrado!',
+    selectReason: 'Selecciona el motivo',
+    selectDriver: 'Selecciona tu nombre primero',
     checkoutTitle: 'Fin del día',
     checkoutCheckinFound: '✓ Check-in de la mañana encontrado, actualizaré la misma fila.',
     checkoutNoCheckin: '⚠ No encontré tu check-in de la mañana. Registraré como "checkout sin check-in".',
@@ -971,6 +1069,14 @@ let state = {
   // v5.14: checkout extras
   odometerEnd: null,
   ssdFillLevel: null,       // 'empty' | 'low' | 'half' | 'high' | 'full'
+  // v5.17: "Did Not Map" flow
+  willMap: null,            // 'yes' | 'no'
+  dnmReason: null,          // 'weather' | 'mech' | 'tech' | 'disks'
+  dnmStopDate: '',
+  dnmServiceStatus: null,
+  dnmExpectedEnd: '',
+  dnmEndStatus: null,
+  dnmDescription: '',
 };
 let maps = {};
 let destCircle = null;
@@ -1061,10 +1167,11 @@ function selectMode(mode) {
     // Modo normal: esconde checkout, mostra fluxo de check-in
     document.getElementById('checkout-card').classList.add('hidden');
     document.getElementById('submit-checkout-btn').classList.add('hidden');
-    document.getElementById('base-card').classList.remove('hidden');
+    // v5.17: NÃO mostra base-card direto. Primeiro pergunta "vai mapear?"
+    document.getElementById('will-map-card').classList.remove('hidden');
     // v5.14: pré-carrega lista de SSDs do driver pra usar no dropdown depois
     loadDriverSsds();
-    loadBase();
+    // (loadBase é chamado SÓ depois que driver responder "Sim, vou mapear")
   } else {
     // Modo checkout: esconde tudo do checkin, mostra só card de checkout
     document.getElementById('base-card').classList.add('hidden');
@@ -1263,6 +1370,211 @@ function toggleIssueDetails() {
   } else {
     wrap.classList.add('hidden');
     label.textContent = t('issueDetailsExpand');
+  }
+}
+
+
+// ================================================================
+// v5.17: "Did Not Map" flow — driver não vai mapear hoje
+// ================================================================
+
+function setupDnmListeners() {
+  // Card 1: "Vai mapear?" (yes/no)
+  document.querySelectorAll('[data-will-map]').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('[data-will-map]').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      state.willMap = opt.dataset.willMap;
+      onWillMapChange();
+    });
+  });
+
+  // Card 2: motivo (weather/mech/tech/disks)
+  document.querySelectorAll('[data-dnm-reason]').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('[data-dnm-reason]').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      state.dnmReason = opt.dataset.dnmReason;
+      onDnmReasonChange();
+    });
+  });
+
+  // Card 3: status do serviço
+  document.querySelectorAll('[data-dnm-status]').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('[data-dnm-status]').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      state.dnmServiceStatus = opt.dataset.dnmStatus;
+      const expectedWrap = document.getElementById('dnm-expected-end-wrap');
+      const endWrap = document.getElementById('dnm-end-status-wrap');
+      if (state.dnmServiceStatus === 'finished') {
+        expectedWrap.classList.add('hidden');
+        endWrap.classList.remove('hidden');
+      } else {
+        expectedWrap.classList.remove('hidden');
+        endWrap.classList.add('hidden');
+        state.dnmEndStatus = null;
+        document.querySelectorAll('[data-dnm-end]').forEach(o => o.classList.remove('selected'));
+      }
+    });
+  });
+
+  // Card 3: situação final
+  document.querySelectorAll('[data-dnm-end]').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('[data-dnm-end]').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      state.dnmEndStatus = opt.dataset.dnmEnd;
+    });
+  });
+
+  // Datas + descrição (input changes)
+  const stopDate = document.getElementById('dnm-stop-date');
+  if (stopDate) stopDate.addEventListener('change', e => { state.dnmStopDate = e.target.value; });
+  const expEnd = document.getElementById('dnm-expected-end');
+  if (expEnd) expEnd.addEventListener('change', e => { state.dnmExpectedEnd = e.target.value; });
+  const desc = document.getElementById('dnm-description');
+  if (desc) desc.addEventListener('input', e => { state.dnmDescription = e.target.value; });
+}
+
+/**
+ * Quando driver responde "vai mapear?":
+ *   yes → segue fluxo normal (carrega base, etc)
+ *   no  → mostra card de motivo
+ */
+function onWillMapChange() {
+  if (state.willMap === 'yes') {
+    // Segue fluxo normal: esconde DNM cards, mostra base
+    document.getElementById('dnm-reason-card').classList.add('hidden');
+    document.getElementById('dnm-details-card').classList.add('hidden');
+    document.getElementById('dnm-submit-btn').classList.add('hidden');
+    document.getElementById('base-card').classList.remove('hidden');
+    loadBase();
+  } else if (state.willMap === 'no') {
+    // Pula tudo do fluxo de mapping. Mostra só motivo.
+    document.getElementById('base-card').classList.add('hidden');
+    document.getElementById('origin-card')?.classList.add('hidden');
+    document.getElementById('dest-card')?.classList.add('hidden');
+    document.getElementById('vehicle-card')?.classList.add('hidden');
+    document.getElementById('extras-card')?.classList.add('hidden');
+    document.getElementById('submit-btn')?.classList.add('hidden');
+
+    document.getElementById('dnm-reason-card').classList.remove('hidden');
+    // Reset state DNM
+    state.dnmReason = null;
+    state.dnmStopDate = '';
+    state.dnmServiceStatus = null;
+    state.dnmExpectedEnd = '';
+    state.dnmEndStatus = null;
+    state.dnmDescription = '';
+    document.querySelectorAll('[data-dnm-reason]').forEach(o => o.classList.remove('selected'));
+    document.getElementById('dnm-details-card').classList.add('hidden');
+    document.getElementById('dnm-submit-btn').classList.add('hidden');
+  }
+}
+
+/**
+ * Quando driver escolhe motivo do "não vou mapear":
+ *   weather → submit direto (sem detalhes)
+ *   mech/tech/disks → mostra card de detalhes obrigatórios
+ */
+function onDnmReasonChange() {
+  const detailsCard = document.getElementById('dnm-details-card');
+  const submitBtn = document.getElementById('dnm-submit-btn');
+
+  if (state.dnmReason === 'weather') {
+    detailsCard.classList.add('hidden');
+    submitBtn.classList.remove('hidden');
+  } else {
+    // mech/tech/disks → exige detalhes
+    detailsCard.classList.remove('hidden');
+    submitBtn.classList.remove('hidden');
+    // Pré-popula stop date com hoje
+    const stopDate = document.getElementById('dnm-stop-date');
+    if (stopDate && !stopDate.value) {
+      stopDate.value = new Date().toISOString().split('T')[0];
+      state.dnmStopDate = stopDate.value;
+    }
+  }
+}
+
+/**
+ * Submit do fluxo "Não vou mapear".
+ */
+async function submitDidNotMap() {
+  if (!state.driver) return toast(t('selectDriver') || 'Selecione seu nome', 'error');
+  if (!state.dnmReason) return toast(t('selectReason') || 'Selecione o motivo', 'error');
+
+  // Pra mech/tech/disks, valida detalhes obrigatórios
+  if (state.dnmReason !== 'weather') {
+    if (!state.dnmStopDate) return toast(t('fillIssueDetails'), 'error');
+    if (!state.dnmServiceStatus) return toast(t('fillIssueDetails'), 'error');
+    if (state.dnmServiceStatus === 'finished' && !state.dnmEndStatus) {
+      return toast(t('fillIssueEndStatus'), 'error');
+    }
+  }
+
+  const btn = document.getElementById('dnm-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> ' + t('sending');
+
+  // Mapeia motivo → categoria do vehicle issue
+  // weather não cria issue, só registra no check-in
+  const categoryMap = {
+    mech: 'mech',
+    tech: 'tech',
+    disks: 'disks',  // backend trata como categoria especial (idle "Disks")
+  };
+
+  const payload = {
+    type: 'checkin',
+    driverName: state.driver.name,
+    driverEmail: state.driver.email,
+    country: state.driver.country,
+    // Campos GPS/mapa zerados (driver não vai sair)
+    originLat: '',
+    originLng: '',
+    originAddress: '',
+    originMethod: '',
+    destLat: '',
+    destLng: '',
+    destAddress: '',
+    destRadius: '',
+    // v5.17: flag dia parado
+    didMap: 'no',
+    dnmReason: state.dnmReason,
+    // Status veículo: weather=OK, demais=Critical
+    vehicleStatus: state.dnmReason === 'weather' ? 'OK' : 'Critical Issue',
+    vehicleIssue: state.dnmDescription || '',
+    notes: state.dnmReason === 'weather'
+      ? '[Did not map: weather]'
+      : `[Did not map: ${state.dnmReason}]`,
+    // v5.14: zera hodômetro/SSD (driver não vai usar carro)
+    odometerStart: 0,
+    ssdInUse: '',
+    ssdSource: '',
+    // v5.14: passa detalhes do issue se for mech/tech/disks
+    vehicleIssueDetails: state.dnmReason !== 'weather' ? {
+      category: categoryMap[state.dnmReason] || state.dnmReason,
+      stopDate: state.dnmStopDate,
+      serviceStatus: state.dnmServiceStatus,
+      expectedEndDate: state.dnmExpectedEnd || '',
+      endStatus: state.dnmEndStatus || '',
+    } : null,
+  };
+
+  try {
+    await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    toast(t('dnmSuccess'), 'success');
+    setTimeout(() => location.reload(), 2000);
+  } catch (err) {
+    console.error('[DNM] Erro:', err);
+    toast(t('errorSend'), 'error');
+    btn.disabled = false;
+    btn.innerHTML = t('dnmSubmit');
   }
 }
 
@@ -1824,6 +2136,7 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
 applyI18n();
 loadDrivers();
 setupV514Listeners();  // v5.14: registra handlers dos campos novos
+setupDnmListeners();   // v5.17: handlers do "Did Not Map" flow
 
 </script>
 
