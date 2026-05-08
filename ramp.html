@@ -4699,12 +4699,295 @@ async function getDriverBaseForCashModal_(item) {
   return null;
 }
 
-// Stubs pra Fase 4 (admin edit/delete)
-function onEditTx() {
-  alert('Edição de transação será implementada na Fase 4.');
+// v5.22: Edição/delete real (admin only) — Fase 4
+
+/**
+ * Toast simples no topo da tela. type: 'success'|'error'|'info'
+ */
+function showToast(msg, type) {
+  type = type || 'info';
+  let toast = document.getElementById('global-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'global-toast';
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    `;
+    document.body.appendChild(toast);
+  }
+  const colors = {
+    success: '#16A34A',
+    error: '#DC2626',
+    info: '#5BA0DC',
+  };
+  toast.style.background = colors[type] || colors.info;
+  toast.textContent = msg;
+  // Anima entrada
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  // Remove após 3s
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.style.opacity = '0';
+  }, 3000);
 }
+
+function onEditTx() {
+  if (!txModalCurrent || !state.adminMode || !isCashAdmin()) return;
+  // Re-renderiza body em modo edição (form em vez de view)
+  const isRequest = state.cashTab === 'requests';
+  const body = document.getElementById('tx-modal-body');
+  body.innerHTML = isRequest ? renderTxRequestEditForm(txModalCurrent) : renderTxReceiptEditForm(txModalCurrent);
+  // Mapa some no modo edit (pra dar espaço ao form)
+}
+
 function onDeleteTx() {
-  alert('Exclusão de transação será implementada na Fase 4.');
+  if (!txModalCurrent || !state.adminMode || !isCashAdmin()) return;
+
+  const item = txModalCurrent;
+  const isRequest = state.cashTab === 'requests';
+  const valorStr = `${item.currency} ${formatNum(item.localAmount)}`;
+  const tipoStr = isRequest ? 'pedido' : 'recibo';
+
+  // Confirmação dupla
+  const msg = `Deletar ${tipoStr} de ${item.driverName} de ${valorStr}?\n\nEssa ação NÃO pode ser desfeita.\nTodos os dados serão perdidos (mas ficarão registrados no Audit Log).`;
+  if (!confirm(msg)) return;
+
+  // Segunda confirmação digitada
+  const typed = prompt(`Pra confirmar, digite "DELETAR" (em maiúsculas):`);
+  if (typed !== 'DELETAR') {
+    showToast('Exclusão cancelada', 'info');
+    return;
+  }
+
+  performDelete(item, isRequest);
+}
+
+async function performDelete(item, isRequest) {
+  const payload = {
+    type: isRequest ? 'deleteCashRequest' : 'deleteCashReceipt',
+    rowIdx: item.rowIdx,
+    expectedDriver: item.driverName,
+    expectedDate: isRequest ? item.dateRequest : item.timestamp,
+    source: item.source || '',  // BR/HC pra recibos
+    adminUser: (currentUser && currentUser.username) || '',
+  };
+
+  showLoader(true, 'Deletando…');
+  try {
+    const res = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload),
+    }).then(r => r.json());
+
+    if (!res.success) throw new Error(res.error || 'Erro desconhecido');
+
+    showToast('✓ ' + (res.message || 'Deletado com sucesso'), 'success');
+    closeTxModal();
+    await loadCashData();  // recarrega tudo
+  } catch (err) {
+    console.error('[Admin Delete] Erro:', err);
+    showToast('Erro: ' + err.message, 'error');
+  } finally {
+    showLoader(false);
+  }
+}
+
+/**
+ * Renderiza form de edição pra Pedido.
+ */
+function renderTxRequestEditForm(item) {
+  return `
+    <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#92400E;">
+      ⚠ Modo de edição — alterações vão pra <strong>Audit Log</strong>.
+    </div>
+
+    <div class="tx-section">
+      <div class="tx-section-title">💰 Pedido</div>
+      <div class="tx-grid">
+        <div class="tx-field">
+          <label class="tx-field-label">Status</label>
+          <select id="edit-status" style="width:100%;padding:7px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;">
+            ${['Pending','Approved','Paid','Rejected'].map(s => `<option value="${s}" ${s === (item.status || 'Pending') ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="tx-field">
+          <label class="tx-field-label">Motivo</label>
+          <select id="edit-reason" style="width:100%;padding:7px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;">
+            <option value="Salary" ${item.reason === 'Salary' ? 'selected' : ''}>Salary</option>
+            <option value="Operational Spends" ${item.reason === 'Operational Spends' ? 'selected' : ''}>Operational Spends</option>
+          </select>
+        </div>
+        <div class="tx-field">
+          <label class="tx-field-label">Categoria</label>
+          <input id="edit-category" type="text" value="${escapeHtml(item.category || '')}" style="width:100%;padding:7px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;" placeholder="Combustível, Hotel, etc">
+        </div>
+        <div class="tx-field">
+          <label class="tx-field-label">Responsável</label>
+          <input id="edit-responsible" type="text" value="${escapeHtml(item.responsible || '')}" style="width:100%;padding:7px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;" placeholder="Lucas, Bia, ...">
+        </div>
+        <div class="tx-field">
+          <label class="tx-field-label">Valor Local (${item.currency})</label>
+          <input id="edit-localAmount" type="number" step="0.01" value="${item.localAmount || 0}" style="width:100%;padding:7px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;">
+          <div style="font-size:10px;color:var(--c-text-muted);margin-top:3px;">USD será recalculado automaticamente</div>
+        </div>
+        <div class="tx-field">
+          <label class="tx-field-label">Precisa Até</label>
+          <input id="edit-dateNeeded" type="date" value="${item.dateNeeded || ''}" style="width:100%;padding:7px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;">
+        </div>
+      </div>
+    </div>
+
+    <div class="tx-modal-actions">
+      <button class="tx-action-btn" onclick="cancelEdit()">Cancelar</button>
+      <button class="tx-action-btn primary" onclick="saveCashRequestEdit()">💾 Salvar alterações</button>
+    </div>
+  `;
+}
+
+/**
+ * Renderiza form de edição pra Recibo.
+ */
+function renderTxReceiptEditForm(item) {
+  return `
+    <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#92400E;">
+      ⚠ Modo de edição — alterações vão pra <strong>Audit Log</strong>.
+    </div>
+
+    <div class="tx-section">
+      <div class="tx-section-title">🧾 Recibo</div>
+      <div class="tx-grid">
+        <div class="tx-field">
+          <label class="tx-field-label">Categoria</label>
+          <input id="edit-category" type="text" value="${escapeHtml(item.category || '')}" style="width:100%;padding:7px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;">
+        </div>
+        <div class="tx-field">
+          <label class="tx-field-label">Estabelecimento</label>
+          <input id="edit-establishment" type="text" value="${escapeHtml(item.establishment || '')}" style="width:100%;padding:7px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;">
+        </div>
+        <div class="tx-field">
+          <label class="tx-field-label">Valor Local (${item.currency})</label>
+          <input id="edit-localAmount" type="number" step="0.01" value="${item.localAmount || 0}" style="width:100%;padding:7px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;">
+          <div style="font-size:10px;color:var(--c-text-muted);margin-top:3px;">USD será recalculado automaticamente</div>
+        </div>
+        <div class="tx-field">
+          <label class="tx-field-label">Data Pagamento</label>
+          <input id="edit-paymentDate" type="date" value="${item.paymentDate || ''}" style="width:100%;padding:7px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;">
+        </div>
+        <div class="tx-field" style="grid-column:1/-1;">
+          <label class="tx-field-label">Observações</label>
+          <textarea id="edit-notes" rows="2" style="width:100%;padding:7px 10px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:13px;resize:vertical;">${escapeHtml(item.notes || '')}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="tx-modal-actions">
+      <button class="tx-action-btn" onclick="cancelEdit()">Cancelar</button>
+      <button class="tx-action-btn primary" onclick="saveCashReceiptEdit()">💾 Salvar alterações</button>
+    </div>
+  `;
+}
+
+function cancelEdit() {
+  if (!txModalCurrent) return;
+  // Re-render no modo view
+  openTxModal(txModalCurrent);
+}
+
+async function saveCashRequestEdit() {
+  if (!txModalCurrent) return;
+  const item = txModalCurrent;
+
+  const payload = {
+    type: 'updateCashRequest',
+    rowIdx: item.rowIdx,
+    expectedDriver: item.driverName,
+    expectedDate: item.dateRequest,
+    adminUser: (currentUser && currentUser.username) || '',
+    status: document.getElementById('edit-status').value,
+    reason: document.getElementById('edit-reason').value,
+    category: document.getElementById('edit-category').value.trim(),
+    responsible: document.getElementById('edit-responsible').value.trim(),
+    localAmount: parseFloat(document.getElementById('edit-localAmount').value) || 0,
+    currency: item.currency,
+    dateNeeded: document.getElementById('edit-dateNeeded').value,
+  };
+
+  showLoader(true, 'Salvando…');
+  try {
+    const res = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload),
+    }).then(r => r.json());
+
+    if (!res.success) throw new Error(res.error || 'Erro desconhecido');
+
+    showToast('✓ ' + (res.message || 'Atualizado'), 'success');
+    closeTxModal();
+    await loadCashData();
+  } catch (err) {
+    console.error('[Admin Update] Erro:', err);
+    showToast('Erro: ' + err.message, 'error');
+  } finally {
+    showLoader(false);
+  }
+}
+
+async function saveCashReceiptEdit() {
+  if (!txModalCurrent) return;
+  const item = txModalCurrent;
+
+  const payload = {
+    type: 'updateCashReceipt',
+    rowIdx: item.rowIdx,
+    source: item.source,
+    expectedDriver: item.driverName,
+    expectedDate: item.timestamp,
+    adminUser: (currentUser && currentUser.username) || '',
+    category: document.getElementById('edit-category').value.trim(),
+    establishment: document.getElementById('edit-establishment').value.trim(),
+    localAmount: parseFloat(document.getElementById('edit-localAmount').value) || 0,
+    currency: item.currency,
+    paymentDate: document.getElementById('edit-paymentDate').value,
+    notes: document.getElementById('edit-notes').value,
+  };
+
+  showLoader(true, 'Salvando…');
+  try {
+    const res = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload),
+    }).then(r => r.json());
+
+    if (!res.success) throw new Error(res.error || 'Erro desconhecido');
+
+    showToast('✓ ' + (res.message || 'Atualizado'), 'success');
+    closeTxModal();
+    await loadCashData();
+  } catch (err) {
+    console.error('[Admin Update] Erro:', err);
+    showToast('Erro: ' + err.message, 'error');
+  } finally {
+    showLoader(false);
+  }
 }
 
 
