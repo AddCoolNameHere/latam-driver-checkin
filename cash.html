@@ -441,7 +441,7 @@
         <div class="mode-card-icon">📥</div>
         <div class="mode-card-content">
           <div class="mode-card-title" data-i18n="modeRequest">Pedir dinheiro</div>
-          <div class="mode-card-sub" data-i18n="modeRequestSub">Solicitar adiantamento de salário ou para gastos do projeto</div>
+          <div class="mode-card-sub" data-i18n="modeRequestSub">Solicitar dinheiro para gastos futuros agendados do projeto</div>
         </div>
       </button>
       <button type="button" class="mode-card" onclick="selectMode('receipt')">
@@ -528,6 +528,12 @@
 
       <label style="margin-top:14px;" data-i18n="notesLabel">Observações <span style="color:#94A3B8;font-weight:400;" data-i18n="optional">(opcional)</span></label>
       <textarea id="req-notes" rows="2" data-i18n-placeholder="reqNotesPlaceholder" placeholder="Detalhes adicionais sobre o pedido"></textarea>
+
+      <label style="margin-top:14px;" data-i18n="reqAttachmentLabel">Anexar comprovante <span style="color:#94A3B8;font-weight:400;" data-i18n="optional">(opcional)</span></label>
+      <input type="file" id="req-file" accept="image/*,application/pdf" onchange="onRequestFileChange(event)">
+      <div class="field-hint" data-i18n="reqAttachmentHint">Útil pra anexar orçamento do mecânico, foto do problema, nota proforma, etc. Foto ou PDF, máx 5MB.</div>
+
+      <div id="req-file-preview-wrap" class="hidden"></div>
     </div>
 
     <button type="button" class="btn-submit" id="req-submit-btn" onclick="submitCashRequest()">
@@ -615,7 +621,7 @@ const I18N = {
     appSubtitle: 'Pedidos de dinheiro e recibos para o time LATAM',
     modeTitle: 'O que você precisa fazer?',
     modeRequest: 'Pedir dinheiro',
-    modeRequestSub: 'Solicitar adiantamento de salário ou para gastos do projeto',
+    modeRequestSub: 'Solicitar dinheiro para gastos futuros agendados do projeto',
     modeReceipt: 'Subir recibo',
     modeReceiptSub: 'Enviar comprovante de gasto (reembolso ou justificativa)',
     back: 'Voltar',
@@ -649,6 +655,8 @@ const I18N = {
     notesLabel: 'Observações',
     optional: '(opcional)',
     reqNotesPlaceholder: 'Detalhes adicionais sobre o pedido',
+    reqAttachmentLabel: 'Anexar comprovante',
+    reqAttachmentHint: 'Útil pra anexar orçamento do mecânico, foto do problema, nota proforma, etc. Foto ou PDF, máx 5MB.',
     submitRequest: 'Enviar pedido',
     // Receipt flow
     recStep2: 'Detalhes do gasto',
@@ -693,7 +701,7 @@ const I18N = {
     appSubtitle: 'Pedidos de dinero y recibos para el equipo LATAM',
     modeTitle: '¿Qué necesitas hacer?',
     modeRequest: 'Pedir dinero',
-    modeRequestSub: 'Solicitar adelanto de salario o para gastos del proyecto',
+    modeRequestSub: 'Solicitar dinero para gastos futuros agendados del proyecto',
     modeReceipt: 'Subir recibo',
     modeReceiptSub: 'Enviar comprobante de gasto (reembolso o justificación)',
     back: 'Volver',
@@ -726,6 +734,8 @@ const I18N = {
     notesLabel: 'Observaciones',
     optional: '(opcional)',
     reqNotesPlaceholder: 'Detalles adicionales sobre el pedido',
+    reqAttachmentLabel: 'Adjuntar comprobante',
+    reqAttachmentHint: 'Útil para adjuntar presupuesto del mecánico, foto del problema, factura proforma, etc. Foto o PDF, máx 5MB.',
     submitRequest: 'Enviar pedido',
     recStep2: 'Detalles del gasto',
     categoryLabel: 'Categoría',
@@ -826,6 +836,8 @@ let state = {
   reqAmountNum: 0,
   reqNeededBy: '',
   reqNotes: '',
+  reqReceiptBase64: null,        // anexo opcional
+  reqReceiptFilename: '',
   // Receipt flow
   recCategory: '',
   recPaymentDate: '',
@@ -1193,6 +1205,52 @@ function removeReceiptFile() {
   wrap.innerHTML = '';
 }
 
+// v2.1: upload opcional no Fluxo A (request) — orçamento, foto do problema, etc
+function onRequestFileChange(evt) {
+  const file = evt.target.files[0];
+  const wrap = document.getElementById('req-file-preview-wrap');
+  if (!file) {
+    state.reqReceiptBase64 = null;
+    state.reqReceiptFilename = '';
+    wrap.classList.add('hidden');
+    wrap.innerHTML = '';
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    toast(t('fileTooLarge'), 'error');
+    evt.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    state.reqReceiptBase64 = e.target.result;
+    state.reqReceiptFilename = file.name;
+
+    let previewHtml = `<div class="receipt-preview">
+      <div class="file-name">📎 ${escapeHtml(file.name)}</div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:2px;">${(file.size / 1024).toFixed(0)} KB</div>`;
+    if (file.type.startsWith('image/')) {
+      previewHtml += `<img src="${e.target.result}" alt="Preview">`;
+    }
+    previewHtml += `<span class="remove-btn" onclick="removeRequestFile()">${t('removeFile')}</span>
+    </div>`;
+    wrap.innerHTML = previewHtml;
+    wrap.classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeRequestFile() {
+  state.reqReceiptBase64 = null;
+  state.reqReceiptFilename = '';
+  document.getElementById('req-file').value = '';
+  const wrap = document.getElementById('req-file-preview-wrap');
+  wrap.classList.add('hidden');
+  wrap.innerHTML = '';
+}
+
 // ================================================================
 // Submit Cash Request (Fluxo A — pedir dinheiro)
 // ================================================================
@@ -1242,6 +1300,9 @@ async function submitCashRequest() {
     locationLng: state.reqLocation ? state.reqLocation.lng : null,
     locationAddress: state.reqLocation ? state.reqLocation.address : '',
     locationMethod: state.reqLocationMethod || '',
+    // v2.1: anexo opcional (orçamento, foto do problema, etc)
+    attachmentBase64: state.reqReceiptBase64 || '',
+    attachmentFilename: state.reqReceiptFilename || '',
   };
 
   try {
