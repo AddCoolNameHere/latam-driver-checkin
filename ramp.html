@@ -198,6 +198,7 @@
   }
 
   /* v5.18: Sub-abas dentro do Cash */
+  .cash-tabs {
     display: flex;
     gap: 0;
     background: white;
@@ -2409,6 +2410,8 @@ let state = {
   chartDriversFilter: [],
 
   sort: { column: 'date', direction: 'desc' },
+  // Sort independente da tabela Cash (Pedidos/Recibos têm colunas diferentes)
+  cashSort: { column: 'date', direction: 'desc' },
   pageLimit: 25,
   period: null,         // { start, end } ou null (= mês atual)
 
@@ -3036,33 +3039,47 @@ function renderCashTable(dataset) {
   // v5.23: Salary + Responsável
   filtered = applyExtraCashFilters(filtered);
 
+  // Sort
+  filtered = sortCashRows(filtered);
+
   if (filtered.length === 0) {
     container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--c-text-muted);">Nenhuma transação encontrada</div>';
     return;
   }
 
+  // Helper pra renderizar TH com indicador de sort ativo
+  const sc = state.cashSort.column;
+  const sd = state.cashSort.direction;
+  const sortCls = (key) => sc === key ? (sd === 'asc' ? ' sort-asc' : ' sort-desc') : '';
+  const th = (key, cls, label, extra = '') =>
+    key
+      ? `<th class="${cls}${sortCls(key)}" data-sort="${key}"${extra}>${label}</th>`
+      : `<th class="${cls}"${extra}>${label}</th>`;
+
   let html = '<table class="ramp-table"><thead><tr>';
   if (state.cashTab === 'requests') {
-    html += `
-      <th class="col-date">${t('cashColDate') || 'Data Pedido'}</th>
-      <th class="col-user">${t('cashColDriver') || 'Motorista'}</th>
-      <th class="col-merchant">${t('cashColCountry') || 'País'}</th>
-      <th class="col-merchant">${t('cashColReason') || 'Motivo'}</th>
-      <th class="col-merchant">${t('cashColCategory') || 'Categoria'}</th>
-      <th class="col-amount">${t('cashColLocal') || 'Valor Local'}</th>
-      <th class="col-amount">${t('cashColUsd') || 'USD'}</th>
-      <th class="col-merchant">${t('cashColStatus') || 'Status'}</th>
-      <th class="col-merchant">${t('cashColAttachment') || 'Anexo'}</th>`;
+    html += [
+      th('date',         'col-date',     t('cashColDate')       || 'Data Pedido'),
+      th('driver',       'col-user',     t('cashColDriver')     || 'Motorista'),
+      th('country',      'col-merchant', t('cashColCountry')    || 'País'),
+      th('reason',       'col-merchant', t('cashColReason')     || 'Motivo'),
+      th('category',     'col-merchant', t('cashColCategory')   || 'Categoria'),
+      th('localAmount',  'col-amount',   t('cashColLocal')      || 'Valor Local'),
+      th('usdAmount',    'col-amount',   t('cashColUsd')        || 'USD'),
+      th('status',       'col-merchant', t('cashColStatus')     || 'Status'),
+      th(null,           'col-merchant', t('cashColAttachment') || 'Anexo'),
+    ].join('');
   } else {
-    html += `
-      <th class="col-date">${t('cashColTimestamp') || 'Data'}</th>
-      <th class="col-user">${t('cashColDriver') || 'Motorista'}</th>
-      <th class="col-merchant">${t('cashColCountry') || 'País'}</th>
-      <th class="col-merchant">${t('cashColCategory') || 'Categoria'}</th>
-      <th class="col-merchant">${t('cashColEstablishment') || 'Estabelecimento'}</th>
-      <th class="col-amount">${t('cashColLocal') || 'Valor Local'}</th>
-      <th class="col-amount">${t('cashColUsd') || 'USD'}</th>
-      <th class="col-merchant">${t('cashColReceipt') || 'Recibo'}</th>`;
+    html += [
+      th('date',          'col-date',     t('cashColTimestamp')     || 'Data'),
+      th('driver',        'col-user',     t('cashColDriver')        || 'Motorista'),
+      th('country',       'col-merchant', t('cashColCountry')       || 'País'),
+      th('category',      'col-merchant', t('cashColCategory')      || 'Categoria'),
+      th('establishment', 'col-merchant', t('cashColEstablishment') || 'Estabelecimento'),
+      th('localAmount',   'col-amount',   t('cashColLocal')         || 'Valor Local'),
+      th('usdAmount',     'col-amount',   t('cashColUsd')           || 'USD'),
+      th(null,            'col-merchant', t('cashColReceipt')       || 'Recibo'),
+    ].join('');
   }
   html += '</tr></thead><tbody>';
 
@@ -3110,6 +3127,65 @@ function renderCashTable(dataset) {
       const item = state.cashVisibleRows[idx];
       if (item) openTxModal(item);
     });
+  });
+
+  // Wire sort handlers nos headers (tabela é dinâmica, então binding aqui)
+  container.querySelectorAll('th[data-sort]').forEach(thEl => {
+    thEl.addEventListener('click', () => handleCashSort(thEl.dataset.sort));
+  });
+}
+
+/**
+ * Handler de click num header sortável da tabela Cash.
+ * Toggla direção se for a mesma coluna; senão reseta direção
+ * (desc pra valores/datas, asc pra texto).
+ */
+function handleCashSort(column) {
+  if (state.cashSort.column === column) {
+    state.cashSort.direction = state.cashSort.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    state.cashSort.column = column;
+    const desc = ['date', 'localAmount', 'usdAmount'].includes(column);
+    state.cashSort.direction = desc ? 'desc' : 'asc';
+  }
+  state.pageLimit = 25;
+  // Re-render só a tabela (gráficos/scorecards não dependem de ordem)
+  const dataset = state.cashTab === 'requests' ? state.cashRequests : state.cashReceipts;
+  renderCashTable(dataset);
+}
+
+/**
+ * Ordena rows da tabela Cash conforme state.cashSort.
+ * Mapeia chaves de coluna lógica pro field do objeto (e.g. 'date'
+ * vira 'dateRequest' pra Pedidos ou 'timestamp' pra Recibos).
+ */
+function sortCashRows(rows) {
+  const col = state.cashSort.column;
+  const dir = state.cashSort.direction === 'asc' ? 1 : -1;
+
+  // Mapping: nome lógico → field do objeto. Pedidos vs Recibos
+  // têm campos de data diferentes (dateRequest vs timestamp).
+  const fieldFor = (item) => {
+    if (col === 'date') {
+      return state.cashTab === 'requests' ? item.dateRequest : item.timestamp;
+    }
+    if (col === 'driver') return item.driverName;
+    return item[col];
+  };
+
+  return rows.slice().sort((a, b) => {
+    const va = fieldFor(a);
+    const vb = fieldFor(b);
+
+    // null/undefined sempre no fim
+    const aEmpty = va === null || va === undefined || va === '';
+    const bEmpty = vb === null || vb === undefined || vb === '';
+    if (aEmpty && bEmpty) return 0;
+    if (aEmpty) return 1;
+    if (bEmpty) return -1;
+
+    if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+    return String(va).localeCompare(String(vb)) * dir;
   });
 }
 
