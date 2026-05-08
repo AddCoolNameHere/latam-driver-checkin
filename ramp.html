@@ -2891,12 +2891,7 @@ function renderCashStatusChart(filtered) {
   document.getElementById('cash-chart-3-title').textContent = 'Status dos Pedidos';
 
   const statusOrder = ['Pending', 'Approved', 'Paid', 'Rejected'];
-  const statusColors = {
-    'Pending': '#F59E0B',
-    'Approved': '#16A34A',
-    'Paid': '#0EA5E9',
-    'Rejected': '#DC2626',
-  };
+  // v5.24: usa paleta semafórica unificada (CASH_STATUS_COLORS no topo)
 
   const groups = new Map();
   filtered.forEach(item => {
@@ -2912,7 +2907,7 @@ function renderCashStatusChart(filtered) {
     if (groups.has(s)) {
       labels.push(s);
       data.push(groups.get(s));
-      colors.push(statusColors[s]);
+      colors.push(CASH_STATUS_COLORS[s]);
     }
   });
   // Outros status (não previstos)
@@ -3101,13 +3096,7 @@ function renderCashTable(dataset) {
 }
 
 function renderStatusBadge(status) {
-  const colors = {
-    'Pending': '#F59E0B',
-    'Approved': '#16A34A',
-    'Paid': '#0EA5E9',
-    'Rejected': '#DC2626',
-  };
-  const color = colors[status] || '#64748B';
+  const color = (typeof CASH_STATUS_COLORS !== 'undefined' && CASH_STATUS_COLORS[status]) || '#64748B';
   return `<span style="background:${color}22;color:${color};padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;">${escapeHtml(status)}</span>`;
 }
 
@@ -4505,6 +4494,15 @@ function renderMatchBadge(matchSource) {
 
 // Lista de admins que podem editar/deletar Cash transactions
 const CASH_ADMIN_USERNAMES = ['fuss'];
+
+// v5.24: Cores semafóricas dos status (clássico vermelho/amarelo/verde).
+// Approved e Paid são dois tons de verde — Paid mais escuro (= já saiu o dinheiro).
+const CASH_STATUS_COLORS = {
+  'Pending':  '#F59E0B',  // 🟡 amarelo — em espera
+  'Approved': '#22C55E',  // 🟢 verde claro — aprovado, aguardando pagamento
+  'Paid':     '#16A34A',  // 🟢 verde forte — pago
+  'Rejected': '#DC2626',  // 🔴 vermelho — recusado
+};
 
 let txModalMap = null;       // instância Leaflet (pra destruir ao fechar)
 let txModalCurrent = null;   // item atualmente aberto
