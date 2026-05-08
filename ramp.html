@@ -1132,6 +1132,8 @@
     <button class="filter-chip" onclick="clearExtraFilters()" style="margin-left:auto;font-size:11px;color:var(--c-text-muted);" data-i18n="resetFilters">↺ Reset filtros</button>
   </div>
 
+  <!-- v5.18: container só do RAMP (scorecards + charts) — escondido no modo cash -->
+  <div id="ramp-view">
   <div class="scorecards">
     <div class="scorecard">
       <div class="sc-label" data-i18n="scTotal">TOTAL DE GASTOS</div>
@@ -1242,6 +1244,12 @@
     <span class="drill-label" data-i18n="drillFiltered">Filtrado por:</span>
     <span class="drill-value" id="drill-value">—</span>
     <button class="drill-clear" onclick="clearDrillFilter()" title="Limpar filtro">✕</button>
+  </div>
+  </div><!-- /#ramp-view -->
+
+  <!-- v5.18: container só do CASH (scorecards próprios) -->
+  <div id="cash-view" class="hidden">
+    <div class="scorecards" id="cash-scorecards"></div>
   </div>
 
   <div class="table-section">
@@ -1992,6 +2000,23 @@ function setMode(newMode) {
   // Mostra/esconde sub-abas do cash
   document.getElementById('cash-tabs').classList.toggle('hidden', newMode !== 'cash');
 
+  // v5.18 fix: troca visibility dos blocos ramp-view e cash-view
+  document.getElementById('ramp-view').classList.toggle('hidden', newMode !== 'ramp');
+  document.getElementById('cash-view').classList.toggle('hidden', newMode !== 'cash');
+
+  // Esconde o drill-breadcrumb e search input que são só do ramp
+  const drillBc = document.getElementById('drill-breadcrumb');
+  if (drillBc && newMode === 'cash') drillBc.style.display = 'none';
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) searchInput.style.display = newMode === 'cash' ? 'none' : '';
+  const tableFooter = document.getElementById('table-footer');
+  if (tableFooter && newMode === 'cash') tableFooter.style.display = 'none';
+
+  // Limpa filtros que não fazem sentido entre os modos
+  state.filter.drivers = [];
+  state.filter.categories = [];
+  state.drillFilter = { category: null, driver: null };
+
   // Carrega dados do modo correspondente
   reloadCurrentMode();
 }
@@ -2052,29 +2077,98 @@ async function loadCashData() {
 
 /**
  * Popula multi-select de drivers com base nos dados de cash carregados.
- * Re-usa `populateDriverList` mas alimenta com dataset unificado.
+ * NOTA: NÃO mexe em state.transactions (é exclusivo do ramp).
+ * Apenas reescreve a UI dos chips de driver.
  */
 function populateCashDriverList() {
   const all = [...state.cashRequests, ...state.cashReceipts];
-  const driverSet = new Set();
+  const driverMap = new Map();
   all.forEach(t => {
-    if (t.driverName) driverSet.add(t.driverName);
+    if (t.driverName) {
+      const key = t.driverEmail || t.driverName;
+      driverMap.set(key, { name: t.driverName, email: t.driverEmail || '' });
+    }
   });
-  // Atualiza estado simulando o dataset do ramp (pra reusar a UI de filtros)
-  state.transactions = all;  // truque: filtros normais conseguem ler `state.transactions[].driver_name`
-  // Renomeia campos pra compatibilidade com filtros existentes
-  state.transactions = all.map(t => ({
-    ...t,
-    user_name: t.driverName,
-    sk_user_id: t.driverEmail || t.driverName,
-    country: t.country || '',
-    sk_category: t.category || (t.reason || ''),
-  }));
-  populateDriverList();
+
+  const list = document.getElementById('driver-list');
+  if (!list) return;
+
+  const sorted = [...driverMap.values()].sort((a, b) => a.name.localeCompare(b.name));
+  list.innerHTML = sorted.map(d => {
+    const checked = state.filter.drivers.includes(d.name) ? 'checked' : '';
+    const safeName = escapeHtml(d.name).replace(/'/g, '&#39;');
+    return `<label class="multi-option">
+      <input type="checkbox" value="${safeName}" ${checked} data-cash-driver="${safeName}">
+      <span>${safeName}</span>
+    </label>`;
+  }).join('');
+
+  // Wire change listeners (mais seguro que inline onchange)
+  list.querySelectorAll('input[data-cash-driver]').forEach(el => {
+    el.addEventListener('change', e => {
+      const name = e.target.value;
+      if (e.target.checked) {
+        if (!state.filter.drivers.includes(name)) state.filter.drivers.push(name);
+      } else {
+        state.filter.drivers = state.filter.drivers.filter(d => d !== name);
+      }
+      renderCurrentView();
+    });
+  });
+}
+
+function toggleCashDriverFilter(driverName, checked) {
+  // Mantido por compatibilidade (não usado mais, listeners agora são via addEventListener)
+  if (checked) {
+    if (!state.filter.drivers.includes(driverName)) state.filter.drivers.push(driverName);
+  } else {
+    state.filter.drivers = state.filter.drivers.filter(d => d !== driverName);
+  }
+  renderCurrentView();
 }
 
 function populateCashCategoryList() {
-  populateCategoryList();
+  // Pra cash, categorias vêm do dataset
+  const all = [...state.cashRequests, ...state.cashReceipts];
+  const cats = new Set();
+  all.forEach(t => {
+    if (t.category) cats.add(t.category);
+  });
+
+  const list = document.getElementById('cat-list');
+  if (!list) return;
+
+  const sorted = [...cats].sort();
+  list.innerHTML = sorted.map(cat => {
+    const checked = state.filter.categories.includes(cat) ? 'checked' : '';
+    const safeCat = escapeHtml(cat).replace(/'/g, '&#39;');
+    return `<label class="multi-option">
+      <input type="checkbox" value="${safeCat}" ${checked} data-cash-cat="${safeCat}">
+      <span>${safeCat}</span>
+    </label>`;
+  }).join('');
+
+  list.querySelectorAll('input[data-cash-cat]').forEach(el => {
+    el.addEventListener('change', e => {
+      const cat = e.target.value;
+      if (e.target.checked) {
+        if (!state.filter.categories.includes(cat)) state.filter.categories.push(cat);
+      } else {
+        state.filter.categories = state.filter.categories.filter(c => c !== cat);
+      }
+      renderCurrentView();
+    });
+  });
+}
+
+function toggleCashCategoryFilter(cat, checked) {
+  // Mantido por compatibilidade
+  if (checked) {
+    if (!state.filter.categories.includes(cat)) state.filter.categories.push(cat);
+  } else {
+    state.filter.categories = state.filter.categories.filter(c => c !== cat);
+  }
+  renderCurrentView();
 }
 
 /**
@@ -2099,12 +2193,11 @@ function renderCashTable(dataset) {
   const container = document.getElementById('table-container');
   if (!container) return;
 
-  // Aplica filtros de país e drivers
+  // Aplica filtros
   const filtered = dataset.filter(item => {
     if (state.filter.country !== 'all' && item.country !== state.filter.country) return false;
-    if (state.filter.drivers.length > 0) {
-      if (!state.filter.drivers.includes(item.driverName)) return false;
-    }
+    if (state.filter.drivers.length > 0 && !state.filter.drivers.includes(item.driverName)) return false;
+    if (state.filter.categories.length > 0 && !state.filter.categories.includes(item.category)) return false;
     return true;
   });
 
@@ -2186,6 +2279,8 @@ function renderStatusBadge(status) {
 function renderCashScorecards(dataset) {
   const filtered = dataset.filter(item => {
     if (state.filter.country !== 'all' && item.country !== state.filter.country) return false;
+    if (state.filter.drivers.length > 0 && !state.filter.drivers.includes(item.driverName)) return false;
+    if (state.filter.categories.length > 0 && !state.filter.categories.includes(item.category)) return false;
     return true;
   });
 
@@ -2194,25 +2289,30 @@ function renderCashScorecards(dataset) {
   const uniqueDrivers = new Set(filtered.map(i => i.driverName)).size;
   const avgPerTx = totalCount > 0 ? totalUsd / totalCount : 0;
 
-  const cards = document.getElementById('scorecards');
+  const cards = document.getElementById('cash-scorecards');
   if (!cards) return;
 
+  const isReq = state.cashTab === 'requests';
   cards.innerHTML = `
     <div class="scorecard">
-      <div class="sc-label">${state.cashTab === 'requests' ? 'Total Pedido (USD)' : 'Total Recibos (USD)'}</div>
+      <div class="sc-label">${isReq ? 'TOTAL PEDIDO (USD)' : 'TOTAL RECIBOS (USD)'}</div>
       <div class="sc-value">$${formatNum(totalUsd)}</div>
+      <div class="sc-sub">${totalCount} ${isReq ? 'pedidos' : 'recibos'}</div>
     </div>
-    <div class="scorecard">
-      <div class="sc-label">${state.cashTab === 'requests' ? '# Pedidos' : '# Recibos'}</div>
+    <div class="scorecard color-green">
+      <div class="sc-label">${isReq ? '# PEDIDOS' : '# RECIBOS'}</div>
       <div class="sc-value">${totalCount}</div>
+      <div class="sc-sub">no período</div>
     </div>
-    <div class="scorecard">
-      <div class="sc-label">Motoristas</div>
+    <div class="scorecard color-orange">
+      <div class="sc-label">MOTORISTAS</div>
       <div class="sc-value">${uniqueDrivers}</div>
+      <div class="sc-sub">com transações</div>
     </div>
-    <div class="scorecard">
-      <div class="sc-label">Média / Transação</div>
+    <div class="scorecard color-purple">
+      <div class="sc-label">MÉDIA / TRANSAÇÃO</div>
       <div class="sc-value">$${formatNum(avgPerTx)}</div>
+      <div class="sc-sub">USD</div>
     </div>
   `;
 }
