@@ -157,8 +157,47 @@
     color: rgba(255,255,255,0.85);
   }
 
+  /* v5.23: filtros extras do modo Cash (Salary toggle + Responsável) */
+  .cash-extra-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    background: white;
+    border-bottom: 1px solid var(--c-border);
+    flex-wrap: wrap;
+  }
+  .cash-extra-filters .filter-label {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  .cash-extra-filters select {
+    padding: 5px 10px;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: inherit;
+    background: white;
+    cursor: pointer;
+    color: var(--c-text);
+    min-width: 140px;
+  }
+  .cash-extra-filters select:hover {
+    border-color: var(--c-primary);
+  }
+  /* Toggle Salary "off" (desativado) */
+  #salary-toggle:not(.active) {
+    background: #FEF2F2;
+    color: #991B1B;
+    border-color: #FECACA;
+  }
+  #salary-toggle:not(.active) #salary-toggle-icon {
+    color: #DC2626;
+  }
+
   /* v5.18: Sub-abas dentro do Cash */
-  .cash-tabs {
     display: flex;
     gap: 0;
     background: white;
@@ -1584,6 +1623,18 @@
 
   <!-- v5.18: container só do CASH (scorecards próprios) -->
   <div id="cash-view" class="hidden">
+
+    <!-- v5.23: filtros extras só pra sub-aba Pedidos (Salary toggle + Responsável) -->
+    <div class="cash-extra-filters" id="cash-extra-filters">
+      <button class="filter-chip active" id="salary-toggle" onclick="toggleIncludeSalary()" title="Incluir/Excluir pedidos do tipo Salary">
+        <span id="salary-toggle-icon">✓</span> <span data-i18n="filterIncludeSalary">Incluir Salary</span>
+      </button>
+      <span class="filter-label" data-i18n="filterResponsible">Responsável:</span>
+      <select id="responsible-filter" onchange="setResponsibleFilter(this.value)">
+        <option value="all" data-i18n="all">Todos</option>
+      </select>
+    </div>
+
     <div class="scorecards" id="cash-scorecards"></div>
 
     <!-- v5.18: charts do cash (3 canvases) -->
@@ -1733,6 +1784,10 @@ const I18N = {
     modeRamp: 'Ramp',
     modeCash: 'Cash',
     adminMode: 'Modo Admin',
+    filterIncludeSalary: 'Incluir Salary',
+    filterOnlyOperational: 'Apenas Operational',
+    filterResponsible: 'Responsável:',
+    filterNoResponsible: '— Sem responsável —',
     cashTabRequests: 'Pedidos',
     cashTabReceipts: 'Recibos',
     cashColDate: 'Data Pedido',
@@ -1886,6 +1941,10 @@ const I18N = {
     modeRamp: 'Ramp',
     modeCash: 'Cash',
     adminMode: 'Modo Admin',
+    filterIncludeSalary: 'Incluir Salary',
+    filterOnlyOperational: 'Apenas Operational',
+    filterResponsible: 'Responsável:',
+    filterNoResponsible: '— Sem responsável —',
     cashTabRequests: 'Pedidos',
     cashTabReceipts: 'Recibos',
     cashColDate: 'Fecha Pedido',
@@ -2031,6 +2090,10 @@ const I18N = {
     modeRamp: 'Ramp',
     modeCash: 'Cash',
     adminMode: 'Admin Mode',
+    filterIncludeSalary: 'Include Salary',
+    filterOnlyOperational: 'Operational Only',
+    filterResponsible: 'Responsible:',
+    filterNoResponsible: '— No responsible —',
     cashTabRequests: 'Requests',
     cashTabReceipts: 'Receipts',
     cashColDate: 'Request Date',
@@ -2305,6 +2368,9 @@ let state = {
     search: '',
     drivers: [],          // array de emails/keys (vazio = todos)
     categories: [],       // array de categorias (vazio = todas)
+    // v5.23: filtros extras só do modo Cash (sub-aba Pedidos)
+    includeSalary: true,    // default: inclui Salary
+    responsible: 'all',     // 'all' | nome do responsável | '__none__'
   },
   // Drill-down: clicar numa categoria/driver no gráfico filtra a página
   // (mostra breadcrumb pra clear). Independente dos filtros normais —
@@ -2393,6 +2459,12 @@ function setMode(newMode) {
   document.getElementById('ramp-view').classList.toggle('hidden', newMode !== 'ramp');
   document.getElementById('cash-view').classList.toggle('hidden', newMode !== 'cash');
 
+  // v5.23: filtros extras visíveis só em Cash + sub-aba Pedidos
+  const extraFilters = document.getElementById('cash-extra-filters');
+  if (extraFilters) {
+    extraFilters.classList.toggle('hidden', !(newMode === 'cash' && state.cashTab === 'requests'));
+  }
+
   // Esconde o drill-breadcrumb e search input que são só do ramp
   const drillBc = document.getElementById('drill-breadcrumb');
   if (drillBc && newMode === 'cash') drillBc.style.display = 'none';
@@ -2416,6 +2488,8 @@ function setCashTab(tab) {
   document.querySelectorAll('[data-cash-tab]').forEach(el => {
     el.classList.toggle('active', el.dataset.cashTab === tab);
   });
+  // v5.23: filtros extras só fazem sentido em Pedidos
+  document.getElementById('cash-extra-filters').classList.toggle('hidden', tab !== 'requests');
   // Re-renderiza com o dataset da sub-aba selecionada
   renderCurrentView();
 }
@@ -2452,6 +2526,8 @@ async function loadCashData() {
     // Popula listas (drivers + categorias) com base no dataset combinado
     populateCashDriverList();
     populateCashCategoryList();
+    // v5.23: popula dropdown de responsáveis (só Pedidos têm)
+    populateResponsibleDropdown();
 
     renderCurrentView();
   } catch (err) {
@@ -2560,6 +2636,92 @@ function toggleCashCategoryFilter(cat, checked) {
   renderCurrentView();
 }
 
+// ==========================================================================
+// v5.23: Filtros extras do modo Cash (Salary toggle + Responsável)
+// ==========================================================================
+
+function toggleIncludeSalary() {
+  state.filter.includeSalary = !state.filter.includeSalary;
+  const btn = document.getElementById('salary-toggle');
+  const icon = document.getElementById('salary-toggle-icon');
+  if (state.filter.includeSalary) {
+    btn.classList.add('active');
+    icon.textContent = '✓';
+    btn.querySelector('span[data-i18n]').textContent = t('filterIncludeSalary') || 'Incluir Salary';
+  } else {
+    btn.classList.remove('active');
+    icon.textContent = '✕';
+    btn.querySelector('span[data-i18n]').textContent = t('filterOnlyOperational') || 'Apenas Operational';
+  }
+  renderCurrentView();
+}
+
+function setResponsibleFilter(value) {
+  state.filter.responsible = value;
+  renderCurrentView();
+}
+
+/**
+ * Popula dropdown de responsáveis com base nos pedidos carregados.
+ * Mantém o valor selecionado se ainda existir no novo dataset.
+ */
+function populateResponsibleDropdown() {
+  const select = document.getElementById('responsible-filter');
+  if (!select) return;
+
+  const respSet = new Set();
+  let hasEmpty = false;
+  state.cashRequests.forEach(item => {
+    const r = (item.responsible || '').trim();
+    if (r) respSet.add(r);
+    else hasEmpty = true;
+  });
+
+  const sorted = [...respSet].sort();
+  const previousValue = state.filter.responsible || 'all';
+
+  let html = `<option value="all">${t('all') || 'Todos'}</option>`;
+  sorted.forEach(r => {
+    html += `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`;
+  });
+  if (hasEmpty) {
+    html += `<option value="__none__">${t('filterNoResponsible') || '— Sem responsável —'}</option>`;
+  }
+  select.innerHTML = html;
+
+  // Restaura valor se ainda existir
+  const validValues = new Set(['all', '__none__', ...sorted]);
+  select.value = validValues.has(previousValue) ? previousValue : 'all';
+  state.filter.responsible = select.value;
+}
+
+/**
+ * Aplica os filtros extras (Salary + Responsável) num dataset.
+ * Só faz sentido pra Pedidos — pra Recibos retorna o array intacto.
+ */
+function applyExtraCashFilters(items) {
+  // Recibos não têm Salary nem Responsável - retorna como está
+  if (state.cashTab !== 'requests') return items;
+
+  let filtered = items;
+
+  // Filtro Salary (default include)
+  if (!state.filter.includeSalary) {
+    filtered = filtered.filter(it => it.reason !== 'Salary');
+  }
+
+  // Filtro responsável
+  if (state.filter.responsible && state.filter.responsible !== 'all') {
+    if (state.filter.responsible === '__none__') {
+      filtered = filtered.filter(it => !it.responsible || !it.responsible.trim());
+    } else {
+      filtered = filtered.filter(it => (it.responsible || '').trim() === state.filter.responsible);
+    }
+  }
+
+  return filtered;
+}
+
 /**
  * Renderiza a view atual (tabela + cards) com base em mode + cashTab.
  */
@@ -2587,12 +2749,14 @@ function renderCurrentView() {
  */
 function renderCashCharts(dataset) {
   // Aplica os mesmos filtros da tabela
-  const filtered = dataset.filter(item => {
+  let filtered = dataset.filter(item => {
     if (state.filter.country !== 'all' && item.country !== state.filter.country) return false;
     if (state.filter.drivers.length > 0 && !state.filter.drivers.includes(item.driverName)) return false;
     if (state.filter.categories.length > 0 && !state.filter.categories.includes(item.category)) return false;
     return true;
   });
+  // v5.23: Salary + Responsável
+  filtered = applyExtraCashFilters(filtered);
 
   // ============ Chart 1: Donut de categorias (USD) ============
   renderCashCategoriesChart(filtered);
@@ -2838,12 +3002,14 @@ function renderCashTable(dataset) {
   if (!container) return;
 
   // Aplica filtros
-  const filtered = dataset.filter(item => {
+  let filtered = dataset.filter(item => {
     if (state.filter.country !== 'all' && item.country !== state.filter.country) return false;
     if (state.filter.drivers.length > 0 && !state.filter.drivers.includes(item.driverName)) return false;
     if (state.filter.categories.length > 0 && !state.filter.categories.includes(item.category)) return false;
     return true;
   });
+  // v5.23: Salary + Responsável
+  filtered = applyExtraCashFilters(filtered);
 
   if (filtered.length === 0) {
     container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--c-text-muted);">Nenhuma transação encontrada</div>';
@@ -2934,12 +3100,14 @@ function renderStatusBadge(status) {
 }
 
 function renderCashScorecards(dataset) {
-  const filtered = dataset.filter(item => {
+  let filtered = dataset.filter(item => {
     if (state.filter.country !== 'all' && item.country !== state.filter.country) return false;
     if (state.filter.drivers.length > 0 && !state.filter.drivers.includes(item.driverName)) return false;
     if (state.filter.categories.length > 0 && !state.filter.categories.includes(item.category)) return false;
     return true;
   });
+  // v5.23: Salary + Responsável
+  filtered = applyExtraCashFilters(filtered);
 
   const totalUsd = filtered.reduce((sum, i) => sum + (i.usdAmount || 0), 0);
   const totalCount = filtered.length;
