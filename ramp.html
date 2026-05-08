@@ -1675,9 +1675,17 @@
         </div>
       </div>
     </div>
+
+    <!-- v5.23 fix: tabela própria do cash, isolada do DOM do Ramp -->
+    <div class="table-section">
+      <div class="table-header">
+        <div class="table-title" id="cash-table-title">Transações Cash</div>
+      </div>
+      <div id="cash-table-container"></div>
+    </div>
   </div>
 
-  <div class="table-section">
+  <div class="table-section" id="ramp-table-section">
     <div class="table-header">
       <div class="table-title"><span data-i18n="tableTitle">Transações</span> <span id="filter-summary" style="font-weight:400;color:var(--c-text-muted);font-size:12px;"></span></div>
       <input type="text" class="table-search" placeholder="Buscar por usuário, merchant…" data-i18n-placeholder="searchPlaceholder" id="search-input" oninput="onSearchInput()">
@@ -2459,6 +2467,10 @@ function setMode(newMode) {
   document.getElementById('ramp-view').classList.toggle('hidden', newMode !== 'ramp');
   document.getElementById('cash-view').classList.toggle('hidden', newMode !== 'cash');
 
+  // v5.23 fix: tabela do ramp também esconde no modo cash (cash tem a sua própria)
+  const rampTable = document.getElementById('ramp-table-section');
+  if (rampTable) rampTable.classList.toggle('hidden', newMode !== 'ramp');
+
   // v5.23: filtros extras visíveis só em Cash + sub-aba Pedidos
   const extraFilters = document.getElementById('cash-extra-filters');
   if (extraFilters) {
@@ -2998,7 +3010,7 @@ function renderCashTimelineChart(filtered) {
  * Renderiza tabela de Cash (Pedidos OU Recibos, depending on cashTab).
  */
 function renderCashTable(dataset) {
-  const container = document.getElementById('table-container');
+  const container = document.getElementById('cash-table-container');
   if (!container) return;
 
   // Aplica filtros
@@ -3464,12 +3476,36 @@ function renderScorecards(filtered) {
 }
 
 function renderTable(filtered) {
-  const tbody = document.getElementById('table-body');
+  // v5.23 fix: se tbody foi destruído (por mudança de modo), recria estrutura
+  let tbody = document.getElementById('table-body');
+  if (!tbody) {
+    const container = document.getElementById('table-container');
+    if (container) {
+      container.innerHTML = `
+        <table class="ramp-table">
+          <thead>
+            <tr>
+              <th data-sort="date" data-i18n="colDate">Data</th>
+              <th data-sort="user" data-i18n="colUser">Usuário</th>
+              <th data-sort="country" data-i18n="colCountry">País</th>
+              <th data-sort="category" data-i18n="colCategory">Categoria</th>
+              <th data-sort="merchant" data-i18n="colMerchant">Estabelecimento</th>
+              <th data-sort="amount" style="text-align:right;" data-i18n="colAmount">Valor</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      `;
+      tbody = document.getElementById('table-body');
+      if (typeof applyI18n === 'function') applyI18n();
+    }
+    if (!tbody) return;  // ainda null? aborta
+  }
   const footer = document.getElementById('table-footer');
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="ic">💸</div>${t('tableEmptyTitle')}</div></td></tr>`;
-    footer.style.display = 'none';
+    if (footer) footer.style.display = 'none';
     return;
   }
 
