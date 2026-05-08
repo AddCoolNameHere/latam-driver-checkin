@@ -124,6 +124,81 @@
     color: var(--c-primary);
     box-shadow: 0 1px 2px rgba(0,0,0,0.06);
   }
+
+  /* v5.18: Toggle Ramp/Cash */
+  .mode-switch {
+    display: flex;
+    background: var(--c-primary-dark);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 0;
+  }
+  .mode-switch .mode-btn {
+    background: none;
+    border: none;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    border-radius: 6px;
+    font-family: inherit;
+    letter-spacing: 0.4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .mode-switch .mode-btn.active {
+    background: white;
+    color: var(--c-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+  .mode-switch .mode-btn:hover:not(.active) {
+    color: rgba(255,255,255,0.85);
+  }
+
+  /* v5.18: Sub-abas dentro do Cash */
+  .cash-tabs {
+    display: flex;
+    gap: 0;
+    background: white;
+    border-bottom: 1px solid var(--c-border);
+    padding: 0 24px;
+  }
+  .cash-tab {
+    background: none;
+    border: none;
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .cash-tab:hover { color: var(--c-text); }
+  .cash-tab.active {
+    color: var(--c-primary);
+    border-bottom-color: var(--c-primary);
+  }
+  .cash-tab-count {
+    font-size: 11px;
+    background: var(--c-bg);
+    color: var(--c-text-muted);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .cash-tab.active .cash-tab-count {
+    background: rgba(91, 160, 220, 0.15);
+    color: var(--c-primary);
+  }
+  .hidden { display: none !important; }
   .user-pill {
     padding: 5px 12px;
     background: var(--c-bg);
@@ -949,20 +1024,37 @@
       <img src="https://www.greatplacetowork.in/great/api/assets/uploads/13040/logo/logo.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
       <div class="brand-divider"></div>
       <div class="brand-sub">
-        <div class="brand-title-line">RAMP EXPENSES</div>
+        <div class="brand-title-line" id="brand-title-line">RAMP EXPENSES</div>
         <div class="brand-region-line">LATAM</div>
       </div>
     </div>
     <div class="header-right">
       <a href="dashboard.html" class="nav-link" data-i18n="navDashboard">← Dashboard ops</a>
+      <!-- v5.18: toggle Ramp/Cash -->
+      <div class="mode-switch">
+        <button class="mode-btn active" id="mode-ramp" onclick="setMode('ramp')">💳 <span data-i18n="modeRamp">Ramp</span></button>
+        <button class="mode-btn" id="mode-cash" onclick="setMode('cash')">💰 <span data-i18n="modeCash">Cash</span></button>
+      </div>
       <div class="lang-switch">
         <button data-lang="pt">PT</button>
         <button data-lang="es">ES</button>
         <button data-lang="en">EN</button>
       </div>
-      <button class="filter-chip" onclick="loadRampData()" data-i18n="refreshBtn">⟳ Atualizar</button>
+      <button class="filter-chip" onclick="reloadCurrentMode()" data-i18n="refreshBtn">⟳ Atualizar</button>
       <div class="user-pill" id="user-pill"></div>
     </div>
+  </div>
+
+  <!-- v5.18: sub-abas que aparecem só no modo Cash -->
+  <div class="cash-tabs hidden" id="cash-tabs">
+    <button class="cash-tab active" data-cash-tab="requests" onclick="setCashTab('requests')">
+      📥 <span data-i18n="cashTabRequests">Pedidos</span>
+      <span class="cash-tab-count" id="count-requests">—</span>
+    </button>
+    <button class="cash-tab" data-cash-tab="receipts" onclick="setCashTab('receipts')">
+      🧾 <span data-i18n="cashTabReceipts">Recibos</span>
+      <span class="cash-tab-count" id="count-receipts">—</span>
+    </button>
   </div>
 
   <div class="filters">
@@ -1256,6 +1348,22 @@ const I18N = {
     // Header
     navDashboard: '← Dashboard ops',
     refreshBtn: '⟳ Atualizar',
+    modeRamp: 'Ramp',
+    modeCash: 'Cash',
+    cashTabRequests: 'Pedidos',
+    cashTabReceipts: 'Recibos',
+    cashColDate: 'Data Pedido',
+    cashColTimestamp: 'Data',
+    cashColDriver: 'Motorista',
+    cashColCountry: 'País',
+    cashColReason: 'Motivo',
+    cashColCategory: 'Categoria',
+    cashColEstablishment: 'Estabelecimento',
+    cashColLocal: 'Valor Local',
+    cashColUsd: 'USD',
+    cashColStatus: 'Status',
+    cashColAttachment: 'Anexo',
+    cashColReceipt: 'Recibo',
     loginProduct: 'RAMP EXPENSES',
     loginTitle: 'Login',
     loginSubtitle: 'Acesse com suas credenciais',
@@ -1392,6 +1500,22 @@ const I18N = {
   es: {
     navDashboard: '← Dashboard ops',
     refreshBtn: '⟳ Actualizar',
+    modeRamp: 'Ramp',
+    modeCash: 'Cash',
+    cashTabRequests: 'Pedidos',
+    cashTabReceipts: 'Recibos',
+    cashColDate: 'Fecha Pedido',
+    cashColTimestamp: 'Fecha',
+    cashColDriver: 'Conductor',
+    cashColCountry: 'País',
+    cashColReason: 'Motivo',
+    cashColCategory: 'Categoría',
+    cashColEstablishment: 'Establecimiento',
+    cashColLocal: 'Valor Local',
+    cashColUsd: 'USD',
+    cashColStatus: 'Estado',
+    cashColAttachment: 'Adjunto',
+    cashColReceipt: 'Recibo',
     loginProduct: 'RAMP EXPENSES',
     loginTitle: 'Iniciar sesión',
     loginSubtitle: 'Accede con tus credenciales',
@@ -1520,6 +1644,22 @@ const I18N = {
   en: {
     navDashboard: '← Ops Dashboard',
     refreshBtn: '⟳ Refresh',
+    modeRamp: 'Ramp',
+    modeCash: 'Cash',
+    cashTabRequests: 'Requests',
+    cashTabReceipts: 'Receipts',
+    cashColDate: 'Request Date',
+    cashColTimestamp: 'Date',
+    cashColDriver: 'Driver',
+    cashColCountry: 'Country',
+    cashColReason: 'Reason',
+    cashColCategory: 'Category',
+    cashColEstablishment: 'Establishment',
+    cashColLocal: 'Local Amount',
+    cashColUsd: 'USD',
+    cashColStatus: 'Status',
+    cashColAttachment: 'Attachment',
+    cashColReceipt: 'Receipt',
     loginProduct: 'RAMP EXPENSES',
     loginTitle: 'Login',
     loginSubtitle: 'Sign in with your credentials',
@@ -1759,7 +1899,15 @@ const CONFIG = {
 };
 
 let state = {
-  transactions: [],     // dataset bruto do backend
+  // v5.18: modo geral - 'ramp' ou 'cash'
+  mode: 'ramp',
+  // v5.18: sub-aba do modo cash - 'requests' ou 'receipts'
+  cashTab: 'requests',
+  // v5.18: dados carregados de Cash Transactions
+  cashRequests: [],
+  cashReceipts: [],
+
+  transactions: [],     // dataset bruto do backend (Ramp)
   filtered: [],         // após aplicar filtros principais
   filter: {
     country: 'all',
@@ -1823,6 +1971,255 @@ function getPeriodRange() {
     start: formatDateYMD(start),
     end: formatDateYMD(end),
   };
+}
+
+// ==========================================================================
+// v5.18: Modo Ramp ↔ Cash + sub-abas
+// ==========================================================================
+
+function setMode(newMode) {
+  if (newMode === state.mode) return;
+  state.mode = newMode;
+
+  // Atualiza visual do toggle
+  document.getElementById('mode-ramp').classList.toggle('active', newMode === 'ramp');
+  document.getElementById('mode-cash').classList.toggle('active', newMode === 'cash');
+
+  // Atualiza título do header
+  const titleLine = document.getElementById('brand-title-line');
+  if (titleLine) titleLine.textContent = newMode === 'cash' ? 'CASH TRANSACTIONS' : 'RAMP EXPENSES';
+
+  // Mostra/esconde sub-abas do cash
+  document.getElementById('cash-tabs').classList.toggle('hidden', newMode !== 'cash');
+
+  // Carrega dados do modo correspondente
+  reloadCurrentMode();
+}
+
+function setCashTab(tab) {
+  if (tab === state.cashTab) return;
+  state.cashTab = tab;
+  document.querySelectorAll('[data-cash-tab]').forEach(el => {
+    el.classList.toggle('active', el.dataset.cashTab === tab);
+  });
+  // Re-renderiza com o dataset da sub-aba selecionada
+  renderCurrentView();
+}
+
+function reloadCurrentMode() {
+  if (state.mode === 'ramp') {
+    loadRampData();
+  } else {
+    loadCashData();
+  }
+}
+
+async function loadCashData() {
+  const { start, end } = getPeriodRange();
+  showLoader(true, `${t('loadingPeriod')} ${start} → ${end}…`);
+
+  try {
+    const url = `${CONFIG.scriptUrl}?action=getCashTransactions&startDate=${start}&endDate=${end}`;
+    const res = await fetch(url).then(r => r.json());
+    if (!res.success) throw new Error(res.error || 'Backend retornou erro');
+
+    state.cashRequests = res.data.requests || [];
+    state.cashReceipts = res.data.receipts || [];
+
+    // Atualiza counters nas tabs
+    document.getElementById('count-requests').textContent = state.cashRequests.length;
+    document.getElementById('count-receipts').textContent = state.cashReceipts.length;
+
+    // Atualiza info de período
+    const total = state.cashRequests.length + state.cashReceipts.length;
+    document.getElementById('period-info').textContent =
+      `${formatDateBR(start)} → ${formatDateBR(end)}  ·  ${total} ${t('chartTransactions')}`;
+
+    // Popula listas (drivers + categorias) com base no dataset combinado
+    populateCashDriverList();
+    populateCashCategoryList();
+
+    renderCurrentView();
+  } catch (err) {
+    console.error('[Cash] Erro:', err);
+    showToast(`Erro: ${err.message}`, 'error');
+    state.cashRequests = [];
+    state.cashReceipts = [];
+  } finally {
+    showLoader(false);
+  }
+}
+
+/**
+ * Popula multi-select de drivers com base nos dados de cash carregados.
+ * Re-usa `populateDriverList` mas alimenta com dataset unificado.
+ */
+function populateCashDriverList() {
+  const all = [...state.cashRequests, ...state.cashReceipts];
+  const driverSet = new Set();
+  all.forEach(t => {
+    if (t.driverName) driverSet.add(t.driverName);
+  });
+  // Atualiza estado simulando o dataset do ramp (pra reusar a UI de filtros)
+  state.transactions = all;  // truque: filtros normais conseguem ler `state.transactions[].driver_name`
+  // Renomeia campos pra compatibilidade com filtros existentes
+  state.transactions = all.map(t => ({
+    ...t,
+    user_name: t.driverName,
+    sk_user_id: t.driverEmail || t.driverName,
+    country: t.country || '',
+    sk_category: t.category || (t.reason || ''),
+  }));
+  populateDriverList();
+}
+
+function populateCashCategoryList() {
+  populateCategoryList();
+}
+
+/**
+ * Renderiza a view atual (tabela + cards) com base em mode + cashTab.
+ */
+function renderCurrentView() {
+  if (state.mode === 'ramp') {
+    // Re-renderiza modo ramp (lógica original)
+    applyFiltersAndRender();
+    return;
+  }
+  // Modo cash: usa dataset da sub-aba selecionada
+  const dataset = state.cashTab === 'requests' ? state.cashRequests : state.cashReceipts;
+  renderCashTable(dataset);
+  renderCashScorecards(dataset);
+}
+
+/**
+ * Renderiza tabela de Cash (Pedidos OU Recibos, depending on cashTab).
+ */
+function renderCashTable(dataset) {
+  const container = document.getElementById('table-container');
+  if (!container) return;
+
+  // Aplica filtros de país e drivers
+  const filtered = dataset.filter(item => {
+    if (state.filter.country !== 'all' && item.country !== state.filter.country) return false;
+    if (state.filter.drivers.length > 0) {
+      if (!state.filter.drivers.includes(item.driverName)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--c-text-muted);">Nenhuma transação encontrada</div>';
+    return;
+  }
+
+  let html = '<table class="ramp-table"><thead><tr>';
+  if (state.cashTab === 'requests') {
+    html += `
+      <th class="col-date">${t('cashColDate') || 'Data Pedido'}</th>
+      <th class="col-user">${t('cashColDriver') || 'Motorista'}</th>
+      <th class="col-merchant">${t('cashColCountry') || 'País'}</th>
+      <th class="col-merchant">${t('cashColReason') || 'Motivo'}</th>
+      <th class="col-merchant">${t('cashColCategory') || 'Categoria'}</th>
+      <th class="col-amount">${t('cashColLocal') || 'Valor Local'}</th>
+      <th class="col-amount">${t('cashColUsd') || 'USD'}</th>
+      <th class="col-merchant">${t('cashColStatus') || 'Status'}</th>
+      <th class="col-merchant">${t('cashColAttachment') || 'Anexo'}</th>`;
+  } else {
+    html += `
+      <th class="col-date">${t('cashColTimestamp') || 'Data'}</th>
+      <th class="col-user">${t('cashColDriver') || 'Motorista'}</th>
+      <th class="col-merchant">${t('cashColCountry') || 'País'}</th>
+      <th class="col-merchant">${t('cashColCategory') || 'Categoria'}</th>
+      <th class="col-merchant">${t('cashColEstablishment') || 'Estabelecimento'}</th>
+      <th class="col-amount">${t('cashColLocal') || 'Valor Local'}</th>
+      <th class="col-amount">${t('cashColUsd') || 'USD'}</th>
+      <th class="col-merchant">${t('cashColReceipt') || 'Recibo'}</th>`;
+  }
+  html += '</tr></thead><tbody>';
+
+  filtered.slice(0, state.pageLimit).forEach(item => {
+    if (state.cashTab === 'requests') {
+      html += `<tr>
+        <td class="col-date">${formatDateBR((item.dateRequest || '').split(' ')[0])}</td>
+        <td class="col-user">${escapeHtml(item.driverName)}</td>
+        <td><span class="country-badge">${escapeHtml(item.country)}</span></td>
+        <td>${escapeHtml(item.reason)}</td>
+        <td>${item.category ? `<span class="category-badge">${escapeHtml(item.category)}</span>` : '—'}</td>
+        <td class="col-amount">${item.currency} ${formatNum(item.localAmount)}</td>
+        <td class="col-amount">${item.usdAmount !== null ? '$' + formatNum(item.usdAmount) : '—'}</td>
+        <td>${renderStatusBadge(item.status)}</td>
+        <td>${item.attachmentUrl ? `<a href="${item.attachmentUrl}" target="_blank">📎</a>` : '—'}</td>
+      </tr>`;
+    } else {
+      html += `<tr>
+        <td class="col-date">${formatDateBR((item.timestamp || '').split(' ')[0])}</td>
+        <td class="col-user">${escapeHtml(item.driverName)}</td>
+        <td><span class="country-badge">${escapeHtml(item.country)}</span></td>
+        <td><span class="category-badge">${escapeHtml(item.category)}</span></td>
+        <td>${escapeHtml(item.establishment || '—')}</td>
+        <td class="col-amount">${item.currency} ${formatNum(item.localAmount)}</td>
+        <td class="col-amount">${item.usdAmount !== null ? '$' + formatNum(item.usdAmount) : '—'}</td>
+        <td>${item.receiptUrl ? `<a href="${item.receiptUrl}" target="_blank">📎</a>` : '—'}</td>
+      </tr>`;
+    }
+  });
+
+  html += '</tbody></table>';
+  if (filtered.length > state.pageLimit) {
+    html += `<div style="padding:12px;text-align:center;color:var(--c-text-muted);font-size:12px;">Mostrando ${state.pageLimit} de ${filtered.length}</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function renderStatusBadge(status) {
+  const colors = {
+    'Pending': '#F59E0B',
+    'Approved': '#16A34A',
+    'Paid': '#0EA5E9',
+    'Rejected': '#DC2626',
+  };
+  const color = colors[status] || '#64748B';
+  return `<span style="background:${color}22;color:${color};padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;">${escapeHtml(status)}</span>`;
+}
+
+function renderCashScorecards(dataset) {
+  const filtered = dataset.filter(item => {
+    if (state.filter.country !== 'all' && item.country !== state.filter.country) return false;
+    return true;
+  });
+
+  const totalUsd = filtered.reduce((sum, i) => sum + (i.usdAmount || 0), 0);
+  const totalCount = filtered.length;
+  const uniqueDrivers = new Set(filtered.map(i => i.driverName)).size;
+  const avgPerTx = totalCount > 0 ? totalUsd / totalCount : 0;
+
+  const cards = document.getElementById('scorecards');
+  if (!cards) return;
+
+  cards.innerHTML = `
+    <div class="scorecard">
+      <div class="sc-label">${state.cashTab === 'requests' ? 'Total Pedido (USD)' : 'Total Recibos (USD)'}</div>
+      <div class="sc-value">$${formatNum(totalUsd)}</div>
+    </div>
+    <div class="scorecard">
+      <div class="sc-label">${state.cashTab === 'requests' ? '# Pedidos' : '# Recibos'}</div>
+      <div class="sc-value">${totalCount}</div>
+    </div>
+    <div class="scorecard">
+      <div class="sc-label">Motoristas</div>
+      <div class="sc-value">${uniqueDrivers}</div>
+    </div>
+    <div class="scorecard">
+      <div class="sc-label">Média / Transação</div>
+      <div class="sc-value">$${formatNum(avgPerTx)}</div>
+    </div>
+  `;
+}
+
+function formatNum(n) {
+  if (n === null || n === undefined || isNaN(n)) return '0';
+  return Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 async function loadRampData() {
