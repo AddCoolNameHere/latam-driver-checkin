@@ -405,6 +405,102 @@
     background: #EBF4FB !important;
   }
 
+  /* v5.21: Modal do motorista (estende tx-modal) */
+  .dr-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5BA0DC 0%, #1E3A5F 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .dr-name-link {
+    color: var(--c-primary);
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .dr-name-link:hover {
+    text-decoration: underline;
+  }
+  .dr-mini-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .dr-mini-card {
+    padding: 12px;
+    background: var(--c-bg);
+    border-radius: 8px;
+    text-align: center;
+  }
+  .dr-mini-card-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .dr-mini-card-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+  }
+  .dr-mini-card-sub {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+  .dr-mini-card.warning .dr-mini-card-value { color: #DC2626; }
+  .dr-mini-card.success .dr-mini-card-value { color: #16A34A; }
+
+  .dr-tx-list {
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .dr-tx-list table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .dr-tx-list th {
+    background: var(--c-bg);
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .dr-tx-list td {
+    padding: 8px 10px;
+    border-top: 1px solid var(--c-border);
+    color: var(--c-text);
+  }
+  .dr-tx-list tr.tx-row-clickable:hover {
+    background: #EBF4FB;
+    cursor: pointer;
+  }
+  .dr-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  @media (max-width: 600px) {
+    .dr-mini-cards { grid-template-columns: repeat(2, 1fr); }
+  }
+
   /* v5.19: Toggle Modo Admin no header (rosa quando ativo) */
   .admin-toggle {
     background: var(--c-bg);
@@ -2787,7 +2883,7 @@ function renderCashTable(dataset) {
     if (state.cashTab === 'requests') {
       html += `<tr ${clickable}>
         <td class="col-date">${formatDateBR((item.dateRequest || '').split(' ')[0])}</td>
-        <td class="col-user">${escapeHtml(item.driverName)}</td>
+        <td class="col-user"><span class="dr-name-link" data-dr-link-email="${escapeHtml(item.driverEmail || '')}" data-dr-link-name="${escapeHtml(item.driverName)}" onclick="event.stopPropagation(); openDriverModal(this.dataset.drLinkEmail, this.dataset.drLinkName);">${escapeHtml(item.driverName)}</span></td>
         <td><span class="country-badge">${escapeHtml(item.country)}</span></td>
         <td>${escapeHtml(item.reason)}</td>
         <td>${item.category ? `<span class="category-badge">${escapeHtml(item.category)}</span>` : '—'}</td>
@@ -2799,7 +2895,7 @@ function renderCashTable(dataset) {
     } else {
       html += `<tr ${clickable}>
         <td class="col-date">${formatDateBR((item.timestamp || '').split(' ')[0])}</td>
-        <td class="col-user">${escapeHtml(item.driverName)}</td>
+        <td class="col-user"><span class="dr-name-link" data-dr-link-email="${escapeHtml(item.driverEmail || '')}" data-dr-link-name="${escapeHtml(item.driverName)}" onclick="event.stopPropagation(); openDriverModal(this.dataset.drLinkEmail, this.dataset.drLinkName);">${escapeHtml(item.driverName)}</span></td>
         <td><span class="country-badge">${escapeHtml(item.country)}</span></td>
         <td><span class="category-badge">${escapeHtml(item.category)}</span></td>
         <td>${escapeHtml(item.establishment || '—')}</td>
@@ -4303,7 +4399,7 @@ function renderTxRequestBody(item) {
     <div class="tx-grid">
       <div class="tx-field">
         <div class="tx-field-label">Nome</div>
-        <div class="tx-field-value">${escapeHtml(item.driverName)}</div>
+        <div class="tx-field-value"><span class="dr-name-link" onclick="openDriverModal('${escapeHtml(item.driverEmail || '')}', '${escapeHtml(item.driverName)}')">${escapeHtml(item.driverName)} →</span></div>
       </div>
       <div class="tx-field">
         <div class="tx-field-label">País</div>
@@ -4396,7 +4492,7 @@ function renderTxReceiptBody(item) {
     <div class="tx-grid">
       <div class="tx-field">
         <div class="tx-field-label">Nome</div>
-        <div class="tx-field-value">${escapeHtml(item.driverName)}</div>
+        <div class="tx-field-value"><span class="dr-name-link" onclick="openDriverModal('${escapeHtml(item.driverEmail || '')}', '${escapeHtml(item.driverName)}')">${escapeHtml(item.driverName)} →</span></div>
       </div>
       <div class="tx-field">
         <div class="tx-field-label">Email</div>
@@ -4610,6 +4706,343 @@ function onEditTx() {
 function onDeleteTx() {
   alert('Exclusão de transação será implementada na Fase 4.');
 }
+
+
+// ==========================================================================
+// v5.21: Modal do motorista (perfil consolidado: cash + base + métricas)
+// ==========================================================================
+
+let drModalMap = null;       // instância Leaflet do modal driver
+let drModalCurrent = null;   // driver atual
+
+/**
+ * Abre o modal do motorista. Aceita email OU nome.
+ * Se modal de transação estiver aberto, fecha primeiro pra evitar empilhar.
+ */
+async function openDriverModal(driverEmail, driverName) {
+  // Fecha modal de transação se aberto (evita confusão visual)
+  if (document.getElementById('tx-modal-backdrop').classList.contains('open')) {
+    closeTxModal();
+  }
+
+  // Fetch info do driver (HR + base)
+  let info = null;
+  try {
+    const url = `${CONFIG.scriptUrl}?action=getDriverInfo`
+      + (driverEmail ? `&email=${encodeURIComponent(driverEmail)}` : '')
+      + (driverName ? `&name=${encodeURIComponent(driverName)}` : '');
+    const res = await fetch(url).then(r => r.json());
+    if (res.success && res.info) info = res.info;
+  } catch (err) {
+    console.warn('[Driver Modal] Erro buscando info:', err);
+  }
+
+  // Fallback se backend não retornou (driver não está mais ativo, etc)
+  if (!info) {
+    info = {
+      name: driverName || '?',
+      email: driverEmail || '',
+      country: '',
+      status: '',
+      base: null,
+    };
+  }
+
+  drModalCurrent = info;
+
+  // Header
+  const initials = (info.name || '?').split(' ').slice(0, 2).map(p => p[0] || '').join('').toUpperCase() || '?';
+  document.getElementById('dr-avatar').textContent = initials;
+
+  const flags = {
+    'Argentina': '🇦🇷', 'Brazil': '🇧🇷', 'Brasil': '🇧🇷',
+    'Chile': '🇨🇱', 'Colombia': '🇨🇴',
+    'Mexico': '🇲🇽', 'México': '🇲🇽', 'Peru': '🇵🇪', 'Perú': '🇵🇪',
+  };
+  const flag = flags[info.country] || '🌎';
+
+  document.getElementById('dr-modal-title').textContent = info.name;
+
+  let subtitle = `${flag} ${info.country || '—'}`;
+  if (info.status) subtitle += ` • ${info.status}`;
+  if (info.email) subtitle += ` • ${info.email}`;
+  document.getElementById('dr-modal-subtitle').textContent = subtitle;
+
+  // Body
+  document.getElementById('dr-modal-body').innerHTML = renderDriverModalBody(info);
+
+  // Mostra modal
+  document.getElementById('dr-modal-backdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Renderiza mapa após DOM estabilizar
+  setTimeout(() => renderDriverModalMap(info), 100);
+}
+
+function closeDrModal() {
+  document.getElementById('dr-modal-backdrop').classList.remove('open');
+  // Se modal de transação não estiver aberto também, libera scroll
+  if (!document.getElementById('tx-modal-backdrop').classList.contains('open')) {
+    document.body.style.overflow = '';
+  }
+  if (drModalMap) {
+    drModalMap.remove();
+    drModalMap = null;
+  }
+  drModalCurrent = null;
+}
+
+function closeDrModalIfBackdrop(evt) {
+  if (evt.target.id === 'dr-modal-backdrop') closeDrModal();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('dr-modal-backdrop').classList.contains('open')) {
+    closeDrModal();
+  }
+});
+
+/**
+ * Filtra cashRequests + cashReceipts pelo driver (email ou nome).
+ */
+function getDriverCashTransactions_(info) {
+  const matchByEmail = info.email ? info.email.toLowerCase() : null;
+  const matchByName = info.name ? info.name.toLowerCase() : null;
+
+  const matches = (item) => {
+    if (matchByEmail && item.driverEmail && item.driverEmail.toLowerCase() === matchByEmail) return true;
+    if (matchByName && item.driverName && item.driverName.toLowerCase() === matchByName) return true;
+    return false;
+  };
+
+  return {
+    requests: state.cashRequests.filter(matches),
+    receipts: state.cashReceipts.filter(matches),
+  };
+}
+
+/**
+ * Renderiza body do modal do motorista.
+ */
+function renderDriverModalBody(info) {
+  const { requests, receipts } = getDriverCashTransactions_(info);
+
+  // Métricas
+  const totalReq = requests.reduce((s, r) => s + (r.usdAmount || 0), 0);
+  const totalRec = receipts.reduce((s, r) => s + (r.usdAmount || 0), 0);
+  const totalTx = requests.length + receipts.length;
+  const balance = totalReq - totalRec;  // pedido - justificado
+
+  let html = '';
+
+  // Mini scorecards
+  html += `<div class="tx-section">
+    <div class="dr-mini-cards">
+      <div class="dr-mini-card">
+        <div class="dr-mini-card-label">Total Pedido</div>
+        <div class="dr-mini-card-value">$${formatNum(totalReq)}</div>
+        <div class="dr-mini-card-sub">${requests.length} pedido${requests.length !== 1 ? 's' : ''}</div>
+      </div>
+      <div class="dr-mini-card success">
+        <div class="dr-mini-card-label">Total Recibos</div>
+        <div class="dr-mini-card-value">$${formatNum(totalRec)}</div>
+        <div class="dr-mini-card-sub">${receipts.length} recibo${receipts.length !== 1 ? 's' : ''}</div>
+      </div>
+      <div class="dr-mini-card">
+        <div class="dr-mini-card-label">Transações</div>
+        <div class="dr-mini-card-value">${totalTx}</div>
+        <div class="dr-mini-card-sub">no período</div>
+      </div>
+      <div class="dr-mini-card ${balance > 0 ? 'warning' : ''}">
+        <div class="dr-mini-card-label">Saldo</div>
+        <div class="dr-mini-card-value">$${formatNum(balance)}</div>
+        <div class="dr-mini-card-sub">${balance > 0 ? 'a justificar' : 'justificado'}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Base info
+  if (info.base) {
+    html += `<div class="tx-section">
+      <div class="tx-section-title">🏠 Base atual</div>
+      <div class="tx-grid">
+        <div class="tx-field">
+          <div class="tx-field-label">Tipo</div>
+          <div class="tx-field-value">${escapeHtml(info.base.type || '—')}</div>
+        </div>
+        <div class="tx-field">
+          <div class="tx-field-label">Endereço</div>
+          <div class="tx-field-value">${escapeHtml(info.base.address || '—')}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Mapa
+  html += `<div class="tx-section">
+    <div class="tx-section-title">🗺 Mapa de atividade</div>
+    <div class="tx-modal-map" id="dr-modal-map" style="height:280px;"></div>
+    <div style="font-size:10px;color:var(--c-text-muted);margin-top:6px;">
+      🔵 Base · 🩷 GPS dos pedidos no período
+    </div>
+  </div>`;
+
+  // Lista de Pedidos
+  html += `<div class="tx-section">
+    <div class="tx-section-title">📥 Pedidos no período (${requests.length})</div>
+    ${renderDriverTxList(requests, 'requests')}
+  </div>`;
+
+  // Lista de Recibos
+  html += `<div class="tx-section">
+    <div class="tx-section-title">🧾 Recibos no período (${receipts.length})</div>
+    ${renderDriverTxList(receipts, 'receipts')}
+  </div>`;
+
+  return html;
+}
+
+function renderDriverTxList(items, kind) {
+  if (items.length === 0) {
+    return `<div class="dr-tx-list"><div class="dr-empty">Nenhuma transação no período</div></div>`;
+  }
+
+  let html = `<div class="dr-tx-list"><table><thead><tr>`;
+  if (kind === 'requests') {
+    html += `<th>Data</th><th>Motivo</th><th>Categoria</th><th style="text-align:right;">Local</th><th style="text-align:right;">USD</th><th>Status</th>`;
+  } else {
+    html += `<th>Data</th><th>Categoria</th><th>Estabelecimento</th><th style="text-align:right;">Local</th><th style="text-align:right;">USD</th><th>📎</th>`;
+  }
+  html += `</tr></thead><tbody>`;
+
+  // Ordena por data desc, limita a 20
+  const sorted = items.slice(0, 20);
+
+  sorted.forEach((item, idx) => {
+    const txKey = `${kind}-${idx}`;
+    if (kind === 'requests') {
+      html += `<tr class="tx-row-clickable" data-dr-tx-kind="${kind}" data-dr-tx-name="${escapeHtml(item.driverName || '')}" data-dr-tx-date="${escapeHtml(item.dateRequest || '')}">
+        <td>${formatDateBR((item.dateRequest || '').split(' ')[0])}</td>
+        <td>${escapeHtml(item.reason || '—')}</td>
+        <td>${item.category ? escapeHtml(item.category) : '—'}</td>
+        <td style="text-align:right;">${item.currency} ${formatNum(item.localAmount)}</td>
+        <td style="text-align:right;font-weight:600;">${item.usdAmount !== null ? '$' + formatNum(item.usdAmount) : '—'}</td>
+        <td>${renderStatusBadge(item.status || 'Pending')}</td>
+      </tr>`;
+    } else {
+      html += `<tr class="tx-row-clickable" data-dr-tx-kind="${kind}" data-dr-tx-name="${escapeHtml(item.driverName || '')}" data-dr-tx-date="${escapeHtml(item.timestamp || '')}">
+        <td>${formatDateBR((item.timestamp || '').split(' ')[0])}</td>
+        <td><span class="category-badge">${escapeHtml(item.category)}</span></td>
+        <td>${escapeHtml(item.establishment || '—')}</td>
+        <td style="text-align:right;">${item.currency} ${formatNum(item.localAmount)}</td>
+        <td style="text-align:right;font-weight:600;">${item.usdAmount !== null ? '$' + formatNum(item.usdAmount) : '—'}</td>
+        <td>${item.receiptUrl ? '📎' : '—'}</td>
+      </tr>`;
+    }
+  });
+
+  html += `</tbody></table></div>`;
+
+  if (items.length > 20) {
+    html += `<div style="padding:8px;text-align:center;font-size:11px;color:var(--c-text-muted);">Mostrando 20 de ${items.length}</div>`;
+  }
+
+  // Wire click após render (delegação a partir do container)
+  setTimeout(() => {
+    document.querySelectorAll('#dr-modal-body [data-dr-tx-kind]').forEach(tr => {
+      if (tr.dataset.wired === '1') return;
+      tr.dataset.wired = '1';
+      tr.addEventListener('click', () => {
+        const kind = tr.dataset.drTxKind;
+        const date = tr.dataset.drTxDate;
+        const name = tr.dataset.drTxName;
+        const key = kind === 'requests' ? 'dateRequest' : 'timestamp';
+        const dataset = kind === 'requests' ? state.cashRequests : state.cashReceipts;
+        const found = dataset.find(it => it.driverName === name && it[key] === date);
+        if (found) {
+          // Switch tab pra alinhar com a tabela detail (renderTxBody usa state.cashTab)
+          state.cashTab = kind;
+          openTxModal(found);
+        }
+      });
+    });
+  }, 50);
+
+  return html;
+}
+
+/**
+ * Renderiza mapa: base + GPS de todos os pedidos do driver.
+ */
+async function renderDriverModalMap(info) {
+  const mapEl = document.getElementById('dr-modal-map');
+  if (!mapEl || typeof L === 'undefined') return;
+
+  if (drModalMap) {
+    drModalMap.remove();
+    drModalMap = null;
+  }
+
+  const markers = [];
+
+  // Base
+  if (info.base && info.base.lat && info.base.lng) {
+    markers.push({
+      lat: info.base.lat,
+      lng: info.base.lng,
+      label: '🏠 Base',
+      color: '#5BA0DC',
+      size: 16,
+      detail: info.base.address || '',
+    });
+  }
+
+  // GPS dos pedidos do driver
+  const { requests } = getDriverCashTransactions_(info);
+  requests.forEach(req => {
+    if (req.locationLat && req.locationLng) {
+      markers.push({
+        lat: req.locationLat,
+        lng: req.locationLng,
+        label: `Pedido ${formatDateBR((req.dateRequest || '').split(' ')[0])}`,
+        color: '#EC4899',
+        size: 12,
+        detail: `${req.currency} ${formatNum(req.localAmount)} — ${req.category || req.reason}`,
+      });
+    }
+  });
+
+  if (markers.length === 0) {
+    mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--c-text-muted);font-size:13px;">📍 Sem dados de localização</div>';
+    return;
+  }
+
+  drModalMap = L.map(mapEl, { zoomControl: true, scrollWheelZoom: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 18,
+  }).addTo(drModalMap);
+
+  const bounds = [];
+  markers.forEach(m => {
+    const icon = L.divIcon({
+      className: 'dr-modal-marker',
+      html: `<div style="background:${m.color};width:${m.size}px;height:${m.size}px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+      iconSize: [m.size, m.size],
+      iconAnchor: [m.size / 2, m.size / 2],
+    });
+    L.marker([m.lat, m.lng], { icon })
+      .addTo(drModalMap)
+      .bindPopup(`<strong>${m.label}</strong>${m.detail ? '<br><small>' + escapeHtml(m.detail) + '</small>' : ''}`);
+    bounds.push([m.lat, m.lng]);
+  });
+
+  if (bounds.length > 1) {
+    drModalMap.fitBounds(bounds, { padding: [30, 30] });
+  } else {
+    drModalMap.setView(bounds[0], 13);
+  }
+}
 </script>
 
 <!-- v5.19: Modal de transação Cash + Leaflet -->
@@ -4626,6 +5059,23 @@ function onDeleteTx() {
       <button class="tx-modal-close" onclick="closeTxModal()" aria-label="Fechar">×</button>
     </div>
     <div class="tx-modal-body" id="tx-modal-body"></div>
+  </div>
+</div>
+
+<!-- v5.21: Modal do motorista (perfil consolidado) -->
+<div class="tx-modal-backdrop" id="dr-modal-backdrop" onclick="closeDrModalIfBackdrop(event)" style="z-index:1010;">
+  <div class="tx-modal" id="dr-modal" role="dialog" aria-modal="true" style="max-width:820px;">
+    <div class="tx-modal-header">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="dr-avatar" id="dr-avatar">—</div>
+        <div>
+          <div class="tx-modal-title" id="dr-modal-title">—</div>
+          <div class="tx-modal-subtitle" id="dr-modal-subtitle">—</div>
+        </div>
+      </div>
+      <button class="tx-modal-close" onclick="closeDrModal()" aria-label="Fechar">×</button>
+    </div>
+    <div class="tx-modal-body" id="dr-modal-body"></div>
   </div>
 </div>
 
