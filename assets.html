@@ -935,17 +935,30 @@ async function loadDrivers() {
 
 function populateDriverSelect() {
   const select = document.getElementById('driver-select');
-  // Ordena alfabético
-  const sorted = [...state.drivers].sort((a, b) =>
-    String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR')
-  );
+
+  // Ordena por país e depois por nome (dentro de cada país)
+  const sorted = [...state.drivers].sort((a, b) => {
+    const ca = String(a.country || '').localeCompare(String(b.country || ''), 'pt-BR');
+    if (ca !== 0) return ca;
+    return String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR');
+  });
+
+  // Agrupa em <optgroup> por país (mesmo padrão visual do index.html)
+  let lastCountry = '';
   sorted.forEach(d => {
+    const country = d.country || '—';
+    if (country !== lastCountry) {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = country;
+      select.appendChild(optgroup);
+      lastCountry = country;
+    }
     const opt = document.createElement('option');
     opt.value = d.email;
-    opt.textContent = (d.country ? '[' + d.country + '] ' : '') + d.name;
+    opt.textContent = d.name;
     opt.dataset.name = d.name;
     opt.dataset.country = d.country || '';
-    select.appendChild(opt);
+    select.lastElementChild.appendChild(opt);
   });
 }
 
