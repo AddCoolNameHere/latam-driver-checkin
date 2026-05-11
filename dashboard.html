@@ -2361,12 +2361,12 @@
   <div class="ranking-card">
     <div class="ranking-header">
       <div>
-        <div class="ranking-title" data-i18n="topSavings">Maior economia hotel mode</div>
-        <div class="ranking-sub" data-i18n="topSavingsSub">Drivers que mais economizam km/dia com o hotel</div>
+        <div class="ranking-title" data-i18n="topKm">KM Mapeados por Driver</div>
+        <div class="ranking-sub" data-i18n="topKmSub">Drivers com mais KM rodados no período (mastersheet)</div>
       </div>
     </div>
-    <div class="ranking-list" id="top-savings-list"></div>
-    <button class="ranking-toggle" id="toggle-savings" onclick="toggleRanking()">
+    <div class="ranking-list" id="top-km-list"></div>
+    <button class="ranking-toggle" id="toggle-km" onclick="toggleRanking()">
       <span data-i18n="showMore">Ver lista completa</span>
     </button>
   </div>
@@ -2899,8 +2899,8 @@ const I18N = {
     thDistance: 'Km base→área',
     thHmMonthly: 'HM mensal',
     thSavings: 'Economia',
-    topSavings: 'Maior economia hotel mode',
-    topSavingsSub: 'Drivers que mais economizam km/dia com o hotel',
+    topKm: 'KM Mapeados por Driver',
+    topKmSub: 'Drivers com mais KM rodados no período (mastersheet)',
     topEfficiency: 'Maior eficiência',
     topEfficiencySub: 'Melhor TKM / KM Driven do mês (mastersheet)',
     showMore: 'Ver lista completa',
@@ -3133,8 +3133,8 @@ const I18N = {
     thDistance: 'Km base→área',
     thHmMonthly: 'HM mensual',
     thSavings: 'Ahorro',
-    topSavings: 'Mayor ahorro hotel mode',
-    topSavingsSub: 'Conductores que más ahorran km/día con el hotel',
+    topKm: 'KM Mapeados por Conductor',
+    topKmSub: 'Conductores con más KM recorridos en el período (mastersheet)',
     topEfficiency: 'Mayor eficiencia',
     topEfficiencySub: 'Mejor TKM / KM Driven del mes (mastersheet)',
     showMore: 'Ver lista completa',
@@ -3367,8 +3367,8 @@ const I18N = {
     thDistance: 'Km base→area',
     thHmMonthly: 'Monthly HM',
     thSavings: 'Savings',
-    topSavings: 'Highest hotel mode savings',
-    topSavingsSub: 'Drivers saving the most km/day via hotel',
+    topKm: "KM's Mapped per Driver",
+    topKmSub: 'Drivers with the most KM driven in the period (mastersheet)',
     topEfficiency: 'Highest efficiency',
     topEfficiencySub: 'Best TKM / KM Driven this month (mastersheet)',
     showMore: 'Show full list',
@@ -4090,17 +4090,17 @@ function applyFiltersAndRender() {
 function renderRankings(drivers) {
   const section = document.getElementById('rankings-section');
 
-  // Top savings: só drivers em hotel mode com savings calculada
-  const savingsList = drivers
-    .filter(d => d.base && d.base.type === 'Hotel' && typeof d.savingsKm === 'number' && d.savingsKm > 0)
-    .sort((a, b) => b.savingsKm - a.savingsKm);
+  // Top KM mapeados: maior KM Driven da mastersheet (coluna "KM Driven" da DASHBOARD HM)
+  const kmList = drivers
+    .filter(d => typeof d.kmDriven === 'number' && d.kmDriven > 0)
+    .sort((a, b) => b.kmDriven - a.kmDriven);
 
   // Top efficiency: maior valor de Efficiency (TKM/KM Driven) da mastersheet
   const efficiencyList = drivers
     .filter(d => typeof d.efficiency === 'number' && d.efficiency > 0)
     .sort((a, b) => b.efficiency - a.efficiency);
 
-  if (savingsList.length === 0 && efficiencyList.length === 0) {
+  if (kmList.length === 0 && efficiencyList.length === 0) {
     section.style.display = 'none';
     return;
   }
@@ -4109,15 +4109,15 @@ function renderRankings(drivers) {
 
   const limit = state.topExpanded ? Infinity : 5;
 
-  renderRankingList('top-savings-list', savingsList.slice(0, limit), 'savings');
+  renderRankingList('top-km-list', kmList.slice(0, limit), 'km');
   renderRankingList('top-efficiency-list', efficiencyList.slice(0, limit), 'efficiency');
 
   // Toggle buttons
-  document.getElementById('toggle-savings').querySelector('span').textContent = state.topExpanded ? t('showLess') : t('showMore');
+  document.getElementById('toggle-km').querySelector('span').textContent = state.topExpanded ? t('showLess') : t('showMore');
   document.getElementById('toggle-efficiency').querySelector('span').textContent = state.topExpanded ? t('showLess') : t('showMore');
 
   // Esconde os botões se tem ≤ 5 drivers (não tem mais pra mostrar)
-  document.getElementById('toggle-savings').style.display = savingsList.length > 5 ? '' : 'none';
+  document.getElementById('toggle-km').style.display = kmList.length > 5 ? '' : 'none';
   document.getElementById('toggle-efficiency').style.display = efficiencyList.length > 5 ? '' : 'none';
 }
 
@@ -4131,8 +4131,8 @@ function renderRankingList(containerId, list, type) {
 
   container.innerHTML = list.map((d, i) => {
     let value, valueClass;
-    if (type === 'savings') {
-      value = '+' + d.savingsKm + ' km';
+    if (type === 'km') {
+      value = d.kmDriven.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' km';
       valueClass = 'positive';
     } else {
       value = (d.efficiency * 100).toFixed(1) + '%';
@@ -4859,9 +4859,9 @@ async function exportSummaryPdf() {
     const savingsTotal = filtered.reduce((s, d) => (d.base && d.base.type === 'Hotel' && typeof d.savingsKm === 'number' && d.savingsKm > 0) ? s + d.savingsKm : s, 0);
 
     // Tops
-    const topSavings = filtered
-      .filter(d => d.base && d.base.type === 'Hotel' && typeof d.savingsKm === 'number' && d.savingsKm > 0)
-      .sort((a, b) => b.savingsKm - a.savingsKm)
+    const topKm = filtered
+      .filter(d => typeof d.kmDriven === 'number' && d.kmDriven > 0)
+      .sort((a, b) => b.kmDriven - a.kmDriven)
       .slice(0, 10);
 
     const topEfficiency = filtered
@@ -5127,16 +5127,16 @@ async function exportSummaryPdf() {
       y += 22;
     }
 
-    // Top drivers: economia
-    if (topSavings.length > 0) {
+    // Top drivers: KM mapeados
+    if (topKm.length > 0) {
       if (y > 240) { pdf.addPage(); y = 15; }
       pdf.setFontSize(12);
       pdf.setTextColor(26, 54, 93);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(t('topSavings'), leftX, y);
+      pdf.text(t('topKm'), leftX, y);
       y += 6;
 
-      topSavings.forEach((d, i) => {
+      topKm.forEach((d, i) => {
         if (y > 280) { pdf.addPage(); y = 15; }
         pdf.setFontSize(9);
         pdf.setTextColor(100, 116, 139);
@@ -5148,7 +5148,7 @@ async function exportSummaryPdf() {
         pdf.text(d.country, leftX + 90, y);
         pdf.setTextColor(22, 163, 74);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('+' + d.savingsKm + ' km', leftX + 140, y);
+        pdf.text(d.kmDriven.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' km', leftX + 140, y);
         y += 5;
       });
 
