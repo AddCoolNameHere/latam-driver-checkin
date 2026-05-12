@@ -848,12 +848,29 @@
     line-height: 1.6;
   }
 
-  /* PMO Notes section (placeholder estruturado, vira render real depois) */
+  /* PMO Notes section — agora populada via fetch real do backend */
   .pmo-section-title {
     margin-top: 18px;
     display: flex;
     align-items: center;
     gap: 6px;
+  }
+  .pmo-notes-container { margin-top: 4px; }
+  .pmo-notes-loading,
+  .pmo-notes-empty,
+  .pmo-notes-error {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    background: var(--c-bg);
+    border: 1px dashed var(--c-border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .pmo-notes-error {
+    color: #991B1B;
+    background: #FEF2F2;
+    border-color: #FCA5A5;
   }
   .pmo-coming-soon {
     font-size: 10px;
@@ -1932,6 +1949,9 @@ const I18N = {
     complianceFineDoc: 'documento',
     complianceNoFines: 'Nenhuma multa registrada para este motorista.',
     compliancePmoNotes: 'Notas dos PMOs',
+    pmoNotesLoading: 'Carregando notas dos PMOs...',
+    pmoNotesEmpty: 'Nenhuma nota registrada para este motorista.',
+    pmoNotesError: 'Erro ao carregar notas dos PMOs.',
     compliancePmoSoon: 'em breve',
     compliancePmoPreviewTitle: 'Preview do sistema futuro',
     compliancePmoPreviewSub: 'Os PMOs registrarão observações semanais sobre acidentes, conduta, incidentes e elogios. Aqui aparecerão assim:',
@@ -2066,6 +2086,9 @@ const I18N = {
     complianceFineDoc: 'documento',
     complianceNoFines: 'Ninguna multa registrada para este conductor.',
     compliancePmoNotes: 'Notas de los PMOs',
+    pmoNotesLoading: 'Cargando notas de los PMOs...',
+    pmoNotesEmpty: 'Ninguna nota registrada para este conductor.',
+    pmoNotesError: 'Error al cargar las notas de los PMOs.',
     compliancePmoSoon: 'próximamente',
     compliancePmoPreviewTitle: 'Vista previa del sistema futuro',
     compliancePmoPreviewSub: 'Los PMOs registrarán observaciones semanales sobre accidentes, conducta, incidentes y elogios. Así aparecerán:',
@@ -2200,6 +2223,9 @@ const I18N = {
     complianceFineDoc: 'document',
     complianceNoFines: 'No fines registered for this driver.',
     compliancePmoNotes: 'PMO Notes',
+    pmoNotesLoading: 'Loading PMO notes...',
+    pmoNotesEmpty: 'No notes registered for this driver.',
+    pmoNotesError: 'Error loading PMO notes.',
     compliancePmoSoon: 'coming soon',
     compliancePmoPreviewTitle: 'Preview of the future system',
     compliancePmoPreviewSub: 'PMOs will record weekly observations about accidents, conduct, incidents and praise. They will appear like this:',
@@ -2904,59 +2930,96 @@ function renderCompliance(p) {
     </div>`;
   }
 
-  // Placeholder das notas dos PMOs (sistema futuro)
-  // Mostra a estrutura visual real com exemplos cinza translúcidos pra
-  // visualização. Quando o backend estiver pronto, substitui o conteúdo
-  // por dados reais de p.pmoNotes (mesmo CSS).
+  // Notas dos PMOs — render do container; fetch async logo abaixo
+  // popula #pmo-notes-content via loadPMONotesForDriver().
   html += `<div class="compliance-section-title pmo-section-title">
     📝 ${t('compliancePmoNotes') || 'Notas dos PMOs'}
-    <span class="pmo-coming-soon">— ${t('compliancePmoSoon') || 'em breve'}</span>
   </div>`;
 
-  html += `<div class="pmo-notes-preview">
-    <div class="pmo-preview-header">
-      <span class="pmo-preview-icon">🔮</span>
-      <div>
-        <strong>${t('compliancePmoPreviewTitle') || 'Preview do sistema futuro'}</strong>
-        <div class="pmo-preview-sub">${t('compliancePmoPreviewSub') || 'Os PMOs registrarão observações semanais sobre acidentes, conduta, incidentes e elogios. Aqui aparecerão assim:'}</div>
-      </div>
-    </div>
-
-    <div class="pmo-note-example">
-      <div class="pmo-note-header">
-        <span class="pmo-category accident">🚨 ${t('compliancePmoCatAccident') || 'Acidente'}</span>
-        <span class="pmo-meta">— ${t('compliancePmoExampleAuthor1') || 'Lucas (Brazil PMO)'} · ${t('compliancePmoExampleDate1') || '15/04/2026'}</span>
-      </div>
-      <div class="pmo-note-body">${t('compliancePmoExample1') || 'Pequena colisão traseira em Curitiba, sem feridos. Carro levado pro mecânico, retorno previsto em 3 dias. Driver fez o B.O. corretamente.'}</div>
-    </div>
-
-    <div class="pmo-note-example">
-      <div class="pmo-note-header">
-        <span class="pmo-category conduct">⚠️ ${t('compliancePmoCatConduct') || 'Conduta'}</span>
-        <span class="pmo-meta">— ${t('compliancePmoExampleAuthor2') || 'Bia (LATAM PMO)'} · ${t('compliancePmoExampleDate2') || '08/04/2026'}</span>
-      </div>
-      <div class="pmo-note-body">${t('compliancePmoExample2') || 'Atraso de 2h no check-in sem aviso prévio. Conversamos por telefone, justificativa aceita mas alertado sobre comunicação proativa.'}</div>
-    </div>
-
-    <div class="pmo-note-example">
-      <div class="pmo-note-header">
-        <span class="pmo-category positive">✅ ${t('compliancePmoCatPositive') || 'Elogio'}</span>
-        <span class="pmo-meta">— ${t('compliancePmoExampleAuthor3') || 'Pankaj'} · ${t('compliancePmoExampleDate3') || '01/04/2026'}</span>
-      </div>
-      <div class="pmo-note-body">${t('compliancePmoExample3') || 'Top performer do mês — eficiência 90%+, zero idle days, comunicação exemplar.'}</div>
-    </div>
-
-    <div class="pmo-preview-footer">
-      <span class="pmo-preview-cats">${t('compliancePmoCategories') || 'Categorias previstas'}:</span>
-      <span class="pmo-cat-chip accident">🚨 ${t('compliancePmoCatAccident') || 'Acidente'}</span>
-      <span class="pmo-cat-chip conduct">⚠️ ${t('compliancePmoCatConduct') || 'Conduta'}</span>
-      <span class="pmo-cat-chip vehicle">🛠 ${t('compliancePmoCatVehicle') || 'Veículo'}</span>
-      <span class="pmo-cat-chip note">📝 ${t('compliancePmoCatGeneral') || 'Observação'}</span>
-      <span class="pmo-cat-chip positive">✅ ${t('compliancePmoCatPositive') || 'Elogio'}</span>
-    </div>
+  html += `<div id="pmo-notes-content" class="pmo-notes-container">
+    <div class="pmo-notes-loading">⏳ ${t('pmoNotesLoading') || 'Carregando notas...'}</div>
   </div>`;
 
   content.innerHTML = html;
+
+  // Dispara fetch async (sem await — não bloqueia o render do resto do profile).
+  const driverEmail = p && p.driver && p.driver.email ? p.driver.email : '';
+  if (driverEmail) {
+    loadPMONotesForDriver(driverEmail);
+  } else {
+    const c = document.getElementById('pmo-notes-content');
+    if (c) c.innerHTML = `<div class="pmo-notes-empty">${t('pmoNotesEmpty') || 'Nenhuma nota registrada.'}</div>`;
+  }
+}
+
+/**
+ * Busca PMO Notes do driver (via endpoint getPMONotes) e renderiza no
+ * container #pmo-notes-content. Reutiliza o CSS já existente
+ * (.pmo-note-example / .pmo-category / .pmo-note-header / .pmo-note-body).
+ */
+async function loadPMONotesForDriver(email) {
+  const container = document.getElementById('pmo-notes-content');
+  if (!container) return;
+
+  const url = CONFIG.scriptUrl
+    + '?action=getPMONotes&limit=200&driverEmail=' + encodeURIComponent(email);
+
+  console.log('[Driver Profile PMO] Buscando notas:', email);
+
+  try {
+    const res = await fetch(url).then(r => r.json());
+    if (!res || !res.success || !Array.isArray(res.notes)) {
+      throw new Error((res && res.error) || 'Backend retornou erro');
+    }
+    console.log('[Driver Profile PMO] Recebidas', res.notes.length, 'notas');
+    renderPMONotes(res.notes);
+  } catch (err) {
+    console.error('[Driver Profile PMO] Erro:', err);
+    container.innerHTML = `<div class="pmo-notes-error">⚠ ${t('pmoNotesError') || 'Erro ao carregar notas dos PMOs.'}</div>`;
+  }
+}
+
+function renderPMONotes(notes) {
+  const container = document.getElementById('pmo-notes-content');
+  if (!container) return;
+
+  if (!notes || notes.length === 0) {
+    container.innerHTML = `<div class="pmo-notes-empty">${t('pmoNotesEmpty') || 'Nenhuma nota registrada para este motorista.'}</div>`;
+    return;
+  }
+
+  const catEmoji = { accident: '🚨', conduct: '⚠️', vehicle: '🛠', note: '📝', positive: '✅' };
+  const catLabelKey = {
+    accident: 'compliancePmoCatAccident',
+    conduct:  'compliancePmoCatConduct',
+    vehicle:  'compliancePmoCatVehicle',
+    note:     'compliancePmoCatGeneral',
+    positive: 'compliancePmoCatPositive',
+  };
+  const fmtDate = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString(
+      currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR')
+    );
+  };
+
+  const html = notes.map(n => {
+    const cat = (n.category || 'note').toLowerCase();
+    const catKey = catLabelKey[cat] || 'compliancePmoCatGeneral';
+    const catLabel = t(catKey) || cat;
+    const emoji = catEmoji[cat] || '📝';
+    return `<div class="pmo-note-example">
+      <div class="pmo-note-header">
+        <span class="pmo-category ${escapeAttr(cat)}">${emoji} ${escapeHtml(catLabel)}</span>
+        <span class="pmo-meta">— ${escapeHtml(n.author || '—')} · ${escapeHtml(fmtDate(n.created))}</span>
+      </div>
+      <div class="pmo-note-body">${escapeHtml(n.body || '')}</div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = html;
 }
 
 /**
