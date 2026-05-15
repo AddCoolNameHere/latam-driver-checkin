@@ -2936,6 +2936,7 @@ const I18N = {
     weatherLoading: 'Carregando radar...',
     weatherUpdated: 'Atualizado às',
     weatherError: 'Erro ao carregar clima',
+    weatherToday: 'Chuva prevista hoje',
     weatherHist7d: 'Acumulado 7 dias',
     weatherHist30d: 'Acumulado 30 dias',
     tableTitle: 'Drivers',
@@ -3176,6 +3177,7 @@ const I18N = {
     weatherLoading: 'Cargando radar...',
     weatherUpdated: 'Actualizado a las',
     weatherError: 'Error al cargar el clima',
+    weatherToday: 'Lluvia prevista hoy',
     weatherHist7d: 'Acumulado 7 días',
     weatherHist30d: 'Acumulado 30 días',
     tableTitle: 'Conductores',
@@ -3416,6 +3418,7 @@ const I18N = {
     weatherLoading: 'Loading radar...',
     weatherUpdated: 'Updated at',
     weatherError: 'Failed to load weather',
+    weatherToday: 'Forecasted rain today',
     weatherHist7d: '7-day accumulated',
     weatherHist30d: '30-day accumulated',
     tableTitle: 'Drivers',
@@ -3765,17 +3768,16 @@ function initMap() {
 // =================================================================
 // WEATHER OVERLAY
 // =================================================================
-// Period=1 (Hoje):  OpenWeatherMap tile "precipitation_new" — chuva ATUAL.
-//                   Key client-side (teatro de segurança). Free tier 1000/dia.
-//                   Browser cacheia tiles (Cache-Control max-age=600).
-// Period=7|30:      Heatmap custom — fetch Open-Meteo Forecast API (sem key)
-//                   pra grid de ~72 pontos sobre LATAM, soma chuva acumulada
-//                   no período. Renderiza com leaflet.heat. Cache em memória
-//                   por período pra não re-fetchar.
+// Heatmap custom unificado pra todos os períodos (Hoje / 7d / 30d).
+// Fetch Open-Meteo Forecast API (free, sem key) pra grid de ~72 pontos sobre
+// LATAM. Renderiza com leaflet.heat. Visível em qualquer zoom (renderização
+// client-side, ao contrário do tile OWM que ficava transparente em zoom baixo).
+//   - Hoje:    forecast_days=1, past_days=0 (chuva prevista pro dia)
+//   - 7 dias:  forecast_days=0, past_days=7 (acumulado retrospectivo)
+//   - 30 dias: forecast_days=0, past_days=30
+// Cache em memória por período pra não re-fetchar.
 const WEATHER_CONFIG = {
-  owmApiKey: '93b2079851911743435b4a6919d9812a',
-  owmLayer: 'precipitation_new',
-  // Grid LATAM pro heatmap histórico (step ~10°)
+  // Grid LATAM step ~10° (~72 pontos)
   gridLatStart: -55, gridLatEnd: 25, gridLatStep: 10,
   gridLngStart: -120, gridLngEnd: -30, gridLngStep: 10,
 };
@@ -3844,8 +3846,7 @@ function removeWeatherLayer() {
 
 /**
  * Renderiza a camada de clima baseada no filtro de período atual.
- * - period=1 (Hoje):  OWM tile (chuva atual)
- * - period=7 ou 30:   heatmap Open-Meteo (acumulado retrospectivo)
+ * Sempre heatmap Open-Meteo (Hoje = forecast, 7d/30d = retrospectivo acumulado).
  */
 async function renderWeatherLayer() {
   if (!weather.active) return;
@@ -3855,46 +3856,33 @@ async function renderWeatherLayer() {
   const iconSpan = weather.btnEl.querySelector('.weather-icon');
 
   try {
+    weather.btnEl.classList.add('loading');
+    if (iconSpan) iconSpan.textContent = '⏳';
+
+    const points = await loadWeatherHeatmapData(period);
+    // L.heatLayer espera array [[lat, lng, intensity], ...] com intensity em 0-1
+    weather.layer = L.heatLayer(points, {
+      radius: 40,
+      blur: 32,
+      maxZoom: 10,         // a partir desse zoom, intensidade não muda
+      max: 1.0,
+      gradient: {
+        0.0: 'rgba(0,0,0,0)',
+        0.2: '#A6DBFF',     // azul claro — chuva fraca
+        0.45: '#5FA9F5',    // azul — moderada
+        0.65: '#F5D742',    // amarelo — forte
+        0.85: '#F58C2E',    // laranja — muito forte
+        1.0: '#D63B2E',     // vermelho — extrema
+      },
+    });
+    weather.layer.addTo(map);
+
     if (period === 1) {
-      // Tile OWM — chuva atual
-      const url = `https://tile.openweathermap.org/map/${WEATHER_CONFIG.owmLayer}/{z}/{x}/{y}.png?appid=${WEATHER_CONFIG.owmApiKey}`;
-      weather.layer = L.tileLayer(url, {
-        opacity: 0.6,
-        attribution: '© <a href="https://openweathermap.org/">OpenWeatherMap</a>',
-        maxZoom: 18,
-      });
-      weather.layer.addTo(map);
-
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mm = String(now.getMinutes()).padStart(2, '0');
-      weather.labelEl.textContent = t('weatherUpdated') + ' ' + hh + ':' + mm;
+      weather.labelEl.textContent = t('weatherToday') || 'Chuva prevista hoje';
+    } else if (period === 7) {
+      weather.labelEl.textContent = t('weatherHist7d') || 'Acumulado 7 dias';
     } else {
-      // Heatmap histórico (7d ou 30d acumulado)
-      weather.btnEl.classList.add('loading');
-      if (iconSpan) iconSpan.textContent = '⏳';
-
-      const points = await loadWeatherHeatmapData(period);
-      // L.heatLayer espera array [[lat, lng, intensity], ...] com intensity em 0-1
-      weather.layer = L.heatLayer(points, {
-        radius: 35,
-        blur: 30,
-        maxZoom: 10,         // a partir desse zoom, intensidade não muda
-        max: 1.0,
-        gradient: {
-          0.0: 'rgba(0,0,0,0)',
-          0.2: '#A6DBFF',     // azul claro — chuva fraca
-          0.45: '#5FA9F5',    // azul — moderada
-          0.65: '#F5D742',    // amarelo — forte
-          0.85: '#F58C2E',    // laranja — muito forte
-          1.0: '#D63B2E',     // vermelho — extrema
-        },
-      });
-      weather.layer.addTo(map);
-
-      weather.labelEl.textContent = period === 7
-        ? t('weatherHist7d') || 'Acumulado 7 dias'
-        : t('weatherHist30d') || 'Acumulado 30 dias';
+      weather.labelEl.textContent = t('weatherHist30d') || 'Acumulado 30 dias';
     }
   } catch (err) {
     console.error('[Weather] erro:', err);
@@ -3940,10 +3928,14 @@ async function loadWeatherHeatmapData(periodDays) {
   return points;
 }
 
-async function fetchOpenMeteoRain(lat, lng, pastDays) {
+async function fetchOpenMeteoRain(lat, lng, periodDays) {
+  // period=1 (Hoje) → forecast do dia atual; demais períodos → acumulado retrospectivo
+  const params = periodDays === 1
+    ? 'past_days=0&forecast_days=1'
+    : `past_days=${periodDays}&forecast_days=0`;
   const url = `https://api.open-meteo.com/v1/forecast`
     + `?latitude=${lat}&longitude=${lng}`
-    + `&past_days=${pastDays}&forecast_days=0`
+    + `&${params}`
     + `&daily=precipitation_sum&timezone=auto`;
   const res = await fetch(url);
   if (!res.ok) return 0;
