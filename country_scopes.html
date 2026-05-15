@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Country Scopes · Aceolution LATAM</title>
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --c-primary: #2C5282;
+    --c-primary-dark: #1A365D;
+    --c-accent: #4A9FE0;
+    --c-bg: #F8FAFC;
+    --c-bg-tint: #EBF4FB;
+    --c-border: #E2E8F0;
+    --c-border-strong: #CBD5E1;
+    --c-text: #1A202C;
+    --c-text-muted: #64748B;
+    --c-success: #16A34A;
+    --c-warn: #CA8A04;
+    --c-danger: #B91C1C;
+    --status-completed: #22C55E;
+    --status-pending: #F59E0B;
+    --status-progress: #4A9FE0;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f6f8;
+    color: var(--c-text);
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    background: white;
+    border-bottom: 1px solid var(--c-border);
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  }
+  .brand-wrap { display: flex; align-items: center; gap: 10px; }
+  .brand-logo { height: 28px; width: auto; }
+  .brand-divider { width: 1px; height: 24px; background: #d5d7db; }
+  .brand-sub {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b7280;
+    letter-spacing: 1px;
+    line-height: 1.2;
+  }
+  .brand-sub span { display: block; color: var(--c-primary); font-size: 11px; }
+  .lang-switch { font-size: 13px; color: #666; }
+  .lang-switch button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .lang-switch button.active { color: var(--c-primary); font-weight: 600; }
+
+  /* Tabs */
+  .country-tabs {
+    background: white;
+    border-bottom: 1px solid var(--c-border);
+    display: flex;
+    padding: 0 20px;
+    gap: 4px;
+  }
+  .country-tab {
+    background: none;
+    border: none;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    border-bottom: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .country-tab:hover { color: var(--c-primary); }
+  .country-tab.active {
+    color: var(--c-primary-dark);
+    border-bottom-color: var(--c-accent);
+    font-weight: 600;
+  }
+  .country-tab .flag { font-size: 16px; }
+
+  /* Stats cards */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    padding: 16px 20px;
+  }
+  .stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+  }
+  .stat-sub {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+  .stat-card.completed .stat-value { color: var(--status-completed); }
+  .stat-card.pending .stat-value { color: var(--status-pending); }
+  .stat-card.progress .stat-value { color: var(--status-progress); }
+
+  /* Map area */
+  .map-wrapper {
+    padding: 0 20px 16px;
+    position: relative;
+  }
+  #map {
+    height: calc(100vh - 280px);
+    min-height: 500px;
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    background: white;
+  }
+  .map-loader {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--c-text-muted);
+    font-size: 14px;
+    border-radius: 12px;
+    z-index: 1000;
+  }
+  .map-loader.hidden { display: none; }
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--c-border);
+    border-top-color: var(--c-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Legend */
+  .map-legend {
+    display: flex;
+    gap: 16px;
+    padding: 10px 20px 16px;
+    font-size: 12px;
+    color: var(--c-text-muted);
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.15);
+  }
+  .legend-line { width: 16px; height: 2px; }
+
+  /* Popups */
+  .leaflet-popup-content { margin: 12px 14px; font-size: 13px; min-width: 220px; }
+  .popup-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--c-primary-dark);
+  }
+  .popup-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 0;
+    color: var(--c-text-muted);
+  }
+  .popup-row strong { color: var(--c-text); font-weight: 500; }
+  .popup-progress {
+    margin-top: 8px;
+    background: #F1F5F9;
+    border-radius: 999px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .popup-progress-fill { height: 100%; background: var(--status-progress); transition: width 0.3s; }
+  .popup-status-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .popup-status-completed { background: #DCFCE7; color: #14532D; }
+  .popup-status-pending { background: #FEF3C7; color: #78350F; }
+  .popup-status-progress { background: #DBEAFE; color: #1E3A8A; }
+  .popup-drivers-section {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--c-border);
+  }
+  .popup-drivers-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--c-text-muted);
+    margin-bottom: 6px;
+  }
+  .popup-driver-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 12px;
+  }
+  .popup-driver-name { color: var(--c-text); }
+  .popup-driver-km { color: var(--c-text-muted); font-size: 11px; }
+
+  /* Driver markers */
+  .driver-home-icon, .driver-area-icon {
+    background: transparent;
+    border: none;
+  }
+  .driver-home-marker {
+    width: 22px;
+    height: 22px;
+    background: white;
+    border: 2px solid var(--c-text-muted);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .driver-area-marker {
+    width: 24px;
+    height: 24px;
+    background: var(--c-primary);
+    border: 2px solid white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+
+  @media (max-width: 768px) {
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    #map { height: 60vh; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-wrap">
+    <img src="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0" class="brand-logo" alt="Aceolution">
+    <div class="brand-divider"></div>
+    <div class="brand-sub">LATAM<span data-i18n="brandSub">Country Scopes</span></div>
+  </div>
+  <div class="lang-switch">
+    <button data-lang="pt" class="active">PT</button>
+    <button data-lang="es">ES</button>
+    <button data-lang="en">EN</button>
+  </div>
+</header>
+
+<nav class="country-tabs" id="country-tabs"></nav>
+
+<div class="stats-row" id="stats-row">
+  <div class="stat-card">
+    <div class="stat-label" data-i18n="statTotal">Total de áreas</div>
+    <div class="stat-value" id="stat-total">—</div>
+    <div class="stat-sub" id="stat-total-km">—</div>
+  </div>
+  <div class="stat-card completed">
+    <div class="stat-label" data-i18n="statCompleted">Completas</div>
+    <div class="stat-value" id="stat-completed">—</div>
+    <div class="stat-sub" id="stat-completed-pct">—</div>
+  </div>
+  <div class="stat-card progress">
+    <div class="stat-label" data-i18n="statProgress">Em progresso</div>
+    <div class="stat-value" id="stat-progress">—</div>
+    <div class="stat-sub" id="stat-progress-pct">—</div>
+  </div>
+  <div class="stat-card pending">
+    <div class="stat-label" data-i18n="statPending">Pendentes</div>
+    <div class="stat-value" id="stat-pending">—</div>
+    <div class="stat-sub" id="stat-pending-pct">—</div>
+  </div>
+</div>
+
+<div class="map-wrapper">
+  <div id="map"></div>
+  <div class="map-loader" id="map-loader">
+    <div class="spinner"></div>
+    <div data-i18n="loading">Carregando dados do país...</div>
+  </div>
+</div>
+
+<div class="map-legend">
+  <div class="legend-item"><span class="legend-swatch" style="background:#22C55E;"></span> <span data-i18n="legendCompleted">Completa</span></div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#4A9FE0;"></span> <span data-i18n="legendInProgress">Em progresso</span></div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#F59E0B;"></span> <span data-i18n="legendPending">Pendente</span></div>
+  <div class="legend-item"><span class="legend-swatch" style="background:white;border:2px solid #64748B;border-radius:50%;"></span> <span data-i18n="legendHome">Casa do motorista</span></div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#2C5282;border-radius:50%;"></span> <span data-i18n="legendArea">Última área (check-in)</span></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  geoJsonBaseUrl: './country-scopes-data',
+  countries: [
+    { code: 'AR', name: 'Argentina', flag: '🇦🇷', center: [-38, -65], zoom: 4 },
+    { code: 'CO', name: 'Colombia', flag: '🇨🇴', center: [4.5, -73], zoom: 5 },
+  ],
+};
+
+// =================================================================
+// i18n
+// =================================================================
+const I18N = {
+  pt: {
+    brandSub: 'Country Scopes',
+    loading: 'Carregando dados do país...',
+    statTotal: 'Total de áreas',
+    statCompleted: 'Completas',
+    statProgress: 'Em progresso',
+    statPending: 'Pendentes',
+    legendCompleted: 'Completa',
+    legendInProgress: 'Em progresso',
+    legendPending: 'Pendente',
+    legendHome: 'Casa do motorista',
+    legendArea: 'Última área (check-in)',
+    areaName: 'Área',
+    areaProvince: 'Província',
+    areaCity: 'Cidade',
+    areaStatus: 'Status',
+    areaTarget: 'Plan',
+    areaCollected: 'Coletado',
+    areaCamera: 'Câmera',
+    areaArea: 'Área',
+    statusCompleted: 'Completa',
+    statusInProgress: 'Em progresso',
+    statusPending: 'Pendente',
+    nearbyDrivers: 'Motoristas mais próximos',
+    homeKm: 'casa',
+    driverHome: 'Casa',
+    driverArea: 'Mapeando agora',
+    noCheckin: 'Sem check-in recente',
+    areaPolygon: 'área',
+    fetchError: 'Erro ao carregar dados',
+  },
+  es: {
+    brandSub: 'Country Scopes',
+    loading: 'Cargando datos del país...',
+    statTotal: 'Total de áreas',
+    statCompleted: 'Completas',
+    statProgress: 'En progreso',
+    statPending: 'Pendientes',
+    legendCompleted: 'Completa',
+    legendInProgress: 'En progreso',
+    legendPending: 'Pendiente',
+    legendHome: 'Casa del motorista',
+    legendArea: 'Última área (check-in)',
+    areaName: 'Área',
+    areaProvince: 'Provincia',
+    areaCity: 'Ciudad',
+    areaStatus: 'Estado',
+    areaTarget: 'Plan',
+    areaCollected: 'Recolectado',
+    areaCamera: 'Cámara',
+    areaArea: 'Área',
+    statusCompleted: 'Completa',
+    statusInProgress: 'En progreso',
+    statusPending: 'Pendiente',
+    nearbyDrivers: 'Motoristas más cercanos',
+    homeKm: 'casa',
+    driverHome: 'Casa',
+    driverArea: 'Mapeando ahora',
+    noCheckin: 'Sin check-in reciente',
+    areaPolygon: 'área',
+    fetchError: 'Error al cargar datos',
+  },
+  en: {
+    brandSub: 'Country Scopes',
+    loading: 'Loading country data...',
+    statTotal: 'Total areas',
+    statCompleted: 'Completed',
+    statProgress: 'In progress',
+    statPending: 'Pending',
+    legendCompleted: 'Completed',
+    legendInProgress: 'In progress',
+    legendPending: 'Pending',
+    legendHome: 'Driver home',
+    legendArea: 'Last area (check-in)',
+    areaName: 'Area',
+    areaProvince: 'Province',
+    areaCity: 'City',
+    areaStatus: 'Status',
+    areaTarget: 'Plan',
+    areaCollected: 'Collected',
+    areaCamera: 'Camera',
+    areaArea: 'Area',
+    statusCompleted: 'Completed',
+    statusInProgress: 'In progress',
+    statusPending: 'Pending',
+    nearbyDrivers: 'Closest drivers',
+    homeKm: 'home',
+    driverHome: 'Home',
+    driverArea: 'Mapping now',
+    noCheckin: 'No recent check-in',
+    areaPolygon: 'area',
+    fetchError: 'Error loading data',
+  },
+};
+
+let currentLang = 'pt';
+function t(key) {
+  return (I18N[currentLang] && I18N[currentLang][key]) || key;
+}
+function applyI18n() {
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es' : 'en');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  // Re-renderiza popups que possam estar abertos
+  if (state.country) renderStats();
+}
+document.querySelectorAll('.lang-switch button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentLang = btn.getAttribute('data-lang');
+    document.querySelectorAll('.lang-switch button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyI18n();
+  });
+});
+
+
+// =================================================================
+// Estado e mapa
+// =================================================================
+const state = {
+  country: 'AR',
+  cache: {},  // { 'AR': { geojson, scopeData, drivers, dashboardData } }
+};
+
+let map = null;
+let polygonLayer = null;
+let driverLayer = null;
+
+
+function initMap() {
+  if (map) return;
+  map = L.map('map', { preferCanvas: true }).setView([-15, -60], 4);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(map);
+}
+
+
+// =================================================================
+// Tabs (gera dinamicamente a partir de CONFIG.countries)
+// =================================================================
+function renderTabs() {
+  const tabs = document.getElementById('country-tabs');
+  tabs.innerHTML = '';
+  CONFIG.countries.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'country-tab' + (c.code === state.country ? ' active' : '');
+    btn.innerHTML = `<span class="flag">${c.flag}</span> ${c.name}`;
+    btn.addEventListener('click', () => switchCountry(c.code));
+    tabs.appendChild(btn);
+  });
+}
+
+async function switchCountry(code) {
+  if (code === state.country && state.cache[code]) return;
+  state.country = code;
+  document.querySelectorAll('.country-tab').forEach((b, i) => {
+    b.classList.toggle('active', CONFIG.countries[i].code === code);
+  });
+  await loadCountry(code);
+}
+
+
+// =================================================================
+// Carrega dados de um país
+// =================================================================
+async function loadCountry(code) {
+  const loader = document.getElementById('map-loader');
+  loader.classList.remove('hidden');
+
+  try {
+    if (!state.cache[code]) {
+      // Paraleliza fetches: geojson estático + scope da MASTERSHEET + drivers + dashboard
+      const [geojson, scopeRes, driversRes, dashRes] = await Promise.all([
+        fetchGeoJson(code),
+        fetch(`${CONFIG.scriptUrl}?action=getCountryScope&country=${code}`).then(r => r.json()).catch(() => ({ areas: [] })),
+        fetch(`${CONFIG.scriptUrl}?action=getDrivers`).then(r => r.json()).catch(() => ({ drivers: [] })),
+        fetch(`${CONFIG.scriptUrl}?action=getDashboardData&days=7`).then(r => r.json()).catch(() => ({ data: null })),
+      ]);
+
+      const countryName = (CONFIG.countries.find(c => c.code === code) || {}).name || '';
+      const allDrivers = driversRes.drivers || [];
+
+      // Merge GeoJSON com scope atualizado (overrides status/km/lastComputed)
+      const scopeById = {};
+      (scopeRes.areas || []).forEach(a => { scopeById[a.id] = a; });
+      geojson.features.forEach(f => {
+        const p = f.properties || {};
+        const fresh = scopeById[p.id];
+        if (fresh) {
+          p.status = fresh.status || p.status;
+          p.collected_km = (fresh.collectedMeters || 0) / 1000;
+          p.target_km = (fresh.targetMeters || 0) / 1000;
+          p.pct_complete = p.target_km > 0 ? (p.collected_km / p.target_km * 100) : 0;
+          p.camera = fresh.camera || p.camera;
+          p.last_computed = fresh.lastComputed || p.last_computed;
+        }
+      });
+
+      // dashboardData traz bases[email] (home) e lastCheckins[email] (área mapeando)
+      const dashData = dashRes.data || {};
+      const bases = dashData.bases || {};
+      const checkins = dashData.lastCheckins || {};
+
+      // Enriquece countryDrivers com home + checkin do dashboard endpoint
+      const countryDrivers = allDrivers
+        .filter(d => String(d.country || '').toLowerCase() === countryName.toLowerCase())
+        .map(d => {
+          const email = d.email || '';
+          const base = bases[email];
+          const checkin = checkins[email];
+          return {
+            ...d,
+            home: (base && base.lat) ? {
+              lat: base.lat,
+              lng: base.lng,
+              address: base.address || '',
+              type: base.type || '',
+            } : null,
+            checkin: (checkin && checkin.destLat) ? {
+              lat: checkin.destLat,
+              lng: checkin.destLng,
+              address: checkin.destAddress || '',
+              radius: checkin.destRadius || 0,
+            } : null,
+          };
+        });
+
+      state.cache[code] = {
+        geojson,
+        countryDrivers,
+      };
+    }
+
+    renderCountry(code);
+  } catch (err) {
+    console.error('[CountryScopes] erro:', err);
+    alert(t('fetchError') + ': ' + err.message);
+  } finally {
+    loader.classList.add('hidden');
+  }
+}
+
+async function fetchGeoJson(code) {
+  const filename = code === 'AR' ? 'argentina.geojson' : 'colombia.geojson';
+  const res = await fetch(`${CONFIG.geoJsonBaseUrl}/${filename}`);
+  return await res.json();
+}
+
+
+// =================================================================
+// Renderiza mapa, polígonos, drivers, stats
+// =================================================================
+function renderCountry(code) {
+  initMap();
+  const c = CONFIG.countries.find(x => x.code === code);
+  const cache = state.cache[code];
+  if (!cache) return;
+
+  // Limpa layers antigas
+  if (polygonLayer) { map.removeLayer(polygonLayer); polygonLayer = null; }
+  if (driverLayer) { map.removeLayer(driverLayer); driverLayer = null; }
+
+  // Polígonos
+  polygonLayer = L.geoJSON(cache.geojson, {
+    style: featureStyle,
+    onEachFeature: (feature, layer) => {
+      layer.on('click', () => layer.bindPopup(buildAreaPopup(feature, cache), { maxWidth: 320 }).openPopup());
+    },
+  }).addTo(map);
+
+  // Drivers (home + última área de check-in)
+  driverLayer = L.layerGroup();
+  cache.countryDrivers.forEach(d => {
+    const home = d.home;
+    const checkin = d.checkin;
+
+    if (home) {
+      const homeIcon = L.divIcon({
+        className: 'driver-home-icon',
+        html: `<div class="driver-home-marker" title="${escapeHtml(d.name)}">🏠</div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+      });
+      L.marker([home.lat, home.lng], { icon: homeIcon })
+        .bindPopup(buildDriverPopup(d, home, checkin))
+        .addTo(driverLayer);
+    }
+
+    if (checkin && checkin.lat && checkin.lng) {
+      const initials = (d.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+      const areaIcon = L.divIcon({
+        className: 'driver-area-icon',
+        html: `<div class="driver-area-marker" title="${escapeHtml(d.name)} — ${t('driverArea')}">${initials}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      });
+      L.marker([checkin.lat, checkin.lng], { icon: areaIcon })
+        .bindPopup(buildDriverPopup(d, home, checkin))
+        .addTo(driverLayer);
+
+      // Linha conectando home → área atual
+      if (home) {
+        L.polyline([[home.lat, home.lng], [checkin.lat, checkin.lng]], {
+          color: '#2C5282',
+          weight: 1.5,
+          opacity: 0.45,
+          dashArray: '5 5',
+        }).addTo(driverLayer);
+      }
+    }
+  });
+  driverLayer.addTo(map);
+
+  // Centra no país
+  map.setView(c.center, c.zoom);
+
+  renderStats();
+}
+
+function featureStyle(feature) {
+  const p = feature.properties || {};
+  const status = String(p.status || '').toUpperCase();
+  let color, fillColor, fillOpacity = 0.35;
+  if (status === 'COMPLETED') {
+    color = '#15803D'; fillColor = '#22C55E';
+  } else if (p.collected_km > 0 || status === 'IN_PROGRESS' || status === 'PARTIAL') {
+    color = '#1E40AF'; fillColor = '#4A9FE0';
+  } else {
+    color = '#B45309'; fillColor = '#F59E0B';
+  }
+  return { color, fillColor, fillOpacity, weight: 1.2 };
+}
+
+
+// =================================================================
+// Popups
+// =================================================================
+function buildAreaPopup(feature, cache) {
+  const p = feature.properties || {};
+  const status = String(p.status || '').toUpperCase();
+  let statusClass = 'popup-status-pending';
+  let statusLabel = t('statusPending');
+  if (status === 'COMPLETED') {
+    statusClass = 'popup-status-completed';
+    statusLabel = t('statusCompleted');
+  } else if (p.collected_km > 0 || status === 'IN_PROGRESS' || status === 'PARTIAL') {
+    statusClass = 'popup-status-progress';
+    statusLabel = t('statusInProgress');
+  }
+
+  const pct = p.target_km > 0 ? Math.min(100, (p.collected_km / p.target_km) * 100) : 0;
+
+  // Ranking dos 5 drivers mais próximos (por home)
+  let driversHtml = '';
+  if (p.lat && p.lon && cache.countryDrivers.length > 0) {
+    const ranked = cache.countryDrivers
+      .map(d => {
+        if (!d.home) return null;
+        const km = haversineKm(p.lat, p.lon, d.home.lat, d.home.lng);
+        return { driver: d, km };
+      })
+      .filter(x => x)
+      .sort((a, b) => a.km - b.km)
+      .slice(0, 5);
+
+    if (ranked.length > 0) {
+      driversHtml = `
+        <div class="popup-drivers-section">
+          <div class="popup-drivers-title">${t('nearbyDrivers')}</div>
+          ${ranked.map(r => `
+            <div class="popup-driver-item">
+              <span class="popup-driver-name">${escapeHtml(r.driver.name)}</span>
+              <span class="popup-driver-km">${r.km.toFixed(0)} km · ${t('homeKm')}</span>
+            </div>
+          `).join('')}
+        </div>`;
+    }
+  }
+
+  return `
+    <div class="popup-title">${escapeHtml(p.name || '')}</div>
+    <span class="popup-status-tag ${statusClass}">${statusLabel}</span>
+    <div style="margin-top:8px;"></div>
+    <div class="popup-row"><span>${t('areaProvince')}</span><strong>${escapeHtml(p.province || '—')}</strong></div>
+    <div class="popup-row"><span>${t('areaCity')}</span><strong>${escapeHtml(p.city || '—')}</strong></div>
+    <div class="popup-row"><span>${t('areaTarget')}</span><strong>${fmtKm(p.target_km)} km</strong></div>
+    <div class="popup-row"><span>${t('areaCollected')}</span><strong>${fmtKm(p.collected_km)} km · ${pct.toFixed(1)}%</strong></div>
+    ${p.area_km2 ? `<div class="popup-row"><span>${t('areaArea')}</span><strong>${fmtKm(p.area_km2)} km²</strong></div>` : ''}
+    ${p.camera ? `<div class="popup-row"><span>${t('areaCamera')}</span><strong>${escapeHtml(p.camera)}</strong></div>` : ''}
+    <div class="popup-progress"><div class="popup-progress-fill" style="width:${pct}%"></div></div>
+    ${driversHtml}
+  `;
+}
+
+function buildDriverPopup(driver, home, checkin) {
+  let html = `<div class="popup-title">${escapeHtml(driver.name)}</div>`;
+  html += `<div class="popup-row"><span>${escapeHtml(driver.country)}</span><strong>${escapeHtml(driver.city || '—')}</strong></div>`;
+  if (home) {
+    html += `<div class="popup-row"><span>${t('driverHome')}</span><strong>${escapeHtml(home.address || '—')}</strong></div>`;
+  }
+  if (checkin && checkin.address) {
+    const dist = home ? haversineKm(home.lat, home.lng, checkin.lat, checkin.lng) : null;
+    html += `<div class="popup-row"><span>${t('driverArea')}</span><strong>${escapeHtml(checkin.address)}${dist !== null ? ` (${dist.toFixed(0)} km)` : ''}</strong></div>`;
+  } else {
+    html += `<div class="popup-row" style="color:var(--c-text-muted);"><em>${t('noCheckin')}</em></div>`;
+  }
+  return html;
+}
+
+
+// =================================================================
+// Stats
+// =================================================================
+function renderStats() {
+  const cache = state.cache[state.country];
+  if (!cache) return;
+  const features = cache.geojson.features || [];
+  let total = 0, completed = 0, inProgress = 0, pending = 0;
+  let totalKm = 0, collectedKm = 0;
+
+  features.forEach(f => {
+    const p = f.properties || {};
+    total++;
+    totalKm += p.target_km || 0;
+    collectedKm += p.collected_km || 0;
+    const status = String(p.status || '').toUpperCase();
+    if (status === 'COMPLETED') completed++;
+    else if (p.collected_km > 0 || status === 'IN_PROGRESS' || status === 'PARTIAL') inProgress++;
+    else pending++;
+  });
+
+  const pct = (n) => total > 0 ? ((n / total) * 100).toFixed(1) + '%' : '0%';
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-total-km').textContent = fmtKm(totalKm) + ' km · ' + fmtKm(collectedKm) + ' km ' + t('areaCollected').toLowerCase();
+  document.getElementById('stat-completed').textContent = completed;
+  document.getElementById('stat-completed-pct').textContent = pct(completed);
+  document.getElementById('stat-progress').textContent = inProgress;
+  document.getElementById('stat-progress-pct').textContent = pct(inProgress);
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-pending-pct').textContent = pct(pending);
+}
+
+
+// =================================================================
+// Helpers
+// =================================================================
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function fmtKm(v) {
+  const n = Number(v) || 0;
+  if (n >= 100) return n.toFixed(0);
+  if (n >= 10) return n.toFixed(1);
+  return n.toFixed(2);
+}
+
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+
+// =================================================================
+// Boot
+// =================================================================
+applyI18n();
+renderTabs();
+loadCountry(state.country);
+
+</script>
+
+</body>
+</html>

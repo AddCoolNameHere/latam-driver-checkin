@@ -1,0 +1,7 @@
+# Pasta Escopos (uppercase): dados brutos do user — ZIPs (130MB AR, 82MB CO),
+# HTMLs rudimentares (2.7MB), CSVs locais. Fica fora do repo.
+# Os GeoJSONs extraidos vivem em country-scopes-data/ (versionado).
+/Escopos/
+
+# Cache temporário do Claude Code
+.claude/

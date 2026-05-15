@@ -221,6 +221,13 @@ function doGet(e) {
       return jsonResponse({ success: true, drivers: getArgentinaDrivers_() });
     }
 
+    // v5.29: scope das areas de coleta por pais (pra country_scopes.html)
+    // Le aba "CSV ARGENTINA" ou "CSV COLOMBIA" da MASTERSHEET
+    if (action === 'getCountryScope') {
+      const country = String(e.parameter.country || '').toUpperCase();
+      return jsonResponse({ success: true, areas: getCountryScope_(country) });
+    }
+
     // v5.6: payload completo de profile do driver (eficiência + idle + VID + base)
     if (action === 'getDriverProfile') {
       const email = e.parameter.email;
@@ -244,12 +251,13 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.28',
+        version: 'v5.29',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
                     'getDriverSsds', 'getDriverVehicleIssues',
                     'getLastAssetsForm', 'getPMONotes', 'getArgentinaDrivers',
+                    'getCountryScope',
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
                     'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
                     'POST submitArgentinaCash'],
@@ -5854,6 +5862,102 @@ function getArgentinaDrivers_() {
 
   drivers.sort((a, b) => a.name.localeCompare(b.name));
   return drivers;
+}
+
+
+// ================================================================
+// COUNTRY SCOPES (v5.29) — country_scopes.html
+// ================================================================
+
+/**
+ * Le aba "CSV ARGENTINA" ou "CSV COLOMBIA" da MASTERSHEET e retorna array
+ * com status atualizado de cada area de coleta.
+ *
+ * Cada linha do CSV tem o ID completo (ex:
+ * "collectionScopes/sv2:094dcc10:AR:11-7FCuHL/collectionAreas/940255e5-AR.0").
+ * Aqui extraimos so o sufixo (940255e5-AR.0) pra fazer match com o ID curto
+ * usado no GeoJSON estatico do frontend.
+ *
+ * @param {string} country  'AR' | 'CO' (case-insensitive)
+ * @return {Array<Object>}  [{ id, name, status, camera, targetMeters, collectedMeters, ... }]
+ */
+function getCountryScope_(country) {
+  const map = {
+    'AR': 'CSV ARGENTINA',
+    'CO': 'CSV COLOMBIA',
+    // Adicionar outros paises aqui conforme forem chegando
+  };
+  const sheetName = map[String(country || '').toUpperCase()];
+  if (!sheetName) return [];
+
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+
+  const idIdx     = headers.indexOf('ID');
+  const nameIdx   = headers.indexOf('Name');
+  const statusIdx = headers.indexOf('Status');
+  const cameraIdx = headers.indexOf('Camera');
+  const tgtIdx    = headers.indexOf('Active Target Segment Total Meters');
+  const colIdx    = headers.indexOf('Active Target Segment Collected Meters');
+  const rcTgtIdx  = headers.indexOf('Active Recollect Target Segment Total Meters');
+  const rcColIdx  = headers.indexOf('Active Recollect Target Segment Collected Meters');
+  const tsIdx     = headers.indexOf('Last Computed Time');
+
+  if (idIdx < 0 || nameIdx < 0) return [];
+
+  const areas = [];
+  for (let i = 1; i < data.length; i++) {
+    const fullId = String(data[i][idIdx] || '').trim();
+    if (!fullId) continue;
+    // Extrai sufixo: ".../collectionAreas/940255e5-AR.0" → "940255e5-AR.0"
+    const m = fullId.match(/\/([^/]+)$/);
+    const shortId = m ? m[1] : fullId;
+
+    areas.push({
+      id: shortId,
+      name: String(data[i][nameIdx] || '').trim(),
+      status: String(data[i][statusIdx] || '').trim(),
+      camera: cameraIdx >= 0 ? String(data[i][cameraIdx] || '').trim() : '',
+      targetMeters: parseScopeNumeric_(data[i][tgtIdx]),
+      collectedMeters: parseScopeNumeric_(data[i][colIdx]),
+      recollectTargetMeters: parseScopeNumeric_(data[i][rcTgtIdx]),
+      recollectCollectedMeters: parseScopeNumeric_(data[i][rcColIdx]),
+      lastComputed: tsIdx >= 0 ? String(data[i][tsIdx] || '') : '',
+    });
+  }
+  return areas;
+}
+
+/**
+ * Parser robusto de numericos do CSV.
+ * CSV original usa "24466,59917" (virgula como decimal).
+ * Quando importado pro Sheets ele pode virar Number, string com virgula,
+ * ou string com ponto. Trata todos os casos.
+ */
+function parseScopeNumeric_(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  if (typeof v === 'number') return v;
+  // String — pode ter virgula como decimal
+  const s = String(v).trim().replace(/\s/g, '');
+  if (!s) return 0;
+  // Se tem virgula E ponto, o ponto provavelmente eh milhar (24.466,59)
+  // Se so tem virgula, troca por ponto pra parseFloat
+  // Se so tem ponto, deixa
+  let normalized;
+  if (s.indexOf(',') >= 0 && s.indexOf('.') >= 0) {
+    // Assume formato BR: ponto=milhar, virgula=decimal
+    normalized = s.replace(/\./g, '').replace(',', '.');
+  } else if (s.indexOf(',') >= 0) {
+    normalized = s.replace(',', '.');
+  } else {
+    normalized = s;
+  }
+  const n = parseFloat(normalized);
+  return isNaN(n) ? 0 : n;
 }
 
 
