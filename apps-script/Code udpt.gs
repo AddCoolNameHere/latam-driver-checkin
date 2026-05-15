@@ -244,7 +244,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.25',
+        version: 'v5.26',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -5041,7 +5041,7 @@ function saveCashRequest_(data) {
   row[4] = neededBy;
   row[5] = data.reason || '';
   row[6] = '';                                  // Responsible (preenchido depois)
-  row[7] = 'Pending';                           // Status default
+  row[7] = 'Requested';                         // Status default — aba tem data validation strict (Requested/Cancelled/Finished/Delayed/In Process); 'Pending' era rejeitado e abortava o setValues inteiro deixando linha vazia
   row[8] = '';                                  // Save
   row[9] = '';                                  // (vazio na planilha original)
   row[10] = '';                                 // Google Rates (cálculo manual)
