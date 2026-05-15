@@ -58,7 +58,7 @@ const USERS = [
   },
   {
     username: 'bia',
-    passwordHash: 'f473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec',
+    passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec',
     fullName: 'Bia',
   },
   {
