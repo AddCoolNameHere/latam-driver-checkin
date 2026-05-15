@@ -97,6 +97,9 @@ const CONFIG = {
   cashReceiptsBrSheet: 'Cash Receipts BR',
   cashReceiptsHcSheet: 'Cash Receipts HC',
   cashReceiptsFolderName: 'cash_receipts_uploads',  // pasta no Drive (auto-criada)
+  // v5.25: argentina cash divergencias (ar-divergencias.html)
+  argentinaCashSheet: 'Argentina Cash',
+  argentinaCashFolderId: '1FfKbF6yuvNDBU7ID-7SGv9apobf0xiTX',  // pasta fixa no Drive pra anexos
 };
 
 // ================================================================
@@ -213,6 +216,11 @@ function doGet(e) {
       return jsonResponse({ success: true, drivers: getDriversList_() });
     }
 
+    // v5.25: lista de motoristas argentinos ativos (pra ar-divergencias.html)
+    if (action === 'getArgentinaDrivers') {
+      return jsonResponse({ success: true, drivers: getArgentinaDrivers_() });
+    }
+
     // v5.6: payload completo de profile do driver (eficiência + idle + VID + base)
     if (action === 'getDriverProfile') {
       const email = e.parameter.email;
@@ -236,14 +244,15 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.24',
+        version: 'v5.25',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
                     'getDriverSsds', 'getDriverVehicleIssues',
-                    'getLastAssetsForm', 'getPMONotes',
+                    'getLastAssetsForm', 'getPMONotes', 'getArgentinaDrivers',
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
-                    'POST savePMONote', 'POST editPMONote', 'POST deletePMONote'],
+                    'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
+                    'POST submitArgentinaCash'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -404,6 +413,12 @@ function doPost(e) {
     if (data.type === 'assetWeekly') {
       const result = saveAssetWeekly_(data);
       return jsonResponse({ success: true, message: result.message, photoUrls: result.photoUrls });
+    }
+
+    // v5.25: divergências de pagamento Argentina (ar-divergencias.html)
+    if (data.type === 'submitArgentinaCash') {
+      const result = submitArgentinaCash_(data);
+      return jsonResponse(result);
     }
 
     // v5.24: PMO Notes — salvar note vindo do pmo.html
@@ -5810,5 +5825,199 @@ function deletePMONoteHandler_(data) {
       deletedAt: now.toISOString(),
       deletedBy: actorUsername,
     },
+  };
+}
+
+
+// ================================================================
+// ARGENTINA CASH DIVERGÊNCIAS (v5.25) — ar-divergencias.html
+// ================================================================
+
+/**
+ * Lista motoristas argentinos ativos.
+ * Usado pelo dropdown da ar-divergencias.html.
+ * Retorna: [{ name, email, city }]
+ */
+function getArgentinaDrivers_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(CONFIG.hrSheet);
+  if (!sheet) return [];
+
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+
+  const nameIdx     = headers.indexOf('Beneficiary Full Name');
+  const emailIdx    = headers.indexOf('Corporate E-mail');
+  const countryIdx  = headers.indexOf('Country');
+  const situationIdx = headers.indexOf('Situation');
+  const cityIdx     = headers.indexOf('City');
+
+  const drivers = [];
+  for (let i = 1; i < data.length; i++) {
+    const country = String(data[i][countryIdx] || '').trim().toLowerCase();
+    if (data[i][situationIdx] === 'Active' && country === 'argentina' && data[i][nameIdx]) {
+      drivers.push({
+        name: String(data[i][nameIdx]).trim(),
+        email: String(data[i][emailIdx] || '').trim(),
+        city: cityIdx >= 0 ? String(data[i][cityIdx] || '').trim() : '',
+      });
+    }
+  }
+
+  drivers.sort((a, b) => a.name.localeCompare(b.name));
+  return drivers;
+}
+
+
+/**
+ * Garante que a aba 'Argentina Cash' existe. Cria com headers se não existir.
+ * Colunas:
+ *   A=Timestamp | B=Session ID | C=Driver Name | D=Driver Email |
+ *   E=Quinzena Label | F=Quinzena Start | G=Quinzena End |
+ *   H=Amount | I=Currency | J=Comment | K=File Links
+ */
+function getOrCreateArgentinaCashSheet_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  let sheet = ss.getSheetByName(CONFIG.argentinaCashSheet);
+  if (sheet) return sheet;
+
+  sheet = ss.insertSheet(CONFIG.argentinaCashSheet);
+  const headers = [
+    'Timestamp', 'Session ID', 'Driver Name', 'Driver Email',
+    'Quinzena Label', 'Quinzena Start', 'Quinzena End',
+    'Amount', 'Currency', 'Comment', 'File Links'
+  ];
+  sheet.appendRow(headers);
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#f0f0f0');
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
+
+/**
+ * Faz upload de um arquivo (base64) pra pasta Argentina Cash no Drive.
+ * Retorna a URL pública do arquivo.
+ *
+ * fileObj: { name: 'recibo.jpg', base64: 'data:image/...;base64,...' }
+ */
+function uploadArgentinaFileToDrive_(fileObj, driverName, quinzenaLabel) {
+  if (!fileObj || !fileObj.base64) return '';
+
+  const cleanBase64 = String(fileObj.base64).replace(/^data:[^;]+;base64,/, '');
+  const mimeMatch = String(fileObj.base64).match(/^data:([^;]+);base64,/);
+  const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+
+  const folder = DriveApp.getFolderById(CONFIG.argentinaCashFolderId);
+  const ts = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd_HH-mm-ss');
+  const safeDriver = String(driverName || 'unknown')
+    .replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  const safeQuinz = String(quinzenaLabel || '')
+    .replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  const safeOrigName = String(fileObj.name || 'arquivo')
+    .replace(/[^a-z0-9._-]/gi, '_');
+  const filename = `${ts}_${safeDriver}_${safeQuinz}_${safeOrigName}`;
+
+  const blob = Utilities.newBlob(Utilities.base64Decode(cleanBase64), mime, filename);
+  const file = folder.createFile(blob);
+
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (err) {
+    Logger.log('[Argentina Cash] Aviso ao definir sharing: ' + err);
+  }
+
+  return file.getUrl();
+}
+
+
+/**
+ * Salva um envio de divergências de pagamento da Argentina.
+ *
+ * Payload esperado:
+ * {
+ *   type: 'submitArgentinaCash',
+ *   driverName: 'Fulano de Tal',
+ *   driverEmail: 'fulano@aceolution.com',
+ *   divergences: [
+ *     {
+ *       quinzenaLabel: '01–15 Mai/2026',
+ *       quinzenaStart: '2026-05-01',  // YYYY-MM-DD
+ *       quinzenaEnd:   '2026-05-15',
+ *       amount: 12345.67,
+ *       currency: 'ARS',              // 'ARS' | 'USD'
+ *       comment: 'observação livre',
+ *       files: [ { name, base64 }, ... ]   // até 5
+ *     },
+ *     ...
+ *   ]
+ * }
+ *
+ * Salva 1 row por divergência na aba 'Argentina Cash'. Todas as divergências
+ * do mesmo envio compartilham o mesmo Session ID (UUID).
+ */
+function submitArgentinaCash_(data) {
+  if (!data || !data.driverName) {
+    return { success: false, error: 'driverName obrigatório' };
+  }
+  if (!Array.isArray(data.divergences) || data.divergences.length === 0) {
+    return { success: false, error: 'nenhuma divergência enviada' };
+  }
+
+  const sheet = getOrCreateArgentinaCashSheet_();
+  const sessionId = Utilities.getUuid();
+  const now = new Date();
+  const rowsToAppend = [];
+
+  for (let i = 0; i < data.divergences.length; i++) {
+    const d = data.divergences[i];
+
+    // Validações por divergência (best-effort)
+    if (d.amount === null || d.amount === undefined || d.amount === '') {
+      return { success: false, error: 'valor obrigatório na divergência #' + (i + 1) };
+    }
+    if (!d.quinzenaLabel) {
+      return { success: false, error: 'quinzena obrigatória na divergência #' + (i + 1) };
+    }
+
+    // Upload dos arquivos (até 5)
+    const fileLinks = [];
+    const files = Array.isArray(d.files) ? d.files.slice(0, 5) : [];
+    for (let j = 0; j < files.length; j++) {
+      try {
+        const url = uploadArgentinaFileToDrive_(files[j], data.driverName, d.quinzenaLabel);
+        if (url) fileLinks.push(url);
+      } catch (err) {
+        Logger.log('[Argentina Cash] Erro upload arquivo #' + (j + 1) + ' div #' + (i + 1) + ': ' + err);
+      }
+    }
+
+    rowsToAppend.push([
+      now,
+      sessionId,
+      String(data.driverName || '').trim(),
+      String(data.driverEmail || '').trim(),
+      String(d.quinzenaLabel || '').trim(),
+      d.quinzenaStart ? new Date(d.quinzenaStart) : '',
+      d.quinzenaEnd   ? new Date(d.quinzenaEnd)   : '',
+      Number(d.amount) || 0,
+      String(d.currency || 'ARS').toUpperCase(),
+      String(d.comment || '').trim(),
+      fileLinks.join('\n'),
+    ]);
+  }
+
+  // Append em batch
+  const startRow = sheet.getLastRow() + 1;
+  sheet.getRange(startRow, 1, rowsToAppend.length, rowsToAppend[0].length)
+    .setValues(rowsToAppend);
+
+  Logger.log('[Argentina Cash] Sess ' + sessionId + ' — ' + data.driverName +
+             ' enviou ' + rowsToAppend.length + ' divergência(s)');
+
+  return {
+    success: true,
+    sessionId: sessionId,
+    rowsAdded: rowsToAppend.length,
+    message: 'Divergências registradas com sucesso',
   };
 }
