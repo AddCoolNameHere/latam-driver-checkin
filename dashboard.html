@@ -3840,6 +3840,11 @@ async function toggleWeather() {
     weather.layer = L.tileLayer(tileUrl, {
       opacity: 0.7,
       attribution: '© <a href="https://rainviewer.com">RainViewer</a>',
+      // RainViewer só serve tiles até zoom ~12; acima disso retorna 404.
+      // maxNativeZoom faz Leaflet upsamplear (esticar) os tiles do zoom 12
+      // pra zooms maiores, em vez de pedir tile que não existe.
+      maxNativeZoom: 12,
+      maxZoom: 19,
     });
     weather.layer.addTo(map);
 
