@@ -720,6 +720,12 @@ const I18N = {
     driverArea: 'Mapeando agora',
     noCheckin: 'Sem check-in recente',
     atHome: 'Em casa',
+    dnmTitle: 'Não mapeou hoje',
+    dnmWeather: 'Clima',
+    dnmMech: 'Mech down',
+    dnmTech: 'Tech down (câmera/dispositivos)',
+    dnmDisks: 'Problema com discos',
+    dnmOther: 'Outro motivo',
     areaPolygon: 'área',
     fetchError: 'Erro ao carregar dados',
   },
@@ -753,6 +759,12 @@ const I18N = {
     driverArea: 'Mapeando ahora',
     noCheckin: 'Sin check-in reciente',
     atHome: 'En casa',
+    dnmTitle: 'No mapeó hoy',
+    dnmWeather: 'Clima',
+    dnmMech: 'Mech down',
+    dnmTech: 'Tech down (cámara/dispositivos)',
+    dnmDisks: 'Problema con discos',
+    dnmOther: 'Otro motivo',
     areaPolygon: 'área',
     fetchError: 'Error al cargar datos',
   },
@@ -786,6 +798,12 @@ const I18N = {
     driverArea: 'Mapping now',
     noCheckin: 'No recent check-in',
     atHome: 'At home',
+    dnmTitle: 'Did not map today',
+    dnmWeather: 'Weather',
+    dnmMech: 'Mech down',
+    dnmTech: 'Tech down (camera/devices)',
+    dnmDisks: 'Disk issue',
+    dnmOther: 'Other reason',
     areaPolygon: 'area',
     fetchError: 'Error loading data',
   },
@@ -926,6 +944,12 @@ async function loadCountry(code) {
               address: checkin.destAddress || '',
               radius: checkin.destRadius || 0,
             } : null,
+            // v5.30: status do check-in mesmo sem area (DNM)
+            dnm: (checkin && checkin.didMap === 'no') ? {
+              reason: String(checkin.dnmReason || '').toLowerCase(),
+              hoursAgo: checkin.hoursAgo,
+              notes: checkin.notes || '',
+            } : null,
           };
         });
 
@@ -995,7 +1019,14 @@ function renderCountry(code) {
     }
 
     const markerClass = isStale ? 'driver-area-marker stale' : 'driver-area-marker';
-    const tooltip = isStale ? `${d.name} — ${t('noCheckin')}` : `${d.name} — ${t('driverArea')}`;
+    let tooltip;
+    if (!isStale) {
+      tooltip = `${d.name} — ${t('driverArea')}`;
+    } else if (d.dnm) {
+      tooltip = `${d.name} — ${dnmLabel(d.dnm.reason)}`;
+    } else {
+      tooltip = `${d.name} — ${t('noCheckin')}`;
+    }
     const areaIcon = L.divIcon({
       className: 'driver-area-icon',
       html: `<div class="${markerClass}" title="${escapeHtml(tooltip)}">${initials}</div>`,
@@ -1097,25 +1128,48 @@ function buildAreaPopup(feature, cache) {
   `;
 }
 
+// Mapping pros motivos de DNM
+const DNM_REASON_META = {
+  weather: { emoji: '☁', i18nKey: 'dnmWeather' },
+  mech:    { emoji: '🔧', i18nKey: 'dnmMech' },
+  tech:    { emoji: '📷', i18nKey: 'dnmTech' },
+  disks:   { emoji: '💾', i18nKey: 'dnmDisks' },
+};
+function dnmLabel(reason) {
+  const meta = DNM_REASON_META[reason];
+  return meta ? `${meta.emoji} ${t(meta.i18nKey)}` : `⚠ ${t('dnmOther')}`;
+}
+
 function buildDriverPopup(driver) {
   const home = driver.home;
   const checkin = driver.checkin;
+  const dnm = driver.dnm;
   let html = `<div class="popup-title">${escapeHtml(driver.name)}</div>`;
   html += `<div class="popup-row"><span>${escapeHtml(driver.country)}</span><strong>${escapeHtml(driver.city || '—')}</strong></div>`;
 
-  // "Em casa" se a base atual está perto da casa (< 1km de raio)
-  const dist = (home && checkin) ? haversineKm(home.lat, home.lng, checkin.lat, checkin.lng) : null;
-  const atHome = dist !== null && dist < 1;
+  // Prioridade 1: DNM (fez checkin mas não mapeou) — destacar motivo
+  if (dnm) {
+    html += `<div class="popup-row"><span>${t('dnmTitle')}</span><strong style="color:var(--c-warn);">${dnmLabel(dnm.reason)}</strong></div>`;
+    if (dnm.notes) {
+      html += `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:11px;margin-top:4px;">${escapeHtml(dnm.notes)}</div>`;
+    }
+    return html;
+  }
 
+  // Prioridade 2: tem checkin com destino — mostra área (ou "Em casa")
   if (checkin && checkin.address) {
+    const dist = home ? haversineKm(home.lat, home.lng, checkin.lat, checkin.lng) : null;
+    const atHome = dist !== null && dist < 1;
     if (atHome) {
       html += `<div class="popup-row"><span>${t('driverArea')}</span><strong style="color:var(--c-success);">${t('atHome')}</strong></div>`;
     } else {
       html += `<div class="popup-row"><span>${t('driverArea')}</span><strong>${escapeHtml(checkin.address)}${dist !== null ? ` (${dist.toFixed(0)} km)` : ''}</strong></div>`;
     }
-  } else {
-    html += `<div class="popup-row" style="color:var(--c-text-muted);"><em>${t('noCheckin')}</em></div>`;
+    return html;
   }
+
+  // Sem checkin recente
+  html += `<div class="popup-row" style="color:var(--c-text-muted);"><em>${t('noCheckin')}</em></div>`;
   return html;
 }
 
