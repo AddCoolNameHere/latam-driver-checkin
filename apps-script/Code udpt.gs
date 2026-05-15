@@ -244,7 +244,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.27',
+        version: 'v5.28',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -5262,21 +5262,16 @@ function sendCashNotificationEmail_(type, data) {
     </div>
   </div>`;
 
-  // GmailApp permite headers customizados (Importance: High) — necessário pro Outlook
-  // marcar como "Importante" automaticamente. MailApp não suporta isso.
-  GmailApp.sendEmail(
-    EMAIL_CONFIG.cashRecipients,
-    subject,
-    '',  // body texto plano (vazio, vai pelo HTML)
-    {
-      htmlBody: html,
-      headers: {
-        'Importance': 'High',
-        'X-Priority': '1',
-        'X-MSMail-Priority': 'High',
-      },
-    }
-  );
+  // v5.28: trocado de GmailApp pra MailApp. GmailApp precisava de scope
+  // (gmail.send) que nunca foi autorizado depois do deploy — falhava silenciosamente
+  // dentro do try/catch silencioso de saveCashRequest_. MailApp usa scope
+  // script.send_mail que ja esta autorizado (emails diarios funcionam com ele).
+  // Trade-off: perde header 'Importance: High' (so afetava marca "Importante" no Outlook).
+  MailApp.sendEmail({
+    to: EMAIL_CONFIG.cashRecipients,
+    subject: subject,
+    htmlBody: html,
+  });
 }
 
 /**
