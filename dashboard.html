@@ -874,6 +874,53 @@
     line-height: 1;
   }
 
+  /* Weather toggle (custom Leaflet control) */
+  .leaflet-control.weather-toggle-control {
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    padding: 0;
+    border: 2px solid rgba(0,0,0,0.2);
+    background-clip: padding-box;
+    font-family: inherit;
+  }
+  .weather-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: white;
+    border: none;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .weather-toggle-btn:hover { background: #F1F5F9; }
+  .weather-toggle-btn.active {
+    background: #DBEAFE;
+    color: #1D4ED8;
+  }
+  .weather-toggle-btn .weather-icon { font-size: 14px; line-height: 1; }
+  .weather-toggle-btn.loading .weather-icon {
+    animation: weather-spin 1s linear infinite;
+    display: inline-block;
+  }
+  @keyframes weather-spin { to { transform: rotate(360deg); } }
+  .weather-updated-label {
+    font-size: 10px;
+    color: #64748B;
+    padding: 3px 10px 5px;
+    border-top: 1px solid #E2E8F0;
+    background: #F8FAFC;
+    border-radius: 0 0 4px 4px;
+    display: none;
+  }
+  .weather-toggle-control.active .weather-updated-label { display: block; }
+
   /* TABLE */
   .table-section {
     background: white;
@@ -2884,6 +2931,10 @@ const I18N = {
     legendArea: 'Área de mapeamento',
     legendRecent: 'Check-in nas últimas 24h',
     legendOld: 'Sem check-in > 24h',
+    weatherToggle: 'Clima',
+    weatherLoading: 'Carregando radar...',
+    weatherUpdated: 'Atualizado às',
+    weatherError: 'Erro ao carregar clima',
     tableTitle: 'Drivers',
     tableSub: 'Clique numa linha pra abrir detalhes',
     ctsTitle: 'CTS Goal vs Achieved',
@@ -3118,6 +3169,10 @@ const I18N = {
     legendArea: 'Área de mapeo',
     legendRecent: 'Check-in en las últimas 24h',
     legendOld: 'Sin check-in > 24h',
+    weatherToggle: 'Clima',
+    weatherLoading: 'Cargando radar...',
+    weatherUpdated: 'Actualizado a las',
+    weatherError: 'Error al cargar el clima',
     tableTitle: 'Conductores',
     tableSub: 'Haga clic en una fila para ver detalles',
     ctsTitle: 'CTS Goal vs Achieved',
@@ -3352,6 +3407,10 @@ const I18N = {
     legendArea: 'Mapping area',
     legendRecent: 'Check-in within 24h',
     legendOld: 'No check-in > 24h',
+    weatherToggle: 'Weather',
+    weatherLoading: 'Loading radar...',
+    weatherUpdated: 'Updated at',
+    weatherError: 'Failed to load weather',
     tableTitle: 'Drivers',
     tableSub: 'Click a row to open details',
     ctsTitle: 'CTS Goal vs Achieved',
@@ -3692,6 +3751,114 @@ function initMap() {
     maxZoom: 19,
   }).addTo(map);
   markerLayer = L.layerGroup().addTo(map);
+  addWeatherToggleControl();
+}
+
+
+// =================================================================
+// WEATHER OVERLAY (RainViewer radar)
+// =================================================================
+
+const weather = {
+  active: false,
+  layer: null,
+  apiData: null,        // {host, radar:{past, nowcast}}
+  fetchedAt: 0,         // ms timestamp
+  control: null,
+  btnEl: null,
+  labelEl: null,
+};
+
+function addWeatherToggleControl() {
+  const Ctrl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      const wrap = L.DomUtil.create('div', 'leaflet-control weather-toggle-control');
+      wrap.innerHTML =
+        '<button type="button" class="weather-toggle-btn" id="weather-toggle-btn">' +
+          '<span class="weather-icon">🌧</span>' +
+          '<span data-i18n="weatherToggle">Clima</span>' +
+        '</button>' +
+        '<div class="weather-updated-label" id="weather-updated-label"></div>';
+      // Não propaga clicks/scrolls pro mapa
+      L.DomEvent.disableClickPropagation(wrap);
+      L.DomEvent.disableScrollPropagation(wrap);
+      return wrap;
+    },
+  });
+  weather.control = new Ctrl();
+  weather.control.addTo(map);
+
+  // Bind eventos no DOM já criado
+  setTimeout(() => {
+    weather.btnEl = document.getElementById('weather-toggle-btn');
+    weather.labelEl = document.getElementById('weather-updated-label');
+    if (weather.btnEl) {
+      weather.btnEl.addEventListener('click', toggleWeather);
+    }
+    // Aplica i18n (texto do botão)
+    if (typeof applyI18n === 'function') applyI18n();
+  }, 0);
+}
+
+async function toggleWeather() {
+  if (weather.active) {
+    weather.active = false;
+    if (weather.layer) {
+      map.removeLayer(weather.layer);
+      weather.layer = null;
+    }
+    weather.btnEl.classList.remove('active');
+    weather.control.getContainer().classList.remove('active');
+    return;
+  }
+
+  // Liga
+  weather.btnEl.classList.add('loading');
+  const originalIcon = '🌧';
+  const iconSpan = weather.btnEl.querySelector('.weather-icon');
+  if (iconSpan) iconSpan.textContent = '⏳';
+
+  try {
+    // Cache de 5min (RainViewer atualiza a cada 10min)
+    const ageMin = (Date.now() - weather.fetchedAt) / 1000 / 60;
+    if (!weather.apiData || ageMin > 5) {
+      const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+      weather.apiData = await res.json();
+      weather.fetchedAt = Date.now();
+    }
+    const { host, radar } = weather.apiData;
+    if (!host || !radar || !radar.past || radar.past.length === 0) {
+      throw new Error('no radar frames');
+    }
+    // Usa o frame mais recente (último "past" = radar atual)
+    const latestFrame = radar.past[radar.past.length - 1];
+
+    // Color scheme 4 (The Weather Channel — azul/verde/amarelo/vermelho)
+    // smooth=1, snow=1
+    const tileUrl = `${host}${latestFrame.path}/256/{z}/{x}/{y}/4/1_1.png`;
+    weather.layer = L.tileLayer(tileUrl, {
+      opacity: 0.7,
+      attribution: '© <a href="https://rainviewer.com">RainViewer</a>',
+    });
+    weather.layer.addTo(map);
+
+    // Label "atualizado às HH:mm"
+    const ts = new Date(latestFrame.time * 1000);
+    const hh = String(ts.getHours()).padStart(2, '0');
+    const mm = String(ts.getMinutes()).padStart(2, '0');
+    weather.labelEl.textContent = t('weatherUpdated') + ' ' + hh + ':' + mm;
+
+    weather.active = true;
+    weather.btnEl.classList.add('active');
+    weather.control.getContainer().classList.add('active');
+  } catch (err) {
+    console.error('[Weather] erro:', err);
+    alert(t('weatherError'));
+  } finally {
+    weather.btnEl.classList.remove('loading');
+    if (iconSpan) iconSpan.textContent = originalIcon;
+  }
 }
 
 function renderMap(drivers) {
