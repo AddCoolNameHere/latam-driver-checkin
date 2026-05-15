@@ -1306,9 +1306,12 @@ async function submitCashRequest() {
   };
 
   try {
-    // Fire-and-forget (CORS limita ler resposta no Apps Script)
+    // Fire-and-forget com no-cors: Apps Script não retorna CORS headers,
+    // então sem isso o Chrome bloqueia a Promise da fetch com "Failed to fetch".
+    // Como já é fire-and-forget (não lemos a resposta), opaque response não atrapalha.
     await fetch(CONFIG.scriptUrl, {
       method: 'POST',
+      mode: 'no-cors',
       body: JSON.stringify(payload),
     });
     toast(t('successRequest'), 'success');
@@ -1365,6 +1368,7 @@ async function submitCashReceipt() {
   try {
     await fetch(CONFIG.scriptUrl, {
       method: 'POST',
+      mode: 'no-cors',
       body: JSON.stringify(payload),
     });
     toast(t('successReceipt'), 'success');
