@@ -2586,6 +2586,7 @@
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
 
 // ================================================================
@@ -2935,6 +2936,8 @@ const I18N = {
     weatherLoading: 'Carregando radar...',
     weatherUpdated: 'Atualizado às',
     weatherError: 'Erro ao carregar clima',
+    weatherHist7d: 'Acumulado 7 dias',
+    weatherHist30d: 'Acumulado 30 dias',
     tableTitle: 'Drivers',
     tableSub: 'Clique numa linha pra abrir detalhes',
     ctsTitle: 'CTS Goal vs Achieved',
@@ -3173,6 +3176,8 @@ const I18N = {
     weatherLoading: 'Cargando radar...',
     weatherUpdated: 'Actualizado a las',
     weatherError: 'Error al cargar el clima',
+    weatherHist7d: 'Acumulado 7 días',
+    weatherHist30d: 'Acumulado 30 días',
     tableTitle: 'Conductores',
     tableSub: 'Haga clic en una fila para ver detalles',
     ctsTitle: 'CTS Goal vs Achieved',
@@ -3411,6 +3416,8 @@ const I18N = {
     weatherLoading: 'Loading radar...',
     weatherUpdated: 'Updated at',
     weatherError: 'Failed to load weather',
+    weatherHist7d: '7-day accumulated',
+    weatherHist30d: '30-day accumulated',
     tableTitle: 'Drivers',
     tableSub: 'Click a row to open details',
     ctsTitle: 'CTS Goal vs Achieved',
@@ -3756,17 +3763,30 @@ function initMap() {
 
 
 // =================================================================
-// WEATHER OVERLAY (RainViewer radar)
+// WEATHER OVERLAY
 // =================================================================
+// Period=1 (Hoje):  OpenWeatherMap tile "precipitation_new" — chuva ATUAL.
+//                   Key client-side (teatro de segurança). Free tier 1000/dia.
+//                   Browser cacheia tiles (Cache-Control max-age=600).
+// Period=7|30:      Heatmap custom — fetch Open-Meteo Forecast API (sem key)
+//                   pra grid de ~72 pontos sobre LATAM, soma chuva acumulada
+//                   no período. Renderiza com leaflet.heat. Cache em memória
+//                   por período pra não re-fetchar.
+const WEATHER_CONFIG = {
+  owmApiKey: '93b2079851911743435b4a6919d9812a',
+  owmLayer: 'precipitation_new',
+  // Grid LATAM pro heatmap histórico (step ~10°)
+  gridLatStart: -55, gridLatEnd: 25, gridLatStep: 10,
+  gridLngStart: -120, gridLngEnd: -30, gridLngStep: 10,
+};
 
 const weather = {
   active: false,
   layer: null,
-  apiData: null,        // {host, radar:{past, nowcast}}
-  fetchedAt: 0,         // ms timestamp
   control: null,
   btnEl: null,
   labelEl: null,
+  heatmapCache: {},     // { '7': [[lat,lng,intensity]...], '30': [...] }
 };
 
 function addWeatherToggleControl() {
@@ -3804,66 +3824,132 @@ function addWeatherToggleControl() {
 async function toggleWeather() {
   if (weather.active) {
     weather.active = false;
-    if (weather.layer) {
-      map.removeLayer(weather.layer);
-      weather.layer = null;
-    }
+    removeWeatherLayer();
     weather.btnEl.classList.remove('active');
     weather.control.getContainer().classList.remove('active');
     return;
   }
+  weather.active = true;
+  weather.btnEl.classList.add('active');
+  weather.control.getContainer().classList.add('active');
+  await renderWeatherLayer();
+}
 
-  // Liga
-  weather.btnEl.classList.add('loading');
-  const originalIcon = '🌧';
+function removeWeatherLayer() {
+  if (weather.layer) {
+    map.removeLayer(weather.layer);
+    weather.layer = null;
+  }
+}
+
+/**
+ * Renderiza a camada de clima baseada no filtro de período atual.
+ * - period=1 (Hoje):  OWM tile (chuva atual)
+ * - period=7 ou 30:   heatmap Open-Meteo (acumulado retrospectivo)
+ */
+async function renderWeatherLayer() {
+  if (!weather.active) return;
+  removeWeatherLayer();
+
+  const period = state.filter && state.filter.period ? state.filter.period : 1;
   const iconSpan = weather.btnEl.querySelector('.weather-icon');
-  if (iconSpan) iconSpan.textContent = '⏳';
 
   try {
-    // Cache de 5min (RainViewer atualiza a cada 10min)
-    const ageMin = (Date.now() - weather.fetchedAt) / 1000 / 60;
-    if (!weather.apiData || ageMin > 5) {
-      const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-      weather.apiData = await res.json();
-      weather.fetchedAt = Date.now();
+    if (period === 1) {
+      // Tile OWM — chuva atual
+      const url = `https://tile.openweathermap.org/map/${WEATHER_CONFIG.owmLayer}/{z}/{x}/{y}.png?appid=${WEATHER_CONFIG.owmApiKey}`;
+      weather.layer = L.tileLayer(url, {
+        opacity: 0.6,
+        attribution: '© <a href="https://openweathermap.org/">OpenWeatherMap</a>',
+        maxZoom: 18,
+      });
+      weather.layer.addTo(map);
+
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      weather.labelEl.textContent = t('weatherUpdated') + ' ' + hh + ':' + mm;
+    } else {
+      // Heatmap histórico (7d ou 30d acumulado)
+      weather.btnEl.classList.add('loading');
+      if (iconSpan) iconSpan.textContent = '⏳';
+
+      const points = await loadWeatherHeatmapData(period);
+      // L.heatLayer espera array [[lat, lng, intensity], ...] com intensity em 0-1
+      weather.layer = L.heatLayer(points, {
+        radius: 35,
+        blur: 30,
+        maxZoom: 10,         // a partir desse zoom, intensidade não muda
+        max: 1.0,
+        gradient: {
+          0.0: 'rgba(0,0,0,0)',
+          0.2: '#A6DBFF',     // azul claro — chuva fraca
+          0.45: '#5FA9F5',    // azul — moderada
+          0.65: '#F5D742',    // amarelo — forte
+          0.85: '#F58C2E',    // laranja — muito forte
+          1.0: '#D63B2E',     // vermelho — extrema
+        },
+      });
+      weather.layer.addTo(map);
+
+      weather.labelEl.textContent = period === 7
+        ? t('weatherHist7d') || 'Acumulado 7 dias'
+        : t('weatherHist30d') || 'Acumulado 30 dias';
     }
-    const { host, radar } = weather.apiData;
-    if (!host || !radar || !radar.past || radar.past.length === 0) {
-      throw new Error('no radar frames');
-    }
-    // Usa o frame mais recente (último "past" = radar atual)
-    const latestFrame = radar.past[radar.past.length - 1];
-
-    // Color scheme 4 (The Weather Channel — azul/verde/amarelo/vermelho)
-    // smooth=1, snow=1
-    const tileUrl = `${host}${latestFrame.path}/256/{z}/{x}/{y}/4/1_1.png`;
-    weather.layer = L.tileLayer(tileUrl, {
-      opacity: 0.7,
-      attribution: '© <a href="https://rainviewer.com">RainViewer</a>',
-      // RainViewer só serve tiles até zoom ~12; acima disso retorna 404.
-      // maxNativeZoom faz Leaflet upsamplear (esticar) os tiles do zoom 12
-      // pra zooms maiores, em vez de pedir tile que não existe.
-      maxNativeZoom: 12,
-      maxZoom: 19,
-    });
-    weather.layer.addTo(map);
-
-    // Label "atualizado às HH:mm"
-    const ts = new Date(latestFrame.time * 1000);
-    const hh = String(ts.getHours()).padStart(2, '0');
-    const mm = String(ts.getMinutes()).padStart(2, '0');
-    weather.labelEl.textContent = t('weatherUpdated') + ' ' + hh + ':' + mm;
-
-    weather.active = true;
-    weather.btnEl.classList.add('active');
-    weather.control.getContainer().classList.add('active');
   } catch (err) {
     console.error('[Weather] erro:', err);
-    alert(t('weatherError'));
+    weather.labelEl.textContent = t('weatherError');
   } finally {
     weather.btnEl.classList.remove('loading');
-    if (iconSpan) iconSpan.textContent = originalIcon;
+    if (iconSpan) iconSpan.textContent = '🌧';
   }
+}
+
+/**
+ * Faz fetch da chuva acumulada (mm) em N dias passados pra cada ponto do grid LATAM.
+ * Cache em memória por período pra evitar re-fetch.
+ * Retorna array [[lat, lng, intensity], ...] pronto pro L.heatLayer.
+ */
+async function loadWeatherHeatmapData(periodDays) {
+  const cacheKey = String(periodDays);
+  if (weather.heatmapCache[cacheKey]) return weather.heatmapCache[cacheKey];
+
+  const cfg = WEATHER_CONFIG;
+  const grid = [];
+  for (let lat = cfg.gridLatStart; lat <= cfg.gridLatEnd; lat += cfg.gridLatStep) {
+    for (let lng = cfg.gridLngStart; lng <= cfg.gridLngEnd; lng += cfg.gridLngStep) {
+      grid.push([lat, lng]);
+    }
+  }
+
+  // Fetches em paralelo (Open-Meteo aguenta — free tier ~10k/dia)
+  const promises = grid.map(([lat, lng]) =>
+    fetchOpenMeteoRain(lat, lng, periodDays).catch(() => 0)
+  );
+  const totals = await Promise.all(promises);
+
+  // Normaliza pra mm/dia → intensidade 0-1
+  // 20mm/dia = chuva muito forte → intensidade 1
+  const points = grid.map(([lat, lng], i) => {
+    const mmPerDay = totals[i] / periodDays;
+    const intensity = Math.min(1, Math.max(0, mmPerDay / 20));
+    return [lat, lng, intensity];
+  }).filter(p => p[2] > 0.02);   // descarta pontos quase secos pra não poluir
+
+  weather.heatmapCache[cacheKey] = points;
+  return points;
+}
+
+async function fetchOpenMeteoRain(lat, lng, pastDays) {
+  const url = `https://api.open-meteo.com/v1/forecast`
+    + `?latitude=${lat}&longitude=${lng}`
+    + `&past_days=${pastDays}&forecast_days=0`
+    + `&daily=precipitation_sum&timezone=auto`;
+  const res = await fetch(url);
+  if (!res.ok) return 0;
+  const data = await res.json();
+  if (!data.daily || !data.daily.precipitation_sum) return 0;
+  return data.daily.precipitation_sum.reduce((s, v) => s + (Number(v) || 0), 0);
 }
 
 function renderMap(drivers) {
@@ -4109,6 +4195,11 @@ function setFilter(type, value) {
 
   // Reset paginação ao filtrar (ordem mudou, top 10 anterior não é mais o mesmo)
   state.tableLimit = 10;
+
+  // Re-renderiza weather layer se ativo (period mudou → tile OWM vs heatmap)
+  if (type === 'period' && weather.active) {
+    renderWeatherLayer();
+  }
 
   savePreferences();
   applyFiltersAndRender();
