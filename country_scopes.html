@@ -276,6 +276,10 @@
     font-weight: 700;
     box-shadow: 0 1px 4px rgba(0,0,0,0.3);
   }
+  .driver-area-marker.stale {
+    background: #94A3B8;
+    opacity: 0.75;
+  }
 
   @media (max-width: 768px) {
     .stats-row { grid-template-columns: 1fr 1fr; }
@@ -529,6 +533,7 @@
   <div class="legend-item"><span class="legend-swatch" style="background:#4A9FE0;"></span> <span data-i18n="legendInProgress">Em progresso</span></div>
   <div class="legend-item"><span class="legend-swatch" style="background:#F59E0B;"></span> <span data-i18n="legendPending">Pendente</span></div>
   <div class="legend-item"><span class="legend-swatch" style="background:#2C5282;border-radius:50%;"></span> <span data-i18n="legendArea">Motorista (clique pra ver a casa)</span></div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#94A3B8;border-radius:50%;opacity:0.75;"></span> <span data-i18n="legendStale">Motorista sem check-in recente (na casa)</span></div>
 </div>
 
 </div><!-- /#app-content -->
@@ -697,6 +702,7 @@ const I18N = {
     legendPending: 'Pendente',
     legendHome: 'Casa do motorista',
     legendArea: 'Motorista (clique pra ver a casa)',
+    legendStale: 'Motorista sem check-in recente (na casa)',
     areaName: 'Área',
     areaProvince: 'Província',
     areaCity: 'Cidade',
@@ -729,6 +735,7 @@ const I18N = {
     legendPending: 'Pendiente',
     legendHome: 'Casa del motorista',
     legendArea: 'Motorista (clic para ver la casa)',
+    legendStale: 'Motorista sin check-in reciente (en casa)',
     areaName: 'Área',
     areaProvince: 'Provincia',
     areaCity: 'Ciudad',
@@ -761,6 +768,7 @@ const I18N = {
     legendPending: 'Pending',
     legendHome: 'Driver home',
     legendArea: 'Driver (click to see home)',
+    legendStale: 'Driver without recent check-in (at home)',
     areaName: 'Area',
     areaProvince: 'Province',
     areaCity: 'City',
@@ -970,22 +978,41 @@ function renderCountry(code) {
   tempLayer = L.layerGroup().addTo(map);
 
   cache.countryDrivers.forEach(d => {
-    const checkin = d.checkin;
-    if (!checkin || !checkin.lat || !checkin.lng) return;
-
     const initials = (d.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+
+    // Decide onde plotar: tem check-in recente → área; senão → casa (apagado)
+    let plotLat, plotLng, isStale;
+    if (d.checkin && d.checkin.lat && d.checkin.lng) {
+      plotLat = d.checkin.lat;
+      plotLng = d.checkin.lng;
+      isStale = false;
+    } else if (d.home && d.home.lat && d.home.lng) {
+      plotLat = d.home.lat;
+      plotLng = d.home.lng;
+      isStale = true;
+    } else {
+      return;  // sem coordenadas conhecidas, não plota
+    }
+
+    const markerClass = isStale ? 'driver-area-marker stale' : 'driver-area-marker';
+    const tooltip = isStale ? `${d.name} — ${t('noCheckin')}` : `${d.name} — ${t('driverArea')}`;
     const areaIcon = L.divIcon({
       className: 'driver-area-icon',
-      html: `<div class="driver-area-marker" title="${escapeHtml(d.name)} — ${t('driverArea')}">${initials}</div>`,
+      html: `<div class="${markerClass}" title="${escapeHtml(tooltip)}">${initials}</div>`,
       iconSize: [24, 24],
       iconAnchor: [12, 12],
     });
-    const marker = L.marker([checkin.lat, checkin.lng], { icon: areaIcon })
+    const marker = L.marker([plotLat, plotLng], { icon: areaIcon })
       .bindPopup(buildDriverPopup(d))
       .addTo(driverLayer);
 
-    // Click: mostra home + linha conectando (temporário, limpa anteriores)
-    marker.on('click', () => showDriverHomeOverlay(d));
+    // Click: mostra home + linha conectando (só se driver tem check-in recente).
+    // Drivers sem check-in já estão posicionados na casa — não tem nada extra a mostrar.
+    if (!isStale) {
+      marker.on('click', () => showDriverHomeOverlay(d));
+    } else {
+      marker.on('click', () => { if (tempLayer) tempLayer.clearLayers(); });
+    }
   });
   driverLayer.addTo(map);
 
