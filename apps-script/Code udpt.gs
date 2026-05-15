@@ -244,7 +244,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.26',
+        version: 'v5.27',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -4358,36 +4358,39 @@ function getActiveDriversByCountry_() {
  */
 function getUsdRate_(currency) {
   if (!currency || currency === 'USD') return 1;
+  const cur = String(currency).toUpperCase();
 
   const props = PropertiesService.getScriptProperties();
-  const cacheKey = 'usd_rate_' + currency.toUpperCase();
+  const cacheKey = 'usd_rates_all_v2';
   const cached = props.getProperty(cacheKey);
 
   if (cached) {
     const parsed = JSON.parse(cached);
     const ageMin = (Date.now() - parsed.fetchedAt) / 1000 / 60;
-    if (ageMin < 60) return parsed.rate;
+    if (ageMin < 60 && parsed.rates && parsed.rates[cur]) return parsed.rates[cur];
   }
 
-  // Cache miss ou vencido — chama Frankfurter
+  // Cache miss ou vencido — chama open.er-api.com (suporta TODAS moedas LATAM: ARS, BRL, CLP, COP, PEN, MXN)
+  // Frankfurter foi descartada porque não suporta ARS/COP/CLP/PEN.
   try {
-    const url = 'https://api.frankfurter.dev/v1/latest?base=USD&symbols=' + currency.toUpperCase();
+    const url = 'https://open.er-api.com/v6/latest/USD';
     const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
     if (response.getResponseCode() !== 200) {
-      Logger.log('⚠ Frankfurter API erro: ' + response.getResponseCode());
-      // Fallback pro cache antigo (mesmo que vencido)
-      if (cached) return JSON.parse(cached).rate;
+      Logger.log('⚠ open.er-api erro: ' + response.getResponseCode());
+      if (cached) return JSON.parse(cached).rates[cur] || null;
       return null;
     }
     const data = JSON.parse(response.getContentText());
-    const rate = data.rates[currency.toUpperCase()];
-    if (!rate) return null;
-
-    props.setProperty(cacheKey, JSON.stringify({ rate, fetchedAt: Date.now() }));
-    return rate;
+    if (data.result !== 'success' || !data.rates) {
+      Logger.log('⚠ open.er-api resposta inválida');
+      if (cached) return JSON.parse(cached).rates[cur] || null;
+      return null;
+    }
+    props.setProperty(cacheKey, JSON.stringify({ rates: data.rates, fetchedAt: Date.now() }));
+    return data.rates[cur] || null;
   } catch (e) {
-    Logger.log('Erro chamando Frankfurter: ' + e);
-    if (cached) return JSON.parse(cached).rate;
+    Logger.log('Erro chamando open.er-api: ' + e);
+    if (cached) return JSON.parse(cached).rates[cur] || null;
     return null;
   }
 }
@@ -5014,46 +5017,36 @@ function saveCashRequest_(data) {
     }
   }
 
-  // Estrutura da aba Cash Transfer Management:
-  //   A: Beneficiary | B: Country | C: USD Amount | D: Date Request | E: Date Needed
-  //   F: Reason | G: Responsible | H: Status | I: Save | (J vazio) | K: Google Rates
-  //   L: Local Amount | M: Currency | N: USD Rate Used
-  //   O: Category | P: Location Address | Q: Lat | R: Lng | S: Method
-  //   T: Attachment URL (v2.1)
-  const lastCol = sheet.getLastColumn();
-  if (lastCol < 20) {
-    const allExtras = ['Local Amount', 'Currency', 'USD Rate Used', 'Category', 'Location Address', 'Location Lat', 'Location Lng', 'Location Method', 'Attachment URL'];
-    const startCol = 12;  // L
-    const numNew = 20 - Math.max(lastCol, 11);
-    if (numNew > 0) {
-      const headersToAdd = allExtras.slice(9 - numNew);
-      const writeStart = startCol + (9 - numNew);
-      sheet.getRange(1, writeStart, 1, numNew).setValues([headersToAdd]);
-      sheet.getRange(1, writeStart, 1, numNew).setFontWeight('bold').setBackground('#f0f0f0');
-    }
-  }
+  // Estrutura ATUAL da aba Cash Transfer Management (re-verificada com user em 2026-05-15):
+  //   A: Beneficiary's Full Name | B: Country | C: Amount (USD) | D: Date of Request | E: Date of Payment/Needed by
+  //   F: Reason for deposit | G: Responsible | H: Status (validation strict: Requested/Cancelled/Finished/Delayed/In Process)
+  //   I: Fee USD | J: Local Amount Received (Estimated) | K: Personal E-mail | L: Corporate E-mail
+  //   M: Month (MM/YYYY) | N: (vazio)
+  //   O: Category | P: Location Address | Q: Location Lat | R: Location Lng | S: Location Method
+  //   T: Attachment URL
+  const monthStr = Utilities.formatDate(now, 'America/Sao_Paulo', 'MM/yyyy');
 
   const row = new Array(20).fill('');
-  row[0] = data.driverName || '';
-  row[1] = data.country || '';
-  row[2] = usdAmount !== null ? usdAmount : '';
-  row[3] = now;
-  row[4] = neededBy;
-  row[5] = data.reason || '';
-  row[6] = '';                                  // Responsible (preenchido depois)
-  row[7] = 'Requested';                         // Status default — aba tem data validation strict (Requested/Cancelled/Finished/Delayed/In Process); 'Pending' era rejeitado e abortava o setValues inteiro deixando linha vazia
-  row[8] = '';                                  // Save
-  row[9] = '';                                  // (vazio na planilha original)
-  row[10] = '';                                 // Google Rates (cálculo manual)
-  row[11] = localAmount;                        // Local Amount
-  row[12] = currency;                           // Currency
-  row[13] = rate !== null ? rate : '';          // USD Rate Used
-  row[14] = data.category || '';                // Category
-  row[15] = data.locationAddress || '';         // Location Address
-  row[16] = data.locationLat !== null && data.locationLat !== undefined ? data.locationLat : '';
-  row[17] = data.locationLng !== null && data.locationLng !== undefined ? data.locationLng : '';
-  row[18] = data.locationMethod || '';
-  row[19] = attachmentUrl;                      // v2.1: link Drive do anexo
+  row[0] = data.driverName || '';                                                    // A: Beneficiary
+  row[1] = data.country || '';                                                       // B: Country
+  row[2] = usdAmount !== null ? usdAmount : '';                                      // C: Amount (USD)
+  row[3] = now;                                                                      // D: Date of Request
+  row[4] = neededBy;                                                                 // E: Date of Payment/Needed by
+  row[5] = data.reason || '';                                                        // F: Reason for deposit
+  row[6] = '';                                                                       // G: Responsible (preenchido manualmente depois)
+  row[7] = 'Requested';                                                              // H: Status — só aceita Requested/Cancelled/Finished/Delayed/In Process
+  row[8] = '';                                                                       // I: Fee USD (vazio — não temos info)
+  row[9] = localAmount;                                                              // J: Local Amount Received (Estimated)
+  row[10] = '';                                                                      // K: Personal E-mail (vazio — não temos)
+  row[11] = data.driverEmail || '';                                                  // L: Corporate E-mail
+  row[12] = monthStr;                                                                // M: Month (MM/YYYY)
+  row[13] = '';                                                                      // N: (vazio na planilha)
+  row[14] = data.category || '';                                                     // O: Category
+  row[15] = data.locationAddress || '';                                              // P: Location Address
+  row[16] = data.locationLat !== null && data.locationLat !== undefined ? data.locationLat : '';  // Q: Location Lat
+  row[17] = data.locationLng !== null && data.locationLng !== undefined ? data.locationLng : '';  // R: Location Lng
+  row[18] = data.locationMethod || '';                                               // S: Location Method
+  row[19] = attachmentUrl;                                                           // T: Attachment URL
 
   // v5.20: insere no topo (linha 11), não no fim
   // A aba Cash Transfer Management tem header em L9-L10 ("Transactions History")
