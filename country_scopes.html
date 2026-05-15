@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Country Scopes · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
+<script src="auth.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -279,9 +281,195 @@
     .stats-row { grid-template-columns: 1fr 1fr; }
     #map { height: 60vh; }
   }
+
+  /* User pill (header, depois do login) */
+  .user-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px 4px 4px;
+    background: var(--c-bg-tint);
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--c-primary-dark);
+  }
+  .user-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .logout-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--c-text-muted);
+    font-size: 14px;
+    padding: 2px 4px;
+    font-family: inherit;
+    line-height: 1;
+  }
+  .logout-btn:hover { color: var(--c-danger); }
+
+  /* Tela de login (mesmo padrão do dashboard) */
+  .login-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 10000;
+  }
+  .login-card {
+    background: white;
+    border-radius: 16px;
+    padding: 36px 32px 28px;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    text-align: center;
+    position: relative;
+  }
+  .login-lang-switch {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: flex;
+    gap: 2px;
+    background: var(--c-bg-tint);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .login-lang-switch button {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: inherit;
+  }
+  .login-lang-switch button.active {
+    background: white;
+    color: var(--c-primary-dark);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .login-logo { margin-bottom: 18px; min-height: 50px; display: flex; align-items: center; justify-content: center; }
+  .login-logo-text {
+    font-size: 26px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  .login-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 4px;
+  }
+  .login-sub {
+    font-size: 13px;
+    color: var(--c-text-muted);
+    margin-bottom: 24px;
+  }
+  .login-card form { text-align: left; }
+  .login-card label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .login-card input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--c-text);
+    background: white;
+  }
+  .login-card input:focus {
+    outline: none;
+    border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(74, 159, 224, 0.15);
+  }
+  .login-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 18px;
+    font-family: inherit;
+  }
+  .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .login-error {
+    color: var(--c-danger);
+    font-size: 12px;
+    margin-top: 10px;
+    min-height: 16px;
+    display: none;
+  }
+  .login-error.visible { display: block; }
+  .login-footer {
+    margin-top: 20px;
+    font-size: 11px;
+    color: var(--c-text-muted);
+  }
 </style>
 </head>
 <body>
+
+<!-- TELA DE LOGIN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-lang-switch">
+      <button type="button" data-login-lang="pt" onclick="setLoginLang('pt')" class="active">PT</button>
+      <button type="button" data-login-lang="es" onclick="setLoginLang('es')">ES</button>
+      <button type="button" data-login-lang="en" onclick="setLoginLang('en')">EN</button>
+    </div>
+    <div class="login-logo">
+      <span class="login-logo-text">Aceolution</span>
+    </div>
+    <div class="login-title">Country Scopes</div>
+    <div class="login-sub" id="login-sub">Faça login para acessar</div>
+    <form id="login-form" onsubmit="return doLogin(event)">
+      <label for="login-username" id="login-label-user">Usuário</label>
+      <input type="text" id="login-username" autocomplete="username" required autofocus>
+      <label for="login-password" id="login-label-pass" style="margin-top:12px;">Senha</label>
+      <input type="password" id="login-password" autocomplete="current-password" required>
+      <button type="submit" class="login-btn" id="login-btn">Entrar</button>
+      <div class="login-error" id="login-error"></div>
+    </form>
+    <div class="login-footer">
+      <small id="login-footer-text">Aceolution do Brasil · Plataforma interna</small>
+    </div>
+  </div>
+</div>
+
+<!-- APP (oculto até login) -->
+<div id="app-content" style="display:none;">
 
 <header>
   <div class="brand-wrap">
@@ -289,10 +477,17 @@
     <div class="brand-divider"></div>
     <div class="brand-sub">LATAM<span data-i18n="brandSub">Country Scopes</span></div>
   </div>
-  <div class="lang-switch">
-    <button data-lang="pt" class="active">PT</button>
-    <button data-lang="es">ES</button>
-    <button data-lang="en">EN</button>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <div class="user-pill" id="user-pill" style="display:none;">
+      <span class="user-avatar" id="user-avatar"></span>
+      <span id="user-name"></span>
+      <button class="logout-btn" type="button" onclick="doLogout()" title="Sair">↪</button>
+    </div>
+    <div class="lang-switch">
+      <button data-lang="pt" class="active">PT</button>
+      <button data-lang="es">ES</button>
+      <button data-lang="en">EN</button>
+    </div>
   </div>
 </header>
 
@@ -333,12 +528,149 @@
   <div class="legend-item"><span class="legend-swatch" style="background:#22C55E;"></span> <span data-i18n="legendCompleted">Completa</span></div>
   <div class="legend-item"><span class="legend-swatch" style="background:#4A9FE0;"></span> <span data-i18n="legendInProgress">Em progresso</span></div>
   <div class="legend-item"><span class="legend-swatch" style="background:#F59E0B;"></span> <span data-i18n="legendPending">Pendente</span></div>
-  <div class="legend-item"><span class="legend-swatch" style="background:white;border:2px solid #64748B;border-radius:50%;"></span> <span data-i18n="legendHome">Casa do motorista</span></div>
-  <div class="legend-item"><span class="legend-swatch" style="background:#2C5282;border-radius:50%;"></span> <span data-i18n="legendArea">Última área (check-in)</span></div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#2C5282;border-radius:50%;"></span> <span data-i18n="legendArea">Motorista (clique pra ver a casa)</span></div>
 </div>
+
+</div><!-- /#app-content -->
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+
+// =================================================================
+// Login (mesmo padrão do dashboard.html)
+// =================================================================
+const LOGIN_I18N = {
+  pt: {
+    subtitle: 'Faça login para acessar',
+    usernameLabel: 'Usuário',
+    passwordLabel: 'Senha',
+    submitBtn: 'Entrar',
+    submitChecking: 'Verificando...',
+    errorEmpty: 'Preencha usuário e senha',
+    errorInvalid: 'Usuário ou senha inválidos',
+    errorGeneric: 'Erro ao fazer login. Tente novamente.',
+    footer: 'Aceolution do Brasil · Plataforma interna',
+  },
+  es: {
+    subtitle: 'Inicie sesión para acceder',
+    usernameLabel: 'Usuario',
+    passwordLabel: 'Contraseña',
+    submitBtn: 'Entrar',
+    submitChecking: 'Verificando...',
+    errorEmpty: 'Complete usuario y contraseña',
+    errorInvalid: 'Usuario o contraseña inválidos',
+    errorGeneric: 'Error al iniciar sesión. Inténtelo de nuevo.',
+    footer: 'Aceolution do Brasil · Plataforma interna',
+  },
+  en: {
+    subtitle: 'Sign in to continue',
+    usernameLabel: 'Username',
+    passwordLabel: 'Password',
+    submitBtn: 'Sign in',
+    submitChecking: 'Verifying...',
+    errorEmpty: 'Fill in username and password',
+    errorInvalid: 'Invalid username or password',
+    errorGeneric: 'Login error. Please try again.',
+    footer: 'Aceolution do Brasil · Internal platform',
+  },
+};
+
+let currentLoginLang = localStorage.getItem('preferredLang') || 'pt';
+let currentUser = null;
+
+function setLoginLang(lang) {
+  if (!LOGIN_I18N[lang]) return;
+  currentLoginLang = lang;
+  localStorage.setItem('preferredLang', lang);
+  document.querySelectorAll('.login-lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.loginLang === lang);
+  });
+  const ti = LOGIN_I18N[lang];
+  document.getElementById('login-sub').textContent = ti.subtitle;
+  document.getElementById('login-label-user').textContent = ti.usernameLabel;
+  document.getElementById('login-label-pass').textContent = ti.passwordLabel;
+  const btn = document.getElementById('login-btn');
+  if (!btn.disabled) btn.textContent = ti.submitBtn;
+  document.getElementById('login-footer-text').textContent = ti.footer;
+  document.documentElement.lang = lang;
+}
+setLoginLang(currentLoginLang);
+
+async function doLogin(event) {
+  event.preventDefault();
+  const usernameEl = document.getElementById('login-username');
+  const passwordEl = document.getElementById('login-password');
+  const errorEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  const ti = LOGIN_I18N[currentLoginLang] || LOGIN_I18N.pt;
+
+  const username = usernameEl.value.trim().toLowerCase();
+  const password = passwordEl.value;
+  if (!username || !password) {
+    errorEl.textContent = ti.errorEmpty;
+    errorEl.classList.add('visible');
+    return false;
+  }
+  btn.disabled = true;
+  btn.textContent = ti.submitChecking;
+  errorEl.classList.remove('visible');
+
+  try {
+    const user = await validateLogin(username, password);
+    if (!user) {
+      await new Promise(r => setTimeout(r, 600));
+      errorEl.textContent = ti.errorInvalid;
+      errorEl.classList.add('visible');
+      passwordEl.value = '';
+      passwordEl.focus();
+      btn.disabled = false;
+      btn.textContent = ti.submitBtn;
+      return false;
+    }
+    currentUser = user;
+    onLoginSuccess();
+  } catch (err) {
+    console.error('Login error:', err);
+    errorEl.textContent = ti.errorGeneric;
+    errorEl.classList.add('visible');
+    btn.disabled = false;
+    btn.textContent = ti.submitBtn;
+  }
+  return false;
+}
+
+function onLoginSuccess() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-content').style.display = '';
+
+  const pill = document.getElementById('user-pill');
+  pill.style.display = '';
+  document.getElementById('user-name').textContent = currentUser.fullName;
+  const initials = currentUser.fullName.split(' ').map(s => s.charAt(0).toUpperCase()).slice(0, 2).join('');
+  document.getElementById('user-avatar').textContent = initials;
+
+  // Sincroniza idioma escolhido na tela de login com o app
+  currentLang = currentLoginLang;
+  document.querySelectorAll('.lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-lang') === currentLang);
+  });
+
+  // Inicializa o app
+  applyI18n();
+  renderTabs();
+  loadCountry(state.country);
+}
+
+function doLogout() {
+  if (!confirm('Sair?')) return;
+  currentUser = null;
+  document.getElementById('app-content').style.display = 'none';
+  document.getElementById('login-screen').style.display = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-btn').disabled = false;
+  document.getElementById('login-btn').textContent = (LOGIN_I18N[currentLoginLang] || LOGIN_I18N.pt).submitBtn;
+}
+
 
 const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
@@ -364,7 +696,7 @@ const I18N = {
     legendInProgress: 'Em progresso',
     legendPending: 'Pendente',
     legendHome: 'Casa do motorista',
-    legendArea: 'Última área (check-in)',
+    legendArea: 'Motorista (clique pra ver a casa)',
     areaName: 'Área',
     areaProvince: 'Província',
     areaCity: 'Cidade',
@@ -381,6 +713,7 @@ const I18N = {
     driverHome: 'Casa',
     driverArea: 'Mapeando agora',
     noCheckin: 'Sem check-in recente',
+    atHome: 'Em casa',
     areaPolygon: 'área',
     fetchError: 'Erro ao carregar dados',
   },
@@ -395,7 +728,7 @@ const I18N = {
     legendInProgress: 'En progreso',
     legendPending: 'Pendiente',
     legendHome: 'Casa del motorista',
-    legendArea: 'Última área (check-in)',
+    legendArea: 'Motorista (clic para ver la casa)',
     areaName: 'Área',
     areaProvince: 'Provincia',
     areaCity: 'Ciudad',
@@ -412,6 +745,7 @@ const I18N = {
     driverHome: 'Casa',
     driverArea: 'Mapeando ahora',
     noCheckin: 'Sin check-in reciente',
+    atHome: 'En casa',
     areaPolygon: 'área',
     fetchError: 'Error al cargar datos',
   },
@@ -426,7 +760,7 @@ const I18N = {
     legendInProgress: 'In progress',
     legendPending: 'Pending',
     legendHome: 'Driver home',
-    legendArea: 'Last area (check-in)',
+    legendArea: 'Driver (click to see home)',
     areaName: 'Area',
     areaProvince: 'Province',
     areaCity: 'City',
@@ -443,6 +777,7 @@ const I18N = {
     driverHome: 'Home',
     driverArea: 'Mapping now',
     noCheckin: 'No recent check-in',
+    atHome: 'At home',
     areaPolygon: 'area',
     fetchError: 'Error loading data',
   },
@@ -482,6 +817,7 @@ const state = {
 let map = null;
 let polygonLayer = null;
 let driverLayer = null;
+let tempLayer = null;     // home marker + linha (mostrado/limpo no click do driver)
 
 
 function initMap() {
@@ -619,6 +955,7 @@ function renderCountry(code) {
   // Limpa layers antigas
   if (polygonLayer) { map.removeLayer(polygonLayer); polygonLayer = null; }
   if (driverLayer) { map.removeLayer(driverLayer); driverLayer = null; }
+  if (tempLayer) { map.removeLayer(tempLayer); tempLayer = null; }
 
   // Polígonos
   polygonLayer = L.geoJSON(cache.geojson, {
@@ -628,46 +965,27 @@ function renderCountry(code) {
     },
   }).addTo(map);
 
-  // Drivers (home + última área de check-in)
+  // Drivers — só o pino da área de check-in atual (home aparece on-demand no click)
   driverLayer = L.layerGroup();
+  tempLayer = L.layerGroup().addTo(map);
+
   cache.countryDrivers.forEach(d => {
-    const home = d.home;
     const checkin = d.checkin;
+    if (!checkin || !checkin.lat || !checkin.lng) return;
 
-    if (home) {
-      const homeIcon = L.divIcon({
-        className: 'driver-home-icon',
-        html: `<div class="driver-home-marker" title="${escapeHtml(d.name)}">🏠</div>`,
-        iconSize: [22, 22],
-        iconAnchor: [11, 11],
-      });
-      L.marker([home.lat, home.lng], { icon: homeIcon })
-        .bindPopup(buildDriverPopup(d, home, checkin))
-        .addTo(driverLayer);
-    }
+    const initials = (d.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const areaIcon = L.divIcon({
+      className: 'driver-area-icon',
+      html: `<div class="driver-area-marker" title="${escapeHtml(d.name)} — ${t('driverArea')}">${initials}</div>`,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+    });
+    const marker = L.marker([checkin.lat, checkin.lng], { icon: areaIcon })
+      .bindPopup(buildDriverPopup(d))
+      .addTo(driverLayer);
 
-    if (checkin && checkin.lat && checkin.lng) {
-      const initials = (d.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-      const areaIcon = L.divIcon({
-        className: 'driver-area-icon',
-        html: `<div class="driver-area-marker" title="${escapeHtml(d.name)} — ${t('driverArea')}">${initials}</div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
-      });
-      L.marker([checkin.lat, checkin.lng], { icon: areaIcon })
-        .bindPopup(buildDriverPopup(d, home, checkin))
-        .addTo(driverLayer);
-
-      // Linha conectando home → área atual
-      if (home) {
-        L.polyline([[home.lat, home.lng], [checkin.lat, checkin.lng]], {
-          color: '#2C5282',
-          weight: 1.5,
-          opacity: 0.45,
-          dashArray: '5 5',
-        }).addTo(driverLayer);
-      }
-    }
+    // Click: mostra home + linha conectando (temporário, limpa anteriores)
+    marker.on('click', () => showDriverHomeOverlay(d));
   });
   driverLayer.addTo(map);
 
@@ -752,19 +1070,62 @@ function buildAreaPopup(feature, cache) {
   `;
 }
 
-function buildDriverPopup(driver, home, checkin) {
+function buildDriverPopup(driver) {
+  const home = driver.home;
+  const checkin = driver.checkin;
   let html = `<div class="popup-title">${escapeHtml(driver.name)}</div>`;
   html += `<div class="popup-row"><span>${escapeHtml(driver.country)}</span><strong>${escapeHtml(driver.city || '—')}</strong></div>`;
-  if (home) {
-    html += `<div class="popup-row"><span>${t('driverHome')}</span><strong>${escapeHtml(home.address || '—')}</strong></div>`;
-  }
+
+  // "Em casa" se a base atual está perto da casa (< 1km de raio)
+  const dist = (home && checkin) ? haversineKm(home.lat, home.lng, checkin.lat, checkin.lng) : null;
+  const atHome = dist !== null && dist < 1;
+
   if (checkin && checkin.address) {
-    const dist = home ? haversineKm(home.lat, home.lng, checkin.lat, checkin.lng) : null;
-    html += `<div class="popup-row"><span>${t('driverArea')}</span><strong>${escapeHtml(checkin.address)}${dist !== null ? ` (${dist.toFixed(0)} km)` : ''}</strong></div>`;
+    if (atHome) {
+      html += `<div class="popup-row"><span>${t('driverArea')}</span><strong style="color:var(--c-success);">${t('atHome')}</strong></div>`;
+    } else {
+      html += `<div class="popup-row"><span>${t('driverArea')}</span><strong>${escapeHtml(checkin.address)}${dist !== null ? ` (${dist.toFixed(0)} km)` : ''}</strong></div>`;
+    }
   } else {
     html += `<div class="popup-row" style="color:var(--c-text-muted);"><em>${t('noCheckin')}</em></div>`;
   }
   return html;
+}
+
+
+/**
+ * Click no pino do driver: mostra home + linha conectando home → área atual.
+ * Limpa overlay anterior. Se "em casa" (dist < 1km), só mostra home sem linha.
+ */
+function showDriverHomeOverlay(driver) {
+  if (!tempLayer) return;
+  tempLayer.clearLayers();
+
+  const home = driver.home;
+  const checkin = driver.checkin;
+  if (!home) return;
+
+  const homeIcon = L.divIcon({
+    className: 'driver-home-icon',
+    html: `<div class="driver-home-marker" title="${escapeHtml(driver.name)} — ${t('driverHome')}">🏠</div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  });
+  L.marker([home.lat, home.lng], { icon: homeIcon })
+    .bindPopup(`<div class="popup-title">${escapeHtml(driver.name)}</div><div class="popup-row"><strong>${t('driverHome')}</strong></div><div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:12px;">${escapeHtml(home.address || '—')}</div>`)
+    .addTo(tempLayer);
+
+  if (checkin && checkin.lat && checkin.lng) {
+    const dist = haversineKm(home.lat, home.lng, checkin.lat, checkin.lng);
+    if (dist >= 1) {  // só desenha linha se NÃO está em casa
+      L.polyline([[home.lat, home.lng], [checkin.lat, checkin.lng]], {
+        color: '#2C5282',
+        weight: 2,
+        opacity: 0.65,
+        dashArray: '6 6',
+      }).addTo(tempLayer);
+    }
+  }
 }
 
 
@@ -832,11 +1193,9 @@ function escapeHtml(s) {
 
 
 // =================================================================
-// Boot
+// Boot — só roda depois do login (chamado de onLoginSuccess)
 // =================================================================
-applyI18n();
-renderTabs();
-loadCountry(state.country);
+// (vazio aqui de propósito; tudo é inicializado em onLoginSuccess)
 
 </script>
 
