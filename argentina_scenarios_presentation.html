@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Otimização Argentina — 5 Cenários · Aceolution LATAM</title>
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<script src="auth.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --c-primary: #2C5282;
+    --c-primary-dark: #1A365D;
+    --c-accent: #4A9FE0;
+    --c-bg: #F8FAFC;
+    --c-bg-tint: #EBF4FB;
+    --c-border: #E2E8F0;
+    --c-text: #1A202C;
+    --c-text-muted: #64748B;
+    --c-success: #16A34A;
+    --c-warn: #CA8A04;
+    --c-danger: #B91C1C;
+  }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #e5e7eb;
+    color: var(--c-text);
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    padding: 0;
+  }
+
+  /* Slide = uma página A4 landscape */
+  .slide {
+    width: 297mm;
+    min-height: 210mm;
+    margin: 12px auto;
+    background: white;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    padding: 18mm 22mm;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Brand strip lateral */
+  .slide::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6mm;
+    background: linear-gradient(180deg, var(--c-primary) 0%, var(--c-accent) 100%);
+  }
+  .slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--c-border);
+    margin-bottom: 14px;
+  }
+  .slide-eyebrow {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--c-primary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+  }
+  .slide-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    line-height: 1.15;
+    letter-spacing: -0.3px;
+  }
+  .slide-subtitle {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    margin-top: 3px;
+  }
+  .slide-logo { height: 28px; }
+  .slide-num {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    font-weight: 600;
+  }
+
+  /* CAPA */
+  .slide-cover {
+    background: linear-gradient(135deg, #1A365D 0%, #2C5282 60%, #4A9FE0 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 30mm;
+  }
+  .slide-cover::before { display: none; }
+  .cover-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 24px;
+  }
+  .cover-logo-row {
+    margin-bottom: 28px;
+  }
+  .cover-logo-row img { height: 40px; filter: brightness(0) invert(1); }
+  .cover-title {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+  .cover-sub {
+    font-size: 18px;
+    color: rgba(255,255,255,0.85);
+    max-width: 600px;
+    line-height: 1.4;
+    margin-bottom: 36px;
+  }
+  .cover-meta {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 1px;
+  }
+
+  /* Layout interno do slide */
+  .slide-body {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 18px;
+    height: calc(100% - 70px);
+  }
+  .slide-body.full { grid-template-columns: 1fr; }
+
+  /* Map */
+  .scenario-map {
+    height: 105mm;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--c-border);
+    background: var(--c-bg);
+  }
+
+  /* Métricas cards */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .metric-card {
+    background: var(--c-bg);
+    border-radius: 7px;
+    padding: 9px 12px;
+    border-left: 3px solid var(--c-accent);
+  }
+  .metric-card.good { border-left-color: var(--c-success); }
+  .metric-card.warn { border-left-color: var(--c-warn); }
+  .metric-card.bad { border-left-color: var(--c-danger); }
+  .metric-label {
+    font-size: 9px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  .metric-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    line-height: 1.1;
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .metric-sub {
+    font-size: 9.5px;
+    color: var(--c-text-muted);
+    margin-top: 1px;
+  }
+  .metric-delta { font-size: 10px; font-weight: 600; }
+  .metric-delta.up { color: var(--c-success); }
+  .metric-delta.down { color: var(--c-danger); }
+  .metric-delta.neutral { color: var(--c-text-muted); }
+
+  /* Bullets */
+  .insights {
+    margin-top: 8px;
+  }
+  .insights h3 {
+    font-size: 10px;
+    color: var(--c-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .insights ul {
+    list-style: none;
+    padding: 0;
+  }
+  .insights li {
+    font-size: 11.5px;
+    padding: 3px 0 3px 12px;
+    position: relative;
+    line-height: 1.4;
+    color: var(--c-text);
+  }
+  .insights li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--c-primary);
+  }
+  .insights li.pro { color: var(--c-text); }
+  .insights li.pro::before { color: var(--c-success); content: '✓'; }
+  .insights li.con::before { color: var(--c-danger); content: '✗'; }
+
+  /* Tabela comparativa */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .compare-table th, .compare-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--c-border);
+    text-align: left;
+  }
+  .compare-table th {
+    background: var(--c-bg);
+    color: var(--c-text-muted);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .compare-table td.metric { text-align: right; font-variant-numeric: tabular-nums; }
+  .compare-table tr.winner { background: rgba(34,197,94,0.08); }
+  .compare-table tr.winner td:first-child { font-weight: 700; color: var(--c-success); }
+  .compare-table .pill {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .pill-best { background: #DCFCE7; color: #14532D; }
+  .pill-mid { background: #FEF3C7; color: #78350F; }
+  .pill-bad { background: #FEE2E2; color: #7F1D1D; }
+
+  /* Chart area */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .chart-card {
+    background: var(--c-bg);
+    border-radius: 8px;
+    padding: 8px 10px 4px;
+  }
+  .chart-card h4 {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    font-weight: 700;
+  }
+  .chart-canvas-wrap { height: 75mm; position: relative; }
+
+  /* Recomendação final */
+  .recommend-banner {
+    background: linear-gradient(135deg, #16A34A 0%, #22C55E 100%);
+    color: white;
+    padding: 14px 20px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .recommend-banner .check {
+    font-size: 32px;
+    line-height: 1;
+  }
+  .recommend-banner-text h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.85;
+    margin-bottom: 2px;
+  }
+  .recommend-banner-text strong {
+    font-size: 19px;
+    font-weight: 700;
+  }
+
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 10px 0;
+  }
+  .why-card {
+    background: var(--c-bg-tint);
+    border-radius: 8px;
+    padding: 11px 13px;
+    border-top: 3px solid var(--c-primary);
+  }
+  .why-num {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--c-primary);
+    line-height: 1;
+  }
+  .why-label {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 4px;
+  }
+  .why-detail {
+    font-size: 10.5px;
+    margin-top: 6px;
+    line-height: 1.4;
+    color: var(--c-text);
+  }
+
+  .caveat-mini {
+    background: #FFFBEB;
+    border-left: 3px solid var(--c-warn);
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 10.5px;
+    color: #78350F;
+    border-radius: 0 4px 4px 0;
+  }
+  .caveat-mini strong { color: #78350F; }
+
+  /* Markers Leaflet */
+  .marker-d {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 8px; font-weight: 700;
+    border: 1.5px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .marker-d.keep { background: #16A34A; }
+  .marker-d.drop { background: #B91C1C; }
+  .marker-d.hire { background: #4A9FE0; font-size: 11px; }
+  .marker-d.hotel { background: #B45309; }
+
+  /* Floating toolbar */
+  .print-toolbar {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    z-index: 9999;
+    font-size: 12px;
+  }
+  .print-btn {
+    background: var(--c-primary);
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .print-btn:disabled { opacity: 0.6; cursor: wait; }
+  .print-status { color: var(--c-text-muted); font-size: 11px; }
+
+  /* Login */
+  .login-screen {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; z-index: 10000;
+  }
+  .login-card {
+    background: white; border-radius: 16px;
+    padding: 36px 32px; max-width: 380px; width: 100%;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    text-align: center;
+  }
+  .login-logo-text {
+    font-size: 26px; font-weight: 700;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .login-title { font-size: 20px; font-weight: 700; color: var(--c-primary-dark); margin: 16px 0 4px; }
+  .login-sub { font-size: 13px; color: var(--c-text-muted); margin-bottom: 22px; }
+  .login-card form { text-align: left; }
+  .login-card label { display: block; font-size: 11px; font-weight: 600; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .login-card input { width: 100%; padding: 11px 14px; border: 1px solid var(--c-border); border-radius: 8px; font-size: 14px; font-family: inherit; margin-bottom: 12px; }
+  .login-card input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
+  .login-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px; font-family: inherit; }
+  .login-error { color: var(--c-danger); font-size: 12px; margin-top: 10px; min-height: 16px; display: none; }
+  .login-error.visible { display: block; }
+
+  /* PRINT */
+  @media print {
+    body { background: white; }
+    .print-toolbar, .login-screen { display: none !important; }
+    .slide {
+      margin: 0;
+      box-shadow: none;
+      page-break-after: always;
+      padding: 12mm 16mm 12mm 18mm;
+    }
+    .slide:last-child { page-break-after: auto; }
+    .leaflet-control-container { display: none !important; }
+  }
+  @page { size: A4 landscape; margin: 0; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo-text">Aceolution</div>
+    <div class="login-title">Apresentação Confidencial</div>
+    <div class="login-sub">5 cenários de otimização — Argentina</div>
+    <form onsubmit="return doLogin(event)">
+      <label>Usuário</label>
+      <input type="text" id="login-username" required autofocus autocomplete="username">
+      <label>Senha</label>
+      <input type="password" id="login-password" required autocomplete="current-password">
+      <button type="submit" class="login-btn" id="login-btn">Entrar</button>
+      <div class="login-error" id="login-error"></div>
+    </form>
+  </div>
+</div>
+
+<div class="print-toolbar" id="print-toolbar" style="display:none;">
+  <span class="print-status" id="print-status">Carregando...</span>
+  <button class="print-btn" id="print-btn" disabled onclick="window.print()">📄 Imprimir / Salvar PDF</button>
+</div>
+
+<!-- ============================================================
+     SLIDES
+============================================================ -->
+<div id="deck" style="display:none;">
+
+<!-- SLIDE 1: CAPA -->
+<section class="slide slide-cover">
+  <div class="cover-logo-row">
+    <img src="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0" alt="Aceolution">
+  </div>
+  <div class="cover-eyebrow">Aceolution LATAM · Análise interna</div>
+  <h1 class="cover-title">Otimização da<br>Equipe Argentina</h1>
+  <p class="cover-sub">5 cenários comparados em cobertura, eficiência e custo. Recomendação final baseada em dados.</p>
+  <div class="cover-meta" id="cover-date">—</div>
+</section>
+
+<!-- SLIDE 2: SITUAÇÃO ATUAL -->
+<section class="slide">
+  <div class="slide-header">
+    <div>
+      <div class="slide-eyebrow">Cenário base · referência</div>
+      <h2 class="slide-title">Situação atual</h2>
+      <div class="slide-subtitle">7 motoristas · 9 veículos · 30.836 km a mapear</div>
+    </div>
+    <div class="slide-num">2 / 10</div>
+  </div>
+  <div class="slide-body">
+    <div>
+      <div class="metric-grid">
+        <div class="metric-card"><div class="metric-label">Motoristas ativos</div><div class="metric-value">7</div><div class="metric-sub">2 inativos · 5 half-active</div></div>
+        <div class="metric-card warn"><div class="metric-label">Áreas órfãs (&gt;500 km)</div><div class="metric-value">29</div><div class="metric-sub">3.155 km sem cobertura próxima</div></div>
+        <div class="metric-card"><div class="metric-label">Eficiência média TKM/KM</div><div class="metric-value">0.492</div><div class="metric-sub">Leandro puxa pra baixo (0.364)</div></div>
+        <div class="metric-card warn"><div class="metric-label">Distância média</div><div class="metric-value">342 km</div><div class="metric-sub">Casa → área de mapeamento</div></div>
+      </div>
+      <div class="insights">
+        <h3>Diagnóstico</h3>
+        <ul>
+          <li><strong>Concentração no centro:</strong> Axel + Mauricio cobrem 62% das áreas próximas (Córdoba + BsAs)</li>
+          <li><strong>Norte mal coberto:</strong> Mauro está em Formosa mas inativo. Misiones/Corrientes ficam órfãs</li>
+          <li><strong>BsAs metro saturado:</strong> Leandro (0.364) e Mauricio (0.502) competem pela mesma região</li>
+          <li><strong>Sul depende de 1 driver:</strong> Matías (Not Active) é o único na Patagônia sul</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div id="map-baseline" class="scenario-map"></div>
+      <div style="font-size:9px;color:var(--c-text-muted);margin-top:4px;text-align:center;">
+        <span style="color:#16A34A;">●</span> Motoristas ativos &nbsp;
+        <span style="color:#B91C1C;">●</span> Áreas pendentes
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 3: CENÁRIO A — HOTEL ONLY -->
+<section class="slide">
+  <div class="slide-header">
+    <div>
+      <div class="slide-eyebrow">Cenário A</div>
+      <h2 class="slide-title">Modo hotel pros top 2</h2>
+      <div class="slide-subtitle">Sem dispensas · habilita hotel pra Axel e Fernando</div>
+    </div>
+    <div class="slide-num">3 / 10</div>
+  </div>
+  <div class="slide-body">
+    <div>
+      <div class="metric-grid">
+        <div class="metric-card"><div class="metric-label">Headcount</div><div class="metric-value">7</div><div class="metric-sub">Igual ao baseline</div></div>
+        <div class="metric-card warn"><div class="metric-label">Áreas órfãs</div><div class="metric-value">29</div><div class="metric-sub">Sem mudança geográfica</div></div>
+        <div class="metric-card"><div class="metric-label">Eficiência média</div><div class="metric-value">0.492</div><div class="metric-sub">Top 2 ganha ~5% real estimado</div></div>
+        <div class="metric-card warn"><div class="metric-label">Δ custo mensal</div><div class="metric-value">+US$ 350</div><div class="metric-sub">Hotel ~5 noites/mês × 2</div></div>
+      </div>
+      <div class="insights">
+        <h3>Análise</h3>
+        <ul>
+          <li class="pro">Sem risco trabalhista nem trauma de demissão</li>
+          <li class="pro">Top performers ganham produtividade em viagens longas (Santa Fe, Tierra del Fuego)</li>
+          <li class="con">Não resolve sobreposição (Leandro × Mauricio)</li>
+          <li class="con">Não cobre áreas órfãs do norte e centro-oeste</li>
+          <li class="con">Aumenta custo sem reduzir headcount baixo-performance</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div id="map-A" class="scenario-map"></div>
+      <div style="font-size:9px;color:var(--c-text-muted);margin-top:4px;text-align:center;">
+        <span style="color:#16A34A;">●</span> Mantidos &nbsp;
+        <span style="color:#B45309;">●</span> Hotel autorizado
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 4: CENÁRIO B — DEMITE LEANDRO -->
+<section class="slide">
+  <div class="slide-header">
+    <div>
+      <div class="slide-eyebrow">Cenário B</div>
+      <h2 class="slide-title">Dispensa Leandro</h2>
+      <div class="slide-subtitle">Corte do pior performer · sem reposição</div>
+    </div>
+    <div class="slide-num">4 / 10</div>
+  </div>
+  <div class="slide-body">
+    <div>
+      <div class="metric-grid">
+        <div class="metric-card good"><div class="metric-label">Headcount</div><div class="metric-value">6</div><div class="metric-sub">−1 vs baseline</div></div>
+        <div class="metric-card warn"><div class="metric-label">Áreas órfãs</div><div class="metric-value">33</div><div class="metric-sub">+4 (área dele realocada)</div></div>
+        <div class="metric-card good"><div class="metric-label">Eficiência média</div><div class="metric-value">0.513</div><div class="metric-sub">+4% vs baseline</div></div>
+        <div class="metric-card good"><div class="metric-label">Δ custo mensal</div><div class="metric-value">−US$ 1.500</div><div class="metric-sub">~US$ 1.400 indemnização</div></div>
+      </div>
+      <div class="insights">
+        <h3>Análise</h3>
+        <ul>
+          <li class="pro">Payback &lt; 1 mês (indemnização paga pela economia mensal)</li>
+          <li class="pro">Mauricio (Chivilcoy) absorve as 7 áreas dele com eficiência superior</li>
+          <li class="pro">Eficiência média sobe (sai o pior 0.364)</li>
+          <li class="con">Áreas órfãs aumentam ligeiramente (Mauricio mais sobrecarregado)</li>
+          <li>Risco trabalhista localizado em 1 caso</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div id="map-B" class="scenario-map"></div>
+      <div style="font-size:9px;color:var(--c-text-muted);margin-top:4px;text-align:center;">
+        <span style="color:#16A34A;">●</span> Mantidos &nbsp;
+        <span style="color:#B91C1C;">●</span> Dispensar
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 5: CENÁRIO C — DEMITE LEANDRO + MAURO -->
+<section class="slide">
+  <div class="slide-header">
+    <div>
+      <div class="slide-eyebrow">Cenário C</div>
+      <h2 class="slide-title">Dispensa Leandro + Mauro</h2>
+      <div class="slide-subtitle">Corte agressivo · sem reposição</div>
+    </div>
+    <div class="slide-num">5 / 10</div>
+  </div>
+  <div class="slide-body">
+    <div>
+      <div class="metric-grid">
+        <div class="metric-card good"><div class="metric-label">Headcount</div><div class="metric-value">5</div><div class="metric-sub">−2 vs baseline · economia máxima</div></div>
+        <div class="metric-card bad"><div class="metric-label">Áreas órfãs</div><div class="metric-value">40</div><div class="metric-sub">+11 (norte fica sem cobertura)</div></div>
+        <div class="metric-card good"><div class="metric-label">Eficiência média</div><div class="metric-value">0.532</div><div class="metric-sub">A maior dos 6 cenários</div></div>
+        <div class="metric-card good"><div class="metric-label">Δ custo mensal</div><div class="metric-value">−US$ 3.000</div><div class="metric-sub">~US$ 2.800 indemnizações</div></div>
+      </div>
+      <div class="insights">
+        <h3>Análise</h3>
+        <ul>
+          <li class="pro">Maior economia recorrente (~US$ 36k/ano)</li>
+          <li class="pro">Eficiência média sobe pra 0.532 (a melhor)</li>
+          <li class="pro">Frota fica com 4 carros sobrando (oportunidade de leasing-down)</li>
+          <li class="con"><strong>Cobertura piora 38%</strong> em áreas órfãs</li>
+          <li class="con">Misiones, Chaco, Santiago del Estero ficam &gt;500 km do próximo driver</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div id="map-C" class="scenario-map"></div>
+      <div style="font-size:9px;color:var(--c-text-muted);margin-top:4px;text-align:center;">
+        <span style="color:#16A34A;">●</span> Mantidos &nbsp;
+        <span style="color:#B91C1C;">●</span> Dispensar
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 6: CENÁRIO D — DEMITE 2 + 1 MENDOZA -->
+<section class="slide">
+  <div class="slide-header">
+    <div>
+      <div class="slide-eyebrow">Cenário D</div>
+      <h2 class="slide-title">Dispensa 2 + Contrata em Mendoza</h2>
+      <div class="slide-subtitle">Reposicionamento parcial · descongestiona Cuyo</div>
+    </div>
+    <div class="slide-num">6 / 10</div>
+  </div>
+  <div class="slide-body">
+    <div>
+      <div class="metric-grid">
+        <div class="metric-card good"><div class="metric-label">Headcount</div><div class="metric-value">6</div><div class="metric-sub">−1 vs baseline (melhor distribuído)</div></div>
+        <div class="metric-card warn"><div class="metric-label">Áreas órfãs</div><div class="metric-value">32</div><div class="metric-sub">+3 vs baseline (NE ainda órfão)</div></div>
+        <div class="metric-card good"><div class="metric-label">Eficiência média</div><div class="metric-value">0.530</div><div class="metric-sub">+7.7% vs baseline</div></div>
+        <div class="metric-card good"><div class="metric-label">Δ custo mensal</div><div class="metric-value">−US$ 1.500</div><div class="metric-sub">~US$ 3.800 one-time (indem.+recrut.)</div></div>
+      </div>
+      <div class="insights">
+        <h3>Análise</h3>
+        <ul>
+          <li class="pro">Mendoza (capital) descongestiona Guillermo, atacando 22 áreas + 2.696 km do Cuyo</li>
+          <li class="pro">Distância média cai pra 324 km</li>
+          <li class="pro">Payback ~2,5 meses</li>
+          <li class="con">NE (Misiones, Chaco, Corrientes) continua órfão</li>
+          <li class="con">Não maximiza a frota (1 carro ocioso a mais)</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div id="map-D" class="scenario-map"></div>
+      <div style="font-size:9px;color:var(--c-text-muted);margin-top:4px;text-align:center;">
+        <span style="color:#16A34A;">●</span> Manter &nbsp;
+        <span style="color:#B91C1C;">●</span> Dispensar &nbsp;
+        <span style="color:#4A9FE0;">★</span> Contratar
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 7: CENÁRIO E — DEMITE 2 + MENDOZA + POSADAS -->
+<section class="slide">
+  <div class="slide-header">
+    <div>
+      <div class="slide-eyebrow">Cenário E · 🏆 Recomendado</div>
+      <h2 class="slide-title">Dispensa 2 + Contrata Mendoza + Posadas</h2>
+      <div class="slide-subtitle">Reposicionamento completo · mesmo headcount, melhor distribuição</div>
+    </div>
+    <div class="slide-num">7 / 10</div>
+  </div>
+  <div class="slide-body">
+    <div>
+      <div class="metric-grid">
+        <div class="metric-card good"><div class="metric-label">Headcount</div><div class="metric-value">7</div><div class="metric-sub">Igual ao baseline</div></div>
+        <div class="metric-card good"><div class="metric-label">Áreas órfãs</div><div class="metric-value">12</div><div class="metric-sub">−59% vs baseline</div></div>
+        <div class="metric-card good"><div class="metric-label">Eficiência média</div><div class="metric-value">0.525</div><div class="metric-sub">+6.7% vs baseline</div></div>
+        <div class="metric-card good"><div class="metric-label">Distância média</div><div class="metric-value">304 km</div><div class="metric-sub">−11% vs baseline</div></div>
+      </div>
+      <div class="insights">
+        <h3>Por que este é o melhor</h3>
+        <ul>
+          <li class="pro"><strong>Mesmo custo mensal</strong> do status quo (7 drivers)</li>
+          <li class="pro"><strong>Cobertura máxima:</strong> só 12 áreas órfãs (vs 29 hoje)</li>
+          <li class="pro">Mendoza ataca Cuyo · Posadas cobre todo o NE (Misiones+Chaco+Corrientes+Entre Ríos)</li>
+          <li class="pro">Eficiência sobe sem sacrificar geografia</li>
+          <li class="con">Maior custo one-time: ~US$ 7.600 (indem. + recrut. × 2)</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div id="map-E" class="scenario-map"></div>
+      <div style="font-size:9px;color:var(--c-text-muted);margin-top:4px;text-align:center;">
+        <span style="color:#16A34A;">●</span> Manter &nbsp;
+        <span style="color:#B91C1C;">●</span> Dispensar &nbsp;
+        <span style="color:#4A9FE0;">★</span> Contratar
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 8: COMPARATIVO TABELA -->
+<section class="slide">
+  <div class="slide-header">
+    <div>
+      <div class="slide-eyebrow">Comparativo</div>
+      <h2 class="slide-title">Os 5 cenários lado a lado</h2>
+      <div class="slide-subtitle">Cenário E vence em cobertura, distância e custo mensal</div>
+    </div>
+    <div class="slide-num">8 / 10</div>
+  </div>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Cenário</th>
+        <th class="metric">Drivers</th>
+        <th class="metric">Eff média</th>
+        <th class="metric">Órfãs</th>
+        <th class="metric">Km órfão</th>
+        <th class="metric">Dist média</th>
+        <th class="metric">Δ Custo/mês</th>
+        <th class="metric">One-time</th>
+        <th>Veredito</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Baseline (status quo)</td><td class="metric">7</td><td class="metric">0.492</td><td class="metric">29</td><td class="metric">3.155</td><td class="metric">342</td><td class="metric">—</td><td class="metric">—</td><td><span class="pill pill-mid">Referência</span></td></tr>
+      <tr><td>A — Hotel only</td><td class="metric">7</td><td class="metric">0.492</td><td class="metric">29</td><td class="metric">3.155</td><td class="metric">342</td><td class="metric">+US$ 350</td><td class="metric">US$ 0</td><td><span class="pill pill-bad">Não resolve</span></td></tr>
+      <tr><td>B — Dispensa Leandro</td><td class="metric">6</td><td class="metric">0.513</td><td class="metric">33</td><td class="metric">3.360</td><td class="metric">342</td><td class="metric">−US$ 1.500</td><td class="metric">US$ 1.400</td><td><span class="pill pill-mid">Conservador</span></td></tr>
+      <tr><td>C — Dispensa Leandro+Mauro</td><td class="metric">5</td><td class="metric">0.532</td><td class="metric">40</td><td class="metric">3.567</td><td class="metric">351</td><td class="metric">−US$ 3.000</td><td class="metric">US$ 2.800</td><td><span class="pill pill-mid">Economia, perde cobertura</span></td></tr>
+      <tr><td>D — Dispensa 2 + Mendoza</td><td class="metric">6</td><td class="metric">0.530</td><td class="metric">32</td><td class="metric">2.695</td><td class="metric">324</td><td class="metric">−US$ 1.500</td><td class="metric">US$ 3.800</td><td><span class="pill pill-mid">Bom meio-termo</span></td></tr>
+      <tr class="winner"><td>E — Dispensa 2 + Mendoza+Posadas</td><td class="metric">7</td><td class="metric">0.525</td><td class="metric"><strong>12</strong></td><td class="metric"><strong>1.662</strong></td><td class="metric"><strong>304</strong></td><td class="metric">US$ 0</td><td class="metric">US$ 7.600</td><td><span class="pill pill-best">🏆 Melhor</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="caveat-mini" style="margin-top:14px;">
+    <strong>Premissas de custo:</strong> US$ 1.500/mês por driver ativo (salário+encargos+carro+combustível). Indemnização ≈ US$ 1.400 por driver dispensado (Ley 20.744, 2 anos de empresa). Recrutamento + treinamento ≈ US$ 1.000 por driver novo. Ajuste com dados de RH conforme contratos reais.
+  </div>
+</section>
+
+<!-- SLIDE 9: GRÁFICOS COMPARATIVOS -->
+<section class="slide">
+  <div class="slide-header">
+    <div>
+      <div class="slide-eyebrow">Visualização</div>
+      <h2 class="slide-title">Cobertura e eficiência por cenário</h2>
+      <div class="slide-subtitle">Cenário E é Pareto-ótimo: melhor cobertura + boa eficiência sem aumento de headcount</div>
+    </div>
+    <div class="slide-num">9 / 10</div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h4>Áreas órfãs (&gt;500 km do driver mais próximo)</h4>
+      <div class="chart-canvas-wrap"><canvas id="chart-orphans"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>Distância média (casa → área pendente, km)</h4>
+      <div class="chart-canvas-wrap"><canvas id="chart-dist"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>Eficiência média (TKM/KM)</h4>
+      <div class="chart-canvas-wrap"><canvas id="chart-eff"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>Δ custo mensal recorrente (US$)</h4>
+      <div class="chart-canvas-wrap"><canvas id="chart-cost"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 10: CONCLUSÃO -->
+<section class="slide">
+  <div class="slide-header">
+    <div>
+      <div class="slide-eyebrow">Conclusão · plano de ação</div>
+      <h2 class="slide-title">Recomendação final</h2>
+    </div>
+    <div class="slide-num">10 / 10</div>
+  </div>
+
+  <div class="recommend-banner">
+    <span class="check">✓</span>
+    <div class="recommend-banner-text">
+      <h3>Cenário E é o caminho recomendado</h3>
+      <strong>Dispensar Leandro + Mauro · Contratar em Mendoza + Posadas</strong>
+    </div>
+  </div>
+
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="why-num">−59%</div>
+      <div class="why-label">Áreas órfãs</div>
+      <div class="why-detail">De 29 para 12 áreas a mais de 500 km do driver mais próximo. Mendoza e Posadas eliminam os dois maiores gaps geográficos.</div>
+    </div>
+    <div class="why-card">
+      <div class="why-num">+6.7%</div>
+      <div class="why-label">Eficiência média</div>
+      <div class="why-detail">Sai o pior performer (Leandro 0.364) e entra driver bem posicionado. Média sobe de 0.492 para 0.525.</div>
+    </div>
+    <div class="why-card">
+      <div class="why-num">US$ 0</div>
+      <div class="why-label">Δ custo mensal</div>
+      <div class="why-detail">Headcount mantido em 7. Os 2 novos drivers substituem os 2 dispensados. Sem aumento de OPEX recorrente.</div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:10px;color:var(--c-primary-dark);font-size:13px;">Próximos passos sugeridos</h3>
+  <ol style="font-size:11px;padding-left:18px;line-height:1.6;color:var(--c-text);">
+    <li><strong>Conversas individuais</strong> com Leandro e Mauro pra entender contexto antes de qualquer decisão (status "Not Active" do Mauro pode ter explicação reversível).</li>
+    <li><strong>Validar custos reais</strong> de indemnização com RH/jurídico antes de comprometer com a economia projetada.</li>
+    <li><strong>Iniciar recrutamento em paralelo</strong>: Mendoza centro e Posadas. Tempo médio ~30-45 dias até onboard completo.</li>
+    <li><strong>Realocar carros</strong>: 2 veículos liberados pelos dispensados + 2 carros ociosos da frota = 4 disponíveis pros 2 novos drivers (com folga).</li>
+    <li><strong>Revisar em 90 dias</strong>: nova eficiência real dos contratados vs projeção. Ajustar.</li>
+  </ol>
+
+  <div class="caveat-mini">
+    <strong>Ressalva:</strong> esta análise considera apenas dados de mapeamento, geografia e custo estimado. Fatores trabalhistas, contratuais e relacionais devem ser avaliados em paralelo pelo time de RH. Os números são projeções baseadas em snapshot atual — eficiência histórica pode variar.
+  </div>
+</section>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+
+// =================================================================
+// Login
+// =================================================================
+async function doLogin(e) {
+  e.preventDefault();
+  const u = document.getElementById('login-username').value.trim().toLowerCase();
+  const p = document.getElementById('login-password').value;
+  const err = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  err.classList.remove('visible');
+  if (!u || !p) { err.textContent = 'Preencha usuário e senha'; err.classList.add('visible'); return false; }
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+  try {
+    const user = await validateLogin(u, p);
+    if (!user) {
+      await new Promise(r => setTimeout(r, 500));
+      err.textContent = 'Usuário ou senha inválidos';
+      err.classList.add('visible');
+      document.getElementById('login-password').value = '';
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+      return false;
+    }
+    onLoginSuccess();
+  } catch (er) {
+    err.textContent = 'Erro: ' + er.message;
+    err.classList.add('visible');
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+  return false;
+}
+function onLoginSuccess() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('deck').style.display = '';
+  document.getElementById('print-toolbar').style.display = 'flex';
+  initPresentation();
+}
+
+
+// =================================================================
+// Dados dos cenários
+// =================================================================
+const ALL_DRIVERS = {
+  axel:      { name: 'Axel',      initials: 'AG', lat: -31.1709, lng: -64.3161 },
+  mauricio:  { name: 'Mauricio',  initials: 'MG', lat: -34.8970, lng: -60.0190 },
+  fernando:  { name: 'Fernando',  initials: 'FA', lat: -40.7621, lng: -71.6472 },
+  matias:    { name: 'Matías',    initials: 'MM', lat: -42.7837, lng: -65.0601 },
+  guillermo: { name: 'Guillermo', initials: 'GJ', lat: -30.2416, lng: -68.7466 },
+  mauro:     { name: 'Mauro',     initials: 'MC', lat: -24.5955, lng: -60.4290 },
+  leandro:   { name: 'Leandro',   initials: 'LA', lat: -34.6981, lng: -58.6015 },
+  mendoza:   { name: 'Mendoza',   initials: '★',  lat: -32.8908, lng: -68.8272 },
+  posadas:   { name: 'Posadas',   initials: '★',  lat: -27.3621, lng: -55.9007 },
+};
+
+const SCENARIOS = {
+  baseline: {
+    keep: ['axel','mauricio','fernando','matias','guillermo','mauro','leandro'],
+    drop: [],
+    hire: [],
+    hotel: [],
+  },
+  A: { // hotel only
+    keep: ['axel','mauricio','fernando','matias','guillermo','mauro','leandro'],
+    drop: [],
+    hire: [],
+    hotel: ['axel','fernando'],
+  },
+  B: { // demite leandro
+    keep: ['axel','mauricio','fernando','matias','guillermo','mauro'],
+    drop: ['leandro'],
+    hire: [],
+    hotel: [],
+  },
+  C: { // demite leandro+mauro
+    keep: ['axel','mauricio','fernando','matias','guillermo'],
+    drop: ['leandro','mauro'],
+    hire: [],
+    hotel: [],
+  },
+  D: { // demite 2 + mendoza
+    keep: ['axel','mauricio','fernando','matias','guillermo'],
+    drop: ['leandro','mauro'],
+    hire: ['mendoza'],
+    hotel: [],
+  },
+  E: { // demite 2 + mendoza + posadas
+    keep: ['axel','mauricio','fernando','matias','guillermo'],
+    drop: ['leandro','mauro'],
+    hire: ['mendoza','posadas'],
+    hotel: [],
+  },
+};
+
+
+// =================================================================
+// Render mapas (mini-maps por slide)
+// =================================================================
+let pendingFeatures = null;
+
+async function loadPending() {
+  if (pendingFeatures) return pendingFeatures;
+  try {
+    const r = await fetch('./country-scopes-data/argentina.geojson');
+    const geo = await r.json();
+    pendingFeatures = geo.features.filter(f =>
+      f.properties && f.properties.status !== 'COMPLETED' && (f.properties.collected_km || 0) < 1
+      && f.properties.lat && f.properties.lon
+    );
+  } catch (err) {
+    console.warn('Erro carregando geojson:', err);
+    pendingFeatures = [];
+  }
+  return pendingFeatures;
+}
+
+async function renderScenarioMap(elId, scenarioKey) {
+  const cfg = SCENARIOS[scenarioKey];
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const m = L.map(el, { preferCanvas: true, zoomControl: false, attributionControl: false })
+    .setView([-37, -65], 3);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 10 }).addTo(m);
+
+  // Áreas pendentes como dots leves
+  const pending = await loadPending();
+  pending.forEach(f => {
+    L.circleMarker([f.properties.lat, f.properties.lon], {
+      radius: 1.8, color: '#B91C1C', weight: 0.5, fillColor: '#B91C1C', fillOpacity: 0.35,
+    }).addTo(m);
+  });
+
+  // Pinos
+  function addDriver(key, klass, label) {
+    const d = ALL_DRIVERS[key];
+    const icon = L.divIcon({
+      className: '', html: `<div class="marker-d ${klass}" title="${d.name}">${label || d.initials}</div>`,
+      iconSize: [22, 22], iconAnchor: [11, 11],
+    });
+    L.marker([d.lat, d.lng], { icon }).addTo(m);
+  }
+  cfg.keep.forEach(k => {
+    const isHotel = cfg.hotel && cfg.hotel.indexOf(k) >= 0;
+    addDriver(k, isHotel ? 'hotel' : 'keep', null);
+  });
+  (cfg.drop || []).forEach(k => addDriver(k, 'drop', null));
+  (cfg.hire || []).forEach(k => addDriver(k, 'hire', '★'));
+}
+
+
+// =================================================================
+// Gráficos comparativos
+// =================================================================
+const SCENARIO_LABELS = ['Baseline', 'A: Hotel', 'B: Demite L', 'C: Demite L+M', 'D: 2 + Mendoza', 'E: 2 + Mzn+Psd'];
+const DATA_ORPHANS = [29, 29, 33, 40, 32, 12];
+const DATA_DIST = [342, 342, 342, 351, 324, 304];
+const DATA_EFF = [0.492, 0.492, 0.513, 0.532, 0.530, 0.525];
+const DATA_COST = [0, 350, -1500, -3000, -1500, 0];
+
+const BAR_COLORS = [
+  '#94A3B8', '#A78BFA', '#FBBF24', '#FB923C', '#60A5FA', '#22C55E'
+];
+
+function renderCharts() {
+  const common = {
+    type: 'bar',
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { displayColors: false } },
+      scales: { y: { ticks: { font: { size: 9 } } }, x: { ticks: { font: { size: 9 }, maxRotation: 30 } } },
+    },
+  };
+  const ctxO = document.getElementById('chart-orphans');
+  if (ctxO) new Chart(ctxO, { ...common, data: { labels: SCENARIO_LABELS, datasets: [{ data: DATA_ORPHANS, backgroundColor: BAR_COLORS, borderRadius: 4 }] } });
+  const ctxD = document.getElementById('chart-dist');
+  if (ctxD) new Chart(ctxD, { ...common, data: { labels: SCENARIO_LABELS, datasets: [{ data: DATA_DIST, backgroundColor: BAR_COLORS, borderRadius: 4 }] } });
+  const ctxE = document.getElementById('chart-eff');
+  if (ctxE) new Chart(ctxE, { ...common, data: { labels: SCENARIO_LABELS, datasets: [{ data: DATA_EFF, backgroundColor: BAR_COLORS, borderRadius: 4 }] }, options: { ...common.options, scales: { y: { min: 0.45, max: 0.55, ticks: { font: { size: 9 } } }, x: { ticks: { font: { size: 9 }, maxRotation: 30 } } } } });
+  const ctxC = document.getElementById('chart-cost');
+  if (ctxC) new Chart(ctxC, { ...common, data: { labels: SCENARIO_LABELS, datasets: [{ data: DATA_COST, backgroundColor: DATA_COST.map((v, i) => v < 0 ? '#22C55E' : (v === 0 ? '#94A3B8' : '#EF4444')), borderRadius: 4 }] } });
+}
+
+
+// =================================================================
+// Init
+// =================================================================
+function initPresentation() {
+  const now = new Date();
+  const fmt = now.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: '2-digit' });
+  document.getElementById('cover-date').textContent = fmt;
+
+  // Renderiza todos os 6 mapas
+  Promise.all([
+    renderScenarioMap('map-baseline', 'baseline'),
+    renderScenarioMap('map-A', 'A'),
+    renderScenarioMap('map-B', 'B'),
+    renderScenarioMap('map-C', 'C'),
+    renderScenarioMap('map-D', 'D'),
+    renderScenarioMap('map-E', 'E'),
+  ]).then(() => {
+    renderCharts();
+    setTimeout(() => {
+      document.getElementById('print-status').textContent = 'Pronto pra imprimir';
+      document.getElementById('print-btn').disabled = false;
+    }, 1500);
+  });
+}
+
+</script>
+
+</body>
+</html>
