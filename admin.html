@@ -464,6 +464,19 @@
     </a>
   </div>
 
+  <!-- Seção SUPER ADMIN — só fuss vê (gerenciamento de usuários do portal) -->
+  <div id="super-admin-section" style="display:none;">
+  <div class="section-label" id="section-system">Sistema</div>
+  <div class="card-grid">
+    <a class="card" href="admin-users.html">
+      <span class="card-tag" style="background:#fef3c7;color:#92400e;">Super Admin</span>
+      <div class="card-icon">🔐</div>
+      <div class="card-title" id="card-users-title">Usuários</div>
+      <div class="card-desc" id="card-users-desc">Adicionar/remover membros, trocar senhas — commita auth.js no GitHub</div>
+    </a>
+  </div>
+  </div><!-- /super-admin-section -->
+
   <div id="admin-only-section" style="display:none;">
   <div class="section-label" id="section-reports">Relatórios pontuais</div>
   <div class="card-grid">
@@ -676,9 +689,13 @@ function onLoginSuccess() {
   document.getElementById('user-name').textContent = currentUser.fullName;
   const initials = currentUser.fullName.split(' ').map(s => s.charAt(0).toUpperCase()).slice(0, 2).join('');
   document.getElementById('user-avatar').textContent = initials;
-  // Seção "Relatórios pontuais" só pra admin (fuss/lucas em ADMIN_USERNAMES)
+  // Seção "Relatórios pontuais" só pra admin (em ADMIN_USERNAMES)
   if (typeof isAdmin === 'function' && isAdmin(currentUser.username)) {
     document.getElementById('admin-only-section').style.display = '';
+  }
+  // Seção "Sistema" (gestão de usuários) só pro super admin — hardcoded 'fuss'
+  if (String(currentUser.username).toLowerCase() === 'fuss') {
+    document.getElementById('super-admin-section').style.display = '';
   }
   setLang(currentLoginLang);
 }

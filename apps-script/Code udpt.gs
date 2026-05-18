@@ -145,7 +145,8 @@ function doGet(e) {
     // ---- Endpoints originais (portal de check-in) ----
 
     if (action === 'getDrivers') {
-      return jsonResponse({ success: true, drivers: getActiveDrivers() });
+      // v5.32: inclui drivers em offboarding pro check-in não deixar ninguém de fora
+      return jsonResponse({ success: true, drivers: getActiveDrivers(true) });
     }
 
     if (action === 'getBase') {
@@ -256,7 +257,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.31',
+        version: 'v5.33',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -265,7 +266,7 @@ function doGet(e) {
                     'getCountryScope',
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
                     'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
-                    'POST submitArgentinaCash'],
+                    'POST submitArgentinaCash', 'POST updateAuthUsers'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -460,6 +461,14 @@ function doPost(e) {
       return jsonResponse({ success: true, message: result.message, mode: result.mode });
     }
 
+    // v5.33: super-admin only — atualiza auth.js commitando direto no GitHub via API
+    if (data.type === 'updateAuthUsers') {
+      if (!isSuperAdminBackend_(data.actorUsername)) {
+        return jsonResponse({ success: false, error: 'Permissão negada. Apenas o super admin pode gerenciar usuários.' });
+      }
+      return jsonResponse(updateAuthUsersHandler_(data));
+    }
+
     // v5.16: pedido de dinheiro (deposita pra driver) — vai pra Cash Transfer Management
     if (data.type === 'saveCashRequest') {
       const result = saveCashRequest_(data);
@@ -509,7 +518,7 @@ function doPost(e) {
 // FUNÇÕES DE LEITURA — ORIGINAIS (portal check-in)
 // ================================================================
 
-function getActiveDrivers() {
+function getActiveDrivers(includeOffboarding) {
   const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
   const sheet = ss.getSheetByName(CONFIG.hrSheet);
   const data = sheet.getDataRange().getValues();
@@ -523,7 +532,9 @@ function getActiveDrivers() {
 
   const drivers = [];
   for (let i = 1; i < data.length; i++) {
-    if (data[i][situationIdx] === 'Active' && data[i][emailIdx]) {
+    const sit = data[i][situationIdx];
+    const ok = sit === 'Active' || (includeOffboarding && sit === 'Offboarding');
+    if (ok && data[i][emailIdx]) {
       drivers.push({
         name: data[i][nameIdx],
         email: data[i][emailIdx],
@@ -6168,4 +6179,265 @@ function submitArgentinaCash_(data) {
     rowsAdded: rowsToAppend.length,
     message: 'Divergências registradas com sucesso',
   };
+}
+
+
+// ================================================================
+// v5.33: SUPER-ADMIN — gerenciamento de usuários via GitHub API
+// Chamado pelo admin-users.html. Só 'fuss' pode invocar.
+// ================================================================
+
+function isSuperAdminBackend_(username) {
+  if (!username) return false;
+  return String(username).toLowerCase().trim() === 'fuss';
+}
+
+/**
+ * Recebe { users: [{username, passwordHash, fullName}], admins: [usernames],
+ *          actorUsername, commitMessage? } e commita novo auth.js no GitHub.
+ *
+ * Requer no Script Properties:
+ *   - GITHUB_TOKEN  (Personal Access Token com contents:write no repo)
+ *   - GITHUB_REPO   (opcional, default: AddCoolNameHere/latam-driver-checkin)
+ *   - GITHUB_BRANCH (opcional, default: main)
+ */
+function updateAuthUsersHandler_(data) {
+  // ---- Validações ----
+  if (!Array.isArray(data.users) || data.users.length === 0) {
+    return { success: false, error: 'Lista de users vazia ou inválida' };
+  }
+  if (!Array.isArray(data.admins)) {
+    return { success: false, error: 'admins precisa ser array (pode ser vazio)' };
+  }
+  const usernamesSeen = {};
+  for (const u of data.users) {
+    if (!u.username || !u.passwordHash || !u.fullName) {
+      return { success: false, error: 'Cada user precisa de username, passwordHash, fullName' };
+    }
+    if (!/^[a-zA-Z0-9._-]+$/.test(u.username)) {
+      return { success: false, error: 'Username inválido (apenas letras/números/._-): ' + u.username };
+    }
+    if (!/^[a-f0-9]{64}$/.test(u.passwordHash)) {
+      return { success: false, error: 'passwordHash inválido (precisa ser SHA-256 hex, 64 chars) pro user: ' + u.username };
+    }
+    const key = String(u.username).toLowerCase();
+    if (usernamesSeen[key]) {
+      return { success: false, error: 'Username duplicado: ' + u.username };
+    }
+    usernamesSeen[key] = true;
+  }
+  // Salvaguarda: pelo menos 'fuss' precisa continuar na lista (senão você perde acesso)
+  if (!usernamesSeen['fuss']) {
+    return { success: false, error: 'Não pode remover o user "fuss" — é o super admin' };
+  }
+  // E precisa estar em ADMIN_USERNAMES
+  const adminLower = data.admins.map(a => String(a).toLowerCase());
+  if (adminLower.indexOf('fuss') < 0) {
+    return { success: false, error: 'Não pode remover "fuss" da lista de admins' };
+  }
+
+  // ---- Config do GitHub ----
+  const props = PropertiesService.getScriptProperties();
+  const token = props.getProperty('GITHUB_TOKEN');
+  if (!token) {
+    return { success: false, error: 'GITHUB_TOKEN não configurado no Script Properties do Apps Script' };
+  }
+  const repo   = props.getProperty('GITHUB_REPO')   || 'AddCoolNameHere/latam-driver-checkin';
+  const branch = props.getProperty('GITHUB_BRANCH') || 'main';
+  const filePath = 'auth.js';
+
+  const apiUrl = 'https://api.github.com/repos/' + repo + '/contents/' + encodeURIComponent(filePath);
+  const ghHeaders = {
+    'Authorization': 'token ' + token,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+    'User-Agent': 'aceolution-latam-admin',
+  };
+
+  // ---- 1. Buscar SHA do arquivo atual ----
+  let currentSha;
+  try {
+    const getRes = UrlFetchApp.fetch(apiUrl + '?ref=' + encodeURIComponent(branch), {
+      method: 'get',
+      headers: ghHeaders,
+      muteHttpExceptions: true,
+    });
+    const code = getRes.getResponseCode();
+    if (code !== 200) {
+      return {
+        success: false,
+        error: 'Falha ao buscar auth.js atual no GitHub (HTTP ' + code + '): ' +
+               getRes.getContentText().substring(0, 250),
+      };
+    }
+    currentSha = JSON.parse(getRes.getContentText()).sha;
+  } catch (err) {
+    return { success: false, error: 'Erro de rede ao buscar auth.js: ' + err.toString() };
+  }
+
+  // ---- 2. Montar novo conteúdo do auth.js ----
+  const newContent = buildAuthJsContent_(data.users, data.admins);
+  const newContentB64 = Utilities.base64Encode(newContent, Utilities.Charset.UTF_8);
+
+  // ---- 3. PUT commit ----
+  const commitMsg = String(data.commitMessage || '').trim()
+    || ('admin: atualiza auth.js via painel (' +
+        new Date().toISOString().substring(0, 10) + ')');
+  try {
+    const putRes = UrlFetchApp.fetch(apiUrl, {
+      method: 'put',
+      headers: ghHeaders,
+      contentType: 'application/json',
+      payload: JSON.stringify({
+        message: commitMsg,
+        content: newContentB64,
+        sha: currentSha,
+        branch: branch,
+      }),
+      muteHttpExceptions: true,
+    });
+    const code = putRes.getResponseCode();
+    if (code !== 200 && code !== 201) {
+      return {
+        success: false,
+        error: 'Falha ao commitar auth.js (HTTP ' + code + '): ' +
+               putRes.getContentText().substring(0, 300),
+      };
+    }
+    const commit = JSON.parse(putRes.getContentText());
+    return {
+      success: true,
+      message: 'auth.js commitado. GitHub Pages atualiza em 1-10min — force Ctrl+Shift+R depois.',
+      commitSha: commit.commit && commit.commit.sha,
+      commitUrl: commit.commit && commit.commit.html_url,
+    };
+  } catch (err) {
+    return { success: false, error: 'Erro de rede ao commitar: ' + err.toString() };
+  }
+}
+
+/**
+ * Gera o conteúdo completo do auth.js a partir das listas de users e admins.
+ * Template é montado inline pra facilitar manutenção (todo o resto do auth.js é fixo).
+ */
+function buildAuthJsContent_(users, admins) {
+  const usersBlock = users.map(function(u) {
+    return '  {\n' +
+           '    username: ' + JSON.stringify(String(u.username).toLowerCase().trim()) + ',\n' +
+           '    passwordHash: ' + JSON.stringify(String(u.passwordHash).toLowerCase().trim()) + ',\n' +
+           '    fullName: ' + JSON.stringify(String(u.fullName).trim()) + ',\n' +
+           '  },';
+  }).join('\n');
+
+  const adminsBlock = admins
+    .map(function(a) { return JSON.stringify(String(a).toLowerCase().trim()); })
+    .join(', ');
+
+  const generatedAt = new Date().toISOString();
+
+  return [
+    '/**',
+    ' * ============================================================',
+    ' * Aceolution LATAM — Auth Configuration',
+    ' * ============================================================',
+    ' *',
+    ' * ARQUIVO GERADO AUTOMATICAMENTE pelo painel admin-users.html.',
+    ' * NÃO EDITE MANUALMENTE — suas mudanças serão sobrescritas no',
+    ' * próximo commit feito pelo painel. Pra alterar, abra:',
+    ' *   admin-users.html (acesso restrito ao usuário "fuss")',
+    ' *',
+    ' * Última geração: ' + generatedAt,
+    ' *',
+    ' * ⚠ NOTA DE SEGURANÇA:',
+    ' * Este é client-side ("teatro de segurança"): qualquer pessoa',
+    ' * com acesso ao GitHub Pages pode ver os hashes e tentar quebrá-los',
+    ' * por força bruta offline. Não use senhas reutilizadas em outros',
+    ' * serviços. Senhas longas e únicas mitigam o risco.',
+    ' *',
+    ' * ============================================================',
+    ' */',
+    '',
+    '// ----------------------------------------------------------------',
+    '// LISTA DE USUÁRIOS',
+    '// ----------------------------------------------------------------',
+    'const USERS = [',
+    usersBlock,
+    '];',
+    '',
+    '// ----------------------------------------------------------------',
+    '// USUÁRIOS COM PRIVILÉGIO ADMIN',
+    '// (veem o botão ⚙ Admin no dashboard e seções restritas)',
+    '// ----------------------------------------------------------------',
+    'const ADMIN_USERNAMES = [' + adminsBlock + '];',
+    '',
+    '// ----------------------------------------------------------------',
+    '// HELPER: SHA-256 hash (compatível com browser moderno)',
+    '// ----------------------------------------------------------------',
+    'async function sha256(text) {',
+    '  const buffer = new TextEncoder().encode(text);',
+    '  const hashBuf = await crypto.subtle.digest(\'SHA-256\', buffer);',
+    '  return Array.from(new Uint8Array(hashBuf))',
+    '    .map(b => b.toString(16).padStart(2, \'0\'))',
+    '    .join(\'\');',
+    '}',
+    '',
+    '// ----------------------------------------------------------------',
+    '// HELPER: validar credenciais',
+    '// Retorna o objeto user em caso de sucesso, null em falha.',
+    '// ----------------------------------------------------------------',
+    'async function validateLogin(username, password) {',
+    '  if (!username || !password) return null;',
+    '  const passwordHash = await sha256(password);',
+    '  const u = (username || \'\').trim().toLowerCase();',
+    '  return USERS.find(x =>',
+    '    x.username.toLowerCase() === u && x.passwordHash === passwordHash',
+    '  ) || null;',
+    '}',
+    '',
+    '// ----------------------------------------------------------------',
+    '// HELPER: checa se um username tem privilégio admin',
+    '// ----------------------------------------------------------------',
+    'function isAdmin(username) {',
+    '  if (!username) return false;',
+    '  return ADMIN_USERNAMES.indexOf(String(username).toLowerCase()) >= 0;',
+    '}',
+    '',
+    '// ----------------------------------------------------------------',
+    '// SESSION: SSO cross-page via localStorage (8h TTL)',
+    '// ----------------------------------------------------------------',
+    'const SESSION_KEY = \'aceolution_latam_session\';',
+    'const SESSION_TTL_HOURS = 8;',
+    '',
+    'function saveSession(user) {',
+    '  if (!user || !user.username) return;',
+    '  try {',
+    '    localStorage.setItem(SESSION_KEY, JSON.stringify({',
+    '      username: user.username,',
+    '      fullName: user.fullName || user.username,',
+    '      expiresAt: Date.now() + SESSION_TTL_HOURS * 3600 * 1000,',
+    '    }));',
+    '  } catch (e) { /* localStorage indisponível */ }',
+    '}',
+    '',
+    '// Retorna {username, fullName} se sessão válida, null caso contrário.',
+    '// Re-valida que o user ainda existe em USERS (caso auth.js tenha mudado).',
+    'function loadSession() {',
+    '  try {',
+    '    const raw = localStorage.getItem(SESSION_KEY);',
+    '    if (!raw) return null;',
+    '    const s = JSON.parse(raw);',
+    '    if (!s || !s.username || !s.expiresAt || Date.now() > s.expiresAt) {',
+    '      localStorage.removeItem(SESSION_KEY);',
+    '      return null;',
+    '    }',
+    '    const u = USERS.find(x => x.username.toLowerCase() === String(s.username).toLowerCase());',
+    '    return u ? { username: u.username, fullName: u.fullName } : null;',
+    '  } catch (e) { return null; }',
+    '}',
+    '',
+    'function clearSession() {',
+    '  try { localStorage.removeItem(SESSION_KEY); } catch (e) {}',
+    '}',
+    '',
+  ].join('\n');
 }
