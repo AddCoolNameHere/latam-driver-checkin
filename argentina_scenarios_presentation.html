@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Argentina Optimization — Scenarios · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="https://aceolution.com/img/logo2.png">
-<script src="auth.js?v=20260518a"></script>
+<script src="auth.js?v=20260518b"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -954,6 +954,7 @@ async function doLogin(e) {
       btn.disabled = false; btn.textContent = 'Sign in';
       return false;
     }
+    saveSession(user);
     onLoginSuccess();
   } catch (er) {
     err.textContent = 'Error: ' + er.message;
@@ -968,6 +969,10 @@ function onLoginSuccess() {
   document.getElementById('print-toolbar').style.display = 'flex';
   initPresentation();
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (loadSession()) onLoginSuccess();
+});
 
 
 const ALL_DRIVERS = {

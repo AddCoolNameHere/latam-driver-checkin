@@ -6,7 +6,7 @@
 <title>Country Scopes · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="https://aceolution.com/img/logo2.png">
 <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
-<script src="auth.js?v=20260518a"></script>
+<script src="auth.js?v=20260518b"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -625,6 +625,7 @@ async function doLogin(event) {
       return false;
     }
     currentUser = user;
+    saveSession(user);
     onLoginSuccess();
   } catch (err) {
     console.error('Login error:', err);
@@ -660,6 +661,7 @@ function onLoginSuccess() {
 
 function doLogout() {
   if (!confirm('Sair?')) return;
+  clearSession();
   currentUser = null;
   document.getElementById('app-content').style.display = 'none';
   document.getElementById('login-screen').style.display = '';
@@ -667,6 +669,11 @@ function doLogout() {
   document.getElementById('login-btn').disabled = false;
   document.getElementById('login-btn').textContent = (LOGIN_I18N[currentLoginLang] || LOGIN_I18N.pt).submitBtn;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = loadSession();
+  if (saved) { currentUser = saved; onLoginSuccess(); }
+});
 
 
 const CONFIG = {

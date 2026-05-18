@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
-  <script src="auth.js?v=20260518a"></script>
+  <script src="auth.js?v=20260518b"></script>
 <style>
   :root {
     --c-primary: #2C5282;
@@ -1802,23 +1802,34 @@ async function doLogin() {
       return;
     }
     currentUser = user;
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').classList.add('shown');
-    document.getElementById('user-pill').innerHTML =
-      `<span>👤 ${user.fullName}</span><button class="logout-btn" onclick="doLogout()" title="Sair">✕</button>`;
-    initApp();
+    saveSession(user);
+    _finishLogin(user);
   } catch (err) {
     errEl.textContent = 'Erro ao validar credenciais.';
     errEl.classList.add('show');
   }
 }
 
+function _finishLogin(user) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('shown');
+  document.getElementById('user-pill').innerHTML =
+    `<span>👤 ${user.fullName}</span><button class="logout-btn" onclick="doLogout()" title="Sair">✕</button>`;
+  initApp();
+}
+
 function doLogout() {
+  clearSession();
   currentUser = null;
   document.getElementById('app').classList.remove('shown');
   document.getElementById('login-screen').style.display = '';
   document.getElementById('login-password').value = '';
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = loadSession();
+  if (saved) { currentUser = saved; _finishLogin(saved); }
+});
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !document.getElementById('app').classList.contains('shown')) {

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Divergências AR — Admin · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="https://aceolution.com/img/logo2.png">
-<script src="auth.js?v=20260518a"></script>
+<script src="auth.js?v=20260518b"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -510,6 +510,7 @@ async function doLogin(e) {
       return false;
     }
     currentUser = user;
+    saveSession(user);
     onLoginSuccess();
   } catch (er) {
     err.textContent = 'Erro: ' + er.message;
@@ -530,6 +531,7 @@ function onLoginSuccess() {
 }
 function doLogout() {
   if (!confirm('Sair?')) return;
+  clearSession();
   currentUser = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = '';
@@ -537,6 +539,11 @@ function doLogout() {
   document.getElementById('login-btn').disabled = false;
   document.getElementById('login-btn').textContent = 'Entrar';
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = loadSession();
+  if (saved) { currentUser = saved; onLoginSuccess(); }
+});
 
 
 // =================================================================

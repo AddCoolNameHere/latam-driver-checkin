@@ -6,7 +6,7 @@
 <title>Admin Hub · LATAM · Aceolution</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="https://aceolution.com/img/logo2.png">
-<script src="auth.js?v=20260518a"></script>
+<script src="auth.js?v=20260518b"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -658,6 +658,7 @@ async function doLogin(event) {
       return false;
     }
     currentUser = user;
+    saveSession(user);
     onLoginSuccess();
   } catch (err) {
     console.error('Login error:', err);
@@ -685,6 +686,7 @@ function onLoginSuccess() {
 function doLogout() {
   const ti = APP_I18N[currentLang];
   if (!confirm(ti.confirmLogout)) return;
+  clearSession();
   currentUser = null;
   document.getElementById('app-content').style.display = 'none';
   document.getElementById('login-screen').style.display = '';
@@ -692,6 +694,15 @@ function doLogout() {
   document.getElementById('login-btn').disabled = false;
   document.getElementById('login-btn').textContent = (LOGIN_I18N[currentLoginLang] || LOGIN_I18N.pt).submitBtn;
 }
+
+// SSO: se sessão válida no localStorage, auto-login sem mostrar tela de login
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = loadSession();
+  if (saved) {
+    currentUser = saved;
+    onLoginSuccess();
+  }
+});
 </script>
 </body>
 </html>

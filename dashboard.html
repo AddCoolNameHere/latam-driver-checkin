@@ -10,7 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
-<script src="auth.js?v=20260518a"></script>
+<script src="auth.js?v=20260518b"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2726,9 +2726,9 @@ async function doLogin(event) {
       return false;
     }
 
-    // Login OK — guarda só na memória (nada em localStorage,
-    // já que a config é "sempre pede ao abrir")
+    // Login OK — salva sessão SSO (8h, compartilhada entre páginas admin)
     currentUser = user;
+    saveSession(user);
     onLoginSuccess();
   } catch (err) {
     console.error('Login error:', err);
@@ -2793,10 +2793,16 @@ function onLoginSuccess() {
 function doLogout() {
   const t = LOGIN_I18N[currentLoginLang] || LOGIN_I18N.pt;
   if (confirm(t.logoutConfirm)) {
+    clearSession();
     currentUser = null;
     location.reload();
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = loadSession();
+  if (saved) { currentUser = saved; onLoginSuccess(); }
+});
 
 
 const CONFIG = {

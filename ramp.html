@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
-  <script src="auth.js?v=20260518a"></script>
+  <script src="auth.js?v=20260518b"></script>
 <style>
   :root {
     --c-primary: #2C5282;
@@ -2340,11 +2340,8 @@ async function doLogin() {
       return;
     }
     currentUser = user;
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').classList.add('shown');
-    document.getElementById('user-pill').innerHTML =
-      `<span>👤 ${user.fullName}</span><button class="logout-btn" onclick="doLogout()" title="Sair">✕</button>`;
-    initApp();
+    saveSession(user);
+    _finishLogin(user);
   } catch (err) {
     errEl.textContent = t('loginValidateError');
     errEl.classList.add('show');
@@ -2352,12 +2349,26 @@ async function doLogin() {
   }
 }
 
+function _finishLogin(user) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('shown');
+  document.getElementById('user-pill').innerHTML =
+    `<span>👤 ${user.fullName}</span><button class="logout-btn" onclick="doLogout()" title="Sair">✕</button>`;
+  initApp();
+}
+
 function doLogout() {
+  clearSession();
   currentUser = null;
   document.getElementById('app').classList.remove('shown');
   document.getElementById('login-screen').style.display = '';
   document.getElementById('login-password').value = '';
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = loadSession();
+  if (saved) { currentUser = saved; _finishLogin(saved); }
+});
 
 // Permitir Enter no login
 document.addEventListener('keydown', (e) => {

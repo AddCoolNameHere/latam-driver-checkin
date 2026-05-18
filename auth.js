@@ -106,3 +106,40 @@ function isAdmin(username) {
   if (!username) return false;
   return ADMIN_USERNAMES.indexOf(String(username).toLowerCase()) >= 0;
 }
+
+// ----------------------------------------------------------------
+// SESSION: SSO cross-page via localStorage (8h TTL)
+// ----------------------------------------------------------------
+const SESSION_KEY = 'aceolution_latam_session';
+const SESSION_TTL_HOURS = 8;
+
+function saveSession(user) {
+  if (!user || !user.username) return;
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      username: user.username,
+      fullName: user.fullName || user.username,
+      expiresAt: Date.now() + SESSION_TTL_HOURS * 3600 * 1000,
+    }));
+  } catch (e) { /* localStorage indisponível */ }
+}
+
+// Retorna {username, fullName} se sessão válida, null caso contrário.
+// Re-valida que o user ainda existe em USERS (caso auth.js tenha mudado).
+function loadSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (!s || !s.username || !s.expiresAt || Date.now() > s.expiresAt) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    const u = USERS.find(x => x.username.toLowerCase() === String(s.username).toLowerCase());
+    return u ? { username: u.username, fullName: u.fullName } : null;
+  } catch (e) { return null; }
+}
+
+function clearSession() {
+  try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+}
