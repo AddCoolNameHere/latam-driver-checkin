@@ -355,12 +355,7 @@
     box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
     text-align: center;
   }
-  .login-logo-text {
-    font-size: 26px; font-weight: 700;
-    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
+  .login-logo-img { height: 44px; width: auto; display: block; margin: 0 auto; }
   .login-title { font-size: 20px; font-weight: 700; color: var(--c-primary-dark); margin: 16px 0 4px; }
   .login-sub { font-size: 13px; color: var(--c-text-muted); margin-bottom: 22px; }
   .login-card form { text-align: left; }
@@ -415,7 +410,7 @@
 <!-- LOGIN -->
 <div id="login-screen" class="login-screen">
   <div class="login-card">
-    <div class="login-logo-text">Aceolution</div>
+    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="login-logo-img">
     <div class="login-title">Divergências AR — Admin</div>
     <div class="login-sub">Acesso restrito</div>
     <form onsubmit="return doLogin(event)">
