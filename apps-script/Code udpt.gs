@@ -228,6 +228,11 @@ function doGet(e) {
       return jsonResponse({ success: true, areas: getCountryScope_(country) });
     }
 
+    // v5.31: lista de divergencias da aba 'Argentina Cash' (pra ar-divergencias-admin.html)
+    if (action === 'getArgentinaCashSubmissions') {
+      return jsonResponse({ success: true, submissions: getArgentinaCashSubmissions_() });
+    }
+
     // v5.6: payload completo de profile do driver (eficiência + idle + VID + base)
     if (action === 'getDriverProfile') {
       const email = e.parameter.email;
@@ -251,7 +256,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.30',
+        version: 'v5.31',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -6050,6 +6055,54 @@ function uploadArgentinaFileToDrive_(fileObj, driverName, quinzenaLabel) {
  * Salva 1 row por divergência na aba 'Argentina Cash'. Todas as divergências
  * do mesmo envio compartilham o mesmo Session ID (UUID).
  */
+
+
+/**
+ * v5.31: lê todas as linhas da aba 'Argentina Cash' e retorna como array.
+ * Usado pelo ar-divergencias-admin.html pra revisar as submissões.
+ * Cada elemento corresponde a UMA divergência (não 1 submissão — agrupar
+ * por sessionId no frontend pra ter "submissões").
+ *
+ * Estrutura retornada:
+ *   { timestamp, sessionId, driverName, driverEmail, quinzenaLabel,
+ *     quinzenaStart, quinzenaEnd, amount, currency, comment, fileLinks: [] }
+ */
+function getArgentinaCashSubmissions_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(CONFIG.argentinaCashSheet);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+
+  const data = sheet.getDataRange().getValues();
+  // Headers (linha 0): Timestamp | Session ID | Driver Name | Driver Email |
+  //   Quinzena Label | Quinzena Start | Quinzena End |
+  //   Amount | Currency | Comment | File Links
+  const out = [];
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[0]) continue;  // skip empty rows
+    const tsRaw = row[0];
+    const qStartRaw = row[5];
+    const qEndRaw = row[6];
+    out.push({
+      timestamp: (tsRaw instanceof Date) ? tsRaw.toISOString() : String(tsRaw || ''),
+      sessionId: String(row[1] || ''),
+      driverName: String(row[2] || '').trim(),
+      driverEmail: String(row[3] || '').trim(),
+      quinzenaLabel: String(row[4] || '').trim(),
+      quinzenaStart: (qStartRaw instanceof Date) ? Utilities.formatDate(qStartRaw, 'America/Sao_Paulo', 'yyyy-MM-dd') : String(qStartRaw || ''),
+      quinzenaEnd:   (qEndRaw   instanceof Date) ? Utilities.formatDate(qEndRaw,   'America/Sao_Paulo', 'yyyy-MM-dd') : String(qEndRaw || ''),
+      amount: Number(row[7]) || 0,
+      currency: String(row[8] || '').trim().toUpperCase(),
+      comment: String(row[9] || '').trim(),
+      fileLinks: String(row[10] || '').split('\n').map(s => s.trim()).filter(s => s),
+    });
+  }
+  // Mais recentes primeiro
+  out.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+  return out;
+}
+
+
 function submitArgentinaCash_(data) {
   if (!data || !data.driverName) {
     return { success: false, error: 'driverName obrigatório' };
