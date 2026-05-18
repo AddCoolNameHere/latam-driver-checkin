@@ -72,7 +72,7 @@ const USERS = [
 // USUÁRIOS COM PRIVILÉGIO ADMIN
 // (veem o botão ⚙ Admin no dashboard)
 // ----------------------------------------------------------------
-const ADMIN_USERNAMES = ['fuss', 'lucas'];
+const ADMIN_USERNAMES = ['fuss'];
 
 // ----------------------------------------------------------------
 // HELPER: SHA-256 hash (compatível com browser moderno)
