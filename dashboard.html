@@ -3777,9 +3777,9 @@ function initMap() {
 //   - 30 dias: forecast_days=0, past_days=30
 // Cache em memória por período pra não re-fetchar.
 const WEATHER_CONFIG = {
-  // Grid LATAM step ~10° (~72 pontos)
-  gridLatStart: -55, gridLatEnd: 25, gridLatStep: 10,
-  gridLngStart: -120, gridLngEnd: -30, gridLngStep: 10,
+  // Grid LATAM step 4° (~480 pontos). 10° era esparso demais — só ~3-4 blobs no zoom de país.
+  gridLatStart: -55, gridLatEnd: 25, gridLatStep: 4,
+  gridLngStart: -120, gridLngEnd: -30, gridLngStep: 4,
 };
 
 const weather = {
@@ -3855,15 +3855,30 @@ async function renderWeatherLayer() {
   const period = state.filter && state.filter.period ? state.filter.period : 1;
   const iconSpan = weather.btnEl.querySelector('.weather-icon');
 
+  // Sanity check: plugin carregou?
+  if (typeof L.heatLayer !== 'function') {
+    console.error('[Dashboard Weather] leaflet.heat plugin não carregou — L.heatLayer indefinido.');
+    weather.labelEl.textContent = t('weatherError') || 'Erro ao carregar plugin de clima';
+    return;
+  }
+
   try {
     weather.btnEl.classList.add('loading');
     if (iconSpan) iconSpan.textContent = '⏳';
 
+    console.log('[Dashboard Weather] carregando period=' + period + '...');
     const points = await loadWeatherHeatmapData(period);
+    console.log('[Dashboard Weather] ' + points.length + ' pontos com chuva no grid LATAM');
+
+    if (points.length === 0) {
+      weather.labelEl.textContent = (t('weatherNoRain') || 'Sem chuva relevante na região');
+      return;
+    }
+
     // L.heatLayer espera array [[lat, lng, intensity], ...] com intensity em 0-1
     weather.layer = L.heatLayer(points, {
-      radius: 40,
-      blur: 32,
+      radius: 35,
+      blur: 28,
       maxZoom: 10,         // a partir desse zoom, intensidade não muda
       max: 1.0,
       gradient: {
@@ -3900,7 +3915,10 @@ async function renderWeatherLayer() {
  */
 async function loadWeatherHeatmapData(periodDays) {
   const cacheKey = String(periodDays);
-  if (weather.heatmapCache[cacheKey]) return weather.heatmapCache[cacheKey];
+  if (weather.heatmapCache[cacheKey] && weather.heatmapCache[cacheKey].length > 0) {
+    console.log('[Dashboard Weather] cache hit period=' + periodDays);
+    return weather.heatmapCache[cacheKey];
+  }
 
   const cfg = WEATHER_CONFIG;
   const grid = [];
@@ -3909,22 +3927,28 @@ async function loadWeatherHeatmapData(periodDays) {
       grid.push([lat, lng]);
     }
   }
+  console.log('[Dashboard Weather] grid de ' + grid.length + ' pontos, fetching Open-Meteo period=' + periodDays + 'd...');
 
   // Fetches em paralelo (Open-Meteo aguenta — free tier ~10k/dia)
+  let fetchErrors = 0;
   const promises = grid.map(([lat, lng]) =>
-    fetchOpenMeteoRain(lat, lng, periodDays).catch(() => 0)
+    fetchOpenMeteoRain(lat, lng, periodDays).catch(err => { fetchErrors++; return 0; })
   );
   const totals = await Promise.all(promises);
+  if (fetchErrors > 0) console.warn('[Dashboard Weather] ' + fetchErrors + '/' + grid.length + ' fetches falharam');
+  const maxMm = Math.max.apply(null, totals);
+  console.log('[Dashboard Weather] máximo mm total no grid: ' + maxMm.toFixed(1));
 
   // Normaliza pra mm/dia → intensidade 0-1
-  // 20mm/dia = chuva muito forte → intensidade 1
+  // 15mm/dia = chuva forte → intensidade 1 (mais sensível que 20mm pra mostrar mais)
   const points = grid.map(([lat, lng], i) => {
     const mmPerDay = totals[i] / periodDays;
-    const intensity = Math.min(1, Math.max(0, mmPerDay / 20));
+    const intensity = Math.min(1, Math.max(0, mmPerDay / 15));
     return [lat, lng, intensity];
-  }).filter(p => p[2] > 0.02);   // descarta pontos quase secos pra não poluir
+  }).filter(p => p[2] > 0.01);   // threshold mais permissivo (era 0.02)
 
-  weather.heatmapCache[cacheKey] = points;
+  // SÓ cacheia se tem dados — senão a sessão inteira fica vazia (era bug antes)
+  if (points.length > 0) weather.heatmapCache[cacheKey] = points;
   return points;
 }
 
