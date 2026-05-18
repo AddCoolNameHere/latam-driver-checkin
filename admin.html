@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Hub · LATAM · Aceolution</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<script src="auth.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --c-primary: #2C5282;
+    --c-primary-dark: #1A365D;
+    --c-accent: #4A9FE0;
+    --c-bg-tint: #EBF4FB;
+    --c-bg: #F4F6F9;
+    --c-surface: #FFFFFF;
+    --c-border: #E2E8F0;
+    --c-border-strong: #CBD5E1;
+    --c-text: #1A202C;
+    --c-text-muted: #64748B;
+    --c-text-dim: #94A3B8;
+    --c-success: #22C55E;
+    --c-warn: #F59E0B;
+    --c-danger: #EF4444;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* LOGIN — mesmo padrão dos outros admin pages */
+  .login-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 10000;
+  }
+  .login-card {
+    background: white;
+    border-radius: 16px;
+    padding: 36px 32px 28px;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(15,23,42,0.25);
+    text-align: center;
+    position: relative;
+  }
+  .login-lang-switch {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: flex;
+    gap: 2px;
+    background: var(--c-bg-tint);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .login-lang-switch button {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: inherit;
+  }
+  .login-lang-switch button.active {
+    background: white;
+    color: var(--c-primary-dark);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .login-logo-text {
+    font-size: 26px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+    margin-bottom: 18px;
+    display: block;
+  }
+  .login-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 4px;
+  }
+  .login-sub {
+    font-size: 13px;
+    color: var(--c-text-muted);
+    margin-bottom: 24px;
+  }
+  .login-card form { text-align: left; }
+  .login-card label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .login-card input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--c-text);
+    background: white;
+  }
+  .login-card input:focus {
+    outline: none;
+    border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(74,159,224,0.15);
+  }
+  .login-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 18px;
+    font-family: inherit;
+  }
+  .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .login-error {
+    color: var(--c-danger);
+    font-size: 12px;
+    margin-top: 10px;
+    min-height: 16px;
+    display: none;
+  }
+  .login-error.visible { display: block; }
+  .login-footer {
+    margin-top: 20px;
+    font-size: 11px;
+    color: var(--c-text-muted);
+  }
+
+  /* HUB layout */
+  .topbar {
+    background: white;
+    border-bottom: 1px solid var(--c-border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.3px;
+  }
+  .brand-divider {
+    width: 1px;
+    height: 22px;
+    background: var(--c-border-strong);
+  }
+  .brand-region {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    letter-spacing: 1.2px;
+    font-weight: 600;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .lang-switch {
+    display: flex;
+    gap: 2px;
+    background: var(--c-bg-tint);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .lang-switch button {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: inherit;
+  }
+  .lang-switch button.active {
+    background: white;
+    color: var(--c-primary-dark);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .user-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 6px;
+    background: var(--c-bg-tint);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-primary-dark);
+  }
+  .user-avatar {
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .logout-btn {
+    background: none;
+    border: 1px solid var(--c-border);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .logout-btn:hover { background: var(--c-bg); color: var(--c-danger); border-color: var(--c-danger); }
+
+  .hub-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px 60px;
+  }
+  .hub-header {
+    margin-bottom: 28px;
+  }
+  .hub-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 6px;
+  }
+  .hub-sub {
+    font-size: 14px;
+    color: var(--c-text-muted);
+  }
+
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    margin: 24px 0 12px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    border: 1px solid var(--c-border);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: all 0.15s ease;
+    position: relative;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(44, 82, 130, 0.12);
+    border-color: var(--c-accent);
+  }
+  .card-icon {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--c-bg-tint), white);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 12px;
+    border: 1px solid var(--c-border);
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 4px;
+  }
+  .card-desc {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    line-height: 1.4;
+  }
+  .card-tag {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-size: 9px;
+    padding: 3px 7px;
+    background: var(--c-bg-tint);
+    color: var(--c-primary);
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .card-tag.report { background: #FEF3C7; color: #B45309; }
+  .card-tag.form { background: #ECFDF5; color: #047857; }
+
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--c-text-dim);
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-lang-switch">
+      <button type="button" data-login-lang="pt" onclick="setLoginLang('pt')" class="active">PT</button>
+      <button type="button" data-login-lang="es" onclick="setLoginLang('es')">ES</button>
+      <button type="button" data-login-lang="en" onclick="setLoginLang('en')">EN</button>
+    </div>
+    <span class="login-logo-text">Aceolution</span>
+    <div class="login-title" id="login-title">Admin Hub</div>
+    <div class="login-sub" id="login-sub">Faça login para acessar</div>
+    <form id="login-form" onsubmit="return doLogin(event)">
+      <label for="login-username" id="login-label-user">Usuário</label>
+      <input type="text" id="login-username" autocomplete="username" required autofocus>
+      <label for="login-password" id="login-label-pass" style="margin-top:12px;">Senha</label>
+      <input type="password" id="login-password" autocomplete="current-password" required>
+      <button type="submit" class="login-btn" id="login-btn">Entrar</button>
+      <div class="login-error" id="login-error"></div>
+    </form>
+    <div class="login-footer">
+      <small id="login-footer-text">Aceolution do Brasil · Plataforma interna</small>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-content" style="display:none;">
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-logo-text">Aceolution</span>
+    <div class="brand-divider"></div>
+    <span class="brand-region">LATAM · ADMIN HUB</span>
+  </div>
+  <div class="topbar-right">
+    <div class="lang-switch">
+      <button type="button" data-lang="pt" onclick="setLang('pt')" class="active">PT</button>
+      <button type="button" data-lang="es" onclick="setLang('es')">ES</button>
+      <button type="button" data-lang="en" onclick="setLang('en')">EN</button>
+    </div>
+    <div class="user-pill">
+      <div class="user-avatar" id="user-avatar">U</div>
+      <span id="user-name">User</span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()" id="logout-btn">Sair</button>
+  </div>
+</header>
+
+<main class="hub-wrap">
+  <div class="hub-header">
+    <h1 class="hub-title" id="hub-title">Painel administrativo</h1>
+    <p class="hub-sub" id="hub-sub">Acesse rapidamente todas as ferramentas internas da operação LATAM</p>
+  </div>
+
+  <div class="section-label" id="section-monitoring">Monitoramento</div>
+  <div class="card-grid">
+    <a class="card" href="dashboard.html">
+      <div class="card-icon">📊</div>
+      <div class="card-title" id="card-dashboard-title">Dashboard</div>
+      <div class="card-desc" id="card-dashboard-desc">Mapa, KMs mapeados, ranking, clima — visão geral da operação</div>
+    </a>
+    <a class="card" href="driver-profile.html">
+      <div class="card-icon">👤</div>
+      <div class="card-title" id="card-driver-title">Driver Profile</div>
+      <div class="card-desc" id="card-driver-desc">Histórico detalhado por motorista — check-ins, KMs, ramp, AI insights</div>
+    </a>
+    <a class="card" href="country_scopes.html">
+      <div class="card-icon">🌎</div>
+      <div class="card-title" id="card-scopes-title">Country Scopes</div>
+      <div class="card-desc" id="card-scopes-desc">Áreas de mapeamento por país (AR/CO) + status + localização dos drivers</div>
+    </a>
+    <a class="card" href="pmo.html">
+      <div class="card-icon">📝</div>
+      <div class="card-title" id="card-pmo-title">PMO Hub</div>
+      <div class="card-desc" id="card-pmo-desc">Anotações qualitativas do PMO por motorista</div>
+    </a>
+  </div>
+
+  <div class="section-label" id="section-finance">Financeiro</div>
+  <div class="card-grid">
+    <a class="card" href="cash.html">
+      <span class="card-tag">Driver + Admin</span>
+      <div class="card-icon">💰</div>
+      <div class="card-title" id="card-cash-title">Cash Flow</div>
+      <div class="card-desc" id="card-cash-desc">Pedidos de cash dos drivers + gestão de transferências</div>
+    </a>
+    <a class="card" href="ar-divergencias-admin.html">
+      <span class="card-tag">Admin</span>
+      <div class="card-icon">⚠️</div>
+      <div class="card-title" id="card-div-title">Divergências AR</div>
+      <div class="card-desc" id="card-div-desc">Pagamentos contestados pelos drivers da Argentina (exporta PDF)</div>
+    </a>
+  </div>
+
+  <div class="section-label" id="section-forms">Forms dos drivers</div>
+  <div class="card-grid">
+    <a class="card" href="index.html">
+      <span class="card-tag form">Driver</span>
+      <div class="card-icon">✅</div>
+      <div class="card-title" id="card-checkin-title">Check-in diário</div>
+      <div class="card-desc" id="card-checkin-desc">Form que os drivers preenchem todo dia (base, área, status)</div>
+    </a>
+    <a class="card" href="assets.html">
+      <span class="card-tag form">Driver</span>
+      <div class="card-icon">📦</div>
+      <div class="card-title" id="card-assets-title">Equipamentos</div>
+      <div class="card-desc" id="card-assets-desc">Relatório semanal de equipamentos (câmera, lidar, discos)</div>
+    </a>
+    <a class="card" href="ramp.html">
+      <span class="card-tag form">Driver</span>
+      <div class="card-icon">🧾</div>
+      <div class="card-title" id="card-ramp-title">Ramp Expenses</div>
+      <div class="card-desc" id="card-ramp-desc">Despesas operacionais (combustível, manutenção, pedágios)</div>
+    </a>
+    <a class="card" href="ar-divergencias.html">
+      <span class="card-tag form">Driver AR</span>
+      <div class="card-icon">📬</div>
+      <div class="card-title" id="card-divform-title">Reportar divergência</div>
+      <div class="card-desc" id="card-divform-desc">Form pros drivers AR contestarem pagamentos da quinzena</div>
+    </a>
+  </div>
+
+  <div class="section-label" id="section-reports">Relatórios pontuais</div>
+  <div class="card-grid">
+    <a class="card" href="argentina_scenarios_presentation.html">
+      <span class="card-tag report">Apresentação</span>
+      <div class="card-icon">📈</div>
+      <div class="card-title" id="card-pres-title">Cenários Argentina</div>
+      <div class="card-desc" id="card-pres-desc">Slides com cenários de otimização do time AR (PMO + idle days)</div>
+    </a>
+    <a class="card" href="argentina_optimization_report.html">
+      <span class="card-tag report">Relatório</span>
+      <div class="card-icon">📄</div>
+      <div class="card-title" id="card-rep-title">Otimização Argentina</div>
+      <div class="card-desc" id="card-rep-desc">Análise inicial de distâncias, fleet e cobertura (versão estendida)</div>
+    </a>
+  </div>
+
+  <footer id="hub-footer">Plataforma interna — Aceolution do Brasil Ltda.</footer>
+</main>
+
+</div>
+
+<script>
+const LOGIN_I18N = {
+  pt: { usernameLabel: 'Usuário', passwordLabel: 'Senha', submitBtn: 'Entrar', submitChecking: 'Verificando…', errorEmpty: 'Preencha usuário e senha', errorInvalid: 'Usuário ou senha inválidos', errorGeneric: 'Erro ao fazer login', subtitle: 'Faça login para acessar', footer: 'Aceolution do Brasil · Plataforma interna' },
+  es: { usernameLabel: 'Usuario', passwordLabel: 'Contraseña', submitBtn: 'Entrar', submitChecking: 'Verificando…', errorEmpty: 'Complete usuario y contraseña', errorInvalid: 'Usuario o contraseña inválidos', errorGeneric: 'Error al iniciar sesión', subtitle: 'Inicia sesión para acceder', footer: 'Aceolution · Plataforma interna' },
+  en: { usernameLabel: 'Username', passwordLabel: 'Password', submitBtn: 'Sign in', submitChecking: 'Verifying…', errorEmpty: 'Enter username and password', errorInvalid: 'Invalid username or password', errorGeneric: 'Login error', subtitle: 'Sign in to access', footer: 'Aceolution · Internal platform' },
+};
+
+const APP_I18N = {
+  pt: {
+    title: 'Painel administrativo',
+    sub: 'Acesse rapidamente todas as ferramentas internas da operação LATAM',
+    sectionMonitoring: 'Monitoramento',
+    sectionFinance: 'Financeiro',
+    sectionForms: 'Forms dos drivers',
+    sectionReports: 'Relatórios pontuais',
+    logout: 'Sair',
+    confirmLogout: 'Sair?',
+    cards: {
+      dashboard: { title: 'Dashboard', desc: 'Mapa, KMs mapeados, ranking, clima — visão geral da operação' },
+      driver: { title: 'Driver Profile', desc: 'Histórico detalhado por motorista — check-ins, KMs, ramp, AI insights' },
+      scopes: { title: 'Country Scopes', desc: 'Áreas de mapeamento por país (AR/CO) + status + localização dos drivers' },
+      pmo: { title: 'PMO Hub', desc: 'Anotações qualitativas do PMO por motorista' },
+      cash: { title: 'Cash Flow', desc: 'Pedidos de cash dos drivers + gestão de transferências' },
+      div: { title: 'Divergências AR', desc: 'Pagamentos contestados pelos drivers da Argentina (exporta PDF)' },
+      checkin: { title: 'Check-in diário', desc: 'Form que os drivers preenchem todo dia (base, área, status)' },
+      assets: { title: 'Equipamentos', desc: 'Relatório semanal de equipamentos (câmera, lidar, discos)' },
+      ramp: { title: 'Ramp Expenses', desc: 'Despesas operacionais (combustível, manutenção, pedágios)' },
+      divform: { title: 'Reportar divergência', desc: 'Form pros drivers AR contestarem pagamentos da quinzena' },
+      pres: { title: 'Cenários Argentina', desc: 'Slides com cenários de otimização do time AR (PMO + idle days)' },
+      rep: { title: 'Otimização Argentina', desc: 'Análise inicial de distâncias, fleet e cobertura (versão estendida)' },
+    },
+    footer: 'Plataforma interna — Aceolution do Brasil Ltda.',
+  },
+  es: {
+    title: 'Panel administrativo',
+    sub: 'Accede rápido a todas las herramientas internas de la operación LATAM',
+    sectionMonitoring: 'Monitoreo',
+    sectionFinance: 'Financiero',
+    sectionForms: 'Forms de los conductores',
+    sectionReports: 'Reportes puntuales',
+    logout: 'Salir',
+    confirmLogout: '¿Salir?',
+    cards: {
+      dashboard: { title: 'Dashboard', desc: 'Mapa, KMs mapeados, ranking, clima — vista general' },
+      driver: { title: 'Driver Profile', desc: 'Historial detallado por conductor — check-ins, KMs, ramp, AI insights' },
+      scopes: { title: 'Country Scopes', desc: 'Áreas de mapeo por país (AR/CO) + estado + ubicación de los conductores' },
+      pmo: { title: 'PMO Hub', desc: 'Notas cualitativas del PMO por conductor' },
+      cash: { title: 'Cash Flow', desc: 'Pedidos de cash + gestión de transferencias' },
+      div: { title: 'Divergencias AR', desc: 'Pagos disputados por los conductores de Argentina (exporta PDF)' },
+      checkin: { title: 'Check-in diario', desc: 'Form que los conductores completan todos los días' },
+      assets: { title: 'Equipamiento', desc: 'Reporte semanal de equipamiento (cámara, lidar, discos)' },
+      ramp: { title: 'Ramp Expenses', desc: 'Gastos operativos (combustible, mantenimiento, peajes)' },
+      divform: { title: 'Reportar divergencia', desc: 'Form para los conductores AR disputar pagos de la quincena' },
+      pres: { title: 'Escenarios Argentina', desc: 'Slides con escenarios de optimización del equipo AR' },
+      rep: { title: 'Optimización Argentina', desc: 'Análisis inicial de distancias, fleet y cobertura' },
+    },
+    footer: 'Plataforma interna — Aceolution do Brasil Ltda.',
+  },
+  en: {
+    title: 'Admin dashboard',
+    sub: 'Quick access to all internal tools for the LATAM operation',
+    sectionMonitoring: 'Monitoring',
+    sectionFinance: 'Finance',
+    sectionForms: 'Driver forms',
+    sectionReports: 'One-off reports',
+    logout: 'Sign out',
+    confirmLogout: 'Sign out?',
+    cards: {
+      dashboard: { title: 'Dashboard', desc: 'Map, mapped KMs, ranking, weather — operation overview' },
+      driver: { title: 'Driver Profile', desc: 'Detailed history per driver — check-ins, KMs, ramp, AI insights' },
+      scopes: { title: 'Country Scopes', desc: 'Mapping areas by country (AR/CO) + status + driver locations' },
+      pmo: { title: 'PMO Hub', desc: 'Qualitative PMO notes per driver' },
+      cash: { title: 'Cash Flow', desc: 'Driver cash requests + transfer management' },
+      div: { title: 'AR Divergences', desc: 'Payments disputed by Argentine drivers (PDF export)' },
+      checkin: { title: 'Daily check-in', desc: 'The form drivers fill out every day (base, area, status)' },
+      assets: { title: 'Equipment', desc: 'Weekly equipment report (camera, lidar, disks)' },
+      ramp: { title: 'Ramp Expenses', desc: 'Operational expenses (fuel, maintenance, tolls)' },
+      divform: { title: 'Report divergence', desc: 'Form for AR drivers to dispute biweekly payments' },
+      pres: { title: 'Argentina Scenarios', desc: 'Slides with optimization scenarios for the AR team' },
+      rep: { title: 'Argentina Optimization', desc: 'Initial analysis of distances, fleet and coverage' },
+    },
+    footer: 'Internal platform — Aceolution do Brasil Ltda.',
+  },
+};
+
+let currentLang = 'pt';
+let currentLoginLang = 'pt';
+let currentUser = null;
+
+function setLoginLang(lang) {
+  currentLoginLang = lang;
+  document.querySelectorAll('.login-lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.loginLang === lang);
+  });
+  const ti = LOGIN_I18N[lang];
+  document.getElementById('login-sub').textContent = ti.subtitle;
+  document.getElementById('login-label-user').textContent = ti.usernameLabel;
+  document.getElementById('login-label-pass').textContent = ti.passwordLabel;
+  const btn = document.getElementById('login-btn');
+  if (!btn.disabled) btn.textContent = ti.submitBtn;
+  document.getElementById('login-footer-text').textContent = ti.footer;
+  document.documentElement.lang = lang;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  applyAppI18n();
+}
+
+function applyAppI18n() {
+  const ti = APP_I18N[currentLang];
+  document.getElementById('hub-title').textContent = ti.title;
+  document.getElementById('hub-sub').textContent = ti.sub;
+  document.getElementById('section-monitoring').textContent = ti.sectionMonitoring;
+  document.getElementById('section-finance').textContent = ti.sectionFinance;
+  document.getElementById('section-forms').textContent = ti.sectionForms;
+  document.getElementById('section-reports').textContent = ti.sectionReports;
+  document.getElementById('logout-btn').textContent = ti.logout;
+  document.getElementById('hub-footer').textContent = ti.footer;
+  const c = ti.cards;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('card-dashboard-title', c.dashboard.title); set('card-dashboard-desc', c.dashboard.desc);
+  set('card-driver-title', c.driver.title);       set('card-driver-desc', c.driver.desc);
+  set('card-scopes-title', c.scopes.title);       set('card-scopes-desc', c.scopes.desc);
+  set('card-pmo-title', c.pmo.title);             set('card-pmo-desc', c.pmo.desc);
+  set('card-cash-title', c.cash.title);           set('card-cash-desc', c.cash.desc);
+  set('card-div-title', c.div.title);             set('card-div-desc', c.div.desc);
+  set('card-checkin-title', c.checkin.title);     set('card-checkin-desc', c.checkin.desc);
+  set('card-assets-title', c.assets.title);       set('card-assets-desc', c.assets.desc);
+  set('card-ramp-title', c.ramp.title);           set('card-ramp-desc', c.ramp.desc);
+  set('card-divform-title', c.divform.title);     set('card-divform-desc', c.divform.desc);
+  set('card-pres-title', c.pres.title);           set('card-pres-desc', c.pres.desc);
+  set('card-rep-title', c.rep.title);             set('card-rep-desc', c.rep.desc);
+  document.documentElement.lang = currentLang;
+}
+
+setLoginLang('pt');
+
+async function doLogin(event) {
+  event.preventDefault();
+  const usernameEl = document.getElementById('login-username');
+  const passwordEl = document.getElementById('login-password');
+  const errorEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  const ti = LOGIN_I18N[currentLoginLang] || LOGIN_I18N.pt;
+  const username = usernameEl.value.trim().toLowerCase();
+  const password = passwordEl.value;
+  if (!username || !password) {
+    errorEl.textContent = ti.errorEmpty;
+    errorEl.classList.add('visible');
+    return false;
+  }
+  btn.disabled = true;
+  btn.textContent = ti.submitChecking;
+  errorEl.classList.remove('visible');
+  try {
+    const user = await validateLogin(username, password);
+    if (!user) {
+      await new Promise(r => setTimeout(r, 500));
+      errorEl.textContent = ti.errorInvalid;
+      errorEl.classList.add('visible');
+      passwordEl.value = '';
+      passwordEl.focus();
+      btn.disabled = false;
+      btn.textContent = ti.submitBtn;
+      return false;
+    }
+    currentUser = user;
+    onLoginSuccess();
+  } catch (err) {
+    console.error('Login error:', err);
+    errorEl.textContent = ti.errorGeneric;
+    errorEl.classList.add('visible');
+    btn.disabled = false;
+    btn.textContent = ti.submitBtn;
+  }
+  return false;
+}
+
+function onLoginSuccess() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-content').style.display = '';
+  document.getElementById('user-name').textContent = currentUser.fullName;
+  const initials = currentUser.fullName.split(' ').map(s => s.charAt(0).toUpperCase()).slice(0, 2).join('');
+  document.getElementById('user-avatar').textContent = initials;
+  setLang(currentLoginLang);
+}
+
+function doLogout() {
+  const ti = APP_I18N[currentLang];
+  if (!confirm(ti.confirmLogout)) return;
+  currentUser = null;
+  document.getElementById('app-content').style.display = 'none';
+  document.getElementById('login-screen').style.display = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-btn').disabled = false;
+  document.getElementById('login-btn').textContent = (LOGIN_I18N[currentLoginLang] || LOGIN_I18N.pt).submitBtn;
+}
+</script>
+</body>
+</html>

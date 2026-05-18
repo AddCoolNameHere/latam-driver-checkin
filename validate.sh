@@ -50,8 +50,11 @@ check_html driver-profile.html
 check_html ramp.html
 check_html assets.html
 check_html cash.html
-check_html devcount.html
 check_html pmo.html
+check_html country_scopes.html
+check_html ar-divergencias.html
+check_html ar-divergencias-admin.html
+check_html admin.html
 
 # Backend
 check_gas "apps-script/Code udpt.gs"
