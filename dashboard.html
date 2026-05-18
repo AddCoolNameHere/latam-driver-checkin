@@ -3877,16 +3877,16 @@ async function renderWeatherLayer() {
 
     // L.heatLayer espera array [[lat, lng, intensity], ...] com intensity em 0-1
     weather.layer = L.heatLayer(points, {
-      radius: 35,
-      blur: 28,
+      radius: 45,
+      blur: 30,
+      minOpacity: 0.4,     // garante visibilidade mesmo em intensidades baixas
       maxZoom: 10,         // a partir desse zoom, intensidade não muda
       max: 1.0,
       gradient: {
-        0.0: 'rgba(0,0,0,0)',
-        0.2: '#A6DBFF',     // azul claro — chuva fraca
-        0.45: '#5FA9F5',    // azul — moderada
-        0.65: '#F5D742',    // amarelo — forte
-        0.85: '#F58C2E',    // laranja — muito forte
+        0.0: '#BEE3FF',     // azul muito claro — chuva fraca já visível
+        0.25: '#5FA9F5',    // azul — moderada
+        0.5: '#F5D742',     // amarelo — forte
+        0.75: '#F58C2E',    // laranja — muito forte
         1.0: '#D63B2E',     // vermelho — extrema
       },
     });
