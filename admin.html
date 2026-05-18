@@ -171,14 +171,10 @@
     align-items: center;
     gap: 12px;
   }
-  .brand-logo-text {
-    font-size: 18px;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: -0.3px;
+  .brand-logo-img {
+    height: 28px;
+    width: auto;
+    display: block;
   }
   .brand-divider {
     width: 1px;
@@ -381,7 +377,7 @@
 
 <header class="topbar">
   <div class="brand">
-    <span class="brand-logo-text">Aceolution</span>
+    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo-img">
     <div class="brand-divider"></div>
     <span class="brand-region">LATAM · ADMIN HUB</span>
   </div>
@@ -473,6 +469,7 @@
     </a>
   </div>
 
+  <div id="admin-only-section" style="display:none;">
   <div class="section-label" id="section-reports">Relatórios pontuais</div>
   <div class="card-grid">
     <a class="card" href="argentina_scenarios_presentation.html">
@@ -488,6 +485,7 @@
       <div class="card-desc" id="card-rep-desc">Análise inicial de distâncias, fleet e cobertura (versão estendida)</div>
     </a>
   </div>
+  </div><!-- /admin-only-section -->
 
   <footer id="hub-footer">Plataforma interna — Aceolution do Brasil Ltda.</footer>
 </main>
@@ -682,6 +680,10 @@ function onLoginSuccess() {
   document.getElementById('user-name').textContent = currentUser.fullName;
   const initials = currentUser.fullName.split(' ').map(s => s.charAt(0).toUpperCase()).slice(0, 2).join('');
   document.getElementById('user-avatar').textContent = initials;
+  // Seção "Relatórios pontuais" só pra admin (fuss/lucas em ADMIN_USERNAMES)
+  if (typeof isAdmin === 'function' && isAdmin(currentUser.username)) {
+    document.getElementById('admin-only-section').style.display = '';
+  }
   setLang(currentLoginLang);
 }
 
