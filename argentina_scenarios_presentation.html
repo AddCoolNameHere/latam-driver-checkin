@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Otimização Argentina — 5 Cenários · Aceolution LATAM</title>
+<title>Argentina Optimization — 5 Scenarios · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <script src="auth.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -82,14 +82,13 @@
     color: var(--c-text-muted);
     margin-top: 3px;
   }
-  .slide-logo { height: 28px; }
   .slide-num {
     font-size: 11px;
     color: var(--c-text-muted);
     font-weight: 600;
   }
 
-  /* CAPA */
+  /* COVER */
   .slide-cover {
     background: linear-gradient(135deg, #1A365D 0%, #2C5282 60%, #4A9FE0 100%);
     color: white;
@@ -138,7 +137,7 @@
     letter-spacing: 1px;
   }
 
-  /* Layout interno do slide */
+  /* Inner layout */
   .slide-body {
     display: grid;
     grid-template-columns: 1.05fr 1fr;
@@ -156,7 +155,7 @@
     background: var(--c-bg);
   }
 
-  /* Métricas cards */
+  /* Metric cards */
   .metric-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -192,10 +191,6 @@
     color: var(--c-text-muted);
     margin-top: 1px;
   }
-  .metric-delta { font-size: 10px; font-weight: 600; }
-  .metric-delta.up { color: var(--c-success); }
-  .metric-delta.down { color: var(--c-danger); }
-  .metric-delta.neutral { color: var(--c-text-muted); }
 
   /* Bullets */
   .insights {
@@ -226,11 +221,10 @@
     left: 0;
     color: var(--c-primary);
   }
-  .insights li.pro { color: var(--c-text); }
   .insights li.pro::before { color: var(--c-success); content: '✓'; }
   .insights li.con::before { color: var(--c-danger); content: '✗'; }
 
-  /* Tabela comparativa */
+  /* Compare table */
   .compare-table {
     width: 100%;
     border-collapse: collapse;
@@ -263,7 +257,7 @@
   .pill-mid { background: #FEF3C7; color: #78350F; }
   .pill-bad { background: #FEE2E2; color: #7F1D1D; }
 
-  /* Chart area */
+  /* Charts */
   .chart-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -285,7 +279,7 @@
   }
   .chart-canvas-wrap { height: 75mm; position: relative; }
 
-  /* Recomendação final */
+  /* Final recommendation */
   .recommend-banner {
     background: linear-gradient(135deg, #16A34A 0%, #22C55E 100%);
     color: white;
@@ -353,7 +347,7 @@
   }
   .caveat-mini strong { color: #78350F; }
 
-  /* Markers Leaflet */
+  /* Leaflet markers */
   .marker-d {
     width: 22px; height: 22px;
     border-radius: 50%;
@@ -447,22 +441,22 @@
 <div id="login-screen" class="login-screen">
   <div class="login-card">
     <div class="login-logo-text">Aceolution</div>
-    <div class="login-title">Apresentação Confidencial</div>
-    <div class="login-sub">5 cenários de otimização — Argentina</div>
+    <div class="login-title">Confidential Presentation</div>
+    <div class="login-sub">5 optimization scenarios — Argentina</div>
     <form onsubmit="return doLogin(event)">
-      <label>Usuário</label>
+      <label>Username</label>
       <input type="text" id="login-username" required autofocus autocomplete="username">
-      <label>Senha</label>
+      <label>Password</label>
       <input type="password" id="login-password" required autocomplete="current-password">
-      <button type="submit" class="login-btn" id="login-btn">Entrar</button>
+      <button type="submit" class="login-btn" id="login-btn">Sign in</button>
       <div class="login-error" id="login-error"></div>
     </form>
   </div>
 </div>
 
 <div class="print-toolbar" id="print-toolbar" style="display:none;">
-  <span class="print-status" id="print-status">Carregando...</span>
-  <button class="print-btn" id="print-btn" disabled onclick="window.print()">📄 Imprimir / Salvar PDF</button>
+  <span class="print-status" id="print-status">Loading…</span>
+  <button class="print-btn" id="print-btn" disabled onclick="window.print()">📄 Print / Save as PDF</button>
 </div>
 
 <!-- ============================================================
@@ -470,101 +464,101 @@
 ============================================================ -->
 <div id="deck" style="display:none;">
 
-<!-- SLIDE 1: CAPA -->
+<!-- SLIDE 1: COVER -->
 <section class="slide slide-cover">
   <div class="cover-logo-row">
     <img src="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0" alt="Aceolution">
   </div>
-  <div class="cover-eyebrow">Aceolution LATAM · Análise interna</div>
-  <h1 class="cover-title">Otimização da<br>Equipe Argentina</h1>
-  <p class="cover-sub">5 cenários comparados em cobertura, eficiência e custo. Recomendação final baseada em dados.</p>
+  <div class="cover-eyebrow">Aceolution LATAM · Internal Analysis</div>
+  <h1 class="cover-title">Argentina Team<br>Optimization</h1>
+  <p class="cover-sub">5 scenarios compared on coverage, efficiency and cost. Final recommendation grounded in data.</p>
   <div class="cover-meta" id="cover-date">—</div>
 </section>
 
-<!-- SLIDE 2: SITUAÇÃO ATUAL -->
+<!-- SLIDE 2: CURRENT SITUATION -->
 <section class="slide">
   <div class="slide-header">
     <div>
-      <div class="slide-eyebrow">Cenário base · referência</div>
-      <h2 class="slide-title">Situação atual</h2>
-      <div class="slide-subtitle">7 motoristas · 9 veículos · 30.836 km a mapear</div>
+      <div class="slide-eyebrow">Baseline · reference</div>
+      <h2 class="slide-title">Current situation</h2>
+      <div class="slide-subtitle">7 drivers · 9 vehicles · 30,836 km still to map</div>
     </div>
     <div class="slide-num">2 / 10</div>
   </div>
   <div class="slide-body">
     <div>
       <div class="metric-grid">
-        <div class="metric-card"><div class="metric-label">Motoristas ativos</div><div class="metric-value">7</div><div class="metric-sub">2 inativos · 5 half-active</div></div>
-        <div class="metric-card warn"><div class="metric-label">Áreas órfãs (&gt;500 km)</div><div class="metric-value">29</div><div class="metric-sub">3.155 km sem cobertura próxima</div></div>
-        <div class="metric-card"><div class="metric-label">Eficiência média TKM/KM</div><div class="metric-value">0.492</div><div class="metric-sub">Leandro puxa pra baixo (0.364)</div></div>
-        <div class="metric-card warn"><div class="metric-label">Distância média</div><div class="metric-value">342 km</div><div class="metric-sub">Casa → área de mapeamento</div></div>
+        <div class="metric-card"><div class="metric-label">Active drivers</div><div class="metric-value">7</div><div class="metric-sub">2 inactive · 5 half-active</div></div>
+        <div class="metric-card warn"><div class="metric-label">Orphan areas (&gt;500 km)</div><div class="metric-value">29</div><div class="metric-sub">3,155 km without nearby coverage</div></div>
+        <div class="metric-card"><div class="metric-label">Avg efficiency TKM/KM</div><div class="metric-value">0.492</div><div class="metric-sub">Leandro drags the average down (0.364)</div></div>
+        <div class="metric-card warn"><div class="metric-label">Avg distance</div><div class="metric-value">342 km</div><div class="metric-sub">Home → mapping area</div></div>
       </div>
       <div class="insights">
-        <h3>Diagnóstico</h3>
+        <h3>Diagnosis</h3>
         <ul>
-          <li><strong>Concentração no centro:</strong> Axel + Mauricio cobrem 62% das áreas próximas (Córdoba + BsAs)</li>
-          <li><strong>Norte mal coberto:</strong> Mauro está em Formosa mas inativo. Misiones/Corrientes ficam órfãs</li>
-          <li><strong>BsAs metro saturado:</strong> Leandro (0.364) e Mauricio (0.502) competem pela mesma região</li>
-          <li><strong>Sul depende de 1 driver:</strong> Matías (Not Active) é o único na Patagônia sul</li>
+          <li><strong>Center concentration:</strong> Axel + Mauricio cover 62% of nearest-driver areas (Córdoba + BsAs)</li>
+          <li><strong>North poorly covered:</strong> Mauro is in Formosa but inactive. Misiones/Corrientes are orphaned</li>
+          <li><strong>BsAs metro saturated:</strong> Leandro (0.364) and Mauricio (0.502) compete for the same region</li>
+          <li><strong>South relies on a single driver:</strong> Matías (Not Active) is the only one in southern Patagonia</li>
         </ul>
       </div>
     </div>
     <div>
       <div id="map-baseline" class="scenario-map"></div>
       <div style="font-size:9px;color:var(--c-text-muted);margin-top:4px;text-align:center;">
-        <span style="color:#16A34A;">●</span> Motoristas ativos &nbsp;
-        <span style="color:#B91C1C;">●</span> Áreas pendentes
+        <span style="color:#16A34A;">●</span> Active drivers &nbsp;
+        <span style="color:#B91C1C;">●</span> Pending areas
       </div>
     </div>
   </div>
 </section>
 
-<!-- SLIDE 3: CENÁRIO A — HOTEL ONLY -->
+<!-- SLIDE 3: SCENARIO A — HOTEL ONLY -->
 <section class="slide">
   <div class="slide-header">
     <div>
-      <div class="slide-eyebrow">Cenário A</div>
-      <h2 class="slide-title">Modo hotel pros top 2</h2>
-      <div class="slide-subtitle">Sem dispensas · habilita hotel pra Axel e Fernando</div>
+      <div class="slide-eyebrow">Scenario A</div>
+      <h2 class="slide-title">Hotel mode for top 2</h2>
+      <div class="slide-subtitle">No layoffs · enables hotel allowance for Axel and Fernando</div>
     </div>
     <div class="slide-num">3 / 10</div>
   </div>
   <div class="slide-body">
     <div>
       <div class="metric-grid">
-        <div class="metric-card"><div class="metric-label">Headcount</div><div class="metric-value">7</div><div class="metric-sub">Igual ao baseline</div></div>
-        <div class="metric-card warn"><div class="metric-label">Áreas órfãs</div><div class="metric-value">29</div><div class="metric-sub">Sem mudança geográfica</div></div>
-        <div class="metric-card"><div class="metric-label">Eficiência média</div><div class="metric-value">0.492</div><div class="metric-sub">Top 2 ganha ~5% real estimado</div></div>
-        <div class="metric-card warn"><div class="metric-label">Δ custo mensal</div><div class="metric-value">+US$ 350</div><div class="metric-sub">Hotel ~5 noites/mês × 2</div></div>
+        <div class="metric-card"><div class="metric-label">Headcount</div><div class="metric-value">7</div><div class="metric-sub">Same as baseline</div></div>
+        <div class="metric-card warn"><div class="metric-label">Orphan areas</div><div class="metric-value">29</div><div class="metric-sub">No geographic change</div></div>
+        <div class="metric-card"><div class="metric-label">Avg efficiency</div><div class="metric-value">0.492</div><div class="metric-sub">Top 2 gains ~5% real (estimated)</div></div>
+        <div class="metric-card warn"><div class="metric-label">Δ monthly cost</div><div class="metric-value">+US$ 350</div><div class="metric-sub">Hotel ~5 nights/month × 2</div></div>
       </div>
       <div class="insights">
-        <h3>Análise</h3>
+        <h3>Analysis</h3>
         <ul>
-          <li class="pro">Sem risco trabalhista nem trauma de demissão</li>
-          <li class="pro">Top performers ganham produtividade em viagens longas (Santa Fe, Tierra del Fuego)</li>
-          <li class="con">Não resolve sobreposição (Leandro × Mauricio)</li>
-          <li class="con">Não cobre áreas órfãs do norte e centro-oeste</li>
-          <li class="con">Aumenta custo sem reduzir headcount baixo-performance</li>
+          <li class="pro">No labor risk, no layoff trauma</li>
+          <li class="pro">Top performers gain productivity on long trips (Santa Fe, Tierra del Fuego)</li>
+          <li class="con">Doesn't fix the Leandro × Mauricio overlap</li>
+          <li class="con">Doesn't address orphan areas in the north and west-center</li>
+          <li class="con">Raises cost without trimming the low-performance headcount</li>
         </ul>
       </div>
     </div>
     <div>
       <div id="map-A" class="scenario-map"></div>
       <div style="font-size:9px;color:var(--c-text-muted);margin-top:4px;text-align:center;">
-        <span style="color:#16A34A;">●</span> Mantidos &nbsp;
-        <span style="color:#B45309;">●</span> Hotel autorizado
+        <span style="color:#16A34A;">●</span> Kept &nbsp;
+        <span style="color:#B45309;">●</span> Hotel authorized
       </div>
     </div>
   </div>
 </section>
 
-<!-- SLIDE 4: CENÁRIO B — DEMITE LEANDRO -->
+<!-- SLIDE 4: SCENARIO B — LET LEANDRO GO -->
 <section class="slide">
   <div class="slide-header">
     <div>
-      <div class="slide-eyebrow">Cenário B</div>
-      <h2 class="slide-title">Dispensa Leandro</h2>
-      <div class="slide-subtitle">Corte do pior performer · sem reposição</div>
+      <div class="slide-eyebrow">Scenario B</div>
+      <h2 class="slide-title">Let Leandro go</h2>
+      <div class="slide-subtitle">Cut the lowest performer · no replacement</div>
     </div>
     <div class="slide-num">4 / 10</div>
   </div>
@@ -572,225 +566,225 @@
     <div>
       <div class="metric-grid">
         <div class="metric-card good"><div class="metric-label">Headcount</div><div class="metric-value">6</div><div class="metric-sub">−1 vs baseline</div></div>
-        <div class="metric-card warn"><div class="metric-label">Áreas órfãs</div><div class="metric-value">33</div><div class="metric-sub">+4 (área dele realocada)</div></div>
-        <div class="metric-card good"><div class="metric-label">Eficiência média</div><div class="metric-value">0.513</div><div class="metric-sub">+4% vs baseline</div></div>
-        <div class="metric-card good"><div class="metric-label">Δ custo mensal</div><div class="metric-value">−US$ 1.500</div><div class="metric-sub">~US$ 1.400 indemnização</div></div>
+        <div class="metric-card warn"><div class="metric-label">Orphan areas</div><div class="metric-value">33</div><div class="metric-sub">+4 (his areas reassigned)</div></div>
+        <div class="metric-card good"><div class="metric-label">Avg efficiency</div><div class="metric-value">0.513</div><div class="metric-sub">+4% vs baseline</div></div>
+        <div class="metric-card good"><div class="metric-label">Δ monthly cost</div><div class="metric-value">−US$ 1,500</div><div class="metric-sub">~US$ 1,400 severance</div></div>
       </div>
       <div class="insights">
-        <h3>Análise</h3>
+        <h3>Analysis</h3>
         <ul>
-          <li class="pro">Payback &lt; 1 mês (indemnização paga pela economia mensal)</li>
-          <li class="pro">Mauricio (Chivilcoy) absorve as 7 áreas dele com eficiência superior</li>
-          <li class="pro">Eficiência média sobe (sai o pior 0.364)</li>
-          <li class="con">Áreas órfãs aumentam ligeiramente (Mauricio mais sobrecarregado)</li>
-          <li>Risco trabalhista localizado em 1 caso</li>
+          <li class="pro">Payback &lt; 1 month (severance covered by monthly savings)</li>
+          <li class="pro">Mauricio (Chivilcoy) absorbs his 7 areas with higher efficiency</li>
+          <li class="pro">Average efficiency rises (lowest 0.364 is gone)</li>
+          <li class="con">Orphan areas tick up slightly (Mauricio gets more loaded)</li>
+          <li>Labor risk contained to a single case</li>
         </ul>
       </div>
     </div>
     <div>
       <div id="map-B" class="scenario-map"></div>
       <div style="font-size:9px;color:var(--c-text-muted);margin-top:4px;text-align:center;">
-        <span style="color:#16A34A;">●</span> Mantidos &nbsp;
-        <span style="color:#B91C1C;">●</span> Dispensar
+        <span style="color:#16A34A;">●</span> Kept &nbsp;
+        <span style="color:#B91C1C;">●</span> Let go
       </div>
     </div>
   </div>
 </section>
 
-<!-- SLIDE 5: CENÁRIO C — DEMITE LEANDRO + MAURO -->
+<!-- SLIDE 5: SCENARIO C — LET LEANDRO + MAURO GO -->
 <section class="slide">
   <div class="slide-header">
     <div>
-      <div class="slide-eyebrow">Cenário C</div>
-      <h2 class="slide-title">Dispensa Leandro + Mauro</h2>
-      <div class="slide-subtitle">Corte agressivo · sem reposição</div>
+      <div class="slide-eyebrow">Scenario C</div>
+      <h2 class="slide-title">Let Leandro + Mauro go</h2>
+      <div class="slide-subtitle">Aggressive cut · no replacement</div>
     </div>
     <div class="slide-num">5 / 10</div>
   </div>
   <div class="slide-body">
     <div>
       <div class="metric-grid">
-        <div class="metric-card good"><div class="metric-label">Headcount</div><div class="metric-value">5</div><div class="metric-sub">−2 vs baseline · economia máxima</div></div>
-        <div class="metric-card bad"><div class="metric-label">Áreas órfãs</div><div class="metric-value">40</div><div class="metric-sub">+11 (norte fica sem cobertura)</div></div>
-        <div class="metric-card good"><div class="metric-label">Eficiência média</div><div class="metric-value">0.532</div><div class="metric-sub">A maior dos 6 cenários</div></div>
-        <div class="metric-card good"><div class="metric-label">Δ custo mensal</div><div class="metric-value">−US$ 3.000</div><div class="metric-sub">~US$ 2.800 indemnizações</div></div>
+        <div class="metric-card good"><div class="metric-label">Headcount</div><div class="metric-value">5</div><div class="metric-sub">−2 vs baseline · max savings</div></div>
+        <div class="metric-card bad"><div class="metric-label">Orphan areas</div><div class="metric-value">40</div><div class="metric-sub">+11 (north left uncovered)</div></div>
+        <div class="metric-card good"><div class="metric-label">Avg efficiency</div><div class="metric-value">0.532</div><div class="metric-sub">Highest of all 6 scenarios</div></div>
+        <div class="metric-card good"><div class="metric-label">Δ monthly cost</div><div class="metric-value">−US$ 3,000</div><div class="metric-sub">~US$ 2,800 severance</div></div>
       </div>
       <div class="insights">
-        <h3>Análise</h3>
+        <h3>Analysis</h3>
         <ul>
-          <li class="pro">Maior economia recorrente (~US$ 36k/ano)</li>
-          <li class="pro">Eficiência média sobe pra 0.532 (a melhor)</li>
-          <li class="pro">Frota fica com 4 carros sobrando (oportunidade de leasing-down)</li>
-          <li class="con"><strong>Cobertura piora 38%</strong> em áreas órfãs</li>
-          <li class="con">Misiones, Chaco, Santiago del Estero ficam &gt;500 km do próximo driver</li>
+          <li class="pro">Largest recurring savings (~US$ 36k/year)</li>
+          <li class="pro">Average efficiency reaches 0.532 (the best)</li>
+          <li class="pro">Frees up 4 fleet cars (opportunity to reduce leasing)</li>
+          <li class="con"><strong>Coverage worsens by 38%</strong> in orphan areas</li>
+          <li class="con">Misiones, Chaco, Santiago del Estero end up &gt;500 km from the nearest driver</li>
         </ul>
       </div>
     </div>
     <div>
       <div id="map-C" class="scenario-map"></div>
       <div style="font-size:9px;color:var(--c-text-muted);margin-top:4px;text-align:center;">
-        <span style="color:#16A34A;">●</span> Mantidos &nbsp;
-        <span style="color:#B91C1C;">●</span> Dispensar
+        <span style="color:#16A34A;">●</span> Kept &nbsp;
+        <span style="color:#B91C1C;">●</span> Let go
       </div>
     </div>
   </div>
 </section>
 
-<!-- SLIDE 6: CENÁRIO D — DEMITE 2 + 1 MENDOZA -->
+<!-- SLIDE 6: SCENARIO D — LET 2 GO + HIRE MENDOZA -->
 <section class="slide">
   <div class="slide-header">
     <div>
-      <div class="slide-eyebrow">Cenário D</div>
-      <h2 class="slide-title">Dispensa 2 + Contrata em Mendoza</h2>
-      <div class="slide-subtitle">Reposicionamento parcial · descongestiona Cuyo</div>
+      <div class="slide-eyebrow">Scenario D</div>
+      <h2 class="slide-title">Let 2 go + Hire in Mendoza</h2>
+      <div class="slide-subtitle">Partial repositioning · relieves the Cuyo region</div>
     </div>
     <div class="slide-num">6 / 10</div>
   </div>
   <div class="slide-body">
     <div>
       <div class="metric-grid">
-        <div class="metric-card good"><div class="metric-label">Headcount</div><div class="metric-value">6</div><div class="metric-sub">−1 vs baseline (melhor distribuído)</div></div>
-        <div class="metric-card warn"><div class="metric-label">Áreas órfãs</div><div class="metric-value">32</div><div class="metric-sub">+3 vs baseline (NE ainda órfão)</div></div>
-        <div class="metric-card good"><div class="metric-label">Eficiência média</div><div class="metric-value">0.530</div><div class="metric-sub">+7.7% vs baseline</div></div>
-        <div class="metric-card good"><div class="metric-label">Δ custo mensal</div><div class="metric-value">−US$ 1.500</div><div class="metric-sub">~US$ 3.800 one-time (indem.+recrut.)</div></div>
+        <div class="metric-card good"><div class="metric-label">Headcount</div><div class="metric-value">6</div><div class="metric-sub">−1 vs baseline (better distributed)</div></div>
+        <div class="metric-card warn"><div class="metric-label">Orphan areas</div><div class="metric-value">32</div><div class="metric-sub">+3 vs baseline (NE still orphaned)</div></div>
+        <div class="metric-card good"><div class="metric-label">Avg efficiency</div><div class="metric-value">0.530</div><div class="metric-sub">+7.7% vs baseline</div></div>
+        <div class="metric-card good"><div class="metric-label">Δ monthly cost</div><div class="metric-value">−US$ 1,500</div><div class="metric-sub">~US$ 3,800 one-time (sev. + hiring)</div></div>
       </div>
       <div class="insights">
-        <h3>Análise</h3>
+        <h3>Analysis</h3>
         <ul>
-          <li class="pro">Mendoza (capital) descongestiona Guillermo, atacando 22 áreas + 2.696 km do Cuyo</li>
-          <li class="pro">Distância média cai pra 324 km</li>
-          <li class="pro">Payback ~2,5 meses</li>
-          <li class="con">NE (Misiones, Chaco, Corrientes) continua órfão</li>
-          <li class="con">Não maximiza a frota (1 carro ocioso a mais)</li>
+          <li class="pro">Mendoza city unloads Guillermo, attacking 22 areas + 2,696 km in Cuyo</li>
+          <li class="pro">Average distance drops to 324 km</li>
+          <li class="pro">Payback ~2.5 months</li>
+          <li class="con">NE (Misiones, Chaco, Corrientes) remains orphaned</li>
+          <li class="con">Doesn't maximize the fleet (one more idle car)</li>
         </ul>
       </div>
     </div>
     <div>
       <div id="map-D" class="scenario-map"></div>
       <div style="font-size:9px;color:var(--c-text-muted);margin-top:4px;text-align:center;">
-        <span style="color:#16A34A;">●</span> Manter &nbsp;
-        <span style="color:#B91C1C;">●</span> Dispensar &nbsp;
-        <span style="color:#4A9FE0;">★</span> Contratar
+        <span style="color:#16A34A;">●</span> Keep &nbsp;
+        <span style="color:#B91C1C;">●</span> Let go &nbsp;
+        <span style="color:#4A9FE0;">★</span> Hire
       </div>
     </div>
   </div>
 </section>
 
-<!-- SLIDE 7: CENÁRIO E — DEMITE 2 + MENDOZA + POSADAS -->
+<!-- SLIDE 7: SCENARIO E — LET 2 GO + HIRE MENDOZA + POSADAS -->
 <section class="slide">
   <div class="slide-header">
     <div>
-      <div class="slide-eyebrow">Cenário E · 🏆 Recomendado</div>
-      <h2 class="slide-title">Dispensa 2 + Contrata Mendoza + Posadas</h2>
-      <div class="slide-subtitle">Reposicionamento completo · mesmo headcount, melhor distribuição</div>
+      <div class="slide-eyebrow">Scenario E · 🏆 Recommended</div>
+      <h2 class="slide-title">Let 2 go + Hire Mendoza + Posadas</h2>
+      <div class="slide-subtitle">Full repositioning · same headcount, better distribution</div>
     </div>
     <div class="slide-num">7 / 10</div>
   </div>
   <div class="slide-body">
     <div>
       <div class="metric-grid">
-        <div class="metric-card good"><div class="metric-label">Headcount</div><div class="metric-value">7</div><div class="metric-sub">Igual ao baseline</div></div>
-        <div class="metric-card good"><div class="metric-label">Áreas órfãs</div><div class="metric-value">12</div><div class="metric-sub">−59% vs baseline</div></div>
-        <div class="metric-card good"><div class="metric-label">Eficiência média</div><div class="metric-value">0.525</div><div class="metric-sub">+6.7% vs baseline</div></div>
-        <div class="metric-card good"><div class="metric-label">Distância média</div><div class="metric-value">304 km</div><div class="metric-sub">−11% vs baseline</div></div>
+        <div class="metric-card good"><div class="metric-label">Headcount</div><div class="metric-value">7</div><div class="metric-sub">Same as baseline</div></div>
+        <div class="metric-card good"><div class="metric-label">Orphan areas</div><div class="metric-value">12</div><div class="metric-sub">−59% vs baseline</div></div>
+        <div class="metric-card good"><div class="metric-label">Avg efficiency</div><div class="metric-value">0.525</div><div class="metric-sub">+6.7% vs baseline</div></div>
+        <div class="metric-card good"><div class="metric-label">Avg distance</div><div class="metric-value">304 km</div><div class="metric-sub">−11% vs baseline</div></div>
       </div>
       <div class="insights">
-        <h3>Por que este é o melhor</h3>
+        <h3>Why this is the best</h3>
         <ul>
-          <li class="pro"><strong>Mesmo custo mensal</strong> do status quo (7 drivers)</li>
-          <li class="pro"><strong>Cobertura máxima:</strong> só 12 áreas órfãs (vs 29 hoje)</li>
-          <li class="pro">Mendoza ataca Cuyo · Posadas cobre todo o NE (Misiones+Chaco+Corrientes+Entre Ríos)</li>
-          <li class="pro">Eficiência sobe sem sacrificar geografia</li>
-          <li class="con">Maior custo one-time: ~US$ 7.600 (indem. + recrut. × 2)</li>
+          <li class="pro"><strong>Same monthly cost</strong> as the status quo (7 drivers)</li>
+          <li class="pro"><strong>Maximum coverage:</strong> only 12 orphan areas (vs 29 today)</li>
+          <li class="pro">Mendoza attacks Cuyo · Posadas covers the entire NE (Misiones + Chaco + Corrientes + Entre Ríos)</li>
+          <li class="pro">Efficiency rises without sacrificing geography</li>
+          <li class="con">Highest one-time cost: ~US$ 7,600 (severance + hiring × 2)</li>
         </ul>
       </div>
     </div>
     <div>
       <div id="map-E" class="scenario-map"></div>
       <div style="font-size:9px;color:var(--c-text-muted);margin-top:4px;text-align:center;">
-        <span style="color:#16A34A;">●</span> Manter &nbsp;
-        <span style="color:#B91C1C;">●</span> Dispensar &nbsp;
-        <span style="color:#4A9FE0;">★</span> Contratar
+        <span style="color:#16A34A;">●</span> Keep &nbsp;
+        <span style="color:#B91C1C;">●</span> Let go &nbsp;
+        <span style="color:#4A9FE0;">★</span> Hire
       </div>
     </div>
   </div>
 </section>
 
-<!-- SLIDE 8: COMPARATIVO TABELA -->
+<!-- SLIDE 8: COMPARISON TABLE -->
 <section class="slide">
   <div class="slide-header">
     <div>
-      <div class="slide-eyebrow">Comparativo</div>
-      <h2 class="slide-title">Os 5 cenários lado a lado</h2>
-      <div class="slide-subtitle">Cenário E vence em cobertura, distância e custo mensal</div>
+      <div class="slide-eyebrow">Comparison</div>
+      <h2 class="slide-title">The 5 scenarios side by side</h2>
+      <div class="slide-subtitle">Scenario E wins on coverage, distance and monthly cost</div>
     </div>
     <div class="slide-num">8 / 10</div>
   </div>
   <table class="compare-table">
     <thead>
       <tr>
-        <th>Cenário</th>
+        <th>Scenario</th>
         <th class="metric">Drivers</th>
-        <th class="metric">Eff média</th>
-        <th class="metric">Órfãs</th>
-        <th class="metric">Km órfão</th>
-        <th class="metric">Dist média</th>
-        <th class="metric">Δ Custo/mês</th>
+        <th class="metric">Avg eff</th>
+        <th class="metric">Orphans</th>
+        <th class="metric">Orphan km</th>
+        <th class="metric">Avg dist</th>
+        <th class="metric">Δ Cost/mo</th>
         <th class="metric">One-time</th>
-        <th>Veredito</th>
+        <th>Verdict</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td>Baseline (status quo)</td><td class="metric">7</td><td class="metric">0.492</td><td class="metric">29</td><td class="metric">3.155</td><td class="metric">342</td><td class="metric">—</td><td class="metric">—</td><td><span class="pill pill-mid">Referência</span></td></tr>
-      <tr><td>A — Hotel only</td><td class="metric">7</td><td class="metric">0.492</td><td class="metric">29</td><td class="metric">3.155</td><td class="metric">342</td><td class="metric">+US$ 350</td><td class="metric">US$ 0</td><td><span class="pill pill-bad">Não resolve</span></td></tr>
-      <tr><td>B — Dispensa Leandro</td><td class="metric">6</td><td class="metric">0.513</td><td class="metric">33</td><td class="metric">3.360</td><td class="metric">342</td><td class="metric">−US$ 1.500</td><td class="metric">US$ 1.400</td><td><span class="pill pill-mid">Conservador</span></td></tr>
-      <tr><td>C — Dispensa Leandro+Mauro</td><td class="metric">5</td><td class="metric">0.532</td><td class="metric">40</td><td class="metric">3.567</td><td class="metric">351</td><td class="metric">−US$ 3.000</td><td class="metric">US$ 2.800</td><td><span class="pill pill-mid">Economia, perde cobertura</span></td></tr>
-      <tr><td>D — Dispensa 2 + Mendoza</td><td class="metric">6</td><td class="metric">0.530</td><td class="metric">32</td><td class="metric">2.695</td><td class="metric">324</td><td class="metric">−US$ 1.500</td><td class="metric">US$ 3.800</td><td><span class="pill pill-mid">Bom meio-termo</span></td></tr>
-      <tr class="winner"><td>E — Dispensa 2 + Mendoza+Posadas</td><td class="metric">7</td><td class="metric">0.525</td><td class="metric"><strong>12</strong></td><td class="metric"><strong>1.662</strong></td><td class="metric"><strong>304</strong></td><td class="metric">US$ 0</td><td class="metric">US$ 7.600</td><td><span class="pill pill-best">🏆 Melhor</span></td></tr>
+      <tr><td>Baseline (status quo)</td><td class="metric">7</td><td class="metric">0.492</td><td class="metric">29</td><td class="metric">3,155</td><td class="metric">342</td><td class="metric">—</td><td class="metric">—</td><td><span class="pill pill-mid">Reference</span></td></tr>
+      <tr><td>A — Hotel only</td><td class="metric">7</td><td class="metric">0.492</td><td class="metric">29</td><td class="metric">3,155</td><td class="metric">342</td><td class="metric">+US$ 350</td><td class="metric">US$ 0</td><td><span class="pill pill-bad">Doesn't solve</span></td></tr>
+      <tr><td>B — Let Leandro go</td><td class="metric">6</td><td class="metric">0.513</td><td class="metric">33</td><td class="metric">3,360</td><td class="metric">342</td><td class="metric">−US$ 1,500</td><td class="metric">US$ 1,400</td><td><span class="pill pill-mid">Conservative</span></td></tr>
+      <tr><td>C — Let Leandro+Mauro go</td><td class="metric">5</td><td class="metric">0.532</td><td class="metric">40</td><td class="metric">3,567</td><td class="metric">351</td><td class="metric">−US$ 3,000</td><td class="metric">US$ 2,800</td><td><span class="pill pill-mid">Savings, loses coverage</span></td></tr>
+      <tr><td>D — Let 2 go + Mendoza</td><td class="metric">6</td><td class="metric">0.530</td><td class="metric">32</td><td class="metric">2,695</td><td class="metric">324</td><td class="metric">−US$ 1,500</td><td class="metric">US$ 3,800</td><td><span class="pill pill-mid">Solid middle ground</span></td></tr>
+      <tr class="winner"><td>E — Let 2 go + Mendoza+Posadas</td><td class="metric">7</td><td class="metric">0.525</td><td class="metric"><strong>12</strong></td><td class="metric"><strong>1,662</strong></td><td class="metric"><strong>304</strong></td><td class="metric">US$ 0</td><td class="metric">US$ 7,600</td><td><span class="pill pill-best">🏆 Best</span></td></tr>
     </tbody>
   </table>
 
   <div class="caveat-mini" style="margin-top:14px;">
-    <strong>Premissas de custo:</strong> US$ 1.500/mês por driver ativo (salário+encargos+carro+combustível). Indemnização ≈ US$ 1.400 por driver dispensado (Ley 20.744, 2 anos de empresa). Recrutamento + treinamento ≈ US$ 1.000 por driver novo. Ajuste com dados de RH conforme contratos reais.
+    <strong>Cost assumptions:</strong> US$ 1,500/month per active driver (salary + benefits + vehicle + fuel). Severance ≈ US$ 1,400 per let-go driver (Ley 20.744, 2 years of service). Recruiting + onboarding ≈ US$ 1,000 per new hire. Adjust with HR data for real contracts.
   </div>
 </section>
 
-<!-- SLIDE 9: GRÁFICOS COMPARATIVOS -->
+<!-- SLIDE 9: CHARTS -->
 <section class="slide">
   <div class="slide-header">
     <div>
-      <div class="slide-eyebrow">Visualização</div>
-      <h2 class="slide-title">Cobertura e eficiência por cenário</h2>
-      <div class="slide-subtitle">Cenário E é Pareto-ótimo: melhor cobertura + boa eficiência sem aumento de headcount</div>
+      <div class="slide-eyebrow">Visualization</div>
+      <h2 class="slide-title">Coverage and efficiency by scenario</h2>
+      <div class="slide-subtitle">Scenario E is Pareto-optimal: best coverage + solid efficiency with no headcount increase</div>
     </div>
     <div class="slide-num">9 / 10</div>
   </div>
   <div class="chart-grid">
     <div class="chart-card">
-      <h4>Áreas órfãs (&gt;500 km do driver mais próximo)</h4>
+      <h4>Orphan areas (&gt;500 km from nearest driver)</h4>
       <div class="chart-canvas-wrap"><canvas id="chart-orphans"></canvas></div>
     </div>
     <div class="chart-card">
-      <h4>Distância média (casa → área pendente, km)</h4>
+      <h4>Avg distance (home → pending area, km)</h4>
       <div class="chart-canvas-wrap"><canvas id="chart-dist"></canvas></div>
     </div>
     <div class="chart-card">
-      <h4>Eficiência média (TKM/KM)</h4>
+      <h4>Avg efficiency (TKM/KM)</h4>
       <div class="chart-canvas-wrap"><canvas id="chart-eff"></canvas></div>
     </div>
     <div class="chart-card">
-      <h4>Δ custo mensal recorrente (US$)</h4>
+      <h4>Δ recurring monthly cost (US$)</h4>
       <div class="chart-canvas-wrap"><canvas id="chart-cost"></canvas></div>
     </div>
   </div>
 </section>
 
-<!-- SLIDE 10: CONCLUSÃO -->
+<!-- SLIDE 10: CONCLUSION -->
 <section class="slide">
   <div class="slide-header">
     <div>
-      <div class="slide-eyebrow">Conclusão · plano de ação</div>
-      <h2 class="slide-title">Recomendação final</h2>
+      <div class="slide-eyebrow">Conclusion · action plan</div>
+      <h2 class="slide-title">Final recommendation</h2>
     </div>
     <div class="slide-num">10 / 10</div>
   </div>
@@ -798,40 +792,40 @@
   <div class="recommend-banner">
     <span class="check">✓</span>
     <div class="recommend-banner-text">
-      <h3>Cenário E é o caminho recomendado</h3>
-      <strong>Dispensar Leandro + Mauro · Contratar em Mendoza + Posadas</strong>
+      <h3>Scenario E is the recommended path</h3>
+      <strong>Let Leandro + Mauro go · Hire in Mendoza + Posadas</strong>
     </div>
   </div>
 
   <div class="why-grid">
     <div class="why-card">
       <div class="why-num">−59%</div>
-      <div class="why-label">Áreas órfãs</div>
-      <div class="why-detail">De 29 para 12 áreas a mais de 500 km do driver mais próximo. Mendoza e Posadas eliminam os dois maiores gaps geográficos.</div>
+      <div class="why-label">Orphan areas</div>
+      <div class="why-detail">From 29 down to 12 areas more than 500 km from the nearest driver. Mendoza and Posadas close the two biggest geographic gaps.</div>
     </div>
     <div class="why-card">
       <div class="why-num">+6.7%</div>
-      <div class="why-label">Eficiência média</div>
-      <div class="why-detail">Sai o pior performer (Leandro 0.364) e entra driver bem posicionado. Média sobe de 0.492 para 0.525.</div>
+      <div class="why-label">Avg efficiency</div>
+      <div class="why-detail">The lowest performer leaves (Leandro 0.364) and a well-placed driver joins. Average rises from 0.492 to 0.525.</div>
     </div>
     <div class="why-card">
       <div class="why-num">US$ 0</div>
-      <div class="why-label">Δ custo mensal</div>
-      <div class="why-detail">Headcount mantido em 7. Os 2 novos drivers substituem os 2 dispensados. Sem aumento de OPEX recorrente.</div>
+      <div class="why-label">Δ monthly cost</div>
+      <div class="why-detail">Headcount stays at 7. The 2 new drivers replace the 2 who leave. No recurring OPEX increase.</div>
     </div>
   </div>
 
-  <h3 style="margin-top:10px;color:var(--c-primary-dark);font-size:13px;">Próximos passos sugeridos</h3>
+  <h3 style="margin-top:10px;color:var(--c-primary-dark);font-size:13px;">Suggested next steps</h3>
   <ol style="font-size:11px;padding-left:18px;line-height:1.6;color:var(--c-text);">
-    <li><strong>Conversas individuais</strong> com Leandro e Mauro pra entender contexto antes de qualquer decisão (status "Not Active" do Mauro pode ter explicação reversível).</li>
-    <li><strong>Validar custos reais</strong> de indemnização com RH/jurídico antes de comprometer com a economia projetada.</li>
-    <li><strong>Iniciar recrutamento em paralelo</strong>: Mendoza centro e Posadas. Tempo médio ~30-45 dias até onboard completo.</li>
-    <li><strong>Realocar carros</strong>: 2 veículos liberados pelos dispensados + 2 carros ociosos da frota = 4 disponíveis pros 2 novos drivers (com folga).</li>
-    <li><strong>Revisar em 90 dias</strong>: nova eficiência real dos contratados vs projeção. Ajustar.</li>
+    <li><strong>1-on-1 conversations</strong> with Leandro and Mauro to understand context before any decision (Mauro's "Not Active" status may have a reversible explanation).</li>
+    <li><strong>Validate real severance costs</strong> with HR/legal before locking in the projected savings.</li>
+    <li><strong>Start recruiting in parallel</strong>: Mendoza city and Posadas. Typical lead time ~30–45 days to full onboarding.</li>
+    <li><strong>Reallocate vehicles</strong>: 2 cars freed by departures + 2 idle fleet cars = 4 available for the 2 new hires (with spares).</li>
+    <li><strong>Review in 90 days</strong>: new hires' actual efficiency vs projection. Adjust as needed.</li>
   </ol>
 
   <div class="caveat-mini">
-    <strong>Ressalva:</strong> esta análise considera apenas dados de mapeamento, geografia e custo estimado. Fatores trabalhistas, contratuais e relacionais devem ser avaliados em paralelo pelo time de RH. Os números são projeções baseadas em snapshot atual — eficiência histórica pode variar.
+    <strong>Caveat:</strong> this analysis considers only mapping, geography and estimated cost data. Labor, contractual and relational factors must be evaluated in parallel by HR. Numbers are projections based on the current snapshot — historical efficiency may vary.
   </div>
 </section>
 
@@ -851,26 +845,26 @@ async function doLogin(e) {
   const err = document.getElementById('login-error');
   const btn = document.getElementById('login-btn');
   err.classList.remove('visible');
-  if (!u || !p) { err.textContent = 'Preencha usuário e senha'; err.classList.add('visible'); return false; }
+  if (!u || !p) { err.textContent = 'Fill in username and password'; err.classList.add('visible'); return false; }
   btn.disabled = true;
-  btn.textContent = 'Verificando...';
+  btn.textContent = 'Verifying…';
   try {
     const user = await validateLogin(u, p);
     if (!user) {
       await new Promise(r => setTimeout(r, 500));
-      err.textContent = 'Usuário ou senha inválidos';
+      err.textContent = 'Invalid username or password';
       err.classList.add('visible');
       document.getElementById('login-password').value = '';
       btn.disabled = false;
-      btn.textContent = 'Entrar';
+      btn.textContent = 'Sign in';
       return false;
     }
     onLoginSuccess();
   } catch (er) {
-    err.textContent = 'Erro: ' + er.message;
+    err.textContent = 'Error: ' + er.message;
     err.classList.add('visible');
     btn.disabled = false;
-    btn.textContent = 'Entrar';
+    btn.textContent = 'Sign in';
   }
   return false;
 }
@@ -883,7 +877,7 @@ function onLoginSuccess() {
 
 
 // =================================================================
-// Dados dos cenários
+// Scenario data
 // =================================================================
 const ALL_DRIVERS = {
   axel:      { name: 'Axel',      initials: 'AG', lat: -31.1709, lng: -64.3161 },
@@ -898,47 +892,17 @@ const ALL_DRIVERS = {
 };
 
 const SCENARIOS = {
-  baseline: {
-    keep: ['axel','mauricio','fernando','matias','guillermo','mauro','leandro'],
-    drop: [],
-    hire: [],
-    hotel: [],
-  },
-  A: { // hotel only
-    keep: ['axel','mauricio','fernando','matias','guillermo','mauro','leandro'],
-    drop: [],
-    hire: [],
-    hotel: ['axel','fernando'],
-  },
-  B: { // demite leandro
-    keep: ['axel','mauricio','fernando','matias','guillermo','mauro'],
-    drop: ['leandro'],
-    hire: [],
-    hotel: [],
-  },
-  C: { // demite leandro+mauro
-    keep: ['axel','mauricio','fernando','matias','guillermo'],
-    drop: ['leandro','mauro'],
-    hire: [],
-    hotel: [],
-  },
-  D: { // demite 2 + mendoza
-    keep: ['axel','mauricio','fernando','matias','guillermo'],
-    drop: ['leandro','mauro'],
-    hire: ['mendoza'],
-    hotel: [],
-  },
-  E: { // demite 2 + mendoza + posadas
-    keep: ['axel','mauricio','fernando','matias','guillermo'],
-    drop: ['leandro','mauro'],
-    hire: ['mendoza','posadas'],
-    hotel: [],
-  },
+  baseline: { keep: ['axel','mauricio','fernando','matias','guillermo','mauro','leandro'], drop: [], hire: [], hotel: [] },
+  A: { keep: ['axel','mauricio','fernando','matias','guillermo','mauro','leandro'], drop: [], hire: [], hotel: ['axel','fernando'] },
+  B: { keep: ['axel','mauricio','fernando','matias','guillermo','mauro'], drop: ['leandro'], hire: [], hotel: [] },
+  C: { keep: ['axel','mauricio','fernando','matias','guillermo'], drop: ['leandro','mauro'], hire: [], hotel: [] },
+  D: { keep: ['axel','mauricio','fernando','matias','guillermo'], drop: ['leandro','mauro'], hire: ['mendoza'], hotel: [] },
+  E: { keep: ['axel','mauricio','fernando','matias','guillermo'], drop: ['leandro','mauro'], hire: ['mendoza','posadas'], hotel: [] },
 };
 
 
 // =================================================================
-// Render mapas (mini-maps por slide)
+// Render maps
 // =================================================================
 let pendingFeatures = null;
 
@@ -952,7 +916,7 @@ async function loadPending() {
       && f.properties.lat && f.properties.lon
     );
   } catch (err) {
-    console.warn('Erro carregando geojson:', err);
+    console.warn('Error loading geojson:', err);
     pendingFeatures = [];
   }
   return pendingFeatures;
@@ -966,7 +930,6 @@ async function renderScenarioMap(elId, scenarioKey) {
     .setView([-37, -65], 3);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 10 }).addTo(m);
 
-  // Áreas pendentes como dots leves
   const pending = await loadPending();
   pending.forEach(f => {
     L.circleMarker([f.properties.lat, f.properties.lon], {
@@ -974,7 +937,6 @@ async function renderScenarioMap(elId, scenarioKey) {
     }).addTo(m);
   });
 
-  // Pinos
   function addDriver(key, klass, label) {
     const d = ALL_DRIVERS[key];
     const icon = L.divIcon({
@@ -993,17 +955,15 @@ async function renderScenarioMap(elId, scenarioKey) {
 
 
 // =================================================================
-// Gráficos comparativos
+// Charts
 // =================================================================
-const SCENARIO_LABELS = ['Baseline', 'A: Hotel', 'B: Demite L', 'C: Demite L+M', 'D: 2 + Mendoza', 'E: 2 + Mzn+Psd'];
+const SCENARIO_LABELS = ['Baseline', 'A: Hotel', 'B: Drop L', 'C: Drop L+M', 'D: 2 + Mendoza', 'E: 2 + Mzn+Psd'];
 const DATA_ORPHANS = [29, 29, 33, 40, 32, 12];
 const DATA_DIST = [342, 342, 342, 351, 324, 304];
 const DATA_EFF = [0.492, 0.492, 0.513, 0.532, 0.530, 0.525];
 const DATA_COST = [0, 350, -1500, -3000, -1500, 0];
 
-const BAR_COLORS = [
-  '#94A3B8', '#A78BFA', '#FBBF24', '#FB923C', '#60A5FA', '#22C55E'
-];
+const BAR_COLORS = ['#94A3B8', '#A78BFA', '#FBBF24', '#FB923C', '#60A5FA', '#22C55E'];
 
 function renderCharts() {
   const common = {
@@ -1022,7 +982,7 @@ function renderCharts() {
   const ctxE = document.getElementById('chart-eff');
   if (ctxE) new Chart(ctxE, { ...common, data: { labels: SCENARIO_LABELS, datasets: [{ data: DATA_EFF, backgroundColor: BAR_COLORS, borderRadius: 4 }] }, options: { ...common.options, scales: { y: { min: 0.45, max: 0.55, ticks: { font: { size: 9 } } }, x: { ticks: { font: { size: 9 }, maxRotation: 30 } } } } });
   const ctxC = document.getElementById('chart-cost');
-  if (ctxC) new Chart(ctxC, { ...common, data: { labels: SCENARIO_LABELS, datasets: [{ data: DATA_COST, backgroundColor: DATA_COST.map((v, i) => v < 0 ? '#22C55E' : (v === 0 ? '#94A3B8' : '#EF4444')), borderRadius: 4 }] } });
+  if (ctxC) new Chart(ctxC, { ...common, data: { labels: SCENARIO_LABELS, datasets: [{ data: DATA_COST, backgroundColor: DATA_COST.map((v) => v < 0 ? '#22C55E' : (v === 0 ? '#94A3B8' : '#EF4444')), borderRadius: 4 }] } });
 }
 
 
@@ -1031,10 +991,9 @@ function renderCharts() {
 // =================================================================
 function initPresentation() {
   const now = new Date();
-  const fmt = now.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: '2-digit' });
+  const fmt = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: '2-digit' });
   document.getElementById('cover-date').textContent = fmt;
 
-  // Renderiza todos os 6 mapas
   Promise.all([
     renderScenarioMap('map-baseline', 'baseline'),
     renderScenarioMap('map-A', 'A'),
@@ -1045,7 +1004,7 @@ function initPresentation() {
   ]).then(() => {
     renderCharts();
     setTimeout(() => {
-      document.getElementById('print-status').textContent = 'Pronto pra imprimir';
+      document.getElementById('print-status').textContent = 'Ready to print';
       document.getElementById('print-btn').disabled = false;
     }, 1500);
   });
