@@ -3875,19 +3875,21 @@ async function renderWeatherLayer() {
       return;
     }
 
-    // L.heatLayer espera array [[lat, lng, intensity], ...] com intensity em 0-1
+    // L.heatLayer espera array [[lat, lng, intensity], ...] com intensity em 0-1.
+    // max=3.0 compensa o acúmulo entre pontos vizinhos do grid denso (step 4°),
+    // senão tudo soma e fica vermelho mesmo com chuva moderada.
     weather.layer = L.heatLayer(points, {
-      radius: 45,
-      blur: 30,
-      minOpacity: 0.4,     // garante visibilidade mesmo em intensidades baixas
-      maxZoom: 10,         // a partir desse zoom, intensidade não muda
-      max: 1.0,
+      radius: 30,
+      blur: 25,
+      minOpacity: 0.25,    // visível mas não opaco
+      maxZoom: 10,
+      max: 3.0,            // sobe o teto pra reduzir saturação por acúmulo de vizinhos
       gradient: {
-        0.0: '#BEE3FF',     // azul muito claro — chuva fraca já visível
-        0.25: '#5FA9F5',    // azul — moderada
-        0.5: '#F5D742',     // amarelo — forte
-        0.75: '#F58C2E',    // laranja — muito forte
-        1.0: '#D63B2E',     // vermelho — extrema
+        0.0: '#BEE3FF',     // azul claro — chuva fraca
+        0.3: '#5FA9F5',     // azul — moderada
+        0.55: '#F5D742',    // amarelo — forte
+        0.8: '#F58C2E',     // laranja — muito forte
+        1.0: '#D63B2E',     // vermelho — extrema (só áreas com chuva acumulada real)
       },
     });
     weather.layer.addTo(map);
