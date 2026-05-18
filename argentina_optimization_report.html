@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Otimização Argentina — Relatório · Aceolution LATAM</title>
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<script src="auth.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --c-primary: #2C5282;
+    --c-primary-dark: #1A365D;
+    --c-accent: #4A9FE0;
+    --c-bg: #F8FAFC;
+    --c-bg-tint: #EBF4FB;
+    --c-border: #E2E8F0;
+    --c-text: #1A202C;
+    --c-text-muted: #64748B;
+    --c-success: #16A34A;
+    --c-warn: #CA8A04;
+    --c-danger: #B91C1C;
+    --c-gold: #B45309;
+  }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #e5e7eb;
+    color: var(--c-text);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    padding: 0;
+  }
+  .report-page {
+    max-width: 880px;
+    margin: 20px auto;
+    background: white;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    padding: 48px 56px;
+    border-radius: 4px;
+  }
+
+  /* Print toolbar */
+  .print-toolbar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    z-index: 9999;
+    font-size: 13px;
+  }
+  .print-btn {
+    background: var(--c-primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .print-btn:hover { background: var(--c-primary-dark); }
+  .print-status { color: var(--c-text-muted); font-size: 12px; }
+
+  /* HEADER da capa */
+  .cover {
+    border-bottom: 4px solid var(--c-primary);
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .cover-text { flex: 1; }
+  .cover-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-primary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+  .cover-title {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--c-primary-dark);
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .cover-sub {
+    font-size: 15px;
+    color: var(--c-text-muted);
+    margin-bottom: 10px;
+  }
+  .cover-date {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .cover-logo {
+    height: 44px;
+    width: auto;
+    margin-left: 24px;
+  }
+
+  /* Headings */
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin: 32px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--c-border);
+    letter-spacing: -0.2px;
+  }
+  h2 .h-num {
+    display: inline-block;
+    background: var(--c-primary);
+    color: white;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin: 18px 0 8px;
+  }
+  p { margin-bottom: 10px; font-size: 13.5px; }
+
+  /* Exec summary box */
+  .exec-summary {
+    background: var(--c-bg-tint);
+    border-left: 4px solid var(--c-primary);
+    padding: 18px 22px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 24px;
+  }
+  .exec-summary h3 {
+    margin-top: 0;
+    color: var(--c-primary-dark);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .exec-summary ul { list-style: none; padding: 0; }
+  .exec-summary li {
+    padding: 4px 0;
+    font-size: 13.5px;
+    color: var(--c-text);
+  }
+  .exec-summary li::before {
+    content: '•';
+    color: var(--c-primary);
+    margin-right: 8px;
+    font-weight: 700;
+  }
+  .exec-summary li strong { color: var(--c-primary-dark); }
+
+  /* Tabelas */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 18px;
+    font-size: 12.5px;
+  }
+  thead { background: var(--c-bg); }
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--c-border);
+    color: var(--c-text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--c-border);
+    vertical-align: top;
+  }
+  tr.keep { background: rgba(34,197,94,0.04); }
+  tr.drop { background: rgba(185,28,28,0.05); }
+  tr.warn { background: rgba(202,138,4,0.04); }
+  td.driver-name { font-weight: 600; color: var(--c-primary-dark); }
+  td.metric { font-variant-numeric: tabular-nums; text-align: right; }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .pill-keep { background: #DCFCE7; color: #14532D; }
+  .pill-drop { background: #FEE2E2; color: #7F1D1D; }
+  .pill-warn { background: #FEF3C7; color: #78350F; }
+  .pill-hotel { background: #E0E7FF; color: #312E81; }
+
+  /* Driver cards */
+  .driver-card {
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+  }
+  .driver-card.drop { border-left: 4px solid var(--c-danger); }
+  .driver-card.keep { border-left: 4px solid var(--c-success); }
+  .driver-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .driver-card-name { font-weight: 700; font-size: 15px; color: var(--c-primary-dark); }
+  .driver-card-sub { font-size: 12px; color: var(--c-text-muted); }
+  .driver-card-reasons {
+    font-size: 12.5px;
+    color: var(--c-text);
+    line-height: 1.55;
+  }
+  .driver-card-reasons li { margin-left: 18px; margin-bottom: 4px; }
+
+  /* Mapa */
+  .map-section {
+    margin: 24px 0;
+    page-break-inside: avoid;
+  }
+  #map {
+    height: 480px;
+    border-radius: 8px;
+    border: 1px solid var(--c-border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .map-legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--c-text-muted);
+  }
+  .legend-dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; }
+  .legend-x {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    color: var(--c-danger);
+    text-align: center;
+    line-height: 11px;
+    font-size: 12px;
+    font-weight: 700;
+    vertical-align: middle;
+    margin-right: 5px;
+  }
+
+  /* Reservations block */
+  .caveat-box {
+    background: #FFFBEB;
+    border-left: 4px solid var(--c-warn);
+    padding: 14px 18px;
+    margin: 18px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 12.5px;
+    color: #78350F;
+  }
+  .caveat-box h3 {
+    color: #92400E;
+    font-size: 12px;
+    margin: 0 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .caveat-box ul { list-style: none; padding: 0; margin: 0; }
+  .caveat-box li { padding: 3px 0; }
+  .caveat-box li::before { content: '⚠ '; color: var(--c-warn); }
+
+  /* Login (mesma estética dos outros) */
+  .login-screen {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; z-index: 10000;
+  }
+  .login-card {
+    background: white; border-radius: 16px;
+    padding: 36px 32px 28px; max-width: 380px; width: 100%;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    text-align: center;
+  }
+  .login-logo-text {
+    font-size: 26px; font-weight: 700;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  .login-title { font-size: 20px; font-weight: 700; color: var(--c-primary-dark); margin: 18px 0 4px; }
+  .login-sub { font-size: 13px; color: var(--c-text-muted); margin-bottom: 24px; }
+  .login-card form { text-align: left; }
+  .login-card label {
+    display: block; font-size: 11px; font-weight: 600;
+    color: var(--c-text-muted); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 6px;
+  }
+  .login-card input {
+    width: 100%; padding: 11px 14px;
+    border: 1px solid var(--c-border); border-radius: 8px;
+    font-size: 14px; font-family: inherit; margin-bottom: 12px;
+  }
+  .login-card input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
+  .login-btn {
+    width: 100%; padding: 12px;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white; border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px;
+    font-family: inherit;
+  }
+  .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .login-error { color: var(--c-danger); font-size: 12px; margin-top: 10px; min-height: 16px; display: none; }
+  .login-error.visible { display: block; }
+
+  /* Markers Leaflet customizados */
+  .marker-driver {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 10px; font-weight: 700;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  }
+  .marker-keep { background: #16A34A; }
+  .marker-drop { background: #B91C1C; }
+  .marker-hire {
+    background: #4A9FE0;
+    width: 30px; height: 30px;
+    font-size: 14px;
+  }
+
+  /* PRINT */
+  @media print {
+    body { background: white; }
+    .print-toolbar, .login-screen { display: none !important; }
+    .report-page {
+      box-shadow: none;
+      margin: 0;
+      padding: 24px 28px;
+      max-width: 100%;
+      border-radius: 0;
+    }
+    h2 { page-break-after: avoid; }
+    .driver-card { page-break-inside: avoid; }
+    .map-section { page-break-inside: avoid; }
+    table { page-break-inside: auto; }
+    tr { page-break-inside: avoid; page-break-after: auto; }
+    .leaflet-control-container { display: none !important; }
+  }
+  @page { size: A4 portrait; margin: 12mm; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo-text">Aceolution</div>
+    <div class="login-title">Relatório Confidencial</div>
+    <div class="login-sub">Análise de otimização de equipe</div>
+    <form id="login-form" onsubmit="return doLogin(event)">
+      <label>Usuário</label>
+      <input type="text" id="login-username" required autofocus autocomplete="username">
+      <label>Senha</label>
+      <input type="password" id="login-password" required autocomplete="current-password">
+      <button type="submit" class="login-btn" id="login-btn">Entrar</button>
+      <div class="login-error" id="login-error"></div>
+    </form>
+  </div>
+</div>
+
+<!-- TOOLBAR (oculta no print) -->
+<div class="print-toolbar" id="print-toolbar" style="display:none;">
+  <span class="print-status" id="print-status">Carregando mapa...</span>
+  <button class="print-btn" id="print-btn" disabled onclick="window.print()">📄 Imprimir / Salvar PDF</button>
+</div>
+
+<!-- RELATÓRIO -->
+<div class="report-page" id="report-page" style="display:none;">
+
+  <!-- Capa -->
+  <div class="cover">
+    <div class="cover-text">
+      <div class="cover-eyebrow">Aceolution LATAM · Análise interna</div>
+      <div class="cover-title">Otimização da equipe Argentina</div>
+      <div class="cover-sub">Cobertura geográfica, eficiência operacional e recomendações de headcount</div>
+      <div class="cover-date" id="cover-date">—</div>
+    </div>
+    <img src="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0" class="cover-logo" alt="Aceolution">
+  </div>
+
+  <!-- Exec summary -->
+  <div class="exec-summary">
+    <h3>Resumo executivo</h3>
+    <ul>
+      <li><strong>7 motoristas</strong> ativos · <strong>9 veículos</strong> na frota AR</li>
+      <li><strong>327 áreas pendentes</strong> · <strong>30.836 km</strong> totais a mapear</li>
+      <li>Recomendação: <strong>dispensar 2</strong> (Leandro Andreoli, Mauro Canepa)</li>
+      <li>Manter <strong>5</strong> (Axel, Mauricio, Fernando, Guillermo, Matías)</li>
+      <li>Contratar <strong>2</strong> em pontos estratégicos (Mendoza, Posadas)</li>
+      <li>Modo hotel justificável para 2 cenários específicos (Axel em Santa Fe, Fernando em Tierra del Fuego)</li>
+    </ul>
+  </div>
+
+  <!-- Seção 1: Equipe atual -->
+  <h2><span class="h-num">1</span>Equipe atual e cobertura</h2>
+  <p>Mapeamento de cada motorista pela área de pendência mais próxima da casa. As <strong>"Áreas próximas"</strong> são áreas pendentes em que o motorista é o driver mais próximo (distância em linha reta).</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Motorista</th>
+        <th>Base</th>
+        <th>Eff TKM/KM</th>
+        <th>Status</th>
+        <th class="metric">Áreas próx.</th>
+        <th class="metric">KM plan</th>
+        <th class="metric">Dist média</th>
+        <th>Decisão</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="keep"><td class="driver-name">Axel Augusto Gentilini</td><td>Río Ceballos, Córdoba</td><td>0.594</td><td>Half Active</td><td class="metric">103</td><td class="metric">8.190</td><td class="metric">253 km</td><td><span class="pill pill-keep">Manter</span></td></tr>
+      <tr class="keep"><td class="driver-name">Mauricio Alejandro Gallero</td><td>Chivilcoy, Buenos Aires</td><td>0.502</td><td>Half Active</td><td class="metric">101</td><td class="metric">7.058</td><td class="metric">276 km</td><td><span class="pill pill-keep">Manter</span></td></tr>
+      <tr class="keep"><td class="driver-name">Fernando Gabriel Andino Correa</td><td>Villa La Angostura, Neuquén</td><td>0.541</td><td>Half Active</td><td class="metric">47</td><td class="metric">6.453</td><td class="metric">400 km</td><td><span class="pill pill-keep">Manter</span></td></tr>
+      <tr class="keep"><td class="driver-name">Matías Daniel Moreira</td><td>Puerto Madryn, Chubut</td><td>—</td><td>Not Active</td><td class="metric">25</td><td class="metric">4.177</td><td class="metric">561 km</td><td><span class="pill pill-warn">Manter c/ ressalva</span></td></tr>
+      <tr class="keep"><td class="driver-name">Guillermo Amado Juarez</td><td>Jáchal, San Juan</td><td>0.521</td><td>Half Active</td><td class="metric">26</td><td class="metric">3.846</td><td class="metric">277 km</td><td><span class="pill pill-keep">Manter</span></td></tr>
+      <tr class="drop"><td class="driver-name">Mauro Leandro Canepa</td><td>Formosa</td><td>—</td><td>Not Active</td><td class="metric">18</td><td class="metric">828</td><td class="metric">507 km</td><td><span class="pill pill-drop">Dispensar</span></td></tr>
+      <tr class="drop"><td class="driver-name">Leandro Martín Andreoli</td><td>La Matanza, BsAs Metro</td><td>0.364</td><td>Half Active</td><td class="metric">7</td><td class="metric">284</td><td class="metric">461 km</td><td><span class="pill pill-drop">Dispensar</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Mapa -->
+  <div class="map-section">
+    <h3>Distribuição geográfica</h3>
+    <div id="map"></div>
+    <div class="map-legend">
+      <div><span class="legend-dot" style="background:#16A34A;"></span> Motorista mantido</div>
+      <div><span class="legend-dot" style="background:#B91C1C;"></span> Motorista a dispensar</div>
+      <div><span class="legend-dot" style="background:#4A9FE0;"></span> Contratação sugerida</div>
+      <div><span class="legend-x">×</span> Área pendente</div>
+    </div>
+  </div>
+
+  <!-- Seção 2: Dispensar -->
+  <h2><span class="h-num">2</span>Drivers recomendados para dispensa</h2>
+
+  <div class="driver-card drop">
+    <div class="driver-card-head">
+      <div>
+        <div class="driver-card-name">Leandro Martín Andreoli</div>
+        <div class="driver-card-sub">La Matanza, Buenos Aires Metropolitano</div>
+      </div>
+      <span class="pill pill-drop">Dispensar</span>
+    </div>
+    <ul class="driver-card-reasons">
+      <li><strong>Pior eficiência da equipe argentina:</strong> 0.364 TKM/KM (30% abaixo da média dos demais). Significa que para cada km dirigido, apenas 0.36 km viram mapeamento de target — deslocamento improdutivo é alto.</li>
+      <li><strong>Cobertura quase nula:</strong> apenas 7 áreas pendentes com ele como mais próximo, totalizando 284 km — menos de 1% do scope da Argentina.</li>
+      <li><strong>Sobreposição com Mauricio:</strong> ambos cobrem Buenos Aires província. Mauricio (Chivilcoy) cobre 101 áreas / 7.058 km na mesma região com eficiência superior (0.502).</li>
+      <li><strong>Distância média elevada:</strong> 461 km da casa até as áreas — sintoma de morar em zona urbana com poucas pendências locais (BsAs metro tem alta densidade já mapeada).</li>
+    </ul>
+  </div>
+
+  <div class="driver-card drop">
+    <div class="driver-card-head">
+      <div>
+        <div class="driver-card-name">Mauro Leandro Canepa</div>
+        <div class="driver-card-sub">Formosa</div>
+      </div>
+      <span class="pill pill-drop">Dispensar</span>
+    </div>
+    <ul class="driver-card-reasons">
+      <li><strong>Status "Not Active":</strong> sem eficiência computada. Último check-in há ~5 dias.</li>
+      <li><strong>Região com pouquíssimo scope restante:</strong> Formosa (0 km), Salta (47 km), Chaco (136 km), Santiago del Estero (369 km), Misiones (591 km). Total norte ~1.143 km — não justifica driver dedicado.</li>
+      <li><strong>Áreas atribuídas distantes:</strong> média 507 km da casa. Estaria viajando muito para entregar pouco.</li>
+      <li><strong>11 das suas áreas são "órfãs"</strong> (>500 km do mais próximo) — região mal coberta de qualquer forma, demanda contratação local em vez de driver remoto.</li>
+    </ul>
+  </div>
+
+  <!-- Seção 3: Manter -->
+  <h2><span class="h-num">3</span>Drivers a manter</h2>
+
+  <div class="driver-card keep">
+    <div class="driver-card-head">
+      <div>
+        <div class="driver-card-name">Axel Augusto Gentilini <span class="pill pill-hotel" style="margin-left:8px;">Hotel sugerido</span></div>
+        <div class="driver-card-sub">Río Ceballos, Córdoba · Top performer</div>
+      </div>
+      <span class="pill pill-keep">Manter</span>
+    </div>
+    <ul class="driver-card-reasons">
+      <li>Maior eficiência da equipe: <strong>0.594</strong> TKM/KM.</li>
+      <li>Cobre 103 áreas / 8.190 km de plan — o maior volume entre os drivers.</li>
+      <li>Posicionado em Córdoba, região com maior densidade de pendências (4.609 km Córdoba + 4.081 km Santa Fe próximas).</li>
+      <li>Distância média 253 km, a menor entre os mantidos.</li>
+      <li><strong>Modo hotel justificável</strong> em deslocamentos &gt; 300 km para leste de Santa Fe — o retorno por km mapeado é o maior, e cada noite de hotel paga pelo tempo poupado.</li>
+    </ul>
+  </div>
+
+  <div class="driver-card keep">
+    <div class="driver-card-head">
+      <div>
+        <div class="driver-card-name">Mauricio Alejandro Gallero</div>
+        <div class="driver-card-sub">Chivilcoy, Buenos Aires</div>
+      </div>
+      <span class="pill pill-keep">Manter</span>
+    </div>
+    <ul class="driver-card-reasons">
+      <li>Eficiência sólida: 0.502 TKM/KM.</li>
+      <li>Cobre 101 áreas / 7.058 km — segundo maior volume.</li>
+      <li>Posição estratégica em Chivilcoy permite cobrir Buenos Aires + La Pampa + Santa Fe sem hotel.</li>
+      <li>Distância média 276 km — adequada para operação diária.</li>
+    </ul>
+  </div>
+
+  <div class="driver-card keep">
+    <div class="driver-card-head">
+      <div>
+        <div class="driver-card-name">Fernando Gabriel Andino Correa <span class="pill pill-hotel" style="margin-left:8px;">Hotel sugerido</span></div>
+        <div class="driver-card-sub">Villa La Angostura, Neuquén · Patagônia Norte</div>
+      </div>
+      <span class="pill pill-keep">Manter</span>
+    </div>
+    <ul class="driver-card-reasons">
+      <li>Eficiência 0.541 TKM/KM.</li>
+      <li>Único motorista cobrindo Neuquén/Río Negro — 7.283 km de scope exclusivo nessa região.</li>
+      <li>Distância média 400 km (alta, mas necessária pela geografia patagônica).</li>
+      <li><strong>Modo hotel obrigatório</strong> para Tierra del Fuego (1.146 km de scope a &gt;1.000 km da casa). Sem hotel, viagem ida-e-volta consome combustível e dias sem produção.</li>
+    </ul>
+  </div>
+
+  <div class="driver-card keep">
+    <div class="driver-card-head">
+      <div>
+        <div class="driver-card-name">Guillermo Amado Juarez</div>
+        <div class="driver-card-sub">Jáchal, San Juan · Cuyo</div>
+      </div>
+      <span class="pill pill-keep">Manter</span>
+    </div>
+    <ul class="driver-card-reasons">
+      <li>Eficiência 0.521 TKM/KM.</li>
+      <li>Único no Cuyo — San Juan + Mendoza + La Rioja somam 4.454 km de scope exclusivo.</li>
+      <li>Distância média 277 km — bom, mas Mendoza (2.696 km) puxa pra cima a média e merece reforço (ver Seção 4).</li>
+    </ul>
+  </div>
+
+  <div class="driver-card keep">
+    <div class="driver-card-head">
+      <div>
+        <div class="driver-card-name">Matías Daniel Moreira</div>
+        <div class="driver-card-sub">Puerto Madryn, Chubut · Patagônia Sul</div>
+      </div>
+      <span class="pill pill-warn">Manter c/ ressalva</span>
+    </div>
+    <ul class="driver-card-reasons">
+      <li>Status atual "Not Active" — investigar motivo antes de qualquer ação (férias, problema de carro, etc).</li>
+      <li><strong>Único motorista no sul:</strong> Chubut + Tierra del Fuego têm 1.842 km de scope que ficaria órfão sem ele.</li>
+      <li>Próximo driver (Fernando, em Villa La Angostura) está a ~700 km — substituí-lo significaria contratar alguém local ou aceitar perda de cobertura.</li>
+      <li><strong>Recomendação:</strong> conversa de reativação. Se não for possível, contratar substituto em Comodoro Rivadavia ou Río Gallegos.</li>
+    </ul>
+  </div>
+
+  <!-- Seção 4: Contratar -->
+  <h2><span class="h-num">4</span>Contratações sugeridas</h2>
+  <p>29 áreas pendentes estão a mais de 500 km do driver mais próximo (3.155 km de scope órfão). Duas contratações estratégicas resolveriam a maior parte do gap:</p>
+
+  <div class="driver-card">
+    <div class="driver-card-head">
+      <div>
+        <div class="driver-card-name">Mendoza (capital) — 1 motorista</div>
+        <div class="driver-card-sub">Aliviar carga do Guillermo (Jáchal)</div>
+      </div>
+      <span class="pill" style="background:#DBEAFE;color:#1E3A8A;">Contratar</span>
+    </div>
+    <ul class="driver-card-reasons">
+      <li><strong>Scope coberto:</strong> Mendoza (22 áreas / 2.696 km) + San Luis (8 áreas / 1.578 km) = 30 áreas / 4.274 km.</li>
+      <li>Hoje Guillermo cobre essa região de Jáchal (~250 km de Mendoza centro). Driver local reduz tempo de deslocamento e libera Guillermo para San Juan + La Rioja.</li>
+      <li>Mendoza é cidade grande, recrutamento mais fácil que regiões remotas.</li>
+    </ul>
+  </div>
+
+  <div class="driver-card">
+    <div class="driver-card-head">
+      <div>
+        <div class="driver-card-name">Posadas / Corrientes — 1 motorista</div>
+        <div class="driver-card-sub">Substituir Mauro com posicionamento melhor</div>
+      </div>
+      <span class="pill" style="background:#DBEAFE;color:#1E3A8A;">Contratar</span>
+    </div>
+    <ul class="driver-card-reasons">
+      <li><strong>Scope coberto:</strong> Misiones (9 áreas / 591 km) + Corrientes (2 áreas / 78 km) + Entre Ríos (6 áreas / 235 km) + Chaco (3 áreas / 136 km) = 20 áreas / 1.040 km.</li>
+      <li>Posicionamento em Posadas centraliza o nordeste e norte, atendendo regiões que hoje ficam órfãs (Mauro em Formosa está fora de eixo).</li>
+      <li>Conjunto de scope é moderado, então pode ser um <strong>motorista part-time</strong> compartilhando carga com Mauricio.</li>
+    </ul>
+  </div>
+
+  <!-- Seção 5: Saldo da operação -->
+  <h2><span class="h-num">5</span>Saldo da operação</h2>
+  <table>
+    <thead>
+      <tr><th>Item</th><th class="metric">Antes</th><th class="metric">Depois</th><th>Comentário</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Motoristas ativos</td><td class="metric">7</td><td class="metric">7</td><td>−2 (Leandro, Mauro) + 2 (Mendoza, Posadas)</td></tr>
+      <tr><td>Veículos da frota</td><td class="metric">9</td><td class="metric">9</td><td>2 carros disponíveis hoje → realocar pros novos</td></tr>
+      <tr><td>Áreas órfãs (&gt;500 km)</td><td class="metric">29</td><td class="metric">~8</td><td>Mendoza + Posadas resolvem ~21 órfãs</td></tr>
+      <tr><td>Distância média ponderada</td><td class="metric">~340 km</td><td class="metric">~270 km</td><td>Menos tempo no carro, mais tempo mapeando</td></tr>
+      <tr><td>Eficiência média da equipe</td><td class="metric">0.504</td><td class="metric">~0.53+</td><td>Sai o pior (Leandro 0.364) → puxa média pra cima</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Ressalvas -->
+  <div class="caveat-box">
+    <h3>Ressalvas importantes</h3>
+    <ul>
+      <li><strong>Snapshot único:</strong> eficiência é histórica acumulada. Verifique evolução nos últimos 3-6 meses no <em>driver-profile.html</em> antes de decidir — performance pode ter variado.</li>
+      <li><strong>Status "Not Active"</strong> pode ser temporário (férias, mech down, problema pessoal). Tenha conversa antes de demitir.</li>
+      <li><strong>Distância é proxy</strong> de produtividade, não verdade absoluta. Conhecimento local de rotas, contatos e geografia tem valor não capturado nos números.</li>
+      <li><strong>Custo trabalhista de demissão</strong> na Argentina é alto (indemnización). Cálculo de payback: comparar verbas rescisórias vs. economia mensal projetada.</li>
+      <li><strong>9 carros vs. 7 drivers atual:</strong> já existem 2 carros sobrando. Após troca, mantém o mesmo headcount mas com melhor distribuição. Considerar aluguel/leasing e multas de cancelamento se for reduzir frota.</li>
+      <li>Esta análise considera <strong>apenas dados de mapeamento e localização</strong>. Fatores de RH, contratuais e relacionais devem ser avaliados em paralelo.</li>
+    </ul>
+  </div>
+
+  <p style="margin-top:32px;text-align:center;font-size:11px;color:var(--c-text-muted);">
+    Aceolution do Brasil · Plataforma interna · Gerado automaticamente em <span id="footer-date">—</span>
+  </p>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+
+// =================================================================
+// Login
+// =================================================================
+async function doLogin(e) {
+  e.preventDefault();
+  const u = document.getElementById('login-username').value.trim().toLowerCase();
+  const p = document.getElementById('login-password').value;
+  const err = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  err.classList.remove('visible');
+  if (!u || !p) { err.textContent = 'Preencha usuário e senha'; err.classList.add('visible'); return false; }
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+  try {
+    const user = await validateLogin(u, p);
+    if (!user) {
+      await new Promise(r => setTimeout(r, 500));
+      err.textContent = 'Usuário ou senha inválidos';
+      err.classList.add('visible');
+      document.getElementById('login-password').value = '';
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+      return false;
+    }
+    onLoginSuccess();
+  } catch (er) {
+    err.textContent = 'Erro: ' + er.message;
+    err.classList.add('visible');
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+  return false;
+}
+function onLoginSuccess() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('report-page').style.display = '';
+  document.getElementById('print-toolbar').style.display = 'flex';
+  initReport();
+}
+
+// =================================================================
+// Init report
+// =================================================================
+function initReport() {
+  const now = new Date();
+  const dtFmt = now.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: '2-digit' }) +
+    ' · ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('cover-date').textContent = dtFmt;
+  document.getElementById('footer-date').textContent = dtFmt;
+  initMap();
+}
+
+
+// =================================================================
+// MAP — drivers + áreas pendentes + contratações sugeridas
+// =================================================================
+const DRIVERS = [
+  { name: 'Axel Augusto Gentilini',         lat: -31.1709, lng: -64.3161, status: 'keep' },
+  { name: 'Mauricio Alejandro Gallero',     lat: -34.8970, lng: -60.0190, status: 'keep' },
+  { name: 'Fernando Gabriel Andino Correa', lat: -40.7621, lng: -71.6472, status: 'keep' },
+  { name: 'Matías Daniel Moreira',          lat: -42.7837, lng: -65.0601, status: 'keep' },
+  { name: 'Guillermo Amado Juarez',         lat: -30.2416, lng: -68.7466, status: 'keep' },
+  { name: 'Mauro Leandro Canepa',           lat: -24.5955, lng: -60.4290, status: 'drop' },
+  { name: 'Leandro Martín Andreoli',        lat: -34.6981, lng: -58.6015, status: 'drop' },
+];
+
+const HIRE = [
+  { name: 'Mendoza (capital)', lat: -32.8908, lng: -68.8272 },
+  { name: 'Posadas',           lat: -27.3621, lng: -55.9007 },
+];
+
+let map;
+
+function initMap() {
+  map = L.map('map', { preferCanvas: true, zoomControl: false, attributionControl: false })
+    .setView([-37, -65], 4);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 12,
+  }).addTo(map);
+
+  // Drivers
+  DRIVERS.forEach(d => {
+    const initials = d.name.split(' ').map(s => s[0]).slice(0, 2).join('');
+    const cls = d.status === 'keep' ? 'marker-driver marker-keep' : 'marker-driver marker-drop';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="${cls}" title="${d.name}">${initials}</div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+    });
+    L.marker([d.lat, d.lng], { icon }).addTo(map).bindTooltip(d.name);
+  });
+
+  // Hire points (estrela)
+  HIRE.forEach(h => {
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="marker-driver marker-hire" title="${h.name}">★</div>`,
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
+    });
+    L.marker([h.lat, h.lng], { icon }).addTo(map).bindTooltip('Contratar: ' + h.name);
+  });
+
+  // Áreas pendentes (carrega geojson e plota como dots vermelhos)
+  fetch('./country-scopes-data/argentina.geojson')
+    .then(r => r.json())
+    .then(geo => {
+      const pending = geo.features.filter(f =>
+        f.properties && f.properties.status !== 'COMPLETED' && (f.properties.collected_km || 0) < 1
+      );
+      pending.forEach(f => {
+        const p = f.properties;
+        if (!p.lat || !p.lon) return;
+        L.circleMarker([p.lat, p.lon], {
+          radius: 3,
+          color: '#B91C1C',
+          weight: 1,
+          fillColor: '#B91C1C',
+          fillOpacity: 0.45,
+        }).addTo(map);
+      });
+      onMapReady();
+    })
+    .catch(err => {
+      console.warn('Erro carregando geojson:', err);
+      onMapReady();
+    });
+}
+
+function onMapReady() {
+  // Espera tiles carregarem
+  let ready = false;
+  const tryReady = () => {
+    if (ready) return;
+    ready = true;
+    document.getElementById('print-status').textContent = 'Pronto pra imprimir';
+    document.getElementById('print-btn').disabled = false;
+  };
+  // Heurística: aguarda 2.5s pra dar tempo tiles + GeoJSON renderizarem
+  setTimeout(tryReady, 2500);
+}
+
+</script>
+
+</body>
+</html>
