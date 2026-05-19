@@ -114,7 +114,8 @@
     border-radius: 10px;
     box-shadow: 0 8px 24px rgba(15,23,42,0.12);
     min-width: 240px;
-    z-index: 100;
+    /* Acima dos panes do Leaflet (que aqui sobem pra z-index 400) */
+    z-index: 9999;
     padding: 6px;
   }
   .export-menu button {
