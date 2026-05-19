@@ -2052,6 +2052,10 @@
           <div class="export-title" data-i18n="exportCalendar">Resumo Calendar</div>
           <div class="export-sub" data-i18n="exportCalendarSub">PDF visual do Driver/VID Calendar (mês)</div>
         </button>
+        <button onclick="exportRecruitmentPdf()">
+          <div class="export-title" data-i18n="exportRecruitment">📋 Slide de Vagas</div>
+          <div class="export-sub" data-i18n="exportRecruitmentSub">PDF com vagas abertas por país (pra mandar nos grupos)</div>
+        </button>
         <button onclick="openMbrModal()" style="border-top:2px solid var(--c-border);">
           <div class="export-title" data-i18n="exportMbr">📊 Monthly Business Review</div>
           <div class="export-sub" data-i18n="exportMbrSub">PowerPoint completo pra reunião do mês</div>
@@ -2859,6 +2863,24 @@ const I18N = {
     rangeInvalid: 'Datas inválidas — De deve vir antes de Até',
     rangeLoading: 'Carregando dados do período…',
     exportCalendarSub: 'PDF visual do Driver/VID Calendar (mês)',
+    exportRecruitment: '📋 Slide de Vagas',
+    exportRecruitmentSub: 'PDF com vagas abertas por país (pra mandar nos grupos)',
+    exportRecruitmentTitle: 'Vagas Abertas',
+    exportRecruitmentSubtitle: 'Atualizado em',
+    exportRecruitmentNoData: 'Nenhuma vaga aberta no momento.',
+    exportRecruitmentCity: 'Cidade',
+    exportRecruitmentStatus: 'Status',
+    exportRecruitmentSince: 'Aberta desde',
+    exportRecruitmentTotal: 'Total de vagas',
+    exportRecruitmentFooter: 'Interessado? Fale com o RH ou com seu líder de país',
+    exportRecruitmentSummary: 'Snapshot por país',
+    summaryOpen: 'Abertas',
+    summaryActive: 'Ativos',
+    summaryHired: 'Contratados',
+    statusOpen: 'Aberta',
+    statusShortlisted: 'Pré-selecionado',
+    statusOnHold: 'Em pausa',
+    statusInProgress: 'Em andamento',
     exportMbr: '📊 Monthly Business Review',
     exportMbrSub: 'PowerPoint completo pra reunião do mês',
     mbrModalTitle: '📊 Monthly Business Review',
@@ -3100,6 +3122,24 @@ const I18N = {
     rangeInvalid: 'Fechas inválidas — De debe ser antes de Hasta',
     rangeLoading: 'Cargando datos del período…',
     exportCalendarSub: 'PDF visual del Driver/VID Calendar (mes)',
+    exportRecruitment: '📋 Slide de Vacantes',
+    exportRecruitmentSub: 'PDF con vacantes abiertas por país (para los grupos)',
+    exportRecruitmentTitle: 'Vacantes Abiertas',
+    exportRecruitmentSubtitle: 'Actualizado en',
+    exportRecruitmentNoData: 'No hay vacantes abiertas en este momento.',
+    exportRecruitmentCity: 'Ciudad',
+    exportRecruitmentStatus: 'Estado',
+    exportRecruitmentSince: 'Abierta desde',
+    exportRecruitmentTotal: 'Total de vacantes',
+    exportRecruitmentFooter: '¿Interesado? Habla con RH o con tu líder de país',
+    exportRecruitmentSummary: 'Snapshot por país',
+    summaryOpen: 'Abiertas',
+    summaryActive: 'Activos',
+    summaryHired: 'Contratados',
+    statusOpen: 'Abierta',
+    statusShortlisted: 'Preseleccionado',
+    statusOnHold: 'En pausa',
+    statusInProgress: 'En curso',
     exportMbr: '📊 Monthly Business Review',
     exportMbrSub: 'PowerPoint completo para reunión del mes',
     mbrModalTitle: '📊 Monthly Business Review',
@@ -3341,6 +3381,24 @@ const I18N = {
     rangeInvalid: 'Invalid dates — From must be before To',
     rangeLoading: 'Loading period data…',
     exportCalendarSub: 'Visual PDF of Driver/VID Calendar (month)',
+    exportRecruitment: '📋 Open Positions Slide',
+    exportRecruitmentSub: 'PDF with open positions by country (to share in groups)',
+    exportRecruitmentTitle: 'Open Positions',
+    exportRecruitmentSubtitle: 'Updated on',
+    exportRecruitmentNoData: 'No open positions at the moment.',
+    exportRecruitmentCity: 'City',
+    exportRecruitmentStatus: 'Status',
+    exportRecruitmentSince: 'Open since',
+    exportRecruitmentTotal: 'Total openings',
+    exportRecruitmentFooter: 'Interested? Talk to HR or your country lead',
+    exportRecruitmentSummary: 'Country snapshot',
+    summaryOpen: 'Open',
+    summaryActive: 'Active',
+    summaryHired: 'Hired',
+    statusOpen: 'Open',
+    statusShortlisted: 'Shortlisted',
+    statusOnHold: 'On Hold',
+    statusInProgress: 'In Progress',
     exportMbr: '📊 Monthly Business Review',
     exportMbrSub: 'Full PowerPoint for the monthly meeting',
     mbrModalTitle: '📊 Monthly Business Review',
@@ -5600,6 +5658,237 @@ function closeMbrModal() {
 function closeMbrModalIfBackdrop(evt) {
   if (evt.target.id === 'mbr-modal') closeMbrModal();
 }
+
+// ================================================================
+// v5.34: Export PDF de Vagas Abertas (Recruitment)
+// 1 página landscape A4, visual tipo slide — pra mandar nos grupos
+// de motoristas via WhatsApp/email.
+// ================================================================
+async function exportRecruitmentPdf() {
+  document.getElementById('export-menu').style.display = 'none';
+
+  if (typeof window.jspdf === 'undefined') {
+    alert(t('exportError'));
+    return;
+  }
+
+  showLoader(true, t('exportGenerating') + '...');
+
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getRecruitmentData').then(r => r.json());
+    if (!res.success) throw new Error(res.error || t('exportErrorBackend'));
+    const recruitmentData = res.data || { summary: [], demand: [] };
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const pageW = 297, pageH = 210;
+
+    // -------- Paleta Aceolution --------
+    const C_PRIMARY = [26, 54, 93];      // #1A365D
+    const C_BRAND = [44, 82, 130];       // #2C5282
+    const C_ACCENT = [74, 159, 224];     // #4A9FE0
+    const C_TEXT = [26, 32, 44];         // #1A202C
+    const C_MUTED = [100, 116, 139];     // #64748B
+    const C_BORDER = [226, 232, 240];    // #E2E8F0
+    const C_BG_TINT = [235, 244, 251];   // #EBF4FB
+    const C_SUCCESS = [22, 163, 74];     // #16A34A
+    const C_WARN = [202, 138, 4];        // #CA8A04
+    const C_OPEN_BG = [220, 252, 231];   // light green
+    const C_HOLD_BG = [254, 243, 199];   // light amber
+    const C_SHORT_BG = [219, 234, 254];  // light blue
+
+    const FLAGS = {
+      'Brazil': 'BR', 'Brasil': 'BR',
+      'Argentina': 'AR',
+      'Chile': 'CL',
+      'Peru': 'PE', 'Perú': 'PE',
+      'México': 'MX', 'Mexico': 'MX',
+      'Colombia': 'CO',
+    };
+
+    // -------- HEADER --------
+    // Faixa azul no topo
+    pdf.setFillColor(...C_PRIMARY);
+    pdf.rect(0, 0, pageW, 26, 'F');
+    // Faixa accent fina
+    pdf.setFillColor(...C_ACCENT);
+    pdf.rect(0, 26, pageW, 1.5, 'F');
+
+    // Brand
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text('ACEOLUTION · LATAM', 15, 11);
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(22);
+    pdf.text(t('exportRecruitmentTitle').toUpperCase(), 15, 22);
+
+    // Data + total à direita
+    const totalOpen = recruitmentData.demand.length;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+    pdf.setTextColor(200, 222, 240);
+    const now = new Date();
+    const locale = currentLang === 'pt' ? 'pt-BR' : currentLang === 'es' ? 'es-ES' : 'en-US';
+    pdf.text(t('exportRecruitmentSubtitle') + ' ' + now.toLocaleDateString(locale), pageW - 15, 11, { align: 'right' });
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(28);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(String(totalOpen), pageW - 15, 22, { align: 'right' });
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.setTextColor(200, 222, 240);
+    const totalLabel = t('exportRecruitmentTotal').toUpperCase();
+    const totalLabelW = pdf.getTextWidth(String(totalOpen)) * (28/8);   // approx — just position to the left of the number
+    pdf.text(totalLabel, pageW - 35, 22, { align: 'right' });
+
+    // -------- CASO sem vagas: tela vazia --------
+    if (totalOpen === 0) {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(16);
+      pdf.setTextColor(...C_MUTED);
+      pdf.text(t('exportRecruitmentNoData'), pageW / 2, pageH / 2, { align: 'center' });
+      pdf.save('LATAM_Vagas_' + dateStamp(now) + '.pdf');
+      return;
+    }
+
+    // -------- Agrupa vagas por país --------
+    const byCountry = {};
+    recruitmentData.demand.forEach(d => {
+      const c = d.country || '—';
+      if (!byCountry[c]) byCountry[c] = [];
+      byCountry[c].push(d);
+    });
+    const countries = Object.keys(byCountry).sort((a, b) => byCountry[b].length - byCountry[a].length);
+
+    // -------- GRID de cards por país --------
+    const startY = 36;
+    const endY = pageH - 18;          // deixa espaço pro footer
+    const gridW = pageW - 30;          // padding 15 cada lado
+    const gridH = endY - startY;
+    const gap = 6;
+
+    // Decide grid baseado em quantos países (1=1col, 2=2col, 3-4=2col, 5-6=3col)
+    let cols;
+    if (countries.length <= 1) cols = 1;
+    else if (countries.length <= 4) cols = 2;
+    else cols = 3;
+    const rows = Math.ceil(countries.length / cols);
+    const cardW = (gridW - gap * (cols - 1)) / cols;
+    const cardH = (gridH - gap * (rows - 1)) / rows;
+
+    countries.forEach((country, idx) => {
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      const x = 15 + col * (cardW + gap);
+      const y = startY + row * (cardH + gap);
+
+      // Card background
+      pdf.setFillColor(255, 255, 255);
+      pdf.setDrawColor(...C_BORDER);
+      pdf.roundedRect(x, y, cardW, cardH, 3, 3, 'FD');
+
+      // Country header band
+      pdf.setFillColor(...C_BG_TINT);
+      pdf.roundedRect(x, y, cardW, 10, 3, 3, 'F');
+      pdf.setFillColor(...C_BG_TINT);
+      pdf.rect(x, y + 4, cardW, 6, 'F');  // tira o arredondamento inferior do header
+
+      // Country name + count
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.setTextColor(...C_PRIMARY);
+      const flag = FLAGS[country] || '';
+      const headerText = flag ? (flag + '  ' + country) : country;
+      pdf.text(headerText, x + 4, y + 7);
+
+      // Count badge à direita
+      const countText = String(byCountry[country].length);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(...C_ACCENT);
+      pdf.text(countText + ' ' + t('summaryOpen').toLowerCase(),
+        x + cardW - 4, y + 7, { align: 'right' });
+
+      // Lista de cidades
+      let listY = y + 14;
+      const maxRows = Math.floor((cardH - 14) / 8) - 1; // quantas linhas cabem
+      byCountry[country].slice(0, maxRows).forEach(v => {
+        // pin
+        pdf.setFillColor(...C_ACCENT);
+        pdf.circle(x + 5, listY + 1.8, 1, 'F');
+
+        // city
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.setTextColor(...C_TEXT);
+        const city = v.city || '—';
+        const maxCityW = cardW - 40;
+        const cityClipped = clipText(pdf, city, maxCityW);
+        pdf.text(cityClipped, x + 8, listY + 2.5);
+
+        // status pill à direita
+        const statusKey = (v.status || '').toLowerCase();
+        let pillBg = C_OPEN_BG, pillText = C_SUCCESS, label = v.status;
+        if (statusKey === 'on hold') { pillBg = C_HOLD_BG; pillText = C_WARN; label = t('statusOnHold'); }
+        else if (statusKey === 'shortlisted') { pillBg = C_SHORT_BG; pillText = C_BRAND; label = t('statusShortlisted'); }
+        else if (statusKey === 'open') { label = t('statusOpen'); }
+        else if (statusKey === 'in progress') { pillBg = C_SHORT_BG; pillText = C_BRAND; label = t('statusInProgress'); }
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(7);
+        const pillW = pdf.getTextWidth(label) + 4;
+        pdf.setFillColor(...pillBg);
+        pdf.roundedRect(x + cardW - pillW - 3, listY - 1.2, pillW, 5, 1.2, 1.2, 'F');
+        pdf.setTextColor(...pillText);
+        pdf.text(label, x + cardW - pillW - 1, listY + 2.2);
+
+        listY += 8;
+      });
+      if (byCountry[country].length > maxRows) {
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(8);
+        pdf.setTextColor(...C_MUTED);
+        pdf.text('+ ' + (byCountry[country].length - maxRows) + ' …', x + 8, listY + 2);
+      }
+    });
+
+    // -------- FOOTER --------
+    pdf.setFillColor(...C_BG_TINT);
+    pdf.rect(0, pageH - 14, pageW, 14, 'F');
+    pdf.setFont('helvetica', 'italic');
+    pdf.setFontSize(10);
+    pdf.setTextColor(...C_BRAND);
+    pdf.text(t('exportRecruitmentFooter'), pageW / 2, pageH - 6, { align: 'center' });
+
+    // Save
+    pdf.save('LATAM_Vagas_' + dateStamp(now) + '.pdf');
+  } catch (err) {
+    console.error('[Recruitment PDF] erro:', err);
+    alert(t('exportError') + ': ' + err.message);
+  } finally {
+    showLoader(false);
+  }
+}
+
+function dateStamp(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + dd;
+}
+
+function clipText(pdf, text, maxW) {
+  if (pdf.getTextWidth(text) <= maxW) return text;
+  let t = text;
+  while (t.length > 4 && pdf.getTextWidth(t + '…') > maxW) {
+    t = t.slice(0, -1);
+  }
+  return t + '…';
+}
+
 
 /**
  * Orquestra a geração do PPTX:

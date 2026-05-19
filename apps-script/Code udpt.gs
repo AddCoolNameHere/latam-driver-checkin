@@ -100,6 +100,8 @@ const CONFIG = {
   // v5.25: argentina cash divergencias (ar-divergencias.html)
   argentinaCashSheet: 'Argentina Cash',
   argentinaCashFolderId: '1FfKbF6yuvNDBU7ID-7SGv9apobf0xiTX',  // pasta fixa no Drive pra anexos
+  // v5.34: recrutamento (recruitment.html)
+  recruitmentSheet: 'Recruitment',
 };
 
 // ================================================================
@@ -224,6 +226,11 @@ function doGet(e) {
 
     // v5.29: scope das areas de coleta por pais (pra country_scopes.html)
     // Le aba "CSV ARGENTINA" ou "CSV COLOMBIA" da MASTERSHEET
+    // v5.34: dados da aba Recruitment (resumo por país + lista de vagas abertas)
+    if (action === 'getRecruitmentData') {
+      return jsonResponse({ success: true, data: getRecruitmentData_() });
+    }
+
     if (action === 'getCountryScope') {
       const country = String(e.parameter.country || '').toUpperCase();
       return jsonResponse({ success: true, areas: getCountryScope_(country) });
@@ -257,7 +264,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.33',
+        version: 'v5.34',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -266,7 +273,8 @@ function doGet(e) {
                     'getCountryScope',
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
                     'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
-                    'POST submitArgentinaCash', 'POST updateAuthUsers'],
+                    'POST submitArgentinaCash', 'POST updateAuthUsers',
+                    'getRecruitmentData'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -6440,4 +6448,135 @@ function buildAuthJsContent_(users, admins) {
     '}',
     '',
   ].join('\n');
+}
+
+
+// ================================================================
+// v5.34: RECRUITMENT — leitura da aba "Recruitment"
+//
+// Aba tem múltiplas seções (resumo current, lista de vagas current,
+// resumo histórico, lista histórica). Aqui pegamos só as duas
+// primeiras (as "current") — que é o que importa pro recruitment.html.
+//
+// Identificamos as seções pelos cabeçalhos:
+//   - Summary current:   "Country | Open | Shortlisted | Training |
+//                          Offboarding | Currently Active | Offboarded | Hired"
+//   - Demand current:    "Country | Sourcing City | Demand Raised On | ..."
+//
+// Parsing é defensivo a mudanças menores na ordem das colunas — usa
+// `indexOf` por nome de coluna em vez de índices fixos.
+// ================================================================
+
+function getRecruitmentData_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = getSheetWithFallback_(ss, CONFIG.recruitmentSheet,
+    ['Recruitment', 'RECRUITMENT', 'recruitment', 'Recrutamento']);
+  if (!sheet) {
+    return { summary: [], demand: [], error: 'aba Recruitment não encontrada' };
+  }
+
+  const data = sheet.getDataRange().getValues();
+  let summary = [];
+  let demand = [];
+  let summaryHeaderRow = -1;
+  let demandHeaderRow = -1;
+
+  // Primeira passada: localiza as linhas de header de cada seção.
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i].map(c => String(c == null ? '' : c).trim());
+    // Summary current: tem 'Currently Active'
+    if (summaryHeaderRow < 0 &&
+        row.indexOf('Country') >= 0 &&
+        row.indexOf('Currently Active') >= 0 &&
+        row.indexOf('Open') >= 0) {
+      summaryHeaderRow = i;
+    }
+    // Demand current: tem 'Sourcing City' e 'Demand Raised On'
+    if (demandHeaderRow < 0 &&
+        row.indexOf('Country') >= 0 &&
+        row.indexOf('Sourcing City') >= 0 &&
+        row.indexOf('Demand Raised On') >= 0) {
+      demandHeaderRow = i;
+    }
+    if (summaryHeaderRow >= 0 && demandHeaderRow >= 0) break;
+  }
+
+  // --- Parse summary section ---
+  if (summaryHeaderRow >= 0) {
+    const headers = data[summaryHeaderRow].map(c => String(c == null ? '' : c).trim());
+    const idx = name => headers.indexOf(name);
+    const cols = {
+      country: idx('Country'),
+      open: idx('Open'),
+      shortlisted: idx('Shortlisted'),
+      training: idx('Training'),
+      offboarding: idx('Offboarding'),
+      currentlyActive: idx('Currently Active'),
+      offboarded: idx('Offboarded'),
+      hired: idx('Hired'),
+    };
+    for (let i = summaryHeaderRow + 1; i < data.length; i++) {
+      const row = data[i];
+      const country = String(row[cols.country] || '').trim();
+      if (!country) break;                  // bloco terminou
+      if (country === 'Sum' || country === 'Total') continue;  // pula linha de soma
+      // Se virou outro header de seção, para
+      if (country === 'Country') break;
+      summary.push({
+        country: country,
+        open:            Number(row[cols.open]) || 0,
+        shortlisted:     Number(row[cols.shortlisted]) || 0,
+        training:        Number(row[cols.training]) || 0,
+        offboarding:     Number(row[cols.offboarding]) || 0,
+        currentlyActive: Number(row[cols.currentlyActive]) || 0,
+        offboarded:      Number(row[cols.offboarded]) || 0,
+        hired:           Number(row[cols.hired]) || 0,
+      });
+    }
+  }
+
+  // --- Parse demand section ---
+  if (demandHeaderRow >= 0) {
+    const headers = data[demandHeaderRow].map(c => String(c == null ? '' : c).trim());
+    const idx = name => headers.indexOf(name);
+    const cols = {
+      country: idx('Country'),
+      city:    idx('Sourcing City'),
+      raisedOn: idx('Demand Raised On'),
+      candidate: headers.findIndex(h => /Shortlisted.*Candidate.*Name/i.test(h)),
+      status:  idx('Status'),
+      remarks: idx('Remarks'),
+      totalLeads: idx('TOTAL LEADS'),
+      leadsCalled: headers.findIndex(h => /LEADS CALLED/i.test(h)),
+    };
+    for (let i = demandHeaderRow + 1; i < data.length; i++) {
+      const row = data[i];
+      const country = String(row[cols.country] || '').trim();
+      if (!country) break;                  // bloco terminou
+      if (country === 'Country') break;     // próximo header de seção
+      const status = String(row[cols.status] || '').trim();
+      // Filtra histórico — só interessam vagas "current" (Open/Shortlisted/On Hold)
+      // Se status for Hired/Cancelled/Replaced, ignora
+      const isCurrent = /^(open|shortlisted|on hold|in progress)$/i.test(status);
+      if (!isCurrent) continue;
+      demand.push({
+        country: country,
+        city:    String(row[cols.city] || '').trim(),
+        raisedOn: row[cols.raisedOn] instanceof Date
+                    ? Utilities.formatDate(row[cols.raisedOn], 'America/Sao_Paulo', 'yyyy-MM-dd')
+                    : String(row[cols.raisedOn] || '').trim(),
+        candidate: cols.candidate >= 0 ? String(row[cols.candidate] || '').trim() : '',
+        status:    status,
+        remarks:   cols.remarks >= 0 ? String(row[cols.remarks] || '').trim() : '',
+        totalLeads: cols.totalLeads >= 0 ? (Number(row[cols.totalLeads]) || 0) : 0,
+        leadsCalled: cols.leadsCalled >= 0 ? (Number(row[cols.leadsCalled]) || 0) : 0,
+      });
+    }
+  }
+
+  return {
+    summary: summary,
+    demand: demand,
+    generatedAt: new Date().toISOString(),
+  };
 }
