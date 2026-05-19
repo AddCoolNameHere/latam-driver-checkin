@@ -8,7 +8,8 @@
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <script src="auth.js?v=20260518b"></script>
 <script src="theme.js?v=20260518c"></script>
-<link rel="stylesheet" href="theme.css?v=20260518c">
+<script src="common.js?v=20260519a"></script>
+<link rel="stylesheet" href="theme.css?v=20260519a">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -20,56 +21,6 @@
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
   }
-
-  /* ---------- LOGIN ---------- */
-  .login-screen {
-    position: fixed; inset: 0;
-    background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
-    display: flex; align-items: center; justify-content: center;
-    padding: 20px; z-index: 10000;
-  }
-  .login-card {
-    background: var(--c-surface); border-radius: 16px;
-    padding: 36px 32px 28px; max-width: 380px; width: 100%;
-    box-shadow: 0 20px 60px rgba(15,23,42,0.25); text-align: center;
-  }
-  .login-logo-img { height: 44px; display: block; margin: 0 auto 18px; }
-  .login-title { font-size: 20px; font-weight: 700; color: var(--c-primary-dark); margin-bottom: 4px; }
-  .login-sub { font-size: 13px; color: var(--c-text-muted); margin-bottom: 24px; }
-  .login-card form { text-align: left; }
-  .login-card label { display: block; font-size: 11px; font-weight: 600; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-  .login-card input { width: 100%; padding: 11px 14px; border: 1px solid var(--c-border); border-radius: 8px; font-size: 14px; font-family: inherit; margin-bottom: 12px; background: var(--c-surface); color: var(--c-text); }
-  .login-card input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
-  .login-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px; font-family: inherit; }
-  .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .login-error { color: var(--c-danger); font-size: 12px; margin-top: 10px; min-height: 16px; display: none; }
-  .login-error.visible { display: block; }
-
-  /* ---------- TOPBAR ---------- */
-  header.topbar {
-    background: var(--c-surface);
-    border-bottom: 1px solid var(--c-border);
-    padding: 12px 24px;
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; flex-wrap: wrap;
-    position: sticky; top: 0; z-index: 200;
-    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
-  }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand-logo-img { height: 28px; }
-  .brand-divider { width: 1px; height: 22px; background: var(--c-border-strong); }
-  .brand-region { font-size: 11px; color: var(--c-text-muted); letter-spacing: 1.3px; font-weight: 700; }
-  .topbar-right { display: flex; align-items: center; gap: 10px; }
-  .lang-switch { display: flex; gap: 2px; background: var(--c-bg-tint); border-radius: 6px; padding: 2px; }
-  .lang-switch button { background: none; border: none; padding: 4px 9px; font-size: 11px; font-weight: 600; color: var(--c-text-muted); cursor: pointer; border-radius: 4px; font-family: inherit; }
-  .lang-switch button.active { background: var(--c-surface); color: var(--c-primary-dark); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
-  .user-pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; background: var(--c-bg-tint); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--c-primary-dark); }
-  .user-avatar { width: 24px; height: 24px; background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
-  .back-link, .pdf-btn, .logout-btn { background: none; border: 1px solid var(--c-border); padding: 6px 12px; border-radius: 8px; font-size: 12px; color: var(--c-text-muted); cursor: pointer; font-family: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
-  .back-link:hover { background: var(--c-bg-tint); color: var(--c-primary); border-color: var(--c-primary); }
-  .pdf-btn { background: var(--c-primary); color: white; border-color: var(--c-primary); font-weight: 600; }
-  .pdf-btn:hover { background: var(--c-primary-dark); border-color: var(--c-primary-dark); }
-  .logout-btn:hover { background: var(--c-bg); color: var(--c-danger); border-color: var(--c-danger); }
 
   /* ---------- REPORT HEADER (sóbrio) ---------- */
   .report-header {
@@ -318,47 +269,8 @@
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login-screen" class="login-screen">
-  <div class="login-card">
-    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="login-logo-img">
-    <div class="login-title" id="login-title">Recruitment Status</div>
-    <div class="login-sub" id="login-sub">Acesso interno</div>
-    <form onsubmit="return doLogin(event)">
-      <label id="login-label-user">Usuário</label>
-      <input type="text" id="login-username" required autofocus autocomplete="username">
-      <label id="login-label-pass">Senha</label>
-      <input type="password" id="login-password" required autocomplete="current-password">
-      <button type="submit" class="login-btn" id="login-btn">Entrar</button>
-      <div class="login-error" id="login-error"></div>
-    </form>
-  </div>
-</div>
-
 <!-- APP -->
 <div id="app" style="display:none;">
-
-<header class="topbar">
-  <div class="brand">
-    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo-img">
-    <div class="brand-divider"></div>
-    <span class="brand-region" id="brand-region">LATAM · RECRUITMENT STATUS</span>
-  </div>
-  <div class="topbar-right">
-    <div class="lang-switch">
-      <button type="button" data-lang="pt" onclick="setLang('pt')" class="active">PT</button>
-      <button type="button" data-lang="es" onclick="setLang('es')">ES</button>
-      <button type="button" data-lang="en" onclick="setLang('en')">EN</button>
-    </div>
-    <a class="back-link" href="admin.html" id="back-link">← Hub</a>
-    <button class="pdf-btn" onclick="window.print()" id="pdf-btn">⎙ <span id="pdf-btn-label">Imprimir / PDF</span></button>
-    <div class="user-pill">
-      <div class="user-avatar" id="user-avatar">U</div>
-      <span id="user-name">User</span>
-    </div>
-    <button class="logout-btn" onclick="doLogout()" id="logout-btn">Sair</button>
-  </div>
-</header>
 
 <section class="report-header">
   <div class="report-header-inner">
@@ -518,81 +430,45 @@ function setLang(lang) {
 }
 
 function applyI18n() {
-  document.getElementById('login-title').textContent = t('loginTitle');
-  document.getElementById('login-sub').textContent = t('loginSub');
-  document.getElementById('login-label-user').textContent = t('labelUser');
-  document.getElementById('login-label-pass').textContent = t('labelPass');
-  document.getElementById('login-btn').textContent = t('loginBtn');
-  document.getElementById('brand-region').textContent = t('region');
-  document.getElementById('pdf-btn-label').textContent = t('pdfBtn');
-  document.getElementById('back-link').textContent = t('backLink');
-  document.getElementById('logout-btn').textContent = t('logoutBtn');
-  document.getElementById('report-eyebrow').textContent = t('reportEyebrow');
-  document.getElementById('report-title').textContent = t('reportTitle');
-  document.getElementById('report-subtitle').textContent = t('reportSubtitle');
-  document.getElementById('loading-text').textContent = t('loadingText');
-  document.getElementById('footer-left').textContent = t('footerLeft');
-  document.getElementById('footer-right').textContent = t('footerRight');
+  // Atualiza só os elementos do CONTEÚDO da página
+  // (topbar é gerenciado pelo common.js, login screen idem)
+  const el = (id) => document.getElementById(id);
+  if (el('report-eyebrow'))  el('report-eyebrow').textContent  = t('reportEyebrow');
+  if (el('report-title'))    el('report-title').textContent    = t('reportTitle');
+  if (el('report-subtitle')) el('report-subtitle').textContent = t('reportSubtitle');
+  if (el('loading-text'))    el('loading-text').textContent    = t('loadingText');
+  if (el('footer-left'))     el('footer-left').textContent     = t('footerLeft');
+  if (el('footer-right'))    el('footer-right').textContent    = t('footerRight');
   document.documentElement.lang = currentLang;
 }
 
-// ---------- LOGIN ----------
-async function doLogin(e) {
-  e.preventDefault();
-  const u = document.getElementById('login-username').value.trim().toLowerCase();
-  const p = document.getElementById('login-password').value;
-  const err = document.getElementById('login-error');
-  const btn = document.getElementById('login-btn');
-  err.classList.remove('visible');
-  if (!u || !p) { err.textContent = t('loginErrorEmpty'); err.classList.add('visible'); return false; }
-  btn.disabled = true; btn.textContent = '...';
-  try {
-    const user = await validateLogin(u, p);
-    if (!user) {
-      await new Promise(r => setTimeout(r, 400));
-      err.textContent = t('loginErrorInvalid');
-      err.classList.add('visible');
-      document.getElementById('login-password').value = '';
-      btn.disabled = false; btn.textContent = t('loginBtn');
-      return false;
-    }
-    currentUser = user;
-    saveSession(user);
-    onLoginSuccess();
-  } catch (er) {
-    err.textContent = 'Erro: ' + er.message;
-    err.classList.add('visible');
-    btn.disabled = false; btn.textContent = t('loginBtn');
-  }
-  return false;
-}
-
-function onLoginSuccess() {
-  document.getElementById('login-screen').style.display = 'none';
+function startApp(user) {
+  currentUser = user;
+  injectTopbar({
+    region: 'LATAM · RECRUITMENT STATUS',
+    user: user,
+    showBack: true,
+    showLangSwitch: true,
+    lang: currentLang,
+    onLangChange: (newLang) => { setLang(newLang); },
+    extras: [{
+      html: '⎙ PDF',
+      onClick: () => window.print(),
+      className: 'primary',
+    }],
+  });
   document.getElementById('app').style.display = '';
-  document.getElementById('user-name').textContent = currentUser.fullName;
-  document.getElementById('user-avatar').textContent =
-    currentUser.fullName.split(' ').map(s => s[0].toUpperCase()).slice(0, 2).join('');
-  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
   loadData();
 }
 
-function doLogout() {
-  if (!confirm(t('confirmLogout'))) return;
-  clearSession();
-  currentUser = null;
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-screen').style.display = '';
-  document.getElementById('login-password').value = '';
-  document.getElementById('login-btn').disabled = false;
-  document.getElementById('login-btn').textContent = t('loginBtn');
-  if (typeof removeThemeToggle === 'function') removeThemeToggle();
-}
-
 // ---------- LOAD DATA ----------
-async function loadData() {
+async function loadData(forceRefresh) {
   try {
-    const res = await fetch(CONFIG.scriptUrl + '?action=getRecruitmentData').then(r => r.json());
+    const url = CONFIG.scriptUrl + '?action=getRecruitmentData';
+    const res = (typeof cachedFetch === 'function')
+      ? await cachedFetch(url, 300, { forceRefresh: !!forceRefresh })
+      : await fetch(url).then(r => r.json());
     if (!res.success) throw new Error(res.error || 'Erro do backend');
     recruitmentData = res.data;
     renderContent();
@@ -851,8 +727,12 @@ function escapeHtml(s) {
 
 document.addEventListener('DOMContentLoaded', () => {
   applyI18n();
-  const saved = loadSession();
-  if (saved) { currentUser = saved; onLoginSuccess(); }
+  injectLogin({
+    title: 'Recruitment Status',
+    sub: 'Acesso interno',
+    lang: currentLang,
+    onSuccess: startApp,
+  });
 });
 </script>
 

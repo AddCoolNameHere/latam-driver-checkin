@@ -7,8 +7,9 @@
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <script src="auth.js?v=20260518b"></script>
 <script src="theme.js?v=20260518c"></script>
+<script src="common.js?v=20260519a"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="theme.css?v=20260518c">
+<link rel="stylesheet" href="theme.css?v=20260519a">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }  :root {
     --c-purple: #7C3AED;
@@ -406,32 +407,9 @@
   .print-btn:disabled { opacity: 0.6; cursor: wait; }
   .print-status { color: var(--c-text-muted); font-size: 11px; }
 
-  .login-screen {
-    position: fixed; inset: 0;
-    background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
-    display: flex; align-items: center; justify-content: center;
-    padding: 20px; z-index: 10000;
-  }
-  .login-card {
-    background: var(--c-surface); border-radius: 16px;
-    padding: 36px 32px; max-width: 380px; width: 100%;
-    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
-    text-align: center;
-  }
-  .login-logo-img { height: 44px; width: auto; display: block; margin: 0 auto; }
-  .login-title { font-size: 20px; font-weight: 700; color: var(--c-primary-dark); margin: 16px 0 4px; }
-  .login-sub { font-size: 13px; color: var(--c-text-muted); margin-bottom: 22px; }
-  .login-card form { text-align: left; }
-  .login-card label { display: block; font-size: 11px; font-weight: 600; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-  .login-card input { width: 100%; padding: 11px 14px; border: 1px solid var(--c-border); border-radius: 8px; font-size: 14px; font-family: inherit; margin-bottom: 12px; }
-  .login-card input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
-  .login-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px; font-family: inherit; }
-  .login-error { color: var(--c-danger); font-size: 12px; margin-top: 10px; min-height: 16px; display: none; }
-  .login-error.visible { display: block; }
-
   @media print {
     body { background: var(--c-surface); }
-    .print-toolbar, .login-screen { display: none !important; }
+    .print-toolbar, .ac-login-screen { display: none !important; }
     .slide {
       margin: 0;
       box-shadow: none;
@@ -445,23 +423,6 @@
 </style>
 </head>
 <body>
-
-<!-- LOGIN -->
-<div id="login-screen" class="login-screen">
-  <div class="login-card">
-    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="login-logo-img">
-    <div class="login-title">Confidential Presentation</div>
-    <div class="login-sub">Argentina · scenarios with PMO insights</div>
-    <form onsubmit="return doLogin(event)">
-      <label>Username</label>
-      <input type="text" id="login-username" required autofocus autocomplete="username">
-      <label>Password</label>
-      <input type="password" id="login-password" required autocomplete="current-password">
-      <button type="submit" class="login-btn" id="login-btn">Sign in</button>
-      <div class="login-error" id="login-error"></div>
-    </form>
-  </div>
-</div>
 
 <div class="print-toolbar" id="print-toolbar" style="display:none;">
   <span class="print-status" id="print-status">Loading…</span>
@@ -925,44 +886,21 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 
-async function doLogin(e) {
-  e.preventDefault();
-  const u = document.getElementById('login-username').value.trim().toLowerCase();
-  const p = document.getElementById('login-password').value;
-  const err = document.getElementById('login-error');
-  const btn = document.getElementById('login-btn');
-  err.classList.remove('visible');
-  if (!u || !p) { err.textContent = 'Fill in username and password'; err.classList.add('visible'); return false; }
-  btn.disabled = true; btn.textContent = 'Verifying…';
-  try {
-    const user = await validateLogin(u, p);
-    if (!user) {
-      await new Promise(r => setTimeout(r, 500));
-      err.textContent = 'Invalid username or password';
-      err.classList.add('visible');
-      document.getElementById('login-password').value = '';
-      btn.disabled = false; btn.textContent = 'Sign in';
-      return false;
-    }
-    saveSession(user);
-    onLoginSuccess();
-  } catch (er) {
-    err.textContent = 'Error: ' + er.message;
-    err.classList.add('visible');
-    btn.disabled = false; btn.textContent = 'Sign in';
-  }
-  return false;
-}
-function onLoginSuccess() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('deck').style.display = '';
-  document.getElementById('print-toolbar').style.display = 'flex';
-  initPresentation();
-  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
-}
+let currentUser = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (loadSession()) onLoginSuccess();
+  injectLogin({
+    title: 'Confidential Presentation',
+    sub: 'Argentina · scenarios with PMO insights',
+    lang: 'en',
+    onSuccess: (user) => {
+      currentUser = user;
+      document.getElementById('deck').style.display = '';
+      document.getElementById('print-toolbar').style.display = 'flex';
+      initPresentation();
+      if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+    },
+  });
 });
 
 const ALL_DRIVERS = {

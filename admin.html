@@ -7,8 +7,9 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <script src="auth.js?v=20260518b"></script>
-<script src="theme.js?v=20260518c"></script>
-<link rel="stylesheet" href="theme.css?v=20260518c">
+<script src="theme.js?v=20260519a"></script>
+<script src="common.js?v=20260519a"></script>
+<link rel="stylesheet" href="theme.css?v=20260519a">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -18,218 +19,6 @@
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
   }
-
-  /* LOGIN — mesmo padrão dos outros admin pages */
-  .login-screen {
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 10000;
-  }
-  .login-card {
-    background: var(--c-surface);
-    border-radius: 16px;
-    padding: 36px 32px 28px;
-    max-width: 380px;
-    width: 100%;
-    box-shadow: 0 20px 60px rgba(15,23,42,0.25);
-    text-align: center;
-    position: relative;
-  }
-  .login-lang-switch {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    display: flex;
-    gap: 2px;
-    background: var(--c-bg-tint);
-    border-radius: 6px;
-    padding: 2px;
-  }
-  .login-lang-switch button {
-    background: none;
-    border: none;
-    padding: 4px 8px;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--c-text-muted);
-    cursor: pointer;
-    border-radius: 4px;
-    font-family: inherit;
-  }
-  .login-lang-switch button.active {
-    background: var(--c-surface);
-    color: var(--c-primary-dark);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-  }
-  .login-logo-img {
-    height: 44px;
-    width: auto;
-    display: block;
-    margin: 0 auto 18px;
-  }
-  .login-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--c-primary-dark);
-    margin-bottom: 4px;
-  }
-  .login-sub {
-    font-size: 13px;
-    color: var(--c-text-muted);
-    margin-bottom: 24px;
-  }
-  .login-card form { text-align: left; }
-  .login-card label {
-    display: block;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--c-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-  }
-  .login-card input {
-    width: 100%;
-    padding: 11px 14px;
-    border: 1px solid var(--c-border);
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: inherit;
-    color: var(--c-text);
-    background: var(--c-surface);
-  }
-  .login-card input:focus {
-    outline: none;
-    border-color: var(--c-primary);
-    box-shadow: 0 0 0 3px rgba(74,159,224,0.15);
-  }
-  .login-btn {
-    width: 100%;
-    padding: 12px;
-    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 18px;
-    font-family: inherit;
-  }
-  .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .login-error {
-    color: var(--c-danger);
-    font-size: 12px;
-    margin-top: 10px;
-    min-height: 16px;
-    display: none;
-  }
-  .login-error.visible { display: block; }
-  .login-footer {
-    margin-top: 20px;
-    font-size: 11px;
-    color: var(--c-text-muted);
-  }
-
-  /* HUB layout */
-  .topbar {
-    background: var(--c-surface);
-    border-bottom: 1px solid var(--c-border);
-    padding: 14px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .brand-logo-img {
-    height: 28px;
-    width: auto;
-    display: block;
-  }
-  .brand-divider {
-    width: 1px;
-    height: 22px;
-    background: var(--c-border-strong);
-  }
-  .brand-region {
-    font-size: 12px;
-    color: var(--c-text-muted);
-    letter-spacing: 1.2px;
-    font-weight: 600;
-  }
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .lang-switch {
-    display: flex;
-    gap: 2px;
-    background: var(--c-bg-tint);
-    border-radius: 6px;
-    padding: 2px;
-  }
-  .lang-switch button {
-    background: none;
-    border: none;
-    padding: 4px 8px;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--c-text-muted);
-    cursor: pointer;
-    border-radius: 4px;
-    font-family: inherit;
-  }
-  .lang-switch button.active {
-    background: var(--c-surface);
-    color: var(--c-primary-dark);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-  }
-  .user-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px 6px 6px;
-    background: var(--c-bg-tint);
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--c-primary-dark);
-  }
-  .user-avatar {
-    width: 24px;
-    height: 24px;
-    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-  }
-  .logout-btn {
-    background: none;
-    border: 1px solid var(--c-border);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    color: var(--c-text-muted);
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .logout-btn:hover { background: var(--c-bg); color: var(--c-danger); border-color: var(--c-danger); }
 
   .hub-wrap {
     max-width: 1200px;
@@ -328,53 +117,8 @@
 </head>
 <body>
 
-<!-- TELA DE LOGIN -->
-<div id="login-screen" class="login-screen">
-  <div class="login-card">
-    <div class="login-lang-switch">
-      <button type="button" data-login-lang="pt" onclick="setLoginLang('pt')" class="active">PT</button>
-      <button type="button" data-login-lang="es" onclick="setLoginLang('es')">ES</button>
-      <button type="button" data-login-lang="en" onclick="setLoginLang('en')">EN</button>
-    </div>
-    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="login-logo-img">
-    <div class="login-title" id="login-title">Admin Hub</div>
-    <div class="login-sub" id="login-sub">Faça login para acessar</div>
-    <form id="login-form" onsubmit="return doLogin(event)">
-      <label for="login-username" id="login-label-user">Usuário</label>
-      <input type="text" id="login-username" autocomplete="username" required autofocus>
-      <label for="login-password" id="login-label-pass" style="margin-top:12px;">Senha</label>
-      <input type="password" id="login-password" autocomplete="current-password" required>
-      <button type="submit" class="login-btn" id="login-btn">Entrar</button>
-      <div class="login-error" id="login-error"></div>
-    </form>
-    <div class="login-footer">
-      <small id="login-footer-text">Aceolution do Brasil · Plataforma interna</small>
-    </div>
-  </div>
-</div>
-
 <!-- APP -->
 <div id="app-content" style="display:none;">
-
-<header class="topbar">
-  <div class="brand">
-    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo-img">
-    <div class="brand-divider"></div>
-    <span class="brand-region">LATAM · ADMIN HUB</span>
-  </div>
-  <div class="topbar-right">
-    <div class="lang-switch">
-      <button type="button" data-lang="pt" onclick="setLang('pt')" class="active">PT</button>
-      <button type="button" data-lang="es" onclick="setLang('es')">ES</button>
-      <button type="button" data-lang="en" onclick="setLang('en')">EN</button>
-    </div>
-    <div class="user-pill">
-      <div class="user-avatar" id="user-avatar">U</div>
-      <span id="user-name">User</span>
-    </div>
-    <button class="logout-btn" onclick="doLogout()" id="logout-btn">Sair</button>
-  </div>
-</header>
 
 <main class="hub-wrap">
   <div class="hub-header">
@@ -424,6 +168,12 @@
       <div class="card-icon">⚠️</div>
       <div class="card-title" id="card-div-title">Divergências AR</div>
       <div class="card-desc" id="card-div-desc">Pagamentos contestados pelos drivers da Argentina (exporta PDF)</div>
+    </a>
+    <a class="card" href="timesheet.html">
+      <span class="card-tag">Admin</span>
+      <div class="card-icon">⏱️</div>
+      <div class="card-title" id="card-ts-title">Timesheet & Payroll</div>
+      <div class="card-desc" id="card-ts-desc">Horas trabalhadas e valor hora por motorista (aba Timesheet)</div>
     </a>
   </div>
 
@@ -515,6 +265,7 @@ const APP_I18N = {
       pmo: { title: 'PMO Hub', desc: 'Anotações qualitativas do PMO por motorista' },
       cash: { title: 'Cash Flow', desc: 'Pedidos de cash dos drivers + gestão de transferências' },
       div: { title: 'Divergências AR', desc: 'Pagamentos contestados pelos drivers da Argentina (exporta PDF)' },
+      ts: { title: 'Timesheet & Payroll', desc: 'Horas trabalhadas e valor hora por motorista (aba Timesheet)' },
       checkin: { title: 'Check-in diário', desc: 'Form que os drivers preenchem todo dia (base, área, status)' },
       assets: { title: 'Equipamentos', desc: 'Relatório semanal de equipamentos (câmera, lidar, discos)' },
       ramp: { title: 'Ramp Expenses', desc: 'Despesas operacionais (combustível, manutenção, pedágios)' },
@@ -540,6 +291,7 @@ const APP_I18N = {
       pmo: { title: 'PMO Hub', desc: 'Notas cualitativas del PMO por conductor' },
       cash: { title: 'Cash Flow', desc: 'Pedidos de cash + gestión de transferencias' },
       div: { title: 'Divergencias AR', desc: 'Pagos disputados por los conductores de Argentina (exporta PDF)' },
+      ts: { title: 'Timesheet y Payroll', desc: 'Horas trabajadas y valor hora por conductor (pestaña Timesheet)' },
       checkin: { title: 'Check-in diario', desc: 'Form que los conductores completan todos los días' },
       assets: { title: 'Equipamiento', desc: 'Reporte semanal de equipamiento (cámara, lidar, discos)' },
       ramp: { title: 'Ramp Expenses', desc: 'Gastos operativos (combustible, mantenimiento, peajes)' },
@@ -565,6 +317,7 @@ const APP_I18N = {
       pmo: { title: 'PMO Hub', desc: 'Qualitative PMO notes per driver' },
       cash: { title: 'Cash Flow', desc: 'Driver cash requests + transfer management' },
       div: { title: 'AR Divergences', desc: 'Payments disputed by Argentine drivers (PDF export)' },
+      ts: { title: 'Timesheet & Payroll', desc: 'Worked hours and hourly rate per driver (Timesheet tab)' },
       checkin: { title: 'Daily check-in', desc: 'The form drivers fill out every day (base, area, status)' },
       assets: { title: 'Equipment', desc: 'Weekly equipment report (camera, lidar, disks)' },
       ramp: { title: 'Ramp Expenses', desc: 'Operational expenses (fuel, maintenance, tolls)' },
@@ -577,31 +330,7 @@ const APP_I18N = {
 };
 
 let currentLang = 'pt';
-let currentLoginLang = 'pt';
 let currentUser = null;
-
-function setLoginLang(lang) {
-  currentLoginLang = lang;
-  document.querySelectorAll('.login-lang-switch button').forEach(b => {
-    b.classList.toggle('active', b.dataset.loginLang === lang);
-  });
-  const ti = LOGIN_I18N[lang];
-  document.getElementById('login-sub').textContent = ti.subtitle;
-  document.getElementById('login-label-user').textContent = ti.usernameLabel;
-  document.getElementById('login-label-pass').textContent = ti.passwordLabel;
-  const btn = document.getElementById('login-btn');
-  if (!btn.disabled) btn.textContent = ti.submitBtn;
-  document.getElementById('login-footer-text').textContent = ti.footer;
-  document.documentElement.lang = lang;
-}
-
-function setLang(lang) {
-  currentLang = lang;
-  document.querySelectorAll('.lang-switch button').forEach(b => {
-    b.classList.toggle('active', b.dataset.lang === lang);
-  });
-  applyAppI18n();
-}
 
 function applyAppI18n() {
   const ti = APP_I18N[currentLang];
@@ -611,7 +340,6 @@ function applyAppI18n() {
   document.getElementById('section-finance').textContent = ti.sectionFinance;
   document.getElementById('section-forms').textContent = ti.sectionForms;
   document.getElementById('section-reports').textContent = ti.sectionReports;
-  document.getElementById('logout-btn').textContent = ti.logout;
   document.getElementById('hub-footer').textContent = ti.footer;
   const c = ti.cards;
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
@@ -621,6 +349,7 @@ function applyAppI18n() {
   set('card-pmo-title', c.pmo.title);             set('card-pmo-desc', c.pmo.desc);
   set('card-cash-title', c.cash.title);           set('card-cash-desc', c.cash.desc);
   set('card-div-title', c.div.title);             set('card-div-desc', c.div.desc);
+  set('card-ts-title', c.ts.title);               set('card-ts-desc', c.ts.desc);
   set('card-checkin-title', c.checkin.title);     set('card-checkin-desc', c.checkin.desc);
   set('card-assets-title', c.assets.title);       set('card-assets-desc', c.assets.desc);
   set('card-ramp-title', c.ramp.title);           set('card-ramp-desc', c.ramp.desc);
@@ -630,88 +359,36 @@ function applyAppI18n() {
   document.documentElement.lang = currentLang;
 }
 
-setLoginLang('pt');
-
-async function doLogin(event) {
-  event.preventDefault();
-  const usernameEl = document.getElementById('login-username');
-  const passwordEl = document.getElementById('login-password');
-  const errorEl = document.getElementById('login-error');
-  const btn = document.getElementById('login-btn');
-  const ti = LOGIN_I18N[currentLoginLang] || LOGIN_I18N.pt;
-  const username = usernameEl.value.trim().toLowerCase();
-  const password = passwordEl.value;
-  if (!username || !password) {
-    errorEl.textContent = ti.errorEmpty;
-    errorEl.classList.add('visible');
-    return false;
-  }
-  btn.disabled = true;
-  btn.textContent = ti.submitChecking;
-  errorEl.classList.remove('visible');
-  try {
-    const user = await validateLogin(username, password);
-    if (!user) {
-      await new Promise(r => setTimeout(r, 500));
-      errorEl.textContent = ti.errorInvalid;
-      errorEl.classList.add('visible');
-      passwordEl.value = '';
-      passwordEl.focus();
-      btn.disabled = false;
-      btn.textContent = ti.submitBtn;
-      return false;
-    }
-    currentUser = user;
-    saveSession(user);
-    onLoginSuccess();
-  } catch (err) {
-    console.error('Login error:', err);
-    errorEl.textContent = ti.errorGeneric;
-    errorEl.classList.add('visible');
-    btn.disabled = false;
-    btn.textContent = ti.submitBtn;
-  }
-  return false;
-}
-
-function onLoginSuccess() {
-  document.getElementById('login-screen').style.display = 'none';
+function startApp(user) {
+  currentUser = user;
+  injectTopbar({
+    region: 'LATAM · ADMIN HUB',
+    user: user,
+    showBack: false,
+    showLangSwitch: true,
+    lang: currentLang,
+    onLangChange: (newLang) => { currentLang = newLang; applyAppI18n(); },
+  });
   document.getElementById('app-content').style.display = '';
-  document.getElementById('user-name').textContent = currentUser.fullName;
-  const initials = currentUser.fullName.split(' ').map(s => s.charAt(0).toUpperCase()).slice(0, 2).join('');
-  document.getElementById('user-avatar').textContent = initials;
   // Seção "Relatórios pontuais" só pra admin (em ADMIN_USERNAMES)
-  if (typeof isAdmin === 'function' && isAdmin(currentUser.username)) {
+  if (typeof isAdmin === 'function' && isAdmin(user.username)) {
     document.getElementById('admin-only-section').style.display = '';
   }
   // Seção "Sistema" (gestão de usuários) só pro super admin — hardcoded 'fuss'
-  if (String(currentUser.username).toLowerCase() === 'fuss') {
+  if (String(user.username).toLowerCase() === 'fuss') {
     document.getElementById('super-admin-section').style.display = '';
   }
-  setLang(currentLoginLang);
-  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
+  applyAppI18n();
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
 }
 
-function doLogout() {
-  const ti = APP_I18N[currentLang];
-  if (!confirm(ti.confirmLogout)) return;
-  clearSession();
-  currentUser = null;
-  document.getElementById('app-content').style.display = 'none';
-  document.getElementById('login-screen').style.display = '';
-  document.getElementById('login-password').value = '';
-  document.getElementById('login-btn').disabled = false;
-  document.getElementById('login-btn').textContent = (LOGIN_I18N[currentLoginLang] || LOGIN_I18N.pt).submitBtn;
-  if (typeof removeThemeToggle === 'function') removeThemeToggle();
-}
-
-// SSO: se sessão válida no localStorage, auto-login sem mostrar tela de login
 document.addEventListener('DOMContentLoaded', () => {
-  const saved = loadSession();
-  if (saved) {
-    currentUser = saved;
-    onLoginSuccess();
-  }
+  injectLogin({
+    title: 'Admin Hub',
+    sub: 'Faça login para acessar',
+    lang: currentLang,
+    onSuccess: startApp,
+  });
 });
 </script>
 </body>

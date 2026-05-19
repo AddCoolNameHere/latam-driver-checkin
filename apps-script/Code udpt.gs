@@ -102,6 +102,8 @@ const CONFIG = {
   argentinaCashFolderId: '1FfKbF6yuvNDBU7ID-7SGv9apobf0xiTX',  // pasta fixa no Drive pra anexos
   // v5.34: recrutamento (recruitment.html)
   recruitmentSheet: 'Recruitment',
+  // v5.35: timesheet/payroll (timesheet.html) — leitura crua da aba pra exibir horas + valor hora
+  timesheetTabSheet: 'Timesheet',
 };
 
 // ================================================================
@@ -264,7 +266,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.34',
+        version: 'v5.35',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -274,7 +276,7 @@ function doGet(e) {
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
                     'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
                     'POST submitArgentinaCash', 'POST updateAuthUsers',
-                    'getRecruitmentData'],
+                    'getRecruitmentData', 'getTimesheetTab'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -384,6 +386,12 @@ function doGet(e) {
       const startDate = e.parameter.startDate; // 'YYYY-MM-DD'
       const endDate = e.parameter.endDate;     // 'YYYY-MM-DD'
       return jsonResponse({ success: true, rows: getTimesheet(startDate, endDate) });
+    }
+
+    // v5.35: timesheet/payroll — leitura crua da aba "Timesheet" (headers + rows)
+    // Frontend (timesheet.html) faz auto-discovery das colunas
+    if (action === 'getTimesheetTab') {
+      return jsonResponse(getTimesheetTab_());
     }
 
     return jsonResponse({ success: false, error: 'Unknown action: ' + action });
@@ -2351,6 +2359,58 @@ function getTimesheet(startDate, endDate) {
   });
 
   return rows;
+}
+
+
+/**
+ * v5.35: leitura crua da aba "Timesheet" (payroll page).
+ * Retorna headers + rows. Frontend (timesheet.html) decide o que mostrar.
+ *
+ * Formato:
+ *   { success: true, headers: ['col1', 'col2', ...], rows: [[...], [...], ...], sheetName: 'Timesheet' }
+ */
+function getTimesheetTab_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = getSheetWithFallback_(ss, CONFIG.timesheetTabSheet, ['TIMESHEET', 'Payroll', 'PAYROLL', 'Folha de Ponto']);
+  if (!sheet) {
+    return { success: false, error: 'Aba "' + CONFIG.timesheetTabSheet + '" não encontrada' };
+  }
+
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  if (lastRow < 1 || lastCol < 1) {
+    return { success: true, headers: [], rows: [], sheetName: sheet.getName() };
+  }
+
+  // Header = linha 1
+  const headersRaw = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const headers = headersRaw.map(h => String(h || '').trim());
+
+  // Descobre quantas colunas têm header de fato (corta colunas extras vazias à direita)
+  let realCols = headers.length;
+  while (realCols > 0 && headers[realCols - 1] === '') realCols--;
+  const trimmedHeaders = headers.slice(0, realCols);
+
+  let rows = [];
+  if (lastRow >= 2 && realCols > 0) {
+    const raw = sheet.getRange(2, 1, lastRow - 1, realCols).getValues();
+    rows = raw.map(r => r.map(cell => {
+      if (cell instanceof Date) {
+        return Utilities.formatDate(cell, 'America/Sao_Paulo', 'yyyy-MM-dd');
+      }
+      if (cell === null || cell === undefined) return '';
+      return cell;
+    }));
+    // Filtra linhas totalmente vazias
+    rows = rows.filter(r => r.some(c => c !== '' && c !== null && c !== undefined));
+  }
+
+  return {
+    success: true,
+    sheetName: sheet.getName(),
+    headers: trimmedHeaders,
+    rows: rows,
+  };
 }
 
 

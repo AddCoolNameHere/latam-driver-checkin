@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timesheet & Payroll · LATAM · Aceolution</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<script src="auth.js?v=20260518b"></script>
+<script src="theme.js?v=20260519a"></script>
+<script src="common.js?v=20260519a"></script>
+<link rel="stylesheet" href="theme.css?v=20260519a">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .ts-wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  .ts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .ts-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 4px;
+  }
+  .ts-sub {
+    font-size: 13px;
+    color: var(--c-text-muted);
+  }
+
+  .ts-toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 16px;
+    background: var(--c-surface);
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--c-border);
+  }
+  .ts-toolbar input[type=search],
+  .ts-toolbar select {
+    padding: 8px 12px;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-width: 180px;
+  }
+  .ts-toolbar input[type=search]:focus,
+  .ts-toolbar select:focus {
+    outline: none;
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 3px rgba(74, 159, 224, 0.15);
+  }
+  .ts-toolbar button {
+    padding: 8px 14px;
+    border: 1px solid var(--c-border);
+    background: var(--c-bg);
+    color: var(--c-text);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .ts-toolbar button:hover {
+    border-color: var(--c-accent);
+    color: var(--c-primary);
+  }
+  .ts-toolbar button.primary {
+    background: var(--c-primary);
+    color: white;
+    border-color: var(--c-primary);
+  }
+  .ts-toolbar button.primary:hover {
+    background: var(--c-primary-dark);
+    color: white;
+  }
+  .ts-toolbar .spacer { flex: 1; }
+  .ts-toolbar .count {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    font-weight: 600;
+  }
+
+  .ts-table-wrap {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    overflow: auto;
+    max-height: calc(100vh - 260px);
+  }
+  table.ts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  .ts-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--c-bg-tint);
+    color: var(--c-primary-dark);
+    font-weight: 700;
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--c-border);
+    white-space: nowrap;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    z-index: 2;
+  }
+  .ts-table tbody td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--c-border);
+    vertical-align: top;
+  }
+  .ts-table tbody tr:hover {
+    background: var(--c-bg-tint);
+  }
+  .ts-table td.num,
+  .ts-table th.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ts-table tfoot td {
+    padding: 10px 12px;
+    font-weight: 700;
+    background: var(--c-bg-tint);
+    border-top: 2px solid var(--c-border);
+    font-variant-numeric: tabular-nums;
+  }
+  .ts-table tfoot td.num { text-align: right; }
+
+  .ts-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--c-text-muted);
+    font-size: 14px;
+  }
+  .ts-state.error { color: #B91C1C; }
+  .ts-state .icon { font-size: 36px; margin-bottom: 10px; }
+
+  .ts-info {
+    font-size: 11px;
+    color: var(--c-text-dim);
+    margin-top: 10px;
+    text-align: right;
+  }
+
+  @media (max-width: 720px) {
+    .ts-toolbar input[type=search],
+    .ts-toolbar select { min-width: 0; flex: 1 1 140px; }
+    .ts-table thead th, .ts-table tbody td { padding: 8px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app-content" style="display:none;">
+
+<main class="ts-wrap">
+  <div class="ts-header">
+    <div>
+      <h1 class="ts-title" id="ts-title">Timesheet & Payroll</h1>
+      <div class="ts-sub" id="ts-sub">Horas e valores da aba Timesheet da Mastersheet</div>
+    </div>
+  </div>
+
+  <div class="ts-toolbar" id="ts-toolbar" style="display:none;">
+    <input type="search" id="ts-search" placeholder="Buscar…" autocomplete="off">
+    <select id="ts-country-filter" style="display:none;">
+      <option value="">Todos os países</option>
+    </select>
+    <span class="spacer"></span>
+    <span class="count" id="ts-count">0 linhas</span>
+    <button type="button" id="ts-refresh" title="Atualizar">↻</button>
+    <button type="button" id="ts-export" class="primary">Exportar CSV</button>
+  </div>
+
+  <div class="ts-table-wrap" id="ts-table-wrap">
+    <div class="ts-state" id="ts-state">
+      <div class="icon">⏳</div>
+      <div id="ts-state-msg">Carregando…</div>
+    </div>
+    <table class="ts-table" id="ts-table" style="display:none;">
+      <thead><tr id="ts-thead-row"></tr></thead>
+      <tbody id="ts-tbody"></tbody>
+      <tfoot id="ts-tfoot" style="display:none;"><tr id="ts-tfoot-row"></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="ts-info" id="ts-info"></div>
+</main>
+
+</div>
+
+<script>
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  cacheTtlSec: 300,
+};
+
+const I18N = {
+  pt: {
+    title: 'Timesheet & Payroll',
+    sub: 'Horas e valores da aba Timesheet da Mastersheet',
+    search: 'Buscar…',
+    allCountries: 'Todos os países',
+    rows: 'linhas',
+    refresh: 'Atualizar',
+    export: 'Exportar CSV',
+    loading: 'Carregando…',
+    empty: 'Aba Timesheet vazia',
+    error: 'Erro ao carregar',
+    cached: 'Dados do cache local · clica em ↻ pra recarregar',
+    fresh: 'Dados atualizados',
+    total: 'TOTAL',
+  },
+  es: {
+    title: 'Timesheet y Payroll',
+    sub: 'Horas y valores de la pestaña Timesheet de la Mastersheet',
+    search: 'Buscar…',
+    allCountries: 'Todos los países',
+    rows: 'filas',
+    refresh: 'Actualizar',
+    export: 'Exportar CSV',
+    loading: 'Cargando…',
+    empty: 'Pestaña Timesheet vacía',
+    error: 'Error al cargar',
+    cached: 'Datos en caché · clic en ↻ para recargar',
+    fresh: 'Datos actualizados',
+    total: 'TOTAL',
+  },
+  en: {
+    title: 'Timesheet & Payroll',
+    sub: 'Hours and pay from the Mastersheet Timesheet tab',
+    search: 'Search…',
+    allCountries: 'All countries',
+    rows: 'rows',
+    refresh: 'Refresh',
+    export: 'Export CSV',
+    loading: 'Loading…',
+    empty: 'Timesheet tab is empty',
+    error: 'Loading error',
+    cached: 'Cached data · click ↻ to reload',
+    fresh: 'Fresh data',
+    total: 'TOTAL',
+  },
+};
+
+let currentLang = 'pt';
+let currentUser = null;
+
+let state = {
+  headers: [],
+  rows: [],
+  filtered: [],
+  countryColIdx: -1,
+  numericColIdxs: new Set(),
+  sumColIdxs: new Set(),     // colunas pra somar no footer (hours, total, valor)
+  fromCache: false,
+};
+
+function t() { return I18N[currentLang] || I18N.pt; }
+
+function applyI18n() {
+  const i = t();
+  document.getElementById('ts-title').textContent = i.title;
+  document.getElementById('ts-sub').textContent = i.sub;
+  document.getElementById('ts-search').placeholder = i.search;
+  document.getElementById('ts-refresh').title = i.refresh;
+  document.getElementById('ts-export').textContent = i.export;
+  document.documentElement.lang = currentLang;
+
+  // Update country dropdown first option
+  const sel = document.getElementById('ts-country-filter');
+  if (sel.options.length > 0) sel.options[0].textContent = i.allCountries;
+
+  updateCount();
+  updateInfo();
+}
+
+function updateCount() {
+  const el = document.getElementById('ts-count');
+  el.textContent = state.filtered.length + ' ' + t().rows;
+}
+
+function updateInfo() {
+  document.getElementById('ts-info').textContent = state.fromCache ? t().cached : t().fresh;
+}
+
+function showState(msg, isError) {
+  const stateEl = document.getElementById('ts-state');
+  const msgEl = document.getElementById('ts-state-msg');
+  stateEl.classList.toggle('error', !!isError);
+  stateEl.querySelector('.icon').textContent = isError ? '⚠️' : (msg === t().loading ? '⏳' : '∅');
+  msgEl.textContent = msg;
+  stateEl.style.display = '';
+  document.getElementById('ts-table').style.display = 'none';
+  document.getElementById('ts-toolbar').style.display = 'none';
+}
+
+function hideState() {
+  document.getElementById('ts-state').style.display = 'none';
+  document.getElementById('ts-table').style.display = '';
+  document.getElementById('ts-toolbar').style.display = '';
+}
+
+// Detecta se uma coluna é "majoritariamente numérica"
+function detectNumericCols(headers, rows) {
+  const numCols = new Set();
+  for (let c = 0; c < headers.length; c++) {
+    let numCount = 0, nonEmpty = 0;
+    for (let r = 0; r < rows.length; r++) {
+      const v = rows[r][c];
+      if (v === '' || v === null || v === undefined) continue;
+      nonEmpty++;
+      if (typeof v === 'number') { numCount++; continue; }
+      const s = String(v).trim().replace(/[,$\s]/g, '').replace(/[%]/g, '');
+      if (s !== '' && !isNaN(Number(s))) numCount++;
+    }
+    if (nonEmpty > 0 && numCount / nonEmpty >= 0.7) numCols.add(c);
+  }
+  return numCols;
+}
+
+// Detecta colunas que devem ter SUM no footer (horas, total, salário, valor)
+function detectSumCols(headers, numericCols) {
+  const out = new Set();
+  const sumKeywords = /\b(hour|hora|horas|total|valor|salary|sal[áa]rio|usd|pay|payment|pagamento|amount|valor.*hora|hourly|gross|net|liquido|l[ií]quido|bruto)\b/i;
+  headers.forEach((h, i) => {
+    if (!numericCols.has(i)) return;
+    if (sumKeywords.test(h)) out.add(i);
+  });
+  return out;
+}
+
+function detectCountryCol(headers) {
+  const re = /\b(country|pa[íi]s|pais)\b/i;
+  return headers.findIndex(h => re.test(String(h || '')));
+}
+
+function buildCountryOptions() {
+  const sel = document.getElementById('ts-country-filter');
+  if (state.countryColIdx < 0) { sel.style.display = 'none'; return; }
+  const unique = new Set();
+  state.rows.forEach(r => {
+    const v = String(r[state.countryColIdx] || '').trim();
+    if (v) unique.add(v);
+  });
+  // Limpa exceto primeira opção
+  while (sel.options.length > 1) sel.remove(1);
+  [...unique].sort().forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+  sel.style.display = unique.size > 0 ? '' : 'none';
+}
+
+function fmtCell(v, isNumeric) {
+  if (v === '' || v === null || v === undefined) return '';
+  if (isNumeric && typeof v === 'number') {
+    // 2 casas decimais se não inteiro
+    if (Number.isInteger(v)) return String(v);
+    return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  if (isNumeric) {
+    const s = String(v).trim();
+    const cleaned = s.replace(/[,$\s]/g, '');
+    const n = Number(cleaned);
+    if (!isNaN(n)) {
+      if (Number.isInteger(n)) return String(n);
+      return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    return s;
+  }
+  return String(v);
+}
+
+function parseNum(v) {
+  if (typeof v === 'number') return v;
+  const s = String(v == null ? '' : v).trim().replace(/[,$\s]/g, '');
+  if (s === '') return 0;
+  const n = Number(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function renderTable() {
+  const thead = document.getElementById('ts-thead-row');
+  const tbody = document.getElementById('ts-tbody');
+  const tfoot = document.getElementById('ts-tfoot');
+  const tfootRow = document.getElementById('ts-tfoot-row');
+
+  thead.innerHTML = '';
+  tbody.innerHTML = '';
+  tfootRow.innerHTML = '';
+
+  state.headers.forEach((h, i) => {
+    const th = document.createElement('th');
+    th.textContent = h || ('Col ' + (i + 1));
+    if (state.numericColIdxs.has(i)) th.classList.add('num');
+    thead.appendChild(th);
+  });
+
+  // body
+  const frag = document.createDocumentFragment();
+  state.filtered.forEach(row => {
+    const tr = document.createElement('tr');
+    state.headers.forEach((_, i) => {
+      const td = document.createElement('td');
+      const isNum = state.numericColIdxs.has(i);
+      td.textContent = fmtCell(row[i], isNum);
+      if (isNum) td.classList.add('num');
+      tr.appendChild(td);
+    });
+    frag.appendChild(tr);
+  });
+  tbody.appendChild(frag);
+
+  // footer (totals)
+  if (state.sumColIdxs.size > 0 && state.filtered.length > 0) {
+    state.headers.forEach((_, i) => {
+      const td = document.createElement('td');
+      if (i === 0) {
+        td.textContent = t().total;
+      } else if (state.sumColIdxs.has(i)) {
+        const sum = state.filtered.reduce((acc, r) => acc + parseNum(r[i]), 0);
+        td.textContent = sum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        td.classList.add('num');
+      } else if (state.numericColIdxs.has(i)) {
+        td.classList.add('num');
+      }
+      tfootRow.appendChild(td);
+    });
+    tfoot.style.display = '';
+  } else {
+    tfoot.style.display = 'none';
+  }
+
+  updateCount();
+}
+
+function applyFilters() {
+  const q = document.getElementById('ts-search').value.trim().toLowerCase();
+  const countryVal = document.getElementById('ts-country-filter').value;
+
+  state.filtered = state.rows.filter(row => {
+    if (countryVal && state.countryColIdx >= 0) {
+      if (String(row[state.countryColIdx] || '').trim() !== countryVal) return false;
+    }
+    if (q) {
+      const joined = row.map(c => String(c == null ? '' : c)).join(' ').toLowerCase();
+      if (!joined.includes(q)) return false;
+    }
+    return true;
+  });
+  renderTable();
+}
+
+async function loadData(forceRefresh) {
+  showState(t().loading);
+  try {
+    const url = CONFIG.scriptUrl + '?action=getTimesheetTab';
+    const res = await cachedFetch(url, CONFIG.cacheTtlSec, { forceRefresh: !!forceRefresh });
+    if (!res || !res.success) {
+      showState((res && res.error) ? (t().error + ' — ' + res.error) : t().error, true);
+      return;
+    }
+    state.headers = Array.isArray(res.headers) ? res.headers : [];
+    state.rows = Array.isArray(res.rows) ? res.rows : [];
+    state.fromCache = !!res._fromCache;
+
+    if (state.headers.length === 0 || state.rows.length === 0) {
+      showState(t().empty);
+      updateInfo();
+      return;
+    }
+
+    state.numericColIdxs = detectNumericCols(state.headers, state.rows);
+    state.sumColIdxs = detectSumCols(state.headers, state.numericColIdxs);
+    state.countryColIdx = detectCountryCol(state.headers);
+
+    buildCountryOptions();
+    state.filtered = state.rows.slice();
+    hideState();
+    renderTable();
+    updateInfo();
+  } catch (e) {
+    console.error('[Timesheet] erro:', e);
+    showState(t().error + ' — ' + (e && e.message || e), true);
+  }
+}
+
+function csvEscape(v) {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  if (/[",\n\r;]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function exportCsv() {
+  const rows = [state.headers, ...state.filtered];
+  const csv = rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = 'timesheet_' + dateStr + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 200);
+}
+
+function startApp(user) {
+  currentUser = user;
+  injectTopbar({
+    region: 'LATAM · TIMESHEET',
+    user: user,
+    showBack: true,
+    showLangSwitch: true,
+    lang: currentLang,
+    onLangChange: (newLang) => { currentLang = newLang; applyI18n(); },
+  });
+  document.getElementById('app-content').style.display = '';
+  applyI18n();
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+
+  document.getElementById('ts-search').addEventListener('input', applyFilters);
+  document.getElementById('ts-country-filter').addEventListener('change', applyFilters);
+  document.getElementById('ts-refresh').addEventListener('click', () => loadData(true));
+  document.getElementById('ts-export').addEventListener('click', exportCsv);
+
+  loadData(false);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  injectLogin({
+    title: 'Timesheet & Payroll',
+    sub: 'Faça login para acessar',
+    lang: currentLang,
+    onSuccess: startApp,
+  });
+});
+</script>
+</body>
+</html>

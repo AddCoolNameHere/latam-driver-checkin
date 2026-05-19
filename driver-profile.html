@@ -11,8 +11,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
   <script src="auth.js?v=20260518b"></script>
-<script src="theme.js?v=20260518c"></script>
-<link rel="stylesheet" href="theme.css?v=20260518c">
+<script src="theme.js?v=20260519a"></script>
+<script src="common.js?v=20260519a"></script>
+<link rel="stylesheet" href="theme.css?v=20260519a">
 <style>  :root {
     --c-good: #16A34A;
     --c-bad: #DC2626;
@@ -24,40 +25,6 @@
     color: var(--c-text);
     background: var(--c-bg);
   }
-
-  /* LOGIN — mesma estética dos outros */
-  .login-screen {
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(135deg, #1A365D 0%, #2C5282 50%, #4A9FE0 100%);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-  .login-box {
-    background: var(--c-surface);
-    padding: 40px 32px;
-    border-radius: 16px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
-    width: 100%;
-    max-width: 380px;
-  }
-  .login-logo { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 24px; }
-  .login-logo img { height: 38px; }
-  .login-logo .product { font-size: 11px; color: var(--c-text-muted); letter-spacing: 1.2px; font-weight: 600; }
-  .login-logo .region { font-size: 16px; color: var(--c-primary); font-weight: 700; letter-spacing: 2px; }
-  .login-title { text-align: center; font-size: 18px; font-weight: 700; color: var(--c-primary-dark); margin: 0 0 6px; }
-  .login-subtitle { text-align: center; font-size: 13px; color: var(--c-text-muted); margin: 0 0 24px; }
-  .login-field { margin-bottom: 14px; }
-  .login-field label { display: block; font-size: 12px; color: var(--c-text-muted); margin-bottom: 6px; font-weight: 500; }
-  .login-field input { width: 100%; padding: 10px 14px; border: 1px solid var(--c-border); border-radius: 8px; font-size: 14px; font-family: inherit; box-sizing: border-box; }
-  .login-field input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74, 159, 224, 0.15); }
-  .login-button { width: 100%; padding: 11px; background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
-  .login-button:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(44, 82, 130, 0.4); }
-  .login-error { background: #FEF2F2; color: #991B1B; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; border-left: 3px solid #EF4444; display: none; }
-  .login-error.show { display: block; }
 
   /* APP */
   #app { display: none; }
@@ -1529,29 +1496,6 @@
 </head>
 <body>
 
-<!-- LOGIN -->
-<div class="login-screen" id="login-screen">
-  <div class="login-box">
-    <div class="login-logo">
-      <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display='none'">
-      <div class="product">DRIVER PROFILE</div>
-      <div class="region">LATAM</div>
-    </div>
-    <h1 class="login-title" data-i18n="loginTitle">Login</h1>
-    <p class="login-subtitle" data-i18n="loginSubtitle">Acesse com suas credenciais</p>
-    <div class="login-error" id="login-error"></div>
-    <div class="login-field">
-      <label data-i18n="loginUser">Usuário</label>
-      <input type="text" id="login-username" autocomplete="username" autofocus>
-    </div>
-    <div class="login-field">
-      <label data-i18n="loginPass">Senha</label>
-      <input type="password" id="login-password" autocomplete="current-password">
-    </div>
-    <button class="login-button" onclick="doLogin()" data-i18n="loginBtn">Entrar</button>
-  </div>
-</div>
-
 <!-- LOADER -->
 <div id="loader" class="loader-overlay">
   <div class="spinner"></div>
@@ -1767,41 +1711,12 @@
 
 <script>
 // ================================================================
-// LOGIN — USERS, sha256() e validateLogin() vêm de auth.js
+// LOGIN — UI vem de common.js (injectLogin); auth vem de auth.js
 // ================================================================
 
 let currentUser = null;
 
-async function doLogin() {
-  const username = document.getElementById('login-username').value.trim().toLowerCase();
-  const password = document.getElementById('login-password').value;
-  const errEl = document.getElementById('login-error');
-  errEl.classList.remove('show');
-
-  if (!username || !password) {
-    errEl.textContent = 'Preencha usuário e senha.';
-    errEl.classList.add('show');
-    return;
-  }
-
-  try {
-    const user = await validateLogin(username, password);
-    if (!user) {
-      errEl.textContent = 'Usuário ou senha inválidos.';
-      errEl.classList.add('show');
-      return;
-    }
-    currentUser = user;
-    saveSession(user);
-    _finishLogin(user);
-  } catch (err) {
-    errEl.textContent = 'Erro ao validar credenciais.';
-    errEl.classList.add('show');
-  }
-}
-
 function _finishLogin(user) {
-  document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').classList.add('shown');
   document.getElementById('user-pill').innerHTML =
     `<span>👤 ${user.fullName}</span><button class="logout-btn" onclick="doLogout()" title="Sair">✕</button>`;
@@ -1810,23 +1725,23 @@ function _finishLogin(user) {
 }
 
 function doLogout() {
-  clearSession();
-  currentUser = null;
-  document.getElementById('app').classList.remove('shown');
-  document.getElementById('login-screen').style.display = '';
-  document.getElementById('login-password').value = '';
-  if (typeof removeThemeToggle === 'function') removeThemeToggle();
+  if (typeof aceLogout === 'function') {
+    aceLogout('Sair?');
+  } else {
+    clearSession();
+    currentUser = null;
+    location.reload();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const saved = loadSession();
-  if (saved) { currentUser = saved; _finishLogin(saved); }
-});
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !document.getElementById('app').classList.contains('shown')) {
-    doLogin();
-  }
+  const lang = localStorage.getItem('preferredLang') || 'pt';
+  injectLogin({
+    title: 'LATAM · Driver Profile',
+    sub: 'Acesse com suas credenciais',
+    lang,
+    onSuccess: (user) => { currentUser = user; _finishLogin(user); },
+  });
 });
 
 // ================================================================
@@ -2332,7 +2247,9 @@ async function initApp() {
     // 2) Busca lista de drivers
     const url = CONFIG.scriptUrl + '?action=getDriversList';
     console.log('[Driver Profile] Fetching:', url);
-    const res = await fetch(url).then(r => r.json());
+    const res = (typeof cachedFetch === 'function')
+      ? await cachedFetch(url, 600)
+      : await fetch(url).then(r => r.json());
     console.log('[Driver Profile] getDriversList Response:', res);
 
     if (!res.success) {
@@ -2594,8 +2511,10 @@ async function selectDriver(email) {
 
   showLoader(true, t('loadingProfile'));
   try {
-    const res = await fetch(CONFIG.scriptUrl + '?action=getDriverProfile&email=' + encodeURIComponent(email))
-      .then(r => r.json());
+    const url = CONFIG.scriptUrl + '?action=getDriverProfile&email=' + encodeURIComponent(email);
+    const res = (typeof cachedFetch === 'function')
+      ? await cachedFetch(url, 120)
+      : await fetch(url).then(r => r.json());
     if (!res.success) throw new Error(res.error || 'Erro carregando perfil');
 
     // ============ DEBUG: payload completo do backend ============

@@ -7,8 +7,9 @@
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <script src="auth.js?v=20260518b"></script>
 <script src="theme.js?v=20260518c"></script>
+<script src="common.js?v=20260519a"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="theme.css?v=20260518c">
+<link rel="stylesheet" href="theme.css?v=20260519a">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }  :root {
     --c-gold: #B45309;
@@ -280,45 +281,6 @@
   .caveat-box li { padding: 3px 0; }
   .caveat-box li::before { content: '⚠ '; color: var(--c-warn); }
 
-  /* Login (mesma estética dos outros) */
-  .login-screen {
-    position: fixed; inset: 0;
-    background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
-    display: flex; align-items: center; justify-content: center;
-    padding: 20px; z-index: 10000;
-  }
-  .login-card {
-    background: var(--c-surface); border-radius: 16px;
-    padding: 36px 32px 28px; max-width: 380px; width: 100%;
-    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
-    text-align: center;
-  }
-  .login-logo-img { height: 44px; width: auto; display: block; margin: 0 auto; }
-  .login-title { font-size: 20px; font-weight: 700; color: var(--c-primary-dark); margin: 18px 0 4px; }
-  .login-sub { font-size: 13px; color: var(--c-text-muted); margin-bottom: 24px; }
-  .login-card form { text-align: left; }
-  .login-card label {
-    display: block; font-size: 11px; font-weight: 600;
-    color: var(--c-text-muted); text-transform: uppercase;
-    letter-spacing: 0.5px; margin-bottom: 6px;
-  }
-  .login-card input {
-    width: 100%; padding: 11px 14px;
-    border: 1px solid var(--c-border); border-radius: 8px;
-    font-size: 14px; font-family: inherit; margin-bottom: 12px;
-  }
-  .login-card input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
-  .login-btn {
-    width: 100%; padding: 12px;
-    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
-    color: white; border: none; border-radius: 8px;
-    font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px;
-    font-family: inherit;
-  }
-  .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .login-error { color: var(--c-danger); font-size: 12px; margin-top: 10px; min-height: 16px; display: none; }
-  .login-error.visible { display: block; }
-
   /* Markers Leaflet customizados */
   .marker-driver {
     width: 28px; height: 28px;
@@ -339,7 +301,7 @@
   /* PRINT */
   @media print {
     body { background: var(--c-surface); }
-    .print-toolbar, .login-screen { display: none !important; }
+    .print-toolbar, .ac-login-screen { display: none !important; }
     .report-page {
       box-shadow: none;
       margin: 0;
@@ -358,23 +320,6 @@
 </style>
 </head>
 <body>
-
-<!-- LOGIN -->
-<div id="login-screen" class="login-screen">
-  <div class="login-card">
-    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="login-logo-img">
-    <div class="login-title">Relatório Confidencial</div>
-    <div class="login-sub">Análise de otimização de equipe</div>
-    <form id="login-form" onsubmit="return doLogin(event)">
-      <label>Usuário</label>
-      <input type="text" id="login-username" required autofocus autocomplete="username">
-      <label>Senha</label>
-      <input type="password" id="login-password" required autocomplete="current-password">
-      <button type="submit" class="login-btn" id="login-btn">Entrar</button>
-      <div class="login-error" id="login-error"></div>
-    </form>
-  </div>
-</div>
 
 <!-- TOOLBAR (oculta no print) -->
 <div class="print-toolbar" id="print-toolbar" style="display:none;">
@@ -639,49 +584,22 @@
 <script>
 
 // =================================================================
-// Login
+// Login (via common.js)
 // =================================================================
-async function doLogin(e) {
-  e.preventDefault();
-  const u = document.getElementById('login-username').value.trim().toLowerCase();
-  const p = document.getElementById('login-password').value;
-  const err = document.getElementById('login-error');
-  const btn = document.getElementById('login-btn');
-  err.classList.remove('visible');
-  if (!u || !p) { err.textContent = 'Preencha usuário e senha'; err.classList.add('visible'); return false; }
-  btn.disabled = true;
-  btn.textContent = 'Verificando...';
-  try {
-    const user = await validateLogin(u, p);
-    if (!user) {
-      await new Promise(r => setTimeout(r, 500));
-      err.textContent = 'Usuário ou senha inválidos';
-      err.classList.add('visible');
-      document.getElementById('login-password').value = '';
-      btn.disabled = false;
-      btn.textContent = 'Entrar';
-      return false;
-    }
-    saveSession(user);
-    onLoginSuccess();
-  } catch (er) {
-    err.textContent = 'Erro: ' + er.message;
-    err.classList.add('visible');
-    btn.disabled = false;
-    btn.textContent = 'Entrar';
-  }
-  return false;
-}
-function onLoginSuccess() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('report-page').style.display = '';
-  document.getElementById('print-toolbar').style.display = 'flex';
-  initReport();
-  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
-}
+let currentUser = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (loadSession()) onLoginSuccess();
+  injectLogin({
+    title: 'Relatório Confidencial',
+    sub: 'Análise de otimização de equipe',
+    onSuccess: (user) => {
+      currentUser = user;
+      document.getElementById('report-page').style.display = '';
+      document.getElementById('print-toolbar').style.display = 'flex';
+      initReport();
+      if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+    },
+  });
 });
 
 // =================================================================

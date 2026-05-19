@@ -6,8 +6,9 @@
 <meta name="robots" content="noindex, nofollow">
 <title>PMO Hub · LATAM · Aceolution</title>
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
-<link rel="stylesheet" href="theme.css?v=20260518c">
-<script src="theme.js?v=20260518c"></script>
+<link rel="stylesheet" href="theme.css?v=20260519a">
+<script src="theme.js?v=20260519a"></script>
+<script src="common.js?v=20260519a"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -796,7 +797,10 @@ document.getElementById('author-name').addEventListener('input', e => {
 async function loadDrivers() {
   const select = document.getElementById('driver-select');
   try {
-    const res = await fetch(CONFIG.scriptUrl + '?action=getActiveDriversByCountry').then(r => r.json());
+    const url = CONFIG.scriptUrl + '?action=getActiveDriversByCountry';
+    const res = (typeof cachedFetch === 'function')
+      ? await cachedFetch(url, 600)
+      : await fetch(url).then(r => r.json());
     if (res.success && res.drivers) {
       state.driversByCountry = res.drivers;
       populateDriverSelect();
@@ -918,8 +922,11 @@ async function submitComment() {
     document.getElementById('driver-select').value = '';
     state.selectedDriver = null;
 
-    // Recarrega lista após 1s (dá tempo do backend gravar)
-    setTimeout(loadComments, 1500);
+    // Recarrega lista após 1s (dá tempo do backend gravar) — cache invalidado
+    setTimeout(() => {
+      if (typeof clearDataCache === 'function') clearDataCache();
+      loadComments();
+    }, 1500);
   } catch (err) {
     console.error('[PMO] Erro ao salvar:', err);
     toast(t('errorSave'), 'error');
@@ -938,7 +945,10 @@ async function loadComments() {
   listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-text">${t('loadingComments')}</div></div>`;
 
   try {
-    const res = await fetch(CONFIG.scriptUrl + '?action=getPMONotes&limit=200').then(r => r.json());
+    const url = CONFIG.scriptUrl + '?action=getPMONotes&limit=200';
+    const res = (typeof cachedFetch === 'function')
+      ? await cachedFetch(url, 60)
+      : await fetch(url).then(r => r.json());
     if (res.success && Array.isArray(res.notes)) {
       state.comments = res.notes;
       renderCommentsList();
