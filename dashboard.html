@@ -2054,8 +2054,8 @@
           <div class="export-sub" data-i18n="exportCalendarSub">PDF visual do Driver/VID Calendar (mês)</div>
         </button>
         <button onclick="exportRecruitmentPdf()">
-          <div class="export-title" data-i18n="exportRecruitment">📋 Slide de Vagas</div>
-          <div class="export-sub" data-i18n="exportRecruitmentSub">PDF com vagas abertas por país (pra mandar nos grupos)</div>
+          <div class="export-title" data-i18n="exportRecruitment">📋 Recruitment Status</div>
+          <div class="export-sub" data-i18n="exportRecruitmentSub">PDF executivo: KPIs, mapa LATAM, pipeline e aging</div>
         </button>
         <button onclick="openMbrModal()" style="border-top:2px solid var(--c-border);">
           <div class="export-title" data-i18n="exportMbr">📊 Monthly Business Review</div>
@@ -2864,8 +2864,8 @@ const I18N = {
     rangeInvalid: 'Datas inválidas — De deve vir antes de Até',
     rangeLoading: 'Carregando dados do período…',
     exportCalendarSub: 'PDF visual do Driver/VID Calendar (mês)',
-    exportRecruitment: '📋 Slide de Vagas',
-    exportRecruitmentSub: 'PDF com vagas abertas por país (pra mandar nos grupos)',
+    exportRecruitment: '📋 Recruitment Status',
+    exportRecruitmentSub: 'PDF executivo: KPIs, mapa LATAM, pipeline e aging',
     exportRecruitmentTitle: 'Vagas Abertas',
     exportRecruitmentSubtitle: 'Atualizado em',
     exportRecruitmentNoData: 'Nenhuma vaga aberta no momento.',
@@ -2882,6 +2882,25 @@ const I18N = {
     statusShortlisted: 'Pré-selecionado',
     statusOnHold: 'Em pausa',
     statusInProgress: 'Em andamento',
+    // Exec PDF / HTML
+    reportTitle: 'Recruitment Status Report',
+    reportSubtitle: 'LATAM Driver Pipeline',
+    kpiOpen: 'Vagas Abertas', kpiOpenSub: 'Posições em recrutamento',
+    kpiActive: 'Fleet Ativa', kpiActiveSub: 'Motoristas operando',
+    kpiHired: 'Total Contratados', kpiHiredSub: 'Histórico LATAM',
+    kpiStuck: 'Vagas Paradas', kpiStuckSub: '≥ 30 dias abertas',
+    sectionByCountry: 'Pipeline por país',
+    sectionMap: 'Distribuição geográfica',
+    sectionAging: 'Vagas em aberto · ordenadas por idade',
+    colCountry: 'País', colOpen: 'Open', colShort: 'Shortlist',
+    colActive: 'Ativos', colTraining: 'Training', colHired: 'Hired',
+    colCity: 'Cidade', colStatus: 'Status', colRaisedOn: 'Aberta em',
+    colDaysOpen: 'Dias', colRemarks: 'Observações',
+    mapLegend: 'Tamanho da bolha = número de vagas',
+    total: 'Total',
+    moreItems: 'vagas a mais',
+    footerConfidential: 'Confidencial · Uso interno',
+    footerSource: 'Fonte:',
     exportMbr: '📊 Monthly Business Review',
     exportMbrSub: 'PowerPoint completo pra reunião do mês',
     mbrModalTitle: '📊 Monthly Business Review',
@@ -3123,8 +3142,8 @@ const I18N = {
     rangeInvalid: 'Fechas inválidas — De debe ser antes de Hasta',
     rangeLoading: 'Cargando datos del período…',
     exportCalendarSub: 'PDF visual del Driver/VID Calendar (mes)',
-    exportRecruitment: '📋 Slide de Vacantes',
-    exportRecruitmentSub: 'PDF con vacantes abiertas por país (para los grupos)',
+    exportRecruitment: '📋 Recruitment Status',
+    exportRecruitmentSub: 'PDF ejecutivo: KPIs, mapa LATAM, pipeline y aging',
     exportRecruitmentTitle: 'Vacantes Abiertas',
     exportRecruitmentSubtitle: 'Actualizado en',
     exportRecruitmentNoData: 'No hay vacantes abiertas en este momento.',
@@ -3141,6 +3160,24 @@ const I18N = {
     statusShortlisted: 'Preseleccionado',
     statusOnHold: 'En pausa',
     statusInProgress: 'En curso',
+    reportTitle: 'Reporte de Reclutamiento',
+    reportSubtitle: 'Pipeline de Conductores LATAM',
+    kpiOpen: 'Vacantes', kpiOpenSub: 'Posiciones abiertas',
+    kpiActive: 'Flota Activa', kpiActiveSub: 'Conductores operando',
+    kpiHired: 'Total Contratados', kpiHiredSub: 'Histórico LATAM',
+    kpiStuck: 'Vacantes Estancadas', kpiStuckSub: '≥ 30 días abiertas',
+    sectionByCountry: 'Pipeline por país',
+    sectionMap: 'Distribución geográfica',
+    sectionAging: 'Vacantes abiertas · ordenadas por antigüedad',
+    colCountry: 'País', colOpen: 'Open', colShort: 'Shortlist',
+    colActive: 'Activos', colTraining: 'Training', colHired: 'Hired',
+    colCity: 'Ciudad', colStatus: 'Estado', colRaisedOn: 'Abierta el',
+    colDaysOpen: 'Días', colRemarks: 'Observaciones',
+    mapLegend: 'Tamaño de burbuja = vacantes',
+    total: 'Total',
+    moreItems: 'vacantes más',
+    footerConfidential: 'Confidencial · Uso interno',
+    footerSource: 'Fuente:',
     exportMbr: '📊 Monthly Business Review',
     exportMbrSub: 'PowerPoint completo para reunión del mes',
     mbrModalTitle: '📊 Monthly Business Review',
@@ -3382,8 +3419,8 @@ const I18N = {
     rangeInvalid: 'Invalid dates — From must be before To',
     rangeLoading: 'Loading period data…',
     exportCalendarSub: 'Visual PDF of Driver/VID Calendar (month)',
-    exportRecruitment: '📋 Open Positions Slide',
-    exportRecruitmentSub: 'PDF with open positions by country (to share in groups)',
+    exportRecruitment: '📋 Recruitment Status',
+    exportRecruitmentSub: 'Executive PDF: KPIs, LATAM map, pipeline & aging',
     exportRecruitmentTitle: 'Open Positions',
     exportRecruitmentSubtitle: 'Updated on',
     exportRecruitmentNoData: 'No open positions at the moment.',
@@ -3400,6 +3437,24 @@ const I18N = {
     statusShortlisted: 'Shortlisted',
     statusOnHold: 'On Hold',
     statusInProgress: 'In Progress',
+    reportTitle: 'Recruitment Status Report',
+    reportSubtitle: 'LATAM Driver Pipeline',
+    kpiOpen: 'Open Positions', kpiOpenSub: 'Currently recruiting',
+    kpiActive: 'Active Fleet', kpiActiveSub: 'Drivers operating',
+    kpiHired: 'Total Hired', kpiHiredSub: 'LATAM all-time',
+    kpiStuck: 'Stuck Openings', kpiStuckSub: '≥ 30 days open',
+    sectionByCountry: 'Pipeline by country',
+    sectionMap: 'Geographic distribution',
+    sectionAging: 'Open positions · by age',
+    colCountry: 'Country', colOpen: 'Open', colShort: 'Shortlist',
+    colActive: 'Active', colTraining: 'Training', colHired: 'Hired',
+    colCity: 'City', colStatus: 'Status', colRaisedOn: 'Opened',
+    colDaysOpen: 'Days', colRemarks: 'Remarks',
+    mapLegend: 'Bubble size = open positions',
+    total: 'Total',
+    moreItems: 'more',
+    footerConfidential: 'Confidential · Internal use',
+    footerSource: 'Source:',
     exportMbr: '📊 Monthly Business Review',
     exportMbrSub: 'Full PowerPoint for the monthly meeting',
     mbrModalTitle: '📊 Monthly Business Review',
@@ -5661,9 +5716,10 @@ function closeMbrModalIfBackdrop(evt) {
 }
 
 // ================================================================
-// v5.34: Export PDF de Vagas Abertas (Recruitment)
-// 1 página landscape A4, visual tipo slide — pra mandar nos grupos
-// de motoristas via WhatsApp/email.
+// v5.34 → v5.34b: Export PDF Recruitment Status Report
+// Layout exec briefing pra apresentar pros chefes: KPIs, mapa LATAM
+// stylized com bolhas, tabela comparativa por país, e tabela detalhada
+// das vagas em aberto ordenadas por idade (aging).
 // ================================================================
 async function exportRecruitmentPdf() {
   document.getElementById('export-menu').style.display = 'none';
@@ -5684,321 +5740,471 @@ async function exportRecruitmentPdf() {
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     const pageW = 297, pageH = 210;
 
-    // -------- Paleta Aceolution --------
-    const C_PRIMARY = [26, 54, 93];      // #1A365D navy
-    const C_PRIMARY_DEEP = [15, 36, 67]; // navy mais escuro
-    const C_BRAND = [44, 82, 130];       // #2C5282
-    const C_ACCENT = [74, 159, 224];     // #4A9FE0
-    const C_ACCENT_SOFT = [200, 222, 240]; // azul super claro
-    const C_TEXT = [26, 32, 44];         // #1A202C
-    const C_MUTED = [100, 116, 139];     // #64748B
-    const C_BORDER = [226, 232, 240];    // #E2E8F0
-    const C_BG_TINT = [248, 250, 252];   // #F8FAFC
-    const C_BG_HEAD = [241, 245, 249];   // slate-100
-    const C_SUCCESS = [22, 163, 74];     // green
-    const C_WARN = [202, 138, 4];        // amber
-    const C_INFO = [37, 99, 235];        // blue-600
-    const C_OPEN_BG = [220, 252, 231];
-    const C_HOLD_BG = [254, 243, 199];
-    const C_SHORT_BG = [219, 234, 254];
+    // -------- Paleta sóbria (executive briefing) --------
+    const C_PRIMARY = [15, 36, 67];      // navy deep
+    const C_NAVY = [26, 54, 93];         // navy
+    const C_BRAND = [44, 82, 130];
+    const C_ACCENT = [74, 159, 224];
+    const C_ACCENT_SOFT = [200, 222, 240];
+    const C_TEXT = [15, 23, 42];         // slate-900
+    const C_TEXT_2 = [51, 65, 85];       // slate-700
+    const C_MUTED = [100, 116, 139];     // slate-500
+    const C_BORDER = [226, 232, 240];
+    const C_BORDER_STRONG = [203, 213, 225];
+    const C_BG_GRID = [248, 250, 252];   // map bg
+    const C_BG_CARD = [241, 245, 249];   // KPI bg
+    const C_SUCCESS = [22, 163, 74];
+    const C_WARN = [202, 138, 4];
+    const C_DANGER = [185, 28, 28];
+    const C_INFO = [37, 99, 235];
 
-    // Cores por país (inspiradas nas bandeiras, mas suaves)
+    // Cores por país pra bolhas do mapa
     const COUNTRY_ACCENT = {
-      'Brazil':    [9, 156, 59],     // verde Brasil
-      'Brasil':    [9, 156, 59],
-      'Argentina': [116, 172, 223],  // azul claro Argentina
-      'Chile':     [213, 43, 30],    // vermelho
-      'Peru':      [217, 16, 35],    // vermelho Peru
-      'Perú':      [217, 16, 35],
-      'México':    [0, 104, 71],     // verde México
-      'Mexico':    [0, 104, 71],
-      'Colombia':  [252, 209, 22],   // amarelo Colombia
+      'Brazil': [9, 156, 59], 'Brasil': [9, 156, 59],
+      'Argentina': [116, 172, 223],
+      'Chile': [213, 43, 30],
+      'Peru': [217, 16, 35], 'Perú': [217, 16, 35],
+      'México': [0, 104, 71], 'Mexico': [0, 104, 71],
+      'Colombia': [252, 209, 22],
     };
+
+    // Centroides aproximados (lat, lng) pro mapa stylized
+    const COUNTRY_CENTROID = {
+      'Brazil':    { lat: -14.2, lng: -51.9 },
+      'Brasil':    { lat: -14.2, lng: -51.9 },
+      'Argentina': { lat: -38.4, lng: -63.6 },
+      'Chile':     { lat: -35.7, lng: -71.5 },
+      'Peru':      { lat:  -9.2, lng: -75.0 },
+      'Perú':      { lat:  -9.2, lng: -75.0 },
+      'México':    { lat:  23.6, lng: -102.5 },
+      'Mexico':    { lat:  23.6, lng: -102.5 },
+      'Colombia':  { lat:   4.6, lng: -74.3 },
+    };
+    // Bounds LATAM pra projeção linear simples
+    const MAP_BOUNDS = { N: 33, S: -56, W: -118, E: -34 };
+    function projectGeo(lat, lng, box) {
+      const x = box.x + ((lng - MAP_BOUNDS.W) / (MAP_BOUNDS.E - MAP_BOUNDS.W)) * box.w;
+      const y = box.y + ((MAP_BOUNDS.N - lat) / (MAP_BOUNDS.N - MAP_BOUNDS.S)) * box.h;
+      return { x, y };
+    }
 
     const now = new Date();
     const locale = currentLang === 'pt' ? 'pt-BR' : currentLang === 'es' ? 'es-ES' : 'en-US';
 
-    // ========== HEADER (gradiente diagonal navy) ==========
-    pdf.setFillColor(...C_PRIMARY_DEEP);
-    pdf.rect(0, 0, pageW, 38, 'F');
+    // -------- prepara dados --------
+    const demand = recruitmentData.demand || [];
+    const summary = recruitmentData.summary || [];
+    const summaryByCountry = {};
+    summary.forEach(s => { summaryByCountry[s.country] = s; });
+
+    const totalOpen = demand.length;
+    const totalActive = summary.reduce((acc, s) => acc + (s.currentlyActive || 0), 0);
+    const totalHired = summary.reduce((acc, s) => acc + (s.hired || 0), 0);
+
+    // Vagas com mais de 30 dias abertas — "stuck"
+    const stuck = demand.filter(d => {
+      const days = computeDaysOpen(d.raisedOn);
+      return days !== null && days >= 30;
+    }).length;
+
+    // Vagas agrupadas/ordenadas por idade descendente (mais velhas primeiro)
+    const demandWithAge = demand.map(d => ({
+      ...d, daysOpen: computeDaysOpen(d.raisedOn)
+    })).sort((a, b) => (b.daysOpen || 0) - (a.daysOpen || 0));
+
+    // ========== HEADER ==========
     pdf.setFillColor(...C_PRIMARY);
-    pdf.triangle(0, 0, pageW * 0.55, 0, 0, 38, 'F');
-    pdf.setFillColor(...C_BRAND);
-    pdf.triangle(0, 0, pageW * 0.30, 0, 0, 38, 'F');
-
-    // Pino decorativo accent
+    pdf.rect(0, 0, pageW, 22, 'F');
     pdf.setFillColor(...C_ACCENT);
-    pdf.rect(0, 38, pageW, 1.8, 'F');
+    pdf.rect(0, 22, pageW, 1, 'F');
 
-    // Brand small
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    pdf.setTextColor(255, 255, 255);
-    pdf.text('ACEOLUTION', 15, 11);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
+    pdf.setFontSize(9);
     pdf.setTextColor(...C_ACCENT_SOFT);
-    pdf.text('STREET VIEW · LATAM', 15, 15.5);
+    pdf.text('ACEOLUTION  ·  STREET VIEW LATAM', 12, 9);
 
-    // Título principal
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(28);
+    pdf.setFontSize(15);
     pdf.setTextColor(255, 255, 255);
-    pdf.text(t('exportRecruitmentTitle').toUpperCase(), 15, 28);
+    pdf.text(t('reportTitle').toUpperCase(), 12, 17);
 
     pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(10);
+    pdf.setFontSize(9);
     pdf.setTextColor(...C_ACCENT_SOFT);
-    pdf.text(t('exportRecruitmentSubtitle') + ' ' + now.toLocaleDateString(locale, {
-      day: '2-digit', month: 'long', year: 'numeric'
-    }), 15, 34);
-
-    // Número grande no canto direito (badge circular)
-    const totalOpen = recruitmentData.demand.length;
-    const badgeX = pageW - 30;
-    const badgeY = 19;
-    pdf.setFillColor(255, 255, 255);
-    pdf.circle(badgeX, badgeY, 14, 'F');
+    pdf.text(now.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' }),
+      pageW - 12, 9, { align: 'right' });
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(28);
-    pdf.setTextColor(...C_PRIMARY_DEEP);
-    pdf.text(String(totalOpen), badgeX, badgeY + 3, { align: 'center' });
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7);
-    pdf.setTextColor(...C_BRAND);
-    pdf.text(t('exportRecruitmentTotal').toUpperCase(), badgeX, badgeY + 9, { align: 'center' });
+    pdf.setFontSize(9);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(t('reportSubtitle'), pageW - 12, 17, { align: 'right' });
 
-    // CASO sem vagas
-    if (totalOpen === 0) {
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(18);
+    // ========== KPI ROW (4 cards) ==========
+    const kpiY = 28;
+    const kpiH = 24;
+    const kpiGap = 4;
+    const kpiW = (pageW - 24 - kpiGap * 3) / 4;
+    const drawKpi = (idx, label, value, sub, color) => {
+      const x = 12 + idx * (kpiW + kpiGap);
+      pdf.setFillColor(...C_BG_CARD);
+      pdf.setDrawColor(...C_BORDER);
+      pdf.roundedRect(x, kpiY, kpiW, kpiH, 2, 2, 'FD');
+      // Accent bar
+      pdf.setFillColor(...color);
+      pdf.rect(x, kpiY, kpiW, 1.5, 'F');
+      // label
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(7);
       pdf.setTextColor(...C_MUTED);
-      pdf.text(t('exportRecruitmentNoData'), pageW / 2, pageH / 2, { align: 'center' });
-      pdf.save('LATAM_Vagas_' + dateStamp(now) + '.pdf');
-      return;
+      pdf.text(label.toUpperCase(), x + 4, kpiY + 7);
+      // value
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(22);
+      pdf.setTextColor(...color);
+      pdf.text(String(value), x + 4, kpiY + 17);
+      // sub
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7);
+      pdf.setTextColor(...C_MUTED);
+      pdf.text(sub, x + 4, kpiY + 21.5);
+    };
+    drawKpi(0, t('kpiOpen'), totalOpen, t('kpiOpenSub'), C_ACCENT);
+    drawKpi(1, t('kpiActive'), totalActive, t('kpiActiveSub'), C_SUCCESS);
+    drawKpi(2, t('kpiHired'), totalHired, t('kpiHiredSub'), C_BRAND);
+    drawKpi(3, t('kpiStuck'), stuck, t('kpiStuckSub'),
+      stuck > 0 ? C_DANGER : C_MUTED);
+
+    // ========== LEFT: COUNTRY TABLE ==========
+    const tableY = 58;
+    const tableW = (pageW - 24 - 6) * 0.52;
+    const tableX = 12;
+    const tableH = 78;
+
+    // section title
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.setTextColor(...C_PRIMARY);
+    pdf.text(t('sectionByCountry'), tableX, tableY - 2);
+
+    // table headers
+    const tCols = [
+      { key: 'country', label: t('colCountry'), w: 0.30, align: 'left' },
+      { key: 'open',    label: t('colOpen'),    w: 0.13, align: 'center' },
+      { key: 'short',   label: t('colShort'),   w: 0.13, align: 'center' },
+      { key: 'active',  label: t('colActive'),  w: 0.13, align: 'center' },
+      { key: 'training',label: t('colTraining'),w: 0.13, align: 'center' },
+      { key: 'hired',   label: t('colHired'),   w: 0.18, align: 'center' },
+    ];
+    let colX = tableX;
+    const rowH = 9;
+    // Header row
+    pdf.setFillColor(...C_PRIMARY);
+    pdf.rect(tableX, tableY + 1, tableW, rowH, 'F');
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(255, 255, 255);
+    let cursor = tableX;
+    tCols.forEach(c => {
+      const w = tableW * c.w;
+      const tx = c.align === 'center' ? cursor + w / 2 : cursor + 3;
+      pdf.text(c.label.toUpperCase(), tx, tableY + 7, { align: c.align });
+      cursor += w;
+    });
+
+    // Country order: descending by open positions, ties by name
+    const COUNTRY_ORDER = ['Brazil', 'Argentina', 'Chile', 'Peru', 'México', 'Colombia'];
+    const orderedCountries = COUNTRY_ORDER.filter(c => summaryByCountry[c]);
+
+    orderedCountries.forEach((country, idx) => {
+      const s = summaryByCountry[country];
+      const rowY = tableY + 1 + rowH * (idx + 1);
+      // zebra
+      if (idx % 2 === 1) {
+        pdf.setFillColor(...C_BG_CARD);
+        pdf.rect(tableX, rowY, tableW, rowH, 'F');
+      }
+      // country accent dot
+      const accent = COUNTRY_ACCENT[country] || C_ACCENT;
+      pdf.setFillColor(...accent);
+      pdf.circle(tableX + 4, rowY + rowH / 2 - 0.2, 1.5, 'F');
+
+      cursor = tableX;
+      const cells = [
+        { val: country, type: 'name' },
+        { val: s.open, type: 'num', highlight: (s.open || 0) > 0 },
+        { val: s.shortlisted, type: 'num' },
+        { val: s.currentlyActive, type: 'num' },
+        { val: s.training, type: 'num' },
+        { val: s.hired, type: 'num' },
+      ];
+      tCols.forEach((c, i) => {
+        const w = tableW * c.w;
+        const cell = cells[i];
+        const tx = c.align === 'center' ? cursor + w / 2 : cursor + 8;
+        if (cell.type === 'name') {
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(9);
+          pdf.setTextColor(...C_TEXT);
+        } else {
+          pdf.setFont('helvetica', cell.highlight ? 'bold' : 'normal');
+          pdf.setFontSize(10);
+          pdf.setTextColor(...(cell.highlight ? accent : C_TEXT_2));
+        }
+        pdf.text(String(cell.val == null ? '—' : cell.val), tx, rowY + 5.8, { align: c.align });
+        cursor += w;
+      });
+    });
+
+    // Totals row
+    const totalsY = tableY + 1 + rowH * (orderedCountries.length + 1);
+    pdf.setFillColor(...C_BG_CARD);
+    pdf.setDrawColor(...C_BORDER_STRONG);
+    pdf.rect(tableX, totalsY, tableW, rowH + 1, 'FD');
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.setTextColor(...C_PRIMARY);
+    cursor = tableX;
+    const totals = {
+      country: t('total').toUpperCase(),
+      open: totalOpen,
+      shortlisted: summary.reduce((a, s) => a + (s.shortlisted || 0), 0),
+      active: totalActive,
+      training: summary.reduce((a, s) => a + (s.training || 0), 0),
+      hired: totalHired,
+    };
+    tCols.forEach((c, i) => {
+      const w = tableW * c.w;
+      const vals = [totals.country, totals.open, totals.shortlisted, totals.active, totals.training, totals.hired];
+      const tx = c.align === 'center' ? cursor + w / 2 : cursor + 3;
+      pdf.text(String(vals[i]), tx, totalsY + 6.5, { align: c.align });
+      cursor += w;
+    });
+    // table border outline
+    pdf.setDrawColor(...C_BORDER_STRONG);
+    pdf.setLineWidth(0.3);
+    pdf.rect(tableX, tableY + 1, tableW, totalsY + rowH + 1 - tableY - 1);
+
+    // ========== RIGHT: STYLIZED LATAM MAP ==========
+    const mapX = tableX + tableW + 6;
+    const mapY = tableY + 1;
+    const mapW = pageW - 12 - mapX;
+    const mapH = tableH + rowH;   // mesma altura da tabela
+
+    // section title
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.setTextColor(...C_PRIMARY);
+    pdf.text(t('sectionMap'), mapX, tableY - 2);
+
+    // Map background
+    pdf.setFillColor(...C_BG_GRID);
+    pdf.setDrawColor(...C_BORDER);
+    pdf.roundedRect(mapX, mapY, mapW, mapH, 2, 2, 'FD');
+
+    // Subtle grid (lat/lng lines)
+    pdf.setDrawColor(...C_BORDER);
+    pdf.setLineWidth(0.15);
+    for (let lat = -50; lat <= 30; lat += 10) {
+      const p1 = projectGeo(lat, MAP_BOUNDS.W, { x: mapX, y: mapY, w: mapW, h: mapH });
+      const p2 = projectGeo(lat, MAP_BOUNDS.E, { x: mapX, y: mapY, w: mapW, h: mapH });
+      pdf.line(p1.x, p1.y, p2.x, p2.y);
+    }
+    for (let lng = -110; lng <= -40; lng += 10) {
+      const p1 = projectGeo(MAP_BOUNDS.N, lng, { x: mapX, y: mapY, w: mapW, h: mapH });
+      const p2 = projectGeo(MAP_BOUNDS.S, lng, { x: mapX, y: mapY, w: mapW, h: mapH });
+      pdf.line(p1.x, p1.y, p2.x, p2.y);
     }
 
-    // ========== SNAPSHOT RIBBON (mini cards por país) ==========
-    const summaryByCountry = {};
-    (recruitmentData.summary || []).forEach(s => {
-      summaryByCountry[s.country] = s;
-    });
-    // Lista os 6 países canônicos na ordem
-    const COUNTRY_ORDER = ['Brazil', 'Argentina', 'Chile', 'Peru', 'México', 'Colombia'];
-    const ribbonCountries = COUNTRY_ORDER.filter(c => summaryByCountry[c]);
-
-    const ribbonY = 44;
-    const ribbonH = 16;
-    const ribbonGap = 4;
-    const ribbonW = (pageW - 30 - ribbonGap * (ribbonCountries.length - 1)) / Math.max(ribbonCountries.length, 1);
-
-    ribbonCountries.forEach((country, idx) => {
-      const s = summaryByCountry[country];
-      const open = s.open || 0;
-      const active = s.currentlyActive || 0;
-      const hired = s.hired || 0;
-      const x = 15 + idx * (ribbonW + ribbonGap);
-
-      const isActive = open > 0;
-      // background
-      pdf.setFillColor(...(isActive ? C_BG_HEAD : C_BG_TINT));
-      pdf.setDrawColor(...C_BORDER);
-      pdf.roundedRect(x, ribbonY, ribbonW, ribbonH, 2, 2, 'FD');
-
-      // Faixa colorida do país (top)
-      const accent = COUNTRY_ACCENT[country] || C_ACCENT;
-      pdf.setFillColor(...accent);
-      pdf.rect(x, ribbonY, ribbonW, 1.5, 'F');
-
-      // Nome do país
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(8);
-      pdf.setTextColor(...(isActive ? C_PRIMARY : C_MUTED));
-      pdf.text(country.toUpperCase(), x + 3, ribbonY + 5.5);
-
-      // Número de vagas grande
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(14);
-      pdf.setTextColor(...(isActive ? accent : C_MUTED));
-      pdf.text(String(open), x + 3, ribbonY + 12.5);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(6);
-      pdf.setTextColor(...C_MUTED);
-      pdf.text(t('summaryOpen'), x + 3 + pdf.getTextWidth(String(open)) + 1.5, ribbonY + 12.5);
-
-      // Active / Hired pequenos
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(6.5);
-      pdf.setTextColor(...C_MUTED);
-      pdf.text(active + ' ' + t('summaryActive').toLowerCase() + ' · ' + hired + ' ' + t('summaryHired').toLowerCase(),
-        x + ribbonW - 3, ribbonY + 12.5, { align: 'right' });
-    });
-
-    // ========== GRID DE CARDS (vagas por país) ==========
-    const byCountry = {};
-    recruitmentData.demand.forEach(d => {
-      const c = d.country || '—';
-      if (!byCountry[c]) byCountry[c] = [];
-      byCountry[c].push(d);
-    });
-    const countries = Object.keys(byCountry).sort((a, b) => byCountry[b].length - byCountry[a].length);
-
-    const gridStartY = ribbonY + ribbonH + 6;
-    const gridEndY = pageH - 22;
-    const gridW = pageW - 30;
-    const gridH = gridEndY - gridStartY;
-    const gap = 5;
-
-    let cols;
-    if (countries.length <= 1) cols = 1;
-    else if (countries.length <= 2) cols = 2;
-    else if (countries.length <= 4) cols = 2;
-    else cols = 3;
-    const rows = Math.ceil(countries.length / cols);
-    const cardW = (gridW - gap * (cols - 1)) / cols;
-    const cardH = (gridH - gap * (rows - 1)) / rows;
-
-    countries.forEach((country, idx) => {
-      const col = idx % cols;
-      const row = Math.floor(idx / cols);
-      const x = 15 + col * (cardW + gap);
-      const y = gridStartY + row * (cardH + gap);
+    // Bubbles per country (size by open positions, color by country)
+    const maxOpen = Math.max(1, ...summary.map(s => s.open || 0));
+    orderedCountries.forEach(country => {
+      const c = COUNTRY_CENTROID[country];
+      if (!c) return;
+      const p = projectGeo(c.lat, c.lng, { x: mapX, y: mapY, w: mapW, h: mapH });
+      const open = (summaryByCountry[country] || {}).open || 0;
+      const radius = open > 0 ? 3 + (open / maxOpen) * 6 : 2;
       const accent = COUNTRY_ACCENT[country] || C_ACCENT;
 
-      // Card background
-      pdf.setFillColor(255, 255, 255);
-      pdf.setDrawColor(...C_BORDER);
-      pdf.roundedRect(x, y, cardW, cardH, 3, 3, 'FD');
+      // Bubble with translucency (jspdf uses GState)
+      try {
+        const gs = pdf.GState({ opacity: 0.30 });
+        pdf.setGState(gs);
+        pdf.setFillColor(...accent);
+        pdf.circle(p.x, p.y, radius + 2, 'F');
+        pdf.setGState(pdf.GState({ opacity: 1 }));
+      } catch (e) { /* GState pode falhar em browsers velhos */ }
 
-      // Stripe colorida do país (lateral esquerda)
       pdf.setFillColor(...accent);
-      pdf.rect(x, y, 4, cardH, 'F');
+      pdf.setDrawColor(255, 255, 255);
+      pdf.setLineWidth(0.8);
+      pdf.circle(p.x, p.y, radius, 'FD');
 
-      // Country header
+      // count label inside (se cabe)
+      if (open > 0 && radius >= 4) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(open >= 10 ? 7 : 8);
+        pdf.setTextColor(255, 255, 255);
+        pdf.text(String(open), p.x, p.y + 1.2, { align: 'center' });
+      }
+
+      // country label (abaixo da bolha)
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(13);
+      pdf.setFontSize(7.5);
       pdf.setTextColor(...C_PRIMARY);
-      pdf.text(country, x + 9, y + 8);
+      pdf.text(country, p.x, p.y + radius + 3.5, { align: 'center' });
+    });
 
-      // Count badge à direita
-      const count = byCountry[country].length;
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(20);
-      pdf.setTextColor(...accent);
-      pdf.text(String(count), x + cardW - 6, y + 9, { align: 'right' });
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(6.5);
+    // Map legend
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(6.5);
+    pdf.setTextColor(...C_MUTED);
+    pdf.text(t('mapLegend'), mapX + mapW - 3, mapY + mapH - 3, { align: 'right' });
+
+    // ========== BOTTOM: AGING TABLE — vagas abertas ordenadas por idade ==========
+    const agingY = tableY + tableH + 14;
+    const agingX = 12;
+    const agingW = pageW - 24;
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.setTextColor(...C_PRIMARY);
+    pdf.text(t('sectionAging') + ' (' + totalOpen + ')', agingX, agingY - 2);
+
+    if (totalOpen === 0) {
+      pdf.setFont('helvetica', 'italic');
+      pdf.setFontSize(10);
       pdf.setTextColor(...C_MUTED);
-      pdf.text(t('summaryOpen').toUpperCase(),
-        x + cardW - 6, y + 12.5, { align: 'right' });
-
-      // Divisor
-      pdf.setDrawColor(...C_BORDER);
-      pdf.setLineWidth(0.3);
-      pdf.line(x + 9, y + 15, x + cardW - 6, y + 15);
-
-      // Lista de cidades
-      const itemH = 9;
-      const listStartY = y + 20;
-      const availableH = cardH - 22;
-      const maxRows = Math.floor(availableH / itemH);
-      const visible = byCountry[country].slice(0, maxRows);
-
-      visible.forEach((v, i) => {
-        const itemY = listStartY + i * itemH;
-        const statusKey = (v.status || '').toLowerCase();
-
-        // Pin (status color)
-        let pinColor = C_SUCCESS;
-        if (statusKey === 'on hold') pinColor = C_WARN;
-        else if (statusKey === 'shortlisted' || statusKey === 'in progress') pinColor = C_INFO;
-        pdf.setFillColor(...pinColor);
-        pdf.circle(x + 10, itemY + 0.5, 1.3, 'F');
-
-        // City name
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(9.5);
-        pdf.setTextColor(...C_TEXT);
-        const city = v.city || '—';
-        const cityMaxW = cardW * 0.55;
-        const cityClipped = clipText(pdf, city, cityMaxW);
-        pdf.text(cityClipped, x + 13, itemY + 1.5);
-
-        // Days open subtitle (small, below city)
-        const daysOpen = computeDaysOpen(v.raisedOn);
-        if (daysOpen !== null) {
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(7);
-          pdf.setTextColor(...C_MUTED);
-          pdf.text(t('exportRecruitmentSince') + ' ' + daysOpen + 'd', x + 13, itemY + 5.5);
-        }
-
-        // Status pill à direita
-        let pillBg = C_OPEN_BG, pillText = C_SUCCESS, label = t('statusOpen');
-        if (statusKey === 'on hold')   { pillBg = C_HOLD_BG;  pillText = C_WARN; label = t('statusOnHold'); }
-        else if (statusKey === 'shortlisted') { pillBg = C_SHORT_BG; pillText = C_INFO; label = t('statusShortlisted'); }
-        else if (statusKey === 'in progress') { pillBg = C_SHORT_BG; pillText = C_INFO; label = t('statusInProgress'); }
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(7);
-        const pillW = pdf.getTextWidth(label) + 5;
-        pdf.setFillColor(...pillBg);
-        pdf.roundedRect(x + cardW - pillW - 5, itemY - 1.5, pillW, 6, 1.5, 1.5, 'F');
-        pdf.setTextColor(...pillText);
-        pdf.text(label, x + cardW - pillW - 5 + pillW / 2, itemY + 2, { align: 'center' });
+      pdf.text(t('exportRecruitmentNoData'), agingX, agingY + 8);
+    } else {
+      // header
+      const aCols = [
+        { key: 'country', label: t('colCountry'), w: 0.13 },
+        { key: 'city',    label: t('colCity'),    w: 0.32 },
+        { key: 'status',  label: t('colStatus'),  w: 0.14 },
+        { key: 'raised',  label: t('colRaisedOn'),w: 0.14 },
+        { key: 'days',    label: t('colDaysOpen'),w: 0.10 },
+        { key: 'remarks', label: t('colRemarks'), w: 0.17 },
+      ];
+      pdf.setFillColor(...C_PRIMARY);
+      pdf.rect(agingX, agingY + 1, agingW, rowH, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(255, 255, 255);
+      cursor = agingX;
+      aCols.forEach(c => {
+        const w = agingW * c.w;
+        pdf.text(c.label.toUpperCase(), cursor + 3, agingY + 7);
+        cursor += w;
       });
 
-      // Mostra "+ N a mais" se overflow
-      if (byCountry[country].length > maxRows) {
+      // rows (limita a 10 pra caber)
+      const maxAgeRows = 10;
+      const visibleAging = demandWithAge.slice(0, maxAgeRows);
+      visibleAging.forEach((d, idx) => {
+        const ry = agingY + 1 + rowH * (idx + 1);
+        if (idx % 2 === 1) {
+          pdf.setFillColor(...C_BG_CARD);
+          pdf.rect(agingX, ry, agingW, rowH, 'F');
+        }
+        cursor = agingX;
+        // country
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(8.5);
+        pdf.setTextColor(...C_TEXT);
+        pdf.text(d.country, cursor + 3, ry + 5.8);
+        cursor += agingW * aCols[0].w;
+
+        // city
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(8.5);
+        pdf.setTextColor(...C_TEXT);
+        pdf.text(clipText(pdf, d.city || '—', agingW * aCols[1].w - 6), cursor + 3, ry + 5.8);
+        cursor += agingW * aCols[1].w;
+
+        // status pill
+        const sk = (d.status || '').toLowerCase();
+        let pillText = C_SUCCESS, label = t('statusOpen');
+        if (sk === 'on hold')      { pillText = C_WARN; label = t('statusOnHold'); }
+        else if (sk === 'shortlisted') { pillText = C_INFO; label = t('statusShortlisted'); }
+        else if (sk === 'in progress') { pillText = C_INFO; label = t('statusInProgress'); }
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(7);
+        pdf.setTextColor(...pillText);
+        // mini dot + label
+        pdf.setFillColor(...pillText);
+        pdf.circle(cursor + 4, ry + 5.0, 1, 'F');
+        pdf.text(label.toUpperCase(), cursor + 7, ry + 5.8);
+        cursor += agingW * aCols[2].w;
+
+        // raised
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(8.5);
+        pdf.setTextColor(...C_TEXT_2);
+        const raisedFmt = formatDate(d.raisedOn, locale);
+        pdf.text(raisedFmt, cursor + 3, ry + 5.8);
+        cursor += agingW * aCols[3].w;
+
+        // days open (highlighted if > 30)
+        const days = d.daysOpen;
+        const isOld = days !== null && days >= 30;
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(9);
+        pdf.setTextColor(...(isOld ? C_DANGER : C_TEXT_2));
+        pdf.text(days !== null ? days + 'd' : '—', cursor + 3, ry + 5.8);
+        cursor += agingW * aCols[4].w;
+
+        // remarks
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(7.5);
+        pdf.setTextColor(...C_MUTED);
+        const remarks = clipText(pdf, d.remarks || '—', agingW * aCols[5].w - 6);
+        pdf.text(remarks, cursor + 3, ry + 5.8);
+      });
+
+      // Overflow note
+      if (demandWithAge.length > maxAgeRows) {
+        const extraY = agingY + 1 + rowH * (maxAgeRows + 1) + 2;
         pdf.setFont('helvetica', 'italic');
         pdf.setFontSize(8);
         pdf.setTextColor(...C_MUTED);
-        pdf.text('+ ' + (byCountry[country].length - maxRows) + ' …',
-          x + 13, listStartY + visible.length * itemH + 2);
+        pdf.text('+ ' + (demandWithAge.length - maxAgeRows) + ' ' + t('moreItems'),
+          agingX, extraY);
       }
-    });
+
+      // outline
+      pdf.setDrawColor(...C_BORDER_STRONG);
+      pdf.setLineWidth(0.3);
+      pdf.rect(agingX, agingY + 1, agingW, rowH * (Math.min(demandWithAge.length, maxAgeRows) + 1));
+    }
 
     // ========== FOOTER ==========
-    pdf.setFillColor(...C_PRIMARY_DEEP);
-    pdf.rect(0, pageH - 18, pageW, 18, 'F');
-    pdf.setFillColor(...C_ACCENT);
-    pdf.rect(0, pageH - 18, pageW, 1.2, 'F');
-
-    // Legend
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7);
-    pdf.setTextColor(...C_ACCENT_SOFT);
-    const legendY = pageH - 11;
-    let legendX = 15;
-    const legendItem = (label, color) => {
-      pdf.setFillColor(...color);
-      pdf.circle(legendX, legendY - 0.5, 1.3, 'F');
-      pdf.setTextColor(...C_ACCENT_SOFT);
-      pdf.text(label, legendX + 2.5, legendY);
-      legendX += pdf.getTextWidth(label) + 9;
-    };
-    legendItem(t('statusOpen').toUpperCase(), C_SUCCESS);
-    legendItem(t('statusShortlisted').toUpperCase(), C_INFO);
-    legendItem(t('statusOnHold').toUpperCase(), C_WARN);
-
-    // Call to action
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(11);
-    pdf.setTextColor(255, 255, 255);
-    pdf.text(t('exportRecruitmentFooter'), pageW - 15, pageH - 8, { align: 'right' });
+    pdf.setFillColor(...C_PRIMARY);
+    pdf.rect(0, pageH - 8, pageW, 8, 'F');
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(7);
     pdf.setTextColor(...C_ACCENT_SOFT);
-    pdf.text('aceolution.com  ·  Street View LATAM Recruitment',
-      pageW - 15, pageH - 4, { align: 'right' });
+    pdf.text('Aceolution · ' + t('footerConfidential'), 12, pageH - 3);
+    pdf.text(t('footerSource') + ' Mastersheet › Recruitment',
+      pageW - 12, pageH - 3, { align: 'right' });
 
-    // Save
-    pdf.save('LATAM_Vagas_' + dateStamp(now) + '.pdf');
+    pdf.save('LATAM_Recruitment_Status_' + dateStamp(now) + '.pdf');
   } catch (err) {
     console.error('[Recruitment PDF] erro:', err);
     alert(t('exportError') + ': ' + err.message);
   } finally {
     showLoader(false);
   }
+}
+
+function formatDate(s, locale) {
+  if (!s) return '—';
+  let d;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) d = new Date(s + 'T00:00:00');
+  else if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+    const [day, mo, yr] = s.split('/').map(Number);
+    d = new Date(yr, mo - 1, day);
+  } else d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: '2-digit' });
 }
 
 function computeDaysOpen(raisedOn) {
