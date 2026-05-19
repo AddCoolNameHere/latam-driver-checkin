@@ -5685,77 +5685,156 @@ async function exportRecruitmentPdf() {
     const pageW = 297, pageH = 210;
 
     // -------- Paleta Aceolution --------
-    const C_PRIMARY = [26, 54, 93];      // #1A365D
+    const C_PRIMARY = [26, 54, 93];      // #1A365D navy
+    const C_PRIMARY_DEEP = [15, 36, 67]; // navy mais escuro
     const C_BRAND = [44, 82, 130];       // #2C5282
     const C_ACCENT = [74, 159, 224];     // #4A9FE0
+    const C_ACCENT_SOFT = [200, 222, 240]; // azul super claro
     const C_TEXT = [26, 32, 44];         // #1A202C
     const C_MUTED = [100, 116, 139];     // #64748B
     const C_BORDER = [226, 232, 240];    // #E2E8F0
-    const C_BG_TINT = [235, 244, 251];   // #EBF4FB
-    const C_SUCCESS = [22, 163, 74];     // #16A34A
-    const C_WARN = [202, 138, 4];        // #CA8A04
-    const C_OPEN_BG = [220, 252, 231];   // light green
-    const C_HOLD_BG = [254, 243, 199];   // light amber
-    const C_SHORT_BG = [219, 234, 254];  // light blue
+    const C_BG_TINT = [248, 250, 252];   // #F8FAFC
+    const C_BG_HEAD = [241, 245, 249];   // slate-100
+    const C_SUCCESS = [22, 163, 74];     // green
+    const C_WARN = [202, 138, 4];        // amber
+    const C_INFO = [37, 99, 235];        // blue-600
+    const C_OPEN_BG = [220, 252, 231];
+    const C_HOLD_BG = [254, 243, 199];
+    const C_SHORT_BG = [219, 234, 254];
 
-    const FLAGS = {
-      'Brazil': 'BR', 'Brasil': 'BR',
-      'Argentina': 'AR',
-      'Chile': 'CL',
-      'Peru': 'PE', 'Perú': 'PE',
-      'México': 'MX', 'Mexico': 'MX',
-      'Colombia': 'CO',
+    // Cores por país (inspiradas nas bandeiras, mas suaves)
+    const COUNTRY_ACCENT = {
+      'Brazil':    [9, 156, 59],     // verde Brasil
+      'Brasil':    [9, 156, 59],
+      'Argentina': [116, 172, 223],  // azul claro Argentina
+      'Chile':     [213, 43, 30],    // vermelho
+      'Peru':      [217, 16, 35],    // vermelho Peru
+      'Perú':      [217, 16, 35],
+      'México':    [0, 104, 71],     // verde México
+      'Mexico':    [0, 104, 71],
+      'Colombia':  [252, 209, 22],   // amarelo Colombia
     };
 
-    // -------- HEADER --------
-    // Faixa azul no topo
-    pdf.setFillColor(...C_PRIMARY);
-    pdf.rect(0, 0, pageW, 26, 'F');
-    // Faixa accent fina
-    pdf.setFillColor(...C_ACCENT);
-    pdf.rect(0, 26, pageW, 1.5, 'F');
-
-    // Brand
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(11);
-    pdf.setTextColor(255, 255, 255);
-    pdf.text('ACEOLUTION · LATAM', 15, 11);
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(22);
-    pdf.text(t('exportRecruitmentTitle').toUpperCase(), 15, 22);
-
-    // Data + total à direita
-    const totalOpen = recruitmentData.demand.length;
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(10);
-    pdf.setTextColor(200, 222, 240);
     const now = new Date();
     const locale = currentLang === 'pt' ? 'pt-BR' : currentLang === 'es' ? 'es-ES' : 'en-US';
-    pdf.text(t('exportRecruitmentSubtitle') + ' ' + now.toLocaleDateString(locale), pageW - 15, 11, { align: 'right' });
 
+    // ========== HEADER (gradiente diagonal navy) ==========
+    pdf.setFillColor(...C_PRIMARY_DEEP);
+    pdf.rect(0, 0, pageW, 38, 'F');
+    pdf.setFillColor(...C_PRIMARY);
+    pdf.triangle(0, 0, pageW * 0.55, 0, 0, 38, 'F');
+    pdf.setFillColor(...C_BRAND);
+    pdf.triangle(0, 0, pageW * 0.30, 0, 0, 38, 'F');
+
+    // Pino decorativo accent
+    pdf.setFillColor(...C_ACCENT);
+    pdf.rect(0, 38, pageW, 1.8, 'F');
+
+    // Brand small
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text('ACEOLUTION', 15, 11);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.setTextColor(...C_ACCENT_SOFT);
+    pdf.text('STREET VIEW · LATAM', 15, 15.5);
+
+    // Título principal
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(28);
     pdf.setTextColor(255, 255, 255);
-    pdf.text(String(totalOpen), pageW - 15, 22, { align: 'right' });
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.setTextColor(200, 222, 240);
-    const totalLabel = t('exportRecruitmentTotal').toUpperCase();
-    const totalLabelW = pdf.getTextWidth(String(totalOpen)) * (28/8);   // approx — just position to the left of the number
-    pdf.text(totalLabel, pageW - 35, 22, { align: 'right' });
+    pdf.text(t('exportRecruitmentTitle').toUpperCase(), 15, 28);
 
-    // -------- CASO sem vagas: tela vazia --------
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+    pdf.setTextColor(...C_ACCENT_SOFT);
+    pdf.text(t('exportRecruitmentSubtitle') + ' ' + now.toLocaleDateString(locale, {
+      day: '2-digit', month: 'long', year: 'numeric'
+    }), 15, 34);
+
+    // Número grande no canto direito (badge circular)
+    const totalOpen = recruitmentData.demand.length;
+    const badgeX = pageW - 30;
+    const badgeY = 19;
+    pdf.setFillColor(255, 255, 255);
+    pdf.circle(badgeX, badgeY, 14, 'F');
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(28);
+    pdf.setTextColor(...C_PRIMARY_DEEP);
+    pdf.text(String(totalOpen), badgeX, badgeY + 3, { align: 'center' });
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7);
+    pdf.setTextColor(...C_BRAND);
+    pdf.text(t('exportRecruitmentTotal').toUpperCase(), badgeX, badgeY + 9, { align: 'center' });
+
+    // CASO sem vagas
     if (totalOpen === 0) {
       pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(16);
+      pdf.setFontSize(18);
       pdf.setTextColor(...C_MUTED);
       pdf.text(t('exportRecruitmentNoData'), pageW / 2, pageH / 2, { align: 'center' });
       pdf.save('LATAM_Vagas_' + dateStamp(now) + '.pdf');
       return;
     }
 
-    // -------- Agrupa vagas por país --------
+    // ========== SNAPSHOT RIBBON (mini cards por país) ==========
+    const summaryByCountry = {};
+    (recruitmentData.summary || []).forEach(s => {
+      summaryByCountry[s.country] = s;
+    });
+    // Lista os 6 países canônicos na ordem
+    const COUNTRY_ORDER = ['Brazil', 'Argentina', 'Chile', 'Peru', 'México', 'Colombia'];
+    const ribbonCountries = COUNTRY_ORDER.filter(c => summaryByCountry[c]);
+
+    const ribbonY = 44;
+    const ribbonH = 16;
+    const ribbonGap = 4;
+    const ribbonW = (pageW - 30 - ribbonGap * (ribbonCountries.length - 1)) / Math.max(ribbonCountries.length, 1);
+
+    ribbonCountries.forEach((country, idx) => {
+      const s = summaryByCountry[country];
+      const open = s.open || 0;
+      const active = s.currentlyActive || 0;
+      const hired = s.hired || 0;
+      const x = 15 + idx * (ribbonW + ribbonGap);
+
+      const isActive = open > 0;
+      // background
+      pdf.setFillColor(...(isActive ? C_BG_HEAD : C_BG_TINT));
+      pdf.setDrawColor(...C_BORDER);
+      pdf.roundedRect(x, ribbonY, ribbonW, ribbonH, 2, 2, 'FD');
+
+      // Faixa colorida do país (top)
+      const accent = COUNTRY_ACCENT[country] || C_ACCENT;
+      pdf.setFillColor(...accent);
+      pdf.rect(x, ribbonY, ribbonW, 1.5, 'F');
+
+      // Nome do país
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8);
+      pdf.setTextColor(...(isActive ? C_PRIMARY : C_MUTED));
+      pdf.text(country.toUpperCase(), x + 3, ribbonY + 5.5);
+
+      // Número de vagas grande
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.setTextColor(...(isActive ? accent : C_MUTED));
+      pdf.text(String(open), x + 3, ribbonY + 12.5);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(6);
+      pdf.setTextColor(...C_MUTED);
+      pdf.text(t('summaryOpen'), x + 3 + pdf.getTextWidth(String(open)) + 1.5, ribbonY + 12.5);
+
+      // Active / Hired pequenos
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(...C_MUTED);
+      pdf.text(active + ' ' + t('summaryActive').toLowerCase() + ' · ' + hired + ' ' + t('summaryHired').toLowerCase(),
+        x + ribbonW - 3, ribbonY + 12.5, { align: 'right' });
+    });
+
+    // ========== GRID DE CARDS (vagas por país) ==========
     const byCountry = {};
     recruitmentData.demand.forEach(d => {
       const c = d.country || '—';
@@ -5764,16 +5843,15 @@ async function exportRecruitmentPdf() {
     });
     const countries = Object.keys(byCountry).sort((a, b) => byCountry[b].length - byCountry[a].length);
 
-    // -------- GRID de cards por país --------
-    const startY = 36;
-    const endY = pageH - 18;          // deixa espaço pro footer
-    const gridW = pageW - 30;          // padding 15 cada lado
-    const gridH = endY - startY;
-    const gap = 6;
+    const gridStartY = ribbonY + ribbonH + 6;
+    const gridEndY = pageH - 22;
+    const gridW = pageW - 30;
+    const gridH = gridEndY - gridStartY;
+    const gap = 5;
 
-    // Decide grid baseado em quantos países (1=1col, 2=2col, 3-4=2col, 5-6=3col)
     let cols;
     if (countries.length <= 1) cols = 1;
+    else if (countries.length <= 2) cols = 2;
     else if (countries.length <= 4) cols = 2;
     else cols = 3;
     const rows = Math.ceil(countries.length / cols);
@@ -5784,85 +5862,134 @@ async function exportRecruitmentPdf() {
       const col = idx % cols;
       const row = Math.floor(idx / cols);
       const x = 15 + col * (cardW + gap);
-      const y = startY + row * (cardH + gap);
+      const y = gridStartY + row * (cardH + gap);
+      const accent = COUNTRY_ACCENT[country] || C_ACCENT;
 
       // Card background
       pdf.setFillColor(255, 255, 255);
       pdf.setDrawColor(...C_BORDER);
       pdf.roundedRect(x, y, cardW, cardH, 3, 3, 'FD');
 
-      // Country header band
-      pdf.setFillColor(...C_BG_TINT);
-      pdf.roundedRect(x, y, cardW, 10, 3, 3, 'F');
-      pdf.setFillColor(...C_BG_TINT);
-      pdf.rect(x, y + 4, cardW, 6, 'F');  // tira o arredondamento inferior do header
+      // Stripe colorida do país (lateral esquerda)
+      pdf.setFillColor(...accent);
+      pdf.rect(x, y, 4, cardH, 'F');
 
-      // Country name + count
+      // Country header
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(11);
+      pdf.setFontSize(13);
       pdf.setTextColor(...C_PRIMARY);
-      const flag = FLAGS[country] || '';
-      const headerText = flag ? (flag + '  ' + country) : country;
-      pdf.text(headerText, x + 4, y + 7);
+      pdf.text(country, x + 9, y + 8);
 
       // Count badge à direita
-      const countText = String(byCountry[country].length);
+      const count = byCountry[country].length;
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(9);
-      pdf.setTextColor(...C_ACCENT);
-      pdf.text(countText + ' ' + t('summaryOpen').toLowerCase(),
-        x + cardW - 4, y + 7, { align: 'right' });
+      pdf.setFontSize(20);
+      pdf.setTextColor(...accent);
+      pdf.text(String(count), x + cardW - 6, y + 9, { align: 'right' });
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(...C_MUTED);
+      pdf.text(t('summaryOpen').toUpperCase(),
+        x + cardW - 6, y + 12.5, { align: 'right' });
+
+      // Divisor
+      pdf.setDrawColor(...C_BORDER);
+      pdf.setLineWidth(0.3);
+      pdf.line(x + 9, y + 15, x + cardW - 6, y + 15);
 
       // Lista de cidades
-      let listY = y + 14;
-      const maxRows = Math.floor((cardH - 14) / 8) - 1; // quantas linhas cabem
-      byCountry[country].slice(0, maxRows).forEach(v => {
-        // pin
-        pdf.setFillColor(...C_ACCENT);
-        pdf.circle(x + 5, listY + 1.8, 1, 'F');
+      const itemH = 9;
+      const listStartY = y + 20;
+      const availableH = cardH - 22;
+      const maxRows = Math.floor(availableH / itemH);
+      const visible = byCountry[country].slice(0, maxRows);
 
-        // city
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(9);
+      visible.forEach((v, i) => {
+        const itemY = listStartY + i * itemH;
+        const statusKey = (v.status || '').toLowerCase();
+
+        // Pin (status color)
+        let pinColor = C_SUCCESS;
+        if (statusKey === 'on hold') pinColor = C_WARN;
+        else if (statusKey === 'shortlisted' || statusKey === 'in progress') pinColor = C_INFO;
+        pdf.setFillColor(...pinColor);
+        pdf.circle(x + 10, itemY + 0.5, 1.3, 'F');
+
+        // City name
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(9.5);
         pdf.setTextColor(...C_TEXT);
         const city = v.city || '—';
-        const maxCityW = cardW - 40;
-        const cityClipped = clipText(pdf, city, maxCityW);
-        pdf.text(cityClipped, x + 8, listY + 2.5);
+        const cityMaxW = cardW * 0.55;
+        const cityClipped = clipText(pdf, city, cityMaxW);
+        pdf.text(cityClipped, x + 13, itemY + 1.5);
 
-        // status pill à direita
-        const statusKey = (v.status || '').toLowerCase();
-        let pillBg = C_OPEN_BG, pillText = C_SUCCESS, label = v.status;
-        if (statusKey === 'on hold') { pillBg = C_HOLD_BG; pillText = C_WARN; label = t('statusOnHold'); }
-        else if (statusKey === 'shortlisted') { pillBg = C_SHORT_BG; pillText = C_BRAND; label = t('statusShortlisted'); }
-        else if (statusKey === 'open') { label = t('statusOpen'); }
-        else if (statusKey === 'in progress') { pillBg = C_SHORT_BG; pillText = C_BRAND; label = t('statusInProgress'); }
+        // Days open subtitle (small, below city)
+        const daysOpen = computeDaysOpen(v.raisedOn);
+        if (daysOpen !== null) {
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(7);
+          pdf.setTextColor(...C_MUTED);
+          pdf.text(t('exportRecruitmentSince') + ' ' + daysOpen + 'd', x + 13, itemY + 5.5);
+        }
 
+        // Status pill à direita
+        let pillBg = C_OPEN_BG, pillText = C_SUCCESS, label = t('statusOpen');
+        if (statusKey === 'on hold')   { pillBg = C_HOLD_BG;  pillText = C_WARN; label = t('statusOnHold'); }
+        else if (statusKey === 'shortlisted') { pillBg = C_SHORT_BG; pillText = C_INFO; label = t('statusShortlisted'); }
+        else if (statusKey === 'in progress') { pillBg = C_SHORT_BG; pillText = C_INFO; label = t('statusInProgress'); }
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(7);
-        const pillW = pdf.getTextWidth(label) + 4;
+        const pillW = pdf.getTextWidth(label) + 5;
         pdf.setFillColor(...pillBg);
-        pdf.roundedRect(x + cardW - pillW - 3, listY - 1.2, pillW, 5, 1.2, 1.2, 'F');
+        pdf.roundedRect(x + cardW - pillW - 5, itemY - 1.5, pillW, 6, 1.5, 1.5, 'F');
         pdf.setTextColor(...pillText);
-        pdf.text(label, x + cardW - pillW - 1, listY + 2.2);
-
-        listY += 8;
+        pdf.text(label, x + cardW - pillW - 5 + pillW / 2, itemY + 2, { align: 'center' });
       });
+
+      // Mostra "+ N a mais" se overflow
       if (byCountry[country].length > maxRows) {
         pdf.setFont('helvetica', 'italic');
         pdf.setFontSize(8);
         pdf.setTextColor(...C_MUTED);
-        pdf.text('+ ' + (byCountry[country].length - maxRows) + ' …', x + 8, listY + 2);
+        pdf.text('+ ' + (byCountry[country].length - maxRows) + ' …',
+          x + 13, listStartY + visible.length * itemH + 2);
       }
     });
 
-    // -------- FOOTER --------
-    pdf.setFillColor(...C_BG_TINT);
-    pdf.rect(0, pageH - 14, pageW, 14, 'F');
-    pdf.setFont('helvetica', 'italic');
-    pdf.setFontSize(10);
-    pdf.setTextColor(...C_BRAND);
-    pdf.text(t('exportRecruitmentFooter'), pageW / 2, pageH - 6, { align: 'center' });
+    // ========== FOOTER ==========
+    pdf.setFillColor(...C_PRIMARY_DEEP);
+    pdf.rect(0, pageH - 18, pageW, 18, 'F');
+    pdf.setFillColor(...C_ACCENT);
+    pdf.rect(0, pageH - 18, pageW, 1.2, 'F');
+
+    // Legend
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7);
+    pdf.setTextColor(...C_ACCENT_SOFT);
+    const legendY = pageH - 11;
+    let legendX = 15;
+    const legendItem = (label, color) => {
+      pdf.setFillColor(...color);
+      pdf.circle(legendX, legendY - 0.5, 1.3, 'F');
+      pdf.setTextColor(...C_ACCENT_SOFT);
+      pdf.text(label, legendX + 2.5, legendY);
+      legendX += pdf.getTextWidth(label) + 9;
+    };
+    legendItem(t('statusOpen').toUpperCase(), C_SUCCESS);
+    legendItem(t('statusShortlisted').toUpperCase(), C_INFO);
+    legendItem(t('statusOnHold').toUpperCase(), C_WARN);
+
+    // Call to action
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(t('exportRecruitmentFooter'), pageW - 15, pageH - 8, { align: 'right' });
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7);
+    pdf.setTextColor(...C_ACCENT_SOFT);
+    pdf.text('aceolution.com  ·  Street View LATAM Recruitment',
+      pageW - 15, pageH - 4, { align: 'right' });
 
     // Save
     pdf.save('LATAM_Vagas_' + dateStamp(now) + '.pdf');
@@ -5872,6 +5999,23 @@ async function exportRecruitmentPdf() {
   } finally {
     showLoader(false);
   }
+}
+
+function computeDaysOpen(raisedOn) {
+  if (!raisedOn) return null;
+  let d;
+  // Tenta formato yyyy-MM-dd (vem do backend assim)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raisedOn)) {
+    d = new Date(raisedOn + 'T00:00:00');
+  } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(raisedOn)) {
+    const [day, mo, yr] = raisedOn.split('/').map(Number);
+    d = new Date(yr, mo - 1, day);
+  } else {
+    d = new Date(raisedOn);
+  }
+  if (isNaN(d.getTime())) return null;
+  const diff = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+  return diff >= 0 ? diff : null;
 }
 
 function dateStamp(d) {

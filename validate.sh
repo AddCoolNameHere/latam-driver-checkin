@@ -57,6 +57,7 @@ check_html ar-divergencias.html
 check_html ar-divergencias-admin.html
 check_html admin.html
 check_html admin-users.html
+check_html recruitment.html
 
 # Backend
 check_gas "apps-script/Code udpt.gs"

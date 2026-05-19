@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vagas Abertas · LATAM · Aceolution</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<script src="auth.js?v=20260518b"></script>
+<script src="theme.js?v=20260518c"></script>
+<link rel="stylesheet" href="theme.css?v=20260518c">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- LOGIN (mesmo padrão dos outros admin) ---------- */
+  .login-screen {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; z-index: 10000;
+  }
+  .login-card {
+    background: var(--c-surface); border-radius: 16px;
+    padding: 36px 32px 28px; max-width: 380px; width: 100%;
+    box-shadow: 0 20px 60px rgba(15,23,42,0.25); text-align: center;
+  }
+  .login-logo-img { height: 44px; display: block; margin: 0 auto 18px; }
+  .login-title { font-size: 20px; font-weight: 700; color: var(--c-primary-dark); margin-bottom: 4px; }
+  .login-sub { font-size: 13px; color: var(--c-text-muted); margin-bottom: 24px; }
+  .login-card form { text-align: left; }
+  .login-card label { display: block; font-size: 11px; font-weight: 600; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .login-card input { width: 100%; padding: 11px 14px; border: 1px solid var(--c-border); border-radius: 8px; font-size: 14px; font-family: inherit; margin-bottom: 12px; background: var(--c-surface); color: var(--c-text); }
+  .login-card input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
+  .login-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px; font-family: inherit; }
+  .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .login-error { color: var(--c-danger); font-size: 12px; margin-top: 10px; min-height: 16px; display: none; }
+  .login-error.visible { display: block; }
+
+  /* ---------- TOPBAR ---------- */
+  header.topbar {
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+    padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+    position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo-img { height: 28px; }
+  .brand-divider { width: 1px; height: 22px; background: var(--c-border-strong); }
+  .brand-region { font-size: 11px; color: var(--c-text-muted); letter-spacing: 1.3px; font-weight: 700; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .lang-switch { display: flex; gap: 2px; background: var(--c-bg-tint); border-radius: 6px; padding: 2px; }
+  .lang-switch button { background: none; border: none; padding: 4px 9px; font-size: 11px; font-weight: 600; color: var(--c-text-muted); cursor: pointer; border-radius: 4px; font-family: inherit; }
+  .lang-switch button.active { background: var(--c-surface); color: var(--c-primary-dark); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+  .user-pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; background: var(--c-bg-tint); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--c-primary-dark); }
+  .user-avatar { width: 24px; height: 24px; background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .back-link, .pdf-btn, .logout-btn { background: none; border: 1px solid var(--c-border); padding: 6px 12px; border-radius: 8px; font-size: 12px; color: var(--c-text-muted); cursor: pointer; font-family: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+  .back-link:hover { background: var(--c-bg-tint); color: var(--c-primary); border-color: var(--c-primary); }
+  .pdf-btn { background: var(--c-primary); color: white; border-color: var(--c-primary); font-weight: 600; }
+  .pdf-btn:hover { background: var(--c-primary-dark); border-color: var(--c-primary-dark); }
+  .logout-btn:hover { background: var(--c-bg); color: var(--c-danger); border-color: var(--c-danger); }
+
+  /* ---------- HERO HEADER ---------- */
+  .hero {
+    position: relative;
+    background: linear-gradient(135deg, #0F2443 0%, #1A365D 45%, #2C5282 100%);
+    color: white;
+    padding: 36px 24px 28px;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 80% 50%, rgba(74,159,224,0.25), transparent 60%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 24px; flex-wrap: wrap; position: relative; z-index: 1;
+  }
+  .hero-text { flex: 1; min-width: 280px; }
+  .hero-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: #C8DEF0; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .hero-title {
+    font-size: 40px; font-weight: 800;
+    letter-spacing: -0.5px; line-height: 1.05;
+    margin-bottom: 8px;
+  }
+  .hero-subtitle {
+    font-size: 14px; color: #C8DEF0;
+    font-weight: 500;
+  }
+  .hero-total {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: white;
+    width: 132px; height: 132px;
+    border-radius: 50%;
+    box-shadow: 0 12px 36px rgba(15,23,42,0.4);
+    color: var(--c-primary-dark);
+  }
+  .hero-total-num {
+    font-size: 56px; font-weight: 800; line-height: 1;
+    color: var(--c-primary);
+  }
+  .hero-total-label {
+    font-size: 9.5px; font-weight: 700; letter-spacing: 1.5px;
+    color: var(--c-text-muted); text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .hero-accent-line {
+    height: 3px;
+    background: linear-gradient(90deg, #4A9FE0 0%, transparent 100%);
+  }
+
+  /* ---------- MAIN ---------- */
+  main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+
+  /* ---------- SNAPSHOT RIBBON ---------- */
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    color: var(--c-text-muted); text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .ribbon {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+  .ribbon-item {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 14px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .ribbon-item.active:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15,23,42,0.10);
+  }
+  .ribbon-item-stripe {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--country-color, var(--c-accent));
+  }
+  .ribbon-country {
+    font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    color: var(--c-primary-dark); text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .ribbon-item.dim .ribbon-country { color: var(--c-text-dim); }
+  .ribbon-main {
+    display: flex; align-items: baseline; gap: 6px;
+    margin-bottom: 4px;
+  }
+  .ribbon-num {
+    font-size: 28px; font-weight: 800;
+    color: var(--country-color, var(--c-accent));
+    line-height: 1;
+  }
+  .ribbon-item.dim .ribbon-num { color: var(--c-text-dim); }
+  .ribbon-num-label {
+    font-size: 11px; font-weight: 600; color: var(--c-text-muted);
+  }
+  .ribbon-sub {
+    font-size: 10.5px; color: var(--c-text-muted);
+    display: flex; gap: 10px;
+  }
+  .ribbon-sub strong { color: var(--c-text); font-weight: 700; }
+
+  /* ---------- COUNTRY CARDS ---------- */
+  .countries-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+  }
+  .country-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: transform 0.18s, box-shadow 0.18s;
+    display: flex; flex-direction: column;
+  }
+  .country-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,23,42,0.10);
+  }
+  .country-card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 20px 12px;
+    border-bottom: 1px solid var(--c-border);
+    position: relative;
+  }
+  .country-card-header::before {
+    content: ''; position: absolute; top: 0; left: 0; bottom: 0;
+    width: 5px;
+    background: var(--country-color, var(--c-accent));
+  }
+  .country-card-title {
+    font-size: 18px; font-weight: 800;
+    color: var(--c-primary-dark);
+  }
+  .country-card-count {
+    text-align: right;
+  }
+  .country-card-count-num {
+    font-size: 26px; font-weight: 800;
+    color: var(--country-color, var(--c-accent));
+    line-height: 1;
+  }
+  .country-card-count-label {
+    font-size: 9px; font-weight: 700; letter-spacing: 1.2px;
+    color: var(--c-text-muted); text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .country-card-list {
+    padding: 8px 0;
+    flex: 1;
+  }
+  .city-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px;
+    transition: background 0.12s;
+  }
+  .city-row + .city-row { border-top: 1px dashed var(--c-border); }
+  .city-row:hover { background: var(--c-bg-tint); }
+  .city-pin {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--status-color, var(--c-success));
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.15);
+    flex-shrink: 0;
+  }
+  .city-info { flex: 1; min-width: 0; }
+  .city-name {
+    font-size: 14px; font-weight: 700; color: var(--c-text);
+    margin-bottom: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .city-meta {
+    font-size: 11px; color: var(--c-text-muted);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .status-pill {
+    display: inline-flex; align-items: center;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.4px;
+    background: var(--pill-bg);
+    color: var(--pill-text);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .pill-open    { --pill-bg: #DCFCE7; --pill-text: #166534; }
+  .pill-hold    { --pill-bg: #FEF3C7; --pill-text: #854D0E; }
+  .pill-short   { --pill-bg: #DBEAFE; --pill-text: #1E40AF; }
+  .pill-progress{ --pill-bg: #E0E7FF; --pill-text: #3730A3; }
+
+  /* ---------- LEGEND / EMPTY / LOADING ---------- */
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    margin-top: 28px;
+    padding: 14px 18px;
+    background: var(--c-bg-tint);
+    border-radius: 10px;
+    font-size: 12px; color: var(--c-text-muted);
+  }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .empty {
+    text-align: center; padding: 60px 20px;
+    color: var(--c-text-muted);
+  }
+  .empty-icon { font-size: 56px; margin-bottom: 12px; }
+  .empty-text { font-size: 16px; font-weight: 600; }
+
+  .loading {
+    text-align: center; padding: 60px 20px;
+    color: var(--c-text-muted);
+  }
+  .spinner {
+    display: inline-block; width: 32px; height: 32px;
+    border: 3px solid var(--c-border);
+    border-top-color: var(--c-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-box {
+    background: #FEE2E2; color: #991B1B;
+    padding: 16px 20px; border-radius: 10px;
+    font-size: 13px;
+    border: 1px solid #FCA5A5;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer.page-footer {
+    background: linear-gradient(135deg, #0F2443 0%, #1A365D 100%);
+    color: white;
+    padding: 28px 24px;
+    text-align: center;
+  }
+  .footer-cta {
+    font-size: 17px; font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .footer-sub {
+    font-size: 12px; color: #C8DEF0;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 720px) {
+    .hero { padding: 24px 18px; }
+    .hero-title { font-size: 28px; }
+    .hero-total { width: 100px; height: 100px; }
+    .hero-total-num { font-size: 40px; }
+    main { padding: 20px 16px 60px; }
+    .countries-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="login-logo-img">
+    <div class="login-title" id="login-title">Vagas Abertas</div>
+    <div class="login-sub" id="login-sub">Acesso interno</div>
+    <form onsubmit="return doLogin(event)">
+      <label id="login-label-user">Usuário</label>
+      <input type="text" id="login-username" required autofocus autocomplete="username">
+      <label id="login-label-pass">Senha</label>
+      <input type="password" id="login-password" required autocomplete="current-password">
+      <button type="submit" class="login-btn" id="login-btn">Entrar</button>
+      <div class="login-error" id="login-error"></div>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+
+<header class="topbar">
+  <div class="brand">
+    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo-img">
+    <div class="brand-divider"></div>
+    <span class="brand-region" id="brand-region">LATAM · RECRUITMENT</span>
+  </div>
+  <div class="topbar-right">
+    <div class="lang-switch">
+      <button type="button" data-lang="pt" onclick="setLang('pt')" class="active">PT</button>
+      <button type="button" data-lang="es" onclick="setLang('es')">ES</button>
+      <button type="button" data-lang="en" onclick="setLang('en')">EN</button>
+    </div>
+    <a class="back-link" href="admin.html" id="back-link">← Hub</a>
+    <button class="pdf-btn" onclick="window.print()" id="pdf-btn">⎙ <span id="pdf-btn-label">Imprimir / PDF</span></button>
+    <div class="user-pill">
+      <div class="user-avatar" id="user-avatar">U</div>
+      <span id="user-name">User</span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()" id="logout-btn">Sair</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="hero-eyebrow" id="hero-eyebrow">Aceolution · Street View LATAM</div>
+      <h1 class="hero-title" id="hero-title">Vagas Abertas</h1>
+      <div class="hero-subtitle" id="hero-subtitle">Atualizado em —</div>
+    </div>
+    <div class="hero-total">
+      <div class="hero-total-num" id="hero-total-num">—</div>
+      <div class="hero-total-label" id="hero-total-label">Vagas Abertas</div>
+    </div>
+  </div>
+</section>
+<div class="hero-accent-line"></div>
+
+<main>
+  <div id="content">
+    <div class="loading"><div class="spinner"></div><div style="margin-top:12px;" id="loading-text">Carregando vagas...</div></div>
+  </div>
+</main>
+
+<footer class="page-footer">
+  <div class="footer-cta" id="footer-cta">Interessado? Fale com o RH ou seu líder de país</div>
+  <div class="footer-sub">aceolution.com · Street View LATAM Recruitment</div>
+</footer>
+
+</div>
+
+<script>
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+};
+
+// Cores por país (mesmas do PDF)
+const COUNTRY_COLOR = {
+  'Brazil':    '#009C3B', 'Brasil': '#009C3B',
+  'Argentina': '#74ACDF',
+  'Chile':     '#D52B1E',
+  'Peru':      '#D91023', 'Perú': '#D91023',
+  'México':    '#006847', 'Mexico': '#006847',
+  'Colombia':  '#FCD116',
+};
+const COUNTRY_ORDER = ['Brazil', 'Argentina', 'Chile', 'Peru', 'México', 'Colombia'];
+
+// ----- i18n -----
+const I18N = {
+  pt: {
+    loginTitle: 'Vagas Abertas', loginSub: 'Acesso interno',
+    labelUser: 'Usuário', labelPass: 'Senha', loginBtn: 'Entrar',
+    loginErrorEmpty: 'Preencha usuário e senha', loginErrorInvalid: 'Usuário ou senha inválidos',
+    region: 'LATAM · RECRUITMENT',
+    pdfBtn: 'Imprimir / PDF', backLink: '← Hub', logoutBtn: 'Sair',
+    heroEyebrow: 'Aceolution · Street View LATAM', heroTitle: 'Vagas Abertas',
+    heroTotalLabel: 'Vagas Abertas', heroSubtitle: 'Atualizado em',
+    loadingText: 'Carregando vagas...',
+    snapshotLabel: 'Snapshot por país', openingsLabel: 'Vagas em aberto',
+    summaryOpen: 'Abertas', summaryActive: 'Ativos', summaryHired: 'Contratados',
+    emptyTitle: 'Nenhuma vaga aberta no momento',
+    statusOpen: 'Aberta', statusShortlisted: 'Pré-selecionado', statusOnHold: 'Em pausa', statusInProgress: 'Em andamento',
+    citySince: 'Aberta há', daysAgo: 'dias',
+    footerCta: 'Interessado? Fale com o RH ou seu líder de país',
+    confirmLogout: 'Sair?',
+  },
+  es: {
+    loginTitle: 'Vacantes Abiertas', loginSub: 'Acceso interno',
+    labelUser: 'Usuario', labelPass: 'Contraseña', loginBtn: 'Entrar',
+    loginErrorEmpty: 'Complete usuario y contraseña', loginErrorInvalid: 'Usuario o contraseña inválidos',
+    region: 'LATAM · RECLUTAMIENTO',
+    pdfBtn: 'Imprimir / PDF', backLink: '← Hub', logoutBtn: 'Salir',
+    heroEyebrow: 'Aceolution · Street View LATAM', heroTitle: 'Vacantes Abiertas',
+    heroTotalLabel: 'Vacantes Abiertas', heroSubtitle: 'Actualizado en',
+    loadingText: 'Cargando vacantes...',
+    snapshotLabel: 'Snapshot por país', openingsLabel: 'Vacantes abiertas',
+    summaryOpen: 'Abiertas', summaryActive: 'Activos', summaryHired: 'Contratados',
+    emptyTitle: 'No hay vacantes abiertas en este momento',
+    statusOpen: 'Abierta', statusShortlisted: 'Preseleccionado', statusOnHold: 'En pausa', statusInProgress: 'En curso',
+    citySince: 'Abierta hace', daysAgo: 'días',
+    footerCta: '¿Interesado? Habla con RH o con tu líder de país',
+    confirmLogout: '¿Salir?',
+  },
+  en: {
+    loginTitle: 'Open Positions', loginSub: 'Internal access',
+    labelUser: 'Username', labelPass: 'Password', loginBtn: 'Sign in',
+    loginErrorEmpty: 'Enter username and password', loginErrorInvalid: 'Invalid username or password',
+    region: 'LATAM · RECRUITMENT',
+    pdfBtn: 'Print / PDF', backLink: '← Hub', logoutBtn: 'Sign out',
+    heroEyebrow: 'Aceolution · Street View LATAM', heroTitle: 'Open Positions',
+    heroTotalLabel: 'Open Positions', heroSubtitle: 'Updated on',
+    loadingText: 'Loading positions...',
+    snapshotLabel: 'Country snapshot', openingsLabel: 'Current openings',
+    summaryOpen: 'Open', summaryActive: 'Active', summaryHired: 'Hired',
+    emptyTitle: 'No open positions at the moment',
+    statusOpen: 'Open', statusShortlisted: 'Shortlisted', statusOnHold: 'On Hold', statusInProgress: 'In Progress',
+    citySince: 'Open for', daysAgo: 'days',
+    footerCta: 'Interested? Talk to HR or your country lead',
+    confirmLogout: 'Sign out?',
+  },
+};
+let currentLang = 'pt';
+let currentUser = null;
+let recruitmentData = null;
+
+function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || I18N.pt[key] || key; }
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  applyI18n();
+  if (recruitmentData) renderContent();
+}
+
+function applyI18n() {
+  document.getElementById('login-title').textContent = t('loginTitle');
+  document.getElementById('login-sub').textContent = t('loginSub');
+  document.getElementById('login-label-user').textContent = t('labelUser');
+  document.getElementById('login-label-pass').textContent = t('labelPass');
+  document.getElementById('login-btn').textContent = t('loginBtn');
+  document.getElementById('brand-region').textContent = t('region');
+  document.getElementById('pdf-btn-label').textContent = t('pdfBtn');
+  document.getElementById('back-link').textContent = t('backLink');
+  document.getElementById('logout-btn').textContent = t('logoutBtn');
+  document.getElementById('hero-eyebrow').textContent = t('heroEyebrow');
+  document.getElementById('hero-title').textContent = t('heroTitle');
+  document.getElementById('hero-total-label').textContent = t('heroTotalLabel');
+  document.getElementById('loading-text').textContent = t('loadingText');
+  document.getElementById('footer-cta').textContent = t('footerCta');
+  document.documentElement.lang = currentLang;
+}
+
+// ---------- LOGIN ----------
+async function doLogin(e) {
+  e.preventDefault();
+  const u = document.getElementById('login-username').value.trim().toLowerCase();
+  const p = document.getElementById('login-password').value;
+  const err = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  err.classList.remove('visible');
+  if (!u || !p) { err.textContent = t('loginErrorEmpty'); err.classList.add('visible'); return false; }
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    const user = await validateLogin(u, p);
+    if (!user) {
+      await new Promise(r => setTimeout(r, 400));
+      err.textContent = t('loginErrorInvalid');
+      err.classList.add('visible');
+      document.getElementById('login-password').value = '';
+      btn.disabled = false; btn.textContent = t('loginBtn');
+      return false;
+    }
+    currentUser = user;
+    saveSession(user);
+    onLoginSuccess();
+  } catch (er) {
+    err.textContent = 'Erro: ' + er.message;
+    err.classList.add('visible');
+    btn.disabled = false; btn.textContent = t('loginBtn');
+  }
+  return false;
+}
+
+function onLoginSuccess() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = '';
+  document.getElementById('user-name').textContent = currentUser.fullName;
+  document.getElementById('user-avatar').textContent =
+    currentUser.fullName.split(' ').map(s => s[0].toUpperCase()).slice(0, 2).join('');
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
+  loadData();
+}
+
+function doLogout() {
+  if (!confirm(t('confirmLogout'))) return;
+  clearSession();
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-btn').disabled = false;
+  document.getElementById('login-btn').textContent = t('loginBtn');
+  if (typeof removeThemeToggle === 'function') removeThemeToggle();
+}
+
+// ---------- DATA + RENDER ----------
+async function loadData() {
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getRecruitmentData').then(r => r.json());
+    if (!res.success) throw new Error(res.error || 'Erro do backend');
+    recruitmentData = res.data;
+    renderContent();
+  } catch (err) {
+    document.getElementById('content').innerHTML =
+      '<div class="error-box">Erro ao carregar dados: ' + escapeHtml(err.message) + '</div>';
+  }
+}
+
+function renderContent() {
+  if (!recruitmentData) return;
+  const demand = recruitmentData.demand || [];
+  const summary = recruitmentData.summary || [];
+  const totalOpen = demand.length;
+
+  // Update hero
+  const now = new Date();
+  const locale = currentLang === 'pt' ? 'pt-BR' : currentLang === 'es' ? 'es-ES' : 'en-US';
+  document.getElementById('hero-total-num').textContent = totalOpen;
+  document.getElementById('hero-subtitle').textContent =
+    t('heroSubtitle') + ' ' + now.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
+
+  const content = document.getElementById('content');
+
+  if (totalOpen === 0) {
+    content.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🎉</div>
+        <div class="empty-text">${t('emptyTitle')}</div>
+      </div>
+    `;
+    return;
+  }
+
+  // Build snapshot ribbon
+  const summaryByCountry = {};
+  summary.forEach(s => summaryByCountry[s.country] = s);
+
+  const ribbonHtml = COUNTRY_ORDER.map(country => {
+    const s = summaryByCountry[country];
+    if (!s) return '';
+    const open = s.open || 0;
+    const active = s.currentlyActive || 0;
+    const hired = s.hired || 0;
+    const color = COUNTRY_COLOR[country] || 'var(--c-accent)';
+    const dimClass = open === 0 ? 'dim' : 'active';
+    return `
+      <div class="ribbon-item ${dimClass}" style="--country-color: ${color}">
+        <div class="ribbon-item-stripe"></div>
+        <div class="ribbon-country">${escapeHtml(country)}</div>
+        <div class="ribbon-main">
+          <div class="ribbon-num">${open}</div>
+          <div class="ribbon-num-label">${t('summaryOpen').toLowerCase()}</div>
+        </div>
+        <div class="ribbon-sub">
+          <span><strong>${active}</strong> ${t('summaryActive').toLowerCase()}</span>
+          <span><strong>${hired}</strong> ${t('summaryHired').toLowerCase()}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Group demand by country
+  const byCountry = {};
+  demand.forEach(d => {
+    const c = d.country || '—';
+    if (!byCountry[c]) byCountry[c] = [];
+    byCountry[c].push(d);
+  });
+  const countries = Object.keys(byCountry).sort((a, b) => byCountry[b].length - byCountry[a].length);
+
+  const cardsHtml = countries.map(country => {
+    const items = byCountry[country];
+    const color = COUNTRY_COLOR[country] || 'var(--c-accent)';
+    const itemsHtml = items.map(v => {
+      const sk = (v.status || '').toLowerCase();
+      let pillClass = 'pill-open', label = t('statusOpen'), pinColor = '#16A34A';
+      if (sk === 'on hold') { pillClass = 'pill-hold'; label = t('statusOnHold'); pinColor = '#CA8A04'; }
+      else if (sk === 'shortlisted') { pillClass = 'pill-short'; label = t('statusShortlisted'); pinColor = '#2563EB'; }
+      else if (sk === 'in progress') { pillClass = 'pill-progress'; label = t('statusInProgress'); pinColor = '#4F46E5'; }
+      const days = computeDaysOpen(v.raisedOn);
+      const daysHtml = days !== null
+        ? `<span>${t('citySince')} ${days} ${t('daysAgo')}</span>` : '';
+      return `
+        <div class="city-row">
+          <span class="city-pin" style="background: ${pinColor}; box-shadow: 0 0 0 3px ${pinColor}26;"></span>
+          <div class="city-info">
+            <div class="city-name">${escapeHtml(v.city || '—')}</div>
+            <div class="city-meta">${daysHtml}</div>
+          </div>
+          <span class="status-pill ${pillClass}">${label}</span>
+        </div>
+      `;
+    }).join('');
+    return `
+      <div class="country-card" style="--country-color: ${color}">
+        <div class="country-card-header">
+          <div class="country-card-title">${escapeHtml(country)}</div>
+          <div class="country-card-count">
+            <div class="country-card-count-num">${items.length}</div>
+            <div class="country-card-count-label">${t('summaryOpen')}</div>
+          </div>
+        </div>
+        <div class="country-card-list">${itemsHtml}</div>
+      </div>
+    `;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="section-label">${t('snapshotLabel')}</div>
+    <div class="ribbon">${ribbonHtml}</div>
+    <div class="section-label">${t('openingsLabel')}</div>
+    <div class="countries-grid">${cardsHtml}</div>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-dot" style="background:#16A34A;"></span>${t('statusOpen')}</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#2563EB;"></span>${t('statusShortlisted')}</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#CA8A04;"></span>${t('statusOnHold')}</span>
+    </div>
+  `;
+}
+
+// ---------- HELPERS ----------
+function computeDaysOpen(raisedOn) {
+  if (!raisedOn) return null;
+  let d;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raisedOn)) {
+    d = new Date(raisedOn + 'T00:00:00');
+  } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(raisedOn)) {
+    const [day, mo, yr] = raisedOn.split('/').map(Number);
+    d = new Date(yr, mo - 1, day);
+  } else {
+    d = new Date(raisedOn);
+  }
+  if (isNaN(d.getTime())) return null;
+  const diff = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+  return diff >= 0 ? diff : null;
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyI18n();
+  const saved = loadSession();
+  if (saved) { currentUser = saved; onLoginSuccess(); }
+});
+</script>
+
+<style media="print">
+  /* Print: oculta topbar e ajusta página A4 landscape */
+  @page { size: A4 landscape; margin: 10mm; }
+  body { background: white !important; }
+  header.topbar, footer.page-footer { display: none !important; }
+  .theme-toggle-btn { display: none !important; }
+  .hero { padding: 18px 16px; break-inside: avoid; }
+  .hero-title { font-size: 28px; }
+  .hero-total { width: 100px; height: 100px; }
+  .hero-total-num { font-size: 40px; }
+  main { padding: 14px 16px 0; }
+  .country-card { break-inside: avoid; box-shadow: none !important; }
+  .ribbon-item { break-inside: avoid; }
+</style>
+
+</body>
+</html>
