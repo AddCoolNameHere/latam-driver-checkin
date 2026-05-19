@@ -8,7 +8,8 @@
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <script src="auth.js?v=20260518b"></script>
 <script src="theme.js?v=20260518c"></script>
-<link rel="stylesheet" href="theme.css?v=20260518c">
+<script src="common.js?v=20260519a"></script>
+<link rel="stylesheet" href="theme.css?v=20260519a">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -19,65 +20,6 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* LOGIN */
-  .login-screen {
-    position: fixed; inset: 0;
-    background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
-    display: flex; align-items: center; justify-content: center;
-    padding: 20px; z-index: 10000;
-  }
-  .login-card {
-    background: var(--c-surface); border-radius: 16px;
-    padding: 36px 32px 28px; max-width: 380px; width: 100%;
-    box-shadow: 0 20px 60px rgba(15,23,42,0.25); text-align: center;
-  }
-  .login-logo-img { height: 44px; display: block; margin: 0 auto 18px; }
-  .login-title { font-size: 20px; font-weight: 700; color: var(--c-primary-dark); margin-bottom: 4px; }
-  .login-sub { font-size: 13px; color: var(--c-text-muted); margin-bottom: 24px; }
-  .login-card form { text-align: left; }
-  .login-card label { display: block; font-size: 11px; font-weight: 600; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-  .login-card input { width: 100%; padding: 11px 14px; border: 1px solid var(--c-border); border-radius: 8px; font-size: 14px; font-family: inherit; margin-bottom: 12px; }
-  .login-card input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
-  .login-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px; font-family: inherit; }
-  .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .login-error { color: var(--c-danger); font-size: 12px; margin-top: 10px; min-height: 16px; display: none; }
-  .login-error.visible { display: block; }
-
-  /* DENIED screen */
-  .denied-screen {
-    position: fixed; inset: 0;
-    background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 100%);
-    display: flex; align-items: center; justify-content: center;
-    padding: 20px; z-index: 9999;
-  }
-  .denied-card {
-    background: var(--c-surface); border-radius: 16px;
-    padding: 36px 32px; max-width: 420px; width: 100%;
-    text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  }
-  .denied-icon { font-size: 48px; margin-bottom: 12px; }
-  .denied-title { font-size: 20px; font-weight: 700; color: var(--c-danger); margin-bottom: 8px; }
-  .denied-sub { font-size: 13px; color: var(--c-text-muted); margin-bottom: 20px; }
-  .denied-btn { display: inline-block; padding: 10px 18px; background: var(--c-primary); color: white; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; font-family: inherit; }
-
-  /* TOPBAR */
-  header.topbar {
-    background: var(--c-surface); border-bottom: 1px solid var(--c-border);
-    padding: 14px 24px; display: flex; align-items: center;
-    justify-content: space-between; flex-wrap: wrap; gap: 12px;
-  }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand-logo-img { height: 28px; display: block; }
-  .brand-divider { width: 1px; height: 22px; background: var(--c-border-strong); }
-  .brand-region { font-size: 12px; color: var(--c-text-muted); letter-spacing: 1.2px; font-weight: 600; }
-  .topbar-right { display: flex; align-items: center; gap: 10px; }
-  .user-pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; background: var(--c-bg-tint); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--c-primary-dark); }
-  .user-avatar { width: 24px; height: 24px; background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
-  .back-link, .logout-btn { background: none; border: 1px solid var(--c-border); padding: 6px 12px; border-radius: 8px; font-size: 12px; color: var(--c-text-muted); cursor: pointer; font-family: inherit; text-decoration: none; }
-  .back-link:hover { background: var(--c-bg); color: var(--c-primary); border-color: var(--c-primary); }
-  .logout-btn:hover { background: var(--c-bg); color: var(--c-danger); border-color: var(--c-danger); }
-
-  /* MAIN */
   main {
     max-width: 980px;
     margin: 0 auto;
@@ -228,51 +170,8 @@
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login-screen" class="login-screen">
-  <div class="login-card">
-    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="login-logo-img">
-    <div class="login-title">Gestão de Usuários</div>
-    <div class="login-sub">Acesso restrito — super admin</div>
-    <form onsubmit="return doLogin(event)">
-      <label>Usuário</label>
-      <input type="text" id="login-username" required autofocus autocomplete="username">
-      <label>Senha</label>
-      <input type="password" id="login-password" required autocomplete="current-password">
-      <button type="submit" class="login-btn" id="login-btn">Entrar</button>
-      <div class="login-error" id="login-error"></div>
-    </form>
-  </div>
-</div>
-
-<!-- ACCESS DENIED -->
-<div id="denied-screen" class="denied-screen" style="display:none;">
-  <div class="denied-card">
-    <div class="denied-icon">🔒</div>
-    <div class="denied-title">Acesso negado</div>
-    <div class="denied-sub">Esta página é restrita ao super admin. Volte para o hub admin.</div>
-    <a href="admin.html" class="denied-btn">← Voltar ao Hub</a>
-  </div>
-</div>
-
-<!-- APP -->
+<!-- APP (oculto até login bem-sucedido) -->
 <div id="app" style="display:none;">
-
-<header class="topbar">
-  <div class="brand">
-    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo-img">
-    <div class="brand-divider"></div>
-    <span class="brand-region">LATAM · USUÁRIOS</span>
-  </div>
-  <div class="topbar-right">
-    <a class="back-link" href="admin.html">← Hub</a>
-    <div class="user-pill">
-      <div class="user-avatar" id="user-avatar">U</div>
-      <span id="user-name">User</span>
-    </div>
-    <button class="logout-btn" onclick="doLogout()">Sair</button>
-  </div>
-</header>
 
 <main>
   <h1 class="page-title">Gestão de usuários</h1>
@@ -357,92 +256,42 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// =================================================================
-// Config
-// =================================================================
 const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
 };
 const SUPER_ADMIN = 'fuss';
 
-// =================================================================
 // Estado
-// =================================================================
 let currentUser = null;
-// Working copy dos users — começa idêntico a USERS de auth.js, é editado in-memory.
-// Cada entry: { username, passwordHash, fullName, _isNew?, _isDirty?, _isDeleted?, _origUsername? }
 let workingUsers = [];
-let workingAdmins = new Set();   // lowercase usernames
-let modalCtx = null;             // { mode: 'add'|'edit', idx?: number }
+let workingAdmins = new Set();
+let modalCtx = null;
 
 // =================================================================
-// Login
+// Bootstrap: login (common.js) → startApp
 // =================================================================
-async function doLogin(e) {
-  e.preventDefault();
-  const u = document.getElementById('login-username').value.trim().toLowerCase();
-  const p = document.getElementById('login-password').value;
-  const err = document.getElementById('login-error');
-  const btn = document.getElementById('login-btn');
-  err.classList.remove('visible');
-  if (!u || !p) { err.textContent = 'Preencha usuário e senha'; err.classList.add('visible'); return false; }
-  btn.disabled = true; btn.textContent = 'Verificando...';
-  try {
-    const user = await validateLogin(u, p);
-    if (!user) {
-      await new Promise(r => setTimeout(r, 500));
-      err.textContent = 'Usuário ou senha inválidos';
-      err.classList.add('visible');
-      document.getElementById('login-password').value = '';
-      btn.disabled = false; btn.textContent = 'Entrar';
-      return false;
-    }
-    currentUser = user;
-    saveSession(user);
-    onLoginSuccess();
-  } catch (er) {
-    err.textContent = 'Erro: ' + er.message;
-    err.classList.add('visible');
-    btn.disabled = false; btn.textContent = 'Entrar';
-  }
-  return false;
-}
+document.addEventListener('DOMContentLoaded', () => {
+  injectLogin({
+    title: 'Gestão de Usuários',
+    sub: 'Acesso restrito — super admin',
+    superAdminGate: SUPER_ADMIN,
+    onSuccess: startApp,
+  });
+});
 
-function onLoginSuccess() {
-  // Gate: só 'fuss' (super admin) entra
-  if (!currentUser || String(currentUser.username).toLowerCase() !== SUPER_ADMIN) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('denied-screen').style.display = '';
-    return;
-  }
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('denied-screen').style.display = 'none';
+function startApp(user) {
+  currentUser = user;
+  injectTopbar({
+    region: 'LATAM · USUÁRIOS',
+    user: user,
+    showBack: true,
+    extras: [],
+  });
   document.getElementById('app').style.display = '';
-  document.getElementById('user-name').textContent = currentUser.fullName;
-  const initials = currentUser.fullName.split(' ').map(s => s[0].toUpperCase()).slice(0, 2).join('');
-  document.getElementById('user-avatar').textContent = initials;
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
   initWorkingState();
   renderTable();
-  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
 }
-
-function doLogout() {
-  if (!confirm('Sair?')) return;
-  clearSession();
-  currentUser = null;
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('denied-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = '';
-  document.getElementById('login-password').value = '';
-  document.getElementById('login-btn').disabled = false;
-  document.getElementById('login-btn').textContent = 'Entrar';
-  if (typeof removeThemeToggle === 'function') removeThemeToggle();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const saved = loadSession();
-  if (saved) { currentUser = saved; onLoginSuccess(); }
-});
 
 // =================================================================
 // Working state (snapshot mutável de USERS + ADMIN_USERNAMES)
@@ -608,7 +457,6 @@ async function saveModal() {
       let changed = false;
 
       if (!isLocked && username !== String(u.username).toLowerCase()) {
-        // renomeou — atualiza admin set também
         const wasAdmin = workingAdmins.has(String(u.username).toLowerCase());
         workingAdmins.delete(String(u.username).toLowerCase());
         if (wasAdmin) workingAdmins.add(username);
@@ -653,7 +501,6 @@ function toggleDelete(idx) {
     return;
   }
   if (u._isNew && !u._isDeleted) {
-    // Novo não-salvo: remove diretamente
     workingUsers.splice(idx, 1);
     workingAdmins.delete(String(u.username).toLowerCase());
   } else {
@@ -672,7 +519,6 @@ async function commitChanges() {
     toast('Nenhuma mudança pra publicar', 'error');
     return;
   }
-  // Lista final (descarta os deletados)
   const finalUsers = workingUsers
     .filter(u => !u._isDeleted)
     .map(u => ({
@@ -680,13 +526,11 @@ async function commitChanges() {
       passwordHash: u.passwordHash,
       fullName: u.fullName,
     }));
-  // Garante que super admin tá presente
   const hasFuss = finalUsers.some(u => String(u.username).toLowerCase() === SUPER_ADMIN);
   if (!hasFuss) {
     toast('Erro: usuário "fuss" não pode ser removido', 'error');
     return;
   }
-  // Lista final de admins (só os que ainda existem)
   const finalUsernames = new Set(finalUsers.map(u => String(u.username).toLowerCase()));
   const finalAdmins = [...workingAdmins].filter(a => finalUsernames.has(a));
   if (finalAdmins.indexOf(SUPER_ADMIN) < 0) finalAdmins.push(SUPER_ADMIN);
@@ -721,8 +565,6 @@ async function commitChanges() {
     btn.textContent = '✓ Publicado';
     toast('Publicado! GitHub Pages atualiza em 1–10min', 'success');
 
-    // Marca todos como "limpos" — a próxima recarga vai pegar o auth.js novo,
-    // mas o que tá em memória aqui é a verdade até lá.
     workingUsers = workingUsers.filter(u => !u._isDeleted).map(u => ({
       username: u.username,
       passwordHash: u.passwordHash,
@@ -758,9 +600,7 @@ function clearStatus() {
   statusEl.textContent = '';
 }
 
-// =================================================================
 // Toast
-// =================================================================
 let toastTimer = null;
 function toast(msg, kind) {
   const el = document.getElementById('toast');
@@ -770,11 +610,10 @@ function toast(msg, kind) {
   toastTimer = setTimeout(() => el.className = 'toast', 3500);
 }
 
-// Fecha modal com ESC
+// ESC fecha modal
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeModal();
 });
-// Click no backdrop fecha
 document.getElementById('user-modal').addEventListener('click', (e) => {
   if (e.target.id === 'user-modal') closeModal();
 });
