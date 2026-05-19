@@ -2894,6 +2894,7 @@ const I18N = {
     sectionAging: 'Vagas em aberto · ordenadas por idade',
     colCountry: 'País', colOpen: 'Open', colShort: 'Shortlist',
     colActive: 'Ativos', colTraining: 'Training', colHired: 'Hired',
+    colOffboarding: 'Offboarding',
     colCity: 'Cidade', colStatus: 'Status', colRaisedOn: 'Aberta em',
     colDaysOpen: 'Dias', colRemarks: 'Observações',
     mapLegend: 'Tamanho da bolha = número de vagas',
@@ -3171,6 +3172,7 @@ const I18N = {
     sectionAging: 'Vacantes abiertas · ordenadas por antigüedad',
     colCountry: 'País', colOpen: 'Open', colShort: 'Shortlist',
     colActive: 'Activos', colTraining: 'Training', colHired: 'Hired',
+    colOffboarding: 'Offboarding',
     colCity: 'Ciudad', colStatus: 'Estado', colRaisedOn: 'Abierta el',
     colDaysOpen: 'Días', colRemarks: 'Observaciones',
     mapLegend: 'Tamaño de burbuja = vacantes',
@@ -3448,6 +3450,7 @@ const I18N = {
     sectionAging: 'Open positions · by age',
     colCountry: 'Country', colOpen: 'Open', colShort: 'Shortlist',
     colActive: 'Active', colTraining: 'Training', colHired: 'Hired',
+    colOffboarding: 'Offboarding',
     colCity: 'City', colStatus: 'Status', colRaisedOn: 'Opened',
     colDaysOpen: 'Days', colRemarks: 'Remarks',
     mapLegend: 'Bubble size = open positions',
@@ -5812,35 +5815,43 @@ async function exportRecruitmentPdf() {
       ...d, daysOpen: computeDaysOpen(d.raisedOn)
     })).sort((a, b) => (b.daysOpen || 0) - (a.daysOpen || 0));
 
-    // ========== HEADER ==========
+    // Helper pra "glow" sem GState (mistura cor com branco)
+    function lighten(rgb, factor) {
+      return rgb.map(c => Math.round(c + (255 - c) * factor));
+    }
+
+    const COUNTRY_ORDER = ['Brazil', 'Argentina', 'Chile', 'Peru', 'México', 'Colombia'];
+    const orderedCountries = COUNTRY_ORDER.filter(c => summaryByCountry[c]);
+
+    // ========== HEADER (compacto) ==========
     pdf.setFillColor(...C_PRIMARY);
-    pdf.rect(0, 0, pageW, 22, 'F');
+    pdf.rect(0, 0, pageW, 18, 'F');
     pdf.setFillColor(...C_ACCENT);
-    pdf.rect(0, 22, pageW, 1, 'F');
+    pdf.rect(0, 18, pageW, 0.8, 'F');
 
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
+    pdf.setFontSize(8);
     pdf.setTextColor(...C_ACCENT_SOFT);
-    pdf.text('ACEOLUTION  ·  STREET VIEW LATAM', 12, 9);
+    pdf.text('ACEOLUTION  ·  STREET VIEW LATAM', 12, 7);
 
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(15);
+    pdf.setFontSize(14);
     pdf.setTextColor(255, 255, 255);
-    pdf.text(t('reportTitle').toUpperCase(), 12, 17);
+    pdf.text(t('reportTitle').toUpperCase(), 12, 14.5);
 
     pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(9);
+    pdf.setFontSize(8);
     pdf.setTextColor(...C_ACCENT_SOFT);
     pdf.text(now.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' }),
-      pageW - 12, 9, { align: 'right' });
+      pageW - 12, 7, { align: 'right' });
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
+    pdf.setFontSize(8);
     pdf.setTextColor(255, 255, 255);
-    pdf.text(t('reportSubtitle'), pageW - 12, 17, { align: 'right' });
+    pdf.text(t('reportSubtitle'), pageW - 12, 14.5, { align: 'right' });
 
-    // ========== KPI ROW (4 cards) ==========
-    const kpiY = 28;
-    const kpiH = 24;
+    // ========== KPI ROW (4 cards) — h=18mm ==========
+    const kpiY = 22;
+    const kpiH = 18;
     const kpiGap = 4;
     const kpiW = (pageW - 24 - kpiGap * 3) / 4;
     const drawKpi = (idx, label, value, sub, color) => {
@@ -5848,24 +5859,20 @@ async function exportRecruitmentPdf() {
       pdf.setFillColor(...C_BG_CARD);
       pdf.setDrawColor(...C_BORDER);
       pdf.roundedRect(x, kpiY, kpiW, kpiH, 2, 2, 'FD');
-      // Accent bar
       pdf.setFillColor(...color);
-      pdf.rect(x, kpiY, kpiW, 1.5, 'F');
-      // label
+      pdf.rect(x, kpiY, kpiW, 1.2, 'F');
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(7);
+      pdf.setFontSize(6.5);
       pdf.setTextColor(...C_MUTED);
-      pdf.text(label.toUpperCase(), x + 4, kpiY + 7);
-      // value
+      pdf.text(label.toUpperCase(), x + 4, kpiY + 5);
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(22);
+      pdf.setFontSize(18);
       pdf.setTextColor(...color);
-      pdf.text(String(value), x + 4, kpiY + 17);
-      // sub
+      pdf.text(String(value), x + 4, kpiY + 13);
       pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(7);
+      pdf.setFontSize(6.5);
       pdf.setTextColor(...C_MUTED);
-      pdf.text(sub, x + 4, kpiY + 21.5);
+      pdf.text(sub, x + 4, kpiY + 16.5);
     };
     drawKpi(0, t('kpiOpen'), totalOpen, t('kpiOpenSub'), C_ACCENT);
     drawKpi(1, t('kpiActive'), totalActive, t('kpiActiveSub'), C_SUCCESS);
@@ -5873,68 +5880,62 @@ async function exportRecruitmentPdf() {
     drawKpi(3, t('kpiStuck'), stuck, t('kpiStuckSub'),
       stuck > 0 ? C_DANGER : C_MUTED);
 
-    // ========== LEFT: COUNTRY TABLE ==========
-    const tableY = 58;
+    // ========== TWO-COL: Country Table (esquerda) + Map (direita) ==========
+    const tableY = 46;
     const tableW = (pageW - 24 - 6) * 0.52;
     const tableX = 12;
-    const tableH = 78;
+    const rowH = 7;
+    const nCountries = orderedCountries.length;
+    const tableH = rowH * (nCountries + 2); // header + countries + totals
 
-    // section title
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
+    pdf.setFontSize(9);
     pdf.setTextColor(...C_PRIMARY);
     pdf.text(t('sectionByCountry'), tableX, tableY - 2);
 
-    // table headers
+    // Coluna Offboarding substitui Hired
     const tCols = [
-      { key: 'country', label: t('colCountry'), w: 0.30, align: 'left' },
-      { key: 'open',    label: t('colOpen'),    w: 0.13, align: 'center' },
-      { key: 'short',   label: t('colShort'),   w: 0.13, align: 'center' },
-      { key: 'active',  label: t('colActive'),  w: 0.13, align: 'center' },
-      { key: 'training',label: t('colTraining'),w: 0.13, align: 'center' },
-      { key: 'hired',   label: t('colHired'),   w: 0.18, align: 'center' },
+      { key: 'country',     label: t('colCountry'),    w: 0.28, align: 'left' },
+      { key: 'open',        label: t('colOpen'),       w: 0.12, align: 'center' },
+      { key: 'short',       label: t('colShort'),      w: 0.13, align: 'center' },
+      { key: 'active',      label: t('colActive'),     w: 0.13, align: 'center' },
+      { key: 'training',    label: t('colTraining'),   w: 0.13, align: 'center' },
+      { key: 'offboarding', label: t('colOffboarding'),w: 0.21, align: 'center' },
     ];
-    let colX = tableX;
-    const rowH = 9;
+
     // Header row
     pdf.setFillColor(...C_PRIMARY);
-    pdf.rect(tableX, tableY + 1, tableW, rowH, 'F');
+    pdf.rect(tableX, tableY, tableW, rowH, 'F');
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7.5);
+    pdf.setFontSize(7);
     pdf.setTextColor(255, 255, 255);
     let cursor = tableX;
     tCols.forEach(c => {
       const w = tableW * c.w;
       const tx = c.align === 'center' ? cursor + w / 2 : cursor + 3;
-      pdf.text(c.label.toUpperCase(), tx, tableY + 7, { align: c.align });
+      pdf.text(c.label.toUpperCase(), tx, tableY + 4.6, { align: c.align });
       cursor += w;
     });
 
-    // Country order: descending by open positions, ties by name
-    const COUNTRY_ORDER = ['Brazil', 'Argentina', 'Chile', 'Peru', 'México', 'Colombia'];
-    const orderedCountries = COUNTRY_ORDER.filter(c => summaryByCountry[c]);
-
     orderedCountries.forEach((country, idx) => {
       const s = summaryByCountry[country];
-      const rowY = tableY + 1 + rowH * (idx + 1);
-      // zebra
+      const rowY = tableY + rowH * (idx + 1);
       if (idx % 2 === 1) {
         pdf.setFillColor(...C_BG_CARD);
         pdf.rect(tableX, rowY, tableW, rowH, 'F');
       }
-      // country accent dot
       const accent = COUNTRY_ACCENT[country] || C_ACCENT;
       pdf.setFillColor(...accent);
-      pdf.circle(tableX + 4, rowY + rowH / 2 - 0.2, 1.5, 'F');
+      pdf.circle(tableX + 4, rowY + rowH / 2, 1.3, 'F');
 
       cursor = tableX;
       const cells = [
         { val: country, type: 'name' },
-        { val: s.open, type: 'num', highlight: (s.open || 0) > 0 },
-        { val: s.shortlisted, type: 'num' },
-        { val: s.currentlyActive, type: 'num' },
-        { val: s.training, type: 'num' },
-        { val: s.hired, type: 'num' },
+        { val: s.open || 0, type: 'num', highlight: (s.open || 0) > 0 },
+        { val: s.shortlisted || 0, type: 'num' },
+        { val: s.currentlyActive || 0, type: 'num' },
+        { val: s.training || 0, type: 'num' },
+        { val: s.offboarding || 0, type: 'num', highlight: (s.offboarding || 0) > 0 },
       ];
       tCols.forEach((c, i) => {
         const w = tableW * c.w;
@@ -5942,130 +5943,130 @@ async function exportRecruitmentPdf() {
         const tx = c.align === 'center' ? cursor + w / 2 : cursor + 8;
         if (cell.type === 'name') {
           pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(9);
+          pdf.setFontSize(8.5);
           pdf.setTextColor(...C_TEXT);
         } else {
           pdf.setFont('helvetica', cell.highlight ? 'bold' : 'normal');
-          pdf.setFontSize(10);
-          pdf.setTextColor(...(cell.highlight ? accent : C_TEXT_2));
+          pdf.setFontSize(9);
+          pdf.setTextColor(...(cell.highlight ? (c.key === 'offboarding' ? C_WARN : accent) : C_TEXT_2));
         }
-        pdf.text(String(cell.val == null ? '—' : cell.val), tx, rowY + 5.8, { align: c.align });
+        pdf.text(String(cell.val), tx, rowY + 4.7, { align: c.align });
         cursor += w;
       });
     });
 
     // Totals row
-    const totalsY = tableY + 1 + rowH * (orderedCountries.length + 1);
+    const totalsY = tableY + rowH * (orderedCountries.length + 1);
     pdf.setFillColor(...C_BG_CARD);
-    pdf.setDrawColor(...C_BORDER_STRONG);
-    pdf.rect(tableX, totalsY, tableW, rowH + 1, 'FD');
+    pdf.rect(tableX, totalsY, tableW, rowH, 'F');
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
+    pdf.setFontSize(7.5);
     pdf.setTextColor(...C_PRIMARY);
     cursor = tableX;
-    const totals = {
-      country: t('total').toUpperCase(),
-      open: totalOpen,
-      shortlisted: summary.reduce((a, s) => a + (s.shortlisted || 0), 0),
-      active: totalActive,
-      training: summary.reduce((a, s) => a + (s.training || 0), 0),
-      hired: totalHired,
-    };
+    const totals = [
+      t('total').toUpperCase(),
+      totalOpen,
+      summary.reduce((a, s) => a + (s.shortlisted || 0), 0),
+      totalActive,
+      summary.reduce((a, s) => a + (s.training || 0), 0),
+      summary.reduce((a, s) => a + (s.offboarding || 0), 0),
+    ];
     tCols.forEach((c, i) => {
       const w = tableW * c.w;
-      const vals = [totals.country, totals.open, totals.shortlisted, totals.active, totals.training, totals.hired];
       const tx = c.align === 'center' ? cursor + w / 2 : cursor + 3;
-      pdf.text(String(vals[i]), tx, totalsY + 6.5, { align: c.align });
+      pdf.text(String(totals[i]), tx, totalsY + 4.7, { align: c.align });
       cursor += w;
     });
-    // table border outline
+    // table border
     pdf.setDrawColor(...C_BORDER_STRONG);
     pdf.setLineWidth(0.3);
-    pdf.rect(tableX, tableY + 1, tableW, totalsY + rowH + 1 - tableY - 1);
+    pdf.rect(tableX, tableY, tableW, tableH);
 
-    // ========== RIGHT: STYLIZED LATAM MAP ==========
+    // ========== MAP (direita) ==========
     const mapX = tableX + tableW + 6;
-    const mapY = tableY + 1;
+    const mapY = tableY;
     const mapW = pageW - 12 - mapX;
-    const mapH = tableH + rowH;   // mesma altura da tabela
+    const mapH = tableH;
 
-    // section title
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
+    pdf.setFontSize(9);
     pdf.setTextColor(...C_PRIMARY);
     pdf.text(t('sectionMap'), mapX, tableY - 2);
 
     // Map background
     pdf.setFillColor(...C_BG_GRID);
-    pdf.setDrawColor(...C_BORDER);
+    pdf.setDrawColor(...C_BORDER_STRONG);
+    pdf.setLineWidth(0.3);
     pdf.roundedRect(mapX, mapY, mapW, mapH, 2, 2, 'FD');
 
-    // Subtle grid (lat/lng lines)
+    // Subtle grid
     pdf.setDrawColor(...C_BORDER);
-    pdf.setLineWidth(0.15);
+    pdf.setLineWidth(0.1);
+    const mapBox = { x: mapX, y: mapY, w: mapW, h: mapH };
     for (let lat = -50; lat <= 30; lat += 10) {
-      const p1 = projectGeo(lat, MAP_BOUNDS.W, { x: mapX, y: mapY, w: mapW, h: mapH });
-      const p2 = projectGeo(lat, MAP_BOUNDS.E, { x: mapX, y: mapY, w: mapW, h: mapH });
+      const p1 = projectGeo(lat, MAP_BOUNDS.W, mapBox);
+      const p2 = projectGeo(lat, MAP_BOUNDS.E, mapBox);
       pdf.line(p1.x, p1.y, p2.x, p2.y);
     }
     for (let lng = -110; lng <= -40; lng += 10) {
-      const p1 = projectGeo(MAP_BOUNDS.N, lng, { x: mapX, y: mapY, w: mapW, h: mapH });
-      const p2 = projectGeo(MAP_BOUNDS.S, lng, { x: mapX, y: mapY, w: mapW, h: mapH });
+      const p1 = projectGeo(MAP_BOUNDS.N, lng, mapBox);
+      const p2 = projectGeo(MAP_BOUNDS.S, lng, mapBox);
       pdf.line(p1.x, p1.y, p2.x, p2.y);
     }
 
-    // Bubbles per country (size by open positions, color by country)
+    // Bubbles per country (SEM GState — usa cor lighter pra "glow")
     const maxOpen = Math.max(1, ...summary.map(s => s.open || 0));
     orderedCountries.forEach(country => {
-      const c = COUNTRY_CENTROID[country];
-      if (!c) return;
-      const p = projectGeo(c.lat, c.lng, { x: mapX, y: mapY, w: mapW, h: mapH });
+      const centroid = COUNTRY_CENTROID[country];
+      if (!centroid) return;
+      const p = projectGeo(centroid.lat, centroid.lng, mapBox);
       const open = (summaryByCountry[country] || {}).open || 0;
-      const radius = open > 0 ? 3 + (open / maxOpen) * 6 : 2;
+      const radius = open > 0 ? 4 + (open / maxOpen) * 5 : 2.5;
       const accent = COUNTRY_ACCENT[country] || C_ACCENT;
 
-      // Bubble with translucency (jspdf uses GState)
-      try {
-        const gs = pdf.GState({ opacity: 0.30 });
-        pdf.setGState(gs);
-        pdf.setFillColor(...accent);
-        pdf.circle(p.x, p.y, radius + 2, 'F');
-        pdf.setGState(pdf.GState({ opacity: 1 }));
-      } catch (e) { /* GState pode falhar em browsers velhos */ }
-
-      pdf.setFillColor(...accent);
-      pdf.setDrawColor(255, 255, 255);
-      pdf.setLineWidth(0.8);
-      pdf.circle(p.x, p.y, radius, 'FD');
-
-      // count label inside (se cabe)
-      if (open > 0 && radius >= 4) {
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(open >= 10 ? 7 : 8);
-        pdf.setTextColor(255, 255, 255);
-        pdf.text(String(open), p.x, p.y + 1.2, { align: 'center' });
+      // Glow ring (cor mais clara, círculo maior, sem stroke)
+      if (open > 0) {
+        const glow = lighten(accent, 0.70);
+        pdf.setFillColor(...glow);
+        pdf.circle(p.x, p.y, radius + 2.5, 'F');
       }
 
-      // country label (abaixo da bolha)
+      // Bolha principal — cor sólida + borda branca
+      pdf.setFillColor(...accent);
+      pdf.setDrawColor(255, 255, 255);
+      pdf.setLineWidth(0.7);
+      pdf.circle(p.x, p.y, radius, 'FD');
+
+      // Número dentro da bolha
+      if (open > 0) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(open >= 10 ? 6.5 : 7.5);
+        pdf.setTextColor(255, 255, 255);
+        pdf.text(String(open), p.x, p.y + 1, { align: 'center' });
+      }
+
+      // Label do país (abaixo)
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(7.5);
+      pdf.setFontSize(6.5);
       pdf.setTextColor(...C_PRIMARY);
-      pdf.text(country, p.x, p.y + radius + 3.5, { align: 'center' });
+      pdf.text(country, p.x, p.y + radius + 3, { align: 'center' });
     });
 
-    // Map legend
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(6.5);
+    // Map legend (rodapé do map)
+    pdf.setFont('helvetica', 'italic');
+    pdf.setFontSize(5.5);
     pdf.setTextColor(...C_MUTED);
-    pdf.text(t('mapLegend'), mapX + mapW - 3, mapY + mapH - 3, { align: 'right' });
+    pdf.text(t('mapLegend'), mapX + mapW / 2, mapY + mapH - 1.5, { align: 'center' });
 
-    // ========== BOTTOM: AGING TABLE — vagas abertas ordenadas por idade ==========
-    const agingY = tableY + tableH + 14;
+    // ========== AGING TABLE — todas as vagas, altura adaptativa ==========
+    const agingY = tableY + tableH + 8;
     const agingX = 12;
     const agingW = pageW - 24;
+    const agingMaxY = pageH - 12; // deixa espaço pro footer
+    const agingAvailH = agingMaxY - agingY - 6; // 6 = header
 
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
+    pdf.setFontSize(9);
     pdf.setTextColor(...C_PRIMARY);
     pdf.text(t('sectionAging') + ' (' + totalOpen + ')', agingX, agingY - 2);
 
@@ -6075,116 +6076,115 @@ async function exportRecruitmentPdf() {
       pdf.setTextColor(...C_MUTED);
       pdf.text(t('exportRecruitmentNoData'), agingX, agingY + 8);
     } else {
-      // header
+      // Calcula altura de linha ADAPTATIVA — mostra todas as vagas
+      const headerH = 6;
+      const desiredRowH = 6.5;
+      let aRowH = desiredRowH;
+      const totalRows = demandWithAge.length;
+      if (totalRows * desiredRowH > agingAvailH) {
+        aRowH = Math.max(4.2, agingAvailH / totalRows);
+      }
+
       const aCols = [
         { key: 'country', label: t('colCountry'), w: 0.13 },
-        { key: 'city',    label: t('colCity'),    w: 0.32 },
+        { key: 'city',    label: t('colCity'),    w: 0.30 },
         { key: 'status',  label: t('colStatus'),  w: 0.14 },
-        { key: 'raised',  label: t('colRaisedOn'),w: 0.14 },
-        { key: 'days',    label: t('colDaysOpen'),w: 0.10 },
-        { key: 'remarks', label: t('colRemarks'), w: 0.17 },
+        { key: 'raised',  label: t('colRaisedOn'),w: 0.12 },
+        { key: 'days',    label: t('colDaysOpen'),w: 0.08 },
+        { key: 'remarks', label: t('colRemarks'), w: 0.23 },
       ];
+      // Header
       pdf.setFillColor(...C_PRIMARY);
-      pdf.rect(agingX, agingY + 1, agingW, rowH, 'F');
+      pdf.rect(agingX, agingY, agingW, headerH, 'F');
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(7.5);
+      pdf.setFontSize(6.5);
       pdf.setTextColor(255, 255, 255);
       cursor = agingX;
       aCols.forEach(c => {
         const w = agingW * c.w;
-        pdf.text(c.label.toUpperCase(), cursor + 3, agingY + 7);
+        pdf.text(c.label.toUpperCase(), cursor + 3, agingY + 4);
         cursor += w;
       });
 
-      // rows (limita a 10 pra caber)
-      const maxAgeRows = 10;
-      const visibleAging = demandWithAge.slice(0, maxAgeRows);
-      visibleAging.forEach((d, idx) => {
-        const ry = agingY + 1 + rowH * (idx + 1);
+      // Body — todas as linhas
+      const fontSize = aRowH >= 6 ? 8.5 : (aRowH >= 5 ? 7.5 : 6.5);
+      const pillFontSize = aRowH >= 6 ? 6.5 : 5.5;
+      demandWithAge.forEach((d, idx) => {
+        const ry = agingY + headerH + aRowH * idx;
         if (idx % 2 === 1) {
           pdf.setFillColor(...C_BG_CARD);
-          pdf.rect(agingX, ry, agingW, rowH, 'F');
+          pdf.rect(agingX, ry, agingW, aRowH, 'F');
         }
+        const textY = ry + aRowH / 2 + 1.5;
         cursor = agingX;
+
         // country
         pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(8.5);
+        pdf.setFontSize(fontSize);
         pdf.setTextColor(...C_TEXT);
-        pdf.text(d.country, cursor + 3, ry + 5.8);
+        pdf.text(d.country, cursor + 3, textY);
         cursor += agingW * aCols[0].w;
 
         // city
         pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(8.5);
+        pdf.setFontSize(fontSize);
         pdf.setTextColor(...C_TEXT);
-        pdf.text(clipText(pdf, d.city || '—', agingW * aCols[1].w - 6), cursor + 3, ry + 5.8);
+        pdf.text(clipText(pdf, d.city || '—', agingW * aCols[1].w - 6), cursor + 3, textY);
         cursor += agingW * aCols[1].w;
 
-        // status pill
+        // status — dot + texto
         const sk = (d.status || '').toLowerCase();
-        let pillText = C_SUCCESS, label = t('statusOpen');
-        if (sk === 'on hold')      { pillText = C_WARN; label = t('statusOnHold'); }
-        else if (sk === 'shortlisted') { pillText = C_INFO; label = t('statusShortlisted'); }
-        else if (sk === 'in progress') { pillText = C_INFO; label = t('statusInProgress'); }
+        let pillColor = C_SUCCESS, label = t('statusOpen');
+        if (sk === 'on hold')      { pillColor = C_WARN; label = t('statusOnHold'); }
+        else if (sk === 'shortlisted') { pillColor = C_INFO; label = t('statusShortlisted'); }
+        else if (sk === 'in progress') { pillColor = C_INFO; label = t('statusInProgress'); }
+        pdf.setFillColor(...pillColor);
+        pdf.circle(cursor + 4, textY - 1.3, 1, 'F');
         pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(7);
-        pdf.setTextColor(...pillText);
-        // mini dot + label
-        pdf.setFillColor(...pillText);
-        pdf.circle(cursor + 4, ry + 5.0, 1, 'F');
-        pdf.text(label.toUpperCase(), cursor + 7, ry + 5.8);
+        pdf.setFontSize(pillFontSize);
+        pdf.setTextColor(...pillColor);
+        pdf.text(label.toUpperCase(), cursor + 7, textY);
         cursor += agingW * aCols[2].w;
 
         // raised
         pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(8.5);
+        pdf.setFontSize(fontSize);
         pdf.setTextColor(...C_TEXT_2);
-        const raisedFmt = formatDate(d.raisedOn, locale);
-        pdf.text(raisedFmt, cursor + 3, ry + 5.8);
+        pdf.text(formatDate(d.raisedOn, locale), cursor + 3, textY);
         cursor += agingW * aCols[3].w;
 
-        // days open (highlighted if > 30)
+        // days
         const days = d.daysOpen;
         const isOld = days !== null && days >= 30;
         pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(9);
+        pdf.setFontSize(fontSize);
         pdf.setTextColor(...(isOld ? C_DANGER : C_TEXT_2));
-        pdf.text(days !== null ? days + 'd' : '—', cursor + 3, ry + 5.8);
+        pdf.text(days !== null ? days + 'd' : '—', cursor + 3, textY);
         cursor += agingW * aCols[4].w;
 
         // remarks
         pdf.setFont('helvetica', 'italic');
-        pdf.setFontSize(7.5);
+        pdf.setFontSize(fontSize - 1);
         pdf.setTextColor(...C_MUTED);
         const remarks = clipText(pdf, d.remarks || '—', agingW * aCols[5].w - 6);
-        pdf.text(remarks, cursor + 3, ry + 5.8);
+        pdf.text(remarks, cursor + 3, textY);
       });
-
-      // Overflow note
-      if (demandWithAge.length > maxAgeRows) {
-        const extraY = agingY + 1 + rowH * (maxAgeRows + 1) + 2;
-        pdf.setFont('helvetica', 'italic');
-        pdf.setFontSize(8);
-        pdf.setTextColor(...C_MUTED);
-        pdf.text('+ ' + (demandWithAge.length - maxAgeRows) + ' ' + t('moreItems'),
-          agingX, extraY);
-      }
 
       // outline
       pdf.setDrawColor(...C_BORDER_STRONG);
       pdf.setLineWidth(0.3);
-      pdf.rect(agingX, agingY + 1, agingW, rowH * (Math.min(demandWithAge.length, maxAgeRows) + 1));
+      pdf.rect(agingX, agingY, agingW, headerH + aRowH * demandWithAge.length);
     }
 
     // ========== FOOTER ==========
     pdf.setFillColor(...C_PRIMARY);
-    pdf.rect(0, pageH - 8, pageW, 8, 'F');
+    pdf.rect(0, pageH - 7, pageW, 7, 'F');
     pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(7);
+    pdf.setFontSize(6.5);
     pdf.setTextColor(...C_ACCENT_SOFT);
-    pdf.text('Aceolution · ' + t('footerConfidential'), 12, pageH - 3);
+    pdf.text('Aceolution · ' + t('footerConfidential'), 12, pageH - 2.5);
     pdf.text(t('footerSource') + ' Mastersheet › Recruitment',
-      pageW - 12, pageH - 3, { align: 'right' });
+      pageW - 12, pageH - 2.5, { align: 'right' });
 
     pdf.save('LATAM_Recruitment_Status_' + dateStamp(now) + '.pdf');
   } catch (err) {

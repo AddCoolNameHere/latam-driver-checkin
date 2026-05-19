@@ -427,6 +427,7 @@ const I18N = {
     sectionAging: 'Vagas em aberto · ordenadas por idade',
     colCountry: 'País', colOpen: 'Open', colShort: 'Shortlist',
     colActive: 'Ativos', colTraining: 'Training', colHired: 'Hired',
+    colOffboarding: 'Offboarding',
     colCity: 'Cidade', colStatus: 'Status', colRaisedOn: 'Aberta em',
     colDaysOpen: 'Dias', colRemarks: 'Observações',
     statusOpen: 'Aberta', statusShortlisted: 'Pré-selecionado',
@@ -456,6 +457,7 @@ const I18N = {
     sectionAging: 'Vacantes abiertas · ordenadas por antigüedad',
     colCountry: 'País', colOpen: 'Open', colShort: 'Shortlist',
     colActive: 'Activos', colTraining: 'Training', colHired: 'Hired',
+    colOffboarding: 'Offboarding',
     colCity: 'Ciudad', colStatus: 'Estado', colRaisedOn: 'Abierta el',
     colDaysOpen: 'Días', colRemarks: 'Observaciones',
     statusOpen: 'Abierta', statusShortlisted: 'Preseleccionado',
@@ -485,6 +487,7 @@ const I18N = {
     sectionAging: 'Open positions · by age',
     colCountry: 'Country', colOpen: 'Open', colShort: 'Shortlist',
     colActive: 'Active', colTraining: 'Training', colHired: 'Hired',
+    colOffboarding: 'Offboarding',
     colCity: 'City', colStatus: 'Status', colRaisedOn: 'Opened',
     colDaysOpen: 'Days', colRemarks: 'Remarks',
     statusOpen: 'Open', statusShortlisted: 'Shortlisted',
@@ -659,20 +662,21 @@ function renderContent() {
             <th>${t('colShort')}</th>
             <th>${t('colActive')}</th>
             <th>${t('colTraining')}</th>
-            <th>${t('colHired')}</th>
+            <th>${t('colOffboarding')}</th>
           </tr></thead>
           <tbody>
             ${COUNTRY_ORDER.filter(c => summaryByCountry[c]).map(c => {
               const s = summaryByCountry[c];
               const color = COUNTRY_COLOR[c] || 'var(--c-accent)';
               const openCell = (s.open > 0) ? `<td class="highlight">${s.open}</td>` : `<td>${s.open}</td>`;
+              const offCell  = (s.offboarding > 0) ? `<td style="color:#CA8A04; font-weight:700;">${s.offboarding}</td>` : `<td>${s.offboarding || 0}</td>`;
               return `<tr>
                 <td><span class="country-dot" style="background:${color}"></span>${escapeHtml(c)}</td>
                 ${openCell}
                 <td>${s.shortlisted}</td>
                 <td>${s.currentlyActive}</td>
                 <td>${s.training}</td>
-                <td>${s.hired}</td>
+                ${offCell}
               </tr>`;
             }).join('')}
             <tr class="totals">
@@ -681,7 +685,7 @@ function renderContent() {
               <td>${summary.reduce((a, s) => a + (s.shortlisted || 0), 0)}</td>
               <td>${totalActive}</td>
               <td>${summary.reduce((a, s) => a + (s.training || 0), 0)}</td>
-              <td>${totalHired}</td>
+              <td>${summary.reduce((a, s) => a + (s.offboarding || 0), 0)}</td>
             </tr>
           </tbody>
         </table></div>
