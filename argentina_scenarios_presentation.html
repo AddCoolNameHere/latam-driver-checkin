@@ -6,21 +6,11 @@
 <title>Argentina Optimization — Scenarios · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <script src="auth.js?v=20260518b"></script>
+<script src="theme.js?v=20260518c"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="theme.css?v=20260518c">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --c-primary: #2C5282;
-    --c-primary-dark: #1A365D;
-    --c-accent: #4A9FE0;
-    --c-bg: #F8FAFC;
-    --c-bg-tint: #EBF4FB;
-    --c-border: #E2E8F0;
-    --c-text: #1A202C;
-    --c-text-muted: #64748B;
-    --c-success: #16A34A;
-    --c-warn: #CA8A04;
-    --c-danger: #B91C1C;
+  * { box-sizing: border-box; margin: 0; padding: 0; }  :root {
     --c-purple: #7C3AED;
   }
   body {
@@ -34,7 +24,7 @@
     width: 297mm;
     min-height: 210mm;
     margin: 12px auto;
-    background: white;
+    background: var(--c-surface);
     box-shadow: 0 4px 16px rgba(0,0,0,0.08);
     padding: 16mm 20mm 14mm 22mm;
     page-break-after: always;
@@ -104,7 +94,7 @@
   }
   .cover-logo-row {
     margin-bottom: 28px;
-    background: white;
+    background: var(--c-surface);
     padding: 10px 18px;
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.15);
@@ -392,7 +382,7 @@
     position: fixed;
     top: 10px;
     right: 10px;
-    background: white;
+    background: var(--c-surface);
     box-shadow: 0 4px 12px rgba(0,0,0,0.18);
     border-radius: 8px;
     padding: 8px 12px;
@@ -423,7 +413,7 @@
     padding: 20px; z-index: 10000;
   }
   .login-card {
-    background: white; border-radius: 16px;
+    background: var(--c-surface); border-radius: 16px;
     padding: 36px 32px; max-width: 380px; width: 100%;
     box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
     text-align: center;
@@ -440,7 +430,7 @@
   .login-error.visible { display: block; }
 
   @media print {
-    body { background: white; }
+    body { background: var(--c-surface); }
     .print-toolbar, .login-screen { display: none !important; }
     .slide {
       margin: 0;
@@ -968,12 +958,12 @@ function onLoginSuccess() {
   document.getElementById('deck').style.display = '';
   document.getElementById('print-toolbar').style.display = 'flex';
   initPresentation();
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   if (loadSession()) onLoginSuccess();
 });
-
 
 const ALL_DRIVERS = {
   axel:      { name: 'Axel',      initials: 'AG', lat: -31.1709, lng: -64.3161 },
@@ -996,7 +986,6 @@ const SCENARIOS = {
   D: { keep: ['axel','fernando','matias','guillermo','mauro','leandro'], drop: ['mauricio'], hire: ['mendoza','bsasrep'], hotel: [], flag: [] },
   E: { keep: ['axel','fernando','matias','guillermo','mauro','leandro'], drop: ['mauricio'], hire: ['mendoza','posadas'], hotel: [], flag: [] },
 };
-
 
 let pendingFeatures = null;
 async function loadPending() {
@@ -1049,7 +1038,6 @@ async function renderScenarioMap(elId, scenarioKey) {
   (cfg.hire || []).forEach(k => addDriver(k, 'hire', '★'));
 }
 
-
 const SCENARIO_LABELS = ['Baseline', 'A: Tweaks', 'B: Drop M', 'C: Drop M+Mzn', 'D: Drop M+BsAs', 'E: Drop M+Mzn+Psd'];
 const DATA_ORPHANS = [29, 29, 43, 35, 35, 25];
 const DATA_DIST = [342, 342, 361, 334, 334, 323];
@@ -1077,7 +1065,6 @@ function renderCharts() {
   const ctxC = document.getElementById('chart-cost');
   if (ctxC) new Chart(ctxC, { ...common, data: { labels: SCENARIO_LABELS, datasets: [{ data: DATA_COST, backgroundColor: DATA_COST.map(v => v < 0 ? '#22C55E' : (v === 0 ? '#94A3B8' : (v <= 200 ? '#FBBF24' : '#EF4444'))), borderRadius: 4 }] } });
 }
-
 
 function initPresentation() {
   const now = new Date();

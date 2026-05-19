@@ -1,0 +1,164 @@
+/* ============================================================
+ * Aceolution LATAM — Design Tokens
+ * ============================================================
+ *
+ * Arquivo central de cores e variáveis CSS de todo o portal.
+ * Cada HTML linka este arquivo ANTES do seu próprio <style> e
+ * pode sobrescrever uma var pontual no seu próprio :root se
+ * precisar (raro — preferível propor mudança aqui).
+ *
+ * - :root                  → light mode (default)
+ * - [data-theme="dark"]    → dark mode (toggle pelo theme.js)
+ *
+ * O toggle é controlado por theme.js e aparece (botão flutuante
+ * no canto inferior direito) só pra usuários em ADMIN_USERNAMES.
+ *
+ * ============================================================
+ */
+
+:root {
+  /* Brand */
+  --c-primary:        #2C5282;
+  --c-primary-dark:   #1A365D;
+  --c-accent:         #4A9FE0;
+
+  /* Surfaces / backgrounds */
+  --c-bg:             #F8FAFC;   /* page background */
+  --c-bg-tint:        #EBF4FB;   /* subtle accented surface (pills, hover) */
+  --c-surface:        #FFFFFF;   /* cards, modals, top-bars */
+
+  /* Borders */
+  --c-border:         #E2E8F0;   /* default border */
+  --c-border-strong:  #CBD5E1;   /* divisores mais pesados */
+
+  /* Text */
+  --c-text:           #1A202C;
+  --c-text-muted:     #64748B;
+  --c-text-dim:       #94A3B8;
+
+  /* States */
+  --c-success:        #16A34A;
+  --c-warn:           #CA8A04;
+  --c-danger:         #B91C1C;
+
+  /* Shadows — vars pra dark mode poder atenuar */
+  --shadow-sm:        0 1px 2px rgba(15,23,42,0.06);
+  --shadow-md:        0 4px 12px rgba(15,23,42,0.08);
+  --shadow-lg:        0 12px 32px rgba(15,23,42,0.12);
+}
+
+/* ============================================================
+ * DARK MODE
+ * Aplicado quando <html data-theme="dark">. Mesmas vars, valores
+ * trocados. Paleta "slate-900" (não preto puro — mais agradável).
+ * ============================================================ */
+[data-theme="dark"] {
+  /* Brand — accent fica mais claro pra contraste em bg escuro */
+  --c-primary:        #60A5FA;   /* blue-400 — botões, links */
+  --c-primary-dark:   #93C5FD;   /* blue-300 — títulos (mais brilhante = mais proeminente) */
+  --c-accent:         #38BDF8;   /* sky-400 */
+
+  /* Surfaces — slate scale */
+  --c-bg:             #0F172A;   /* slate-900 (página) */
+  --c-surface:        #1E293B;   /* slate-800 (cards, modais, topbar) */
+  --c-bg-tint:        #1E3A5F;   /* azul-slate (pills, hover accent) */
+
+  /* Borders */
+  --c-border:         #334155;   /* slate-700 */
+  --c-border-strong:  #475569;   /* slate-600 */
+
+  /* Text */
+  --c-text:           #F1F5F9;   /* slate-100 */
+  --c-text-muted:     #94A3B8;   /* slate-400 */
+  --c-text-dim:       #64748B;   /* slate-500 */
+
+  /* States — versões lifted pra contraste em dark */
+  --c-success:        #4ADE80;   /* green-400 */
+  --c-warn:           #FBBF24;   /* amber-400 */
+  --c-danger:         #F87171;   /* red-400 */
+
+  /* Shadows mais pretas no dark (precisa mais opacidade pra ver) */
+  --shadow-sm:        0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md:        0 4px 12px rgba(0,0,0,0.5);
+  --shadow-lg:        0 12px 32px rgba(0,0,0,0.6);
+
+  /* color-scheme avisa o browser pra estilizar scrollbar/inputs nativos no escuro */
+  color-scheme: dark;
+}
+
+/* ============================================================
+ * Floating theme toggle (injetado pelo theme.js, só pra admins)
+ * ============================================================ */
+.theme-toggle-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  color: var(--c-text);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  z-index: 9998;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  padding: 0;
+}
+.theme-toggle-btn:hover {
+  border-color: var(--c-primary);
+  transform: translateY(-2px);
+}
+.theme-toggle-btn:active { transform: translateY(0); }
+
+/* Em telas pequenas, recolhe pra não cobrir conteúdo */
+@media (max-width: 640px) {
+  .theme-toggle-btn { bottom: 14px; right: 14px; width: 38px; height: 38px; font-size: 15px; }
+}
+
+/* Esconde no print */
+@media print {
+  .theme-toggle-btn { display: none !important; }
+}
+
+/* ============================================================
+ * Dark-mode component fixes — para cores que NÃO conseguimos
+ * trocar pra var() nas páginas (background: white inline, etc).
+ * Aplicados só quando data-theme="dark".
+ * ============================================================ */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: var(--c-surface);
+  color: var(--c-text);
+  border-color: var(--c-border);
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--c-text-dim);
+}
+
+/* Tiles do Leaflet (mapa): inverte luminosidade pra encaixar no tema escuro.
+   Não muda muito a cor das ruas/labels, mas escurece o fundo claro do OSM. */
+[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9);
+}
+/* Os markers/popups do Leaflet também precisam ser readonly no escuro */
+[data-theme="dark"] .leaflet-popup-content-wrapper,
+[data-theme="dark"] .leaflet-popup-tip {
+  background: var(--c-surface);
+  color: var(--c-text);
+}
+[data-theme="dark"] .leaflet-control-attribution {
+  background: rgba(15,23,42,0.75) !important;
+  color: var(--c-text-muted) !important;
+}
+[data-theme="dark"] .leaflet-control-attribution a {
+  color: var(--c-primary) !important;
+}

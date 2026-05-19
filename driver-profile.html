@@ -11,20 +11,10 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
   <script src="auth.js?v=20260518b"></script>
-<style>
-  :root {
-    --c-primary: #2C5282;
-    --c-primary-dark: #1A365D;
-    --c-accent: #4A9FE0;
-    --c-bg: #F8FAFC;
-    --c-bg-tint: #EBF4FB;
-    --c-border: #E2E8F0;
-    --c-border-strong: #CBD5E1;
-    --c-text: #1A202C;
-    --c-text-muted: #64748B;
-    --c-text-dim: #94A3B8;
+<script src="theme.js?v=20260518c"></script>
+<link rel="stylesheet" href="theme.css?v=20260518c">
+<style>  :root {
     --c-good: #16A34A;
-    --c-warn: #F59E0B;
     --c-bad: #DC2626;
   }
   * { box-sizing: border-box; }
@@ -47,7 +37,7 @@
     padding: 20px;
   }
   .login-box {
-    background: white;
+    background: var(--c-surface);
     padding: 40px 32px;
     border-radius: 16px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
@@ -75,7 +65,7 @@
 
   /* HEADER */
   .header {
-    background: white;
+    background: var(--c-surface);
     padding: 12px 24px;
     display: flex;
     justify-content: space-between;
@@ -123,7 +113,7 @@
     transition: all 0.15s;
   }
   .lang-switch button.active {
-    background: white;
+    background: var(--c-surface);
     color: var(--c-primary);
     font-weight: 700;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
@@ -152,7 +142,7 @@
 
   /* SEARCH BAR */
   .search-section {
-    background: white;
+    background: var(--c-surface);
     padding: 18px 24px;
     border-bottom: 1px solid var(--c-border);
   }
@@ -190,7 +180,7 @@
     top: calc(100% + 4px);
     left: 0;
     right: 0;
-    background: white;
+    background: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: 10px;
     box-shadow: 0 8px 28px rgba(15, 23, 42, 0.15);
@@ -263,7 +253,7 @@
     margin-bottom: 28px;
   }
   .ranking-card {
-    background: white;
+    background: var(--c-surface);
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
     max-width: 720px;
@@ -305,7 +295,7 @@
     font-weight: 500;
   }
   .ranking-toggle-btn.active {
-    background: white;
+    background: var(--c-surface);
     color: var(--c-primary);
     font-weight: 600;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -401,7 +391,7 @@
     color: #92400E;
   }
   .from-link-back {
-    background: white;
+    background: var(--c-surface);
     border: 1px solid #FDE68A;
     color: #92400E;
     padding: 4px 10px;
@@ -491,7 +481,7 @@
     margin-bottom: 18px;
   }
   .scorecard {
-    background: white;
+    background: var(--c-surface);
     padding: 18px;
     border-radius: 12px;
     border-left: 3px solid var(--c-primary);
@@ -528,7 +518,7 @@
     margin-bottom: 18px;
   }
   .detail-card {
-    background: white;
+    background: var(--c-surface);
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
@@ -608,7 +598,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: white;
+    background: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: 4px;
     padding: 4px 8px;
@@ -915,7 +905,7 @@
     line-height: 1.5;
   }
   .pmo-note-example {
-    background: white;
+    background: var(--c-surface);
     border-radius: 6px;
     padding: 10px 12px;
     margin-bottom: 8px;
@@ -1213,7 +1203,7 @@
     line-height: 1.6;
   }
   .eff-formula code {
-    background: white;
+    background: var(--c-surface);
     padding: 2px 6px;
     border-radius: 4px;
     font-family: 'SF Mono', Monaco, Menlo, monospace;
@@ -1320,7 +1310,7 @@
     margin-bottom: 6px;
   }
   .idle-issue-row {
-    background: white;
+    background: var(--c-surface);
     border-radius: 4px;
     padding: 6px 8px;
     margin-bottom: 4px;
@@ -1419,7 +1409,7 @@
   .history-trend-flat { color: var(--c-text-muted); font-weight: 600; }
 
   .placeholder-section {
-    background: white;
+    background: var(--c-surface);
     border: 2px dashed var(--c-border);
     padding: 32px;
     border-radius: 12px;
@@ -1729,7 +1719,7 @@
       <div id="profile-map" class="profile-map"></div>
       <div class="map-legend" id="map-legend">
         <span class="legend-item"><span class="legend-dot" style="background:#2C5282;"></span> <span data-i18n="legendBase">Base atual</span></span>
-        <span class="legend-item"><span class="legend-dot" style="background:white;border:2px solid #22C55E;"></span> 🏠 <span data-i18n="legendHome">Casa</span></span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--c-surface);border:2px solid #22C55E;"></span> 🏠 <span data-i18n="legendHome">Casa</span></span>
         <span class="legend-item"><span class="legend-circle" style="border-color:#2C5282;background:rgba(74,159,224,0.2);"></span> <span data-i18n="legendArea">Área de mapeamento</span></span>
         <span class="legend-item"><span class="legend-line"></span> <span data-i18n="legendHistory">Histórico (mais transparente = mais antigo)</span></span>
       </div>
@@ -1816,6 +1806,7 @@ function _finishLogin(user) {
   document.getElementById('user-pill').innerHTML =
     `<span>👤 ${user.fullName}</span><button class="logout-btn" onclick="doLogout()" title="Sair">✕</button>`;
   initApp();
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
 }
 
 function doLogout() {
@@ -1824,6 +1815,7 @@ function doLogout() {
   document.getElementById('app').classList.remove('shown');
   document.getElementById('login-screen').style.display = '';
   document.getElementById('login-password').value = '';
+  if (typeof removeThemeToggle === 'function') removeThemeToggle();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -3663,7 +3655,7 @@ async function renderProfileMap(p) {
     if (!tooClose) {
       const homeIcon = L.divIcon({
         className: 'driver-marker',
-        html: `<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:white;border:2px solid #22C55E;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:14px;">🏠</div>`,
+        html: `<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:var(--c-surface);border:2px solid #22C55E;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:14px;">🏠</div>`,
         iconSize: [28, 28],
         iconAnchor: [14, 14],
       });

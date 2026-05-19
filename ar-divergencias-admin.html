@@ -6,22 +6,10 @@
 <title>Divergências AR — Admin · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <script src="auth.js?v=20260518b"></script>
+<script src="theme.js?v=20260518c"></script>
+<link rel="stylesheet" href="theme.css?v=20260518c">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --c-primary: #2C5282;
-    --c-primary-dark: #1A365D;
-    --c-accent: #4A9FE0;
-    --c-bg: #F8FAFC;
-    --c-bg-tint: #EBF4FB;
-    --c-border: #E2E8F0;
-    --c-border-strong: #CBD5E1;
-    --c-text: #1A202C;
-    --c-text-muted: #64748B;
-    --c-success: #16A34A;
-    --c-warn: #CA8A04;
-    --c-danger: #B91C1C;
-  }
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #f5f6f8;
@@ -32,7 +20,7 @@
 
   /* Header */
   header {
-    background: white;
+    background: var(--c-surface);
     border-bottom: 1px solid var(--c-border);
     padding: 12px 24px;
     display: flex;
@@ -118,7 +106,7 @@
     margin-bottom: 18px;
   }
   .stat-card {
-    background: white;
+    background: var(--c-surface);
     border-radius: 10px;
     padding: 14px 16px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
@@ -141,7 +129,7 @@
 
   /* Filters */
   .filters {
-    background: white;
+    background: var(--c-surface);
     border-radius: 10px;
     padding: 14px 16px;
     margin-bottom: 16px;
@@ -165,7 +153,7 @@
     border-radius: 6px;
     font-size: 13px;
     font-family: inherit;
-    background: white;
+    background: var(--c-surface);
   }
   .filter-clear {
     background: none;
@@ -180,7 +168,7 @@
 
   /* Driver sections */
   .driver-section {
-    background: white;
+    background: var(--c-surface);
     border-radius: 12px;
     margin-bottom: 14px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
@@ -283,7 +271,7 @@
     color: var(--c-text);
     margin: 4px 0 6px;
     padding: 6px 10px;
-    background: white;
+    background: var(--c-surface);
     border-radius: 4px;
     font-style: italic;
   }
@@ -301,7 +289,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: white;
+    background: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: 6px;
     padding: 3px 10px;
@@ -315,7 +303,7 @@
 
   /* Empty state */
   .empty {
-    background: white;
+    background: var(--c-surface);
     padding: 48px 20px;
     text-align: center;
     color: var(--c-text-muted);
@@ -350,7 +338,7 @@
     padding: 20px; z-index: 10000;
   }
   .login-card {
-    background: white; border-radius: 16px;
+    background: var(--c-surface); border-radius: 16px;
     padding: 36px 32px; max-width: 380px; width: 100%;
     box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
     text-align: center;
@@ -368,7 +356,7 @@
 
   /* PRINT — layout PDF debulhado */
   @media print {
-    body { background: white; }
+    body { background: var(--c-surface); }
     .login-screen { display: none !important; }
     header { position: static; box-shadow: none; border-bottom: 2px solid var(--c-primary); page-break-after: avoid; }
     .header-actions { display: none !important; }
@@ -528,6 +516,7 @@ function onLoginSuccess() {
   document.getElementById('user-name').textContent = currentUser.fullName;
   document.getElementById('user-avatar').textContent = currentUser.fullName.split(' ').map(s => s[0].toUpperCase()).slice(0, 2).join('');
   loadSubmissions();
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
 }
 function doLogout() {
   if (!confirm('Sair?')) return;
@@ -538,13 +527,13 @@ function doLogout() {
   document.getElementById('login-password').value = '';
   document.getElementById('login-btn').disabled = false;
   document.getElementById('login-btn').textContent = 'Entrar';
+  if (typeof removeThemeToggle === 'function') removeThemeToggle();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const saved = loadSession();
   if (saved) { currentUser = saved; onLoginSuccess(); }
 });
-
 
 // =================================================================
 // Config + estado
@@ -555,7 +544,6 @@ const CONFIG = {
 
 let allRows = [];
 let filterState = { driver: '', currency: '', from: '', to: '' };
-
 
 // =================================================================
 // Fetch
@@ -605,7 +593,6 @@ function clearFilters() {
   filterState = { driver: '', currency: '', from: '', to: '' };
   render();
 }
-
 
 // =================================================================
 // Render
@@ -755,7 +742,6 @@ function renderDivergence(d) {
     </div>
   `;
 }
-
 
 // =================================================================
 // Helpers

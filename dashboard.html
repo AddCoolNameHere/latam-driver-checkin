@@ -11,26 +11,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
 <script src="auth.js?v=20260518b"></script>
+<script src="theme.js?v=20260518c"></script>
+<link rel="stylesheet" href="theme.css?v=20260518c">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --c-primary: #2C5282;
-    --c-primary-dark: #1A365D;
-    --c-accent: #4A9FE0;
-    --c-bg-tint: #EBF4FB;
-    --c-bg: #F4F6F9;
-    --c-surface: #FFFFFF;
-    --c-border: #E2E8F0;
-    --c-border-strong: #CBD5E1;
-    --c-text: #1A202C;
-    --c-text-muted: #64748B;
-    --c-text-dim: #94A3B8;
-    --c-success: #22C55E;
+  * { box-sizing: border-box; margin: 0; padding: 0; }  :root {
     --c-success-bg: #ECFDF5;
-    --c-warn: #F59E0B;
     --c-warn-bg: #FEF3C7;
-    --c-danger: #EF4444;
     --c-danger-bg: #FEE2E2;
   }
 
@@ -46,7 +32,7 @@
 
   /* HEADER */
   .header {
-    background: white;
+    background: var(--c-surface);
     border-radius: 12px;
     padding: 16px 20px;
     margin-bottom: 16px;
@@ -123,7 +109,7 @@
     position: absolute;
     top: calc(100% + 4px);
     right: 0;
-    background: white;
+    background: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: 10px;
     box-shadow: 0 8px 24px rgba(15,23,42,0.12);
@@ -159,7 +145,7 @@
     padding: 20px;
   }
   .admin-modal-content {
-    background: white;
+    background: var(--c-surface);
     border-radius: 14px;
     width: 100%;
     max-width: 900px;
@@ -325,7 +311,7 @@
     align-items: center;
     gap: 4px;
     padding: 12px 8px;
-    background: white;
+    background: var(--c-surface);
     border: 2px solid var(--c-border);
     border-radius: 8px;
     cursor: pointer;
@@ -368,7 +354,7 @@
   }
   .admin-cancel-btn {
     padding: 9px 16px;
-    background: white;
+    background: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: 8px;
     cursor: pointer;
@@ -427,7 +413,7 @@
     padding: 20px;
   }
   .ts-modal-content {
-    background: white;
+    background: var(--c-surface);
     border-radius: 14px;
     padding: 24px;
     max-width: 460px;
@@ -503,7 +489,7 @@
   .ts-modal-actions button {
     padding: 9px 18px;
     border: 1px solid var(--c-border);
-    background: white;
+    background: var(--c-surface);
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
@@ -541,14 +527,14 @@
     letter-spacing: 0.5px;
   }
   .lang-switch button.active {
-    background: white;
+    background: var(--c-surface);
     color: var(--c-primary);
     box-shadow: 0 1px 2px rgba(0,0,0,0.06);
   }
 
   /* FILTERS */
   .filters {
-    background: white;
+    background: var(--c-surface);
     border-radius: 12px;
     padding: 12px 16px;
     margin-bottom: 12px;
@@ -565,7 +551,7 @@
   }
   .filter-chip {
     padding: 6px 12px;
-    background: white;
+    background: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: 8px;
     font-size: 12px;
@@ -598,7 +584,7 @@
     top: calc(100% + 6px);
     left: 0;
     z-index: 999;
-    background: white;
+    background: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: 10px;
     padding: 12px;
@@ -777,7 +763,7 @@
     margin-bottom: 12px;
   }
   .scorecard {
-    background: white;
+    background: var(--c-surface);
     border-radius: 12px;
     padding: 14px 16px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
@@ -820,7 +806,7 @@
 
   /* MAP */
   .map-section {
-    background: white;
+    background: var(--c-surface);
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 12px;
@@ -876,7 +862,7 @@
 
   /* Weather toggle (custom Leaflet control) */
   .leaflet-control.weather-toggle-control {
-    background: white;
+    background: var(--c-surface);
     border-radius: 6px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.2);
     padding: 0;
@@ -889,7 +875,7 @@
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
-    background: white;
+    background: var(--c-surface);
     border: none;
     color: #475569;
     font-size: 12px;
@@ -923,14 +909,14 @@
 
   /* TABLE */
   .table-section {
-    background: white;
+    background: var(--c-surface);
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   }
   .cts-section {
-    background: white;
+    background: var(--c-surface);
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 12px;
@@ -986,7 +972,7 @@
   }
   .cts-card-stats strong { color: var(--c-text); }
   .cts-period-select {
-    background: white;
+    background: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: 8px;
     padding: 6px 10px;
@@ -1041,7 +1027,7 @@
     margin-bottom: 12px;
   }
   .ranking-card {
-    background: white;
+    background: var(--c-surface);
     border-radius: 12px;
     padding: 16px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
@@ -1160,7 +1146,7 @@
   }
   .table-page-btn {
     padding: 6px 14px;
-    background: white;
+    background: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: 16px;
     cursor: pointer;
@@ -1221,7 +1207,7 @@
   }
   .month-picker-overlay.show { display: flex; }
   .month-picker-box {
-    background: white;
+    background: var(--c-surface);
     border-radius: 12px;
     box-shadow: 0 20px 60px rgba(15, 23, 42, 0.3);
     width: 100%;
@@ -1267,7 +1253,7 @@
     font-size: 14px;
     font-family: inherit;
     margin-bottom: 16px;
-    background: white;
+    background: var(--c-surface);
   }
   .month-picker-select:focus {
     outline: none;
@@ -1288,7 +1274,7 @@
     cursor: pointer;
     font-family: inherit;
     border: 1px solid var(--c-border);
-    background: white;
+    background: var(--c-surface);
     color: var(--c-text-muted);
     transition: all 0.15s;
   }
@@ -1358,7 +1344,7 @@
     bottom: 0;
     width: 480px;
     max-width: 100vw;
-    background: white;
+    background: var(--c-surface);
     box-shadow: -4px 0 24px rgba(0,0,0,0.1);
     z-index: 999;
     transform: translateX(100%);
@@ -1381,7 +1367,7 @@
   .panel-header {
     position: sticky;
     top: 0;
-    background: white;
+    background: var(--c-surface);
     border-bottom: 1px solid var(--c-border);
     padding: 16px 20px;
     display: flex;
@@ -1522,7 +1508,7 @@
   .idle-mini-cell {
     text-align: center;
     padding: 6px 2px;
-    background: white;
+    background: var(--c-surface);
     border-radius: 6px;
     border: 1px solid var(--c-border);
   }
@@ -1730,7 +1716,7 @@
   .history-notes {
     margin-top: 4px;
     padding: 6px 8px;
-    background: white;
+    background: var(--c-surface);
     border-left: 2px solid var(--c-accent);
     border-radius: 3px;
     font-size: 11px;
@@ -1795,7 +1781,7 @@
     z-index: 10000;
   }
   .login-card {
-    background: white;
+    background: var(--c-surface);
     border-radius: 16px;
     padding: 36px 32px 28px;
     max-width: 380px;
@@ -1832,7 +1818,7 @@
     color: var(--c-primary);
   }
   .login-lang-switch button.active {
-    background: white;
+    background: var(--c-surface);
     color: var(--c-primary-dark);
     box-shadow: 0 1px 2px rgba(0,0,0,0.08);
   }
@@ -1893,7 +1879,7 @@
     font-size: 14px;
     font-family: inherit;
     color: var(--c-text);
-    background: white;
+    background: var(--c-surface);
     transition: border-color 0.15s, box-shadow 0.15s;
     box-sizing: border-box;
   }
@@ -2785,6 +2771,7 @@ function onLoginSuccess() {
   // preferências restauradas. Pequeno delay pra garantir que loadData() já
   // populou os filtros de país dinâmicos.
   setTimeout(syncFilterButtonsUI, 500);
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
 }
 
 /**
@@ -2797,13 +2784,13 @@ function doLogout() {
     currentUser = null;
     location.reload();
   }
+  if (typeof removeThemeToggle === 'function') removeThemeToggle();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const saved = loadSession();
   if (saved) { currentUser = saved; onLoginSuccess(); }
 });
-
 
 const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
@@ -3572,7 +3559,6 @@ document.addEventListener('click', (e) => {
   if (th && th.dataset.sort) handleSortClick(th.dataset.sort);
 });
 
-
 let state = {
   drivers: [],
   filter: { country: 'all', period: 1, specificDate: null, specificRange: null }, // specificDate='YYYY-MM-DD' (1 dia) | specificRange={start,end} (range) | period=1 (hoje)
@@ -3769,7 +3755,6 @@ function initMap() {
   markerLayer = L.layerGroup().addTo(map);
   addWeatherToggleControl();
 }
-
 
 // =================================================================
 // WEATHER OVERLAY
@@ -5568,7 +5553,6 @@ function formatMonthOption(monthKey) {
   return (monthNames[m - 1] || m) + ' ' + y;
 }
 
-
 // ================================================================
 // v5.15: Monthly Business Review (PPTX) — geração no client com pptxgenjs
 // ================================================================
@@ -5691,7 +5675,6 @@ function setMbrStatus(msg, isError) {
   el.textContent = msg;
   el.style.color = isError ? '#DC2626' : 'var(--c-text-muted)';
 }
-
 
 // ================================================================
 // v5.15: BUILD PPTX — usa pptxgenjs com paleta Aceolution
@@ -6154,7 +6137,6 @@ function formatNumber(n, decimals) {
   decimals = decimals !== undefined ? decimals : 2;
   return Number(n).toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
-
 
 /**
  * Gera PDF Calendar Summary do mês especificado.
@@ -7476,7 +7458,7 @@ function renderPanelMap(d) {
     if (!tooClose) {
       const homeIcon = L.divIcon({
         className: 'driver-marker',
-        html: '<div style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:white;border:2px solid #22C55E;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:14px;">🏠</div>',
+        html: '<div style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--c-surface);border:2px solid #22C55E;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:14px;">🏠</div>',
         iconSize: [26, 26],
         iconAnchor: [13, 13],
       });

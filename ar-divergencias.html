@@ -5,22 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Divergencias de Pago Argentina · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<link rel="stylesheet" href="theme.css?v=20260518c">
+<script src="theme.js?v=20260518c"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --c-primary: #2C5282;
-    --c-primary-dark: #1A365D;
-    --c-accent: #4A9FE0;
-    --c-bg: #F8FAFC;
-    --c-bg-tint: #EBF4FB;
-    --c-border: #E2E8F0;
-    --c-border-strong: #CBD5E1;
-    --c-text: #1A202C;
-    --c-text-muted: #64748B;
-    --c-success: #16A34A;
-    --c-warn: #CA8A04;
-    --c-danger: #B91C1C;
-  }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #f5f6f8;
@@ -32,7 +20,7 @@
     -webkit-font-smoothing: antialiased;
   }
   header {
-    background: white;
+    background: var(--c-surface);
     border-radius: 12px;
     padding: 14px 16px;
     margin-bottom: 14px;
@@ -76,7 +64,7 @@
   }
 
   .card {
-    background: white;
+    background: var(--c-surface);
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 12px;
@@ -120,7 +108,7 @@
     border: 1px solid #d5d7db;
     border-radius: 8px;
     font-size: 15px;
-    background: white;
+    background: var(--c-surface);
     font-family: inherit;
     color: var(--c-text);
   }
@@ -164,7 +152,7 @@
   }
   .btn-primary:active:not(:disabled) { transform: scale(0.98); }
   .btn-secondary {
-    background: white;
+    background: var(--c-surface);
     color: var(--c-primary);
     border: 1.5px solid var(--c-primary);
   }
@@ -255,7 +243,7 @@
     overflow: hidden;
   }
   .currency-toggle button {
-    background: white;
+    background: var(--c-surface);
     border: none;
     padding: 10px;
     font-size: 14px;
@@ -692,7 +680,6 @@ document.querySelectorAll('.lang-switch button').forEach(btn => {
   });
 });
 
-
 // ================================================================
 // ESTADO
 // ================================================================
@@ -704,7 +691,6 @@ const state = {
   divergences: [],             // lista de divergências confirmadas
   currentCurrency: 'ARS',
 };
-
 
 // ================================================================
 // QUINZENAS — gera as últimas 12 dinamicamente
@@ -777,7 +763,6 @@ function rebuildQuinzenaSelect() {
   if (currentValue) sel.value = currentValue;
 }
 
-
 // ================================================================
 // STEP 1 — Carrega motoristas
 // ================================================================
@@ -829,7 +814,6 @@ document.getElementById('step-1-next').addEventListener('click', () => {
   goToStep(2);
 });
 
-
 // ================================================================
 // STEP 2 — Seleciona quinzena
 // ================================================================
@@ -863,7 +847,6 @@ document.getElementById('step-2-next').addEventListener('click', () => {
   resetStep3UI();
   goToStep(3);
 });
-
 
 // ================================================================
 // STEP 3 — Form da divergência
@@ -1036,7 +1019,6 @@ document.getElementById('step-3-next').addEventListener('click', () => {
   goToStep(4);
 });
 
-
 // ================================================================
 // STEP 4 — Outra ou enviar
 // ================================================================
@@ -1078,7 +1060,6 @@ function refreshDivergencesSummaries() {
     });
   });
 }
-
 
 // ================================================================
 // SUBMIT
@@ -1132,7 +1113,6 @@ async function submitAll() {
   }
 }
 
-
 // ================================================================
 // STEP 5 — Sucesso
 // ================================================================
@@ -1146,7 +1126,6 @@ document.getElementById('step-5-restart').addEventListener('click', () => {
   goToStep(1);
 });
 
-
 // ================================================================
 // Navegação entre steps
 // ================================================================
@@ -1157,7 +1136,6 @@ function goToStep(n) {
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 
 // ================================================================
 // Toast
@@ -1171,7 +1149,6 @@ function showToast(msg, type) {
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
-
 
 // ================================================================
 // BOOT

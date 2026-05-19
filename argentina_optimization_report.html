@@ -6,21 +6,11 @@
 <title>Otimização Argentina — Relatório · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <script src="auth.js?v=20260518b"></script>
+<script src="theme.js?v=20260518c"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="theme.css?v=20260518c">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --c-primary: #2C5282;
-    --c-primary-dark: #1A365D;
-    --c-accent: #4A9FE0;
-    --c-bg: #F8FAFC;
-    --c-bg-tint: #EBF4FB;
-    --c-border: #E2E8F0;
-    --c-text: #1A202C;
-    --c-text-muted: #64748B;
-    --c-success: #16A34A;
-    --c-warn: #CA8A04;
-    --c-danger: #B91C1C;
+  * { box-sizing: border-box; margin: 0; padding: 0; }  :root {
     --c-gold: #B45309;
   }
   body {
@@ -34,7 +24,7 @@
   .report-page {
     max-width: 880px;
     margin: 20px auto;
-    background: white;
+    background: var(--c-surface);
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     padding: 48px 56px;
     border-radius: 4px;
@@ -45,7 +35,7 @@
     position: fixed;
     top: 16px;
     right: 16px;
-    background: white;
+    background: var(--c-surface);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     border-radius: 8px;
     padding: 10px 14px;
@@ -298,7 +288,7 @@
     padding: 20px; z-index: 10000;
   }
   .login-card {
-    background: white; border-radius: 16px;
+    background: var(--c-surface); border-radius: 16px;
     padding: 36px 32px 28px; max-width: 380px; width: 100%;
     box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
     text-align: center;
@@ -348,7 +338,7 @@
 
   /* PRINT */
   @media print {
-    body { background: white; }
+    body { background: var(--c-surface); }
     .print-toolbar, .login-screen { display: none !important; }
     .report-page {
       box-shadow: none;
@@ -687,6 +677,7 @@ function onLoginSuccess() {
   document.getElementById('report-page').style.display = '';
   document.getElementById('print-toolbar').style.display = 'flex';
   initReport();
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -704,7 +695,6 @@ function initReport() {
   document.getElementById('footer-date').textContent = dtFmt;
   initMap();
 }
-
 
 // =================================================================
 // MAP — drivers + áreas pendentes + contratações sugeridas

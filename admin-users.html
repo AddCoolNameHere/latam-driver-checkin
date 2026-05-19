@@ -7,24 +7,10 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <script src="auth.js?v=20260518b"></script>
+<script src="theme.js?v=20260518c"></script>
+<link rel="stylesheet" href="theme.css?v=20260518c">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --c-primary: #2C5282;
-    --c-primary-dark: #1A365D;
-    --c-accent: #4A9FE0;
-    --c-bg: #F4F6F9;
-    --c-bg-tint: #EBF4FB;
-    --c-surface: #FFFFFF;
-    --c-border: #E2E8F0;
-    --c-border-strong: #CBD5E1;
-    --c-text: #1A202C;
-    --c-text-muted: #64748B;
-    --c-text-dim: #94A3B8;
-    --c-success: #16A34A;
-    --c-warn: #CA8A04;
-    --c-danger: #B91C1C;
-  }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: var(--c-bg);
@@ -41,7 +27,7 @@
     padding: 20px; z-index: 10000;
   }
   .login-card {
-    background: white; border-radius: 16px;
+    background: var(--c-surface); border-radius: 16px;
     padding: 36px 32px 28px; max-width: 380px; width: 100%;
     box-shadow: 0 20px 60px rgba(15,23,42,0.25); text-align: center;
   }
@@ -65,7 +51,7 @@
     padding: 20px; z-index: 9999;
   }
   .denied-card {
-    background: white; border-radius: 16px;
+    background: var(--c-surface); border-radius: 16px;
     padding: 36px 32px; max-width: 420px; width: 100%;
     text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   }
@@ -76,7 +62,7 @@
 
   /* TOPBAR */
   header.topbar {
-    background: white; border-bottom: 1px solid var(--c-border);
+    background: var(--c-surface); border-bottom: 1px solid var(--c-border);
     padding: 14px 24px; display: flex; align-items: center;
     justify-content: space-between; flex-wrap: wrap; gap: 12px;
   }
@@ -121,16 +107,16 @@
   .btn-primary { background: var(--c-primary); color: white; }
   .btn-primary:hover { background: var(--c-primary-dark); }
   .btn-primary:disabled { background: var(--c-text-dim); cursor: not-allowed; }
-  .btn-ghost { background: white; color: var(--c-text); border-color: var(--c-border-strong); }
+  .btn-ghost { background: var(--c-surface); color: var(--c-text); border-color: var(--c-border-strong); }
   .btn-ghost:hover { background: var(--c-bg-tint); border-color: var(--c-primary); }
-  .btn-danger { background: white; color: var(--c-danger); border-color: var(--c-danger); }
+  .btn-danger { background: var(--c-surface); color: var(--c-danger); border-color: var(--c-danger); }
   .btn-danger:hover { background: var(--c-danger); color: white; }
   .btn-success { background: var(--c-success); color: white; }
   .btn-success:hover { background: #15803d; }
 
   /* Users table */
   .users-card {
-    background: white; border: 1px solid var(--c-border);
+    background: var(--c-surface); border: 1px solid var(--c-border);
     border-radius: 12px; overflow: hidden;
   }
   table.users {
@@ -171,7 +157,7 @@
 
   /* Save area */
   .save-area {
-    margin-top: 18px; padding: 16px; background: white;
+    margin-top: 18px; padding: 16px; background: var(--c-surface);
     border: 1px solid var(--c-border); border-radius: 12px;
   }
   .save-area label {
@@ -199,7 +185,7 @@
   }
   .modal-backdrop.visible { display: flex; }
   .modal {
-    background: white; border-radius: 14px; padding: 24px;
+    background: var(--c-surface); border-radius: 14px; padding: 24px;
     max-width: 460px; width: 100%;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   }
@@ -437,6 +423,7 @@ function onLoginSuccess() {
   document.getElementById('user-avatar').textContent = initials;
   initWorkingState();
   renderTable();
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
 }
 
 function doLogout() {
@@ -449,6 +436,7 @@ function doLogout() {
   document.getElementById('login-password').value = '';
   document.getElementById('login-btn').disabled = false;
   document.getElementById('login-btn').textContent = 'Entrar';
+  if (typeof removeThemeToggle === 'function') removeThemeToggle();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

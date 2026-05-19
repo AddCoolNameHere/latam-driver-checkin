@@ -43,6 +43,7 @@ check_gas() {
 
 # Frontend
 node --check auth.js && echo "✓ auth.js"
+node --check theme.js && echo "✓ theme.js"
 check_html auth-helper.html
 check_html index.html
 check_html dashboard.html
