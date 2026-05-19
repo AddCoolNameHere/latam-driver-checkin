@@ -319,6 +319,70 @@
     text-align: right;
   }
 
+  /* Quinzena banner */
+  .quinzena-banner {
+    background: linear-gradient(135deg, var(--c-primary), var(--c-primary-dark));
+    color: white;
+    padding: 14px 20px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .qb-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .qb-text {
+    flex: 1;
+    min-width: 200px;
+  }
+  .qb-label {
+    font-size: 11px;
+    opacity: 0.85;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .qb-range {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .qb-weeks {
+    font-size: 11px;
+    opacity: 0.8;
+    margin-top: 2px;
+  }
+  .qb-pay-day {
+    background: rgba(255, 255, 255, 0.16);
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .qb-pay-label {
+    font-size: 10px;
+    opacity: 0.85;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+  }
+  .qb-pay-date {
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
   @media (max-width: 920px) {
     .kpi-row { grid-template-columns: repeat(2, 1fr); }
     .charts-row { grid-template-columns: 1fr; }
@@ -338,10 +402,24 @@
 <main class="ts-wrap">
   <div class="ts-header">
     <h1 class="ts-title" id="ts-title">Timesheet & Payroll</h1>
-    <div class="ts-sub" id="ts-sub">Snapshot atual da folha — horas, valor hora e próximo pagamento por motorista</div>
+    <div class="ts-sub" id="ts-sub">Pagamento quinzenal — todos os países recebem a cada 15 dias</div>
   </div>
 
   <div id="ts-content" style="display:none;">
+
+    <!-- Quinzena banner -->
+    <div class="quinzena-banner" id="quinzena-banner">
+      <div class="qb-icon">📅</div>
+      <div class="qb-text">
+        <div class="qb-label" id="qb-label">Quinzena atual</div>
+        <div class="qb-range" id="qb-range">—</div>
+        <div class="qb-weeks" id="qb-weeks"></div>
+      </div>
+      <div class="qb-pay-day">
+        <div class="qb-pay-label" id="qb-pay-label">Próximo pagamento</div>
+        <div class="qb-pay-date" id="qb-pay-date">—</div>
+      </div>
+    </div>
 
     <!-- KPI Cards -->
     <div class="kpi-row">
@@ -351,14 +429,14 @@
         <div class="kpi-hint" id="kpi-h-drivers">total</div>
       </div>
       <div class="kpi-card green">
-        <div class="kpi-label" id="kpi-l-hours">Horas no período</div>
+        <div class="kpi-label" id="kpi-l-hours">Horas na quinzena</div>
         <div class="kpi-value" id="kpi-v-hours">0</div>
-        <div class="kpi-hint" id="kpi-h-hours">soma de Final Hours</div>
+        <div class="kpi-hint" id="kpi-h-hours">soma das 2 semanas anteriores</div>
       </div>
       <div class="kpi-card amber">
-        <div class="kpi-label" id="kpi-l-payroll">Folha estimada</div>
+        <div class="kpi-label" id="kpi-l-payroll">Folha quinzenal</div>
         <div class="kpi-value" id="kpi-v-payroll">$0</div>
-        <div class="kpi-hint" id="kpi-h-payroll">soma Month Salary (USD)</div>
+        <div class="kpi-hint" id="kpi-h-payroll">total a pagar (USD)</div>
       </div>
       <div class="kpi-card purple">
         <div class="kpi-label" id="kpi-l-rate">Valor hora médio</div>
@@ -436,59 +514,71 @@ const COUNTRY_COLORS = {
 const I18N = {
   pt: {
     title: 'Timesheet & Payroll',
-    sub: 'Snapshot atual da folha — horas, valor hora e próximo pagamento por motorista',
+    sub: 'Pagamento quinzenal — todos os países recebem a cada 15 dias',
+    qbLabel: 'Quinzena atual',
+    qbWeeks: 'Semana {prev} + Semana {curr}',
+    qbPayLabel: 'Próximo pagamento',
     kpiDrivers: 'Motoristas', kpiDriversHint: 'total',
-    kpiHours: 'Horas no período', kpiHoursHint: 'soma de Final Hours',
-    kpiPayroll: 'Folha estimada', kpiPayrollHint: 'soma Month Salary (USD)',
+    kpiHours: 'Horas na quinzena', kpiHoursHint: 'soma das 2 semanas anteriores',
+    kpiPayroll: 'Folha quinzenal', kpiPayrollHint: 'total a pagar (USD)',
     kpiRate: 'Valor hora médio', kpiRateHint: 'média Hour Pay',
     search: 'Buscar motorista…',
     allCountries: 'Todos os países', allStatus: 'Todos status',
     drivers: 'motoristas', refresh: 'Atualizar', export: 'Exportar CSV',
-    chartBar: 'Top motoristas por horas trabalhadas',
+    chartBar: 'Top motoristas por horas na quinzena',
     chartDonut: 'Motoristas por país',
     sectionDrivers: 'Detalhes por motorista',
     loading: 'Carregando…', empty: 'Aba Timesheet vazia',
     error: 'Erro ao carregar', cached: 'Dados do cache · clica ↻ pra recarregar',
-    fresh: 'Dados atualizados', nextPay: 'Próximo pagamento', hourRate: 'Valor hora',
-    monthSalary: 'Salário mensal', finalHours: 'Horas',
+    fresh: 'Dados atualizados',
+    cardQuinzenalPay: 'Pagamento quinzenal', cardHourRate: 'Valor hora',
+    cardHoursQuinzena: 'Horas quinzena', cardWeekBreakdown: 'Detalhe semanal',
     noEmail: '—',
   },
   es: {
     title: 'Timesheet y Payroll',
-    sub: 'Snapshot actual de nómina — horas, valor hora y próximo pago por conductor',
+    sub: 'Pago quincenal — todos los países cobran cada 15 días',
+    qbLabel: 'Quincena actual',
+    qbWeeks: 'Semana {prev} + Semana {curr}',
+    qbPayLabel: 'Próximo pago',
     kpiDrivers: 'Conductores', kpiDriversHint: 'total',
-    kpiHours: 'Horas del período', kpiHoursHint: 'suma de Final Hours',
-    kpiPayroll: 'Nómina estimada', kpiPayrollHint: 'suma Month Salary (USD)',
+    kpiHours: 'Horas de la quincena', kpiHoursHint: 'suma de las 2 semanas anteriores',
+    kpiPayroll: 'Nómina quincenal', kpiPayrollHint: 'total a pagar (USD)',
     kpiRate: 'Valor hora promedio', kpiRateHint: 'promedio Hour Pay',
     search: 'Buscar conductor…',
     allCountries: 'Todos los países', allStatus: 'Todos los estados',
     drivers: 'conductores', refresh: 'Actualizar', export: 'Exportar CSV',
-    chartBar: 'Top conductores por horas trabajadas',
+    chartBar: 'Top conductores por horas de la quincena',
     chartDonut: 'Conductores por país',
     sectionDrivers: 'Detalles por conductor',
     loading: 'Cargando…', empty: 'Pestaña Timesheet vacía',
     error: 'Error al cargar', cached: 'Datos en caché · clic en ↻ para recargar',
-    fresh: 'Datos actualizados', nextPay: 'Próximo pago', hourRate: 'Valor hora',
-    monthSalary: 'Salario mensual', finalHours: 'Horas',
+    fresh: 'Datos actualizados',
+    cardQuinzenalPay: 'Pago quincenal', cardHourRate: 'Valor hora',
+    cardHoursQuinzena: 'Horas quincena', cardWeekBreakdown: 'Detalle semanal',
     noEmail: '—',
   },
   en: {
     title: 'Timesheet & Payroll',
-    sub: 'Current payroll snapshot — hours, hourly rate and next payment per driver',
+    sub: 'Biweekly payroll — all countries get paid every 15 days',
+    qbLabel: 'Current biweekly period',
+    qbWeeks: 'Week {prev} + Week {curr}',
+    qbPayLabel: 'Next payment',
     kpiDrivers: 'Drivers', kpiDriversHint: 'total',
-    kpiHours: 'Hours this period', kpiHoursHint: 'sum of Final Hours',
-    kpiPayroll: 'Estimated payroll', kpiPayrollHint: 'sum Month Salary (USD)',
+    kpiHours: 'Hours this biweekly', kpiHoursHint: 'sum of the 2 previous weeks',
+    kpiPayroll: 'Biweekly payroll', kpiPayrollHint: 'total to pay (USD)',
     kpiRate: 'Avg hourly rate', kpiRateHint: 'average Hour Pay',
     search: 'Search driver…',
     allCountries: 'All countries', allStatus: 'All statuses',
     drivers: 'drivers', refresh: 'Refresh', export: 'Export CSV',
-    chartBar: 'Top drivers by hours worked',
+    chartBar: 'Top drivers by biweekly hours',
     chartDonut: 'Drivers by country',
     sectionDrivers: 'Driver details',
     loading: 'Loading…', empty: 'Timesheet tab is empty',
     error: 'Loading error', cached: 'Cached data · click ↻ to reload',
-    fresh: 'Fresh data', nextPay: 'Next payment', hourRate: 'Hourly rate',
-    monthSalary: 'Month salary', finalHours: 'Hours',
+    fresh: 'Fresh data',
+    cardQuinzenalPay: 'Biweekly pay', cardHourRate: 'Hourly rate',
+    cardHoursQuinzena: 'Biweekly hours', cardWeekBreakdown: 'Week breakdown',
     noEmail: '—',
   },
 };
@@ -500,8 +590,9 @@ let chartDonut = null;
 
 let state = {
   raw: { headers: [], rows: [] },
-  parsed: [],     // array de objetos { name, country, status, rate, email, hours, salary, nextPay }
+  parsed: [],     // { name, country, status, rate, email, hoursPrev, hoursCurr, hoursQuinzena, quinzenalPay }
   filtered: [],
+  metadata: {},   // { nextPayrollDay, lastPayrollDay, currentWeek, nextPayrollWeek }
   fromCache: false,
 };
 
@@ -511,6 +602,8 @@ function applyI18n() {
   const i = t();
   document.getElementById('ts-title').textContent = i.title;
   document.getElementById('ts-sub').textContent = i.sub;
+  document.getElementById('qb-label').textContent = i.qbLabel;
+  document.getElementById('qb-pay-label').textContent = i.qbPayLabel;
   document.getElementById('kpi-l-drivers').textContent = i.kpiDrivers;
   document.getElementById('kpi-h-drivers').textContent = i.kpiDriversHint;
   document.getElementById('kpi-l-hours').textContent = i.kpiHours;
@@ -535,6 +628,7 @@ function applyI18n() {
   updateCount();
   updateInfo();
   if (state.parsed.length > 0) {
+    renderBanner();
     render();
   }
 }
@@ -589,9 +683,15 @@ function getCountryColor(country) {
   return COUNTRY_COLORS[country] || '#64748B';
 }
 
-// Detecta índices das colunas a partir dos headers
+// Detecta índices das colunas a partir dos headers da Timesheet.
+// Estrutura esperada (cols importantes):
+//   Worker Full Name | Country | Situation | Hour Pay | Corporate E-mail |
+//   Final Hours (monthly) | Month Salary (monthly) |
+//   <Next Payroll Date> | <CurrentWeek.YYYY> | <PrevWeek.YYYY> |
+//   ACE | CTS | Final Hours (current week) | Dif |
+//   ACE | CTS | Final Hours (prev week) | Dif | ...
 function detectCols(headers) {
-  const lower = headers.map(h => String(h || '').toLowerCase());
+  const lower = headers.map(h => String(h || '').toLowerCase().trim());
   const findFirst = (...patterns) => {
     for (const p of patterns) {
       for (let i = 0; i < lower.length; i++) {
@@ -600,48 +700,95 @@ function detectCols(headers) {
     }
     return -1;
   };
-  // Para Final Hours, pega a PRIMEIRA ocorrência (col F na mastersheet)
-  let finalHoursIdx = -1;
-  for (let i = 0; i < lower.length; i++) {
-    if (lower[i] === 'final hours' || lower[i].includes('final hours')) {
-      finalHoursIdx = i;
+  // Acha TODAS as ocorrências de "Final Hours" pra distinguir monthly vs week
+  const finalHoursIdxs = [];
+  lower.forEach((h, i) => { if (h === 'final hours') finalHoursIdxs.push(i); });
+
+  // Acha a col da data (próximo pagamento) — header é tipo "2026-05-28" ou "28/05/2026"
+  const dateRe = /^\d{4}-\d{2}-\d{2}$|^\d{2}\/\d{2}\/\d{4}$/;
+  let nextPayDateIdx = -1;
+  for (let i = 0; i < headers.length; i++) {
+    if (dateRe.test(String(headers[i] || '').trim())) {
+      nextPayDateIdx = i;
       break;
     }
   }
-  // Para Next Payment: a coluna logo depois de Month Salary que tem header tipo data ou número
-  const salaryIdx = findFirst('month salary', 'salario mensal', 'salário mensal');
-  let nextPayIdx = -1;
-  if (salaryIdx >= 0 && salaryIdx + 1 < headers.length) {
-    nextPayIdx = salaryIdx + 1;
-  }
+
   return {
     name: findFirst('worker full name', 'beneficiary', 'full name', 'driver name', 'nome'),
     country: findFirst('country', 'país', 'pais'),
     status: findFirst('situation', 'status', 'estado'),
     rate: findFirst('hour pay', 'hourly rate', 'valor hora', 'valor/hora'),
     email: findFirst('corporate e-mail', 'corporate email', 'email', 'e-mail'),
-    hours: finalHoursIdx,
-    salary: salaryIdx,
-    nextPay: nextPayIdx,
+    // Final Hours: [0]=monthly expected (descartado), [1]=current week, [2]=prev week
+    monthlyHours: finalHoursIdxs[0] >= 0 ? finalHoursIdxs[0] : -1,
+    currWeekHours: finalHoursIdxs.length >= 2 ? finalHoursIdxs[1] : -1,
+    prevWeekHours: finalHoursIdxs.length >= 3 ? finalHoursIdxs[2] : -1,
+    quinzenalPay: nextPayDateIdx,  // col com data = total a pagar na quinzena
   };
 }
 
 function parseRows(headers, rows) {
   const idx = detectCols(headers);
+  console.log('[Timesheet] detected cols:', idx);
   return rows.map(r => {
     const name = String(r[idx.name] || '').trim();
     if (!name) return null;
+    const rate = idx.rate >= 0 ? parseNum(r[idx.rate]) : 0;
+    const hoursCurr = idx.currWeekHours >= 0 ? parseNum(r[idx.currWeekHours]) : 0;
+    const hoursPrev = idx.prevWeekHours >= 0 ? parseNum(r[idx.prevWeekHours]) : 0;
+    const hoursQuinzena = hoursCurr + hoursPrev;
+    // Pagamento quinzenal: prefere o valor já calculado pela mastersheet,
+    // mas se não tiver, calcula como hours × rate
+    let quinzenalPay = idx.quinzenalPay >= 0 ? parseNum(r[idx.quinzenalPay]) : 0;
+    if (!quinzenalPay && rate > 0) quinzenalPay = hoursQuinzena * rate;
     return {
       name: name,
       country: idx.country >= 0 ? String(r[idx.country] || '').trim() : '',
       status: idx.status >= 0 ? String(r[idx.status] || '').trim() : '',
-      rate: idx.rate >= 0 ? parseNum(r[idx.rate]) : 0,
+      rate: rate,
       email: idx.email >= 0 ? String(r[idx.email] || '').trim() : '',
-      hours: idx.hours >= 0 ? parseNum(r[idx.hours]) : 0,
-      salary: idx.salary >= 0 ? parseNum(r[idx.salary]) : 0,
-      nextPay: idx.nextPay >= 0 ? parseNum(r[idx.nextPay]) : 0,
+      hoursCurr: hoursCurr,
+      hoursPrev: hoursPrev,
+      hoursQuinzena: hoursQuinzena,
+      quinzenalPay: quinzenalPay,
     };
   }).filter(d => d !== null);
+}
+
+function fmtDateBR(iso) {
+  if (!iso) return '';
+  // accepts yyyy-MM-dd or dd/mm/yyyy
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  return String(iso);
+}
+
+function renderBanner() {
+  const meta = state.metadata || {};
+  const i = t();
+  const next = fmtDateBR(meta.nextPayrollDay);
+  const last = fmtDateBR(meta.lastPayrollDay);
+  const rangeEl = document.getElementById('qb-range');
+  const weeksEl = document.getElementById('qb-weeks');
+  const payEl = document.getElementById('qb-pay-date');
+
+  if (last && next) {
+    rangeEl.textContent = `${last} → ${next}`;
+  } else if (next) {
+    rangeEl.textContent = next;
+  } else {
+    rangeEl.textContent = '—';
+  }
+  if (meta.currentWeek && meta.nextPayrollWeek) {
+    const prevW = Math.max(1, meta.currentWeek - 1);
+    weeksEl.textContent = i.qbWeeks.replace('{prev}', prevW).replace('{curr}', meta.currentWeek);
+  } else {
+    weeksEl.textContent = '';
+  }
+  payEl.textContent = next || '—';
 }
 
 function buildFilters() {
@@ -688,20 +835,20 @@ function applyFilters() {
 function renderKpis() {
   const list = state.filtered;
   document.getElementById('kpi-v-drivers').textContent = list.length.toLocaleString('en-US');
-  const totalHours = list.reduce((a, d) => a + d.hours, 0);
+  const totalHours = list.reduce((a, d) => a + d.hoursQuinzena, 0);
   document.getElementById('kpi-v-hours').textContent = fmtHours(totalHours);
-  const totalSalary = list.reduce((a, d) => a + d.salary, 0);
-  document.getElementById('kpi-v-payroll').textContent = fmtMoneyCompact(totalSalary);
+  const totalPay = list.reduce((a, d) => a + d.quinzenalPay, 0);
+  document.getElementById('kpi-v-payroll').textContent = fmtMoneyCompact(totalPay);
   const rates = list.map(d => d.rate).filter(r => r > 0);
   const avgRate = rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
   document.getElementById('kpi-v-rate').textContent = fmtRate(avgRate);
 }
 
 function renderCharts() {
-  // Bar: top 10 por horas
-  const sortedHours = [...state.filtered].sort((a, b) => b.hours - a.hours).slice(0, 10);
+  // Bar: top 10 por horas da quinzena
+  const sortedHours = [...state.filtered].sort((a, b) => b.hoursQuinzena - a.hoursQuinzena).slice(0, 10);
   const barLabels = sortedHours.map(d => d.name);
-  const barData = sortedHours.map(d => d.hours);
+  const barData = sortedHours.map(d => d.hoursQuinzena);
   const barColors = sortedHours.map(d => getCountryColor(d.country));
 
   const isDark = document.documentElement.classList.contains('theme-dark');
@@ -813,6 +960,10 @@ function renderDrivers() {
     const sCls = statusClass(d.status);
     const accentColor = getCountryColor(d.country);
 
+    const breakdown = (d.hoursPrev > 0 || d.hoursCurr > 0)
+      ? `${fmtHours(d.hoursPrev)} + ${fmtHours(d.hoursCurr)} h`
+      : '—';
+
     card.innerHTML = `
       ${d.status ? `<span class="dc-status-badge ${sCls}">${escapeHtml(d.status)}</span>` : ''}
       <div class="dc-top">
@@ -825,20 +976,22 @@ function renderDrivers() {
       ${d.country ? `<div class="dc-country-pill">${flag ? flag + ' ' : ''}${escapeHtml(d.country)}</div>` : ''}
       <div class="dc-stats" style="margin-top:12px;">
         <div class="dc-stat-cell">
-          <div class="dc-stat-label">${i.hourRate}</div>
+          <div class="dc-stat-label">${i.cardHourRate}</div>
           <div class="dc-stat-value">${fmtRate(d.rate)}</div>
         </div>
         <div class="dc-stat-cell">
-          <div class="dc-stat-label">${i.finalHours}</div>
-          <div class="dc-stat-value">${fmtHours(d.hours)} h</div>
+          <div class="dc-stat-label">${i.cardHoursQuinzena}</div>
+          <div class="dc-stat-value">${fmtHours(d.hoursQuinzena)} h</div>
         </div>
-        <div class="dc-stat-cell">
-          <div class="dc-stat-label">${i.monthSalary}</div>
-          <div class="dc-stat-value muted">${fmtMoney(d.salary)}</div>
+        <div class="dc-stat-cell full">
+          <div class="dc-stat-label">${i.cardWeekBreakdown}</div>
+          <div class="dc-stat-value muted" style="font-size:12px;">${breakdown}</div>
         </div>
-        <div class="dc-stat-cell">
-          <div class="dc-stat-label">${i.nextPay}</div>
-          <div class="dc-stat-value big" style="color:${accentColor};">${fmtMoney(d.nextPay)}</div>
+      </div>
+      <div class="dc-payment-highlight" style="background:linear-gradient(135deg, ${accentColor}18, ${accentColor}08);">
+        <div>
+          <div class="dc-stat-label">${i.cardQuinzenalPay}</div>
+          <div class="dc-stat-value big" style="color:${accentColor};">${fmtMoney(d.quinzenalPay)}</div>
         </div>
       </div>
     `;
@@ -895,6 +1048,7 @@ async function loadData(forceRefresh) {
       return;
     }
     state.raw = { headers: res.headers || [], rows: res.rows || [] };
+    state.metadata = res.metadata || {};
     state.fromCache = !!res._fromCache;
     state.parsed = parseRows(state.raw.headers, state.raw.rows);
 
@@ -905,6 +1059,7 @@ async function loadData(forceRefresh) {
     buildFilters();
     state.filtered = state.parsed.slice();
     hideState();
+    renderBanner();
     render();
   } catch (e) {
     console.error('[Timesheet] erro:', e);
@@ -920,18 +1075,17 @@ function csvEscape(v) {
 }
 
 function exportCsv() {
-  const i = t();
-  const headers = ['Name', 'Country', 'Status', 'Hour Pay', 'Email', 'Final Hours', 'Month Salary', 'Next Payment'];
+  const headers = ['Name', 'Country', 'Status', 'Hour Pay', 'Email', 'Hours Prev Week', 'Hours Curr Week', 'Hours Quinzena', 'Quinzenal Pay (USD)'];
   const rows = [headers, ...state.filtered.map(d => [
-    d.name, d.country, d.status, d.rate, d.email, d.hours, d.salary, d.nextPay,
+    d.name, d.country, d.status, d.rate, d.email, d.hoursPrev, d.hoursCurr, d.hoursQuinzena, d.quinzenalPay,
   ])];
   const csv = rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const dateStr = new Date().toISOString().slice(0, 10);
+  const dateStr = (state.metadata && state.metadata.nextPayrollDay) || new Date().toISOString().slice(0, 10);
   a.href = url;
-  a.download = 'timesheet_payroll_' + dateStr + '.csv';
+  a.download = 'timesheet_quinzena_' + dateStr + '.csv';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

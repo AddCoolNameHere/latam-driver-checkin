@@ -266,7 +266,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.35',
+        version: 'v5.36',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -2368,8 +2368,12 @@ function getTimesheet(startDate, endDate) {
  * Retorna apenas as primeiras 25 colunas (info principal por driver — sem os 1000+ cols
  * de dados diários que estouram payload).
  *
+ * v5.36: extrai metadata (Next/Last Payroll Day + Week numbers) das linhas acima do header
+ * pra que o frontend possa mostrar o período da quinzena.
+ *
  * Formato:
- *   { success: true, headers: ['col1', 'col2', ...], rows: [[...], [...], ...], sheetName: 'Timesheet' }
+ *   { success: true, headers: [...], rows: [[...], ...], sheetName: 'Timesheet',
+ *     metadata: { nextPayrollDay, lastPayrollDay, currentWeek, nextPayrollWeek } }
  */
 function getTimesheetTab_() {
   const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
@@ -2381,12 +2385,9 @@ function getTimesheetTab_() {
   const lastRow = sheet.getLastRow();
   const lastCol = sheet.getLastColumn();
   if (lastRow < 1 || lastCol < 1) {
-    return { success: true, headers: [], rows: [], sheetName: sheet.getName() };
+    return { success: true, headers: [], rows: [], sheetName: sheet.getName(), metadata: {} };
   }
 
-  // v5.35: aba Timesheet tem várias linhas de metadata acima do header real.
-  // Procura a linha que tem "Worker Full Name" na col A (ou similar) — só pega as primeiras 25 cols
-  // (basta pra info principal: name/country/situation/hour pay/email/final hours/month salary + payroll cols)
   const SCAN_COLS = Math.min(lastCol, 30);
   const SCAN_ROWS = Math.min(lastRow, 20);
   const scanData = sheet.getRange(1, 1, SCAN_ROWS, SCAN_COLS).getValues();
@@ -2402,9 +2403,53 @@ function getTimesheetTab_() {
   }
   if (headerRowIdx < 0) headerRowIdx = 0;
 
+  // v5.36: extrai metadata escaneando as linhas acima do header
+  // Procura labels conhecidos e pega o valor da MESMA col em alguma linha abaixo
+  const metadata = {};
+  const labelMap = [
+    { re: /next payroll day/i, key: 'nextPayrollDay', type: 'date' },
+    { re: /last payroll day/i, key: 'lastPayrollDay', type: 'date' },
+    { re: /next payroll week/i, key: 'nextPayrollWeek', type: 'number' },
+    { re: /current week/i, key: 'currentWeek', type: 'number' },
+  ];
+  for (let i = 0; i < headerRowIdx; i++) {
+    for (let j = 0; j < SCAN_COLS; j++) {
+      const cellStr = String(scanData[i][j] || '').trim();
+      if (!cellStr) continue;
+      for (const lm of labelMap) {
+        if (metadata[lm.key]) continue; // já encontrou
+        if (!lm.re.test(cellStr)) continue;
+        // procura valor em linhas abaixo na mesma coluna
+        for (let k = i + 1; k < headerRowIdx; k++) {
+          const v = scanData[k][j];
+          if (v === null || v === undefined || v === '') continue;
+          if (lm.type === 'date') {
+            if (v instanceof Date) {
+              metadata[lm.key] = Utilities.formatDate(v, 'America/Sao_Paulo', 'yyyy-MM-dd');
+              break;
+            } else if (typeof v === 'string' && v.match(/\d/)) {
+              metadata[lm.key] = v;
+              break;
+            }
+          } else if (lm.type === 'number') {
+            if (typeof v === 'number' && v > 0) {
+              metadata[lm.key] = v;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
   const MAX_OUT_COLS = Math.min(SCAN_COLS, 25);
   const headersRaw = scanData[headerRowIdx].slice(0, MAX_OUT_COLS);
-  const headers = headersRaw.map(h => String(h || '').trim());
+  const headers = headersRaw.map(h => {
+    if (h instanceof Date) {
+      return Utilities.formatDate(h, 'America/Sao_Paulo', 'yyyy-MM-dd');
+    }
+    return String(h || '').trim();
+  });
 
   let rows = [];
   const dataStartRow = headerRowIdx + 2; // 1-indexed
@@ -2417,7 +2462,6 @@ function getTimesheetTab_() {
       if (cell === null || cell === undefined) return '';
       return cell;
     }));
-    // Filtra linhas sem nome de driver
     rows = rows.filter(r => r[0] && String(r[0]).trim() !== '');
   }
 
@@ -2426,6 +2470,7 @@ function getTimesheetTab_() {
     sheetName: sheet.getName(),
     headers: headers,
     rows: rows,
+    metadata: metadata,
   };
 }
 
