@@ -2363,8 +2363,10 @@ function getTimesheet(startDate, endDate) {
 
 
 /**
- * v5.35: leitura crua da aba "Timesheet" (payroll page).
- * Retorna headers + rows. Frontend (timesheet.html) decide o que mostrar.
+ * v5.35: leitura da aba "Timesheet" (payroll page).
+ * Pula linhas de metadata e identifica a linha com "Worker Full Name" como header.
+ * Retorna apenas as primeiras 25 colunas (info principal por driver — sem os 1000+ cols
+ * de dados diários que estouram payload).
  *
  * Formato:
  *   { success: true, headers: ['col1', 'col2', ...], rows: [[...], [...], ...], sheetName: 'Timesheet' }
@@ -2382,18 +2384,32 @@ function getTimesheetTab_() {
     return { success: true, headers: [], rows: [], sheetName: sheet.getName() };
   }
 
-  // Header = linha 1
-  const headersRaw = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  // v5.35: aba Timesheet tem várias linhas de metadata acima do header real.
+  // Procura a linha que tem "Worker Full Name" na col A (ou similar) — só pega as primeiras 25 cols
+  // (basta pra info principal: name/country/situation/hour pay/email/final hours/month salary + payroll cols)
+  const SCAN_COLS = Math.min(lastCol, 30);
+  const SCAN_ROWS = Math.min(lastRow, 20);
+  const scanData = sheet.getRange(1, 1, SCAN_ROWS, SCAN_COLS).getValues();
+
+  let headerRowIdx = -1;
+  const headerRe = /worker full name|beneficiary.*name|full name|driver name|nome.*funcion/i;
+  for (let i = 0; i < scanData.length; i++) {
+    const firstCell = String(scanData[i][0] || '').trim();
+    if (headerRe.test(firstCell)) {
+      headerRowIdx = i;
+      break;
+    }
+  }
+  if (headerRowIdx < 0) headerRowIdx = 0;
+
+  const MAX_OUT_COLS = Math.min(SCAN_COLS, 25);
+  const headersRaw = scanData[headerRowIdx].slice(0, MAX_OUT_COLS);
   const headers = headersRaw.map(h => String(h || '').trim());
 
-  // Descobre quantas colunas têm header de fato (corta colunas extras vazias à direita)
-  let realCols = headers.length;
-  while (realCols > 0 && headers[realCols - 1] === '') realCols--;
-  const trimmedHeaders = headers.slice(0, realCols);
-
   let rows = [];
-  if (lastRow >= 2 && realCols > 0) {
-    const raw = sheet.getRange(2, 1, lastRow - 1, realCols).getValues();
+  const dataStartRow = headerRowIdx + 2; // 1-indexed
+  if (lastRow >= dataStartRow) {
+    const raw = sheet.getRange(dataStartRow, 1, lastRow - dataStartRow + 1, MAX_OUT_COLS).getValues();
     rows = raw.map(r => r.map(cell => {
       if (cell instanceof Date) {
         return Utilities.formatDate(cell, 'America/Sao_Paulo', 'yyyy-MM-dd');
@@ -2401,14 +2417,14 @@ function getTimesheetTab_() {
       if (cell === null || cell === undefined) return '';
       return cell;
     }));
-    // Filtra linhas totalmente vazias
-    rows = rows.filter(r => r.some(c => c !== '' && c !== null && c !== undefined));
+    // Filtra linhas sem nome de driver
+    rows = rows.filter(r => r[0] && String(r[0]).trim() !== '');
   }
 
   return {
     success: true,
     sheetName: sheet.getName(),
-    headers: trimmedHeaders,
+    headers: headers,
     rows: rows,
   };
 }

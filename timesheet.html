@@ -10,6 +10,7 @@
 <script src="theme.js?v=20260519a"></script>
 <script src="common.js?v=20260519a"></script>
 <link rel="stylesheet" href="theme.css?v=20260519a">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -25,16 +26,12 @@
     margin: 0 auto;
     padding: 24px 20px 60px;
   }
+
   .ts-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 18px;
+    margin-bottom: 22px;
   }
   .ts-title {
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 700;
     color: var(--c-primary-dark);
     margin-bottom: 4px;
@@ -44,19 +41,66 @@
     color: var(--c-text-muted);
   }
 
-  .ts-toolbar {
+  /* KPI Cards */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .kpi-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--c-accent);
+  }
+  .kpi-card.green::before { background: #10B981; }
+  .kpi-card.amber::before { background: #F59E0B; }
+  .kpi-card.purple::before { background: #8B5CF6; }
+  .kpi-label {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi-hint {
+    font-size: 11px;
+    color: var(--c-text-dim);
+    margin-top: 4px;
+  }
+
+  /* Filters */
+  .filters-bar {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     background: var(--c-surface);
     padding: 12px 14px;
     border-radius: 10px;
     border: 1px solid var(--c-border);
   }
-  .ts-toolbar input[type=search],
-  .ts-toolbar select {
+  .filters-bar input[type=search],
+  .filters-bar select {
     padding: 8px 12px;
     border: 1px solid var(--c-border);
     border-radius: 8px;
@@ -64,15 +108,15 @@
     font-family: inherit;
     background: var(--c-bg);
     color: var(--c-text);
-    min-width: 180px;
+    min-width: 160px;
   }
-  .ts-toolbar input[type=search]:focus,
-  .ts-toolbar select:focus {
+  .filters-bar input[type=search]:focus,
+  .filters-bar select:focus {
     outline: none;
     border-color: var(--c-accent);
     box-shadow: 0 0 0 3px rgba(74, 159, 224, 0.15);
   }
-  .ts-toolbar button {
+  .filters-bar button {
     padding: 8px 14px;
     border: 1px solid var(--c-border);
     background: var(--c-bg);
@@ -84,96 +128,206 @@
     font-weight: 600;
     transition: all 0.15s;
   }
-  .ts-toolbar button:hover {
+  .filters-bar button:hover {
     border-color: var(--c-accent);
     color: var(--c-primary);
   }
-  .ts-toolbar button.primary {
+  .filters-bar button.primary {
     background: var(--c-primary);
     color: white;
     border-color: var(--c-primary);
   }
-  .ts-toolbar button.primary:hover {
+  .filters-bar button.primary:hover {
     background: var(--c-primary-dark);
     color: white;
   }
-  .ts-toolbar .spacer { flex: 1; }
-  .ts-toolbar .count {
+  .filters-bar .spacer { flex: 1; }
+  .filters-bar .count {
     font-size: 12px;
     color: var(--c-text-muted);
     font-weight: 600;
   }
 
-  .ts-table-wrap {
+  /* Charts row */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1.7fr 1fr;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .chart-card {
     background: var(--c-surface);
     border: 1px solid var(--c-border);
-    border-radius: 10px;
-    overflow: auto;
-    max-height: calc(100vh - 260px);
+    border-radius: 12px;
+    padding: 18px;
   }
-  table.ts-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12.5px;
-  }
-  .ts-table thead th {
-    position: sticky;
-    top: 0;
-    background: var(--c-bg-tint);
+  .chart-title {
+    font-size: 13px;
+    font-weight: 700;
     color: var(--c-primary-dark);
-    font-weight: 700;
-    text-align: left;
-    padding: 10px 12px;
-    border-bottom: 2px solid var(--c-border);
-    white-space: nowrap;
-    font-size: 11.5px;
+    margin-bottom: 14px;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
-    z-index: 2;
+    letter-spacing: 0.5px;
   }
-  .ts-table tbody td {
-    padding: 9px 12px;
-    border-bottom: 1px solid var(--c-border);
-    vertical-align: top;
+  .chart-wrap {
+    height: 320px;
+    position: relative;
   }
-  .ts-table tbody tr:hover {
-    background: var(--c-bg-tint);
-  }
-  .ts-table td.num,
-  .ts-table th.num {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-  .ts-table tfoot td {
-    padding: 10px 12px;
-    font-weight: 700;
-    background: var(--c-bg-tint);
-    border-top: 2px solid var(--c-border);
-    font-variant-numeric: tabular-nums;
-  }
-  .ts-table tfoot td.num { text-align: right; }
 
+  /* Driver cards */
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    margin: 16px 0 12px;
+  }
+  .driver-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 14px;
+  }
+  .driver-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.15s ease;
+    position: relative;
+  }
+  .driver-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(44, 82, 130, 0.10);
+    border-color: var(--c-accent);
+  }
+  .dc-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .dc-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--c-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .dc-name-block { flex: 1; min-width: 0; }
+  .dc-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dc-email {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dc-country-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    background: var(--c-bg-tint);
+    border-radius: 12px;
+    font-size: 11px;
+    color: var(--c-primary);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .dc-status-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .dc-status-badge.active { background: #ECFDF5; color: #047857; }
+  .dc-status-badge.offboarding { background: #FEF3C7; color: #B45309; }
+  .dc-status-badge.other { background: var(--c-bg-tint); color: var(--c-text-muted); }
+
+  .dc-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    border-top: 1px solid var(--c-border);
+    padding-top: 12px;
+  }
+  .dc-stat-label {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .dc-stat-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    font-variant-numeric: tabular-nums;
+  }
+  .dc-stat-value.big {
+    font-size: 18px;
+  }
+  .dc-stat-value.muted {
+    color: var(--c-text-muted);
+    font-weight: 600;
+  }
+  .dc-stat-cell { padding: 4px 0; }
+  .dc-stat-cell.full { grid-column: 1 / -1; }
+  .dc-payment-highlight {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, rgba(74, 159, 224, 0.08), rgba(44, 82, 130, 0.04));
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* States */
   .ts-state {
-    padding: 60px 20px;
+    padding: 80px 20px;
     text-align: center;
     color: var(--c-text-muted);
     font-size: 14px;
   }
   .ts-state.error { color: #B91C1C; }
-  .ts-state .icon { font-size: 36px; margin-bottom: 10px; }
+  .ts-state .icon { font-size: 40px; margin-bottom: 12px; display: block; }
 
   .ts-info {
     font-size: 11px;
     color: var(--c-text-dim);
-    margin-top: 10px;
+    margin-top: 14px;
     text-align: right;
   }
 
-  @media (max-width: 720px) {
-    .ts-toolbar input[type=search],
-    .ts-toolbar select { min-width: 0; flex: 1 1 140px; }
-    .ts-table thead th, .ts-table tbody td { padding: 8px 8px; }
+  @media (max-width: 920px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .charts-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .kpi-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .kpi-value { font-size: 22px; }
+    .filters-bar input[type=search],
+    .filters-bar select { min-width: 0; flex: 1 1 140px; }
   }
 </style>
 </head>
@@ -183,36 +337,69 @@
 
 <main class="ts-wrap">
   <div class="ts-header">
-    <div>
-      <h1 class="ts-title" id="ts-title">Timesheet & Payroll</h1>
-      <div class="ts-sub" id="ts-sub">Horas e valores da aba Timesheet da Mastersheet</div>
+    <h1 class="ts-title" id="ts-title">Timesheet & Payroll</h1>
+    <div class="ts-sub" id="ts-sub">Snapshot atual da folha — horas, valor hora e próximo pagamento por motorista</div>
+  </div>
+
+  <div id="ts-content" style="display:none;">
+
+    <!-- KPI Cards -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label" id="kpi-l-drivers">Motoristas</div>
+        <div class="kpi-value" id="kpi-v-drivers">0</div>
+        <div class="kpi-hint" id="kpi-h-drivers">total</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label" id="kpi-l-hours">Horas no período</div>
+        <div class="kpi-value" id="kpi-v-hours">0</div>
+        <div class="kpi-hint" id="kpi-h-hours">soma de Final Hours</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label" id="kpi-l-payroll">Folha estimada</div>
+        <div class="kpi-value" id="kpi-v-payroll">$0</div>
+        <div class="kpi-hint" id="kpi-h-payroll">soma Month Salary (USD)</div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-label" id="kpi-l-rate">Valor hora médio</div>
+        <div class="kpi-value" id="kpi-v-rate">$0</div>
+        <div class="kpi-hint" id="kpi-h-rate">média Hour Pay</div>
+      </div>
     </div>
-  </div>
 
-  <div class="ts-toolbar" id="ts-toolbar" style="display:none;">
-    <input type="search" id="ts-search" placeholder="Buscar…" autocomplete="off">
-    <select id="ts-country-filter" style="display:none;">
-      <option value="">Todos os países</option>
-    </select>
-    <span class="spacer"></span>
-    <span class="count" id="ts-count">0 linhas</span>
-    <button type="button" id="ts-refresh" title="Atualizar">↻</button>
-    <button type="button" id="ts-export" class="primary">Exportar CSV</button>
-  </div>
-
-  <div class="ts-table-wrap" id="ts-table-wrap">
-    <div class="ts-state" id="ts-state">
-      <div class="icon">⏳</div>
-      <div id="ts-state-msg">Carregando…</div>
+    <!-- Filters -->
+    <div class="filters-bar">
+      <input type="search" id="ts-search" placeholder="Buscar motorista…" autocomplete="off">
+      <select id="f-country"><option value="">Todos os países</option></select>
+      <select id="f-status"><option value="">Todos status</option></select>
+      <span class="spacer"></span>
+      <span class="count" id="ts-count">0 motoristas</span>
+      <button type="button" id="ts-refresh" title="Atualizar">↻</button>
+      <button type="button" id="ts-export" class="primary">Exportar CSV</button>
     </div>
-    <table class="ts-table" id="ts-table" style="display:none;">
-      <thead><tr id="ts-thead-row"></tr></thead>
-      <tbody id="ts-tbody"></tbody>
-      <tfoot id="ts-tfoot" style="display:none;"><tr id="ts-tfoot-row"></tr></tfoot>
-    </table>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title" id="chart-t-bar">Top motoristas por horas trabalhadas</div>
+        <div class="chart-wrap"><canvas id="chart-bar"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title" id="chart-t-donut">Motoristas por país</div>
+        <div class="chart-wrap"><canvas id="chart-donut"></canvas></div>
+      </div>
+    </div>
+
+    <div class="section-label" id="section-drivers">Detalhes por motorista</div>
+    <div class="driver-grid" id="driver-grid"></div>
+
+    <div class="ts-info" id="ts-info"></div>
   </div>
 
-  <div class="ts-info" id="ts-info"></div>
+  <div class="ts-state" id="ts-state">
+    <span class="icon">⏳</span>
+    <div id="ts-state-msg">Carregando…</div>
+  </div>
 </main>
 
 </div>
@@ -223,64 +410,98 @@ const CONFIG = {
   cacheTtlSec: 300,
 };
 
+const FLAG_MAP = {
+  'brazil': '🇧🇷', 'brasil': '🇧🇷',
+  'mexico': '🇲🇽', 'méxico': '🇲🇽',
+  'argentina': '🇦🇷',
+  'colombia': '🇨🇴',
+  'peru': '🇵🇪', 'perú': '🇵🇪',
+  'chile': '🇨🇱',
+  'uruguay': '🇺🇾',
+  'paraguay': '🇵🇾',
+  'venezuela': '🇻🇪',
+  'ecuador': '🇪🇨',
+  'bolivia': '🇧🇴',
+};
+
+const COUNTRY_COLORS = {
+  'Brazil': '#10B981',
+  'México': '#EF4444', 'Mexico': '#EF4444',
+  'Argentina': '#3B82F6',
+  'Colombia': '#F59E0B',
+  'Peru': '#8B5CF6',
+  'Chile': '#EC4899',
+};
+
 const I18N = {
   pt: {
     title: 'Timesheet & Payroll',
-    sub: 'Horas e valores da aba Timesheet da Mastersheet',
-    search: 'Buscar…',
-    allCountries: 'Todos os países',
-    rows: 'linhas',
-    refresh: 'Atualizar',
-    export: 'Exportar CSV',
-    loading: 'Carregando…',
-    empty: 'Aba Timesheet vazia',
-    error: 'Erro ao carregar',
-    cached: 'Dados do cache local · clica em ↻ pra recarregar',
-    fresh: 'Dados atualizados',
-    total: 'TOTAL',
+    sub: 'Snapshot atual da folha — horas, valor hora e próximo pagamento por motorista',
+    kpiDrivers: 'Motoristas', kpiDriversHint: 'total',
+    kpiHours: 'Horas no período', kpiHoursHint: 'soma de Final Hours',
+    kpiPayroll: 'Folha estimada', kpiPayrollHint: 'soma Month Salary (USD)',
+    kpiRate: 'Valor hora médio', kpiRateHint: 'média Hour Pay',
+    search: 'Buscar motorista…',
+    allCountries: 'Todos os países', allStatus: 'Todos status',
+    drivers: 'motoristas', refresh: 'Atualizar', export: 'Exportar CSV',
+    chartBar: 'Top motoristas por horas trabalhadas',
+    chartDonut: 'Motoristas por país',
+    sectionDrivers: 'Detalhes por motorista',
+    loading: 'Carregando…', empty: 'Aba Timesheet vazia',
+    error: 'Erro ao carregar', cached: 'Dados do cache · clica ↻ pra recarregar',
+    fresh: 'Dados atualizados', nextPay: 'Próximo pagamento', hourRate: 'Valor hora',
+    monthSalary: 'Salário mensal', finalHours: 'Horas',
+    noEmail: '—',
   },
   es: {
     title: 'Timesheet y Payroll',
-    sub: 'Horas y valores de la pestaña Timesheet de la Mastersheet',
-    search: 'Buscar…',
-    allCountries: 'Todos los países',
-    rows: 'filas',
-    refresh: 'Actualizar',
-    export: 'Exportar CSV',
-    loading: 'Cargando…',
-    empty: 'Pestaña Timesheet vacía',
-    error: 'Error al cargar',
-    cached: 'Datos en caché · clic en ↻ para recargar',
-    fresh: 'Datos actualizados',
-    total: 'TOTAL',
+    sub: 'Snapshot actual de nómina — horas, valor hora y próximo pago por conductor',
+    kpiDrivers: 'Conductores', kpiDriversHint: 'total',
+    kpiHours: 'Horas del período', kpiHoursHint: 'suma de Final Hours',
+    kpiPayroll: 'Nómina estimada', kpiPayrollHint: 'suma Month Salary (USD)',
+    kpiRate: 'Valor hora promedio', kpiRateHint: 'promedio Hour Pay',
+    search: 'Buscar conductor…',
+    allCountries: 'Todos los países', allStatus: 'Todos los estados',
+    drivers: 'conductores', refresh: 'Actualizar', export: 'Exportar CSV',
+    chartBar: 'Top conductores por horas trabajadas',
+    chartDonut: 'Conductores por país',
+    sectionDrivers: 'Detalles por conductor',
+    loading: 'Cargando…', empty: 'Pestaña Timesheet vacía',
+    error: 'Error al cargar', cached: 'Datos en caché · clic en ↻ para recargar',
+    fresh: 'Datos actualizados', nextPay: 'Próximo pago', hourRate: 'Valor hora',
+    monthSalary: 'Salario mensual', finalHours: 'Horas',
+    noEmail: '—',
   },
   en: {
     title: 'Timesheet & Payroll',
-    sub: 'Hours and pay from the Mastersheet Timesheet tab',
-    search: 'Search…',
-    allCountries: 'All countries',
-    rows: 'rows',
-    refresh: 'Refresh',
-    export: 'Export CSV',
-    loading: 'Loading…',
-    empty: 'Timesheet tab is empty',
-    error: 'Loading error',
-    cached: 'Cached data · click ↻ to reload',
-    fresh: 'Fresh data',
-    total: 'TOTAL',
+    sub: 'Current payroll snapshot — hours, hourly rate and next payment per driver',
+    kpiDrivers: 'Drivers', kpiDriversHint: 'total',
+    kpiHours: 'Hours this period', kpiHoursHint: 'sum of Final Hours',
+    kpiPayroll: 'Estimated payroll', kpiPayrollHint: 'sum Month Salary (USD)',
+    kpiRate: 'Avg hourly rate', kpiRateHint: 'average Hour Pay',
+    search: 'Search driver…',
+    allCountries: 'All countries', allStatus: 'All statuses',
+    drivers: 'drivers', refresh: 'Refresh', export: 'Export CSV',
+    chartBar: 'Top drivers by hours worked',
+    chartDonut: 'Drivers by country',
+    sectionDrivers: 'Driver details',
+    loading: 'Loading…', empty: 'Timesheet tab is empty',
+    error: 'Loading error', cached: 'Cached data · click ↻ to reload',
+    fresh: 'Fresh data', nextPay: 'Next payment', hourRate: 'Hourly rate',
+    monthSalary: 'Month salary', finalHours: 'Hours',
+    noEmail: '—',
   },
 };
 
 let currentLang = 'pt';
 let currentUser = null;
+let chartBar = null;
+let chartDonut = null;
 
 let state = {
-  headers: [],
-  rows: [],
+  raw: { headers: [], rows: [] },
+  parsed: [],     // array de objetos { name, country, status, rate, email, hours, salary, nextPay }
   filtered: [],
-  countryColIdx: -1,
-  numericColIdxs: new Set(),
-  sumColIdxs: new Set(),     // colunas pra somar no footer (hours, total, valor)
   fromCache: false,
 };
 
@@ -290,26 +511,363 @@ function applyI18n() {
   const i = t();
   document.getElementById('ts-title').textContent = i.title;
   document.getElementById('ts-sub').textContent = i.sub;
+  document.getElementById('kpi-l-drivers').textContent = i.kpiDrivers;
+  document.getElementById('kpi-h-drivers').textContent = i.kpiDriversHint;
+  document.getElementById('kpi-l-hours').textContent = i.kpiHours;
+  document.getElementById('kpi-h-hours').textContent = i.kpiHoursHint;
+  document.getElementById('kpi-l-payroll').textContent = i.kpiPayroll;
+  document.getElementById('kpi-h-payroll').textContent = i.kpiPayrollHint;
+  document.getElementById('kpi-l-rate').textContent = i.kpiRate;
+  document.getElementById('kpi-h-rate').textContent = i.kpiRateHint;
   document.getElementById('ts-search').placeholder = i.search;
   document.getElementById('ts-refresh').title = i.refresh;
   document.getElementById('ts-export').textContent = i.export;
+  document.getElementById('chart-t-bar').textContent = i.chartBar;
+  document.getElementById('chart-t-donut').textContent = i.chartDonut;
+  document.getElementById('section-drivers').textContent = i.sectionDrivers;
   document.documentElement.lang = currentLang;
 
-  // Update country dropdown first option
-  const sel = document.getElementById('ts-country-filter');
-  if (sel.options.length > 0) sel.options[0].textContent = i.allCountries;
+  const fc = document.getElementById('f-country');
+  if (fc.options.length > 0) fc.options[0].textContent = i.allCountries;
+  const fs = document.getElementById('f-status');
+  if (fs.options.length > 0) fs.options[0].textContent = i.allStatus;
 
   updateCount();
   updateInfo();
+  if (state.parsed.length > 0) {
+    render();
+  }
+}
+
+function parseNum(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  if (typeof v === 'number') return v;
+  let s = String(v).trim().replace(/[$\sR$]/g, '');
+  if (s === '') return 0;
+  // PT-BR / ES: 1.234,56  → 1234.56
+  // EN: 1,234.56 → 1234.56
+  if (s.includes(',') && s.includes('.')) {
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+      // comma é decimal
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(/,/g, '');
+    }
+  } else if (s.includes(',')) {
+    s = s.replace(',', '.');
+  }
+  const n = Number(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function fmtMoney(n) {
+  return '$' + (Math.round(n * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtMoneyCompact(n) {
+  if (n >= 100000) return '$' + (n / 1000).toFixed(1) + 'K';
+  return '$' + Math.round(n).toLocaleString('en-US');
+}
+function fmtHours(n) {
+  if (Number.isInteger(n)) return String(n);
+  return n.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+function fmtRate(n) {
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '/h';
+}
+
+function getInitials(name) {
+  if (!name) return '?';
+  return name.trim().split(/\s+/).map(s => s[0] || '').slice(0, 2).join('').toUpperCase();
+}
+
+function getFlag(country) {
+  const key = String(country || '').trim().toLowerCase();
+  return FLAG_MAP[key] || '';
+}
+
+function getCountryColor(country) {
+  return COUNTRY_COLORS[country] || '#64748B';
+}
+
+// Detecta índices das colunas a partir dos headers
+function detectCols(headers) {
+  const lower = headers.map(h => String(h || '').toLowerCase());
+  const findFirst = (...patterns) => {
+    for (const p of patterns) {
+      for (let i = 0; i < lower.length; i++) {
+        if (lower[i].includes(p)) return i;
+      }
+    }
+    return -1;
+  };
+  // Para Final Hours, pega a PRIMEIRA ocorrência (col F na mastersheet)
+  let finalHoursIdx = -1;
+  for (let i = 0; i < lower.length; i++) {
+    if (lower[i] === 'final hours' || lower[i].includes('final hours')) {
+      finalHoursIdx = i;
+      break;
+    }
+  }
+  // Para Next Payment: a coluna logo depois de Month Salary que tem header tipo data ou número
+  const salaryIdx = findFirst('month salary', 'salario mensal', 'salário mensal');
+  let nextPayIdx = -1;
+  if (salaryIdx >= 0 && salaryIdx + 1 < headers.length) {
+    nextPayIdx = salaryIdx + 1;
+  }
+  return {
+    name: findFirst('worker full name', 'beneficiary', 'full name', 'driver name', 'nome'),
+    country: findFirst('country', 'país', 'pais'),
+    status: findFirst('situation', 'status', 'estado'),
+    rate: findFirst('hour pay', 'hourly rate', 'valor hora', 'valor/hora'),
+    email: findFirst('corporate e-mail', 'corporate email', 'email', 'e-mail'),
+    hours: finalHoursIdx,
+    salary: salaryIdx,
+    nextPay: nextPayIdx,
+  };
+}
+
+function parseRows(headers, rows) {
+  const idx = detectCols(headers);
+  return rows.map(r => {
+    const name = String(r[idx.name] || '').trim();
+    if (!name) return null;
+    return {
+      name: name,
+      country: idx.country >= 0 ? String(r[idx.country] || '').trim() : '',
+      status: idx.status >= 0 ? String(r[idx.status] || '').trim() : '',
+      rate: idx.rate >= 0 ? parseNum(r[idx.rate]) : 0,
+      email: idx.email >= 0 ? String(r[idx.email] || '').trim() : '',
+      hours: idx.hours >= 0 ? parseNum(r[idx.hours]) : 0,
+      salary: idx.salary >= 0 ? parseNum(r[idx.salary]) : 0,
+      nextPay: idx.nextPay >= 0 ? parseNum(r[idx.nextPay]) : 0,
+    };
+  }).filter(d => d !== null);
+}
+
+function buildFilters() {
+  const fc = document.getElementById('f-country');
+  const fs = document.getElementById('f-status');
+  const countries = [...new Set(state.parsed.map(d => d.country).filter(Boolean))].sort();
+  const statuses = [...new Set(state.parsed.map(d => d.status).filter(Boolean))].sort();
+
+  while (fc.options.length > 1) fc.remove(1);
+  countries.forEach(c => {
+    const flag = getFlag(c);
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = (flag ? flag + ' ' : '') + c;
+    fc.appendChild(opt);
+  });
+
+  while (fs.options.length > 1) fs.remove(1);
+  statuses.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    fs.appendChild(opt);
+  });
+}
+
+function applyFilters() {
+  const q = document.getElementById('ts-search').value.trim().toLowerCase();
+  const country = document.getElementById('f-country').value;
+  const status = document.getElementById('f-status').value;
+
+  state.filtered = state.parsed.filter(d => {
+    if (country && d.country !== country) return false;
+    if (status && d.status !== status) return false;
+    if (q) {
+      const blob = (d.name + ' ' + d.email + ' ' + d.country).toLowerCase();
+      if (!blob.includes(q)) return false;
+    }
+    return true;
+  });
+  render();
+}
+
+function renderKpis() {
+  const list = state.filtered;
+  document.getElementById('kpi-v-drivers').textContent = list.length.toLocaleString('en-US');
+  const totalHours = list.reduce((a, d) => a + d.hours, 0);
+  document.getElementById('kpi-v-hours').textContent = fmtHours(totalHours);
+  const totalSalary = list.reduce((a, d) => a + d.salary, 0);
+  document.getElementById('kpi-v-payroll').textContent = fmtMoneyCompact(totalSalary);
+  const rates = list.map(d => d.rate).filter(r => r > 0);
+  const avgRate = rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
+  document.getElementById('kpi-v-rate').textContent = fmtRate(avgRate);
+}
+
+function renderCharts() {
+  // Bar: top 10 por horas
+  const sortedHours = [...state.filtered].sort((a, b) => b.hours - a.hours).slice(0, 10);
+  const barLabels = sortedHours.map(d => d.name);
+  const barData = sortedHours.map(d => d.hours);
+  const barColors = sortedHours.map(d => getCountryColor(d.country));
+
+  const isDark = document.documentElement.classList.contains('theme-dark');
+  const gridCol = isDark ? '#2a3a52' : '#E5E7EB';
+  const tickCol = isDark ? '#b0b8c4' : '#4B5563';
+
+  if (chartBar) chartBar.destroy();
+  const ctxBar = document.getElementById('chart-bar').getContext('2d');
+  chartBar = new Chart(ctxBar, {
+    type: 'bar',
+    data: {
+      labels: barLabels,
+      datasets: [{
+        data: barData,
+        backgroundColor: barColors,
+        borderRadius: 4,
+        barThickness: 'flex',
+        maxBarThickness: 22,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => fmtHours(ctx.parsed.x) + ' h',
+          },
+        },
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: gridCol },
+          ticks: { color: tickCol, font: { size: 11 } },
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: tickCol, font: { size: 11 } },
+        },
+      },
+    },
+  });
+
+  // Donut: by country
+  const byCountry = {};
+  state.filtered.forEach(d => {
+    const c = d.country || '—';
+    byCountry[c] = (byCountry[c] || 0) + 1;
+  });
+  const donutEntries = Object.entries(byCountry).sort((a, b) => b[1] - a[1]);
+  const donutLabels = donutEntries.map(([c]) => c);
+  const donutData = donutEntries.map(([, n]) => n);
+  const donutColors = donutLabels.map(c => getCountryColor(c));
+
+  if (chartDonut) chartDonut.destroy();
+  const ctxDonut = document.getElementById('chart-donut').getContext('2d');
+  chartDonut = new Chart(ctxDonut, {
+    type: 'doughnut',
+    data: {
+      labels: donutLabels,
+      datasets: [{
+        data: donutData,
+        backgroundColor: donutColors,
+        borderColor: isDark ? '#1a2436' : '#fff',
+        borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: tickCol, font: { size: 12 }, boxWidth: 12, padding: 10 },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.label}: ${ctx.parsed} ${t().drivers}`,
+          },
+        },
+      },
+    },
+  });
+}
+
+function statusClass(s) {
+  const v = String(s || '').toLowerCase();
+  if (v.includes('active') || v.includes('ativo')) return 'active';
+  if (v.includes('offboard') || v.includes('saída') || v.includes('desligamento')) return 'offboarding';
+  return 'other';
+}
+
+function renderDrivers() {
+  const grid = document.getElementById('driver-grid');
+  grid.innerHTML = '';
+  const i = t();
+  const frag = document.createDocumentFragment();
+
+  state.filtered.forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'driver-card';
+
+    const flag = getFlag(d.country);
+    const initials = getInitials(d.name);
+    const sCls = statusClass(d.status);
+    const accentColor = getCountryColor(d.country);
+
+    card.innerHTML = `
+      ${d.status ? `<span class="dc-status-badge ${sCls}">${escapeHtml(d.status)}</span>` : ''}
+      <div class="dc-top">
+        <div class="dc-avatar" style="background:${accentColor};">${escapeHtml(initials)}</div>
+        <div class="dc-name-block">
+          <div class="dc-name">${escapeHtml(d.name)}</div>
+          <div class="dc-email" title="${escapeHtml(d.email)}">${escapeHtml(d.email || i.noEmail)}</div>
+        </div>
+      </div>
+      ${d.country ? `<div class="dc-country-pill">${flag ? flag + ' ' : ''}${escapeHtml(d.country)}</div>` : ''}
+      <div class="dc-stats" style="margin-top:12px;">
+        <div class="dc-stat-cell">
+          <div class="dc-stat-label">${i.hourRate}</div>
+          <div class="dc-stat-value">${fmtRate(d.rate)}</div>
+        </div>
+        <div class="dc-stat-cell">
+          <div class="dc-stat-label">${i.finalHours}</div>
+          <div class="dc-stat-value">${fmtHours(d.hours)} h</div>
+        </div>
+        <div class="dc-stat-cell">
+          <div class="dc-stat-label">${i.monthSalary}</div>
+          <div class="dc-stat-value muted">${fmtMoney(d.salary)}</div>
+        </div>
+        <div class="dc-stat-cell">
+          <div class="dc-stat-label">${i.nextPay}</div>
+          <div class="dc-stat-value big" style="color:${accentColor};">${fmtMoney(d.nextPay)}</div>
+        </div>
+      </div>
+    `;
+    frag.appendChild(card);
+  });
+
+  grid.appendChild(frag);
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function updateCount() {
-  const el = document.getElementById('ts-count');
-  el.textContent = state.filtered.length + ' ' + t().rows;
+  document.getElementById('ts-count').textContent = state.filtered.length + ' ' + t().drivers;
 }
 
 function updateInfo() {
   document.getElementById('ts-info').textContent = state.fromCache ? t().cached : t().fresh;
+}
+
+function render() {
+  renderKpis();
+  renderCharts();
+  renderDrivers();
+  updateCount();
+  updateInfo();
 }
 
 function showState(msg, isError) {
@@ -319,166 +877,12 @@ function showState(msg, isError) {
   stateEl.querySelector('.icon').textContent = isError ? '⚠️' : (msg === t().loading ? '⏳' : '∅');
   msgEl.textContent = msg;
   stateEl.style.display = '';
-  document.getElementById('ts-table').style.display = 'none';
-  document.getElementById('ts-toolbar').style.display = 'none';
+  document.getElementById('ts-content').style.display = 'none';
 }
 
 function hideState() {
   document.getElementById('ts-state').style.display = 'none';
-  document.getElementById('ts-table').style.display = '';
-  document.getElementById('ts-toolbar').style.display = '';
-}
-
-// Detecta se uma coluna é "majoritariamente numérica"
-function detectNumericCols(headers, rows) {
-  const numCols = new Set();
-  for (let c = 0; c < headers.length; c++) {
-    let numCount = 0, nonEmpty = 0;
-    for (let r = 0; r < rows.length; r++) {
-      const v = rows[r][c];
-      if (v === '' || v === null || v === undefined) continue;
-      nonEmpty++;
-      if (typeof v === 'number') { numCount++; continue; }
-      const s = String(v).trim().replace(/[,$\s]/g, '').replace(/[%]/g, '');
-      if (s !== '' && !isNaN(Number(s))) numCount++;
-    }
-    if (nonEmpty > 0 && numCount / nonEmpty >= 0.7) numCols.add(c);
-  }
-  return numCols;
-}
-
-// Detecta colunas que devem ter SUM no footer (horas, total, salário, valor)
-function detectSumCols(headers, numericCols) {
-  const out = new Set();
-  const sumKeywords = /\b(hour|hora|horas|total|valor|salary|sal[áa]rio|usd|pay|payment|pagamento|amount|valor.*hora|hourly|gross|net|liquido|l[ií]quido|bruto)\b/i;
-  headers.forEach((h, i) => {
-    if (!numericCols.has(i)) return;
-    if (sumKeywords.test(h)) out.add(i);
-  });
-  return out;
-}
-
-function detectCountryCol(headers) {
-  const re = /\b(country|pa[íi]s|pais)\b/i;
-  return headers.findIndex(h => re.test(String(h || '')));
-}
-
-function buildCountryOptions() {
-  const sel = document.getElementById('ts-country-filter');
-  if (state.countryColIdx < 0) { sel.style.display = 'none'; return; }
-  const unique = new Set();
-  state.rows.forEach(r => {
-    const v = String(r[state.countryColIdx] || '').trim();
-    if (v) unique.add(v);
-  });
-  // Limpa exceto primeira opção
-  while (sel.options.length > 1) sel.remove(1);
-  [...unique].sort().forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    sel.appendChild(opt);
-  });
-  sel.style.display = unique.size > 0 ? '' : 'none';
-}
-
-function fmtCell(v, isNumeric) {
-  if (v === '' || v === null || v === undefined) return '';
-  if (isNumeric && typeof v === 'number') {
-    // 2 casas decimais se não inteiro
-    if (Number.isInteger(v)) return String(v);
-    return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-  if (isNumeric) {
-    const s = String(v).trim();
-    const cleaned = s.replace(/[,$\s]/g, '');
-    const n = Number(cleaned);
-    if (!isNaN(n)) {
-      if (Number.isInteger(n)) return String(n);
-      return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-    return s;
-  }
-  return String(v);
-}
-
-function parseNum(v) {
-  if (typeof v === 'number') return v;
-  const s = String(v == null ? '' : v).trim().replace(/[,$\s]/g, '');
-  if (s === '') return 0;
-  const n = Number(s);
-  return isNaN(n) ? 0 : n;
-}
-
-function renderTable() {
-  const thead = document.getElementById('ts-thead-row');
-  const tbody = document.getElementById('ts-tbody');
-  const tfoot = document.getElementById('ts-tfoot');
-  const tfootRow = document.getElementById('ts-tfoot-row');
-
-  thead.innerHTML = '';
-  tbody.innerHTML = '';
-  tfootRow.innerHTML = '';
-
-  state.headers.forEach((h, i) => {
-    const th = document.createElement('th');
-    th.textContent = h || ('Col ' + (i + 1));
-    if (state.numericColIdxs.has(i)) th.classList.add('num');
-    thead.appendChild(th);
-  });
-
-  // body
-  const frag = document.createDocumentFragment();
-  state.filtered.forEach(row => {
-    const tr = document.createElement('tr');
-    state.headers.forEach((_, i) => {
-      const td = document.createElement('td');
-      const isNum = state.numericColIdxs.has(i);
-      td.textContent = fmtCell(row[i], isNum);
-      if (isNum) td.classList.add('num');
-      tr.appendChild(td);
-    });
-    frag.appendChild(tr);
-  });
-  tbody.appendChild(frag);
-
-  // footer (totals)
-  if (state.sumColIdxs.size > 0 && state.filtered.length > 0) {
-    state.headers.forEach((_, i) => {
-      const td = document.createElement('td');
-      if (i === 0) {
-        td.textContent = t().total;
-      } else if (state.sumColIdxs.has(i)) {
-        const sum = state.filtered.reduce((acc, r) => acc + parseNum(r[i]), 0);
-        td.textContent = sum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        td.classList.add('num');
-      } else if (state.numericColIdxs.has(i)) {
-        td.classList.add('num');
-      }
-      tfootRow.appendChild(td);
-    });
-    tfoot.style.display = '';
-  } else {
-    tfoot.style.display = 'none';
-  }
-
-  updateCount();
-}
-
-function applyFilters() {
-  const q = document.getElementById('ts-search').value.trim().toLowerCase();
-  const countryVal = document.getElementById('ts-country-filter').value;
-
-  state.filtered = state.rows.filter(row => {
-    if (countryVal && state.countryColIdx >= 0) {
-      if (String(row[state.countryColIdx] || '').trim() !== countryVal) return false;
-    }
-    if (q) {
-      const joined = row.map(c => String(c == null ? '' : c)).join(' ').toLowerCase();
-      if (!joined.includes(q)) return false;
-    }
-    return true;
-  });
-  renderTable();
+  document.getElementById('ts-content').style.display = '';
 }
 
 async function loadData(forceRefresh) {
@@ -490,25 +894,18 @@ async function loadData(forceRefresh) {
       showState((res && res.error) ? (t().error + ' — ' + res.error) : t().error, true);
       return;
     }
-    state.headers = Array.isArray(res.headers) ? res.headers : [];
-    state.rows = Array.isArray(res.rows) ? res.rows : [];
+    state.raw = { headers: res.headers || [], rows: res.rows || [] };
     state.fromCache = !!res._fromCache;
+    state.parsed = parseRows(state.raw.headers, state.raw.rows);
 
-    if (state.headers.length === 0 || state.rows.length === 0) {
+    if (state.parsed.length === 0) {
       showState(t().empty);
-      updateInfo();
       return;
     }
-
-    state.numericColIdxs = detectNumericCols(state.headers, state.rows);
-    state.sumColIdxs = detectSumCols(state.headers, state.numericColIdxs);
-    state.countryColIdx = detectCountryCol(state.headers);
-
-    buildCountryOptions();
-    state.filtered = state.rows.slice();
+    buildFilters();
+    state.filtered = state.parsed.slice();
     hideState();
-    renderTable();
-    updateInfo();
+    render();
   } catch (e) {
     console.error('[Timesheet] erro:', e);
     showState(t().error + ' — ' + (e && e.message || e), true);
@@ -523,14 +920,18 @@ function csvEscape(v) {
 }
 
 function exportCsv() {
-  const rows = [state.headers, ...state.filtered];
+  const i = t();
+  const headers = ['Name', 'Country', 'Status', 'Hour Pay', 'Email', 'Final Hours', 'Month Salary', 'Next Payment'];
+  const rows = [headers, ...state.filtered.map(d => [
+    d.name, d.country, d.status, d.rate, d.email, d.hours, d.salary, d.nextPay,
+  ])];
   const csv = rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const dateStr = new Date().toISOString().slice(0, 10);
   a.href = url;
-  a.download = 'timesheet_' + dateStr + '.csv';
+  a.download = 'timesheet_payroll_' + dateStr + '.csv';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -552,7 +953,8 @@ function startApp(user) {
   if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
 
   document.getElementById('ts-search').addEventListener('input', applyFilters);
-  document.getElementById('ts-country-filter').addEventListener('change', applyFilters);
+  document.getElementById('f-country').addEventListener('change', applyFilters);
+  document.getElementById('f-status').addEventListener('change', applyFilters);
   document.getElementById('ts-refresh').addEventListener('click', () => loadData(true));
   document.getElementById('ts-export').addEventListener('click', exportCsv);
 
