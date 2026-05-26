@@ -2143,6 +2143,7 @@
     <div class="legend-item"><span class="legend-dot" style="background:#4A9FE0; opacity:0.4;"></span> <span data-i18n="legendArea">Área de mapeamento</span></div>
     <div class="legend-item"><span class="legend-dot" style="background:#22C55E;"></span> <span data-i18n="legendRecent">Check-in nas últimas 24h</span></div>
     <div class="legend-item"><span class="legend-dot" style="background:#F59E0B;"></span> <span data-i18n="legendOld">Sem check-in &gt; 24h</span></div>
+    <div class="legend-item"><span class="legend-dot" style="background:#EF4444;"></span> <span data-i18n="legendNoMap">Não vai mapear hoje</span></div>
   </div>
 </div>
 
@@ -2642,6 +2643,7 @@ const I18N = {
     legendArea: 'Área de mapeamento',
     legendRecent: 'Check-in nas últimas 24h',
     legendOld: 'Sem check-in > 24h',
+    legendNoMap: 'Não vai mapear hoje',
     weatherToggle: 'Clima',
     weatherLoading: 'Carregando radar...',
     weatherUpdated: 'Atualizado às',
@@ -2708,6 +2710,11 @@ const I18N = {
     pillNoCheckin: 'Sem check-in',
     pillCritical: '⚠ Crítico',
     pillMinor: '⚠ Alerta',
+    pillDidNotMap: '⛔ Sem mapear',
+    dnmReasonWeather: 'clima',
+    dnmReasonMech: 'mecânico',
+    dnmReasonTech: 'técnico',
+    dnmReasonDisks: 'discos',
     pillOk: '✓ OK',
     noCheckin: 'Nunca',
     hoursAgoPrefix: 'há',
@@ -2920,6 +2927,7 @@ const I18N = {
     legendArea: 'Área de mapeo',
     legendRecent: 'Check-in en las últimas 24h',
     legendOld: 'Sin check-in > 24h',
+    legendNoMap: 'No va a mapear hoy',
     weatherToggle: 'Clima',
     weatherLoading: 'Cargando radar...',
     weatherUpdated: 'Actualizado a las',
@@ -2986,6 +2994,11 @@ const I18N = {
     pillNoCheckin: 'Sin check-in',
     pillCritical: '⚠ Crítico',
     pillMinor: '⚠ Alerta',
+    pillDidNotMap: '⛔ Sin mapear',
+    dnmReasonWeather: 'clima',
+    dnmReasonMech: 'mecánico',
+    dnmReasonTech: 'técnico',
+    dnmReasonDisks: 'discos',
     pillOk: '✓ OK',
     noCheckin: 'Nunca',
     hoursAgoPrefix: 'hace',
@@ -3198,6 +3211,7 @@ const I18N = {
     legendArea: 'Mapping area',
     legendRecent: 'Check-in within 24h',
     legendOld: 'No check-in > 24h',
+    legendNoMap: 'Not mapping today',
     weatherToggle: 'Weather',
     weatherLoading: 'Loading radar...',
     weatherUpdated: 'Updated at',
@@ -3264,6 +3278,11 @@ const I18N = {
     pillNoCheckin: 'No check-in',
     pillCritical: '⚠ Critical',
     pillMinor: '⚠ Warning',
+    pillDidNotMap: '⛔ Not mapping',
+    dnmReasonWeather: 'weather',
+    dnmReasonMech: 'mechanical',
+    dnmReasonTech: 'technical',
+    dnmReasonDisks: 'disks',
     pillOk: '✓ OK',
     noCheckin: 'Never',
     hoursAgoPrefix: '',
@@ -3760,7 +3779,10 @@ function renderMap(drivers) {
     if (!d.base || !d.base.lat) return;
 
     const isRecent = d.hoursAgo !== null && d.hoursAgo <= 24;
-    const baseColor = isRecent ? '#22C55E' : '#F59E0B';
+    // v5.17 DNM: último check-in marcou "não vou mapear" → vermelho (tem prioridade).
+    // Um check-in mais recente (dizendo que vai mapear) vira o último e remove o vermelho.
+    const didNotMap = d.didMap === 'no';
+    const baseColor = didNotMap ? '#EF4444' : (isRecent ? '#22C55E' : '#F59E0B');
 
     // Emoji indicando tipo de base — visível com 1 olhada
     const baseTypeIcon = d.base.type === 'Hotel' ? '🏨' : '🏠';
@@ -3780,7 +3802,11 @@ function renderMap(drivers) {
       <div class="popup-row">${d.country} · ${d.city || '—'}</div>
       <div class="popup-row">Base: ${d.base.type || '—'}</div>
       <div class="popup-row">${d.base.address || ''}</div>
-      ${d.hoursAgo !== null ? `<div class="popup-row" style="margin-top:6px;color:${isRecent ? '#22C55E' : '#F59E0B'};">${formatHoursAgo(d.hoursAgo)}</div>` : `<div class="popup-row" style="color:#94A3B8;">${t('pillNoCheckin')}</div>`}
+      ${didNotMap
+        ? `<div class="popup-row" style="margin-top:6px;color:#EF4444;font-weight:600;">⛔ ${t('legendNoMap')}${d.dnmReason ? ' · ' + dnmReasonLabel(d.dnmReason) : ''}</div>`
+        : (d.hoursAgo !== null
+          ? `<div class="popup-row" style="margin-top:6px;color:${isRecent ? '#22C55E' : '#F59E0B'};">${formatHoursAgo(d.hoursAgo)}</div>`
+          : `<div class="popup-row" style="color:#94A3B8;">${t('pillNoCheckin')}</div>`)}
       <div style="margin-top:8px;"><a href="#" onclick="event.preventDefault(); openDriverPanelByEmail('${d.email}'); return false;" style="color:#2C5282;font-weight:500;">Ver detalhes →</a></div>
     `);
     markerLayer.addLayer(marker);
@@ -3942,6 +3968,9 @@ async function fetchRealData(forceRefresh) {
       vehicleStatus: checkin ? (checkin.vehicleStatus || 'OK') : 'OK',
       vehicleIssue: checkin ? checkin.vehicleIssue : '',
       notes: checkin ? checkin.notes : '',
+      // v5.17 DNM: 'no' = condutor marcou que NÃO vai mapear → marcador vermelho
+      didMap: checkin ? (checkin.didMap || '') : '',
+      dnmReason: checkin ? (checkin.dnmReason || '') : '',
       distBaseToEdge,
       distHomeToEdge,
       distHomeToCenter,
@@ -4126,6 +4155,8 @@ function applyFiltersAndRender() {
         vehicleStatus: periodCheckin.vehicleStatus || 'OK',
         vehicleIssue: periodCheckin.vehicleIssue || '',
         notes: periodCheckin.notes || '',
+        didMap: periodCheckin.didMap || '',
+        dnmReason: periodCheckin.dnmReason || '',
         area: {
           lat: periodCheckin.destLat,
           lng: periodCheckin.destLng,
@@ -7320,7 +7351,8 @@ function sortDrivers(drivers, column, direction) {
       case 'distBaseToEdge': return (d.distBaseToEdge === null || d.distBaseToEdge === undefined) ? null : d.distBaseToEdge;
       case 'savingsKm': return (typeof d.savingsKm !== 'number' || !d.base || d.base.type !== 'Hotel') ? null : d.savingsKm;
       case 'status': {
-        // Prioridade: crítico > alerta > > 24h > ativo > sem check-in
+        // Prioridade: sem mapear > crítico > alerta > > 24h > ativo > sem check-in
+        if (d.didMap === 'no') return 5;
         if (d.vehicleStatus === 'Critical Issue') return 4;
         if (d.vehicleStatus === 'Minor Issue') return 3;
         if (d.hoursAgo === null) return 0;
@@ -7362,6 +7394,8 @@ function handleSortClick(column) {
 }
 
 function getStatusPill(d, periodHours) {
+  // v5.17 DNM: condutor marcou "não vou mapear" → vermelho, tem prioridade
+  if (d.didMap === 'no') return '<span class="status-pill status-danger">' + t('pillDidNotMap') + '</span>';
   if (d.vehicleStatus === 'Critical Issue') return '<span class="status-pill status-danger">' + t('pillCritical') + '</span>';
   if (d.vehicleStatus === 'Minor Issue') return '<span class="status-pill status-warn">' + t('pillMinor') + '</span>';
   if (d.hoursAgo === null) return '<span class="status-pill status-neutral">' + t('pillNoCheckin') + '</span>';
@@ -8007,6 +8041,12 @@ function haversine(lat1, lng1, lat2, lng2) {
 function formatTime(d) {
   const locale = currentLang === 'pt' ? 'pt-BR' : currentLang === 'es' ? 'es-ES' : 'en-US';
   return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+}
+
+// v5.17 DNM: traduz o motivo do "não vou mapear" (weather/mech/tech/disks)
+function dnmReasonLabel(reason) {
+  const map = { weather: 'dnmReasonWeather', mech: 'dnmReasonMech', tech: 'dnmReasonTech', disks: 'dnmReasonDisks' };
+  return map[reason] ? t(map[reason]) : reason;
 }
 
 function formatHoursAgo(h) {

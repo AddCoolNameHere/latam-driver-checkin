@@ -266,7 +266,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.36',
+        version: 'v5.38',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -813,6 +813,9 @@ function getCheckinsByPeriod(startDate, endDate) {
         vehicleStatus: data[i][13],
         vehicleIssue: data[i][14],
         notes: data[i][15],
+        // v5.38: DNM flags pro dashboard colorir marcador de vermelho em filtro de período
+        didMap: data[i][32] || '',          // 'yes' | 'no'
+        dnmReason: data[i][33] || '',       // 'weather' | 'mech' | 'tech' | 'disks' | ''
       };
     }
   }
@@ -2588,7 +2591,8 @@ function saveCheckin(data) {
   row[32] = data.didMap || 'yes';   // AG: 'yes' | 'no'
   row[33] = data.dnmReason || '';   // AH: 'weather' | 'mech' | 'tech' | 'disks' | ''
 
-  sheet.appendRow(row);
+  // v5.37: insere no topo (logo abaixo do header) em vez de no fim — mais recente em cima
+  insertRowAt_(sheet, 2, row);
 
   // Se foi reportado vehicle issue com detalhes, também grava em Vehicle Issues Tracking
   // v5.17: pra DNM com motivo mech/tech/disks também cria issue (clima não cria)
@@ -2781,7 +2785,8 @@ function saveCheckout(data) {
     // Cols AE-AF (índices 30-31): checkout extras v5.14
     newRow[30] = checkoutExtras[0][0];
     newRow[31] = checkoutExtras[0][1];
-    sheet.appendRow(newRow);
+    // v5.37: insere no topo (logo abaixo do header) em vez de no fim — mais recente em cima
+    insertRowAt_(sheet, 2, newRow);
     return { mode: 'created', message: 'Checkout sem check-in registrado (linha nova)' };
   }
 }
