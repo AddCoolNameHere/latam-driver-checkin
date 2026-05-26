@@ -6,9 +6,6 @@
 <title>Argentina Fleet Launch · LATAM · Aceolution</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
-<script src="auth.js?v=20260518b"></script>
-<script src="theme.js?v=20260518c"></script>
-<script src="common.js?v=20260519a"></script>
 <link rel="stylesheet" href="theme.css?v=20260519a">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -785,23 +782,16 @@ function renderAll() {
   renderCalendar();
 }
 
-function startApp(user) {
-  injectTopbar({ region: 'LATAM · AR LAUNCH', user: user, showBack: true });
+function startApp() {
   document.getElementById('app').style.display = '';
-  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
   // Auto-expand launch day on first load
   if (Object.keys(state.expanded).length === 0) { state.expanded['2026-06-01'] = true; save(); }
   renderAll();
   applyView();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  injectLogin({
-    title: 'Argentina Fleet Launch',
-    sub: 'Acesso interno',
-    onSuccess: startApp,
-  });
-});
+// Página pública — sem login. Renderiza direto.
+document.addEventListener('DOMContentLoaded', startApp);
 </script>
 
 </body>
