@@ -462,7 +462,8 @@ function startApp(user) {
 document.addEventListener('DOMContentLoaded', () => {
   injectLogin({
     title: 'Roadmap LATAM',
-    sub: 'Acesso interno',
+    sub: 'Acesso restrito ao super admin',
+    superAdminGate: 'fuss',
     onSuccess: startApp,
   });
 });
