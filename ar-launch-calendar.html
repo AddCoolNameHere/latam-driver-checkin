@@ -55,7 +55,8 @@
     display: flex; align-items: flex-end; justify-content: space-between;
     gap: 16px; margin: 28px 0 18px; flex-wrap: wrap;
   }
-  .toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .sync-status { font-size: 12px; font-weight: 600; padding: 0 6px; color: var(--c-text-muted); white-space: nowrap; }
 
   /* ---------- VIEW TOGGLE ---------- */
   .view-toggle { display: inline-flex; gap: 4px; background: var(--c-bg-tint); padding: 4px; border-radius: 99px; }
@@ -285,10 +286,12 @@
       <h2 class="section-title">Schedule</h2>
     </div>
     <div class="toolbar-actions">
+      <span id="sync-status" class="sync-status"></span>
       <div class="view-toggle">
         <button id="view-list-btn" class="active" onclick="switchView('list')">☰ List</button>
         <button id="view-cal-btn" onclick="switchView('calendar')">▦ Calendar</button>
       </div>
+      <button class="btn" id="refresh-pull">↻ Refresh</button>
       <button class="btn" id="expand-all">Expand all</button>
       <button class="btn" id="collapse-all">Collapse all</button>
     </div>
@@ -336,6 +339,7 @@
 <script>
 // ============ CONFIG ============
 const STORAGE_KEY = 'aceolution_arg_fleet_v1';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec';
 
 const TYPES = {
   'plane-arrival': { icon: '✈️', label: 'Plane arrival', color: '#2563eb' },
@@ -448,6 +452,63 @@ function save() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.warn(e); }
 }
 
+// ============ SYNC (backend compartilhado) ============
+// Só locations + events são compartilhados. expanded/view ficam locais (preferência de quem abre).
+function scheduleForServer() { return { locations: state.locations, events: state.events }; }
+
+function setSyncStatus(s) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  const map = {
+    loading: ['Loading…', 'var(--c-text-muted)'],
+    saving:  ['Saving…', 'var(--c-warn)'],
+    saved:   ['✓ Synced', 'var(--c-success)'],
+    offline: ['⚠ Offline — saved locally', 'var(--c-danger)']
+  };
+  const [txt, col] = map[s] || ['', 'var(--c-text-muted)'];
+  el.textContent = txt;
+  el.style.color = col;
+}
+
+// Edição de conteúdo: salva local na hora + empurra pro servidor (debounce)
+let pushTimer = null;
+function saveAndSync() {
+  save();
+  setSyncStatus('saving');
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushToServer, 700);
+}
+
+async function pushToServer() {
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ type: 'saveArLaunchSchedule', schedule: scheduleForServer() })
+    });
+    setSyncStatus('saved');
+  } catch (e) {
+    console.warn('push falhou', e);
+    setSyncStatus('offline');
+  }
+}
+
+async function pullFromServer() {
+  setSyncStatus('loading');
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=getArLaunchSchedule').then(r => r.json());
+    if (res && res.success && res.schedule) {
+      state.locations = { ...DEFAULT_DATA.locations, ...(res.schedule.locations || {}) };
+      state.events = { ...DEFAULT_DATA.events, ...(res.schedule.events || {}) };
+      save();
+      renderAll();
+    }
+    setSyncStatus('saved');
+  } catch (e) {
+    console.warn('pull falhou', e);
+    setSyncStatus('offline');
+  }
+}
+
 // ============ RENDER: LOCATIONS ============
 function renderLocations() {
   const grid = document.getElementById('loc-grid');
@@ -549,7 +610,7 @@ function buildDayBody(date, events) {
       evEl.querySelector('.event-edit').addEventListener('click', (e) => { e.stopPropagation(); openEventModal(date, idx); });
       evEl.querySelector('.event-delete').addEventListener('click', (e) => {
         e.stopPropagation();
-        if (confirm('Delete this event?')) { state.events[date].splice(idx, 1); save(); renderDays(); renderCalendar(); }
+        if (confirm('Delete this event?')) { state.events[date].splice(idx, 1); saveAndSync(); renderDays(); renderCalendar(); }
       });
       eventsEl.appendChild(evEl);
     });
@@ -608,7 +669,7 @@ function buildDayBody(date, events) {
     if (!desc) { alert('Please add a description.'); return; }
     if (!state.events[date]) state.events[date] = [];
     state.events[date].push({ slot, type, loc: loc || null, desc });
-    save(); renderDays(); renderCalendar();
+    saveAndSync(); renderDays(); renderCalendar();
     // keep the day in edit mode after re-render
     const el = document.querySelector(`[data-date="${date}"]`);
     if (el) el.classList.add('editing');
@@ -712,7 +773,7 @@ document.getElementById('loc-modal-save').addEventListener('click', () => {
   if (!name) { alert('Name is required.'); return; }
   state.locations[editingLocKey].name = name;
   state.locations[editingLocKey].addr = addr;
-  save(); closeLocModal(); renderLocations(); renderDays(); renderCalendar();
+  saveAndSync(); closeLocModal(); renderLocations(); renderDays(); renderCalendar();
 });
 
 // ============ EVENT MODAL (edit existing) ============
@@ -742,7 +803,7 @@ document.getElementById('ev-modal-save').addEventListener('click', () => {
   ev.type = document.getElementById('ev-modal-type').value;
   ev.loc = document.getElementById('ev-modal-loc').value || null;
   ev.desc = desc;
-  save(); closeEventModal(); renderDays(); renderCalendar();
+  saveAndSync(); closeEventModal(); renderDays(); renderCalendar();
 });
 
 // ============ TOOLBAR ============
@@ -753,10 +814,11 @@ document.getElementById('collapse-all').addEventListener('click', () => {
   state.expanded = {}; save(); renderDays();
 });
 document.getElementById('reset-btn').addEventListener('click', () => {
-  if (confirm('Reset everything to defaults? Your local edits will be lost.')) {
-    localStorage.removeItem(STORAGE_KEY); state = load(); renderAll(); applyView();
+  if (confirm('Reset to defaults FOR EVERYONE? This overwrites the shared schedule.')) {
+    localStorage.removeItem(STORAGE_KEY); state = load(); saveAndSync(); renderAll(); applyView();
   }
 });
+document.getElementById('refresh-pull').addEventListener('click', pullFromServer);
 
 // ============ HELPERS ============
 function escapeHtml(s) {
@@ -786,8 +848,9 @@ function startApp() {
   document.getElementById('app').style.display = '';
   // Auto-expand launch day on first load
   if (Object.keys(state.expanded).length === 0) { state.expanded['2026-06-01'] = true; save(); }
-  renderAll();
+  renderAll();      // render imediato com cache local
   applyView();
+  pullFromServer(); // depois sincroniza com a versão compartilhada
 }
 
 // Página pública — sem login. Renderiza direto.

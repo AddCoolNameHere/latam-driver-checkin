@@ -250,6 +250,11 @@ function doGet(e) {
       return jsonResponse({ success: true, profile: getDriverProfile_(email) });
     }
 
+    // v5.39: cronograma compartilhado do lançamento AR (ar-launch-calendar.html)
+    if (action === 'getArLaunchSchedule') {
+      return jsonResponse({ success: true, schedule: getArLaunchSchedule_() });
+    }
+
     // v5.6: ping de saúde — retorna versão deployada (útil pra debugar deploys)
     if (action === 'ping') {
       // Faz uma chamada real à getDriversList_ pra confirmar que a função existe
@@ -266,7 +271,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.38',
+        version: 'v5.39',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -276,7 +281,8 @@ function doGet(e) {
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
                     'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
                     'POST submitArgentinaCash', 'POST updateAuthUsers',
-                    'getRecruitmentData', 'getTimesheetTab'],
+                    'getRecruitmentData', 'getTimesheetTab',
+                    'getArLaunchSchedule', 'POST saveArLaunchSchedule'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -475,6 +481,11 @@ function doPost(e) {
     if (data.type === 'saveVehicleIssue') {
       const result = saveVehicleIssue_(data);
       return jsonResponse({ success: true, message: result.message, mode: result.mode });
+    }
+
+    // v5.39: salva cronograma compartilhado do lançamento AR (ar-launch-calendar.html)
+    if (data.type === 'saveArLaunchSchedule') {
+      return jsonResponse(saveArLaunchSchedule_(data.schedule));
     }
 
     // v5.33: super-admin only — atualiza auth.js commitando direto no GitHub via API
@@ -825,6 +836,33 @@ function getCheckinsByPeriod(startDate, endDate) {
     delete c._ts;
     return c;
   });
+}
+
+
+/**
+ * v5.39: cronograma compartilhado do lançamento na Argentina.
+ * Doc único (locations + events) guardado como JSON no ScriptProperties —
+ * sem aba na Mastersheet. Last-write-wins (uso interno, baixo volume).
+ */
+const AR_LAUNCH_KEY = 'AR_LAUNCH_SCHEDULE';
+
+function getArLaunchSchedule_() {
+  const raw = PropertiesService.getScriptProperties().getProperty(AR_LAUNCH_KEY);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch (e) { return null; }
+}
+
+function saveArLaunchSchedule_(schedule) {
+  if (!schedule || typeof schedule !== 'object') {
+    return { success: false, error: 'schedule inválido' };
+  }
+  const json = JSON.stringify(schedule);
+  // ScriptProperties tem limite de ~9KB por valor
+  if (json.length > 9000) {
+    return { success: false, error: 'schedule grande demais pro storage (>9KB)' };
+  }
+  PropertiesService.getScriptProperties().setProperty(AR_LAUNCH_KEY, json);
+  return { success: true };
 }
 
 
