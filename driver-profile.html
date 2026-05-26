@@ -1521,6 +1521,7 @@
       </div>
       <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
       <a href="ramp.html" class="nav-link">💳 Ramp</a>
+      <button class="nav-link" id="refresh-btn" style="cursor:pointer;font:inherit;" title="Atualizar" onclick="refreshProfilePage()">⟳</button>
       <div class="user-pill" id="user-pill"></div>
     </div>
   </div>
@@ -2500,7 +2501,7 @@ function toggleRankingExpanded() {
 // ================================================================
 // DRIVER PROFILE (quando seleciona)
 // ================================================================
-async function selectDriver(email) {
+async function selectDriver(email, forceRefresh) {
   console.log('[Driver Profile] selectDriver chamado com email:', email);
   // Stack trace pra ajudar a debugar quem disparou (acidentalmente ou não)
   console.trace('[Driver Profile] origem da chamada selectDriver');
@@ -2513,7 +2514,7 @@ async function selectDriver(email) {
   try {
     const url = CONFIG.scriptUrl + '?action=getDriverProfile&email=' + encodeURIComponent(email);
     const res = (typeof cachedFetch === 'function')
-      ? await cachedFetch(url, 120)
+      ? await cachedFetch(url, 120, { forceRefresh: !!forceRefresh })
       : await fetch(url).then(r => r.json());
     if (!res.success) throw new Error(res.error || 'Erro carregando perfil');
 
@@ -2534,6 +2535,17 @@ async function selectDriver(email) {
     alert('Erro ao carregar perfil: ' + err.message);
   } finally {
     showLoader(false);
+  }
+}
+
+// Refresh manual: invalida cache e recarrega. Se tem driver aberto, recarrega
+// o perfil dele forçado; senão recarrega a lista de drivers.
+function refreshProfilePage() {
+  if (typeof clearDataCache === 'function') clearDataCache();
+  if (state.selectedEmail) {
+    selectDriver(state.selectedEmail, true);
+  } else {
+    initApp();
   }
 }
 

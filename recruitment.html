@@ -451,6 +451,7 @@ function startApp(user) {
     showLangSwitch: true,
     lang: currentLang,
     onLangChange: (newLang) => { setLang(newLang); },
+    onRefresh: () => loadData(true),
     extras: [{
       html: '⎙ PDF',
       onClick: () => window.print(),

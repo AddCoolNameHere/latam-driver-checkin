@@ -372,6 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
         region: 'LATAM · DIVERGÊNCIAS AR',
         user: user,
         showBack: true,
+        onRefresh: () => loadSubmissions(),
         extras: [{
           html: '⎙ Exportar PDF',
           onClick: () => window.print(),

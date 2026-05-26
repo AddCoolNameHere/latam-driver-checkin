@@ -223,9 +223,9 @@ function aceLogout(confirmText) {
 // 3) TOPBAR
 // =============================================================
 const ACE_TOPBAR_I18N = {
-  pt: { logout: 'Sair', confirmLogout: 'Sair?', back: '← Hub' },
-  es: { logout: 'Salir', confirmLogout: '¿Salir?', back: '← Hub' },
-  en: { logout: 'Sign out', confirmLogout: 'Sign out?', back: '← Hub' },
+  pt: { logout: 'Sair', confirmLogout: 'Sair?', back: '← Hub', refresh: 'Atualizar' },
+  es: { logout: 'Salir', confirmLogout: '¿Salir?', back: '← Hub', refresh: 'Actualizar' },
+  en: { logout: 'Sign out', confirmLogout: 'Sign out?', back: '← Hub', refresh: 'Refresh' },
 };
 
 /**
@@ -239,6 +239,7 @@ const ACE_TOPBAR_I18N = {
  * @param {boolean} [opts.showLangSwitch=false] - mostra PT/ES/EN
  * @param {string} [opts.lang='pt'] - idioma corrente
  * @param {function} [opts.onLangChange] - callback(lang)
+ * @param {function} [opts.onRefresh] - se setado, mostra botão ⟳ que chama essa fn (refresh manual)
  * @param {Array} [opts.extras] - [{ html, onClick, className }] botões extras antes do user pill
  * @param {HTMLElement} [opts.mount] - elemento alvo (default: prepend no body)
  * @returns {HTMLElement} — o nó do topbar
@@ -303,6 +304,20 @@ function injectTopbar(opts) {
 
   // Extras
   const extrasSlot = topbar.querySelector('.ac-extras-slot');
+
+  // Botão de refresh (opcional) — recarrega os dados da página sob demanda.
+  // Fica antes dos extras pra ter posição consistente entre páginas.
+  if (typeof opts.onRefresh === 'function') {
+    const rbtn = document.createElement('button');
+    rbtn.type = 'button';
+    rbtn.className = 'ac-topbar-btn ac-refresh-btn';
+    rbtn.innerHTML = '⟳';
+    rbtn.title = i18n.refresh;
+    rbtn.setAttribute('aria-label', i18n.refresh);
+    rbtn.addEventListener('click', () => opts.onRefresh());
+    extrasSlot.appendChild(rbtn);
+  }
+
   if (Array.isArray(opts.extras)) {
     opts.extras.forEach(ext => {
       const btn = document.createElement('button');

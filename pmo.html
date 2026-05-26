@@ -431,6 +431,7 @@
     </div>
     <div class="header-right">
       <a href="dashboard.html" class="nav-link" data-i18n="navDashboard">← Dashboard</a>
+      <button class="nav-link" id="refresh-btn" style="cursor:pointer;font:inherit;" title="Atualizar" onclick="refreshPmoPage()">⟳</button>
       <span class="lang-toggle">
         <button class="active" data-lang="pt" onclick="setLang('pt')">PT</button>
         <button data-lang="es" onclick="setLang('es')">ES</button>
@@ -1039,6 +1040,13 @@ function formatDate(iso) {
     return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' +
            d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
   } catch (e) { return ''; }
+}
+
+// Refresh manual: invalida cache e recarrega drivers + comentários
+function refreshPmoPage() {
+  if (typeof clearDataCache === 'function') clearDataCache();
+  loadDrivers();
+  loadComments();
 }
 
 // ================================================================
