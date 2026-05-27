@@ -104,6 +104,8 @@ const CONFIG = {
   recruitmentSheet: 'Recruitment',
   // v5.35: timesheet/payroll (timesheet.html) — leitura crua da aba pra exibir horas + valor hora
   timesheetTabSheet: 'Timesheet',
+  // v5.40: ajustes de payroll (reembolsos/bônus/descontos) lançados pelo super admin no timesheet.html
+  payrollAdjustmentsSheet: 'Payroll Adjustments',
 };
 
 // ================================================================
@@ -271,7 +273,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.39',
+        version: 'v5.40',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -282,6 +284,7 @@ function doGet(e) {
                     'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
                     'POST submitArgentinaCash', 'POST updateAuthUsers',
                     'getRecruitmentData', 'getTimesheetTab',
+                    'getPayrollAdjustments', 'POST savePayrollAdjustment', 'POST deletePayrollAdjustment',
                     'getArLaunchSchedule', 'POST saveArLaunchSchedule'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
@@ -400,6 +403,12 @@ function doGet(e) {
       return jsonResponse(getTimesheetTab_());
     }
 
+    // v5.40: ajustes de payroll (reembolsos/bônus/descontos) por driver+quinzena
+    // ?quinzena=YYYY-MM-DD filtra pra uma quinzena específica (opcional)
+    if (action === 'getPayrollAdjustments') {
+      return jsonResponse(getPayrollAdjustments_(e.parameter.quinzena || ''));
+    }
+
     return jsonResponse({ success: false, error: 'Unknown action: ' + action });
   } catch (err) {
     return jsonResponse({ success: false, error: err.toString() });
@@ -486,6 +495,20 @@ function doPost(e) {
     // v5.39: salva cronograma compartilhado do lançamento AR (ar-launch-calendar.html)
     if (data.type === 'saveArLaunchSchedule') {
       return jsonResponse(saveArLaunchSchedule_(data.schedule));
+    }
+
+    // v5.40: payroll adjustments (timesheet.html) — só super admin (fuss) lança/remove
+    if (data.type === 'savePayrollAdjustment') {
+      if (!isSuperAdminBackend_(data.actorUsername)) {
+        return jsonResponse({ success: false, error: 'Permissão negada. Apenas o super admin pode lançar valores.' });
+      }
+      return jsonResponse(savePayrollAdjustment_(data));
+    }
+    if (data.type === 'deletePayrollAdjustment') {
+      if (!isSuperAdminBackend_(data.actorUsername)) {
+        return jsonResponse({ success: false, error: 'Permissão negada. Apenas o super admin pode remover valores.' });
+      }
+      return jsonResponse(deletePayrollAdjustment_(data));
     }
 
     // v5.33: super-admin only — atualiza auth.js commitando direto no GitHub via API
@@ -2513,6 +2536,132 @@ function getTimesheetTab_() {
     rows: rows,
     metadata: metadata,
   };
+}
+
+
+// ================================================================
+// PAYROLL ADJUSTMENTS (v5.40)
+// ================================================================
+/**
+ * Ajustes de payroll (reembolsos, bônus, descontos) lançados pelo super admin
+ * no timesheet.html. Como o timesheet virou fonte do financeiro, os ajustes
+ * ficam numa aba auditável da Mastersheet (não em ScriptProperties), com quem
+ * lançou, quando, qual driver e qual quinzena.
+ *
+ * Aba "Payroll Adjustments" (auto-criada na primeira escrita):
+ *   ID | Timestamp | Added By | Quinzena (Pay Date) | Driver Name | Driver Email |
+ *   Country | Category | Amount (USD) | Note | Status
+ *
+ * - Amount já vem assinado (descontos chegam negativos do frontend).
+ * - Status: 'active' | 'deleted' (soft-delete preserva trilha de auditoria).
+ */
+const PAYROLL_ADJ_HEADERS = ['ID', 'Timestamp', 'Added By', 'Quinzena (Pay Date)',
+  'Driver Name', 'Driver Email', 'Country', 'Category', 'Amount (USD)', 'Note', 'Status'];
+const PAYROLL_ADJ_STATUS_COL = 11; // col K (1-indexed)
+
+function getOrCreatePayrollAdjustmentsSheet_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  let sheet = ss.getSheetByName(CONFIG.payrollAdjustmentsSheet);
+  if (sheet) return sheet;
+  sheet = ss.insertSheet(CONFIG.payrollAdjustmentsSheet);
+  sheet.appendRow(PAYROLL_ADJ_HEADERS);
+  sheet.getRange(1, 1, 1, PAYROLL_ADJ_HEADERS.length).setFontWeight('bold');
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
+/**
+ * Lista ajustes ativos. Se quinzena (YYYY-MM-DD) for passada, filtra só os dela.
+ * Retorna { success, adjustments: [{id, timestamp, addedBy, quinzena,
+ *   driverName, driverEmail, country, category, amount, note}] }.
+ */
+function getPayrollAdjustments_(quinzena) {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(CONFIG.payrollAdjustmentsSheet);
+  if (!sheet || sheet.getLastRow() < 2) {
+    return { success: true, adjustments: [] };
+  }
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, PAYROLL_ADJ_HEADERS.length).getValues();
+  const qFilter = String(quinzena || '').trim();
+  const adjustments = [];
+  data.forEach(function (r) {
+    const status = String(r[10] || '').trim().toLowerCase();
+    if (status === 'deleted') return;
+    let q = r[3];
+    if (q instanceof Date) q = Utilities.formatDate(q, 'America/Sao_Paulo', 'yyyy-MM-dd');
+    else q = String(q || '').trim();
+    if (qFilter && q !== qFilter) return;
+    let ts = r[1];
+    if (ts instanceof Date) ts = ts.toISOString();
+    adjustments.push({
+      id: String(r[0] || ''),
+      timestamp: String(ts || ''),
+      addedBy: String(r[2] || ''),
+      quinzena: q,
+      driverName: String(r[4] || ''),
+      driverEmail: String(r[5] || ''),
+      country: String(r[6] || ''),
+      category: String(r[7] || ''),
+      amount: Number(r[8]) || 0,
+      note: String(r[9] || ''),
+    });
+  });
+  return { success: true, adjustments: adjustments };
+}
+
+/**
+ * Salva um ajuste novo. Permissão já validada no doPost (super admin).
+ * data: { actorUsername, quinzena, driverName, driverEmail, country, category, amount, note }
+ */
+function savePayrollAdjustment_(data) {
+  const name = String(data.driverName || '').trim();
+  if (!name) return { success: false, error: 'driverName obrigatório' };
+  const amount = Number(data.amount);
+  if (!isFinite(amount) || amount === 0) return { success: false, error: 'amount inválido' };
+  const category = String(data.category || '').trim();
+  if (!category) return { success: false, error: 'category obrigatória' };
+  const quinzena = String(data.quinzena || '').trim();
+
+  const sheet = getOrCreatePayrollAdjustmentsSheet_();
+  const id = 'ADJ-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+  const now = new Date();
+  const driverEmail = String(data.driverEmail || '').trim();
+  const country = String(data.country || '').trim();
+  const note = String(data.note || '').trim();
+
+  sheet.appendRow([
+    id, now, String(data.actorUsername || ''), quinzena,
+    name, driverEmail, country, category, amount, note, 'active',
+  ]);
+
+  return {
+    success: true,
+    adjustment: {
+      id: id, timestamp: now.toISOString(), addedBy: String(data.actorUsername || ''),
+      quinzena: quinzena, driverName: name, driverEmail: driverEmail,
+      country: country, category: category, amount: amount, note: note,
+    },
+  };
+}
+
+/**
+ * Soft-delete: marca Status='deleted' pra preservar auditoria.
+ * data: { actorUsername, id }
+ */
+function deletePayrollAdjustment_(data) {
+  const id = String(data.id || '').trim();
+  if (!id) return { success: false, error: 'id obrigatório' };
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(CONFIG.payrollAdjustmentsSheet);
+  if (!sheet || sheet.getLastRow() < 2) return { success: false, error: 'nenhum ajuste encontrado' };
+  const ids = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+  for (let i = 0; i < ids.length; i++) {
+    if (String(ids[i][0] || '').trim() === id) {
+      sheet.getRange(i + 2, PAYROLL_ADJ_STATUS_COL).setValue('deleted');
+      return { success: true };
+    }
+  }
+  return { success: false, error: 'id não encontrado' };
 }
 
 
