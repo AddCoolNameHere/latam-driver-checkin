@@ -3,37 +3,14 @@
  * Aceolution LATAM — Auth Configuration
  * ============================================================
  *
- * Arquivo central de configuração de usuários para todas as páginas
- * (dashboard.html, ramp.html, driver-profile.html).
+ * ARQUIVO GERADO AUTOMATICAMENTE pelo painel admin-users.html.
+ * NÃO EDITE MANUALMENTE — suas mudanças serão sobrescritas no
+ * próximo commit feito pelo painel. Pra alterar, abra:
+ *   admin-users.html (acesso restrito ao usuário "fuss")
  *
- * COMO ADICIONAR/REMOVER/EDITAR USUÁRIOS:
- * ----------------------------------------------------------------
- *
- * 1. Para gerar um hash SHA-256 de uma senha nova:
- *    - Abra `auth-helper.html` no browser (também no GitHub)
- *    - Cole a senha em texto plano
- *    - Copie o hash gerado
- *
- * 2. Adicionar usuário:
- *    - Adicione um objeto novo no array USERS abaixo seguindo o
- *      padrão: { username, passwordHash, fullName }
- *    - O `username` é case-insensitive no login
- *
- * 3. Remover usuário:
- *    - Apague a linha correspondente do array USERS
- *
- * 4. Mudar senha de um usuário:
- *    - Gere o novo hash em auth-helper.html
- *    - Substitua o `passwordHash` no array
- *
- * 5. Tornar alguém admin (vê o painel ⚙ Admin no dashboard):
- *    - Adicione o `username` (lowercase) ao array ADMIN_USERNAMES
- *
- * 6. Commit no GitHub. Aguarde 1–10 min para o GitHub Pages atualizar
- *    e force reload (Ctrl+Shift+R) no browser.
+ * Última geração: 2026-05-27T16:30:09.127Z
  *
  * ⚠ NOTA DE SEGURANÇA:
- * ----------------------------------------------------------------
  * Este é client-side ("teatro de segurança"): qualquer pessoa
  * com acesso ao GitHub Pages pode ver os hashes e tentar quebrá-los
  * por força bruta offline. Não use senhas reutilizadas em outros
@@ -47,36 +24,40 @@
 // ----------------------------------------------------------------
 const USERS = [
   {
-    username: 'fuss',
-    passwordHash: '20fc17a5b2949b22e408a7f0748a07c46833654638dd6f4ae744ba74c3af476a',
-    fullName: 'Fuss',
+    username: "fuss",
+    passwordHash: "20fc17a5b2949b22e408a7f0748a07c46833654638dd6f4ae744ba74c3af476a",
+    fullName: "Fuss",
   },
   {
-    username: 'pankaj',
-    passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec',
-    fullName: 'Pankaj',
+    username: "pankaj",
+    passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
+    fullName: "Pankaj",
   },
   {
-    username: 'bia',
-    passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec',
-    fullName: 'Bia',
+    username: "bia",
+    passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
+    fullName: "Bia",
   },
   {
-    username: 'lucas',
-    passwordHash: '473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec',
-    fullName: 'Outro Lucas',
+    username: "lucas",
+    passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
+    fullName: "Outro Lucas",
+  },
+  {
+    username: "payroll",
+    passwordHash: "946ef4dd0fb666f73883b6a3de531857d91e97769d540be3d5b2d2fec900606b",
+    fullName: "Payroll",
   },
 ];
 
 // ----------------------------------------------------------------
 // USUÁRIOS COM PRIVILÉGIO ADMIN
-// (veem o botão ⚙ Admin no dashboard)
+// (veem o botão ⚙ Admin no dashboard e seções restritas)
 // ----------------------------------------------------------------
-const ADMIN_USERNAMES = ['fuss'];
+const ADMIN_USERNAMES = ["fuss"];
 
 // ----------------------------------------------------------------
 // HELPER: SHA-256 hash (compatível com browser moderno)
-// Recebe string em texto plano, retorna hex hash.
 // ----------------------------------------------------------------
 async function sha256(text) {
   const buffer = new TextEncoder().encode(text);
