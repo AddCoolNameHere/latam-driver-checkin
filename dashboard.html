@@ -956,6 +956,45 @@
   }
   .crime-toggle-control.active .crime-updated-label { display: block; }
 
+  /* Legenda das facções dentro do painel (v5.41 + facções) */
+  .crime-faccoes-legend {
+    display: none;
+    border-top: 1px solid var(--c-border);
+    padding: 6px 10px 8px;
+    background: var(--c-bg);
+    border-radius: 0 0 4px 4px;
+  }
+  .crime-toggle-control.active .crime-faccoes-legend { display: block; }
+  .crime-faccoes-legend .lg-title {
+    font-size: 10px;
+    color: #64748B;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .crime-faccoes-legend .lg-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #475569;
+    line-height: 1.4;
+  }
+  .crime-faccoes-legend .lg-sw {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    border: 1px solid rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  .crime-faccoes-legend .lg-attr {
+    font-size: 9px;
+    color: #94A3B8;
+    margin-top: 5px;
+    font-style: italic;
+  }
+
   /* TABLE */
   .table-section {
     background: var(--c-surface);
@@ -2707,6 +2746,9 @@ const I18N = {
     crimePopupPolice: 'Ação policial',
     crimePopupVictims: 'Vítimas',
     crimePopupDeaths: 'mortos',
+    crimeFaccoesLegend: 'Facções no RJ',
+    crimeFaccoesAttr: 'Mapa de facções: Fogo Cruzado / GENI-UFF',
+    crimePopupArea: 'Área controlada por',
     tableTitle: 'Drivers',
     tableSub: 'Clique numa linha pra abrir detalhes',
     ctsTitle: 'CTS Goal vs Achieved',
@@ -3001,6 +3043,9 @@ const I18N = {
     crimePopupPolice: 'Acción policial',
     crimePopupVictims: 'Víctimas',
     crimePopupDeaths: 'muertos',
+    crimeFaccoesLegend: 'Facciones en RJ',
+    crimeFaccoesAttr: 'Mapa de facciones: Fogo Cruzado / GENI-UFF',
+    crimePopupArea: 'Área controlada por',
     tableTitle: 'Conductores',
     tableSub: 'Haga clic en una fila para ver detalles',
     ctsTitle: 'CTS Goal vs Achieved',
@@ -3295,6 +3340,9 @@ const I18N = {
     crimePopupPolice: 'Police action',
     crimePopupVictims: 'Victims',
     crimePopupDeaths: 'killed',
+    crimeFaccoesLegend: 'Factions in RJ',
+    crimeFaccoesAttr: 'Faction map: Fogo Cruzado / GENI-UFF',
+    crimePopupArea: 'Area controlled by',
     tableTitle: 'Drivers',
     tableSub: 'Click a row to open details',
     ctsTitle: 'CTS Goal vs Achieved',
@@ -3856,18 +3904,31 @@ async function fetchOpenMeteoRain(lat, lng, periodDays) {
 // LATAM zoomed-out. Dados via backend getCrimeOverlay (proxy + cache 6h).
 const CRIME_CONFIG = {
   days: 30,
-  minZoom: 13,        // street/neighborhood level — abaixo disso esconde
+  minZoom: 13,        // shootings: street/neighborhood level — abaixo disso esconde
   fetchTtlSec: 6 * 3600,
+  faccoesUrl: 'assets/faccoes_rj.geojson',  // mapa de facções RJ (Fogo Cruzado / GENI-UFF)
+};
+
+// Legenda das facções — cores do dataset original (Fogo Cruzado 2021-2023)
+const FACCOES_COLORS = {
+  'ADA': '#DDB310',
+  'CV': '#B61D14',
+  'Domínio Indefinido': '#E6A176',
+  'Milícia': '#4053D3',
+  'TCP': '#00B25D',
 };
 
 const crime = {
   active: false,
-  layer: null,        // L.layerGroup com os circleMarkers
+  layer: null,         // L.layerGroup com os circleMarkers (tiroteios)
+  faccoesLayer: null,  // L.geoJSON com polígonos de território
+  faccoesData: null,   // GeoJSON FeatureCollection cacheado
   control: null,
   btnEl: null,
   labelEl: null,
-  data: null,         // array de pontos cacheada na sessão
-  moveHandler: null,  // referência pra remover no toggle off
+  legendEl: null,
+  data: null,          // array de pontos cacheada na sessão (tiroteios)
+  moveHandler: null,   // referência pra remover no toggle off
 };
 
 function addCrimeToggleControl() {
@@ -3880,7 +3941,8 @@ function addCrimeToggleControl() {
           '<span class="crime-icon">🚨</span>' +
           '<span data-i18n="crimeToggle">Risco</span>' +
         '</button>' +
-        '<div class="crime-updated-label" id="crime-updated-label"></div>';
+        '<div class="crime-updated-label" id="crime-updated-label"></div>' +
+        '<div class="crime-faccoes-legend" id="crime-faccoes-legend"></div>';
       L.DomEvent.disableClickPropagation(wrap);
       L.DomEvent.disableScrollPropagation(wrap);
       return wrap;
@@ -3892,6 +3954,7 @@ function addCrimeToggleControl() {
   setTimeout(() => {
     crime.btnEl = document.getElementById('crime-toggle-btn');
     crime.labelEl = document.getElementById('crime-updated-label');
+    crime.legendEl = document.getElementById('crime-faccoes-legend');
     if (crime.btnEl) crime.btnEl.addEventListener('click', toggleCrime);
     if (typeof applyI18n === 'function') applyI18n();
   }, 0);
@@ -3901,6 +3964,7 @@ async function toggleCrime() {
   if (crime.active) {
     crime.active = false;
     removeCrimeLayer();
+    removeFaccoesLayer();
     crime.btnEl.classList.remove('active');
     crime.control.getContainer().classList.remove('active');
     if (crime.moveHandler) {
@@ -3912,8 +3976,11 @@ async function toggleCrime() {
   crime.active = true;
   crime.btnEl.classList.add('active');
   crime.control.getContainer().classList.add('active');
-  await loadCrimeData();
-  applyCrimeVisibility();
+  // Fetch em paralelo: facções (estático ~4MB, cache de browser longo) + tiroteios (proxy backend)
+  await Promise.all([loadCrimeData(), loadFaccoesData()]);
+  renderFaccoesLayer();        // polígonos: sempre visíveis quando toggle ligado
+  populateFaccoesLegend();
+  applyCrimeVisibility();      // tiroteios: visíveis só com zoom alto
   crime.moveHandler = applyCrimeVisibility;
   map.on('moveend', crime.moveHandler);
 }
@@ -3923,6 +3990,79 @@ function removeCrimeLayer() {
     map.removeLayer(crime.layer);
     crime.layer = null;
   }
+}
+
+function removeFaccoesLayer() {
+  if (crime.faccoesLayer) {
+    map.removeLayer(crime.faccoesLayer);
+    crime.faccoesLayer = null;
+  }
+  if (crime.legendEl) crime.legendEl.innerHTML = '';
+}
+
+// Mapa de facções (polígonos territoriais RJ). Asset estático ~4MB, fetcha 1x por sessão.
+async function loadFaccoesData() {
+  if (crime.faccoesData) return;
+  try {
+    const res = await fetch(CRIME_CONFIG.faccoesUrl);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    crime.faccoesData = await res.json();
+    console.log('[Dashboard Crime] facções carregadas: ' +
+      (crime.faccoesData.features ? crime.faccoesData.features.length : 0) + ' polígonos');
+  } catch (e) {
+    console.warn('[Dashboard Crime] facções falharam:', e.message);
+    crime.faccoesData = null;
+  }
+}
+
+function renderFaccoesLayer() {
+  removeFaccoesLayer();
+  if (!crime.faccoesData || !Array.isArray(crime.faccoesData.features)) return;
+  crime.faccoesLayer = L.geoJSON(crime.faccoesData, {
+    style: function (feat) {
+      const c = (feat.properties && feat.properties.color) || '#999999';
+      return {
+        color: '#333',
+        weight: 0.4,
+        opacity: 0.6,
+        fillColor: c,
+        fillOpacity: 0.45,
+      };
+    },
+    onEachFeature: function (feat, layer) {
+      const f = (feat.properties && feat.properties.faction) || '—';
+      const label = (feat.properties && feat.properties.label) || '';
+      const i = (typeof t === 'function') ? {
+        area: t('crimePopupArea') || 'Área controlada por',
+        attr: t('crimeFaccoesAttr') || 'Mapa de facções: Fogo Cruzado / GENI-UFF',
+      } : { area: 'Área controlada por', attr: 'Fogo Cruzado / GENI-UFF' };
+      layer.bindPopup(`
+        <div style="font-size:12px;min-width:170px;line-height:1.35;">
+          <div style="font-weight:700;color:#B91C1C;margin-bottom:3px;">${escapeHtml(i.area)}: ${escapeHtml(f)}</div>
+          ${label ? `<div style="color:#475569;">${escapeHtml(label)}</div>` : ''}
+          <div style="margin-top:5px;font-size:10px;color:#94A3B8;font-style:italic;">${escapeHtml(i.attr)}</div>
+        </div>`);
+    },
+  });
+  crime.faccoesLayer.addTo(map);
+}
+
+function populateFaccoesLegend() {
+  if (!crime.legendEl) return;
+  if (!crime.faccoesData) {
+    crime.legendEl.innerHTML = '';
+    return;
+  }
+  const i = (typeof t === 'function') ? {
+    title: t('crimeFaccoesLegend') || 'Facções no RJ',
+    attr: t('crimeFaccoesAttr') || 'Fogo Cruzado / GENI-UFF',
+  } : { title: 'Facções no RJ', attr: 'Fogo Cruzado / GENI-UFF' };
+  let html = '<div class="lg-title">' + escapeHtml(i.title) + '</div>';
+  Object.keys(FACCOES_COLORS).forEach(function (name) {
+    html += '<div class="lg-row"><span class="lg-sw" style="background:' + FACCOES_COLORS[name] + ';"></span>' + escapeHtml(name) + '</div>';
+  });
+  html += '<div class="lg-attr">' + escapeHtml(i.attr) + '</div>';
+  crime.legendEl.innerHTML = html;
 }
 
 async function loadCrimeData() {
