@@ -273,7 +273,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.40',
+        version: 'v5.41',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -285,6 +285,7 @@ function doGet(e) {
                     'POST submitArgentinaCash', 'POST updateAuthUsers',
                     'getRecruitmentData', 'getTimesheetTab',
                     'getPayrollAdjustments', 'POST savePayrollAdjustment', 'POST deletePayrollAdjustment',
+                    'getCrimeOverlay',
                     'getArLaunchSchedule', 'POST saveArLaunchSchedule'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
@@ -407,6 +408,14 @@ function doGet(e) {
     // ?quinzena=YYYY-MM-DD filtra pra uma quinzena específica (opcional)
     if (action === 'getPayrollAdjustments') {
       return jsonResponse(getPayrollAdjustments_(e.parameter.quinzena || ''));
+    }
+
+    // v5.41: overlay de risco/crime no dashboard — proxy + cache da API do Fogo Cruzado
+    // ?days=30 (default, max 90). Retorna pontos {lat,lng,date,city,state,reason,victims,policeAction}
+    // dos 4 estados cobertos (RJ/PE/BA/PA). Token email/senha em PropertiesService.
+    if (action === 'getCrimeOverlay') {
+      const days = Math.min(90, Math.max(1, parseInt(e.parameter.days, 10) || 30));
+      return jsonResponse(getCrimeOverlay_(days));
     }
 
     return jsonResponse({ success: false, error: 'Unknown action: ' + action });
@@ -6892,4 +6901,236 @@ function getRecruitmentData_() {
     demand: demand,
     generatedAt: new Date().toISOString(),
   };
+}
+
+
+// ================================================================
+// FOGO CRUZADO — Overlay de risco/crime no mapa do dashboard (v5.41)
+// ================================================================
+/**
+ * Proxy + cache pra API do Fogo Cruzado (https://api.fogocruzado.org.br/docs).
+ * Dataset gratuito de tiroteios/disparos com cobertura nas regiões metropolitanas
+ * de RJ (desde 2016), PE (2018), BA (2022) e PA (2023). Requer cadastro free.
+ *
+ * SETUP (uma vez):
+ *   1. User cria conta em https://api.fogocruzado.org.br/sign-up e aguarda aprovação.
+ *   2. No Apps Script: Project Settings → Script Properties, adiciona:
+ *      - FOGO_CRUZADO_EMAIL    = email da conta
+ *      - FOGO_CRUZADO_PASSWORD = senha
+ *
+ * Sem as credenciais setadas, o endpoint retorna error explicativo (não quebra
+ * o dashboard — o overlay simplesmente fica desabilitado).
+ *
+ * Cache:
+ *   - Token JWT: 50min (validade é 1h, deixa margem)
+ *   - Resultado da query: 6h (dataset é diário, não precisa ser tempo real)
+ *   - State UUIDs: persistido em ScriptProperties (descoberto 1x)
+ */
+const FC_API_BASE = 'https://api-service.fogocruzado.org.br/api/v2';
+const FC_TARGET_STATES = ['Rio de Janeiro', 'Pernambuco', 'Bahia', 'Pará'];
+const FC_TOKEN_CACHE_KEY = 'fogo_cruzado_token';
+const FC_TOKEN_CACHE_SEC = 50 * 60;      // 50min (token vive 1h)
+const FC_RESULT_CACHE_PREFIX = 'fogo_cruzado_result_';
+const FC_RESULT_CACHE_SEC = 6 * 3600;    // 6h
+const FC_STATE_IDS_PROP = 'FOGO_CRUZADO_STATE_IDS';
+
+function getCrimeOverlay_(days) {
+  const props = PropertiesService.getScriptProperties();
+  const email = props.getProperty('FOGO_CRUZADO_EMAIL');
+  const pass  = props.getProperty('FOGO_CRUZADO_PASSWORD');
+  if (!email || !pass) {
+    return {
+      success: false,
+      error: 'Credenciais Fogo Cruzado não configuradas. Setar FOGO_CRUZADO_EMAIL e FOGO_CRUZADO_PASSWORD em Script Properties.',
+      points: [],
+    };
+  }
+
+  // Cache check antes de qualquer chamada externa
+  const cache = CacheService.getScriptCache();
+  const cacheKey = FC_RESULT_CACHE_PREFIX + days;
+  const cached = cache.get(cacheKey);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      parsed._fromCache = true;
+      return parsed;
+    } catch (e) { /* cache corrompido, refaz */ }
+  }
+
+  try {
+    const stateIds = fogoCruzadoStateIds_();
+    if (!stateIds || stateIds.length === 0) {
+      return { success: false, error: 'Não foi possível descobrir UUIDs dos estados.', points: [] };
+    }
+
+    // Janela de datas (YYYY-MM-DD, fuso UTC pra simplicidade — API usa BRT)
+    const today = new Date();
+    const start = new Date(today.getTime() - days * 86400000);
+    const fmt = function (d) { return Utilities.formatDate(d, 'America/Sao_Paulo', 'yyyy-MM-dd'); };
+    const initialdate = fmt(start);
+    const finaldate = fmt(today);
+
+    // Pagina cada estado. Limite total pra evitar payload gigante.
+    const MAX_POINTS = 5000;
+    const TAKE = 200;
+    const points = [];
+    let totalRaw = 0;
+
+    for (let i = 0; i < stateIds.length && points.length < MAX_POINTS; i++) {
+      const stateId = stateIds[i];
+      let page = 1;
+      while (points.length < MAX_POINTS) {
+        const url = FC_API_BASE + '/occurrences'
+          + '?order=DESC'
+          + '&page=' + page
+          + '&take=' + TAKE
+          + '&idState=' + encodeURIComponent(stateId)
+          + '&initialdate=' + initialdate
+          + '&finaldate=' + finaldate;
+        const res = fogoCruzadoAuthedFetch_(url);
+        if (!res || res.code !== 200 || !Array.isArray(res.data)) break;
+
+        totalRaw += res.data.length;
+        res.data.forEach(function (o) {
+          if (points.length >= MAX_POINTS) return;
+          const lat = parseFloat(o.latitude);
+          const lng = parseFloat(o.longitude);
+          if (!isFinite(lat) || !isFinite(lng)) return;
+          const victims = Array.isArray(o.victims) ? o.victims : [];
+          const deaths = victims.filter(function (v) { return v && String(v.situation || '').toLowerCase() === 'dead'; }).length;
+          points.push({
+            lat: lat,
+            lng: lng,
+            date: o.date || '',
+            city: (o.city && o.city.name) || '',
+            state: (o.state && o.state.name) || '',
+            reason: (o.contextInfo && o.contextInfo.mainReason && o.contextInfo.mainReason.name) || '',
+            policeAction: !!o.policeAction,
+            victims: victims.length,
+            deaths: deaths,
+          });
+        });
+
+        const meta = res.pageMeta || {};
+        if (!meta.hasNextPage) break;
+        page++;
+        if (page > 50) break; // hard stop defensivo
+      }
+    }
+
+    const result = {
+      success: true,
+      points: points,
+      days: days,
+      generatedAt: new Date().toISOString(),
+      windowStart: initialdate,
+      windowEnd: finaldate,
+      totalRawFetched: totalRaw,
+      capped: points.length >= MAX_POINTS,
+    };
+    // CacheService tem limite de 100KB por valor — só cacheia se couber
+    try {
+      const serialized = JSON.stringify(result);
+      if (serialized.length < 95000) {
+        cache.put(cacheKey, serialized, FC_RESULT_CACHE_SEC);
+      } else {
+        Logger.log('[Fogo Cruzado] resultado grande demais pra cache (' + serialized.length + 'b)');
+      }
+    } catch (e) { /* skip cache */ }
+    return result;
+  } catch (e) {
+    Logger.log('[Fogo Cruzado] erro: ' + e.message);
+    return { success: false, error: 'Erro ao consultar Fogo Cruzado: ' + e.message, points: [] };
+  }
+}
+
+/**
+ * Retorna array de UUIDs dos 4 estados-alvo. Descobre via /states na 1ª vez
+ * e persiste em ScriptProperties. Se a aba states mudar, basta apagar a property.
+ */
+function fogoCruzadoStateIds_() {
+  const props = PropertiesService.getScriptProperties();
+  const cached = props.getProperty(FC_STATE_IDS_PROP);
+  if (cached) {
+    try { return JSON.parse(cached); } catch (e) { /* refaz */ }
+  }
+  const res = fogoCruzadoAuthedFetch_(FC_API_BASE + '/states');
+  if (!res || !Array.isArray(res.data)) return [];
+  const targetSet = {};
+  FC_TARGET_STATES.forEach(function (n) { targetSet[n.toLowerCase()] = true; });
+  const ids = res.data
+    .filter(function (s) { return s && s.name && targetSet[String(s.name).toLowerCase()]; })
+    .map(function (s) { return s.id; });
+  if (ids.length > 0) {
+    props.setProperty(FC_STATE_IDS_PROP, JSON.stringify(ids));
+  }
+  return ids;
+}
+
+/**
+ * GET autenticado: pega token do cache (ou faz login), chama URL com Bearer.
+ * Se der 401, força refresh do token e tenta 1x mais.
+ */
+function fogoCruzadoAuthedFetch_(url) {
+  let token = fogoCruzadoToken_(false);
+  let res = fogoCruzadoRawFetch_(url, token);
+  if (res && res.code === 401) {
+    // Token expirou — força novo login e tenta de novo
+    token = fogoCruzadoToken_(true);
+    res = fogoCruzadoRawFetch_(url, token);
+  }
+  return res;
+}
+
+function fogoCruzadoRawFetch_(url, token) {
+  const opts = {
+    method: 'get',
+    headers: { 'Authorization': 'Bearer ' + token },
+    muteHttpExceptions: true,
+  };
+  const r = UrlFetchApp.fetch(url, opts);
+  const txt = r.getContentText();
+  try {
+    const j = JSON.parse(txt);
+    j.code = j.code || r.getResponseCode();
+    return j;
+  } catch (e) {
+    return { code: r.getResponseCode(), error: txt.slice(0, 200) };
+  }
+}
+
+/**
+ * Login no Fogo Cruzado, retorna accessToken. Cacheia por 50min.
+ * forceRefresh=true ignora o cache.
+ */
+function fogoCruzadoToken_(forceRefresh) {
+  const cache = CacheService.getScriptCache();
+  if (!forceRefresh) {
+    const t = cache.get(FC_TOKEN_CACHE_KEY);
+    if (t) return t;
+  }
+  const props = PropertiesService.getScriptProperties();
+  const email = props.getProperty('FOGO_CRUZADO_EMAIL');
+  const pass  = props.getProperty('FOGO_CRUZADO_PASSWORD');
+  if (!email || !pass) throw new Error('FOGO_CRUZADO_EMAIL/PASSWORD não configurados');
+
+  const r = UrlFetchApp.fetch(FC_API_BASE + '/auth/login', {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify({ email: email, password: pass }),
+    muteHttpExceptions: true,
+  });
+  const code = r.getResponseCode();
+  let j;
+  try { j = JSON.parse(r.getContentText()); } catch (e) {
+    throw new Error('Login Fogo Cruzado retornou resposta inválida (code ' + code + ')');
+  }
+  if (code !== 200 && code !== 201) {
+    throw new Error('Login Fogo Cruzado falhou: ' + (j && j.msg ? j.msg : 'code ' + code));
+  }
+  const token = j && j.data && j.data.accessToken;
+  if (!token) throw new Error('Login Fogo Cruzado: accessToken não veio na resposta');
+  cache.put(FC_TOKEN_CACHE_KEY, token, FC_TOKEN_CACHE_SEC);
+  return token;
 }

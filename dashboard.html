@@ -909,6 +909,53 @@
   }
   .weather-toggle-control.active .weather-updated-label { display: block; }
 
+  /* Crime/risk toggle (v5.41) — mesma cara do weather, tema vermelho */
+  .leaflet-control.crime-toggle-control {
+    background: var(--c-surface);
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    padding: 0;
+    border: 2px solid rgba(0,0,0,0.2);
+    background-clip: padding-box;
+    font-family: inherit;
+  }
+  .crime-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--c-surface);
+    border: none;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .crime-toggle-btn:hover { background: #FEF2F2; }
+  .crime-toggle-btn.active {
+    background: #FEE2E2;
+    color: #B91C1C;
+  }
+  .crime-toggle-btn .crime-icon { font-size: 14px; line-height: 1; }
+  .crime-toggle-btn.loading .crime-icon {
+    animation: weather-spin 1s linear infinite;
+    display: inline-block;
+  }
+  .crime-updated-label {
+    font-size: 10px;
+    color: #64748B;
+    padding: 3px 10px 5px;
+    border-top: 1px solid var(--c-border);
+    background: var(--c-bg);
+    border-radius: 0 0 4px 4px;
+    display: none;
+    max-width: 220px;
+  }
+  .crime-toggle-control.active .crime-updated-label { display: block; }
+
   /* TABLE */
   .table-section {
     background: var(--c-surface);
@@ -2650,6 +2697,16 @@ const I18N = {
     weatherToday: 'Chuva prevista hoje',
     weatherHist7d: 'Acumulado 7 dias',
     weatherHist30d: 'Acumulado 30 dias',
+    crimeToggle: 'Risco',
+    crimeLoading: 'Carregando ocorrências...',
+    crimeError: 'Erro ao carregar risco',
+    crimeNoData: 'Sem ocorrências no período',
+    crimeZoomHint: 'Aproxime o mapa pra ver tiroteios ({n} no total)',
+    crimeVisibleCount: '{n} tiroteios visíveis · Fogo Cruzado',
+    crimePopupShooting: 'Tiroteio',
+    crimePopupPolice: 'Ação policial',
+    crimePopupVictims: 'Vítimas',
+    crimePopupDeaths: 'mortos',
     tableTitle: 'Drivers',
     tableSub: 'Clique numa linha pra abrir detalhes',
     ctsTitle: 'CTS Goal vs Achieved',
@@ -2934,6 +2991,16 @@ const I18N = {
     weatherToday: 'Lluvia prevista hoy',
     weatherHist7d: 'Acumulado 7 días',
     weatherHist30d: 'Acumulado 30 días',
+    crimeToggle: 'Riesgo',
+    crimeLoading: 'Cargando incidencias...',
+    crimeError: 'Error al cargar riesgo',
+    crimeNoData: 'Sin incidencias en el período',
+    crimeZoomHint: 'Acerque el mapa para ver tiroteos ({n} en total)',
+    crimeVisibleCount: '{n} tiroteos visibles · Fogo Cruzado',
+    crimePopupShooting: 'Tiroteo',
+    crimePopupPolice: 'Acción policial',
+    crimePopupVictims: 'Víctimas',
+    crimePopupDeaths: 'muertos',
     tableTitle: 'Conductores',
     tableSub: 'Haga clic en una fila para ver detalles',
     ctsTitle: 'CTS Goal vs Achieved',
@@ -3218,6 +3285,16 @@ const I18N = {
     weatherToday: 'Forecasted rain today',
     weatherHist7d: '7-day accumulated',
     weatherHist30d: '30-day accumulated',
+    crimeToggle: 'Risk',
+    crimeLoading: 'Loading incidents...',
+    crimeError: 'Failed to load risk',
+    crimeNoData: 'No incidents in period',
+    crimeZoomHint: 'Zoom in to see shootings ({n} total)',
+    crimeVisibleCount: '{n} shootings visible · Fogo Cruzado',
+    crimePopupShooting: 'Shooting',
+    crimePopupPolice: 'Police action',
+    crimePopupVictims: 'Victims',
+    crimePopupDeaths: 'killed',
     tableTitle: 'Drivers',
     tableSub: 'Click a row to open details',
     ctsTitle: 'CTS Goal vs Achieved',
@@ -3563,6 +3640,7 @@ function initMap() {
   }).addTo(map);
   markerLayer = L.layerGroup().addTo(map);
   addWeatherToggleControl();
+  addCrimeToggleControl();
 }
 
 // =================================================================
@@ -3768,6 +3846,192 @@ async function fetchOpenMeteoRain(lat, lng, periodDays) {
   const data = await res.json();
   if (!data.daily || !data.daily.precipitation_sum) return 0;
   return data.daily.precipitation_sum.reduce((s, v) => s + (Number(v) || 0), 0);
+}
+
+// =================================================================
+// CRIME / RISK OVERLAY (v5.41) — Fogo Cruzado
+// =================================================================
+// Mostra tiroteios dos últimos 30 dias em RJ/PE/BA/PA como circle markers
+// vermelhos. Só visível em zoom >= 13 (street level) pra não poluir o mapa
+// LATAM zoomed-out. Dados via backend getCrimeOverlay (proxy + cache 6h).
+const CRIME_CONFIG = {
+  days: 30,
+  minZoom: 13,        // street/neighborhood level — abaixo disso esconde
+  fetchTtlSec: 6 * 3600,
+};
+
+const crime = {
+  active: false,
+  layer: null,        // L.layerGroup com os circleMarkers
+  control: null,
+  btnEl: null,
+  labelEl: null,
+  data: null,         // array de pontos cacheada na sessão
+  moveHandler: null,  // referência pra remover no toggle off
+};
+
+function addCrimeToggleControl() {
+  const Ctrl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      const wrap = L.DomUtil.create('div', 'leaflet-control crime-toggle-control');
+      wrap.innerHTML =
+        '<button type="button" class="crime-toggle-btn" id="crime-toggle-btn">' +
+          '<span class="crime-icon">🚨</span>' +
+          '<span data-i18n="crimeToggle">Risco</span>' +
+        '</button>' +
+        '<div class="crime-updated-label" id="crime-updated-label"></div>';
+      L.DomEvent.disableClickPropagation(wrap);
+      L.DomEvent.disableScrollPropagation(wrap);
+      return wrap;
+    },
+  });
+  crime.control = new Ctrl();
+  crime.control.addTo(map);
+
+  setTimeout(() => {
+    crime.btnEl = document.getElementById('crime-toggle-btn');
+    crime.labelEl = document.getElementById('crime-updated-label');
+    if (crime.btnEl) crime.btnEl.addEventListener('click', toggleCrime);
+    if (typeof applyI18n === 'function') applyI18n();
+  }, 0);
+}
+
+async function toggleCrime() {
+  if (crime.active) {
+    crime.active = false;
+    removeCrimeLayer();
+    crime.btnEl.classList.remove('active');
+    crime.control.getContainer().classList.remove('active');
+    if (crime.moveHandler) {
+      map.off('moveend', crime.moveHandler);
+      crime.moveHandler = null;
+    }
+    return;
+  }
+  crime.active = true;
+  crime.btnEl.classList.add('active');
+  crime.control.getContainer().classList.add('active');
+  await loadCrimeData();
+  applyCrimeVisibility();
+  crime.moveHandler = applyCrimeVisibility;
+  map.on('moveend', crime.moveHandler);
+}
+
+function removeCrimeLayer() {
+  if (crime.layer) {
+    map.removeLayer(crime.layer);
+    crime.layer = null;
+  }
+}
+
+async function loadCrimeData() {
+  if (crime.data) return; // session-cache: só fetcha 1x por sessão
+  const iconSpan = crime.btnEl.querySelector('.crime-icon');
+  try {
+    crime.btnEl.classList.add('loading');
+    if (iconSpan) iconSpan.textContent = '⏳';
+    crime.labelEl.textContent = t('crimeLoading') || 'Carregando…';
+    const url = CONFIG.scriptUrl + '?action=getCrimeOverlay&days=' + CRIME_CONFIG.days;
+    const res = await cachedFetch(url, CRIME_CONFIG.fetchTtlSec, {});
+    if (!res || !res.success) {
+      const errMsg = (res && res.error) ? (t('crimeError') + ' — ' + res.error) : t('crimeError');
+      crime.labelEl.textContent = errMsg;
+      console.warn('[Dashboard Crime] backend retornou erro:', res && res.error);
+      crime.data = [];
+      return;
+    }
+    crime.data = Array.isArray(res.points) ? res.points : [];
+    console.log('[Dashboard Crime] ' + crime.data.length + ' pontos carregados (Fogo Cruzado, janela ' +
+      (res.windowStart || '?') + ' → ' + (res.windowEnd || '?') + ')');
+  } catch (e) {
+    console.error('[Dashboard Crime] erro:', e);
+    crime.labelEl.textContent = t('crimeError') + ' — ' + (e.message || e);
+    crime.data = [];
+  } finally {
+    crime.btnEl.classList.remove('loading');
+    if (iconSpan) iconSpan.textContent = '🚨';
+  }
+}
+
+// Esconde abaixo do zoom threshold (mostra hint); acima, renderiza o que está
+// dentro da viewport pra não desenhar 5k markers fora da tela.
+function applyCrimeVisibility() {
+  if (!crime.active) return;
+  const z = map.getZoom();
+  if (z < CRIME_CONFIG.minZoom) {
+    removeCrimeLayer();
+    const total = (crime.data && crime.data.length) || 0;
+    crime.labelEl.textContent = (t('crimeZoomHint') || 'Aproxime o mapa').replace('{n}', total);
+    return;
+  }
+  renderCrimeLayer();
+}
+
+function renderCrimeLayer() {
+  removeCrimeLayer();
+  if (!crime.data || crime.data.length === 0) {
+    crime.labelEl.textContent = t('crimeNoData') || 'Sem ocorrências';
+    return;
+  }
+  const bounds = map.getBounds();
+  const layer = L.layerGroup();
+  let visibleCount = 0;
+  crime.data.forEach(p => {
+    if (!bounds.contains([p.lat, p.lng])) return;
+    visibleCount++;
+    const hasDeath = p.deaths > 0;
+    const fillColor = hasDeath ? '#B91C1C' : '#EF4444';
+    const radius = hasDeath ? 7 : 5;
+    const m = L.circleMarker([p.lat, p.lng], {
+      radius: radius,
+      color: '#7F1D1D',
+      weight: 1,
+      fillColor: fillColor,
+      fillOpacity: 0.78,
+    });
+    m.bindPopup(buildCrimePopup(p));
+    layer.addLayer(m);
+  });
+  layer.addTo(map);
+  crime.layer = layer;
+  crime.labelEl.textContent = (t('crimeVisibleCount') || '{n} visíveis').replace('{n}', visibleCount);
+}
+
+function buildCrimePopup(p) {
+  const i = (typeof t === 'function') ? {
+    shooting: t('crimePopupShooting') || 'Tiroteio',
+    police: t('crimePopupPolice') || 'Ação policial',
+    victims: t('crimePopupVictims') || 'Vítimas',
+    deaths: t('crimePopupDeaths') || 'mortos',
+  } : { shooting: 'Tiroteio', police: 'Ação policial', victims: 'Vítimas', deaths: 'mortos' };
+  const dateStr = formatCrimeDate(p.date);
+  const title = escapeHtml(p.reason || i.shooting);
+  const locStr = [p.city, p.state].filter(Boolean).map(escapeHtml).join(' — ');
+  const victimsLine = p.victims > 0
+    ? `<div style="margin-top:4px;">${i.victims}: <b>${p.victims}</b>${p.deaths > 0 ? ' (' + p.deaths + ' ' + i.deaths + ')' : ''}</div>`
+    : '';
+  const policeLine = p.policeAction
+    ? `<div style="margin-top:2px;color:#475569;">⚠ ${i.police}</div>`
+    : '';
+  return `
+    <div style="font-size:12px;min-width:180px;line-height:1.35;">
+      <div style="font-weight:700;color:#B91C1C;margin-bottom:4px;">${title}</div>
+      <div><b>${dateStr}</b></div>
+      ${locStr ? `<div>${locStr}</div>` : ''}
+      ${victimsLine}
+      ${policeLine}
+    </div>`;
+}
+
+function formatCrimeDate(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso).slice(0, 10);
+    const locale = currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-AR' : 'pt-BR');
+    return d.toLocaleDateString(locale);
+  } catch (e) { return String(iso).slice(0, 10); }
 }
 
 function renderMap(drivers) {
