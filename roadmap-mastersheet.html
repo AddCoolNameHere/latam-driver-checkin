@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadmap — Saindo da dependência da Mastersheet</title>
+<style>
+  :root {
+    --primary: #2C5282;
+    --primary-dark: #1A365D;
+    --accent: #4A9FE0;
+    --ink: #1F2933;
+    --muted: #6B7280;
+    --line: #E5E9F0;
+    --bg: #F1F5FA;
+    --card: #FFFFFF;
+    --bg-tint: #F6F9FC;
+    --green: #16A34A;
+    --green-bg: #ECFDF3;
+    --amber: #D97706;
+    --amber-bg: #FFF7ED;
+    --red: #DC2626;
+    --red-bg: #FEF2F2;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(26,54,93,.06), 0 6px 22px rgba(26,54,93,.07);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--primary); }
+  code {
+    background: #EEF2F7;
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-family: "SF Mono", Consolas, "Roboto Mono", monospace;
+    font-size: .86em;
+    color: var(--primary-dark);
+    word-break: break-word;
+  }
+
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 18px 80px; }
+
+  /* ---- Barra de progresso fixa ---- */
+  .scorebar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 18px;
+    margin: 0 -18px 0;
+  }
+  .scorebar-inner { max-width: 960px; margin: 0 auto; display: flex; align-items: center; gap: 16px; }
+  .score-meta { flex: 1 1 auto; min-width: 0; }
+  .score-top { display: flex; align-items: baseline; gap: 10px; }
+  .score-pct { font-size: 24px; font-weight: 800; color: var(--primary-dark); line-height: 1; }
+  .score-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .score-frac { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .track { height: 8px; background: #E3E9F2; border-radius: 99px; overflow: hidden; margin-top: 8px; }
+  .track > div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 99px; width: 0; transition: width .4s ease; }
+  .btn-ghost {
+    flex: 0 0 auto;
+    border: 1px solid var(--line); background: #fff; color: var(--muted);
+    font-size: 11.5px; font-weight: 600; padding: 7px 12px; border-radius: 8px; cursor: pointer;
+  }
+  .btn-ghost:hover { color: var(--primary); border-color: var(--accent); }
+
+  /* ---- Capa ---- */
+  .cover { padding: 38px 0 6px; }
+  .cover .eyebrow { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+  .cover h1 { font-size: 30px; line-height: 1.18; color: var(--primary-dark); margin: 10px 0 12px; font-weight: 800; letter-spacing: -.5px; }
+  .cover .sub { color: var(--muted); font-size: 15px; max-width: 680px; }
+  .cover .meta { margin-top: 14px; font-size: 11.5px; color: var(--muted); }
+
+  /* ---- Callouts ---- */
+  .callout { border-radius: var(--radius); padding: 18px 22px; margin: 22px 0; box-shadow: var(--shadow); background: var(--card); border: 1px solid var(--line); }
+  .callout .label { font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 800; margin-bottom: 8px; }
+  .callout h3 { margin: 0 0 8px; font-size: 16px; color: var(--primary-dark); }
+  .callout p { margin: 8px 0; }
+  .callout.focus { border-left: 5px solid var(--accent); }
+  .callout.focus .label { color: var(--accent); }
+  .callout.critique { border-left: 5px solid var(--amber); background: var(--amber-bg); }
+  .callout.critique .label { color: var(--amber); }
+  .callout.critique ol { margin: 8px 0 0; padding-left: 20px; }
+  .callout.critique li { margin: 10px 0; }
+
+  h2 { font-size: 19px; color: var(--primary-dark); margin: 40px 0 8px; font-weight: 800; letter-spacing: -.3px; }
+  h2 .lead-sm { display: block; font-size: 13px; color: var(--muted); font-weight: 500; margin-top: 3px; }
+
+  /* ---- Tabela ---- */
+  .tablecard { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th { background: var(--primary-dark); color: #fff; text-align: left; padding: 10px 13px; font-weight: 600; font-size: 11px; letter-spacing: .3px; }
+  td { padding: 11px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: var(--bg-tint); }
+  .tier { display: inline-block; font-weight: 700; font-size: 11px; white-space: nowrap; padding: 2px 8px; border-radius: 99px; }
+  .tier.g { color: var(--green); background: var(--green-bg); }
+  .tier.y { color: var(--amber); background: var(--amber-bg); }
+  .tier.r { color: var(--red); background: var(--red-bg); }
+
+  /* ---- Field tracker ---- */
+  .fieldrow { display: grid; grid-template-columns: 26px 1.4fr 1fr 1fr 64px; gap: 10px; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+  .fieldrow:last-child { border-bottom: 0; }
+  .fieldrow.head { background: var(--primary-dark); color: #fff; font-size: 10.5px; letter-spacing: .3px; font-weight: 700; text-transform: uppercase; }
+  .fieldrow.head > div { padding: 3px 0; }
+  .fieldrow .fname { font-weight: 600; color: var(--primary-dark); }
+  .fieldrow.done .fname { color: var(--green); }
+  .fieldrow .phasechip { font-size: 10.5px; font-weight: 700; color: var(--primary); background: #EAF2FB; border-radius: 99px; padding: 2px 8px; text-align: center; }
+  .arrow { color: var(--muted); }
+  @media (max-width: 720px) {
+    .fieldrow { grid-template-columns: 24px 1fr; }
+    .fieldrow .col-hide { display: none; }
+    .fieldrow.head { display: none; }
+  }
+
+  /* ---- Fases (accordion) ---- */
+  .phase { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); margin: 16px 0; box-shadow: var(--shadow); overflow: hidden; }
+  .phase[open] { border-color: var(--accent); }
+  .phase > summary { list-style: none; cursor: pointer; padding: 18px 22px; display: flex; align-items: center; gap: 14px; }
+  .phase > summary::-webkit-details-marker { display: none; }
+  .phase .chev { transition: transform .2s; color: var(--accent); font-size: 13px; flex: 0 0 auto; }
+  .phase[open] .chev { transform: rotate(90deg); }
+  .phase .pnum { flex: 0 0 auto; width: 34px; height: 34px; background: var(--primary); color: #fff; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; }
+  .phase.win .pnum { background: var(--green); }
+  .phase.opt .pnum { background: var(--muted); }
+  .phase .ptitle { flex: 1 1 auto; }
+  .phase .ptitle b { display: block; font-size: 15.5px; color: var(--primary-dark); }
+  .phase .ptitle span { font-size: 12px; color: var(--muted); }
+  .pillset { display: flex; gap: 6px; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; }
+  .pill { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; padding: 3px 8px; border-radius: 99px; }
+  .pill.win { color: var(--green); background: var(--green-bg); }
+  .pill.opt { color: var(--muted); background: #EEF1F5; }
+  .pcount { font-size: 12px; font-weight: 800; color: var(--muted); background: #EEF1F5; border-radius: 99px; padding: 3px 10px; min-width: 42px; text-align: center; }
+  .pcount.complete { color: var(--green); background: var(--green-bg); }
+  .phase-body { padding: 0 22px 8px; }
+  .phase-intro { color: var(--muted); font-size: 13px; margin: 0 0 6px; padding-top: 2px; }
+
+  /* ---- Task card ---- */
+  .task { border: 1px solid var(--line); border-radius: 10px; margin: 12px 0; overflow: hidden; }
+  .task-head { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; }
+  .task-head label.cbx { flex: 0 0 auto; position: relative; cursor: pointer; padding-top: 1px; }
+  input.cbx-in { width: 19px; height: 19px; accent-color: var(--green); cursor: pointer; }
+  .task-title { flex: 1 1 auto; }
+  .task-title b { font-size: 14.5px; color: var(--primary-dark); }
+  .task-title .tid { font-size: 11px; font-weight: 700; color: var(--accent); margin-right: 6px; }
+  .badges { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: #EEF1F5; color: var(--muted); }
+  .badge.impact { color: var(--green); background: var(--green-bg); }
+  .badge.risk-low { color: var(--green); background: var(--green-bg); }
+  .badge.risk-med { color: var(--amber); background: var(--amber-bg); }
+  .task-detail { padding: 0 16px 16px 47px; }
+  .task-detail h5 { margin: 14px 0 5px; font-size: 11px; letter-spacing: .6px; text-transform: uppercase; color: var(--primary); }
+  .task-detail ul { margin: 4px 0; padding-left: 18px; }
+  .task-detail li { margin: 4px 0; font-size: 13px; }
+  .where { font-size: 12.5px; background: var(--bg-tint); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+  .verify { font-size: 12.5px; color: var(--ink); background: var(--green-bg); border-radius: 8px; padding: 8px 12px; border: 1px solid #C9EFD6; }
+
+  /* ---- Prompt copiável ---- */
+  .promptbox { border: 1px dashed var(--accent); border-radius: 9px; background: #F7FBFF; margin-top: 6px; }
+  .promptbox-top { display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; border-bottom: 1px dashed #CFE4F6; }
+  .promptbox-top span { font-size: 10.5px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--accent); }
+  .btn-copy { border: 1px solid var(--accent); background: #fff; color: var(--primary); font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 7px; cursor: pointer; }
+  .btn-copy:hover { background: var(--accent); color: #fff; }
+  .btn-copy.copied { background: var(--green); border-color: var(--green); color: #fff; }
+  pre.prompt { margin: 0; padding: 11px 13px; font-family: "SF Mono", Consolas, "Roboto Mono", monospace; font-size: 11.5px; line-height: 1.55; color: var(--primary-dark); white-space: pre-wrap; word-break: break-word; }
+
+  /* ---- Escada / prioridades ---- */
+  .ladder { counter-reset: step; list-style: none; padding: 0; margin: 16px 0; }
+  .ladder li { position: relative; padding: 13px 16px 13px 52px; margin: 9px 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; font-size: 13.5px; box-shadow: var(--shadow); }
+  .ladder li::before { counter-increment: step; content: counter(step); position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; background: var(--primary); color: #fff; border-radius: 50%; text-align: center; line-height: 26px; font-weight: 800; font-size: 13px; }
+  .ladder b { color: var(--primary-dark); }
+  .ladder .roi { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-left: 6px; }
+  .roi.hi { color: var(--green); background: var(--green-bg); }
+  .roi.mid { color: var(--amber); background: var(--amber-bg); }
+  .roi.opt { color: var(--muted); background: #EEF1F5; }
+
+  .footer { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); text-align: center; }
+  strong { color: var(--primary-dark); }
+
+  @media print {
+    body { background: #fff; font-size: 12px; }
+    .scorebar, .btn-ghost, .btn-copy, .chev { display: none !important; }
+    .phase, .callout, .tablecard, .ladder li, .task { box-shadow: none; break-inside: avoid; }
+    .phase > summary { cursor: default; }
+    .promptbox { break-inside: avoid; }
+    a { color: var(--ink); text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scorebar">
+  <div class="scorebar-inner">
+    <div class="score-meta">
+      <div class="score-top">
+        <span class="score-pct" id="score-pct">0%</span>
+        <span class="score-label">independente da aba manual</span>
+      </div>
+      <div class="track"><div id="score-bar"></div></div>
+      <div class="score-frac" id="score-frac">0 campos migrados</div>
+    </div>
+    <button class="btn-ghost" id="reset" type="button">Zerar progresso</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="cover">
+    <div class="eyebrow">Aceolution · Street View LATAM</div>
+    <h1>Saindo da dependência da Mastersheet</h1>
+    <div class="sub">Plano interativo pra fazer o dashboard ler dos dados que os próprios motoristas geram — em vez de abas mantidas à mão. Marque cada tarefa conforme avança; a barra no topo é o placar real. Cada tarefa tem um prompt pronto pra me passar.</div>
+    <div class="meta">Documento vivo · revisado em 29 de maio de 2026 · backend atual <code>v5.41</code></div>
+  </div>
+
+  <div class="callout focus">
+    <div class="label">Antes de tudo — o que "parar de usar" significa de verdade</div>
+    <p>"Parar de usar a Mastersheet" tem dois sentidos, e eles custam coisas muito diferentes:</p>
+    <p>🎯 <strong>Matar as abas <span class="tier r">🔴 manuais</span></strong> (alguém digita/calcula à mão) — é onde mora 100% da dor: aba renomeada, valor desatualizado, erro de digitação. <strong>ROI altíssimo, risco baixo.</strong> É este o alvo do plano.</p>
+    <p>🧱 <strong>Matar o Sheets como banco</strong> (trocar por Firestore/Postgres) — é um projeto de verdade (auth, deploy, backup) e foge do stack "ferramenta interna sem build step". Pro tamanho de hoje, <strong>não compensa.</strong> Fica como Fase 4, opção B, só se o volume doer.</p>
+    <p>Ou seja: o Sheets continua sendo o lugar onde o app <em>escreve</em> o check-in. O que a gente elimina é o Sheets como lugar onde gente <em>digita número à mão</em>.</p>
+  </div>
+
+  <div class="callout critique">
+    <div class="label">⚠ Minha revisão crítica do plano anterior</div>
+    <p>Reli o que eu mesmo tinha sugerido e olhei o código (<code>Code udpt.gs</code>). O plano estava certo no espírito, mas tinha 4 furos — já corrigidos abaixo:</p>
+    <ol>
+      <li><strong>A Fase 1 tinha um pré-requisito escondido: completude do checkout.</strong> Derivar produção do check-in só bate com a planilha se <em>todo</em> dia de mapeamento tiver checkout preenchido. Se o motorista pula o checkout, o número derivado fica <em>menor</em> que o manual. Virou a tarefa <code>0.2</code> (auditoria) — gating da Fase 1.</li>
+      <li><strong>A higiene do cadastro tem que vir antes, não depois.</strong> Tudo agrega por <code>email</code>. Se há email duplicado ou país errado no cadastro, a agregação da Fase 1 já nasce torta. Virou a tarefa <code>0.3</code>.</li>
+      <li><strong>A Fase 3 (Ramp/Calendar via API) estava superdimensionada.</strong> É o maior esforço e depende de acesso de admin / token que talvez nem exista — pra resolver uma dor menor (cópia ocasional). Rebaixada pra <strong>opcional, gated por ROI</strong>.</li>
+      <li><strong>Faltava tornar a proveniência visível no produto.</strong> Um <code>.md</code> que ninguém abre apodrece. Melhor: um selo 🟢🟡🔴 ao lado de cada KPI no próprio dashboard. Virou parte da tarefa <code>0.1</code>.</li>
+    </ol>
+  </div>
+
+  <h2>1. Diagnóstico — o que a Mastersheet entrega hoje
+    <span class="lead-sm">Tudo que o sistema lê, separado em três tipos de fonte. Essa separação é a chave: a maior parte do 🔴 é redundante — dá pra recalcular do que a gente já coleta.</span>
+  </h2>
+  <div class="tablecard">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:20%">Tipo de fonte</th>
+          <th style="width:26%">O que é</th>
+          <th style="width:34%">Exemplos nas abas atuais</th>
+          <th style="width:20%">Confiabilidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tier g">🟢 First-party</span></td>
+          <td>Dados que o próprio app / motoristas produzem</td>
+          <td><code>Driver Daily Check-in</code> (check-in <b>e checkout</b>: TKM mapeado, KM dirigido, área, GPS), <code>PMO Notes</code>, <code>Argentina Cash</code>, <code>Assets</code>, <code>Cash</code></td>
+          <td>É a verdade na origem. Já é nosso.</td>
+        </tr>
+        <tr>
+          <td><span class="tier y">🟡 Externa autoritativa</span></td>
+          <td>Sistema de terceiro com API própria</td>
+          <td><code>Ramp DATABASE</code> (Ramp tem API), <code>VID Monthly CALENDAR</code> / <code>DRIVER CALENDAR</code> (Google Calendar), produção/QC do Street View (Google)</td>
+          <td>Confiável, mas hoje entra por cópia/export manual.</td>
+        </tr>
+        <tr>
+          <td><span class="tier r">🔴 Manual / derivada</span></td>
+          <td>Alguém digita ou calcula à mão na planilha</td>
+          <td><code>DASHBOARD (HM)</code> (KM Driven, TKM, Mapping Days, efficiency, breakeven, salário, custo), <code>CTS Goal Management</code>, <code>HR and Vendors Database</code></td>
+          <td>É o que mais quebra. O alvo do plano.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>O ponto central, confirmado no código:</strong> o <code>getDashboard_</code> lê tudo da <code>DASHBOARD (HM)</code> (manual). Mas o <code>getDriverProfile_</code> <strong>já agrega</strong> os mesmos números do <code>Driver Daily Check-in</code>. Ou seja, KM Driven / TKM / Mapping Days da aba manual são só uma soma do que os drivers já reportaram no checkout. A Fase 1 é literalmente generalizar uma função que já existe.</p>
+
+  <h2>2. Placar — campo a campo
+    <span class="lead-sm">Cada linha é um campo que o dashboard mostra hoje. Marque quando ele deixar de ler da aba manual. Isso alimenta a barra do topo.</span>
+  </h2>
+  <div class="tablecard">
+    <div class="fieldrow head">
+      <div></div><div>Campo no dashboard</div><div class="col-hide">Fonte hoje</div><div class="col-hide">Fonte alvo</div><div>Fase</div>
+    </div>
+    <!-- field rows: data-kind=field feeds the score -->
+    <div class="fieldrow">
+      <div><input type="checkbox" class="cbx-in" data-kind="field" data-id="f-km"></div>
+      <div class="fname">KM Driven</div>
+      <div class="col-hide"><span class="tier r">🔴 DASHBOARD (HM)</span></div>
+      <div class="col-hide"><span class="arrow">→</span> <span class="tier g">🟢 soma do checkout</span></div>
+      <div><span class="phasechip">F1</span></div>
+    </div>
+    <div class="fieldrow">
+      <div><input type="checkbox" class="cbx-in" data-kind="field" data-id="f-tkm"></div>
+      <div class="fname">TKM Mapped</div>
+      <div class="col-hide"><span class="tier r">🔴 DASHBOARD (HM)</span></div>
+      <div class="col-hide"><span class="arrow">→</span> <span class="tier g">🟢 soma do checkout</span></div>
+      <div><span class="phasechip">F1</span></div>
+    </div>
+    <div class="fieldrow">
+      <div><input type="checkbox" class="cbx-in" data-kind="field" data-id="f-days"></div>
+      <div class="fname">Mapping Days</div>
+      <div class="col-hide"><span class="tier r">🔴 DASHBOARD (HM)</span></div>
+      <div class="col-hide"><span class="arrow">→</span> <span class="tier g">🟢 contagem de checkouts</span></div>
+      <div><span class="phasechip">F1</span></div>
+    </div>
+    <div class="fieldrow">
+      <div><input type="checkbox" class="cbx-in" data-kind="field" data-id="f-eff"></div>
+      <div class="fname">Efficiency</div>
+      <div class="col-hide"><span class="tier r">🔴 DASHBOARD (HM)</span></div>
+      <div class="col-hide"><span class="arrow">→</span> <span class="tier g">🟢 derivado (TKM/KM)</span></div>
+      <div><span class="phasechip">F1</span></div>
+    </div>
+    <div class="fieldrow">
+      <div><input type="checkbox" class="cbx-in" data-kind="field" data-id="f-name"></div>
+      <div class="fname">Driver (nome)</div>
+      <div class="col-hide"><span class="tier r">🔴 DASHBOARD (HM)</span></div>
+      <div class="col-hide"><span class="arrow">→</span> <span class="tier g">🟢 cadastro (HR)</span></div>
+      <div><span class="phasechip">F2</span></div>
+    </div>
+    <div class="fieldrow">
+      <div><input type="checkbox" class="cbx-in" data-kind="field" data-id="f-country"></div>
+      <div class="fname">Country</div>
+      <div class="col-hide"><span class="tier r">🔴 DASHBOARD (HM)</span></div>
+      <div class="col-hide"><span class="arrow">→</span> <span class="tier g">🟢 cadastro (HR)</span></div>
+      <div><span class="phasechip">F2</span></div>
+    </div>
+    <div class="fieldrow">
+      <div><input type="checkbox" class="cbx-in" data-kind="field" data-id="f-status"></div>
+      <div class="fname">Status (ativo)</div>
+      <div class="col-hide"><span class="tier r">🔴 DASHBOARD (HM)</span></div>
+      <div class="col-hide"><span class="arrow">→</span> <span class="tier g">🟢 cadastro (HR)</span></div>
+      <div><span class="phasechip">F2</span></div>
+    </div>
+    <div class="fieldrow">
+      <div><input type="checkbox" class="cbx-in" data-kind="field" data-id="f-salary"></div>
+      <div class="fname">Salary</div>
+      <div class="col-hide"><span class="tier r">🔴 DASHBOARD (HM)</span></div>
+      <div class="col-hide"><span class="arrow">→</span> <span class="tier y">🟡 HR + Payroll Adjustments</span></div>
+      <div><span class="phasechip">F2</span></div>
+    </div>
+    <div class="fieldrow">
+      <div><input type="checkbox" class="cbx-in" data-kind="field" data-id="f-cost"></div>
+      <div class="fname">Cost</div>
+      <div class="col-hide"><span class="tier r">🔴 DASHBOARD (HM)</span></div>
+      <div class="col-hide"><span class="arrow">→</span> <span class="tier y">🟡 Ramp + Payroll</span></div>
+      <div><span class="phasechip">F3</span></div>
+    </div>
+    <div class="fieldrow">
+      <div><input type="checkbox" class="cbx-in" data-kind="field" data-id="f-be"></div>
+      <div class="fname">Breakeven</div>
+      <div class="col-hide"><span class="tier r">🔴 DASHBOARD (HM)</span></div>
+      <div class="col-hide"><span class="arrow">→</span> <span class="tier g">🟢 derivado (produção vs custo)</span></div>
+      <div><span class="phasechip">F3</span></div>
+    </div>
+  </div>
+
+  <h2>3. As fases — com breakdown de cada tarefa
+    <span class="lead-sm">Clique pra abrir. Cada tarefa tem: o que fazer, onde mexer no código, o prompt pra me passar, e como validar. Cada fase deixa o sistema inteiro funcionando — nada de big bang.</span>
+  </h2>
+
+  <!-- ============ FASE 0 ============ -->
+  <details class="phase" open>
+    <summary>
+      <span class="chev">▶</span>
+      <span class="pnum">0</span>
+      <span class="ptitle"><b>Medir e destravar</b><span>1–2 dias · risco zero · pré-requisito de tudo</span></span>
+      <span class="pillset"><span class="pcount" data-phase-tasks="0">0/3</span></span>
+    </summary>
+    <div class="phase-body">
+      <p class="phase-intro">Não dá pra reduzir o que não se mede — nem confiar no número derivado sem antes saber se o dado-base está completo e limpo. Esta fase é só diagnóstico, mas é o que destrava a Fase 1 com segurança.</p>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="0" data-id="t-0-1"></label>
+          <div class="task-title">
+            <span class="tid">0.1</span><b>Mapa de proveniência + selo de fonte no dashboard</b>
+            <div class="badges"><span class="badge risk-low">risco baixo</span><span class="badge">~½ dia</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <h5>O que fazer</h5>
+          <ul>
+            <li>Criar <code>DATA_SOURCES.md</code> mapeando cada campo que o <code>getDashboard_</code> retorna → aba/coluna de origem → tier 🟢🟡🔴.</li>
+            <li>No <code>dashboard.html</code>, pôr um selinho 🟢🟡🔴 ao lado de cada KPI, lido de um objeto central — assim a dependência fica visível na tela, não num arquivo esquecido.</li>
+          </ul>
+          <h5>Onde mexer</h5>
+          <div class="where">Novo: <code>DATA_SOURCES.md</code> · <code>dashboard.html</code> (render dos KPIs)</div>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p1">Copiar</button></div>
+            <pre class="prompt" id="p1">Cria um DATA_SOURCES.md mapeando cada campo que o getDashboard_ retorna (no Code udpt.gs) pra sua aba/coluna de origem e o tier 🟢🟡🔴. Depois adiciona no dashboard.html um selo de fonte (🟢/🟡/🔴) ao lado de cada KPI, lendo de um objeto central FIELD_SOURCES, pra deixar a dependência da aba manual visível na própria tela.</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Abrir o dashboard e ver o selo em cada KPI. Hoje vai estar quase tudo 🔴 — esse é o ponto de partida do placar.</div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="0" data-id="t-0-2"></label>
+          <div class="task-title">
+            <span class="tid">0.2</span><b>Auditoria de completude do checkout</b>
+            <div class="badges"><span class="badge risk-low">risco baixo</span><span class="badge impact">destrava a Fase 1</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <p style="font-size:13px;margin:2px 0 0">Pré-requisito crítico: o número derivado só bate com a planilha se todo dia de mapeamento tiver checkout preenchido. Esta auditoria diz se dá pra confiar.</p>
+          <h5>O que fazer</h5>
+          <ul>
+            <li>Novo endpoint <code>?action=checkoutAudit</code>: por motorista e por mês, compara dias esperados vs dias com checkout preenchido (<code>tkmMapped</code>/<code>kmDriven</code> não vazios) e retorna o % de completude.</li>
+            <li>Onde a completude for baixa, decidir: cobrar checkout dos drivers, ou backfill pontual.</li>
+          </ul>
+          <h5>Onde mexer</h5>
+          <div class="where"><code>Code udpt.gs</code> → nova <code>getCheckoutAudit_</code> + rota no <code>doGet</code> · lê <code>CONFIG.sheets.checkin</code></div>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p2">Copiar</button></div>
+            <pre class="prompt" id="p2">No Code udpt.gs cria a ação ?action=checkoutAudit (getCheckoutAudit_) que lê a aba de check-in (CONFIG.sheets.checkin), e por motorista e por mês compara dias com checkout preenchido (tkmMapped/kmDriven não vazios) vs dias úteis esperados, retornando o % de completude. Quero saber se dá pra confiar nos números derivados antes de migrar a Fase 1. Bumpa a versão e me lembra de reimplantar.</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Bater <code>?action=checkoutAudit</code> e olhar se a completude geral está alta (ex.: &gt;90%). Se algum mês/driver estiver baixo, resolver antes de virar a chave.</div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="0" data-id="t-0-3"></label>
+          <div class="task-title">
+            <span class="tid">0.3</span><b>Higiene do cadastro de motorista</b>
+            <div class="badges"><span class="badge risk-low">risco baixo</span><span class="badge impact">destrava F1 e F2</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <p style="font-size:13px;margin:2px 0 0">Tudo agrega por <code>email</code>. Se o cadastro tem email duplicado ou país inconsistente, a soma da Fase 1 já nasce errada. Limpar antes.</p>
+          <h5>O que fazer</h5>
+          <ul>
+            <li>Endpoint <code>?action=registryAudit</code> que aponta: emails duplicados, motoristas sem email, país/nome inconsistentes entre <code>HR and Vendors Database</code> e <code>DASHBOARD (HM)</code>, e nomes que aparecem no check-in mas não no HR.</li>
+            <li>Corrigir as divergências na planilha (manual, uma vez) pra o cadastro virar confiável.</li>
+          </ul>
+          <h5>Onde mexer</h5>
+          <div class="where"><code>Code udpt.gs</code> → nova <code>getRegistryAudit_</code> · cruza <code>CONFIG.sheets.hrVendors</code> × <code>checkin</code> × <code>dashboardHM</code></div>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p3">Copiar</button></div>
+            <pre class="prompt" id="p3">No Code udpt.gs cria ?action=registryAudit (getRegistryAudit_) que lê a HR and Vendors Database e aponta: emails duplicados, motoristas sem email, país/nome inconsistentes entre HR e DASHBOARD (HM), e nomes presentes no check-in mas ausentes no HR. Retorna a lista de divergências pra eu limpar. Bumpa a versão.</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Rodar <code>?action=registryAudit</code>, zerar as divergências na planilha, rodar de novo e ver a lista vazia.</div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ FASE 1 ============ -->
+  <details class="phase win">
+    <summary>
+      <span class="chev">▶</span>
+      <span class="pnum">1</span>
+      <span class="ptitle"><b>Produção derivada do checkout</b><span>menor risco, maior impacto · é por aqui que se começa</span></span>
+      <span class="pillset"><span class="pill win">maior ganho</span><span class="pcount" data-phase-tasks="1">0/3</span></span>
+    </summary>
+    <div class="phase-body">
+      <p class="phase-intro">A <code>DASHBOARD (HM)</code> é a aba 🔴 mais editada. Este é o golpe que mais reduz dependência — e o código de agregação já existe no <code>getDriverProfile_</code>.</p>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="1" data-id="t-1-1"></label>
+          <div class="task-title">
+            <span class="tid">1.1</span><b>Endpoint <code>getProductionFromCheckins_</code></b>
+            <div class="badges"><span class="badge risk-low">risco baixo</span><span class="badge impact">alto impacto</span><span class="badge">~1 dia</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <h5>O que fazer</h5>
+          <ul>
+            <li>Agregar o check-in por motorista no período: soma de TKM e KM, contagem de dias com checkout (= Mapping Days), efficiency (TKM/KM).</li>
+            <li>Reaproveitar a lógica que já existe em <code>getDriverProfile_</code> — só generalizar de 1 driver pra todos.</li>
+          </ul>
+          <h5>Onde mexer</h5>
+          <div class="where"><code>Code udpt.gs</code> → nova <code>getProductionFromCheckins_(startDate, endDate)</code> · usa <code>CONFIG.checkinCols</code></div>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p4">Copiar</button></div>
+            <pre class="prompt" id="p4">No Code udpt.gs cria getProductionFromCheckins_(startDate, endDate): lê a aba de check-in (CONFIG.sheets.checkin / CONFIG.checkinCols), filtra os checkouts do período e agrega por email — soma de tkmMapped, soma de kmDriven, contagem de dias distintos com checkout (Mapping Days) e efficiency = tkm/km. Reaproveita a agregação que já existe em getDriverProfile_. Ainda não muda o getDashboard_; só cria a função.</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Chamar a função num teste e conferir que os totais batem com a aba pra um motorista conhecido.</div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="1" data-id="t-1-2"></label>
+          <div class="task-title">
+            <span class="tid">1.2</span><b>Validação paralela: derivado vs planilha</b>
+            <div class="badges"><span class="badge risk-low">risco baixo</span><span class="badge">1–2 semanas rodando</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <p style="font-size:13px;margin:2px 0 0">O passo que de-risca tudo: por 1–2 semanas, mostrar os dois lado a lado e só desligar a planilha onde bater.</p>
+          <h5>O que fazer</h5>
+          <ul>
+            <li>Ação <code>?action=productionCheck</code> que retorna, por motorista, o derivado e o da <code>DASHBOARD (HM)</code> + a diferença %.</li>
+            <li>Uma viewzinha de conferência no dashboard (ou aba escondida) destacando divergências.</li>
+          </ul>
+          <h5>Onde mexer</h5>
+          <div class="where"><code>Code udpt.gs</code> → <code>productionCheck</code> (combina <code>getProductionFromCheckins_</code> + <code>getDashboard_</code>) · <code>dashboard.html</code> (view de conferência)</div>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p5">Copiar</button></div>
+            <pre class="prompt" id="p5">No Code udpt.gs cria ?action=productionCheck que retorna por motorista o valor derivado (getProductionFromCheckins_) vs o da DASHBOARD (HM), com a diferença em %. Depois adiciona uma view de conferência no dashboard.html mostrando os dois lado a lado e destacando quem diverge acima de X%. Bumpa a versão.</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Deixar rodando ~1–2 semanas. Onde derivado ≈ planilha de forma estável, o campo está pronto pra virar a chave (1.3).</div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="1" data-id="t-1-3"></label>
+          <div class="task-title">
+            <span class="tid">1.3</span><b>Virar a chave: dashboard lê o derivado</b>
+            <div class="badges"><span class="badge risk-med">risco médio</span><span class="badge impact">migra 4 campos</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <h5>O que fazer</h5>
+          <ul>
+            <li><code>getDashboard_</code> passa a usar <code>getProductionFromCheckins_</code> pra KM / TKM / Mapping Days / Efficiency.</li>
+            <li>A <code>DASHBOARD (HM)</code> vira fallback/conferência, não fonte. Selo dos 4 campos vira 🟢.</li>
+          </ul>
+          <h5>Onde mexer</h5>
+          <div class="where"><code>Code udpt.gs</code> → <code>getDashboard_</code> (trocar a fonte dos 4 campos)</div>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p6">Copiar</button></div>
+            <pre class="prompt" id="p6">Agora que a validação paralela bateu, troca o getDashboard_ pra ler KM Driven, TKM, Mapping Days e Efficiency do getProductionFromCheckins_ em vez da DASHBOARD (HM). Deixa a HM como fallback se o derivado vier vazio. Atualiza os selos desses 4 campos pra 🟢. Bumpa a versão e me lembra de reimplantar (Nova versão).</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Conferir o dashboard pós-deploy (Ctrl+Shift+R). Marcar no placar: KM Driven, TKM, Mapping Days, Efficiency → <strong>+4 campos 🟢</strong>.</div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ FASE 2 ============ -->
+  <details class="phase">
+    <summary>
+      <span class="chev">▶</span>
+      <span class="pnum">2</span>
+      <span class="ptitle"><b>Cadastro mestre de motorista</b><span>isolar e blindar o único 🔴 que não dá pra derivar</span></span>
+      <span class="pillset"><span class="pcount" data-phase-tasks="2">0/3</span></span>
+    </summary>
+    <div class="phase-body">
+      <p class="phase-intro">Quem é motorista, email, país, casa e status são cadastro de verdade — não dá pra derivar. A jogada não é eliminar, é centralizar em uma fonte e referenciar por <code>email</code> em todo lugar.</p>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="2" data-id="t-2-1"></label>
+          <div class="task-title">
+            <span class="tid">2.1</span><b>Endpoint <code>getDriverRegistry_</code> cacheado</b>
+            <div class="badges"><span class="badge risk-low">risco baixo</span><span class="badge">~½ dia</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <h5>O que fazer</h5>
+          <ul>
+            <li>Eleger a <code>HR and Vendors Database</code> como cadastro canônico.</li>
+            <li><code>getDriverRegistry_()</code> retorna nome, email, país, casa, status — cacheado (<code>cachedFetch</code> no front, cache de Apps Script no back).</li>
+          </ul>
+          <h5>Onde mexer</h5>
+          <div class="where"><code>Code udpt.gs</code> → <code>getDriverRegistry_</code> (fonte: <code>CONFIG.sheets.hrVendors</code>) · <code>common.js</code> (<code>cachedFetch</code>)</div>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p7">Copiar</button></div>
+            <pre class="prompt" id="p7">No Code udpt.gs cria ?action=driverRegistry (getDriverRegistry_) que lê a HR and Vendors Database e retorna por motorista: nome, email (chave), país, casa e status. Adiciona cache (CacheService no back). No front, expõe via cachedFetch do common.js com um TTL razoável. Bumpa a versão.</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Bater <code>?action=driverRegistry</code> e conferir que a lista de motoristas/emails está completa e sem duplicado (já limpo na 0.3).</div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="2" data-id="t-2-2"></label>
+          <div class="task-title">
+            <span class="tid">2.2</span><b>Tudo referencia por <code>email</code> (nome/país/status fora da HM)</b>
+            <div class="badges"><span class="badge risk-med">risco médio</span><span class="badge impact">migra 3 campos</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <h5>O que fazer</h5>
+          <ul>
+            <li><code>getDashboard_</code> pega nome, país e status do <code>getDriverRegistry_</code>, fazendo join por email — não mais da <code>DASHBOARD (HM)</code>.</li>
+            <li>Nada de duplicar nome/país em outras abas.</li>
+          </ul>
+          <h5>Onde mexer</h5>
+          <div class="where"><code>Code udpt.gs</code> → <code>getDashboard_</code> (join por email com o registry)</div>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p8">Copiar</button></div>
+            <pre class="prompt" id="p8">No getDashboard_, troca a origem de nome, país e status: em vez da DASHBOARD (HM), faz join por email com o getDriverRegistry_. Garante que driver sem registry ainda apareça (fallback). Atualiza os selos desses 3 campos pra 🟢. Bumpa a versão e me lembra de reimplantar.</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Conferir nomes/países no dashboard. Marcar no placar: Driver, Country, Status → <strong>+3 campos 🟢</strong>.</div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="2" data-id="t-2-3"></label>
+          <div class="task-title">
+            <span class="tid">2.3</span><b>Salário do HR + Payroll Adjustments (não da HM)</b>
+            <div class="badges"><span class="badge risk-med">risco médio</span><span class="badge impact">migra Salary</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <p style="font-size:13px;margin:2px 0 0">A aba <code>Payroll Adjustments</code> já existe e já alimenta o timesheet (v5.40). Reaproveitar em vez de ler salário da HM.</p>
+          <h5>O que fazer</h5>
+          <ul>
+            <li>Salary no dashboard = base do registry/HR + ajustes do <code>Payroll Adjustments</code> — mesma fonte que o timesheet já usa.</li>
+          </ul>
+          <h5>Onde mexer</h5>
+          <div class="where"><code>Code udpt.gs</code> → <code>getDashboard_</code> · reaproveita a lógica do <code>getTimesheet_</code> / <code>CONFIG.sheets.payrollAdj</code></div>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p9">Copiar</button></div>
+            <pre class="prompt" id="p9">No getDashboard_, troca a origem do Salary: em vez da DASHBOARD (HM), usa a base do registry/HR + os ajustes da aba Payroll Adjustments, reaproveitando a lógica que o getTimesheet_ já usa (v5.40). Atualiza o selo do Salary. Bumpa a versão.</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Comparar Salary do dashboard com o do timesheet pra alguns motoristas — têm que bater. Marcar Salary 🟢.</div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ FASE 3 ============ -->
+  <details class="phase opt">
+    <summary>
+      <span class="chev">▶</span>
+      <span class="pnum">3</span>
+      <span class="ptitle"><b>Fontes externas via API</b><span>opcional · só se o ROI fechar e o acesso existir</span></span>
+      <span class="pillset"><span class="pill opt">gated por ROI</span><span class="pcount" data-phase-tasks="3">0/3</span></span>
+    </summary>
+    <div class="phase-body">
+      <p class="phase-intro"><strong>Atenção honesta:</strong> esta é a fase de maior esforço e menor garantia. Depende de acesso de admin / token que talvez não exista, e resolve uma dor menor (cópia ocasional entre sistemas). Faça a 3.0 primeiro e só siga se compensar.</p>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="3" data-id="t-3-0"></label>
+          <div class="task-title">
+            <span class="tid">3.0</span><b>Checar acesso e decidir se vale</b>
+            <div class="badges"><span class="badge risk-low">risco zero</span><span class="badge">gate de decisão</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <h5>O que fazer</h5>
+          <ul>
+            <li>Confirmar se temos credencial de API da Ramp (precisa de admin / tier de negócio) e se o Calendar é acessível pela conta de serviço.</li>
+            <li>Estimar: com que frequência essas abas são copiadas hoje? Se for raro, talvez não valha — pular pra Fase 4.</li>
+          </ul>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p10">Copiar</button></div>
+            <pre class="prompt" id="p10">Me ajuda a avaliar a Fase 3: lista o que a Ramp API exige (tipo de token, escopo, tier) e o que a Google Calendar API exige pra a conta de serviço deste Apps Script ler VID/Driver Calendar. Com base nisso, me dá uma recomendação de seguir ou pular, considerando que a cópia manual hoje é pouco frequente.</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Decisão registrada: seguir (3.1/3.2) ou pular pra Fase 4. Marcar só esta como feita se a decisão for "pular".</div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="3" data-id="t-3-1"></label>
+          <div class="task-title">
+            <span class="tid">3.1</span><b>Ramp via API → mata <code>Ramp DATABASE</code> + alimenta Cost</b>
+            <div class="badges"><span class="badge risk-med">risco médio</span><span class="badge">depende de token</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <h5>O que fazer</h5>
+          <ul>
+            <li>Buscar transações direto na Ramp API (token no <code>PropertiesService</code>, nunca hardcoded), cacheado.</li>
+            <li>Cost do dashboard passa a vir de Ramp + Payroll — não da HM. Aba <code>Ramp DATABASE</code> deixa de ser copiada.</li>
+          </ul>
+          <h5>Onde mexer</h5>
+          <div class="where"><code>Code udpt.gs</code> → <code>getRamp_</code> (trocar fonte) · token em <code>PropertiesService</code> · <code>ramp.html</code></div>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p11">Copiar</button></div>
+            <pre class="prompt" id="p11">No Code udpt.gs, troca o getRamp_ pra buscar transações direto na Ramp API (token lido do PropertiesService, nunca hardcoded), com cache. Depois faz o Cost do getDashboard_ vir de Ramp + Payroll em vez da DASHBOARD (HM). Atualiza os selos. Bumpa a versão e me lembra de reimplantar.</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Comparar transações da API com a aba antiga por um período. Marcar Cost 🟢 quando o dashboard usar a nova fonte.</div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="3" data-id="t-3-2"></label>
+          <div class="task-title">
+            <span class="tid">3.2</span><b>Calendar via API (VID / Driver) + Breakeven derivado</b>
+            <div class="badges"><span class="badge risk-med">risco médio</span><span class="badge">migra Breakeven</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <h5>O que fazer</h5>
+          <ul>
+            <li>Escala/dias vêm do Google Calendar real (CalendarApp/Calendar API), não da cópia mensal.</li>
+            <li>Com produção (F1) e custo (3.1) já derivados, o Breakeven vira cálculo, não digitação.</li>
+          </ul>
+          <h5>Onde mexer</h5>
+          <div class="where"><code>Code udpt.gs</code> → <code>getDriverCalendar_</code> (fonte: Calendar) · <code>getDashboard_</code> (breakeven = produção vs custo)</div>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p12">Copiar</button></div>
+            <pre class="prompt" id="p12">No Code udpt.gs, faz o getDriverCalendar_ ler do Google Calendar real (VID/Driver) em vez da cópia mensal nas abas. Depois calcula o Breakeven no getDashboard_ a partir da produção derivada (F1) e do custo (Ramp+Payroll), em vez de ler da DASHBOARD (HM). Atualiza os selos. Bumpa a versão.</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Conferir eventos vs calendário e breakeven vs cálculo manual. Marcar Breakeven 🟢. Aqui a <code>DASHBOARD (HM)</code> não é mais fonte de nada.</div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ FASE 4 ============ -->
+  <details class="phase opt">
+    <summary>
+      <span class="chev">▶</span>
+      <span class="pnum">4</span>
+      <span class="ptitle"><b>Decisão de arquitetura</b><span>uma bifurcação a escolher — só quando o resto estiver pronto</span></span>
+      <span class="pillset"><span class="pcount" data-phase-tasks="4">0/1</span></span>
+    </summary>
+    <div class="phase-body">
+      <p class="phase-intro">Com os 🔴 mortos, sobra a pergunta: o Sheets continua sendo o banco? Minha recomendação clara está abaixo.</p>
+
+      <div class="task">
+        <div class="task-head">
+          <label class="cbx"><input type="checkbox" class="cbx-in" data-kind="task" data-phase="4" data-id="t-4-1"></label>
+          <div class="task-title">
+            <span class="tid">4.1</span><b>Escolher: A (Sheets saneado) vs B (banco real)</b>
+            <div class="badges"><span class="badge">decisão</span></div>
+          </div>
+        </div>
+        <div class="task-detail">
+          <div class="where" style="background:var(--green-bg);border-color:#C9EFD6">
+            <strong>Caminho A — Sheets saneado (recomendado).</strong> Mantém Apps Script + Sheets, mas as abas viram tabelas limpas só de escrita do app (check-in, registry, notes), sem nada manual/derivado. Barato, zero migração, combina com "ferramenta interna sem build step". <strong>Resolve ~90% e é o que eu perseguiria primeiro.</strong> Limite: performance quando o check-in crescer muito.
+          </div>
+          <div class="where" style="margin-top:8px">
+            <strong>Caminho B — Store real por baixo.</strong> Move o first-party pra um banco leve (Firestore, Supabase/Postgres); o Sheets vira view exportada. Mais robusto e rápido, mas é projeto de verdade (auth, deploy, backup) e foge do stack atual. Só quando volume/latência do check-in começar a doer.
+          </div>
+          <h5>Como me pedir</h5>
+          <div class="promptbox">
+            <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" data-copy="p13">Copiar</button></div>
+            <pre class="prompt" id="p13">Com os campos manuais já migrados, me ajuda a decidir a Fase 4. Mede o tamanho atual da aba de check-in e a latência das chamadas do dashboard, e me diz se o Caminho A (Sheets saneado) ainda aguenta ou se já vale prototipar o Caminho B (banco real). Recomenda um dos dois com base nos números.</pre>
+          </div>
+          <h5>Como validar</h5>
+          <div class="verify">Decisão registrada. Pro tamanho de hoje, esperar A — marcar quando a escolha estiver feita e documentada.</div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <h2>4. A escada — em ordem de execução, com ROI honesto
+    <span class="lead-sm">Nem toda fase vale o mesmo. Esta é a ordem que eu seguiria.</span>
+  </h2>
+  <ol class="ladder">
+    <li><b>Fase 0</b> — medir e destravar: proveniência + completude do checkout + higiene do cadastro <span class="roi mid">pré-requisito</span></li>
+    <li><b>Fase 1</b> — produção (KM / TKM / dias / efic) do checkout, não da <code>DASHBOARD (HM)</code> <span class="roi hi">ROI alto</span></li>
+    <li><b>Fase 2</b> — cadastro único por <code>email</code> (nome, país, status, salário) <span class="roi hi">ROI alto</span></li>
+    <li><b>Fase 3</b> — Ramp / Calendar via API + custo/breakeven derivados <span class="roi opt">opcional · gated</span></li>
+    <li><b>Fase 4</b> — decidir Sheets-saneado (A) vs banco real (B) <span class="roi opt">só no fim</span></li>
+  </ol>
+  <p>Note a assimetria: <strong>Fases 1 e 2 já matam 7 dos 10 campos manuais</strong> com risco baixo e código que em boa parte já existe. As Fases 3 e 4 são opcionais e só fazem sentido depois.</p>
+
+  <div class="callout focus">
+    <div class="label">Como eu te ajudo, concretamente</div>
+    <p>Quase tudo aqui é Apps Script + edição de HTML — exatamente o que eu faço bem. Em cada tarefa tem um <strong>botão "Copiar"</strong> com o prompt pronto: você cola pra mim, eu escrevo a função / endpoint / view, valido com <code>node --check</code>, bumpo a versão e te lembro de reimplantar (Nova versão). Você revisa, testa no ambiente e marca a tarefa. O placar no topo é o seu termômetro de "quanto a Mastersheet ainda importa".</p>
+  </div>
+
+  <div class="footer">
+    Aceolution do Brasil — Street View LATAM · Roadmap interno de arquitetura de dados · progresso salvo neste navegador
+  </div>
+
+</div>
+
+<script>
+  var STORE_KEY = 'roadmap-ms-progress-v2';
+
+  function loadState() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function saveState(s) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) {}
+  }
+
+  var state = loadState();
+
+  function refresh() {
+    // Placar principal = campos (data-kind="field")
+    var fields = Array.prototype.slice.call(document.querySelectorAll('input[data-kind="field"]'));
+    var done = fields.filter(function (c) { return c.checked; }).length;
+    var pct = fields.length ? Math.round(done / fields.length * 100) : 0;
+    document.getElementById('score-pct').textContent = pct + '%';
+    document.getElementById('score-bar').style.width = pct + '%';
+    document.getElementById('score-frac').textContent = done + '/' + fields.length + ' campos fora da aba manual';
+
+    fields.forEach(function (c) {
+      var row = c.closest('.fieldrow');
+      if (row) row.classList.toggle('done', c.checked);
+    });
+
+    // Contador por fase
+    var badges = Array.prototype.slice.call(document.querySelectorAll('[data-phase-tasks]'));
+    badges.forEach(function (badge) {
+      var ph = badge.getAttribute('data-phase-tasks');
+      var tasks = Array.prototype.slice.call(
+        document.querySelectorAll('input[data-kind="task"][data-phase="' + ph + '"]')
+      );
+      var d = tasks.filter(function (c) { return c.checked; }).length;
+      badge.textContent = d + '/' + tasks.length;
+      badge.classList.toggle('complete', tasks.length > 0 && d === tasks.length);
+    });
+  }
+
+  function initChecks() {
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('input[type="checkbox"][data-id]'));
+    boxes.forEach(function (cb) {
+      cb.checked = !!state[cb.getAttribute('data-id')];
+      cb.addEventListener('change', function () {
+        state[cb.getAttribute('data-id')] = cb.checked;
+        saveState(state);
+        refresh();
+      });
+    });
+  }
+
+  function initCopy() {
+    var btns = Array.prototype.slice.call(document.querySelectorAll('[data-copy]'));
+    btns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var el = document.getElementById(btn.getAttribute('data-copy'));
+        if (!el) return;
+        var txt = el.textContent.trim();
+        var done = function () {
+          var old = btn.textContent;
+          btn.textContent = '✓ copiado';
+          btn.classList.add('copied');
+          setTimeout(function () { btn.textContent = old; btn.classList.remove('copied'); }, 1600);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(txt).then(done, function () {});
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = txt; document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); done(); } catch (e) {}
+          document.body.removeChild(ta);
+        }
+      });
+    });
+  }
+
+  function initReset() {
+    var r = document.getElementById('reset');
+    if (!r) return;
+    r.addEventListener('click', function () {
+      if (!confirm('Zerar todo o progresso marcado?')) return;
+      state = {};
+      saveState(state);
+      Array.prototype.slice.call(document.querySelectorAll('input[type="checkbox"][data-id]'))
+        .forEach(function (c) { c.checked = false; });
+      refresh();
+    });
+  }
+
+  window.addEventListener('beforeprint', function () {
+    Array.prototype.slice.call(document.querySelectorAll('details.phase'))
+      .forEach(function (d) { d.open = true; });
+  });
+
+  initChecks();
+  initCopy();
+  initReset();
+  refresh();
+</script>
+</body>
+</html>
