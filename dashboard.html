@@ -4193,7 +4193,7 @@ function renderMap(drivers) {
     // Ícone personalizado de base — círculo colorido com emoji do tipo
     const baseIcon = L.divIcon({
       className: 'driver-marker',
-      html: `<div style="width:22px;height:22px;background:${baseColor};border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;">${baseTypeIcon}</div>`,
+      html: `<div style="width:22px;height:22px;background:${baseColor};border:2px solid var(--c-surface);border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;">${baseTypeIcon}</div>`,
       iconSize: [22, 22],
       iconAnchor: [11, 11],
     });
@@ -8194,7 +8194,7 @@ function renderPanelMap(d) {
   if (hasBase) {
     const baseIcon = L.divIcon({
       className: 'driver-marker',
-      html: '<div style="width:16px;height:16px;background:#2C5282;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
+      html: '<div style="width:16px;height:16px;background:#2C5282;border:3px solid var(--c-surface);border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
       iconSize: [16, 16],
       iconAnchor: [8, 8],
     });
