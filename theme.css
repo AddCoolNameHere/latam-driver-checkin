@@ -284,6 +284,13 @@
   color: var(--c-text-dim);
 }
 
+/* Logo da Aceolution (logo2.png é colorido): no dark vira branco pra contrastar
+   com a topbar/card escuros. Cobre topbar (.ac-brand-logo) e login (.ac-login-logo). */
+[data-theme="dark"] .ac-brand-logo,
+[data-theme="dark"] .ac-login-logo {
+  filter: brightness(0) invert(1);
+}
+
 /* Tiles do Leaflet (mapa): inverte luminosidade pra encaixar no tema escuro.
    Não muda muito a cor das ruas/labels, mas escurece o fundo claro do OSM. */
 [data-theme="dark"] .leaflet-tile-pane {
