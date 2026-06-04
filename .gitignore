@@ -5,3 +5,7 @@
 
 # Cache temporário do Claude Code
 .claude/
+
+# Scaffolding de build do "dashboard teste.html" (peças extraídas do bundle
+# do Claude Design + backup do export original). O HTML final é self-contained.
+.tmp_extract/

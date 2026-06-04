@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google" content="notranslate">
+  <title>Street View LATAM · Dashboard (teste)</title>
+
+  <!-- FOUC: aplica o tema salvo (mesmo localStorage do portal) antes de renderizar -->
+  <script>(function(){try{if(localStorage.getItem('AC_THEME')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+
+  <!-- Fonte -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Leaflet (mapa) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <!-- Auth + tema do portal (login gate + tokens dark compartilhados + login/topbar CSS) -->
+  <script src="auth.js?v=20260518b"></script>
+  <link rel="stylesheet" href="theme.css?v=20260519a">
+  <script src="common.js?v=20260519a"></script>
+
+  <style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F4F6FA; --surface: #FFFFFF;
+    --ink: #0E1726; --ink-2: #56627A; --muted: #97A1B2;
+    --line: #E7EAF1; --line-2: #F2F4F9;
+    --primary: #2563EB; --primary-700: #1D4ED8; --primary-soft: #EEF3FF;
+    --nav-bg: #0E1830; --nav-line: rgba(255,255,255,.08); --nav-txt: #9AA7BE; --nav-txt-dim: #6C7894;
+    --green: #16A34A; --green-bg: #E7F7EE;
+    --amber: #C77A06; --amber-bg: #FDF1DF;
+    --red: #DC2626;   --red-bg: #FCEAEA;
+    --indigo: #4F46E5; --indigo-bg: #ECEDFD;
+    --r-card: 16px; --r-ctrl: 10px;
+    --sh-sm: 0 1px 2px rgba(14,23,38,.05);
+    --sh: 0 1px 2px rgba(14,23,38,.04), 0 10px 24px -16px rgba(14,23,38,.20);
+    --sh-lg: 0 20px 50px -22px rgba(14,23,38,.34);
+    --sh-pop: 0 14px 40px -10px rgba(14,23,38,.28);
+  }
+  html, body { height: 100%; }
+  body { font-family: "Plus Jakarta Sans", system-ui, sans-serif; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  #root { min-height: 100%; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, textarea { font-family: inherit; }
+  ::selection { background: #C7D7FF; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------------- shell ---------------- */
+  .app { display: flex; min-height: 100vh; }
+
+  /* ---------------- sidebar (navy) ---------------- */
+  .sidebar { width: 250px; flex-shrink: 0; background: var(--nav-bg); color: var(--nav-txt); position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; padding: 20px 14px; }
+  .brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 20px; margin-bottom: 6px; border-bottom: 1px solid var(--nav-line); }
+  .brand-mark { width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0; background: linear-gradient(140deg, #2563EB, #5B8DEF); color: #fff; font-weight: 800; font-size: 15px; display: grid; place-items: center; box-shadow: 0 8px 18px -6px rgba(37,99,235,.7); }
+  .brand-name { font-weight: 800; font-size: 15.5px; color: #fff; letter-spacing: -.2px; line-height: 1.1; }
+  .brand-region { font-size: 10.5px; font-weight: 700; color: #6F8BD6; letter-spacing: 1.6px; margin-top: 1px; }
+  .nav { flex: 1; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; padding-top: 8px; }
+  .nav-group { margin-bottom: 12px; }
+  .nav-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--nav-txt-dim); padding: 4px 12px 7px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border-radius: var(--r-ctrl); font-size: 13.5px; font-weight: 600; color: var(--nav-txt); transition: background .14s, color .14s; }
+  .nav-ico { color: var(--nav-txt-dim); display: inline-flex; transition: color .14s; }
+  .nav-item:hover { background: rgba(255,255,255,.05); color: #E7ECF5; }
+  .nav-item:hover .nav-ico { color: #C3CEE2; }
+  .nav-item.active { background: linear-gradient(135deg, #2563EB, #3B7BF0); color: #fff; box-shadow: 0 10px 22px -12px rgba(37,99,235,.9); }
+  .nav-item.active .nav-ico { color: #fff; }
+  .nav-label { flex: 1; text-align: left; }
+  .nav-tag { font-size: 10px; font-weight: 700; letter-spacing: .4px; color: #B9C6E6; background: rgba(255,255,255,.09); padding: 2px 7px; border-radius: 6px; }
+  .nav-item.active .nav-tag { background: rgba(255,255,255,.22); color: #fff; }
+  .nav-ext { color: var(--nav-txt-dim); display: inline-flex; }
+  .nav-parent { display: flex; flex-direction: column; }
+  .nav-toggle.parent-active { color: #E7ECF5; background: rgba(255,255,255,.04); }
+  .nav-toggle.parent-active .nav-ico { color: #C3CEE2; }
+  .nav-caret { color: var(--nav-txt-dim); display: inline-flex; transition: transform .18s; }
+  .nav-caret.open { transform: rotate(180deg); }
+  .nav-sub { display: flex; flex-direction: column; gap: 1px; margin: 3px 0 4px 25px; padding-left: 11px; border-left: 1px solid var(--nav-line); }
+  .nav-subitem { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: var(--nav-txt); text-align: left; }
+  .nav-subitem:hover { background: rgba(255,255,255,.05); color: #E7ECF5; }
+  .nav-sub-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--nav-txt-dim); flex-shrink: 0; transition: background .14s; }
+  .nav-subitem.active { color: #fff; }
+  .nav-subitem.active .nav-sub-dot { background: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.28); }
+  .sidebar-foot { display: flex; align-items: center; gap: 10px; padding: 12px 10px 4px; border-top: 1px solid var(--nav-line); margin-top: 6px; }
+  .sf-dot { width: 8px; height: 8px; border-radius: 50%; background: #34D399; box-shadow: 0 0 0 3px rgba(52,211,153,.18); flex-shrink: 0; }
+  .sf-line1 { font-size: 11.5px; font-weight: 700; color: #C3CEE2; }
+  .sf-line2 { font-size: 10.5px; color: var(--nav-txt-dim); }
+
+  /* ---------------- main + topbar ---------------- */
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 14px; padding: 12px 26px; background: rgba(244,246,250,.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .searchbox { display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; width: min(380px, 34vw); color: var(--muted); box-shadow: var(--sh-sm); }
+  .searchbox input { border: none; outline: none; flex: 1; font-size: 13.5px; color: var(--ink); background: none; }
+  .searchbox input::placeholder { color: var(--muted); }
+  .search-kbd { font-size: 10.5px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 2px 5px; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 9px; }
+  .tool-btn { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); padding: 8px 12px; border-radius: var(--r-ctrl); box-shadow: var(--sh-sm); transition: all .14s; white-space: nowrap; }
+  .tool-btn:hover { border-color: #C9D6F2; color: var(--ink); }
+  .tool-btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 8px 18px -8px rgba(37,99,235,.6); }
+  .tool-btn.primary:hover { background: var(--primary-700); color: #fff; }
+  .tool-btn.on { border-color: var(--primary); }
+  .t-divider { width: 1px; height: 26px; background: var(--line); }
+  .lang-switch { display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; box-shadow: var(--sh-sm); }
+  .lang-switch button { font-size: 11.5px; font-weight: 700; color: var(--muted); padding: 5px 9px; border-radius: 999px; }
+  .lang-switch button.active { background: var(--primary); color: #fff; }
+  .icon-btn { width: 38px; height: 38px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); display: grid; place-items: center; color: var(--ink-2); position: relative; box-shadow: var(--sh-sm); }
+  .icon-btn:hover { color: var(--primary); }
+  .icon-btn.has-dot::after { content: ""; position: absolute; top: 8px; right: 9px; width: 7px; height: 7px; background: var(--red); border-radius: 50%; border: 2px solid var(--surface); }
+  .user-pill { display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px 9px 4px 4px; box-shadow: var(--sh-sm); cursor: pointer; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#2563EB,#60A5FA); color: #fff; font-weight: 700; font-size: 12.5px; display: grid; place-items: center; }
+  .user-meta { line-height: 1.15; }
+  .user-name { font-size: 12.5px; font-weight: 700; }
+  .user-role { font-size: 10.5px; color: var(--muted); font-weight: 600; }
+  .user-chev { color: var(--muted); display: inline-flex; }
+
+  /* popovers */
+  .pop-wrap { position: relative; }
+  .pop { position: absolute; top: calc(100% + 8px); right: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--sh-pop); padding: 10px; z-index: 2400; animation: pop .14s ease; }
+  @keyframes pop { from { opacity: 0; transform: translateY(-4px); } }
+  .date-pop { width: 250px; }
+  .pop-seg { display: flex; background: var(--line-2); border-radius: 9px; padding: 3px; gap: 2px; }
+  .pop-seg button { flex: 1; font-size: 12.5px; font-weight: 600; color: var(--ink-2); padding: 6px; border-radius: 7px; }
+  .pop-seg button.on { background: var(--surface); color: var(--primary); box-shadow: var(--sh-sm); }
+  .pop-divider { height: 1px; background: var(--line); margin: 10px 0; }
+  .pop-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 9px; }
+  .pop-field span { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .pop-field input { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font-size: 12.5px; color: var(--ink); }
+  .pop-range { display: flex; gap: 6px; }
+  .pop-range input { flex: 1; min-width: 0; }
+  .pop-apply { width: 100%; background: var(--primary); color: #fff; font-weight: 700; font-size: 13px; padding: 9px; border-radius: 9px; margin-top: 2px; }
+  .exp-pop { width: 280px; display: flex; flex-direction: column; gap: 2px; }
+  .exp-item { display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 10px; text-align: left; transition: background .12s; }
+  .exp-item:hover { background: var(--line-2); }
+  .exp-item.hi { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 13px; }
+  .exp-ico { width: 34px; height: 34px; border-radius: 9px; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; flex-shrink: 0; }
+  .exp-item.hi .exp-ico { background: #FEF3C7; color: #B45309; }
+  .exp-t { display: block; font-size: 13px; font-weight: 700; color: var(--ink); }
+  .exp-s { display: block; font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+
+  /* ---------------- content ---------------- */
+  .content { padding: 24px 26px 36px; max-width: 1560px; width: 100%; margin: 0 auto; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  .page-title { font-size: 25px; font-weight: 800; letter-spacing: -.6px; }
+  .page-sub { color: var(--ink-2); font-size: 13.5px; margin-top: 3px; max-width: 640px; }
+  .page-meta { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+  .updated { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(22,163,74,.45);} 70% { box-shadow: 0 0 0 7px rgba(22,163,74,0);} 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0);} }
+  .filter-flag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--primary); background: var(--primary-soft); border: 1px solid #D6E2FB; padding: 5px 10px; border-radius: 999px; }
+
+  /* filters */
+  .filterbar { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; flex-wrap: wrap; }
+  .filter-cap { font-size: 10.5px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12.5px; font-weight: 600; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); padding: 6px 12px; border-radius: 999px; transition: all .13s; }
+  .chip:hover { border-color: #C9D6F2; color: var(--ink); }
+  .chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  /* ---------------- KPI ---------------- */
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 18px; }
+  .kpi { position: relative; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 16px; display: flex; gap: 13px; box-shadow: var(--sh); transition: transform .15s, box-shadow .15s, border-color .15s; }
+  .kpi:hover { transform: translateY(-3px); box-shadow: var(--sh-lg); }
+  .kpi.active { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary), var(--sh); }
+  .kpi-ico { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; display: grid; place-items: center; }
+  .tone-blue { background: var(--primary-soft); color: var(--primary); }
+  .tone-indigo { background: var(--indigo-bg); color: var(--indigo); }
+  .tone-green { background: var(--green-bg); color: var(--green); }
+  .tone-amber { background: var(--amber-bg); color: var(--amber); }
+  .tone-red { background: var(--red-bg); color: var(--red); }
+  .kpi-body { min-width: 0; flex: 1; }
+  .kpi-label { font-size: 11.5px; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi-value-row { display: flex; align-items: baseline; gap: 7px; margin: 3px 0 2px; }
+  .kpi-value { font-size: 26px; font-weight: 800; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+  .kpi-delta { display: inline-flex; align-items: center; gap: 1px; font-size: 11.5px; font-weight: 700; padding: 2px 6px 2px 3px; border-radius: 999px; }
+  .kpi-delta.up { color: var(--green); background: var(--green-bg); }
+  .kpi-delta.down { color: var(--amber); background: var(--amber-bg); }
+  .kpi-sub { font-size: 11.5px; color: var(--muted); font-weight: 500; }
+  .kpi-sub b { color: var(--ink-2); }
+  .kpi-filter-hint { position: absolute; top: 14px; right: 12px; color: var(--muted); opacity: 0; transition: opacity .14s, transform .14s; }
+  .kpi:hover .kpi-filter-hint { opacity: .7; transform: translateX(2px); }
+
+  /* ---------------- cards + grids ---------------- */
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); box-shadow: var(--sh); }
+  .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 17px 20px 12px; }
+  .card-title { font-size: 15.5px; font-weight: 800; letter-spacing: -.3px; white-space: nowrap; }
+  .card-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .ghost-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); border: 1px solid var(--line); padding: 6px 11px; border-radius: 9px; white-space: nowrap; transition: all .13s; }
+  .ghost-btn:hover { border-color: #C9D6F2; color: var(--primary); }
+  .grid-a { display: grid; grid-template-columns: 1.85fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-b { display: grid; grid-template-columns: 1.85fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-map { display: grid; grid-template-columns: 1.9fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .map-count { font-size: 12.5px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+  .map-count span { color: var(--muted); font-weight: 600; font-size: 11.5px; }
+
+  /* ---------------- map ---------------- */
+  .map-frame { padding: 0 20px 18px; }
+  .map-bare { padding: 0; }
+  .map-el { width: 100%; border-radius: 13px; overflow: hidden; border: 1px solid var(--line); background: #EAEFF6; }
+  .leaflet-container { font-family: inherit; background: #EAEFF6; }
+  .mk-wrap { background: none; border: none; }
+  .mk { display: block; width: 16px; height: 16px; border-radius: 50%; background: var(--mk); border: 3px solid #fff; box-shadow: 0 2px 5px rgba(14,23,38,.4); }
+  .mk-hotel { box-shadow: 0 2px 5px rgba(14,23,38,.4), 0 0 0 3px rgba(79,70,229,.35); }
+  .leaflet-tooltip { border: none; box-shadow: var(--sh-pop); border-radius: 9px; font-size: 12px; padding: 6px 9px; color: var(--ink); font-weight: 500; }
+  .leaflet-tooltip b { font-weight: 700; }
+  .map-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 13px; font-size: 11.5px; font-weight: 600; color: var(--ink-2); }
+  .map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .map-legend .lg { width: 9px; height: 9px; border-radius: 50%; }
+  .map-legend .lg-ring { width: 9px; height: 9px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgba(79,70,229,.5); }
+
+  /* ---------------- exceptions ---------------- */
+  .exc-card { display: flex; flex-direction: column; }
+  .exc-count { font-size: 11.5px; font-weight: 700; color: var(--amber); background: var(--amber-bg); padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .exc-list { padding: 2px 12px 14px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+  .exc-row { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 8px; border-radius: 11px; text-align: left; transition: background .12s; }
+  .exc-row:hover { background: var(--line-2); }
+  .exc-bar { width: 3px; height: 30px; border-radius: 3px; flex-shrink: 0; }
+  .exc-av { width: 34px; height: 34px; border-radius: 10px; background: var(--line-2); color: var(--ink-2); font-weight: 700; font-size: 11.5px; display: grid; place-items: center; flex-shrink: 0; }
+  .exc-info { flex: 1; min-width: 0; }
+  .exc-name { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .exc-meta { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 1px; }
+  .exc-go { color: var(--muted); display: inline-flex; }
+  .exc-empty { padding: 40px 20px; text-align: center; color: var(--green); }
+  .exc-empty-t { font-size: 15px; font-weight: 800; color: var(--ink); margin-top: 8px; }
+  .exc-empty-s { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+
+  /* ---------------- CTS ---------------- */
+  .cts-total { text-align: right; }
+  .cts-total-pct { display: block; font-size: 19px; font-weight: 800; color: var(--primary); letter-spacing: -.5px; }
+  .cts-total-lbl { font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .cts-list { padding: 4px 20px 16px; }
+  .cts-row { display: grid; grid-template-columns: 132px 1fr 48px 92px auto; align-items: center; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--line-2); }
+  .cts-row:last-child { border-bottom: none; }
+  .cts-country { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .cts-bar { height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .cts-fill { height: 100%; border-radius: 999px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+  .cts-fill.on { background: linear-gradient(90deg, var(--primary), #5B8DEF); }
+  .cts-fill.behind { background: linear-gradient(90deg, var(--amber), #EBA94A); }
+  .cts-pct { font-size: 13.5px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+  .cts-detail { font-size: 11px; color: var(--muted); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+  .cts-tag { font-size: 10.5px; font-weight: 700; padding: 4px 9px; border-radius: 999px; white-space: nowrap; text-align: center; }
+  .cts-tag.on { color: var(--green); background: var(--green-bg); }
+  .cts-tag.behind { color: var(--amber); background: var(--amber-bg); }
+
+  /* ---------------- rankings ---------------- */
+  .rank-ico { color: var(--amber); display: inline-flex; }
+  .rank-list { padding: 2px 18px 16px; }
+  .rank-row { display: flex; align-items: center; gap: 11px; padding: 9px 2px; border-bottom: 1px solid var(--line-2); }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-pos { font-size: 13px; font-weight: 800; width: 14px; text-align: center; }
+  .rank-av { width: 34px; height: 34px; border-radius: 10px; background: var(--primary-soft); color: var(--primary); font-weight: 700; font-size: 11.5px; display: grid; place-items: center; flex-shrink: 0; }
+  .rank-info { flex: 1; min-width: 0; }
+  .rank-name { font-size: 13px; font-weight: 700; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rank-bar { height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .rank-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #6CA0F5); border-radius: 999px; }
+  .rank-km { font-size: 13.5px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .rank-km span { font-size: 10.5px; font-weight: 600; color: var(--muted); margin-left: 2px; }
+
+  /* ---------------- table ---------------- */
+  .table-card { overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  .dtable { width: 100%; border-collapse: collapse; min-width: 900px; }
+  .dtable th { text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 9px 16px; background: var(--line-2); cursor: pointer; white-space: nowrap; user-select: none; }
+  .dtable th:first-child { padding-left: 20px; }
+  .dtable th span, .dtable th svg { vertical-align: middle; }
+  .dtable th svg { margin-left: 3px; opacity: .4; }
+  .dtable th.sorted { color: var(--primary); }
+  .dtable th.sorted svg { opacity: 1; }
+  .dtable td { padding: 11px 16px; font-size: 13px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+  .dtable td:first-child { padding-left: 20px; }
+  .dtable tbody tr { transition: background .1s; cursor: pointer; }
+  .dtable tbody tr:hover { background: var(--primary-soft); }
+  .dtable tbody tr:last-child td { border-bottom: none; }
+  .td-driver { display: flex; align-items: center; gap: 10px; }
+  .td-av { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg,#E2EAFB,#EFF4FF); color: var(--primary); font-weight: 700; font-size: 11px; display: grid; place-items: center; flex-shrink: 0; }
+  .td-name { display: block; font-weight: 700; }
+  .td-plate { display: block; font-size: 10.5px; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .cc { font-size: 9.5px; font-weight: 800; color: var(--ink-2); background: var(--line-2); padding: 2px 5px; border-radius: 5px; margin-right: 7px; letter-spacing: .3px; }
+  .muted { color: var(--muted); }
+  .stale { color: var(--amber); font-weight: 700; }
+  .save { color: var(--green); font-weight: 700; }
+  .hm-yes { display: inline-flex; align-items: center; gap: 3px; color: var(--green); font-weight: 700; }
+  .base-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 4px 9px; border-radius: 999px; }
+  .base-pill.home { background: var(--line-2); color: var(--ink-2); }
+  .base-pill.hotel { background: var(--indigo-bg); color: var(--indigo); }
+  .status-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+  .status-pill .sp-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .status-pill.ok { background: var(--green-bg); color: var(--green); }
+  .status-pill.warn { background: var(--amber-bg); color: var(--amber); }
+  .status-pill.danger { background: var(--red-bg); color: var(--red); }
+  .status-pill.neutral { background: var(--line-2); color: var(--ink-2); }
+  .table-foot { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; font-size: 12.5px; font-weight: 600; color: var(--muted); border-top: 1px solid var(--line-2); }
+
+  /* ---------------- driver detail (slide-over) ---------------- */
+  .dp-backdrop { position: fixed; inset: 0; background: rgba(14,23,38,.4); backdrop-filter: blur(2px); z-index: 2000; animation: fade .18s ease; }
+  @keyframes fade { from { opacity: 0; } }
+  .dp { position: fixed; top: 0; right: 0; height: 100vh; width: 432px; max-width: 94vw; background: var(--surface); z-index: 2050; display: flex; flex-direction: column; box-shadow: var(--sh-lg); animation: slide .24s cubic-bezier(.2,.8,.2,1); }
+  @keyframes slide { from { transform: translateX(100%); } }
+  .dp-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px 14px; border-bottom: 1px solid var(--line); }
+  .dp-head-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .dp-av { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg,#2563EB,#60A5FA); color: #fff; font-weight: 700; font-size: 15px; display: grid; place-items: center; flex-shrink: 0; }
+  .dp-av.lg { width: 48px; height: 48px; }
+  .dp-name { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+  .dp-sub { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+  .dp-close { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; color: var(--ink-2); border: 1px solid var(--line); flex-shrink: 0; }
+  .dp-close:hover { background: var(--line-2); }
+  .dp-statusbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: var(--line-2); }
+  .dp-checkin { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+  .dp-body { flex: 1; overflow-y: auto; padding: 16px 20px 24px; }
+  .dp-map { height: 150px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); margin-bottom: 14px; }
+  .dp-metric { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: linear-gradient(120deg, #EEF3FF, #F6F9FF); border: 1px solid #DEE9FC; border-radius: 13px; margin-bottom: 16px; }
+  .dp-metric-lbl { font-size: 11px; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: .4px; }
+  .dp-metric-val { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-top: 2px; }
+  .dp-metric-val small { font-size: 14px; font-weight: 700; color: var(--muted); }
+  .dp-class { font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 999px; }
+  .dp-class.good { color: var(--green); background: var(--green-bg); }
+  .dp-class.mid { color: var(--primary); background: var(--primary-soft); }
+  .dp-class.warn { color: var(--amber); background: var(--amber-bg); }
+  .dp-sec { margin-bottom: 18px; }
+  .dp-sec-title { display: flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--ink-2); margin-bottom: 9px; }
+  .dp-sec-title svg { color: var(--muted); }
+  .info-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line-2); }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { font-size: 12.5px; color: var(--ink-2); font-weight: 500; }
+  .info-value { font-size: 12.5px; font-weight: 600; text-align: right; }
+  .info-value.strong { font-weight: 800; }
+  .info-value .small { font-size: 11.5px; color: var(--ink-2); font-weight: 500; }
+  .dp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .dp-stat { background: var(--line-2); border-radius: 11px; padding: 11px 12px; text-align: center; }
+  .dp-stat span { display: block; font-size: 18px; font-weight: 800; letter-spacing: -.5px; }
+  .dp-stat label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
+  .warn-num { color: var(--amber); }
+  .gpill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: var(--green-bg); color: var(--green); }
+  .gpill.idle { background: var(--amber-bg); color: var(--amber); }
+  .gpill.hold { background: var(--red-bg); color: var(--red); }
+  .qc-good { color: var(--green); } .qc-mid { color: var(--primary); } .qc-low { color: var(--amber); }
+  .veh { font-weight: 700; } .veh.ok { color: var(--green); } .veh.minor { color: var(--amber); } .veh.critical { color: var(--red); }
+  .dp-hist { display: flex; flex-direction: column; gap: 3px; }
+  .dp-hist-row { display: flex; align-items: center; gap: 11px; padding: 5px 0; }
+  .dp-hist-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); border: 2px solid #CBD5E6; flex-shrink: 0; }
+  .dp-hist-m { font-size: 12.5px; font-weight: 700; }
+  .dp-hist-c { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .dp-profile { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 11px; font-size: 13px; font-weight: 700; color: var(--primary); text-decoration: none; transition: background .13s; }
+  .dp-profile:hover { background: var(--primary-soft); }
+
+  /* ---------------- modal / admin ---------------- */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(14,23,38,.45); backdrop-filter: blur(3px); z-index: 2200; display: grid; place-items: center; padding: 28px; animation: fade .18s ease; }
+  .modal { background: var(--surface); border-radius: 18px; box-shadow: var(--sh-lg); width: 100%; max-width: 760px; max-height: 86vh; display: flex; flex-direction: column; overflow: hidden; animation: modalin .2s cubic-bezier(.2,.8,.2,1); }
+  @keyframes modalin { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+  .modal-title { font-size: 17px; font-weight: 800; }
+  .modal-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .admin-body { display: grid; grid-template-columns: 264px 1fr; min-height: 0; flex: 1; }
+  .admin-list-col { border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+  .admin-search { display: flex; align-items: center; gap: 8px; margin: 12px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 9px; color: var(--muted); }
+  .admin-search input { border: none; outline: none; flex: 1; font-size: 13px; color: var(--ink); }
+  .admin-list { overflow-y: auto; padding: 0 8px 10px; flex: 1; }
+  .admin-li { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: 10px; text-align: left; }
+  .admin-li:hover { background: var(--line-2); }
+  .admin-li.on { background: var(--primary-soft); }
+  .admin-li-av { width: 32px; height: 32px; border-radius: 9px; background: var(--line-2); color: var(--ink-2); font-weight: 700; font-size: 11px; display: grid; place-items: center; flex-shrink: 0; }
+  .admin-li.on .admin-li-av { background: #fff; color: var(--primary); }
+  .admin-li-name { display: block; font-size: 13px; font-weight: 700; }
+  .admin-li-meta { display: flex; align-items: center; font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 1px; }
+  .admin-form { padding: 20px 22px; overflow-y: auto; }
+  .admin-form-head { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+  .admin-field { margin-bottom: 14px; }
+  .admin-field label { display: block; font-size: 11.5px; font-weight: 700; color: var(--ink-2); margin-bottom: 6px; }
+  .admin-field input, .admin-field textarea { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; font-size: 13px; color: var(--ink); outline: none; resize: vertical; }
+  .admin-field input:focus, .admin-field textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+  .admin-seg { display: flex; gap: 8px; }
+  .admin-seg button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 9px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink-2); }
+  .admin-seg button.on { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+  .admin-actions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; margin-top: 18px; }
+  .admin-saved { margin-right: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 700; color: var(--green); }
+  .btn-ghost { font-size: 13px; font-weight: 700; color: var(--ink-2); padding: 9px 16px; border-radius: 9px; border: 1px solid var(--line); }
+  .btn-primary { font-size: 13px; font-weight: 700; color: #fff; background: var(--primary); padding: 9px 18px; border-radius: 9px; box-shadow: 0 8px 18px -8px rgba(37,99,235,.6); }
+  .btn-primary:hover { background: var(--primary-700); }
+
+  /* ---------------- expenses ---------------- */
+  .exp-top { display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin-bottom: 16px; }
+  .exp-total { padding: 22px; display: flex; flex-direction: column; justify-content: center; }
+  .exp-total-lbl { font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
+  .exp-total-val { font-size: 38px; font-weight: 800; letter-spacing: -1.5px; margin: 4px 0 8px; }
+  .exp-total-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 700; color: var(--green); }
+  .exp-cats { padding: 4px 20px 18px; }
+  .exp-cat { display: grid; grid-template-columns: 14px 120px 1fr 60px; align-items: center; gap: 12px; padding: 8px 0; }
+  .exp-cat-dot { width: 11px; height: 11px; border-radius: 4px; }
+  .exp-cat-dot.tone-blue { background: var(--primary); } .exp-cat-dot.tone-indigo { background: var(--indigo); } .exp-cat-dot.tone-amber { background: var(--amber); } .exp-cat-dot.tone-green { background: var(--green); } .exp-cat-dot.tone-red { background: var(--red); }
+  .exp-cat-name { font-size: 13px; font-weight: 600; }
+  .exp-cat-bar { height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .exp-cat-fill { display: block; height: 100%; border-radius: 999px; }
+  .exp-cat-fill.tone-blue { background: var(--primary); } .exp-cat-fill.tone-indigo { background: var(--indigo); } .exp-cat-fill.tone-amber { background: var(--amber); } .exp-cat-fill.tone-green { background: var(--green); } .exp-cat-fill.tone-red { background: var(--red); }
+  .exp-cat-val { font-size: 13px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---------------- recruitment / mini stats + funnel ---------------- */
+  .mini-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+  .mini-card { position: relative; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); box-shadow: var(--sh); padding: 18px 18px 16px; }
+  .mini-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+  .mini-bar.tone-blue { background: var(--primary); } .mini-bar.tone-indigo { background: var(--indigo); } .mini-bar.tone-green { background: var(--green); } .mini-bar.tone-amber { background: var(--amber); }
+  .mini-val { font-size: 27px; font-weight: 800; letter-spacing: -1px; }
+  .mini-lbl { font-size: 12px; font-weight: 600; color: var(--ink-2); margin-top: 2px; }
+  .funnel { padding: 8px 20px 18px; }
+  .fun-row { display: grid; grid-template-columns: 92px 1fr 40px; align-items: center; gap: 12px; padding: 9px 0; }
+  .fun-lbl { font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
+  .fun-track { height: 12px; background: var(--line-2); border-radius: 7px; overflow: hidden; }
+  .fun-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #5B8DEF); border-radius: 7px; }
+  .fun-val { font-size: 13.5px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .foot { text-align: center; color: var(--muted); font-size: 11.5px; margin-top: 22px; }
+
+  /* ---------------- responsive ---------------- */
+  @media (max-width: 1200px) {
+    .kpi-row { grid-template-columns: repeat(3, 1fr); }
+    .grid-a, .grid-b, .grid-map, .exp-top { grid-template-columns: 1fr; }
+    .mini-row { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 880px) {
+    .sidebar { display: none; }
+    .content { padding: 18px 14px 32px; }
+    .topbar { padding: 10px 14px; gap: 8px; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .tool-btn span, .search-kbd, .user-meta { display: none; }
+    .searchbox { width: auto; flex: 1; }
+  }
+  @media (max-width: 560px) { .kpi-row { grid-template-columns: 1fr; } }
+
+  /* ====================================================================
+     DARK MODE — paleta slate, ativada por <html data-theme="dark">.
+     Espelha o tom do theme.css do portal (slate-900) mas pras vars
+     próprias do mockup. Sincroniza com as páginas embedadas (mesmo
+     localStorage.AC_THEME), então a shell e os iframes escurecem juntos.
+     ==================================================================== */
+  :root[data-theme="dark"] {
+    --bg: #0B1120; --surface: #151E32;
+    --ink: #E8EDF6; --ink-2: #AEB9CE; --muted: #6E7B93;
+    --line: #263247; --line-2: #1A2336;
+    --primary: #3B82F6; --primary-700: #2563EB; --primary-soft: #18233C;
+    --nav-bg: #090E1B; --nav-line: rgba(255,255,255,.07); --nav-txt: #9AA7BE; --nav-txt-dim: #5C6987;
+    --green: #34D399; --green-bg: rgba(52,211,153,.14);
+    --amber: #FBBF24; --amber-bg: rgba(251,191,36,.15);
+    --red: #F87171;   --red-bg: rgba(248,113,113,.15);
+    --indigo: #818CF8; --indigo-bg: rgba(129,140,248,.16);
+    --sh-sm: 0 1px 2px rgba(0,0,0,.4);
+    --sh: 0 1px 2px rgba(0,0,0,.35), 0 10px 24px -16px rgba(0,0,0,.7);
+    --sh-lg: 0 20px 50px -22px rgba(0,0,0,.8);
+    --sh-pop: 0 14px 40px -10px rgba(0,0,0,.7);
+    color-scheme: dark;
+  }
+  :root[data-theme="dark"] ::selection { background: #1E3A5F; color: #fff; }
+
+  /* topbar tem bg rgba claro hardcoded */
+  :root[data-theme="dark"] .topbar { background: rgba(11,17,32,.82); }
+
+  /* borders de hover hardcoded claros */
+  :root[data-theme="dark"] .tool-btn:hover,
+  :root[data-theme="dark"] .chip:hover,
+  :root[data-theme="dark"] .ghost-btn:hover { border-color: var(--primary); }
+
+  /* chip ativo era var(--ink)+texto branco → vira azul no dark */
+  :root[data-theme="dark"] .chip.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  /* avatar/célula com gradiente claro */
+  :root[data-theme="dark"] .td-av { background: #1E3A5F; color: #9CC3FF; }
+  :root[data-theme="dark"] .admin-li.on .admin-li-av { background: var(--surface); color: var(--primary); }
+
+  /* dp-metric: gradiente azul claro → azul escuro */
+  :root[data-theme="dark"] .dp-metric { background: linear-gradient(120deg, #16233C, #121A2C); border-color: #24395C; }
+  :root[data-theme="dark"] .dp-class.mid { background: var(--primary-soft); }
+
+  /* item destacado do menu de export (amarelo claro) */
+  :root[data-theme="dark"] .exp-item.hi .exp-ico { background: rgba(251,191,36,.16); color: var(--amber); }
+
+  /* bordas claras pontuais */
+  :root[data-theme="dark"] .filter-flag { border-color: #24395C; }
+  :root[data-theme="dark"] .dp-hist-dot { background: var(--line); border-color: var(--line-2); }
+
+  /* mapa: tiles claros do Carto invertidos + chrome do Leaflet no escuro */
+  :root[data-theme="dark"] .map-el,
+  :root[data-theme="dark"] .leaflet-container { background: #0E1726; }
+  :root[data-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9); }
+  :root[data-theme="dark"] .leaflet-tooltip { background: var(--surface); color: var(--ink); box-shadow: var(--sh-pop); }
+  :root[data-theme="dark"] .leaflet-control-attribution { background: rgba(11,17,32,.72) !important; color: var(--muted) !important; }
+  :root[data-theme="dark"] .leaflet-control-attribution a { color: var(--primary) !important; }
+  :root[data-theme="dark"] .leaflet-bar a { background: var(--surface); color: var(--ink); border-color: var(--line); }
+  :root[data-theme="dark"] .leaflet-bar a:hover { background: var(--line-2); }
+
+  /* ====================================================================
+     EMBED — abas que incorporam as páginas reais via iframe (paginazona)
+     ==================================================================== */
+  .content-embed { max-width: none; padding: 14px 22px 18px; }
+  .embed-wrap { display: flex; flex-direction: column; height: calc(100vh - 116px); min-height: 520px; border: 1px solid var(--line); border-radius: var(--r-card); overflow: hidden; background: var(--surface); box-shadow: var(--sh); }
+  .embed-bar { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--line); background: var(--surface); }
+  .embed-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(52,211,153,.18); flex-shrink: 0; }
+  .embed-src { font-size: 12px; font-weight: 600; color: var(--muted); font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .embed-ext { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--primary); text-decoration: none; border: 1px solid var(--line); padding: 6px 11px; border-radius: 9px; transition: all .13s; white-space: nowrap; }
+  .embed-ext:hover { background: var(--primary-soft); border-color: var(--primary); }
+  .embed-frame { flex: 1; width: 100%; border: none; background: var(--surface); }
+  .embed-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: var(--indigo); background: var(--indigo-bg); padding: 4px 10px; border-radius: 999px; }
+
+  /* indicador "↗" nos itens de nav que abrem páginas reais */
+  .nav-ext { display: inline-flex; color: var(--nav-txt-dim); opacity: .5; flex-shrink: 0; }
+  .nav-item:hover .nav-ext { opacity: .8; }
+  .nav-item.active .nav-ext { color: rgba(255,255,255,.85); opacity: .95; }
+
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <noscript>Este dashboard precisa de JavaScript pra rodar.</noscript>
+
+  <!-- Libs (CDN) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+
+  <!-- Dados + i18n (mockup) -->
+  <script>
+/* ============================================================
+   Street View LATAM — i18n (PT / ES / EN)
+   ============================================================ */
+(function () {
+  const I18N = {
+    pt: {
+      // nav
+      navGroupOps: "Operação", navGroupFin: "Financeiro", navGroupSys: "Sistema",
+      navHome: "Início", navDrivers: "Drivers", navMap: "Mapa", navCts: "Metas (CTS)",
+      navRankings: "Rankings", navExpenses: "Despesas", navSettings: "Ajustes", navHelp: "Ajuda",
+      navFunds: "Funds", navScope: "Scope planning", navReports: "Reports",
+      navPayroll: "Payroll", navRecruitment: "Recruitment status", navDriverReports: "Drivers reports",
+      pgFundsTitle: "Funds", pgFundsSub: "Verbas e gastos da operação por país e categoria",
+      pgScopeTitle: "Scope planning", pgScopeSub: "Áreas de mapeamento, cobertura e metas por país",
+      pgPayTitle: "Payroll", pgPaySub: "Folha de pagamento dos drivers no período",
+      pgRecTitle: "Recruitment status", pgRecSub: "Pipeline de contratação e aging por país",
+      payDays: "Dias", payHours: "Horas", payRate: "Valor/h", payGross: "Bruto", payTotal: "Total da folha", payStatus: "Status", payPaid: "Pago", payPending: "Pendente", payByCountry: "Por país",
+      recApplied: "Inscritos", recScreen: "Triagem", recInterview: "Entrevista", recOffer: "Oferta", recHired: "Contratado",
+      recOpen: "Vagas abertas", recPipeline: "No pipeline", recHiredMo: "Contratados (mês)", recAging: "Aging médio", recDays: "dias",
+      recByCountry: "Status por país", recFunnel: "Funil de contratação", thOpen: "Vagas", thPipeline: "Pipeline", thHired: "Contratados", thAging: "Aging",
+      // topbar
+      searchPlaceholder: "Buscar driver, cidade ou placa…",
+      export: "Exportar", admin: "Admin", updated: "Atualizado",
+      today: "Hoje", week: "7 dias", month: "30 dias",
+      dateSpecific: "Dia específico", dateRange: "Período", apply: "Aplicar", clear: "Limpar",
+      // export menu
+      expFull: "Dashboard completo", expFullSub: "PDF de tudo na tela",
+      expSummary: "Relatório resumido", expSummarySub: "Scorecards + CTS + top drivers",
+      expTimesheet: "Folha de ponto", expTimesheetSub: "Excel por driver/dia",
+      expMbr: "Monthly Business Review", expMbrSub: "PowerPoint da reunião do mês",
+      // pages
+      pgHomeTitle: "Visão geral da operação", pgHomeSub: "Frota LATAM em tempo real — quem está ok, onde, e o que precisa de ação",
+      pgDriversTitle: "Drivers", pgDriversSub: "Frota completa — filtre, ordene e abra detalhes",
+      pgMapTitle: "Mapa LATAM", pgMapSub: "Posição e status de check-in de cada driver",
+      pgCtsTitle: "Metas — CTS", pgCtsSub: "Km mapeados vs meta mensal por país",
+      pgRankTitle: "Rankings", pgRankSub: "Desempenho dos drivers no período",
+      pgExpTitle: "Despesas — Ramp", pgExpSub: "Gastos da operação por país e categoria",
+      // filters
+      filterCountry: "País", filterPeriod: "Período", all: "Todos", clearFilter: "Limpar filtro",
+      filteredBy: "Filtrado por", drivers: "drivers",
+      // kpi
+      kpiActive: "Drivers ativos", kpiActiveSub: "na frota",
+      kpiHotel: "Em Hotel Mode", kpiHotelSub: "da frota ativa",
+      kpiSavings: "Economia Hotel Mode", kpiSavingsSub: "km/dia evitados",
+      kpiMissing: "Sem check-in", kpiMissingSub: "+24h sem update",
+      kpiIssues: "Issues reportados", kpiIssuesSub: "veículos no período",
+      // exceptions
+      excTitle: "Precisa de atenção", excSub: "Ordenado por severidade",
+      excAllGood: "Tudo certo", excAllGoodSub: "Nenhuma exceção na frota agora",
+      excView: "Abrir", excCount: "itens",
+      // cts
+      ctsTitle: "Metas — CTS", ctsSub: "Progresso mensal de km mapeados por país",
+      ctsGoal: "Meta", ctsDone: "Realizado", ctsOnTrack: "No ritmo", ctsBehind: "Atrasado",
+      ctsTotal: "Total LATAM",
+      // map
+      mapTitle: "Mapa LATAM", mapSub: "Base atual e status por driver", mapVisible: "visíveis",
+      legendRecent: "Check-in 24h", legendOld: "+24h", legendNoMap: "Não mapeia", legendIssue: "Issue", legendHotel: "Hotel mode",
+      // rankings
+      rankKmTitle: "Top KM mapeados", rankKmSub: "Maiores distâncias no período",
+      rankEffTitle: "Maior eficiência", rankEffSub: "Menor km base→área",
+      rankUnit: "km", viewAll: "Ver todos",
+      // table
+      tableTitle: "Drivers", tableSub: "Clique numa linha para abrir o detalhe",
+      thDriver: "Driver", thCountry: "País", thCity: "Cidade", thBase: "Base",
+      thHm: "HM mensal", thCheckin: "Último check-in", thKm: "Km período",
+      thSavings: "Economia", thStatus: "Status", showAll: "Ver todos os drivers",
+      baseHome: "Casa", baseHotel: "Hotel",
+      stActive: "Ativo", stWarn: "Atrasado", stCritical: "Issue crítico", stMinor: "Issue leve",
+      stNoCheckin: "Sem check-in", stNoMap: "Não mapeia",
+      hoursAgo: "h atrás", dayAgo: "d atrás", justNow: "agora", yes: "Sim", no: "Não",
+      // detail panel
+      dpDist: "Km base → área", dpClose: "Fechar",
+      dpBase: "Base atual", dpType: "Tipo", dpAddress: "Endereço", dpPlate: "Placa",
+      dpVid: "VID atual", dpVidId: "VID", dpFloating: "Floating", dpGStatus: "Status (Google)", dpQc: "QC Score",
+      dpPerf: "Desempenho do mês", dpEff: "Eficiência", dpTkm: "TKM", dpKmDriven: "KM rodados",
+      dpMapDays: "Dias de mapeamento", dpBreakeven: "Breakeven TKM", dpIdle: "Idle days",
+      dpHotel: "Eficiência Hotel Mode", dpHome: "Casa", dpDistHome: "Km casa → área",
+      dpSavings: "Economia (km/dia)", dpHmMonthly: "Hotel Mode (mensal)",
+      dpArea: "Área de mapeamento", dpLocation: "Local", dpRadius: "Raio",
+      dpCheckin: "Último check-in", dpWhen: "Quando", dpVehicle: "Status veículo", dpNotes: "Observações",
+      dpHistory: "Histórico de áreas", dpProfile: "Ver perfil completo",
+      vehOk: "OK", vehMinor: "Issue leve", vehCritical: "Issue crítico",
+      // admin
+      admTitle: "Painel Admin", admSub: "Edite informações sem abrir a planilha",
+      admSearch: "Buscar driver…", admSelect: "Selecione um driver à esquerda",
+      admEmail: "Email", admBaseType: "Tipo de base", admNotes: "Observações administrativas",
+      admSave: "Salvar alterações", admCancel: "Cancelar", admSaved: "Alterações salvas (mockup)",
+      // expenses page
+      expTotal: "Gasto total no mês", expByCountry: "Por país", expByCat: "Por categoria",
+      catFuel: "Combustível", catHotel: "Hospedagem", catMaint: "Manutenção", catTolls: "Pedágios", catOther: "Outros",
+    },
+    es: {
+      navGroupOps: "Operación", navGroupFin: "Financiero", navGroupSys: "Sistema",
+      navHome: "Inicio", navDrivers: "Drivers", navMap: "Mapa", navCts: "Metas (CTS)",
+      navRankings: "Rankings", navExpenses: "Gastos", navSettings: "Ajustes", navHelp: "Ayuda",
+      navFunds: "Funds", navScope: "Scope planning", navReports: "Reports",
+      navPayroll: "Payroll", navRecruitment: "Recruitment status", navDriverReports: "Drivers reports",
+      pgFundsTitle: "Funds", pgFundsSub: "Fondos y gastos de la operación por país y categoría",
+      pgScopeTitle: "Scope planning", pgScopeSub: "Áreas de mapeo, cobertura y metas por país",
+      pgPayTitle: "Payroll", pgPaySub: "Nómina de los drivers en el período",
+      pgRecTitle: "Recruitment status", pgRecSub: "Pipeline de contratación y aging por país",
+      payDays: "Días", payHours: "Horas", payRate: "Valor/h", payGross: "Bruto", payTotal: "Total de nómina", payStatus: "Estado", payPaid: "Pagado", payPending: "Pendiente", payByCountry: "Por país",
+      recApplied: "Postulados", recScreen: "Filtro", recInterview: "Entrevista", recOffer: "Oferta", recHired: "Contratado",
+      recOpen: "Vacantes", recPipeline: "En pipeline", recHiredMo: "Contratados (mes)", recAging: "Aging medio", recDays: "días",
+      recByCountry: "Estado por país", recFunnel: "Embudo de contratación", thOpen: "Vacantes", thPipeline: "Pipeline", thHired: "Contratados", thAging: "Aging",
+      searchPlaceholder: "Buscar driver, ciudad o placa…",
+      export: "Exportar", admin: "Admin", updated: "Actualizado",
+      today: "Hoy", week: "7 días", month: "30 días",
+      dateSpecific: "Día específico", dateRange: "Período", apply: "Aplicar", clear: "Limpiar",
+      expFull: "Dashboard completo", expFullSub: "PDF de todo en pantalla",
+      expSummary: "Reporte resumido", expSummarySub: "Scorecards + CTS + top drivers",
+      expTimesheet: "Hoja de horas", expTimesheetSub: "Excel por driver/día",
+      expMbr: "Monthly Business Review", expMbrSub: "PowerPoint de la reunión del mes",
+      pgHomeTitle: "Resumen de la operación", pgHomeSub: "Flota LATAM en tiempo real — quién está ok, dónde, y qué necesita acción",
+      pgDriversTitle: "Drivers", pgDriversSub: "Flota completa — filtra, ordena y abre detalles",
+      pgMapTitle: "Mapa LATAM", pgMapSub: "Posición y estado de check-in de cada driver",
+      pgCtsTitle: "Metas — CTS", pgCtsSub: "Km mapeados vs meta mensual por país",
+      pgRankTitle: "Rankings", pgRankSub: "Desempeño de los drivers en el período",
+      pgExpTitle: "Gastos — Ramp", pgExpSub: "Gastos de la operación por país y categoría",
+      filterCountry: "País", filterPeriod: "Período", all: "Todos", clearFilter: "Limpiar filtro",
+      filteredBy: "Filtrado por", drivers: "drivers",
+      kpiActive: "Drivers activos", kpiActiveSub: "en la flota",
+      kpiHotel: "En Hotel Mode", kpiHotelSub: "de la flota activa",
+      kpiSavings: "Ahorro Hotel Mode", kpiSavingsSub: "km/día evitados",
+      kpiMissing: "Sin check-in", kpiMissingSub: "+24h sin update",
+      kpiIssues: "Issues reportados", kpiIssuesSub: "vehículos en el período",
+      excTitle: "Necesita atención", excSub: "Ordenado por severidad",
+      excAllGood: "Todo bien", excAllGoodSub: "Sin excepciones en la flota ahora",
+      excView: "Abrir", excCount: "ítems",
+      ctsTitle: "Metas — CTS", ctsSub: "Progreso mensual de km mapeados por país",
+      ctsGoal: "Meta", ctsDone: "Logrado", ctsOnTrack: "En ritmo", ctsBehind: "Atrasado",
+      ctsTotal: "Total LATAM",
+      mapTitle: "Mapa LATAM", mapSub: "Base actual y estado por driver", mapVisible: "visibles",
+      legendRecent: "Check-in 24h", legendOld: "+24h", legendNoMap: "No mapea", legendIssue: "Issue", legendHotel: "Hotel mode",
+      rankKmTitle: "Top KM mapeados", rankKmSub: "Mayores distancias del período",
+      rankEffTitle: "Mayor eficiencia", rankEffSub: "Menor km base→área",
+      rankUnit: "km", viewAll: "Ver todos",
+      tableTitle: "Drivers", tableSub: "Haz clic en una fila para ver el detalle",
+      thDriver: "Driver", thCountry: "País", thCity: "Ciudad", thBase: "Base",
+      thHm: "HM mensual", thCheckin: "Último check-in", thKm: "Km período",
+      thSavings: "Ahorro", thStatus: "Estado", showAll: "Ver todos los drivers",
+      baseHome: "Casa", baseHotel: "Hotel",
+      stActive: "Activo", stWarn: "Atrasado", stCritical: "Issue crítico", stMinor: "Issue leve",
+      stNoCheckin: "Sin check-in", stNoMap: "No mapea",
+      hoursAgo: "h atrás", dayAgo: "d atrás", justNow: "ahora", yes: "Sí", no: "No",
+      dpDist: "Km base → área", dpClose: "Cerrar",
+      dpBase: "Base actual", dpType: "Tipo", dpAddress: "Dirección", dpPlate: "Placa",
+      dpVid: "VID actual", dpVidId: "VID", dpFloating: "Floating", dpGStatus: "Estado (Google)", dpQc: "QC Score",
+      dpPerf: "Desempeño del mes", dpEff: "Eficiencia", dpTkm: "TKM", dpKmDriven: "KM recorridos",
+      dpMapDays: "Días de mapeo", dpBreakeven: "Breakeven TKM", dpIdle: "Idle days",
+      dpHotel: "Eficiencia Hotel Mode", dpHome: "Casa", dpDistHome: "Km casa → área",
+      dpSavings: "Ahorro (km/día)", dpHmMonthly: "Hotel Mode (mensual)",
+      dpArea: "Área de mapeo", dpLocation: "Lugar", dpRadius: "Radio",
+      dpCheckin: "Último check-in", dpWhen: "Cuándo", dpVehicle: "Estado vehículo", dpNotes: "Observaciones",
+      dpHistory: "Historial de áreas", dpProfile: "Ver perfil completo",
+      vehOk: "OK", vehMinor: "Issue leve", vehCritical: "Issue crítico",
+      admTitle: "Panel Admin", admSub: "Edita información sin abrir la planilla",
+      admSearch: "Buscar driver…", admSelect: "Selecciona un driver a la izquierda",
+      admEmail: "Email", admBaseType: "Tipo de base", admNotes: "Observaciones administrativas",
+      admSave: "Guardar cambios", admCancel: "Cancelar", admSaved: "Cambios guardados (mockup)",
+      expTotal: "Gasto total del mes", expByCountry: "Por país", expByCat: "Por categoría",
+      catFuel: "Combustible", catHotel: "Hospedaje", catMaint: "Mantenimiento", catTolls: "Peajes", catOther: "Otros",
+    },
+    en: {
+      navGroupOps: "Operations", navGroupFin: "Finance", navGroupSys: "System",
+      navHome: "Home", navDrivers: "Drivers", navMap: "Map", navCts: "Goals (CTS)",
+      navRankings: "Rankings", navExpenses: "Expenses", navSettings: "Settings", navHelp: "Help",
+      navFunds: "Funds", navScope: "Scope planning", navReports: "Reports",
+      navPayroll: "Payroll", navRecruitment: "Recruitment status", navDriverReports: "Drivers reports",
+      pgFundsTitle: "Funds", pgFundsSub: "Operation funds and spend by country and category",
+      pgScopeTitle: "Scope planning", pgScopeSub: "Mapping areas, coverage and goals by country",
+      pgPayTitle: "Payroll", pgPaySub: "Driver payroll for the period",
+      pgRecTitle: "Recruitment status", pgRecSub: "Hiring pipeline and aging by country",
+      payDays: "Days", payHours: "Hours", payRate: "Rate/h", payGross: "Gross", payTotal: "Payroll total", payStatus: "Status", payPaid: "Paid", payPending: "Pending", payByCountry: "By country",
+      recApplied: "Applied", recScreen: "Screening", recInterview: "Interview", recOffer: "Offer", recHired: "Hired",
+      recOpen: "Open roles", recPipeline: "In pipeline", recHiredMo: "Hired (month)", recAging: "Avg aging", recDays: "days",
+      recByCountry: "Status by country", recFunnel: "Hiring funnel", thOpen: "Open", thPipeline: "Pipeline", thHired: "Hired", thAging: "Aging",
+      searchPlaceholder: "Search driver, city or plate…",
+      export: "Export", admin: "Admin", updated: "Updated",
+      today: "Today", week: "7 days", month: "30 days",
+      dateSpecific: "Specific day", dateRange: "Date range", apply: "Apply", clear: "Clear",
+      expFull: "Full dashboard", expFullSub: "PDF of everything on screen",
+      expSummary: "Summary report", expSummarySub: "Scorecards + CTS + top drivers",
+      expTimesheet: "Timesheet", expTimesheetSub: "Excel per driver/day",
+      expMbr: "Monthly Business Review", expMbrSub: "PowerPoint for the monthly meeting",
+      pgHomeTitle: "Operations overview", pgHomeSub: "LATAM fleet in real time — who's ok, where, and what needs action",
+      pgDriversTitle: "Drivers", pgDriversSub: "Full fleet — filter, sort and open details",
+      pgMapTitle: "LATAM Map", pgMapSub: "Position and check-in status per driver",
+      pgCtsTitle: "Goals — CTS", pgCtsSub: "Mapped km vs monthly goal by country",
+      pgRankTitle: "Rankings", pgRankSub: "Driver performance in the period",
+      pgExpTitle: "Expenses — Ramp", pgExpSub: "Operation spend by country and category",
+      filterCountry: "Country", filterPeriod: "Period", all: "All", clearFilter: "Clear filter",
+      filteredBy: "Filtered by", drivers: "drivers",
+      kpiActive: "Active drivers", kpiActiveSub: "in the fleet",
+      kpiHotel: "In Hotel Mode", kpiHotelSub: "of active fleet",
+      kpiSavings: "Hotel Mode savings", kpiSavingsSub: "km/day avoided",
+      kpiMissing: "No check-in", kpiMissingSub: "+24h without update",
+      kpiIssues: "Reported issues", kpiIssuesSub: "vehicles in period",
+      excTitle: "Needs attention", excSub: "Sorted by severity",
+      excAllGood: "All clear", excAllGoodSub: "No exceptions in the fleet right now",
+      excView: "Open", excCount: "items",
+      ctsTitle: "Goals — CTS", ctsSub: "Monthly mapped-km progress by country",
+      ctsGoal: "Goal", ctsDone: "Achieved", ctsOnTrack: "On track", ctsBehind: "Behind",
+      ctsTotal: "LATAM total",
+      mapTitle: "LATAM Map", mapSub: "Current base and status per driver", mapVisible: "visible",
+      legendRecent: "Check-in 24h", legendOld: "+24h", legendNoMap: "Not mapping", legendIssue: "Issue", legendHotel: "Hotel mode",
+      rankKmTitle: "Top mapped KM", rankKmSub: "Longest distances in period",
+      rankEffTitle: "Highest efficiency", rankEffSub: "Lowest km base→area",
+      rankUnit: "km", viewAll: "View all",
+      tableTitle: "Drivers", tableSub: "Click a row to open the detail",
+      thDriver: "Driver", thCountry: "Country", thCity: "City", thBase: "Base",
+      thHm: "Monthly HM", thCheckin: "Last check-in", thKm: "Km period",
+      thSavings: "Savings", thStatus: "Status", showAll: "View all drivers",
+      baseHome: "Home", baseHotel: "Hotel",
+      stActive: "Active", stWarn: "Behind", stCritical: "Critical issue", stMinor: "Minor issue",
+      stNoCheckin: "No check-in", stNoMap: "Not mapping",
+      hoursAgo: "h ago", dayAgo: "d ago", justNow: "now", yes: "Yes", no: "No",
+      dpDist: "Km base → area", dpClose: "Close",
+      dpBase: "Current base", dpType: "Type", dpAddress: "Address", dpPlate: "Plate",
+      dpVid: "Current VID", dpVidId: "VID", dpFloating: "Floating", dpGStatus: "Status (Google)", dpQc: "QC Score",
+      dpPerf: "Month performance", dpEff: "Efficiency", dpTkm: "TKM", dpKmDriven: "KM driven",
+      dpMapDays: "Mapping days", dpBreakeven: "Breakeven TKM", dpIdle: "Idle days",
+      dpHotel: "Hotel Mode efficiency", dpHome: "Home", dpDistHome: "Km home → area",
+      dpSavings: "Savings (km/day)", dpHmMonthly: "Hotel Mode (monthly)",
+      dpArea: "Mapping area", dpLocation: "Location", dpRadius: "Radius",
+      dpCheckin: "Last check-in", dpWhen: "When", dpVehicle: "Vehicle status", dpNotes: "Notes",
+      dpHistory: "Area history", dpProfile: "View full profile",
+      vehOk: "OK", vehMinor: "Minor issue", vehCritical: "Critical issue",
+      admTitle: "Admin panel", admSub: "Edit info without opening the spreadsheet",
+      admSearch: "Search driver…", admSelect: "Select a driver on the left",
+      admEmail: "Email", admBaseType: "Base type", admNotes: "Administrative notes",
+      admSave: "Save changes", admCancel: "Cancel", admSaved: "Changes saved (mockup)",
+      expTotal: "Total spend this month", expByCountry: "By country", expByCat: "By category",
+      catFuel: "Fuel", catHotel: "Lodging", catMaint: "Maintenance", catTolls: "Tolls", catOther: "Other",
+    },
+  };
+  window.SV_I18N = I18N;
+})();
+
+  </script>
+  <script>
+/* ============================================================
+   i18n extra — chaves novas do shell de teste (nav, dark, embed).
+   Mergeado em window.SV_I18N. Mantém os 3 idiomas (pt/es/en).
+   ============================================================ */
+(function () {
+  const X = {
+    pt: {
+      grpRedesign: "Redesign (mockup)", grpOps: "Operação", grpFin: "Financeiro", grpSys: "Reports & Sistema",
+      themeDark: "Modo escuro", themeLight: "Modo claro",
+      logout: "Sair", loggedIn: "Logado", confirmLogout: "Sair do dashboard?",
+      openPage: "Abrir página", embedBadge: "Página real",
+      embedSub: "Página real do portal, embedada aqui dentro do novo shell.",
+    },
+    es: {
+      grpRedesign: "Rediseño (mockup)", grpOps: "Operación", grpFin: "Financiero", grpSys: "Reports & Sistema",
+      themeDark: "Modo oscuro", themeLight: "Modo claro",
+      logout: "Salir", loggedIn: "Conectado", confirmLogout: "¿Salir del dashboard?",
+      openPage: "Abrir página", embedBadge: "Página real",
+      embedSub: "Página real del portal, embebida aquí dentro del nuevo shell.",
+    },
+    en: {
+      grpRedesign: "Redesign (mockup)", grpOps: "Operations", grpFin: "Finance", grpSys: "Reports & System",
+      themeDark: "Dark mode", themeLight: "Light mode",
+      logout: "Sign out", loggedIn: "Signed in", confirmLogout: "Sign out of the dashboard?",
+      openPage: "Open page", embedBadge: "Live page",
+      embedSub: "Real portal page, embedded here inside the new shell.",
+    },
+  };
+  const I = window.SV_I18N || { pt: {}, es: {}, en: {} };
+  ["pt", "es", "en"].forEach((l) => { I[l] = Object.assign({}, I[l], X[l]); });
+  window.SV_I18N = I;
+})();
+
+  </script>
+  <script>
+/* ============================================================
+   Street View LATAM — sample data (rich, mockup)
+   ============================================================ */
+(function () {
+  // status derivation (mirrors original rules)
+  function statusOf(d) {
+    if (d.didMap === false) return "nomap";
+    if (d.vehicleStatus === "critical") return "critical";
+    if (d.vehicleStatus === "minor") return "minor";
+    if (d.checkin === null) return "nocheckin";
+    if (d.checkin > 24) return "warn";
+    return "active";
+  }
+  // severity order for exceptions queue
+  const SEVERITY = { critical: 0, nomap: 1, nocheckin: 2, warn: 3, minor: 4, active: 9 };
+
+  // 18 drivers across LATAM, fully fleshed out
+  const D = [
+    ["Mateus Almeida","Brasil","BR","São Paulo, SP","BRA-7C21","hotel",true,0.5,"ok",true,412,86,3.1,18.6,"VID-SP-0431",false,"Active",96,1.42,118,14,71,4.1,1,-23.55,-46.63],
+    ["Sofía Rodríguez","México","MX","Guadalajara, JAL","MEX-4F88","home",false,2,"ok",true,388,0,17.2,17.2,"VID-GDL-0192",true,"Active",91,1.18,132,15,64,5.2,0,20.67,-103.35],
+    ["Lucas Fernández","Argentina","AR","Córdoba","ARG-9921","hotel",true,1,"ok",true,356,74,2.8,16.1,"VID-COR-0078",false,"Active",94,1.33,121,14,69,4.0,2,-31.42,-64.18],
+    ["Camila Duarte","Brasil","BR","Belo Horizonte, MG","BRA-2D45","home",true,6,"ok",true,401,0,15.9,15.9,"VID-BH-0310",false,"Active",89,1.27,124,15,66,4.6,1,-19.92,-43.94],
+    ["Diego Morales","Chile","CL","Valparaíso","CHL-5510","hotel",true,3,"ok",true,372,62,3.4,14.8,"VID-VAL-0055",false,"Active",92,1.21,116,14,68,4.3,3,-33.05,-71.61],
+    ["Valentina Gómez","Colombia","CO","Medellín","COL-7782","home",false,28,"ok",true,210,0,12.6,12.6,"VID-MED-0144",true,"Idle",78,0.92,88,11,52,6.1,5,6.24,-75.58],
+    ["Bruno Carvalho","Brasil","BR","Curitiba, PR","BRA-3391","hotel",true,1.5,"minor",true,365,58,3.0,15.2,"VID-CWB-0221",false,"Active",90,1.29,119,14,67,4.4,2,-25.43,-49.27],
+    ["Andrés Vargas","Peru","PE","Arequipa","PER-1180","home",false,40,"ok",true,142,0,19.8,19.8,"VID-AQP-0033",false,"Hold",71,0.74,72,9,44,7.8,7,-16.41,-71.54],
+    ["Isabela Ramos","México","MX","Monterrey, NL","MEX-6604","hotel",true,2,"ok",true,344,71,3.2,16.9,"VID-MTY-0098",false,"Active",93,1.30,127,15,70,4.1,1,25.69,-100.32],
+    ["Tomás Herrera","Argentina","AR","Rosario","ARG-8830","home",false,5,"critical",true,298,0,14.1,14.1,"VID-ROS-0061",false,"Active",84,1.05,101,13,59,5.4,3,-32.95,-60.64],
+    ["Larissa Souza","Brasil","BR","Recife, PE","BRA-4417","hotel",true,0.8,"ok",true,389,80,2.9,17.3,"VID-REC-0205",false,"Active",95,1.38,129,15,72,3.9,0,-8.05,-34.88],
+    ["Mariana Castro","Colombia","CO","Bogotá","COL-9035","home",true,4,"ok",true,332,0,13.7,13.7,"VID-BOG-0177",false,"Active",88,1.22,113,14,65,4.7,2,4.71,-74.07],
+    ["Felipe Navarro","Chile","CL","Concepción","CHL-2244","home",false,30,"ok",false,188,0,16.4,16.4,"VID-CCP-0049",false,"Idle",69,0.81,79,10,48,6.9,6,-36.83,-73.05],
+    ["Gabriel Pereira","Brasil","BR","Salvador, BA","BRA-5562","hotel",true,2,"ok",true,358,66,3.3,15.6,"VID-SSA-0198",false,"Active",91,1.26,122,14,68,4.2,1,-12.97,-38.51],
+    ["Daniela Flores","México","MX","Puebla","MEX-7719","home",false,7,"minor",true,276,0,11.9,11.9,"VID-PUE-0112",true,"Active",83,1.08,104,13,60,5.1,3,19.04,-98.21],
+    ["Joaquín Silva","Peru","PE","Lima","PER-3307","hotel",true,1,"ok",true,340,69,3.1,15.9,"VID-LIM-0027",false,"Active",92,1.31,120,15,69,4.0,1,-12.05,-77.04],
+    ["Renata Lopes","Brasil","BR","Fortaleza, CE","BRA-6628","hotel",true,1.2,"ok",true,351,73,2.7,16.4,"VID-FOR-0214",false,"Active",94,1.35,126,15,71,3.8,0,-3.73,-38.52],
+    ["Pablo Méndez","Colombia","CO","Cali","COL-4490","home",false,52,"ok",true,164,0,18.2,18.2,"VID-CAL-0159",true,"Hold",74,0.79,76,10,46,7.2,8,3.45,-76.53],
+  ];
+
+  const FIELDS = ["name","country","cc","city","plate","base","hm","checkin","vehicleStatus","didMap","km","savings","distBase","distHome","vid","floating","gStatus","qc","tkm","kmDriven","mapDays","efficiency","breakeven","idle","lat","lng"];
+  const DRIVERS = D.map((row, i) => {
+    const o = { id: "d" + i };
+    FIELDS.forEach((f, idx) => (o[f] = row[idx]));
+    o.status = statusOf(o);
+    return o;
+  });
+
+  // CTS — goal vs achieved (km) per country
+  const CTS = [
+    { country: "Brasil",    cc: "BR", goal: 48000, done: 39120 },
+    { country: "México",    cc: "MX", goal: 32000, done: 20480 },
+    { country: "Argentina", cc: "AR", goal: 18000, done: 15660 },
+    { country: "Colombia",  cc: "CO", goal: 16000, done: 11200 },
+    { country: "Chile",     cc: "CL", goal: 12000, done: 10560 },
+    { country: "Peru",      cc: "PE", goal: 9000,  done: 5040  },
+  ];
+
+  // KPIs (icon + tone + delta). Each maps to a filter key.
+  const KPIS = [
+    { id: "active",  filter: "all",       icon: "users",  tone: "blue",   value: "18",   delta: "+2",   deltaSign: "up",   labelKey: "kpiActive",  subKey: "kpiActiveSub" },
+    { id: "hotel",   filter: "hotel",     icon: "hotel",  tone: "indigo", value: "8",    delta: "+1",   deltaSign: "up",   labelKey: "kpiHotel",   subKey: "kpiHotelSub",  subVal: "44%" },
+    { id: "savings", filter: "savings",   icon: "leaf",   tone: "green",  value: "639",  delta: "+12%", deltaSign: "up",   labelKey: "kpiSavings", subKey: "kpiSavingsSub" },
+    { id: "missing", filter: "nocheckin", icon: "clock",  tone: "amber",  value: "3",    delta: "-1",   deltaSign: "down", labelKey: "kpiMissing", subKey: "kpiMissingSub" },
+    { id: "issues",  filter: "issues",    icon: "alert",  tone: "red",    value: "3",    delta: "+1",   deltaSign: "up",   labelKey: "kpiIssues",  subKey: "kpiIssuesSub" },
+  ];
+
+  // Expenses (Ramp) page
+  const EXPENSES = {
+    total: 184320,
+    byCountry: [
+      { cc: "BR", country: "Brasil", value: 72400 },
+      { cc: "MX", country: "México", value: 41200 },
+      { cc: "AR", country: "Argentina", value: 23800 },
+      { cc: "CO", country: "Colombia", value: 18600 },
+      { cc: "CL", country: "Chile", value: 16100 },
+      { cc: "PE", country: "Peru", value: 12220 },
+    ],
+    byCategory: [
+      { key: "catFuel",  value: 78400, tone: "blue" },
+      { key: "catHotel", value: 52100, tone: "indigo" },
+      { key: "catMaint", value: 28600, tone: "amber" },
+      { key: "catTolls", value: 16800, tone: "green" },
+      { key: "catOther", value: 8420,  tone: "red" },
+    ],
+  };
+
+  const RECRUITMENT = {
+    funnel: [
+      { key: "recApplied", count: 248 },
+      { key: "recScreen", count: 132 },
+      { key: "recInterview", count: 64 },
+      { key: "recOffer", count: 28 },
+      { key: "recHired", count: 17 },
+    ],
+    byCountry: [
+      { cc: "BR", country: "Brasil", open: 9, pipeline: 78, hired: 6, aging: 12 },
+      { cc: "MX", country: "México", open: 7, pipeline: 54, hired: 4, aging: 18 },
+      { cc: "AR", country: "Argentina", open: 4, pipeline: 31, hired: 3, aging: 15 },
+      { cc: "CO", country: "Colombia", open: 5, pipeline: 28, hired: 2, aging: 21 },
+      { cc: "CL", country: "Chile", open: 3, pipeline: 19, hired: 1, aging: 16 },
+      { cc: "PE", country: "Peru", open: 4, pipeline: 14, hired: 1, aging: 24 },
+    ],
+  };
+  const PAY_RATES = { Brasil: 28, México: 24, Argentina: 22, Colombia: 20, Chile: 26, Peru: 19 };
+
+  function exceptions() {
+    return DRIVERS.filter((d) => d.status !== "active")
+      .sort((a, b) => SEVERITY[a.status] - SEVERITY[b.status]);
+  }
+
+  window.DASH = { DRIVERS, CTS, KPIS, EXPENSES, RECRUITMENT, PAY_RATES, statusOf, exceptions, SEVERITY };
+})();
+
+  </script>
+
+  <!-- App (React/JSX, transpilado em runtime pelo Babel) -->
+  <script type="text/babel" data-presets="react">
+/* ============================================================
+   Icons — clean line set, stroke = currentColor
+   ============================================================ */
+function Icon({ name, size = 18, stroke = 1.9 }) {
+  const c = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: stroke, strokeLinecap: "round", strokeLinejoin: "round" };
+  const P = {
+    home:   <><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" /></>,
+    users:  <><circle cx="9" cy="8" r="3.2" /><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5" /><path d="M16 5.2A3 3 0 0 1 16 11" /><path d="M21 20c0-2.6-1.5-4.2-3.8-4.8" /></>,
+    map:    <><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z" /><path d="M9 4v13M15 6.5v13" /></>,
+    target: <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="1" /></>,
+    trophy: <><path d="M7 4h10v4a5 5 0 0 1-10 0V4Z" /><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" /><path d="M12 14v3M9 21h6M10 21v-2.5a2 2 0 0 1 4 0V21" /></>,
+    wallet: <><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18a2 2 0 0 1 2 2v1H5.5" /><path d="M3 7.5V17a2 2 0 0 0 2 2h14a1.5 1.5 0 0 0 1.5-1.5V9.5A1.5 1.5 0 0 0 19 8H4.5" /><circle cx="16.5" cy="13.5" r="1.1" /></>,
+    settings:<><circle cx="12" cy="12" r="3" /><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7 5.6 5.6" /></>,
+    help:   <><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7M12 17h.01" /></>,
+    hotel:  <><path d="M3 20V6M3 13h13a4 4 0 0 1 4 4v3M3 20h18" /><path d="M7 10.5h2.5" /></>,
+    leaf:   <><path d="M4 20c8 1 16-3 16-13 0 0-6-1-10 2S4 13 4 20Z" /><path d="M9 15c2-3 5-5 8-6" /></>,
+    clock:  <><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></>,
+    alert:  <><path d="M12 4 2.5 20h19L12 4Z" /><path d="M12 10v4M12 17.5h.01" /></>,
+    search: <><circle cx="11" cy="11" r="6.5" /><path d="m20 20-3.2-3.2" /></>,
+    bell:   <><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" /><path d="M10 20a2 2 0 0 0 4 0" /></>,
+    chevron:<><path d="m6 9 6 6 6-6" /></>,
+    chevronR:<><path d="m9 6 6 6-6 6" /></>,
+    arrow:  <><path d="M5 12h14M13 6l6 6-6 6" /></>,
+    pin:    <><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z" /><circle cx="12" cy="10" r="2.5" /></>,
+    up:     <><path d="M7 14l5-5 5 5" /></>,
+    down:   <><path d="M7 10l5 5 5-5" /></>,
+    sort:   <><path d="M8 9l4-4 4 4M8 15l4 4 4-4" /></>,
+    download:<><path d="M12 3v12M7.5 11l4.5 4 4.5-4" /><path d="M5 20h14" /></>,
+    x:      <><path d="M6 6l12 12M18 6 6 18" /></>,
+    calendar:<><rect x="3.5" y="5" width="17" height="16" rx="2.5" /><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" /></>,
+    car:    <><path d="M5 16.5 6.2 11A2 2 0 0 1 8.1 9.5h7.8a2 2 0 0 1 1.9 1.5L19 16.5" /><path d="M4 16.5h16v2.5a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-1H7.5v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2.5Z" /><path d="M7 13.5h2M15 13.5h2" /></>,
+    building:<><path d="M5 21V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v16" /><path d="M14 9h4a1 1 0 0 1 1 1v11M3 21h18" /><path d="M8 8h2M8 12h2M8 16h2" /></>,
+    check:  <><path d="M5 12.5 10 17l9-10" /></>,
+    checkCircle:<><circle cx="12" cy="12" r="9" /><path d="M8.5 12l2.5 2.5 4.5-5" /></>,
+    sliders:<><path d="M4 8h10M18 8h2M4 16h2M10 16h10" /><circle cx="16" cy="8" r="2.2" /><circle cx="8" cy="16" r="2.2" /></>,
+    sun:    <><circle cx="12" cy="12" r="4" /><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" /></>,
+    moon:   <><path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.6 6.6 0 0 0 9.7 9.7Z" /></>,
+    ext:    <><path d="M14 5h5v5M19 5l-8 8M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5" /></>,
+    user:   <><circle cx="12" cy="8" r="3.5" /><path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6" /></>,
+    flag:   <><path d="M5 21V4M5 4h12l-2 4 2 4H5" /></>,
+    layers: <><path d="M12 3 3 7.5l9 4.5 9-4.5L12 3Z" /><path d="M3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5" /></>,
+    report: <><rect x="4" y="3" width="16" height="18" rx="2.5" /><path d="M8 13.5v3.5M12 10.5v6.5M16 8v9" /></>,
+    fileText: <><path d="M6 3h8l4 4v14H6V3Z" /><path d="M14 3v4h4" /><path d="M9 12.5h6M9 16h5" /></>,
+    grid:   <><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></>,
+    logout: <><path d="M14 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4" /><path d="M3 12h11M10 8l-4 4 4 4" /></>,
+  };
+  return <svg {...c}>{P[name] || null}</svg>;
+}
+
+/* ============================================================
+   Sidebar — deep navy, grouped nav. Items podem ser páginas
+   nativas (mockup do redesign) ou páginas reais embedadas.
+   ============================================================ */
+function Sidebar({ t, groups, active, onSelect }) {
+  const NavBtn = (it) => (
+    <button key={it.id} className={"nav-item" + (active === it.id ? " active" : "")} onClick={() => onSelect(it.id)} title={it.title || ""}>
+      <span className="nav-ico"><Icon name={it.icon} size={19} /></span>
+      <span className="nav-label">{it.label}</span>
+      {it.type === "embed" ? <span className="nav-ext"><Icon name="ext" size={13} /></span> : null}
+    </button>
+  );
+  return (
+    <aside className="sidebar">
+      <div className="brand">
+        <div className="brand-mark">SV</div>
+        <div className="brand-text">
+          <div className="brand-name">Street View</div>
+          <div className="brand-region">LATAM · Ops</div>
+        </div>
+      </div>
+      <nav className="nav">
+        {groups.map((g) => (
+          <div className="nav-group" key={g.label}>
+            <div className="nav-group-label">{g.label}</div>
+            {g.items.map(NavBtn)}
+          </div>
+        ))}
+      </nav>
+      <div className="sidebar-foot">
+        <div className="sf-dot" />
+        <div>
+          <div className="sf-line1">Redesign · teste</div>
+          <div className="sf-line2">páginas reais embedadas</div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+/* ============================================================
+   Top bar — search + date + export + admin + dark + lang + user
+   ============================================================ */
+function TopBar({ t, lang, setLang, search, setSearch, period, setPeriod, onAdmin, dark, toggleDark, user, onLogout }) {
+  const [expOpen, setExpOpen] = React.useState(false);
+  const [dateOpen, setDateOpen] = React.useState(false);
+  const periods = [{ id: "today", k: "today" }, { id: "week", k: "week" }, { id: "month", k: "month" }];
+  const expItems = [
+    { icon: "download", t: "expFull", s: "expFullSub" },
+    { icon: "download", t: "expSummary", s: "expSummarySub" },
+    { icon: "download", t: "expTimesheet", s: "expTimesheetSub" },
+    { icon: "download", t: "expMbr", s: "expMbrSub", hi: true },
+  ];
+  const uname = (user && user.fullName) || "—";
+  const uinit = initials(uname);
+  return (
+    <header className="topbar">
+      <label className="searchbox">
+        <Icon name="search" size={17} />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("searchPlaceholder")} />
+        <span className="search-kbd">⌘K</span>
+      </label>
+
+      <div className="topbar-right">
+        <div className="pop-wrap">
+          <button className={"tool-btn" + (dateOpen ? " on" : "")} onClick={() => { setDateOpen(!dateOpen); setExpOpen(false); }}>
+            <Icon name="calendar" size={16} /><span>{t(periods.find((p) => p.id === period)?.k)}</span><Icon name="chevron" size={14} />
+          </button>
+          {dateOpen && (
+            <div className="pop date-pop" onMouseLeave={() => setDateOpen(false)}>
+              <div className="pop-seg">
+                {periods.map((p) => (
+                  <button key={p.id} className={period === p.id ? "on" : ""} onClick={() => { setPeriod(p.id); setDateOpen(false); }}>{t(p.k)}</button>
+                ))}
+              </div>
+              <div className="pop-divider" />
+              <div className="pop-field"><span>{t("dateSpecific")}</span><input type="date" /></div>
+              <div className="pop-field"><span>{t("dateRange")}</span><div className="pop-range"><input type="date" /><input type="date" /></div></div>
+              <button className="pop-apply">{t("apply")}</button>
+            </div>
+          )}
+        </div>
+
+        <div className="pop-wrap">
+          <button className={"tool-btn primary" + (expOpen ? " on" : "")} onClick={() => { setExpOpen(!expOpen); setDateOpen(false); }}>
+            <Icon name="download" size={16} /><span>{t("export")}</span><Icon name="chevron" size={14} />
+          </button>
+          {expOpen && (
+            <div className="pop exp-pop" onMouseLeave={() => setExpOpen(false)}>
+              {expItems.map((it, i) => (
+                <button key={i} className={"exp-item" + (it.hi ? " hi" : "")} onClick={() => setExpOpen(false)}>
+                  <span className="exp-ico"><Icon name={it.icon} size={17} /></span>
+                  <span><span className="exp-t">{t(it.t)}</span><span className="exp-s">{t(it.s)}</span></span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button className="tool-btn ghost" onClick={onAdmin}><Icon name="sliders" size={16} /><span>{t("admin")}</span></button>
+
+        <div className="t-divider" />
+
+        <button className="icon-btn" onClick={toggleDark} title={dark ? t("themeLight") : t("themeDark")} aria-label={dark ? t("themeLight") : t("themeDark")}>
+          <Icon name={dark ? "sun" : "moon"} size={18} />
+        </button>
+
+        <div className="lang-switch">
+          {["pt", "es", "en"].map((l) => (
+            <button key={l} className={lang === l ? "active" : ""} onClick={() => setLang(l)}>{l.toUpperCase()}</button>
+          ))}
+        </div>
+        <button className="icon-btn has-dot"><Icon name="bell" size={18} /></button>
+        <div className="user-pill" onClick={onLogout} title={t("logout")}>
+          <div className="avatar">{uinit}</div>
+          <div className="user-meta"><div className="user-name">{uname}</div><div className="user-role">{t("loggedIn")}</div></div>
+          <span className="user-chev"><Icon name="logout" size={15} /></span>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ============================================================
+   KPI card (clickable = filter)
+   ============================================================ */
+function KpiCard({ t, k, activeFilter, onClick }) {
+  const on = activeFilter === k.filter && k.filter !== "all";
+  return (
+    <button className={"kpi" + (on ? " active" : "")} onClick={() => onClick(k.filter)}>
+      <div className={"kpi-ico tone-" + k.tone}><Icon name={k.icon} size={19} /></div>
+      <div className="kpi-body">
+        <div className="kpi-label">{t(k.labelKey)}</div>
+        <div className="kpi-value-row">
+          <span className="kpi-value">{k.value}</span>
+          <span className={"kpi-delta " + k.deltaSign}><Icon name={k.deltaSign === "up" ? "up" : "down"} size={13} />{k.delta}</span>
+        </div>
+        <div className="kpi-sub">{k.subVal ? <b>{k.subVal} </b> : null}{t(k.subKey)}</div>
+      </div>
+      <span className="kpi-filter-hint"><Icon name="chevronR" size={14} /></span>
+    </button>
+  );
+}
+
+function initials(name) { return name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase(); }
+
+Object.assign(window, { Icon, Sidebar, TopBar, KpiCard, initials });
+
+
+/* ============================================================
+   Shared helpers
+   ============================================================ */
+const STATUS_META = {
+  active:    { k: "stActive",    cls: "ok",      dot: "#16A34A" },
+  warn:      { k: "stWarn",      cls: "warn",    dot: "#D97706" },
+  critical:  { k: "stCritical",  cls: "danger",  dot: "#DC2626" },
+  minor:     { k: "stMinor",     cls: "warn",    dot: "#D97706" },
+  nocheckin: { k: "stNoCheckin", cls: "neutral", dot: "#94A3B8" },
+  nomap:     { k: "stNoMap",     cls: "danger",  dot: "#DC2626" },
+};
+function checkinLabel(t, h) {
+  if (h === null) return "—";
+  if (h < 1) return t("justNow");
+  if (h < 24) return Math.round(h) + t("hoursAgo");
+  return Math.round(h / 24) + t("dayAgo");
+}
+function CC({ cc }) { return <span className="cc">{cc}</span>; }
+
+/* ============================================================
+   Map card
+   ============================================================ */
+function MapCard({ t, drivers, onSelect, height = 460, bare = false }) {
+  const ref = React.useRef(null), mapRef = React.useRef(null), layerRef = React.useRef(null);
+  React.useEffect(() => {
+    if (!window.L || mapRef.current) return;
+    const map = window.L.map(ref.current, { center: [-15, -60], zoom: 3, zoomControl: false, attributionControl: false, scrollWheelZoom: false });
+    mapRef.current = map;
+    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(map);
+    window.L.control.zoom({ position: "bottomright" }).addTo(map);
+    layerRef.current = window.L.layerGroup().addTo(map);
+    setTimeout(() => map.invalidateSize(), 150);
+  }, []);
+  React.useEffect(() => {
+    const map = mapRef.current, lg = layerRef.current;
+    if (!map || !lg) return;
+    lg.clearLayers();
+    drivers.forEach((d) => {
+      const dot = STATUS_META[d.status].dot;
+      const hotel = d.base === "hotel";
+      const html = `<span class="mk ${hotel ? "mk-hotel" : ""}" style="--mk:${dot}"></span>`;
+      const ic = window.L.divIcon({ className: "mk-wrap", html, iconSize: [18, 18], iconAnchor: [9, 9] });
+      window.L.marker([d.lat, d.lng], { icon: ic }).addTo(lg)
+        .on("click", () => onSelect && onSelect(d))
+        .bindTooltip(`<b>${d.name}</b><br>${d.city}`, { direction: "top", offset: [0, -8] });
+    });
+  }, [drivers]);
+
+  const legend = (
+    <div className="map-legend">
+      <span><i className="lg" style={{ background: "#16A34A" }} />{t("legendRecent")}</span>
+      <span><i className="lg" style={{ background: "#D97706" }} />{t("legendOld")}</span>
+      <span><i className="lg" style={{ background: "#DC2626" }} />{t("legendNoMap")}/{t("legendIssue")}</span>
+      <span><i className="lg-ring" />{t("legendHotel")}</span>
+    </div>
+  );
+  if (bare) return <div className="map-bare"><div ref={ref} className="map-el" style={{ height }} />{legend}</div>;
+  return (
+    <section className="card map-card">
+      <div className="card-head">
+        <div><div className="card-title">{t("mapTitle")}</div><div className="card-sub">{t("mapSub")}</div></div>
+        <div className="map-count">{drivers.length} <span>{t("mapVisible")}</span></div>
+      </div>
+      <div className="map-frame"><div ref={ref} className="map-el" style={{ height }} />{legend}</div>
+    </section>
+  );
+}
+
+/* ============================================================
+   Exceptions queue — "Precisa de atenção"
+   ============================================================ */
+function ExceptionsPanel({ t, onSelect }) {
+  const items = window.DASH.exceptions();
+  return (
+    <section className="card exc-card">
+      <div className="card-head">
+        <div><div className="card-title">{t("excTitle")}</div><div className="card-sub">{t("excSub")}</div></div>
+        <span className="exc-count">{items.length} {t("excCount")}</span>
+      </div>
+      {items.length === 0 ? (
+        <div className="exc-empty"><Icon name="checkCircle" size={34} /><div className="exc-empty-t">{t("excAllGood")}</div><div className="exc-empty-s">{t("excAllGoodSub")}</div></div>
+      ) : (
+        <div className="exc-list">
+          {items.map((d) => {
+            const sm = STATUS_META[d.status];
+            return (
+              <button className="exc-row" key={d.id} onClick={() => onSelect(d)}>
+                <span className="exc-bar" style={{ background: sm.dot }} />
+                <span className="exc-av">{initials(d.name)}</span>
+                <span className="exc-info">
+                  <span className="exc-name">{d.name}</span>
+                  <span className="exc-meta"><CC cc={d.cc} />{d.city.split(",")[0]} · {checkinLabel(t, d.checkin)}</span>
+                </span>
+                <span className={"status-pill " + sm.cls}>{t(sm.k)}</span>
+                <span className="exc-go"><Icon name="chevronR" size={15} /></span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ============================================================
+   CTS card
+   ============================================================ */
+function CtsCard({ t, compact = false }) {
+  const rows = window.DASH.CTS.map((c) => ({ ...c, pct: Math.round((c.done / c.goal) * 100) }));
+  const tDone = rows.reduce((s, r) => s + r.done, 0), tGoal = rows.reduce((s, r) => s + r.goal, 0);
+  const tPct = Math.round((tDone / tGoal) * 100);
+  return (
+    <section className={"card cts-card" + (compact ? " compact" : "")}>
+      <div className="card-head">
+        <div><div className="card-title">{t("ctsTitle")}</div><div className="card-sub">{t("ctsSub")}</div></div>
+        <div className="cts-total"><span className="cts-total-pct">{tPct}%</span><span className="cts-total-lbl">{t("ctsTotal")}</span></div>
+      </div>
+      <div className="cts-list">
+        {rows.map((c) => {
+          const on = c.pct >= 70;
+          return (
+            <div className="cts-row" key={c.cc}>
+              <div className="cts-country"><CC cc={c.cc} />{c.country}</div>
+              <div className="cts-bar"><div className={"cts-fill " + (on ? "on" : "behind")} style={{ width: c.pct + "%" }} /></div>
+              <div className="cts-pct">{c.pct}%</div>
+              <div className="cts-detail">{(c.done / 1000).toFixed(1)}k / {(c.goal / 1000).toFixed(0)}k</div>
+              <span className={"cts-tag " + (on ? "on" : "behind")}>{on ? t("ctsOnTrack") : t("ctsBehind")}</span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   Ranking card — type: "km" | "eff"
+   ============================================================ */
+function RankingCard({ t, type = "km" }) {
+  const base = [...window.DASH.DRIVERS];
+  const list = type === "km"
+    ? base.sort((a, b) => b.km - a.km).slice(0, 6)
+    : base.sort((a, b) => a.distBase - b.distBase).slice(0, 6);
+  const max = type === "km" ? list[0].km : Math.max(...list.map((d) => d.distBase));
+  const medal = ["#D9A441", "#9AA6B8", "#B9824E"];
+  return (
+    <section className="card rank-card">
+      <div className="card-head">
+        <div><div className="card-title">{t(type === "km" ? "rankKmTitle" : "rankEffTitle")}</div><div className="card-sub">{t(type === "km" ? "rankKmSub" : "rankEffSub")}</div></div>
+        <span className="rank-ico"><Icon name={type === "km" ? "trophy" : "leaf"} size={17} /></span>
+      </div>
+      <div className="rank-list">
+        {list.map((d, i) => {
+          const val = type === "km" ? d.km : d.distBase;
+          const w = type === "km" ? (d.km / max) * 100 : (1 - d.distBase / (max * 1.1)) * 100;
+          return (
+            <div className="rank-row" key={d.id}>
+              <div className="rank-pos" style={{ color: medal[i] || "#C3CCDA" }}>{i + 1}</div>
+              <div className="rank-av">{initials(d.name)}</div>
+              <div className="rank-info">
+                <div className="rank-name">{d.name}</div>
+                <div className="rank-bar"><div className="rank-fill" style={{ width: Math.max(8, w) + "%" }} /></div>
+              </div>
+              <div className="rank-km">{type === "km" ? val : val.toFixed(1)}<span>{t("rankUnit")}</span></div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   Drivers table
+   ============================================================ */
+function DriversTable({ t, drivers, onSelect, full = false }) {
+  const [sort, setSort] = React.useState({ key: "km", dir: "desc" });
+  const rows = [...drivers].sort((a, b) => {
+    const dir = sort.dir === "asc" ? 1 : -1;
+    let va = a[sort.key], vb = b[sort.key];
+    if (va === null) va = -1; if (vb === null) vb = -1;
+    if (typeof va === "string") return va.localeCompare(vb) * dir;
+    return (va - vb) * dir;
+  });
+  const toggle = (k) => setSort((s) => s.key === k ? { key: k, dir: s.dir === "asc" ? "desc" : "asc" } : { key: k, dir: "desc" });
+  const cols = [
+    { key: "name", l: "thDriver" }, { key: "country", l: "thCountry" }, { key: "city", l: "thCity" },
+    { key: "base", l: "thBase" }, { key: "hm", l: "thHm" }, { key: "checkin", l: "thCheckin" },
+    { key: "km", l: "thKm" }, { key: "savings", l: "thSavings" }, { key: "status", l: "thStatus" },
+  ];
+  const shown = full ? rows : rows.slice(0, 8);
+  return (
+    <section className="card table-card">
+      <div className="card-head">
+        <div><div className="card-title">{t("tableTitle")}</div><div className="card-sub">{t("tableSub")}</div></div>
+        <span className="map-count">{rows.length} <span>{t("drivers")}</span></span>
+      </div>
+      <div className="table-scroll">
+        <table className="dtable">
+          <thead><tr>
+            {cols.map((c) => (
+              <th key={c.key} onClick={() => toggle(c.key)} className={sort.key === c.key ? "sorted" : ""}>
+                <span>{t(c.l)}</span><Icon name="sort" size={12} />
+              </th>
+            ))}
+          </tr></thead>
+          <tbody>
+            {shown.map((d) => {
+              const sm = STATUS_META[d.status];
+              return (
+                <tr key={d.id} onClick={() => onSelect(d)}>
+                  <td><div className="td-driver"><div className="td-av">{initials(d.name)}</div><div><span className="td-name">{d.name}</span><span className="td-plate">{d.plate}</span></div></div></td>
+                  <td><CC cc={d.cc} />{d.country}</td>
+                  <td className="muted">{d.city.split(",")[0]}</td>
+                  <td><span className={"base-pill " + d.base}><Icon name={d.base === "hotel" ? "hotel" : "home"} size={13} />{t(d.base === "hotel" ? "baseHotel" : "baseHome")}</span></td>
+                  <td>{d.hm ? <span className="hm-yes"><Icon name="check" size={13} />{t("yes")}</span> : <span className="muted">{t("no")}</span>}</td>
+                  <td className={d.checkin > 24 ? "stale" : "muted"}>{checkinLabel(t, d.checkin)}</td>
+                  <td className="num">{d.km}</td>
+                  <td className="num">{d.savings ? <span className="save">+{d.savings}</span> : <span className="muted">—</span>}</td>
+                  <td><span className={"status-pill " + sm.cls}><i className="sp-dot" style={{ background: sm.dot }} />{t(sm.k)}</span></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {!full && rows.length > 8 && <div className="table-foot"><span>{shown.length} / {rows.length}</span><button className="ghost-btn">{t("showAll")} <Icon name="arrow" size={14} /></button></div>}
+    </section>
+  );
+}
+
+Object.assign(window, { STATUS_META, checkinLabel, CC, MapCard, ExceptionsPanel, CtsCard, RankingCard, DriversTable });
+
+
+/* ============================================================
+   Driver detail — rich slide-over (drill-down)
+   ============================================================ */
+function Row({ label, children, strong }) {
+  return <div className="info-row"><span className="info-label">{label}</span><span className={"info-value" + (strong ? " strong" : "")}>{children}</span></div>;
+}
+function Sec({ title, icon, children }) {
+  return <div className="dp-sec"><div className="dp-sec-title">{icon ? <Icon name={icon} size={15} /> : null}{title}</div>{children}</div>;
+}
+
+function DriverDetail({ t, driver, onClose }) {
+  const ref = React.useRef(null), mapRef = React.useRef(null);
+  React.useEffect(() => {
+    if (!driver || !window.L) return;
+    const map = window.L.map(ref.current, { center: [driver.lat, driver.lng], zoom: 11, zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false });
+    mapRef.current = map;
+    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png").addTo(map);
+    const dot = STATUS_META[driver.status].dot;
+    window.L.marker([driver.lat, driver.lng], { icon: window.L.divIcon({ className: "mk-wrap", html: `<span class="mk" style="--mk:${dot}"></span>`, iconSize: [18, 18], iconAnchor: [9, 9] }) }).addTo(map);
+    window.L.circle([driver.lat, driver.lng], { radius: 9000, color: "#2563EB", weight: 1.2, fillColor: "#2563EB", fillOpacity: 0.08 }).addTo(map);
+    setTimeout(() => map.invalidateSize(), 120);
+    return () => { map.remove(); mapRef.current = null; };
+  }, [driver && driver.id]);
+
+  if (!driver) return null;
+  const d = driver, sm = STATUS_META[d.status];
+  const city = d.city.split(",")[0];
+  const cls = d.distBase < 5 ? "Excelente" : d.distBase < 12 ? "Bom" : "Atenção";
+  return (
+    <>
+      <div className="dp-backdrop" onClick={onClose} />
+      <aside className="dp" role="dialog">
+        <div className="dp-head">
+          <div className="dp-head-main">
+            <div className="dp-av">{initials(d.name)}</div>
+            <div><div className="dp-name">{d.name}</div><div className="dp-sub"><CC cc={d.cc} />{d.city} · {d.plate}</div></div>
+          </div>
+          <button className="dp-close" onClick={onClose}><Icon name="x" size={18} /></button>
+        </div>
+        <div className="dp-statusbar"><span className={"status-pill " + sm.cls}><i className="sp-dot" style={{ background: sm.dot }} />{t(sm.k)}</span><span className="dp-checkin"><Icon name="clock" size={14} />{checkinLabel(t, d.checkin)}</span></div>
+
+        <div className="dp-body">
+          <div ref={ref} className="dp-map" />
+
+          <div className="dp-metric">
+            <div><div className="dp-metric-lbl">{t("dpDist")}</div><div className="dp-metric-val">{d.distBase.toFixed(1)} <small>km</small></div></div>
+            <div className={"dp-class " + (cls === "Excelente" ? "good" : cls === "Bom" ? "mid" : "warn")}>{cls}</div>
+          </div>
+
+          <Sec title={t("dpBase")} icon="building">
+            <Row label={t("dpType")}>{d.base === "hotel" ? "🏨 " + t("baseHotel") : "🏠 " + t("baseHome")}</Row>
+            <Row label={t("dpAddress")}><span className="small">{city} — Centro, {d.country}</span></Row>
+            <Row label={t("dpPlate")} strong>{d.plate}</Row>
+          </Sec>
+
+          <Sec title={t("dpVid")} icon="map">
+            <Row label={t("dpVidId")} strong>{d.vid}</Row>
+            <Row label={t("dpFloating")}>{d.floating ? t("yes") : t("no")}</Row>
+            <Row label={t("dpGStatus")}><span className={"gpill " + d.gStatus.toLowerCase()}>{d.gStatus}</span></Row>
+            <Row label={t("dpQc")} strong><span className={d.qc >= 90 ? "qc-good" : d.qc >= 80 ? "qc-mid" : "qc-low"}>{d.qc}</span></Row>
+          </Sec>
+
+          <Sec title={t("dpPerf")} icon="target">
+            <div className="dp-grid">
+              <div className="dp-stat"><span>{d.efficiency}</span><label>{t("dpEff")}</label></div>
+              <div className="dp-stat"><span>{d.tkm}</span><label>{t("dpTkm")}</label></div>
+              <div className="dp-stat"><span>{d.kmDriven}</span><label>{t("dpKmDriven")}</label></div>
+              <div className="dp-stat"><span>{d.mapDays}</span><label>{t("dpMapDays")}</label></div>
+              <div className="dp-stat"><span>{d.breakeven}%</span><label>{t("dpBreakeven")}</label></div>
+              <div className="dp-stat"><span className={d.idle > 4 ? "warn-num" : ""}>{d.idle}</span><label>{t("dpIdle")}</label></div>
+            </div>
+          </Sec>
+
+          <Sec title={t("dpHotel")} icon="leaf">
+            <Row label={t("dpHome")}><span className="small">{city} — Bairro residencial</span></Row>
+            <Row label={t("dpDistHome")} strong>{d.distHome.toFixed(1)} km</Row>
+            <Row label={t("dpSavings")}><span className="save">{d.savings ? "+" + d.savings + " km/dia" : "—"}</span></Row>
+            <Row label={t("dpHmMonthly")}>{d.hm ? <span className="hm-yes"><Icon name="check" size={13} />{t("yes")}</span> : t("no")}</Row>
+          </Sec>
+
+          <Sec title={t("dpArea")} icon="pin">
+            <Row label={t("dpLocation")}><span className="small">{city} — área operacional</span></Row>
+            <Row label={t("dpRadius")} strong>{(8 + (d.id.charCodeAt(1) % 6))} km</Row>
+          </Sec>
+
+          <Sec title={t("dpCheckin")} icon="clock">
+            <Row label={t("dpWhen")}>{checkinLabel(t, d.checkin)}</Row>
+            <Row label={t("dpVehicle")}>
+              <span className={"veh " + d.vehicleStatus}>{t(d.vehicleStatus === "ok" ? "vehOk" : d.vehicleStatus === "minor" ? "vehMinor" : "vehCritical")}</span>
+            </Row>
+          </Sec>
+
+          <Sec title={t("dpHistory")} icon="map">
+            <div className="dp-hist">
+              {["Maio 2026", "Abril 2026", "Março 2026"].map((m, i) => (
+                <div className="dp-hist-row" key={m}><span className="dp-hist-dot" /><div><div className="dp-hist-m">{m}</div><div className="dp-hist-c">{city} — VID-{d.cc}-0{20 - i * 3}</div></div></div>
+              ))}
+            </div>
+          </Sec>
+
+          <a className="dp-profile" href="#" onClick={(e) => e.preventDefault()}><Icon name="user" size={16} />{t("dpProfile")}<Icon name="arrow" size={15} /></a>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+/* ============================================================
+   Admin modal — edit driver without the spreadsheet
+   ============================================================ */
+function AdminModal({ t, onClose }) {
+  const [sel, setSel] = React.useState(window.DASH.DRIVERS[0]);
+  const [q, setQ] = React.useState("");
+  const [saved, setSaved] = React.useState(false);
+  const list = window.DASH.DRIVERS.filter((d) => d.name.toLowerCase().includes(q.toLowerCase()));
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal admin-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div><div className="modal-title">{t("admTitle")}</div><div className="modal-sub">{t("admSub")}</div></div>
+          <button className="dp-close" onClick={onClose}><Icon name="x" size={18} /></button>
+        </div>
+        <div className="admin-body">
+          <div className="admin-list-col">
+            <label className="admin-search"><Icon name="search" size={15} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("admSearch")} /></label>
+            <div className="admin-list">
+              {list.map((d) => (
+                <button key={d.id} className={"admin-li" + (sel.id === d.id ? " on" : "")} onClick={() => { setSel(d); setSaved(false); }}>
+                  <span className="admin-li-av">{initials(d.name)}</span>
+                  <span><span className="admin-li-name">{d.name}</span><span className="admin-li-meta"><CC cc={d.cc} />{d.city.split(",")[0]}</span></span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="admin-form">
+            <div className="admin-form-head"><div className="dp-av lg">{initials(sel.name)}</div><div><div className="dp-name">{sel.name}</div><div className="dp-sub"><CC cc={sel.cc} />{sel.city} · {sel.plate}</div></div></div>
+            <div className="admin-field"><label>{t("admEmail")}</label><input type="email" defaultValue={sel.name.toLowerCase().replace(/[^a-z]/g, ".").replace(/\.+/g, ".") + "@streetview.com"} /></div>
+            <div className="admin-field"><label>{t("admBaseType")}</label>
+              <div className="admin-seg">
+                <button className={sel.base === "home" ? "on" : ""}><Icon name="home" size={14} />{t("baseHome")}</button>
+                <button className={sel.base === "hotel" ? "on" : ""}><Icon name="hotel" size={14} />{t("baseHotel")}</button>
+              </div>
+            </div>
+            <div className="admin-field"><label>{t("admNotes")}</label><textarea rows="3" placeholder="Ex: Driver mudou de cidade em abril/2026…"></textarea></div>
+            <div className="admin-actions">
+              {saved && <span className="admin-saved"><Icon name="check" size={15} />{t("admSaved")}</span>}
+              <button className="btn-ghost" onClick={onClose}>{t("admCancel")}</button>
+              <button className="btn-primary" onClick={() => setSaved(true)}>{t("admSave")}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { DriverDetail, AdminModal });
+
+
+/* ============================================================
+   Page chrome — head + filters
+   ============================================================ */
+function PageHead({ t, title, sub, country, kpiFilter, onClear }) {
+  const filtered = country !== "all" || (kpiFilter && kpiFilter !== "all");
+  return (
+    <div className="page-head">
+      <div>
+        <h1 className="page-title">{title}</h1>
+        <p className="page-sub">{sub}</p>
+      </div>
+      <div className="page-meta">
+        {filtered && <button className="filter-flag" onClick={onClear}><Icon name="x" size={13} />{t("clearFilter")}</button>}
+        <span className="updated"><span className="live-dot" />{t("updated")} · 14:32</span>
+      </div>
+    </div>
+  );
+}
+
+function FilterBar({ t, country, setCountry }) {
+  const cs = [["all", t("all")], ["Brasil", "Brasil"], ["México", "México"], ["Argentina", "Argentina"], ["Colombia", "Colombia"], ["Chile", "Chile"], ["Peru", "Peru"]];
+  return (
+    <div className="filterbar">
+      <span className="filter-cap">{t("filterCountry")}</span>
+      <div className="chips">
+        {cs.map(([id, label]) => (
+          <button key={id} className={"chip" + (country === id ? " on" : "")} onClick={() => setCountry(id)}>{label}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   Pages
+   ============================================================ */
+function OverviewPage({ t, ctx }) {
+  return (
+    <>
+      <PageHead t={t} title={t("pgHomeTitle")} sub={t("pgHomeSub")} country={ctx.country} kpiFilter={ctx.kpiFilter} onClear={ctx.clearFilters} />
+      <FilterBar t={t} country={ctx.country} setCountry={ctx.setCountry} />
+      <div className="kpi-row">
+        {window.DASH.KPIS.map((k) => <KpiCard key={k.id} t={t} k={k} activeFilter={ctx.kpiFilter} onClick={ctx.toggleKpi} />)}
+      </div>
+      <div className="grid-a">
+        <MapCard t={t} drivers={ctx.drivers} onSelect={ctx.select} height={470} />
+        <ExceptionsPanel t={t} onSelect={ctx.select} />
+      </div>
+      <div className="grid-b">
+        <CtsCard t={t} compact />
+        <RankingCard t={t} type="km" />
+      </div>
+      <DriversTable t={t} drivers={ctx.drivers} onSelect={ctx.select} />
+    </>
+  );
+}
+
+function DriversPage({ t, ctx }) {
+  return (
+    <>
+      <PageHead t={t} title={t("pgDriversTitle")} sub={t("pgDriversSub")} country={ctx.country} kpiFilter={ctx.kpiFilter} onClear={ctx.clearFilters} />
+      <FilterBar t={t} country={ctx.country} setCountry={ctx.setCountry} />
+      <div className="kpi-row">
+        {window.DASH.KPIS.map((k) => <KpiCard key={k.id} t={t} k={k} activeFilter={ctx.kpiFilter} onClick={ctx.toggleKpi} />)}
+      </div>
+      <DriversTable t={t} drivers={ctx.drivers} onSelect={ctx.select} full />
+    </>
+  );
+}
+
+function MapPage({ t, ctx }) {
+  return (
+    <>
+      <PageHead t={t} title={t("pgMapTitle")} sub={t("pgMapSub")} country={ctx.country} kpiFilter={ctx.kpiFilter} onClear={ctx.clearFilters} />
+      <FilterBar t={t} country={ctx.country} setCountry={ctx.setCountry} />
+      <div className="grid-map">
+        <section className="card map-card">
+          <div className="card-head">
+            <div><div className="card-title">{t("mapTitle")}</div><div className="card-sub">{t("mapSub")}</div></div>
+            <div className="map-count">{ctx.drivers.length} <span>{t("mapVisible")}</span></div>
+          </div>
+          <div className="map-frame"><MapCard t={t} drivers={ctx.drivers} onSelect={ctx.select} height={620} bare /></div>
+        </section>
+        <ExceptionsPanel t={t} onSelect={ctx.select} />
+      </div>
+    </>
+  );
+}
+
+function CtsPage({ t, ctx }) {
+  return (
+    <>
+      <PageHead t={t} title={t("pgCtsTitle")} sub={t("pgCtsSub")} country={ctx.country} kpiFilter={ctx.kpiFilter} onClear={ctx.clearFilters} />
+      <div className="grid-b">
+        <CtsCard t={t} />
+        <RankingCard t={t} type="km" />
+      </div>
+    </>
+  );
+}
+
+function RankingsPage({ t, ctx }) {
+  return (
+    <>
+      <PageHead t={t} title={t("pgRankTitle")} sub={t("pgRankSub")} country={ctx.country} kpiFilter={ctx.kpiFilter} onClear={ctx.clearFilters} />
+      <div className="grid-b">
+        <RankingCard t={t} type="km" />
+        <RankingCard t={t} type="eff" />
+      </div>
+    </>
+  );
+}
+
+function ExpensesPage({ t }) {
+  const E = window.DASH.EXPENSES;
+  const maxC = Math.max(...E.byCountry.map((c) => c.value));
+  const fmt = (n) => "$" + (n / 1000).toFixed(1) + "k";
+  return (
+    <>
+      <PageHead t={t} title={t("pgFundsTitle")} sub={t("pgFundsSub")} country="all" kpiFilter="all" onClear={() => {}} />
+      <div className="exp-top">
+        <div className="card exp-total">
+          <div className="exp-total-lbl">{t("expTotal")}</div>
+          <div className="exp-total-val">${(E.total / 1000).toFixed(1)}k</div>
+          <div className="exp-total-delta"><Icon name="up" size={14} />+6.4% vs maio</div>
+        </div>
+        <section className="card exp-cat-card">
+          <div className="card-head"><div className="card-title">{t("expByCat")}</div></div>
+          <div className="exp-cats">
+            {E.byCategory.map((c) => (
+              <div className="exp-cat" key={c.key}>
+                <span className={"exp-cat-dot tone-" + c.tone} />
+                <span className="exp-cat-name">{t(c.key)}</span>
+                <span className="exp-cat-bar"><span className={"exp-cat-fill tone-" + c.tone} style={{ width: (c.value / E.byCategory[0].value) * 100 + "%" }} /></span>
+                <span className="exp-cat-val">{fmt(c.value)}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+      <section className="card">
+        <div className="card-head"><div className="card-title">{t("expByCountry")}</div></div>
+        <div className="cts-list">
+          {E.byCountry.map((c) => (
+            <div className="cts-row" key={c.cc}>
+              <div className="cts-country"><CC cc={c.cc} />{c.country}</div>
+              <div className="cts-bar"><div className="cts-fill on" style={{ width: (c.value / maxC) * 100 + "%" }} /></div>
+              <div className="cts-pct">{fmt(c.value)}</div>
+              <div className="cts-detail">{Math.round((c.value / E.total) * 100)}%</div>
+              <span />
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function ScopePlanningPage({ t, ctx }) {
+  return (
+    <>
+      <PageHead t={t} title={t("pgScopeTitle")} sub={t("pgScopeSub")} country={ctx.country} kpiFilter={ctx.kpiFilter} onClear={ctx.clearFilters} />
+      <FilterBar t={t} country={ctx.country} setCountry={ctx.setCountry} />
+      <section className="card map-card" style={{ marginBottom: 16 }}>
+        <div className="card-head">
+          <div><div className="card-title">{t("mapTitle")}</div><div className="card-sub">{t("mapSub")}</div></div>
+          <div className="map-count">{ctx.drivers.length} <span>{t("mapVisible")}</span></div>
+        </div>
+        <div className="map-frame"><MapCard t={t} drivers={ctx.drivers} onSelect={ctx.select} height={480} bare /></div>
+      </section>
+      <CtsCard t={t} />
+    </>
+  );
+}
+
+function PayrollPage({ t, ctx }) {
+  const fmt = (n) => "$" + Math.round(n).toLocaleString("en-US");
+  const rows = ctx.drivers.map((d) => {
+    const rate = window.DASH.PAY_RATES[d.country] || 22;
+    const hours = d.mapDays * 8 + (d.id.charCodeAt(1) % 5);
+    return { ...d, rate, hours, gross: hours * rate };
+  }).sort((a, b) => b.gross - a.gross);
+  const total = rows.reduce((s, r) => s + r.gross, 0);
+  const byCountry = {};
+  rows.forEach((r) => { byCountry[r.cc] = byCountry[r.cc] || { cc: r.cc, country: r.country, value: 0 }; byCountry[r.cc].value += r.gross; });
+  const bc = Object.values(byCountry).sort((a, b) => b.value - a.value);
+  const maxBc = bc.length ? bc[0].value : 1;
+  return (
+    <>
+      <PageHead t={t} title={t("pgPayTitle")} sub={t("pgPaySub")} country={ctx.country} kpiFilter={ctx.kpiFilter} onClear={ctx.clearFilters} />
+      <FilterBar t={t} country={ctx.country} setCountry={ctx.setCountry} />
+      <div className="exp-top">
+        <div className="card exp-total">
+          <div className="exp-total-lbl">{t("payTotal")}</div>
+          <div className="exp-total-val">{fmt(total)}</div>
+          <div className="exp-total-delta"><Icon name="up" size={14} />+4.1% vs maio</div>
+        </div>
+        <section className="card">
+          <div className="card-head"><div className="card-title">{t("payByCountry")}</div></div>
+          <div className="cts-list">
+            {bc.map((c) => (
+              <div className="cts-row" key={c.cc} style={{ gridTemplateColumns: "132px 1fr 84px auto" }}>
+                <div className="cts-country"><CC cc={c.cc} />{c.country}</div>
+                <div className="cts-bar"><div className="cts-fill on" style={{ width: (c.value / maxBc) * 100 + "%" }} /></div>
+                <div className="cts-pct">{fmt(c.value)}</div>
+                <div className="cts-detail">{Math.round((c.value / total) * 100)}%</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+      <section className="card table-card">
+        <div className="card-head"><div><div className="card-title">{t("navPayroll")}</div><div className="card-sub">{rows.length} drivers</div></div><button className="ghost-btn">{t("export")} <Icon name="download" size={14} /></button></div>
+        <div className="table-scroll">
+          <table className="dtable">
+            <thead><tr><th>{t("thDriver")}</th><th>{t("thCountry")}</th><th>{t("payDays")}</th><th>{t("payHours")}</th><th>{t("payRate")}</th><th>{t("payGross")}</th><th>{t("payStatus")}</th></tr></thead>
+            <tbody>
+              {rows.map((d, i) => (
+                <tr key={d.id} onClick={() => ctx.select(d)}>
+                  <td><div className="td-driver"><div className="td-av">{initials(d.name)}</div><div><span className="td-name">{d.name}</span><span className="td-plate">{d.plate}</span></div></div></td>
+                  <td><CC cc={d.cc} />{d.country}</td>
+                  <td className="num">{d.mapDays}</td>
+                  <td className="num">{d.hours}</td>
+                  <td className="num muted">${d.rate}</td>
+                  <td className="num" style={{ fontWeight: 800 }}>{fmt(d.gross)}</td>
+                  <td>{i % 4 === 0 ? <span className="status-pill warn"><i className="sp-dot" style={{ background: "#D97706" }} />{t("payPending")}</span> : <span className="status-pill ok"><i className="sp-dot" style={{ background: "#16A34A" }} />{t("payPaid")}</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function RecruitmentPage({ t, ctx }) {
+  const R = window.DASH.RECRUITMENT;
+  const maxF = R.funnel[0].count;
+  const sum = (k) => R.byCountry.reduce((s, c) => s + c[k], 0);
+  const avgAging = Math.round(R.byCountry.reduce((s, c) => s + c.aging, 0) / R.byCountry.length);
+  const stats = [
+    { val: sum("open"), lbl: t("recOpen"), tone: "blue" },
+    { val: sum("pipeline"), lbl: t("recPipeline"), tone: "indigo" },
+    { val: sum("hired"), lbl: t("recHiredMo"), tone: "green" },
+    { val: avgAging + " " + t("recDays"), lbl: t("recAging"), tone: "amber" },
+  ];
+  return (
+    <>
+      <PageHead t={t} title={t("pgRecTitle")} sub={t("pgRecSub")} country="all" kpiFilter="all" onClear={() => {}} />
+      <div className="mini-row">
+        {stats.map((s, i) => (
+          <div className="mini-card" key={i}>
+            <div className={"mini-bar tone-" + s.tone} />
+            <div className="mini-val">{s.val}</div>
+            <div className="mini-lbl">{s.lbl}</div>
+          </div>
+        ))}
+      </div>
+      <div className="grid-map">
+        <section className="card">
+          <div className="card-head"><div><div className="card-title">{t("recByCountry")}</div></div></div>
+          <div className="table-scroll">
+            <table className="dtable">
+              <thead><tr><th>{t("thCountry")}</th><th>{t("thOpen")}</th><th>{t("thPipeline")}</th><th>{t("thHired")}</th><th>{t("thAging")}</th></tr></thead>
+              <tbody>
+                {R.byCountry.map((c) => (
+                  <tr key={c.cc}>
+                    <td><CC cc={c.cc} /><b>{c.country}</b></td>
+                    <td className="num">{c.open}</td>
+                    <td className="num">{c.pipeline}</td>
+                    <td className="num save">{c.hired}</td>
+                    <td className="num"><span className={c.aging > 18 ? "stale" : "muted"}>{c.aging} {t("recDays")}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section className="card">
+          <div className="card-head"><div className="card-title">{t("recFunnel")}</div></div>
+          <div className="funnel">
+            {R.funnel.map((f, i) => (
+              <div className="fun-row" key={f.key}>
+                <div className="fun-lbl">{t(f.key)}</div>
+                <div className="fun-track"><div className="fun-fill" style={{ width: (f.count / maxF) * 100 + "%", opacity: 1 - i * 0.13 }} /></div>
+                <div className="fun-val">{f.count}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}
+
+Object.assign(window, { PageHead, FilterBar, OverviewPage, DriversPage, MapPage, CtsPage, RankingsPage, ExpensesPage, ScopePlanningPage, PayrollPage, RecruitmentPage });
+
+
+/* ============================================================
+   Embed — incorpora páginas reais do portal como abas (iframe).
+   Esconde o topbar interno delas pra virar "uma paginazona" só,
+   e sincroniza o dark mode (mesmo localStorage.AC_THEME).
+   Como tudo é same-origin (GitHub Pages), o iframe auto-loga via
+   sessão e compartilha localStorage com a shell.
+   ============================================================ */
+function EmbedFrame({ src, title }) {
+  const ref = React.useRef(null);
+  const onLoad = () => {
+    try {
+      const d = ref.current && ref.current.contentDocument;
+      if (!d) return;
+      const dark = document.documentElement.getAttribute("data-theme") === "dark";
+      if (dark) d.documentElement.setAttribute("data-theme", "dark");
+      else d.documentElement.removeAttribute("data-theme");
+      if (!d.getElementById("sv-embed-style")) {
+        const st = d.createElement("style");
+        st.id = "sv-embed-style";
+        // esconde o topbar/botão de tema próprios da página → visual unificado
+        st.textContent = ".ac-topbar{display:none!important;} .theme-toggle-btn{display:none!important;}";
+        (d.head || d.documentElement).appendChild(st);
+      }
+    } catch (e) { /* cross-origin ou ainda não pronto — ignora */ }
+  };
+  return (
+    <div className="embed-wrap">
+      <div className="embed-bar">
+        <span className="embed-dot" />
+        <span className="embed-src">{src}</span>
+        <a className="embed-ext" href={src} target="_blank" rel="noopener noreferrer"><Icon name="ext" size={14} /> {title}</a>
+      </div>
+      <iframe ref={ref} className="embed-frame" src={src} title={title} onLoad={onLoad} />
+    </div>
+  );
+}
+
+function EmbedPage({ t, item }) {
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">{item.label}</h1>
+          <p className="page-sub">{t("embedSub")}</p>
+        </div>
+        <div className="page-meta">
+          <span className="embed-badge"><Icon name="layers" size={13} /> {t("embedBadge")}</span>
+          <a className="filter-flag" href={item.src} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}><Icon name="ext" size={13} />{t("openPage")}</a>
+        </div>
+      </div>
+      <EmbedFrame src={item.src} title={item.label} />
+    </>
+  );
+}
+
+Object.assign(window, { EmbedFrame, EmbedPage });
+
+
+/* ============================================================
+   App — router, state, filtros, dark mode, login e embeds
+   ============================================================ */
+const { useState } = React;
+
+function filterDrivers(drivers, { country, kpi, search }) {
+  let r = drivers;
+  if (country && country !== "all") r = r.filter((d) => d.country === country);
+  if (kpi === "hotel") r = r.filter((d) => d.base === "hotel");
+  else if (kpi === "savings") r = r.filter((d) => d.savings > 0);
+  else if (kpi === "nocheckin") r = r.filter((d) => d.status === "nocheckin" || d.checkin > 24);
+  else if (kpi === "issues") r = r.filter((d) => d.vehicleStatus !== "ok");
+  if (search && search.trim()) {
+    const q = search.toLowerCase();
+    r = r.filter((d) => d.name.toLowerCase().includes(q) || d.city.toLowerCase().includes(q) || d.plate.toLowerCase().includes(q));
+  }
+  return r;
+}
+
+/* Páginas nativas (mockup do redesign, dados de exemplo) */
+const PAGES_NATIVE = {
+  home: OverviewPage,
+  drivers: DriversPage,
+  map: MapPage,
+  cts: CtsPage,
+  rankings: RankingsPage,
+};
+
+/* Navegação: grupo "Redesign" usa páginas nativas; os outros grupos
+   embedam as páginas reais do portal como abas (iframe).
+   Pra trocar o alvo de um botão, é só editar o `src` aqui. */
+const NAV_GROUPS = [
+  { labelKey: "grpRedesign", items: [
+    { id: "home",     icon: "home",   labelKey: "navHome",     type: "native" },
+    { id: "drivers",  icon: "users",  labelKey: "navDrivers",  type: "native" },
+    { id: "map",      icon: "map",    labelKey: "navMap",      type: "native" },
+    { id: "cts",      icon: "target", labelKey: "navCts",      type: "native" },
+    { id: "rankings", icon: "trophy", labelKey: "navRankings", type: "native" },
+  ]},
+  { labelKey: "grpOps", items: [
+    { id: "dashHM",  icon: "grid",     label: "Dashboard HM",    type: "embed", src: "dashboard.html" },
+    { id: "profile", icon: "user",     label: "Driver Profile",  type: "embed", src: "driver-profile.html" },
+    { id: "scope",   icon: "pin",      label: "Scope / Áreas",   type: "embed", src: "country_scopes.html" },
+    { id: "assets",  icon: "car",      label: "Assets",          type: "embed", src: "assets.html" },
+  ]},
+  { labelKey: "grpFin", items: [
+    { id: "payroll", icon: "report",   label: "Payroll & Timesheet", type: "embed", src: "timesheet.html" },
+    { id: "funds",   icon: "wallet",   label: "Despesas (Ramp)",     type: "embed", src: "ramp.html" },
+    { id: "cash",    icon: "building", label: "Cash AR",             type: "embed", src: "cash.html" },
+  ]},
+  { labelKey: "grpSys", items: [
+    { id: "recruitment", icon: "users",    label: "Recruitment", type: "embed", src: "recruitment.html" },
+    { id: "pmo",         icon: "fileText", label: "PMO",         type: "embed", src: "pmo.html" },
+    { id: "roadmap",     icon: "layers",   label: "Roadmap",     type: "embed", src: "roadmap.html" },
+    { id: "admin",       icon: "sliders",  label: "Admin",       type: "embed", src: "admin.html" },
+  ]},
+];
+
+const NAV_INDEX = {};
+NAV_GROUPS.forEach((g) => g.items.forEach((it) => (NAV_INDEX[it.id] = it)));
+
+function localizedGroups(t) {
+  return NAV_GROUPS.map((g) => ({
+    label: g.labelKey ? t(g.labelKey) : g.label,
+    items: g.items.map((it) => ({ ...it, label: it.labelKey ? t(it.labelKey) : it.label })),
+  }));
+}
+
+function App({ user }) {
+  const [lang, setLang] = useState(() => localStorage.getItem("sv_lang") || "pt");
+  const [page, setPage] = useState("home");
+  const [country, setCountry] = useState("all");
+  const [kpiFilter, setKpiFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(null);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [dark, setDark] = useState(() => document.documentElement.getAttribute("data-theme") === "dark");
+
+  const t = (key) => { const I = window.SV_I18N; return (I[lang] && I[lang][key]) || I.pt[key] || key; };
+  const changeLang = (l) => { setLang(l); localStorage.setItem("sv_lang", l); };
+  const toggleKpi = (f) => setKpiFilter((cur) => (cur === f ? "all" : f));
+  const clearFilters = () => { setCountry("all"); setKpiFilter("all"); };
+
+  const toggleDark = () => {
+    const next = !dark;
+    setDark(next);
+    const root = document.documentElement;
+    if (next) root.setAttribute("data-theme", "dark");
+    else root.removeAttribute("data-theme");
+    try { localStorage.setItem("AC_THEME", next ? "dark" : "light"); } catch (e) {}
+    // sincroniza iframes abertos (same-origin)
+    document.querySelectorAll("iframe.embed-frame").forEach((f) => {
+      try {
+        const d = f.contentDocument;
+        if (!d) return;
+        if (next) d.documentElement.setAttribute("data-theme", "dark");
+        else d.documentElement.removeAttribute("data-theme");
+      } catch (e) {}
+    });
+  };
+
+  const onLogout = () => { if (typeof aceLogout === "function") aceLogout(t("confirmLogout")); };
+
+  const drivers = filterDrivers(window.DASH.DRIVERS, { country, kpi: kpiFilter, search });
+  const ctx = { country, setCountry, kpiFilter, toggleKpi, clearFilters, drivers, select: setSelected, search };
+
+  const item = NAV_INDEX[page] || NAV_INDEX.home;
+  const isEmbed = item && item.type === "embed";
+  const Native = PAGES_NATIVE[page] || OverviewPage;
+
+  return (
+    <div className="app">
+      <Sidebar t={t} groups={localizedGroups(t)} active={page} onSelect={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} />
+      <main className="main">
+        <TopBar
+          t={t} lang={lang} setLang={changeLang}
+          search={search} setSearch={setSearch}
+          period={"today"} setPeriod={() => {}}
+          onAdmin={() => setAdminOpen(true)}
+          dark={dark} toggleDark={toggleDark}
+          user={user} onLogout={onLogout}
+        />
+        <div className={"content" + (isEmbed ? " content-embed" : "")}>
+          {isEmbed
+            ? <EmbedPage t={t} item={localizedGroups(t).flatMap((g) => g.items).find((x) => x.id === item.id)} />
+            : <Native t={t} ctx={ctx} />}
+          {!isEmbed && <footer className="foot">Street View LATAM · Dashboard redesign · mockup hi-fi com dados de exemplo</footer>}
+        </div>
+      </main>
+
+      {selected && <DriverDetail t={t} driver={selected} onClose={() => setSelected(null)} />}
+      {adminOpen && <AdminModal t={t} onClose={() => setAdminOpen(false)} />}
+    </div>
+  );
+}
+
+/* ---- bootstrap: login gate (auth.js + common.js) → monta o app ---- */
+function mountApp(user) {
+  ReactDOM.createRoot(document.getElementById("root")).render(<App user={user} />);
+}
+
+(function gate() {
+  if (typeof injectLogin === "function") {
+    injectLogin({
+      title: "Dashboard · Redesign (teste)",
+      sub: "Acesse com suas credenciais do portal",
+      lang: "pt",
+      onSuccess: mountApp,
+    });
+  } else {
+    mountApp({ username: "guest", fullName: "Convidado" });
+  }
+})();
+
+  </script>
+</body>
+</html>
