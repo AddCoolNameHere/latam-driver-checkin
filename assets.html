@@ -8,7 +8,13 @@
 <title>Relatório Semanal de Equipamentos · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <link rel="stylesheet" href="theme.css?v=20260518c">
-<script src="theme.js?v=20260518c"></script>
+<!-- Sem theme.js de propósito: assets é página de driver (sem login), então sempre light igual ao index.
+     Carregar theme.js fazia ela herdar o AC_THEME=dark salvo pelo admin e ficar presa num dark quebrado
+     (body claro + cards escuros), já que o toggle pra sair só aparece em páginas admin. -->
+<script>
+  // Garante light mesmo que um data-theme="dark" tenha sobrado de outra página no mesmo browser.
+  document.documentElement.removeAttribute('data-theme');
+</script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
