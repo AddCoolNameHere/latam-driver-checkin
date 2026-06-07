@@ -28,10 +28,7 @@
 })();
 
 function setupThemeToggle(user) {
-  if (!user || typeof isAdmin !== 'function' || !isAdmin(user.username)) {
-    removeThemeToggle();
-    return;
-  }
+  // Toggle de tema disponível pra TODOS os usuários logados (antes era só admin).
   if (document.getElementById('theme-toggle-btn')) return; // já existe
   const btn = document.createElement('button');
   btn.id = 'theme-toggle-btn';
