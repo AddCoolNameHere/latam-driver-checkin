@@ -4304,7 +4304,7 @@ async function fetchRealData(forceRefresh) {
   // TTLs: dashboardData 60s (volátil), HM 5min (derivado), CTS 10min (mensal)
   const opts = (timeoutMs) => ({ forceRefresh: !!forceRefresh, timeoutMs });
   const [dashData, hmCountry, hmDriver, ctsData] = await Promise.all([
-    cachedFetch(CONFIG.scriptUrl + '?action=getDashboardData&days=7', 60, opts(30000))
+    cachedFetch(CONFIG.scriptUrl + '?action=getDashboardData&days=7', 60, opts(60000))
       .catch(err => { console.warn('getDashboardData falhou', err); return { success: false }; }),
     cachedFetch(CONFIG.scriptUrl + '?action=getHotelModeByCountry', 300, opts(15000))
       .catch(err => { console.warn('getHotelModeByCountry falhou', err); return { success: false }; }),

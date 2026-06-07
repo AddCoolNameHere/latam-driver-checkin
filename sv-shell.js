@@ -144,7 +144,7 @@
   function build(user) {
     var html = '<div class="sv-brand">' +
       '<img class="sv-brand-logo" src="https://aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'logo-failed\')">' +
-      '<img class="sv-brand-globe" src="aceolution-globe.png" alt="Aceolution" aria-hidden="true">' +
+      '<img class="sv-brand-globe" src="aceolution-globe.png?v=2" alt="Aceolution" aria-hidden="true">' +
       '<div class="sv-brand-mark">SV</div>' +
       '<div class="sv-brand-region">Street View · LATAM</div></div>' +
       '<nav class="sv-nav"></nav>' +
