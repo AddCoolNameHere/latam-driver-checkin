@@ -1,23 +1,19 @@
 /* ============================================================
- * sv-shell.js — sidebar enterprise COMUM + gating por permissão.
+ * sv-shell.js — sidebar enterprise COMUM + gating por permissão + i18n.
  *
  * Inclua <script src="sv-shell.js"></script> antes de </body>.
  * Não toca no JS/IDs da página.
  *
  * O que faz:
- *  1. NAV abaixo é a FONTE ÚNICA de navegação do portal admin.
+ *  1. NAV abaixo é a FONTE ÚNICA de navegação do portal admin (labels pt/es/en).
  *  2. Mostra só o que o usuário logado pode acessar (mesmo modelo da admin.html):
- *       all   → qualquer usuário logado
- *       admin → isAdmin() (em ADMIN_USERNAMES do auth.js)
- *       super → super admin (fuss)
- *  3. Login-aware: só monta DEPOIS do login (observa a saída da .ac-login-screen),
- *     pra nunca renderizar a sidebar por cima da tela de login nem antes de saber
- *     quem é o usuário (senão o gating não funcionaria).
- *  4. NÃO inclui os forms de driver (index/assets/check-in) — esses são páginas
- *     públicas, sem sidebar e sempre light (ver assets-sempre-light).
- *  5. Liga o toggle de dark mode (setupThemeToggle) — centraliza o aprendizado de
- *     dark mode num lugar só pras páginas do shell (toggle só aparece pra admin).
- *  6. Se a página já tiver uma .sv-sidebar inline, só aplica o gating (não duplica).
+ *       all   → qualquer usuário logado · admin → isAdmin() · super → fuss
+ *  3. Login-aware: só monta DEPOIS do login (observa a saída da .ac-login-screen).
+ *  4. NÃO inclui os forms de driver (index/assets/cash/ar-divergencias) — públicos, sem sidebar.
+ *  5. Liga o toggle de dark mode (setupThemeToggle) pra páginas do shell.
+ *  6. i18n: a sidebar TRADUZ junto com a página — detecta a língua por clique em
+ *     qualquer botão [data-lang] e por mutação do <html lang>. Sem editar as páginas.
+ *  7. Colapsada mostra o globo da Aceolution (favicon): colorido no light, branco no dark.
  * ============================================================ */
 (function () {
   // ---- garante skin + fonte ----
@@ -29,8 +25,11 @@
     l.href = href;
     document.head.appendChild(l);
   }
-  ensureLink("sv-skin.css?v=3");
+  ensureLink("sv-skin.css?v=4");
   ensureLink("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+  // Globo da Aceolution (mesma imagem do favicon) — usado quando a sidebar colapsa.
+  var GLOBE = "https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0";
 
   // ---- ícones (line, 24x24) ----
   var ICON = {
@@ -52,34 +51,47 @@
     return '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (ICON[name] || "") + "</svg>";
   }
 
-  // ---- NAV: FONTE ÚNICA. access = nível mínimo (all < admin < super). ----
-  // Mirror da admin.html, SEM os forms de driver (index/assets/ar-divergencias).
+  // ---- NAV: FONTE ÚNICA. label = {pt,es,en}. access = nível mínimo (all<admin<super). ----
   var NAV = [
-    { label: "Operação", items: [
-      { label: "Dashboard",      href: "dashboard.html",      icon: "home",     access: "all" },
-      { label: "Drivers",        href: "driver-profile.html", icon: "users",    access: "all" },
-      { label: "Recruitment",    href: "recruitment.html",    icon: "userPlus", access: "all" },
-      { label: "Country Scopes", href: "country_scopes.html", icon: "layers",   access: "admin" },
-      { label: "PMO Hub",        href: "pmo.html",            icon: "notes",    access: "admin" },
+    { label: { pt: "Operação", es: "Operación", en: "Operations" }, items: [
+      { label: { pt: "Dashboard",        es: "Dashboard",        en: "Dashboard" },        href: "dashboard.html",      icon: "home",     access: "all" },
+      { label: { pt: "Motoristas",       es: "Conductores",      en: "Drivers" },          href: "driver-profile.html", icon: "users",    access: "all" },
+      { label: { pt: "Recrutamento",     es: "Reclutamiento",    en: "Recruitment" },      href: "recruitment.html",    icon: "userPlus", access: "all" },
+      { label: { pt: "Áreas por país",   es: "Áreas por país",   en: "Country Scopes" },   href: "country_scopes.html", icon: "layers",   access: "admin" },
+      { label: { pt: "PMO Hub",          es: "PMO Hub",          en: "PMO Hub" },          href: "pmo.html",            icon: "notes",    access: "admin" },
     ]},
-    { label: "Financeiro", items: [
-      // 'all' espelha a admin.html: a seção Financeiro é visível a todos os logados
-      // (as tags "Admin" lá são só decorativas). Pra travar um item, troque pra 'admin'.
-      { label: "Funds",           href: "ramp.html",                   icon: "wallet", access: "all" },
-      { label: "Payroll",         href: "timesheet.html",              icon: "report", access: "all" },
-      { label: "Divergências AR",  href: "ar-divergencias-admin.html", icon: "alert",  access: "all" },
+    { label: { pt: "Financeiro", es: "Financiero", en: "Finance" }, items: [
+      { label: { pt: "Fundos",           es: "Fondos",           en: "Funds" },            href: "ramp.html",                  icon: "wallet", access: "all" },
+      { label: { pt: "Folha",            es: "Nómina",           en: "Payroll" },          href: "timesheet.html",             icon: "report", access: "all" },
+      { label: { pt: "Divergências AR",  es: "Divergencias AR",  en: "AR Divergences" },   href: "ar-divergencias-admin.html", icon: "alert",  access: "all" },
     ]},
-    { label: "Relatórios", items: [
-      { label: "Cenários Argentina",   href: "argentina_scenarios_presentation.html", icon: "chart",    access: "admin" },
-      { label: "Otimização Argentina", href: "argentina_optimization_report.html",    icon: "fileText", access: "admin" },
+    { label: { pt: "Relatórios", es: "Reportes", en: "Reports" }, items: [
+      { label: { pt: "Cenários Argentina",   es: "Escenarios Argentina",   en: "Argentina Scenarios" },    href: "argentina_scenarios_presentation.html", icon: "chart",    access: "admin" },
+      { label: { pt: "Otimização Argentina", es: "Optimización Argentina", en: "Argentina Optimization" }, href: "argentina_optimization_report.html",    icon: "fileText", access: "admin" },
     ]},
-    { label: "Sistema", items: [
-      { label: "Usuários", href: "admin-users.html", icon: "settings", access: "super" },
-      { label: "Roadmap",  href: "roadmap.html",     icon: "map",      access: "super" },
+    { label: { pt: "Sistema", es: "Sistema", en: "System" }, items: [
+      { label: { pt: "Usuários", es: "Usuarios", en: "Users" }, href: "admin-users.html", icon: "settings", access: "super" },
+      { label: { pt: "Roadmap",  es: "Roadmap",  en: "Roadmap" }, href: "roadmap.html",   icon: "map",      access: "super" },
     ]},
   ];
 
   var RANK = { all: 0, admin: 1, super: 2 };
+  var CURRENT_USER = null;
+
+  function L(v, lang) { return (v && typeof v === "object") ? (v[lang] || v.pt) : v; }
+
+  // Língua atual: <html lang> → localStorage('latam.lang') → 'pt'.
+  function curLang() {
+    try {
+      var h = (document.documentElement.getAttribute("lang") || "").toLowerCase();
+      if (h.indexOf("es") === 0) return "es";
+      if (h.indexOf("en") === 0) return "en";
+      if (h.indexOf("pt") === 0) return "pt";
+      var s = localStorage.getItem("latam.lang");
+      if (s === "es" || s === "en" || s === "pt") return s;
+    } catch (e) {}
+    return "pt";
+  }
 
   function getUser() {
     try { return (typeof loadSession === "function") ? loadSession() : null; }
@@ -104,26 +116,41 @@
 
   function here() { return (location.pathname.split("/").pop() || "dashboard.html").toLowerCase(); }
 
-  function build(user) {
+  // Monta SÓ o conteúdo da nav (labels na língua dada, gated, com ativo).
+  function renderNav(navEl, user, lang) {
     var userTier = tierOf(user);
     var cur = here();
     var activeSet = false;
-    var html = '<div class="sv-brand">' +
-      '<img class="sv-brand-logo" src="https://aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'logo-failed\')">' +
-      '<div class="sv-brand-mark">SV</div>' +
-      '<div class="sv-brand-region">Street View · LATAM</div></div><nav class="sv-nav">';
+    var html = "";
     NAV.forEach(function (g) {
       var visible = g.items.filter(function (it) { return canSee(it.access, userTier); });
-      if (!visible.length) return; // esconde grupo inteiro se nada visível
-      html += '<div class="sv-nav-label">' + g.label + "</div>";
+      if (!visible.length) return;
+      html += '<div class="sv-nav-label">' + L(g.label, lang) + "</div>";
       visible.forEach(function (it) {
         var isActive = !activeSet && it.href.toLowerCase() === cur;
         if (isActive) activeSet = true;
-        html += '<a class="sv-nav-item' + (isActive ? " active" : "") + '" href="' + it.href + '" title="' + it.label + '">' +
-          '<span class="sv-ico">' + svg(it.icon) + "</span><span>" + it.label + "</span></a>";
+        var label = L(it.label, lang);
+        html += '<a class="sv-nav-item' + (isActive ? " active" : "") + '" href="' + it.href + '" title="' + label + '">' +
+          '<span class="sv-ico">' + svg(it.icon) + "</span><span>" + label + "</span></a>";
       });
     });
-    html += "</nav>" +
+    navEl.innerHTML = html;
+  }
+
+  // Re-traduz a sidebar (chamado no clique de [data-lang] e na mutação de <html lang>).
+  function applyLang(lang) {
+    var nav = document.querySelector(".sv-sidebar .sv-nav");
+    if (nav && CURRENT_USER) renderNav(nav, CURRENT_USER, lang);
+  }
+  window.svShellSetLang = applyLang; // pra páginas que quiserem chamar explicitamente
+
+  function build(user) {
+    var html = '<div class="sv-brand">' +
+      '<img class="sv-brand-logo" src="https://aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'logo-failed\')">' +
+      '<img class="sv-brand-globe" src="' + GLOBE + '" alt="Aceolution" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'globe-failed\')">' +
+      '<div class="sv-brand-mark">SV</div>' +
+      '<div class="sv-brand-region">Street View · LATAM</div></div>' +
+      '<nav class="sv-nav"></nav>' +
       '<div class="sv-foot">' +
         '<div class="sv-foot-status"><div class="sv-foot-dot"></div>' +
           '<div><div class="sv-foot-l1">Apps Script · live</div><div class="sv-foot-l2">v5.21 · build 2026.06</div></div></div>' +
@@ -137,10 +164,14 @@
     aside.innerHTML = html;
     document.body.appendChild(aside);
     document.body.classList.add("sv-shell");
+
+    renderNav(aside.querySelector(".sv-nav"), user, curLang());
+
     // restaura estado recolhido (desktop), salvo entre páginas/sessões
     try { if (localStorage.getItem("AC_SIDEBAR_COLLAPSED") === "1") document.body.classList.add("sv-collapsed"); } catch (e) {}
     ensureChrome();
     wireControls(aside);
+    setupLangHooks();
   }
 
   // Hamburger (mobile) + backdrop — criados uma vez no body.
@@ -168,7 +199,6 @@
     if (col) col.addEventListener("click", function () {
       var on = document.body.classList.toggle("sv-collapsed");
       try { localStorage.setItem("AC_SIDEBAR_COLLAPSED", on ? "1" : "0"); } catch (e) {}
-      // após a transição de largura, avisa o Leaflet (e cia) pra recalcular tamanho
       setTimeout(function () { window.dispatchEvent(new Event("resize")); }, 230);
     });
     var links = aside.querySelectorAll(".sv-nav-item");
@@ -177,8 +207,26 @@
     }
   }
 
-  // Gateia uma sidebar inline já presente (sem reconstruir): esconde itens
-  // sem permissão e labels de grupo que ficaram sem nenhum item visível.
+  // i18n: a sidebar segue a língua da página. Dois detectores, montados uma vez:
+  //  (a) clique em qualquer [data-lang] (botões PT/ES/EN das páginas e do topbar);
+  //  (b) mutação do atributo lang do <html> (páginas que setam document.documentElement.lang).
+  var langHooksDone = false;
+  function setupLangHooks() {
+    if (langHooksDone) return;
+    langHooksDone = true;
+    document.addEventListener("click", function (e) {
+      var el = e.target && e.target.closest ? e.target.closest("[data-lang]") : null;
+      if (!el) return;
+      var l = (el.getAttribute("data-lang") || "").toLowerCase();
+      if (l === "pt" || l === "es" || l === "en") applyLang(l);
+    });
+    try {
+      new MutationObserver(function () { applyLang(curLang()); })
+        .observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+    } catch (e) {}
+  }
+
+  // Gateia uma sidebar inline já presente (sem reconstruir).
   function gateInline(aside, user) {
     var userTier = tierOf(user);
     var items = aside.querySelectorAll(".sv-nav-item");
@@ -204,6 +252,7 @@
   function apply() {
     var user = getUser();
     if (!user) return false; // ainda não logado
+    CURRENT_USER = user;
     var existing = document.querySelector(".sv-sidebar");
     if (existing) gateInline(existing, user);
     else build(user);
@@ -215,7 +264,6 @@
 
   function start() {
     if (apply()) return;
-    // Sem sessão: espera o login terminar (tela .ac-login-screen sai do DOM).
     var obs = new MutationObserver(function () {
       if (getUser() && !document.querySelector(".ac-login-screen")) {
         if (apply()) obs.disconnect();

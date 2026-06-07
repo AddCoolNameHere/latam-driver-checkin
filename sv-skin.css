@@ -225,10 +225,14 @@ body.sv-shell .ac-user-pill { background: var(--sv-line-2) !important; border-ra
  * ============================================================ */
 .sv-sidebar { transition: width .18s ease, transform .22s ease; }
 
-/* Mark "SV" — aparece recolhido (desktop) ou se o logo falhar */
+/* Mark "SV" — fallback se o logo/globo falhar */
 .sv-brand-mark { display: none; }
 .sv-brand.logo-failed .sv-brand-logo { display: none; }
 .sv-brand.logo-failed .sv-brand-mark { display: grid; }
+/* Globo da Aceolution (favicon) — aparece SÓ quando recolhido. Colorido no light, branco no dark. */
+.sv-brand-globe { display: none; height: 30px; width: auto; }
+[data-theme="dark"] .sv-brand-globe { filter: brightness(0) invert(1); }
+.sv-brand.globe-failed .sv-brand-globe { display: none !important; }
 
 /* Rodapé: status + botão recolher */
 .sv-foot { justify-content: space-between; gap: 8px; }
@@ -261,7 +265,9 @@ body.sv-shell .ac-user-pill { background: var(--sv-line-2) !important; border-ra
   .sv-collapsed .sv-sidebar { width: 76px; padding-left: 12px; padding-right: 12px; }
   .sv-collapsed .sv-brand { align-items: center; }
   .sv-collapsed .sv-brand-logo { display: none; }
-  .sv-collapsed .sv-brand-mark { display: grid; }
+  .sv-collapsed .sv-brand-globe { display: block; }
+  .sv-collapsed .sv-brand-mark { display: none; }
+  .sv-collapsed .sv-brand.globe-failed .sv-brand-mark { display: grid; } /* fallback se o globo falhar */
   .sv-collapsed .sv-brand-region { display: none; }
   .sv-collapsed .sv-nav-label { display: none; }
   .sv-collapsed .sv-nav-item { justify-content: center; padding: 10px; gap: 0; }
@@ -285,6 +291,7 @@ body.sv-shell .ac-user-pill { background: var(--sv-line-2) !important; border-ra
   .sv-collapse-btn { display: none; } /* no mobile usa o drawer, não o rail */
   /* no drawer o conteúdo é sempre "expandido", mesmo com sv-collapsed salvo */
   .sv-collapsed .sv-brand-logo { display: block; }
+  .sv-collapsed .sv-brand-globe { display: none; }
   .sv-collapsed .sv-brand-mark { display: none; }
   .sv-collapsed .sv-brand-region, .sv-collapsed .sv-nav-label { display: block; }
   .sv-collapsed .sv-nav-item { justify-content: flex-start; padding: 10px 12px; gap: 12px; }
