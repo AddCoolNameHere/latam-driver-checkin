@@ -23,11 +23,12 @@
   }
 
   /* ---------- REPORT HEADER (sóbrio) ---------- */
+  /* Banner navy demovido: a marca agora é a sidebar. Vira um cabeçalho de página claro. */
   .report-header {
-    background: linear-gradient(135deg, #0F2443 0%, #1A365D 60%, #2C5282 100%);
-    color: white;
-    padding: 26px 24px 22px;
-    border-bottom: 2px solid var(--c-accent);
+    background: transparent;
+    color: var(--c-text);
+    padding: 24px 24px 6px;
+    border-bottom: none;
   }
   .report-header-inner {
     max-width: 1320px; margin: 0 auto;
@@ -36,22 +37,22 @@
   }
   .report-eyebrow {
     font-size: 10px; font-weight: 800; letter-spacing: 2.5px;
-    color: #C8DEF0; text-transform: uppercase; margin-bottom: 6px;
+    color: var(--c-text-muted); text-transform: uppercase; margin-bottom: 6px;
   }
   .report-title {
     font-size: 26px; font-weight: 800;
     letter-spacing: -0.3px; line-height: 1.1;
   }
   .report-subtitle {
-    font-size: 12px; color: #C8DEF0;
+    font-size: 12px; color: var(--c-text-muted);
     margin-top: 4px; font-weight: 500;
   }
   .report-date {
     font-size: 12px; font-weight: 700;
-    color: #C8DEF0;
+    color: var(--c-text-muted);
     text-align: right; letter-spacing: 0.5px;
   }
-  .report-date strong { color: white; font-size: 16px; display: block; }
+  .report-date strong { color: var(--c-text); font-size: 16px; display: block; }
 
   /* ---------- MAIN ---------- */
   main {
@@ -737,5 +738,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<script src="sv-shell.js"></script>
 </body>
 </html>
