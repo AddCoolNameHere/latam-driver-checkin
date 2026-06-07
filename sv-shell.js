@@ -25,11 +25,8 @@
     l.href = href;
     document.head.appendChild(l);
   }
-  ensureLink("sv-skin.css?v=4");
+  ensureLink("sv-skin.css?v=5");
   ensureLink("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
-
-  // Globo (vetorial) — usado quando a sidebar colapsa. Cor via currentColor (CSS).
-  var GLOBE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19"/><path d="M12 2.5a14 14 0 0 1 3.8 9.5 14 14 0 0 1-3.8 9.5 14 14 0 0 1-3.8-9.5 14 14 0 0 1 3.8-9.5Z"/></svg>';
 
   // ---- ícones (line, 24x24) ----
   var ICON = {
@@ -147,7 +144,7 @@
   function build(user) {
     var html = '<div class="sv-brand">' +
       '<img class="sv-brand-logo" src="https://aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'logo-failed\')">' +
-      '<span class="sv-brand-globe" aria-hidden="true">' + GLOBE_SVG + '</span>' +
+      '<img class="sv-brand-globe" src="aceolution-globe.png" alt="Aceolution" aria-hidden="true">' +
       '<div class="sv-brand-mark">SV</div>' +
       '<div class="sv-brand-region">Street View · LATAM</div></div>' +
       '<nav class="sv-nav"></nav>' +

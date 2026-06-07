@@ -229,10 +229,10 @@ body.sv-shell .ac-user-pill { background: var(--sv-line-2) !important; border-ra
 .sv-brand-mark { display: none; }
 .sv-brand.logo-failed .sv-brand-logo { display: none; }
 .sv-brand.logo-failed .sv-brand-mark { display: grid; }
-/* Globo (vetorial) — aparece SÓ quando recolhido. Colorido (accent) no light, branco no dark. */
-.sv-brand-globe { display: none; color: var(--c-accent); }
-.sv-brand-globe svg { width: 30px; height: 30px; display: block; }
-[data-theme="dark"] .sv-brand-globe { color: #fff; }
+/* Globo da Aceolution (PNG transparente) — aparece SÓ quando recolhido.
+   Colorido no light (a própria arte azul); branco no dark (filtro → silhueta, ok pq é transparente). */
+.sv-brand-globe { display: none; width: 34px; height: 34px; object-fit: contain; }
+[data-theme="dark"] .sv-brand-globe { filter: brightness(0) invert(1); }
 
 /* Rodapé: status + botão recolher */
 .sv-foot { justify-content: space-between; gap: 8px; }
