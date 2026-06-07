@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Argentina Fleet Launch · LATAM · Aceolution</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<link rel="stylesheet" href="theme_teste.css?v=20260519a">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 22px 18px 70px; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #0F2443 0%, #1A365D 60%, #2C5282 100%);
+    color: #fff; border-radius: 16px; padding: 28px 30px;
+    border: 1px solid var(--c-border);
+  }
+  .hero .eyebrow {
+    font-size: 10px; font-weight: 800; letter-spacing: 2.5px;
+    color: #C8DEF0; text-transform: uppercase; margin-bottom: 9px;
+  }
+  .hero h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; }
+  .hero .dates {
+    margin-top: 13px; display: flex; flex-wrap: wrap; gap: 9px 22px;
+    font-size: 13px; color: #C8DEF0;
+  }
+  .hero .dates span { display: inline-flex; align-items: center; gap: 8px; }
+  .hero .dates span::before {
+    content: ''; width: 5px; height: 5px; background: var(--c-accent); border-radius: 50%;
+  }
+
+  /* ---------- SECTION HEADERS ---------- */
+  .section-label {
+    font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--c-text-muted); font-weight: 700; margin: 0 0 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::before { content: ''; width: 22px; height: 2px; background: var(--c-accent); }
+  .section-title {
+    font-size: 20px; font-weight: 700; color: var(--c-primary-dark);
+    letter-spacing: -0.3px; margin: 0 0 18px;
+  }
+
+  .toolbar {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 16px; margin: 28px 0 18px; flex-wrap: wrap;
+  }
+  .toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .sync-status { font-size: 12px; font-weight: 600; padding: 0 6px; color: var(--c-text-muted); white-space: nowrap; }
+
+  /* ---------- VIEW TOGGLE ---------- */
+  .view-toggle { display: inline-flex; gap: 4px; background: var(--c-bg-tint); padding: 4px; border-radius: 99px; }
+  .view-toggle button {
+    border: none; background: none; cursor: pointer; font-family: inherit;
+    padding: 7px 16px; border-radius: 99px; font-size: 12.5px; font-weight: 600;
+    color: var(--c-text-muted); display: inline-flex; align-items: center; gap: 6px;
+  }
+  .view-toggle button.active { background: var(--c-primary); color: #fff; }
+
+  /* ---------- LOCATIONS ---------- */
+  .loc-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px;
+  }
+  .loc-card {
+    background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 11px;
+    padding: 13px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer;
+    transition: all .16s ease; text-align: left; font-family: inherit; color: inherit; width: 100%;
+  }
+  .loc-card:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,.08); border-color: var(--c-primary); }
+  .loc-card .icon {
+    width: 38px; height: 38px; border-radius: 9px; background: var(--c-bg-tint);
+    display: grid; place-items: center; font-size: 18px; flex-shrink: 0;
+  }
+  .loc-card .text { flex: 1; min-width: 0; }
+  .loc-card .name { font-weight: 700; font-size: 14px; line-height: 1.2; color: var(--c-text); }
+  .loc-card .addr {
+    font-size: 11.5px; color: var(--c-text-muted); margin-top: 2px; line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .loc-card .addr.tbd { color: var(--c-accent); font-weight: 600; font-style: italic; }
+  .loc-edit-btn {
+    background: none; border: 1px solid var(--c-border); border-radius: 7px;
+    width: 30px; height: 30px; cursor: pointer; display: grid; place-items: center;
+    color: var(--c-text-muted); transition: all .15s ease; flex-shrink: 0;
+  }
+  .loc-edit-btn:hover { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+
+  /* ---------- LEGEND ---------- */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 7px 14px; padding: 14px 18px;
+    background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 11px;
+  }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--c-text-muted); }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+  /* ---------- DAYS (LIST) ---------- */
+  .days { display: flex; flex-direction: column; gap: 11px; }
+  .day {
+    background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 14px;
+    overflow: hidden; transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .day:hover { border-color: var(--c-border-strong); }
+  .day.expanded { border-color: var(--c-primary); box-shadow: 0 6px 18px rgba(0,0,0,.07); }
+  .day.launch { border-color: var(--c-accent); border-width: 2px; }
+  .day-head {
+    display: grid; grid-template-columns: 130px 1fr auto; align-items: center;
+    gap: 22px; padding: 18px 22px; cursor: pointer; user-select: none;
+  }
+  .day-date { display: flex; align-items: baseline; gap: 9px; }
+  .day-date .weekday {
+    font-size: 11px; letter-spacing: 1.5px; color: var(--c-text-muted);
+    text-transform: uppercase; width: 30px; font-weight: 700;
+  }
+  .day-date .num { font-size: 40px; font-weight: 800; line-height: 1; letter-spacing: -1px; color: var(--c-primary-dark); }
+  .day.launch .day-date .num { color: var(--c-accent); }
+  .day-date .month { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--c-text-muted); font-weight: 700; }
+  .day-summary { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .day-tag {
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--c-text-muted);
+    padding: 4px 9px; background: var(--c-bg-tint); border-radius: 99px; font-weight: 700;
+  }
+  .day-tag.special { background: var(--c-accent); color: #fff; }
+  .summary-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .summary-chip { width: 26px; height: 26px; border-radius: 7px; background: var(--c-bg-tint); display: grid; place-items: center; font-size: 13px; }
+  .day-toggle {
+    width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--c-border);
+    background: var(--c-surface); display: grid; place-items: center; color: var(--c-text);
+    transition: transform .2s ease, background .15s ease; cursor: pointer;
+  }
+  .day.expanded .day-toggle { transform: rotate(180deg); background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+  .day-body { display: none; padding: 0 22px 22px; border-top: 1px dashed var(--c-border); }
+  .day.expanded .day-body { display: block; }
+
+  .slot { margin-top: 18px; }
+  .slot-label {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--c-text-muted);
+    margin: 0 0 10px; display: flex; align-items: center; gap: 10px; font-weight: 700;
+  }
+  .slot-label::after { content: ''; flex: 1; height: 1px; background: var(--c-border); }
+  .events { display: flex; flex-direction: column; gap: 6px; }
+  .event {
+    display: grid; grid-template-columns: auto 1fr auto auto auto; align-items: center; gap: 11px;
+    padding: 10px 14px; background: var(--c-bg-tint); border-radius: 9px;
+    border-left: 3px solid var(--c-text-dim); transition: all .15s ease;
+  }
+  .event-icon { width: 28px; height: 28px; border-radius: 7px; background: var(--c-surface); display: grid; place-items: center; font-size: 14px; flex-shrink: 0; }
+  .event-desc { font-size: 14px; line-height: 1.4; min-width: 0; color: var(--c-text); }
+  .event-loc, .event-edit, .event-delete {
+    border: 1px solid var(--c-border); border-radius: 7px; cursor: pointer;
+    color: var(--c-text-muted); transition: all .15s ease; flex-shrink: 0; background: var(--c-surface);
+  }
+  .event-loc {
+    padding: 5px 10px; font-size: 11px; letter-spacing: .3px; color: var(--c-text);
+    display: inline-flex; align-items: center; gap: 5px; text-transform: uppercase; font-weight: 600;
+  }
+  .event-loc:hover { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+  .event-edit, .event-delete { width: 28px; height: 28px; display: none; place-items: center; }
+  .day.editing .event-edit, .day.editing .event-delete { display: grid; }
+  .event-edit:hover { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+  .event-delete:hover { background: var(--c-danger); color: #fff; border-color: var(--c-danger); }
+
+  .day-actions { display: flex; gap: 8px; margin-top: 18px; padding-top: 18px; border-top: 1px dashed var(--c-border); }
+
+  /* ---------- BUTTONS ---------- */
+  .btn {
+    font-size: 12px; font-weight: 600; padding: 8px 15px; border-radius: 9px;
+    border: 1px solid var(--c-border-strong); background: var(--c-surface); color: var(--c-text);
+    cursor: pointer; transition: all .15s ease; display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
+  }
+  .btn:hover { background: var(--c-bg-tint); border-color: var(--c-primary); color: var(--c-primary); }
+  .btn-primary { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+  .btn-primary:hover { background: var(--c-primary-dark); border-color: var(--c-primary-dark); color: #fff; }
+
+  .add-form { display: none; margin-top: 16px; padding: 16px; background: var(--c-bg-tint); border-radius: 11px; border: 1px dashed var(--c-border-strong); }
+  .day.editing .add-form { display: block; }
+  .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 10px; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-field { display: flex; flex-direction: column; gap: 4px; }
+  .form-field label { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--c-text-muted); font-weight: 700; }
+  .form-field input, .form-field select {
+    font-family: inherit; font-size: 13px; padding: 9px 11px; border-radius: 8px;
+    border: 1px solid var(--c-border); background: var(--c-surface); color: var(--c-text);
+  }
+  .form-field input:focus, .form-field select:focus { outline: none; border-color: var(--c-primary); }
+
+  /* ---------- CALENDAR ---------- */
+  .calendar { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 14px; padding: 16px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
+  .cal-weekday { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--c-text-muted); font-weight: 700; text-align: center; padding: 4px 0 8px; }
+  .cal-cell {
+    aspect-ratio: 1 / 1; border: 1px solid var(--c-border); border-radius: 10px; padding: 8px;
+    display: flex; flex-direction: column; gap: 5px; background: var(--c-bg); position: relative; overflow: hidden;
+  }
+  .cal-cell.muted { background: transparent; border-color: transparent; }
+  .cal-cell.active { cursor: pointer; background: var(--c-surface); transition: all .15s ease; }
+  .cal-cell.active:hover { border-color: var(--c-primary); box-shadow: 0 4px 12px rgba(0,0,0,.08); transform: translateY(-1px); }
+  .cal-cell.launch { border-color: var(--c-accent); border-width: 2px; }
+  .cal-num { font-size: 17px; font-weight: 800; color: var(--c-text); line-height: 1; }
+  .cal-cell.muted .cal-num { color: var(--c-text-dim); font-weight: 600; }
+  .cal-cell.launch .cal-num { color: var(--c-accent); }
+  .cal-month { font-size: 8.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--c-text-muted); font-weight: 700; }
+  .cal-launch-tag { position: absolute; top: 7px; right: 7px; font-size: 11px; }
+  .cal-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: auto; }
+  .cal-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .cal-count { font-size: 9px; color: var(--c-text-muted); font-weight: 700; margin-top: auto; }
+  @media (max-width: 640px) {
+    .cal-cell { padding: 5px; border-radius: 8px; }
+    .cal-num { font-size: 13px; }
+    .cal-month { display: none; }
+  }
+
+  /* ---------- MODAL ---------- */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(12,14,18,.6);
+    backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--c-surface); border-radius: 14px; padding: 28px; max-width: 500px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.3); border: 1px solid var(--c-border); }
+  .modal h3 { font-size: 19px; margin: 0 0 22px; color: var(--c-primary-dark); font-weight: 700; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  footer {
+    text-align: center; padding: 22px; color: var(--c-text-dim); font-size: 11px;
+    letter-spacing: 1px; border-top: 1px solid var(--c-border); margin-top: 36px;
+  }
+  footer .reset-link { color: var(--c-accent); cursor: pointer; text-decoration: underline; background: none; border: none; font: inherit; letter-spacing: inherit; }
+
+  @media (max-width: 720px) {
+    .day-head { grid-template-columns: 1fr auto; grid-template-areas: "date toggle" "summary summary"; gap: 14px; }
+    .day-date { grid-area: date; } .day-toggle { grid-area: toggle; } .day-summary { grid-area: summary; }
+    .event { grid-template-columns: auto 1fr auto; grid-template-areas: "icon desc loc" "icon edit del"; gap: 7px 11px; }
+    .event-icon { grid-area: icon; } .event-desc { grid-area: desc; } .event-loc { grid-area: loc; }
+    .event-edit { grid-area: edit; } .event-delete { grid-area: del; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app" class="wrap" style="display:none;">
+
+  <section class="hero">
+    <div class="eyebrow">Aceolution · Street View LATAM</div>
+    <h1>Argentina Fleet Launch</h1>
+    <div class="dates">
+      <span>May 26 – June 4, 2026</span>
+      <span>Buenos Aires</span>
+      <span>10 drivers · 2 ops</span>
+    </div>
+  </section>
+
+  <!-- LOCATIONS -->
+  <div class="toolbar">
+    <div>
+      <p class="section-label">Map · 01</p>
+      <h2 class="section-title">Quick Locations</h2>
+    </div>
+  </div>
+  <div class="loc-grid" id="loc-grid"></div>
+
+  <!-- LEGEND -->
+  <div class="toolbar">
+    <div>
+      <p class="section-label">Map · 02</p>
+      <h2 class="section-title">Event Types</h2>
+    </div>
+  </div>
+  <div class="legend" id="legend"></div>
+
+  <!-- SCHEDULE -->
+  <div class="toolbar">
+    <div>
+      <p class="section-label">Map · 03</p>
+      <h2 class="section-title">Schedule</h2>
+    </div>
+    <div class="toolbar-actions">
+      <span id="sync-status" class="sync-status"></span>
+      <div class="view-toggle">
+        <button id="view-list-btn" class="active" onclick="switchView('list')">☰ List</button>
+        <button id="view-cal-btn" onclick="switchView('calendar')">▦ Calendar</button>
+      </div>
+      <button class="btn" id="refresh-pull">↻ Refresh</button>
+      <button class="btn" id="expand-all">Expand all</button>
+      <button class="btn" id="collapse-all">Collapse all</button>
+    </div>
+  </div>
+
+  <div class="view active" id="view-list"><div class="days" id="days"></div></div>
+  <div class="view" id="view-calendar"><div class="calendar"><div class="cal-grid" id="cal-grid"></div></div></div>
+
+  <footer>
+    Aceolution · Buenos Aires Fleet Launch · Edits stored locally in this browser ·
+    <button class="reset-link" id="reset-btn">Reset to defaults</button>
+  </footer>
+</div>
+
+<!-- LOCATION MODAL -->
+<div class="modal-backdrop" id="loc-modal">
+  <div class="modal">
+    <h3 id="loc-modal-title">Edit Location</h3>
+    <div class="form-row full"><div class="form-field"><label>Name</label><input type="text" id="loc-modal-name"></div></div>
+    <div class="form-row full"><div class="form-field"><label>Address / Google Maps Query</label><input type="text" id="loc-modal-addr" placeholder="e.g. Aeropuerto Ezeiza, Buenos Aires"></div></div>
+    <div class="modal-actions">
+      <button class="btn" id="loc-modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="loc-modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EVENT MODAL -->
+<div class="modal-backdrop" id="event-modal">
+  <div class="modal">
+    <h3 id="event-modal-title">Edit Event</h3>
+    <div class="form-row">
+      <div class="form-field"><label>When</label><select id="ev-modal-slot"></select></div>
+      <div class="form-field"><label>Type</label><select id="ev-modal-type"></select></div>
+      <div class="form-field"><label>Location</label><select id="ev-modal-loc"></select></div>
+    </div>
+    <div class="form-row full"><div class="form-field"><label>Description</label><input type="text" id="ev-modal-desc"></div></div>
+    <div class="modal-actions">
+      <button class="btn" id="ev-modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="ev-modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ CONFIG ============
+const STORAGE_KEY = 'aceolution_arg_fleet_v1';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec';
+
+const TYPES = {
+  'plane-arrival': { icon: '✈️', label: 'Plane arrival', color: '#2563eb' },
+  'car-arrival':   { icon: '🚗', label: 'Car arrival',   color: '#059669' },
+  'office':        { icon: '🔧', label: 'To office',     color: '#b45309' },
+  'hotel':         { icon: '🏨', label: 'Hotel',         color: '#be185d' },
+  'airbnb':        { icon: '🏠', label: 'Airbnb',        color: '#7c3aed' },
+  'event':         { icon: '🎉', label: 'Event',         color: '#c8102e' },
+  'training':      { icon: '📚', label: 'Training',      color: '#0891b2' },
+  'meal':          { icon: '🍽️', label: 'Meal',          color: '#ea580c' },
+  'briefing':      { icon: '📋', label: 'Briefing',      color: '#475569' },
+  'other':         { icon: '📍', label: 'Other',         color: '#6b7280' }
+};
+
+const SLOTS = ['morning', 'afternoon', 'evening', 'all-day'];
+const SLOT_LABELS = { 'morning': 'Morning', 'afternoon': 'Afternoon', 'evening': 'Evening', 'all-day': 'All day' };
+
+const DAYS_LIST = [
+  { date: '2026-05-26', weekday: 'TUE', num: 26, month: 'MAY' },
+  { date: '2026-05-27', weekday: 'WED', num: 27, month: 'MAY' },
+  { date: '2026-05-28', weekday: 'THU', num: 28, month: 'MAY' },
+  { date: '2026-05-29', weekday: 'FRI', num: 29, month: 'MAY' },
+  { date: '2026-05-30', weekday: 'SAT', num: 30, month: 'MAY' },
+  { date: '2026-05-31', weekday: 'SUN', num: 31, month: 'MAY' },
+  { date: '2026-06-01', weekday: 'MON', num: 1,  month: 'JUN', launch: true },
+  { date: '2026-06-02', weekday: 'TUE', num: 2,  month: 'JUN' },
+  { date: '2026-06-03', weekday: 'WED', num: 3,  month: 'JUN' },
+  { date: '2026-06-04', weekday: 'THU', num: 4,  month: 'JUN' }
+];
+const DAY_BY_DATE = {}; DAYS_LIST.forEach(d => DAY_BY_DATE[d.date] = d);
+
+// ============ DEFAULT DATA ============
+const DEFAULT_DATA = {
+  locations: {
+    'airport-eze':  { icon: '✈️', name: 'EZE Airport',      addr: 'Aeropuerto Ministro Pistarini, Ezeiza' },
+    'airport-aep':  { icon: '✈️', name: 'AEP Airport',      addr: 'Aeroparque Jorge Newbery, Buenos Aires' },
+    'hotel':        { icon: '🏨', name: 'CABA Hotel',       addr: '' },
+    'airbnb':       { icon: '🏠', name: 'Airbnb',           addr: '' },
+    'office':       { icon: '🏢', name: 'Google Office BA', addr: 'Google Argentina, Av. del Libertador 101, Vicente López' },
+    'warehouse':    { icon: '📦', name: 'Warehouse',        addr: '' }
+  },
+  events: {
+    '2026-05-26': [
+      { slot: 'evening', type: 'car-arrival', desc: 'Fernando arrives in Buenos Aires', loc: 'airbnb' },
+      { slot: 'evening', type: 'airbnb',      desc: 'Transfer to Airbnb',                loc: 'airbnb' }
+    ],
+    '2026-05-27': [
+      { slot: 'morning', type: 'office',      desc: 'Fernando: vehicle to Google Office',  loc: 'office' },
+      { slot: 'evening', type: 'car-arrival', desc: 'Mauro arrives in Buenos Aires',       loc: 'airbnb' },
+      { slot: 'evening', type: 'airbnb',      desc: 'Transfer to Airbnb',                  loc: 'airbnb' }
+    ],
+    '2026-05-28': [
+      { slot: 'morning', type: 'office',      desc: 'Mauro: vehicle to Google Office',     loc: 'office' },
+      { slot: 'evening', type: 'car-arrival', desc: 'Guillermo arrives in Buenos Aires',   loc: 'airbnb' },
+      { slot: 'evening', type: 'airbnb',      desc: 'Transfer to Airbnb',                  loc: 'airbnb' }
+    ],
+    '2026-05-29': [
+      { slot: 'morning',   type: 'office',        desc: 'Guillermo: vehicle to Google Office', loc: 'office' },
+      { slot: 'afternoon', type: 'car-arrival',   desc: 'Axel arrives in Buenos Aires',        loc: 'airbnb' },
+      { slot: 'afternoon', type: 'car-arrival',   desc: 'Matías arrives in Buenos Aires',      loc: 'airbnb' },
+      { slot: 'afternoon', type: 'plane-arrival', desc: 'Leo arrives in Buenos Aires',         loc: 'airport-eze' },
+      { slot: 'afternoon', type: 'plane-arrival', desc: 'Giuliano arrives in Buenos Aires',    loc: 'airport-eze' },
+      { slot: 'evening',   type: 'airbnb',        desc: 'Transfers to Airbnb (times TBD)',     loc: 'airbnb' }
+    ],
+    '2026-05-30': [
+      { slot: 'morning',   type: 'hotel',         desc: 'Axel, Matías, Leo & Giuliano: vehicles arrive at CABA hotel', loc: 'hotel' },
+      { slot: 'afternoon', type: 'car-arrival',   desc: 'Leandro arrives at CABA hotel',  loc: 'hotel' },
+      { slot: 'afternoon', type: 'car-arrival',   desc: 'Mauricio arrives at CABA hotel', loc: 'hotel' },
+      { slot: 'afternoon', type: 'plane-arrival', desc: 'Fuss arrives in Buenos Aires',   loc: 'airport-eze' }
+    ],
+    '2026-05-31': [
+      { slot: 'afternoon', type: 'plane-arrival', desc: 'Bia arrives in Buenos Aires',                    loc: 'airport-eze' },
+      { slot: 'afternoon', type: 'hotel',         desc: 'Group transfer: Airbnb → CABA hotel (full team)', loc: 'hotel' },
+      { slot: 'evening',   type: 'briefing',      desc: 'Pre-launch briefing / team dinner (TBD)',         loc: 'hotel' }
+    ],
+    '2026-06-01': [
+      { slot: 'morning',   type: 'event',    desc: 'Lucas & Bia: set up hotel lobby (flags, food, decor, signage)', loc: 'hotel' },
+      { slot: 'morning',   type: 'event',    desc: 'Fleet presentation / kickoff',         loc: 'hotel' },
+      { slot: 'morning',   type: 'meal',     desc: 'Team gathering — pizza / cake / welcome moment', loc: 'hotel' },
+      { slot: 'morning',   type: 'training', desc: 'Training session',                     loc: 'hotel' },
+      { slot: 'afternoon', type: 'office',   desc: 'Post-training: drivers to warehouse (TBD)', loc: 'warehouse' }
+    ],
+    '2026-06-02': [],
+    '2026-06-03': [],
+    '2026-06-04': []
+  },
+  expanded: {},
+  view: 'list'
+};
+
+// ============ STATE ============
+let state = load();
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { ...DEFAULT_DATA, ...parsed,
+        locations: { ...DEFAULT_DATA.locations, ...(parsed.locations || {}) },
+        events: { ...DEFAULT_DATA.events, ...(parsed.events || {}) },
+        expanded: parsed.expanded || {},
+        view: parsed.view || 'list'
+      };
+    }
+  } catch (e) { console.warn(e); }
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.warn(e); }
+}
+
+// ============ SYNC (backend compartilhado) ============
+// Só locations + events são compartilhados. expanded/view ficam locais (preferência de quem abre).
+function scheduleForServer() { return { locations: state.locations, events: state.events }; }
+
+function setSyncStatus(s) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  const map = {
+    loading: ['Loading…', 'var(--c-text-muted)'],
+    saving:  ['Saving…', 'var(--c-warn)'],
+    saved:   ['✓ Synced', 'var(--c-success)'],
+    offline: ['⚠ Offline — saved locally', 'var(--c-danger)']
+  };
+  const [txt, col] = map[s] || ['', 'var(--c-text-muted)'];
+  el.textContent = txt;
+  el.style.color = col;
+}
+
+// Edição de conteúdo: salva local na hora + empurra pro servidor (debounce)
+let pushTimer = null;
+function saveAndSync() {
+  save();
+  setSyncStatus('saving');
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushToServer, 700);
+}
+
+async function pushToServer() {
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ type: 'saveArLaunchSchedule', schedule: scheduleForServer() })
+    });
+    setSyncStatus('saved');
+  } catch (e) {
+    console.warn('push falhou', e);
+    setSyncStatus('offline');
+  }
+}
+
+async function pullFromServer() {
+  setSyncStatus('loading');
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=getArLaunchSchedule').then(r => r.json());
+    if (res && res.success && res.schedule) {
+      state.locations = { ...DEFAULT_DATA.locations, ...(res.schedule.locations || {}) };
+      state.events = { ...DEFAULT_DATA.events, ...(res.schedule.events || {}) };
+      save();
+      renderAll();
+    }
+    setSyncStatus('saved');
+  } catch (e) {
+    console.warn('pull falhou', e);
+    setSyncStatus('offline');
+  }
+}
+
+// ============ RENDER: LOCATIONS ============
+function renderLocations() {
+  const grid = document.getElementById('loc-grid');
+  grid.innerHTML = '';
+  Object.entries(state.locations).forEach(([key, loc]) => {
+    const card = document.createElement('div');
+    card.className = 'loc-card';
+    const hasAddr = loc.addr && loc.addr.trim();
+    card.innerHTML = `
+      <div class="icon">${loc.icon}</div>
+      <div class="text">
+        <div class="name">${escapeHtml(loc.name)}</div>
+        <div class="addr ${hasAddr ? '' : 'tbd'}">${hasAddr ? escapeHtml(loc.addr) : 'Address TBD — click to set'}</div>
+      </div>`;
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.loc-edit-btn')) return;
+      if (hasAddr) openMaps(loc.addr); else openLocationModal(key);
+    });
+    const editBtn = document.createElement('button');
+    editBtn.className = 'loc-edit-btn';
+    editBtn.title = 'Edit location';
+    editBtn.innerHTML = svgIcon('edit');
+    editBtn.addEventListener('click', (e) => { e.stopPropagation(); openLocationModal(key); });
+    card.appendChild(editBtn);
+    grid.appendChild(card);
+  });
+}
+
+function renderLegend() {
+  document.getElementById('legend').innerHTML = Object.entries(TYPES).map(([key, t]) =>
+    `<span class="legend-item"><span class="legend-dot" style="background:${t.color}"></span>${t.icon} ${t.label}</span>`
+  ).join('');
+}
+
+// ============ RENDER: LIST ============
+function renderDays() {
+  const container = document.getElementById('days');
+  container.innerHTML = '';
+  DAYS_LIST.forEach(d => {
+    const events = state.events[d.date] || [];
+    const expanded = state.expanded[d.date];
+    const day = document.createElement('article');
+    day.className = `day${expanded ? ' expanded' : ''}${d.launch ? ' launch' : ''}`;
+    day.dataset.date = d.date;
+    const types = [...new Set(events.map(e => e.type))];
+    const chips = types.map(t => `<span class="summary-chip">${TYPES[t]?.icon || '📍'}</span>`).join('');
+    day.innerHTML = `
+      <div class="day-head">
+        <div class="day-date">
+          <span class="weekday">${d.weekday}</span>
+          <span class="num">${d.num}</span>
+          <span class="month">${d.month}</span>
+        </div>
+        <div class="day-summary">
+          ${d.launch ? '<span class="day-tag special">★ Launch Day</span>' : ''}
+          <span class="day-tag">${events.length} ${events.length === 1 ? 'item' : 'items'}</span>
+          <div class="summary-chips">${chips}</div>
+        </div>
+        <button class="day-toggle" aria-label="Toggle">${svgIcon('chevron')}</button>
+      </div>
+      <div class="day-body"></div>`;
+    day.querySelector('.day-body').appendChild(buildDayBody(d.date, events));
+    day.querySelector('.day-head').addEventListener('click', () => {
+      state.expanded[d.date] = !state.expanded[d.date];
+      save(); renderDays();
+    });
+    container.appendChild(day);
+  });
+}
+
+function buildDayBody(date, events) {
+  const wrap = document.createElement('div');
+  SLOTS.forEach(slot => {
+    const slotEvents = events.filter(e => e.slot === slot);
+    if (slotEvents.length === 0) return;
+    const slotEl = document.createElement('div');
+    slotEl.className = 'slot';
+    slotEl.innerHTML = `<p class="slot-label">${SLOT_LABELS[slot]}</p>`;
+    const eventsEl = document.createElement('div');
+    eventsEl.className = 'events';
+    slotEvents.forEach(ev => {
+      const idx = events.indexOf(ev);
+      const t = TYPES[ev.type] || TYPES.other;
+      const loc = ev.loc ? state.locations[ev.loc] : null;
+      const evEl = document.createElement('div');
+      evEl.className = 'event';
+      evEl.style.borderLeftColor = t.color;
+      evEl.innerHTML = `
+        <div class="event-icon">${t.icon}</div>
+        <div class="event-desc">${escapeHtml(ev.desc)}</div>
+        ${loc ? `<button class="event-loc" data-addr="${escapeHtml(loc.addr || '')}">${loc.icon} ${escapeHtml(loc.name)}</button>` : '<span></span>'}
+        <button class="event-edit" title="Edit">${svgIcon('pencil')}</button>
+        <button class="event-delete" title="Delete">${svgIcon('trash')}</button>`;
+      evEl.querySelector('.event-loc')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const addr = e.currentTarget.dataset.addr;
+        if (addr) openMaps(addr); else openLocationModal(ev.loc);
+      });
+      evEl.querySelector('.event-edit').addEventListener('click', (e) => { e.stopPropagation(); openEventModal(date, idx); });
+      evEl.querySelector('.event-delete').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm('Delete this event?')) { state.events[date].splice(idx, 1); saveAndSync(); renderDays(); renderCalendar(); }
+      });
+      eventsEl.appendChild(evEl);
+    });
+    slotEl.appendChild(eventsEl);
+    wrap.appendChild(slotEl);
+  });
+
+  if (events.length === 0) {
+    const empty = document.createElement('p');
+    empty.style.cssText = 'color:var(--c-text-muted); font-style:italic; padding:16px 0; margin:16px 0 0; text-align:center;';
+    empty.textContent = 'No events scheduled — click Edit to add some.';
+    wrap.appendChild(empty);
+  }
+
+  const actions = document.createElement('div');
+  actions.className = 'day-actions';
+  actions.innerHTML = `
+    <button class="btn edit-day-btn">${svgIcon('pencil')} Edit</button>
+    <button class="btn done-day-btn" style="display:none;">${svgIcon('check')} Done</button>`;
+  const dayEl = () => document.querySelector(`[data-date="${date}"]`);
+  actions.querySelector('.edit-day-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dayEl().classList.add('editing');
+    actions.querySelector('.edit-day-btn').style.display = 'none';
+    actions.querySelector('.done-day-btn').style.display = 'inline-flex';
+  });
+  actions.querySelector('.done-day-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dayEl().classList.remove('editing');
+    actions.querySelector('.edit-day-btn').style.display = 'inline-flex';
+    actions.querySelector('.done-day-btn').style.display = 'none';
+  });
+  wrap.appendChild(actions);
+
+  const form = document.createElement('div');
+  form.className = 'add-form';
+  form.innerHTML = `
+    <div class="form-row">
+      <div class="form-field"><label>When</label>
+        <select class="f-slot">${SLOTS.map(s => `<option value="${s}">${SLOT_LABELS[s]}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Type</label>
+        <select class="f-type">${Object.entries(TYPES).map(([k, t]) => `<option value="${k}">${t.icon} ${t.label}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Location</label>
+        <select class="f-loc"><option value="">— none —</option>${Object.entries(state.locations).map(([k, l]) => `<option value="${k}">${l.icon} ${l.name}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-row full"><div class="form-field"><label>Description</label>
+      <input type="text" class="f-desc" placeholder="e.g. Pickup at airport, briefing, etc."></div></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn btn-primary add-event-btn">${svgIcon('plus')} Add event</button></div>`;
+  form.querySelector('.add-event-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const slot = form.querySelector('.f-slot').value;
+    const type = form.querySelector('.f-type').value;
+    const loc = form.querySelector('.f-loc').value;
+    const desc = form.querySelector('.f-desc').value.trim();
+    if (!desc) { alert('Please add a description.'); return; }
+    if (!state.events[date]) state.events[date] = [];
+    state.events[date].push({ slot, type, loc: loc || null, desc });
+    saveAndSync(); renderDays(); renderCalendar();
+    // keep the day in edit mode after re-render
+    const el = document.querySelector(`[data-date="${date}"]`);
+    if (el) el.classList.add('editing');
+  });
+  wrap.appendChild(form);
+  return wrap;
+}
+
+// ============ RENDER: CALENDAR ============
+function fmtDate(d) {
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function parseLocal(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+
+function renderCalendar() {
+  const grid = document.getElementById('cal-grid');
+  const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  let html = WD.map(w => `<div class="cal-weekday">${w}</div>`).join('');
+
+  const dates = DAYS_LIST.map(d => d.date).sort();
+  const min = parseLocal(dates[0]);
+  const max = parseLocal(dates[dates.length - 1]);
+  const start = new Date(min); start.setDate(min.getDate() - min.getDay());        // back to Sunday
+  const end = new Date(max);   end.setDate(max.getDate() + (6 - max.getDay()));     // forward to Saturday
+
+  for (let cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+    const ds = fmtDate(cur);
+    const info = DAY_BY_DATE[ds];
+    const monthLabel = MONTHS[cur.getMonth()];
+    if (!info) {
+      html += `<div class="cal-cell muted"><span class="cal-num">${cur.getDate()}</span><span class="cal-month">${monthLabel}</span></div>`;
+      continue;
+    }
+    const events = state.events[ds] || [];
+    const types = [...new Set(events.map(e => e.type))];
+    const dots = types.slice(0, 8).map(t => `<span class="cal-dot" style="background:${(TYPES[t] || TYPES.other).color}"></span>`).join('');
+    html += `
+      <div class="cal-cell active${info.launch ? ' launch' : ''}" onclick="gotoDay('${ds}')">
+        ${info.launch ? '<span class="cal-launch-tag">★</span>' : ''}
+        <span class="cal-num">${info.num}</span>
+        <span class="cal-month">${info.month}</span>
+        ${events.length ? `<div class="cal-dots">${dots}</div>` : '<span class="cal-count">—</span>'}
+      </div>`;
+  }
+  grid.innerHTML = html;
+}
+const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+function gotoDay(date) {
+  state.view = 'list';
+  state.expanded[date] = true;
+  save();
+  applyView();
+  renderDays();
+  setTimeout(() => {
+    const el = document.querySelector(`.day[data-date="${date}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 60);
+}
+
+// ============ VIEW TOGGLE ============
+function switchView(v) {
+  state.view = v;
+  save();
+  applyView();
+}
+function applyView() {
+  const isList = state.view !== 'calendar';
+  document.getElementById('view-list').classList.toggle('active', isList);
+  document.getElementById('view-calendar').classList.toggle('active', !isList);
+  document.getElementById('view-list-btn').classList.toggle('active', isList);
+  document.getElementById('view-cal-btn').classList.toggle('active', !isList);
+  // Expand/collapse buttons only make sense in list view
+  document.getElementById('expand-all').style.display = isList ? '' : 'none';
+  document.getElementById('collapse-all').style.display = isList ? '' : 'none';
+}
+
+// ============ MAPS ============
+function openMaps(query) {
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank');
+}
+
+// ============ LOCATION MODAL ============
+let editingLocKey = null;
+function openLocationModal(key) {
+  editingLocKey = key;
+  const loc = state.locations[key];
+  document.getElementById('loc-modal-title').textContent = `Edit · ${loc.name}`;
+  document.getElementById('loc-modal-name').value = loc.name;
+  document.getElementById('loc-modal-addr').value = loc.addr || '';
+  document.getElementById('loc-modal').classList.add('open');
+}
+function closeLocModal() { document.getElementById('loc-modal').classList.remove('open'); editingLocKey = null; }
+document.getElementById('loc-modal-cancel').addEventListener('click', closeLocModal);
+document.getElementById('loc-modal').addEventListener('click', (e) => { if (e.target.id === 'loc-modal') closeLocModal(); });
+document.getElementById('loc-modal-save').addEventListener('click', () => {
+  if (!editingLocKey) return;
+  const name = document.getElementById('loc-modal-name').value.trim();
+  const addr = document.getElementById('loc-modal-addr').value.trim();
+  if (!name) { alert('Name is required.'); return; }
+  state.locations[editingLocKey].name = name;
+  state.locations[editingLocKey].addr = addr;
+  saveAndSync(); closeLocModal(); renderLocations(); renderDays(); renderCalendar();
+});
+
+// ============ EVENT MODAL (edit existing) ============
+let editingEvent = null; // { date, idx }
+function openEventModal(date, idx) {
+  const ev = (state.events[date] || [])[idx];
+  if (!ev) return;
+  editingEvent = { date, idx };
+  document.getElementById('ev-modal-slot').innerHTML = SLOTS.map(s => `<option value="${s}">${SLOT_LABELS[s]}</option>`).join('');
+  document.getElementById('ev-modal-type').innerHTML = Object.entries(TYPES).map(([k, t]) => `<option value="${k}">${t.icon} ${t.label}</option>`).join('');
+  document.getElementById('ev-modal-loc').innerHTML = '<option value="">— none —</option>' + Object.entries(state.locations).map(([k, l]) => `<option value="${k}">${l.icon} ${l.name}</option>`).join('');
+  document.getElementById('ev-modal-slot').value = ev.slot;
+  document.getElementById('ev-modal-type').value = ev.type;
+  document.getElementById('ev-modal-loc').value = ev.loc || '';
+  document.getElementById('ev-modal-desc').value = ev.desc;
+  document.getElementById('event-modal').classList.add('open');
+}
+function closeEventModal() { document.getElementById('event-modal').classList.remove('open'); editingEvent = null; }
+document.getElementById('ev-modal-cancel').addEventListener('click', closeEventModal);
+document.getElementById('event-modal').addEventListener('click', (e) => { if (e.target.id === 'event-modal') closeEventModal(); });
+document.getElementById('ev-modal-save').addEventListener('click', () => {
+  if (!editingEvent) return;
+  const desc = document.getElementById('ev-modal-desc').value.trim();
+  if (!desc) { alert('Description is required.'); return; }
+  const ev = state.events[editingEvent.date][editingEvent.idx];
+  ev.slot = document.getElementById('ev-modal-slot').value;
+  ev.type = document.getElementById('ev-modal-type').value;
+  ev.loc = document.getElementById('ev-modal-loc').value || null;
+  ev.desc = desc;
+  saveAndSync(); closeEventModal(); renderDays(); renderCalendar();
+});
+
+// ============ TOOLBAR ============
+document.getElementById('expand-all').addEventListener('click', () => {
+  DAYS_LIST.forEach(d => state.expanded[d.date] = true); save(); renderDays();
+});
+document.getElementById('collapse-all').addEventListener('click', () => {
+  state.expanded = {}; save(); renderDays();
+});
+document.getElementById('reset-btn').addEventListener('click', () => {
+  if (confirm('Reset to defaults FOR EVERYONE? This overwrites the shared schedule.')) {
+    localStorage.removeItem(STORAGE_KEY); state = load(); saveAndSync(); renderAll(); applyView();
+  }
+});
+document.getElementById('refresh-pull').addEventListener('click', pullFromServer);
+
+// ============ HELPERS ============
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function svgIcon(name) {
+  const icons = {
+    chevron: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>',
+    edit:    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
+    pencil:  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>',
+    trash:   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"></path></svg>',
+    plus:    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
+    check:   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+  };
+  return icons[name] || '';
+}
+
+// ============ INIT ============
+function renderAll() {
+  renderLocations();
+  renderLegend();
+  renderDays();
+  renderCalendar();
+}
+
+function startApp() {
+  document.getElementById('app').style.display = '';
+  // Auto-expand launch day on first load
+  if (Object.keys(state.expanded).length === 0) { state.expanded['2026-06-01'] = true; save(); }
+  renderAll();      // render imediato com cache local
+  applyView();
+  pullFromServer(); // depois sincroniza com a versão compartilhada
+}
+
+// Página pública — sem login. Renderiza direto.
+document.addEventListener('DOMContentLoaded', startApp);
+</script>
+
+</body>
+</html>

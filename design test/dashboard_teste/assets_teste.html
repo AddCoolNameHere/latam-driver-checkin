@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="pt-BR" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<!-- App gerencia o próprio PT/ES — impede o auto-translate do browser de bagunçar a UI (ex: "Dom" virando "Sol" no celular) -->
+<meta name="google" content="notranslate">
+<title>Relatório Semanal de Equipamentos · Aceolution LATAM</title>
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<link rel="stylesheet" href="theme_teste.css?v=20260518c">
+<!-- Sem theme_teste.js de propósito: assets é página de driver (sem login), sempre light igual ao index.
+     Carregar o theme.js fazia ela herdar o AC_THEME=dark do admin e ficar presa num dark quebrado. -->
+<script>
+  // Garante light mesmo que um data-theme="dark" tenha sobrado de outra página no mesmo browser.
+  document.documentElement.removeAttribute('data-theme');
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f6f8;
+    color: var(--c-text);
+    padding: 16px;
+    padding-bottom: 80px;
+    max-width: 560px;
+    margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    background: var(--c-surface);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand-wrap { display: flex; align-items: center; gap: 10px; }
+  .brand-logo { height: 28px; width: auto; }
+  .brand-divider { width: 1px; height: 24px; background: #d5d7db; }
+  .brand-sub {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b7280;
+    letter-spacing: 1px;
+    line-height: 1.2;
+  }
+  .brand-sub span { display: block; color: var(--c-primary); font-size: 11px; }
+  .lang-switch { font-size: 13px; color: #666; }
+  .lang-switch button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .lang-switch button.active { color: var(--c-primary); font-weight: 600; }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--c-surface);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card.hidden { display: none; }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--c-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .step-title { font-size: 15px; font-weight: 600; }
+  .step-sub { font-size: 12px; color: var(--c-text-muted); margin-top: 2px; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 6px;
+  }
+  label.with-hint { display: flex; justify-content: space-between; align-items: baseline; }
+  .label-hint { font-size: 11px; color: var(--c-text-muted); font-weight: 400; }
+
+  select, input, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d5d7db;
+    border-radius: 8px;
+    font-size: 15px;
+    background: var(--c-surface);
+    font-family: inherit;
+  }
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(74,159,224,0.15);
+  }
+  textarea { resize: vertical; min-height: 70px; }
+
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Chip groups (multi-select) */
+  .chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    padding: 8px 12px;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 13px;
+    background: var(--c-surface);
+    color: var(--c-text);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--c-accent); background: var(--c-bg-tint); }
+  .chip.selected {
+    background: var(--c-bg-tint);
+    border-color: var(--c-primary);
+    color: var(--c-primary-dark);
+    font-weight: 500;
+  }
+
+  /* Yes/No buttons */
+  .yesno-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .yesno-btn {
+    padding: 12px;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 8px;
+    background: var(--c-surface);
+    cursor: pointer;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .yesno-btn.yes.selected {
+    background: #D1FAE5;
+    border-color: var(--c-success);
+    color: #14532D;
+  }
+  .yesno-btn.no.selected {
+    background: #FEE2E2;
+    border-color: var(--c-danger);
+    color: #7F1D1D;
+  }
+
+  /* Prefilled fields visual hint */
+  .prefilled-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .prefilled-pill {
+    font-size: 10px;
+    color: var(--c-success);
+    background: #D1FAE5;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+  }
+  .edit-link {
+    font-size: 12px;
+    color: var(--c-primary);
+    cursor: pointer;
+    text-decoration: underline;
+    background: none;
+    border: none;
+    font-family: inherit;
+    padding: 0;
+  }
+
+  .last-value-hint {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  /* Photo upload */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .photo-slot {
+    border: 2px dashed var(--c-border-strong);
+    border-radius: 10px;
+    aspect-ratio: 4/3;
+    position: relative;
+    overflow: hidden;
+    background: var(--c-bg);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .photo-slot:hover { border-color: var(--c-accent); background: var(--c-bg-tint); }
+  .photo-slot.has-photo {
+    border-style: solid;
+    border-color: var(--c-success);
+    padding: 0;
+  }
+  .photo-slot input[type="file"] { display: none; }
+  .photo-slot-icon { font-size: 28px; color: var(--c-primary); line-height: 1; }
+  .photo-slot-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--c-text-muted);
+    margin-top: 6px;
+    line-height: 1.3;
+  }
+  .photo-slot img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .photo-slot .remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: none;
+  }
+  .photo-slot.has-photo .remove-btn { display: block; }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-accent) 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    box-shadow: 0 2px 6px rgba(44,82,130,0.2);
+    font-family: inherit;
+  }
+  .submit-btn:disabled { background: #94B8D9; cursor: not-allowed; box-shadow: none; }
+  .submit-btn:active { transform: scale(0.98); }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    z-index: 9999;
+    max-width: 90%;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .toast.success { background: var(--c-primary); }
+  .toast.error { background: var(--c-danger); }
+  .toast.hidden { display: none; }
+
+  .loader {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+  }
+
+  .nav-back {
+    display: inline-block;
+    color: var(--c-primary);
+    text-decoration: none;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .info-banner {
+    background: var(--c-bg-tint);
+    border-left: 3px solid var(--c-accent);
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--c-primary-dark);
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  footer {
+    margin-top: 24px;
+    padding: 16px;
+    text-align: center;
+    font-size: 11px;
+    color: #9ca3af;
+    line-height: 1.6;
+  }
+  footer a { color: var(--c-primary); text-decoration: none; }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-wrap">
+    <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
+    <div class="brand-divider"></div>
+    <div class="brand-sub">
+      STREET VIEW
+      <span>LATAM</span>
+    </div>
+  </div>
+  <div class="lang-switch">
+    <button data-lang="pt" class="active">PT</button>
+    <button data-lang="es">ES</button>
+  </div>
+</header>
+
+<a href="index.html" class="nav-back" data-i18n="navBack">← Voltar ao check-in diário</a>
+
+<h1 data-i18n="title">Relatório Semanal de Equipamentos</h1>
+<div class="subtitle" data-i18n="subtitle">Preenche uma vez por semana. Os dados que não mudam ficam pré-preenchidos.</div>
+
+<div id="app-loader" class="loader" data-i18n="loading">Carregando drivers...</div>
+
+<div id="app-content" class="hidden">
+
+  <!-- Step 1: Driver -->
+  <div class="card">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title" data-i18n="step1">Identificação</div>
+        <div class="step-sub" data-i18n="step1Sub">Escolhe seu nome — vou puxar suas info da semana passada</div>
+      </div>
+    </div>
+    <select id="driver-select">
+      <option value="" data-i18n="chooseOption">-- Escolha --</option>
+    </select>
+  </div>
+
+  <div id="form-cards" class="hidden">
+
+    <div id="prefill-banner" class="info-banner hidden"></div>
+
+    <!-- Step 2: VID, country -->
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div class="step-title" data-i18n="step2">Veículo & País</div>
+      </div>
+
+      <div class="field">
+        <label class="with-hint" for="vid-input">
+          <span data-i18n="vidLabel">VID (ID do veículo)</span>
+          <span class="prefilled-pill prefilled-vid hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
+        </label>
+        <input type="text" id="vid-input" inputmode="numeric" placeholder="40623">
+      </div>
+
+      <div class="field">
+        <label data-i18n="countryLabel">País</label>
+        <div class="chip-group single-select" id="country-group">
+          <div class="chip" data-value="Argentina">🇦🇷 Argentina</div>
+          <div class="chip" data-value="Brazil">🇧🇷 Brasil</div>
+          <div class="chip" data-value="Chile">🇨🇱 Chile</div>
+          <div class="chip" data-value="Colombia">🇨🇴 Colômbia</div>
+          <div class="chip" data-value="Mexico">🇲🇽 México</div>
+          <div class="chip" data-value="Peru">🇵🇪 Peru</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="with-hint" for="plate-input">
+          <span data-i18n="plateLabel">Placa do veículo</span>
+          <span class="prefilled-pill prefilled-plate hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
+        </label>
+        <input type="text" id="plate-input" placeholder="ABC-1234" style="text-transform:uppercase;">
+      </div>
+
+      <div class="field">
+        <label class="with-hint" for="vehicle-date-input">
+          <span data-i18n="vehicleDateLabel">Quando recebeu esse carro?</span>
+          <span class="prefilled-pill prefilled-vdate hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
+        </label>
+        <input type="date" id="vehicle-date-input">
+        <div class="last-value-hint" data-i18n="vehicleDateHint">Só preenche se mudou de carro</div>
+      </div>
+
+      <div class="field">
+        <label class="with-hint" for="city-input">
+          <span data-i18n="cityLabel">Cidade onde está agora</span>
+          <span class="prefilled-pill prefilled-city hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
+        </label>
+        <input type="text" id="city-input" placeholder="São Paulo, SP">
+      </div>
+    </div>
+
+    <!-- Step 3: Hours and days -->
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <div>
+          <div class="step-title" data-i18n="step3">Horas trabalhadas</div>
+          <div class="step-sub" data-i18n="step3Sub">Em quais dias você trabalhou 8h e em quais trabalhou 9h?</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label data-i18n="hours8Label">Dias que trabalhou 8 horas</label>
+        <div class="chip-group multi-select day-group" data-target="hours8">
+          <div class="chip" data-value="Lun/Seg" data-i18n="dayMon">Seg</div>
+          <div class="chip" data-value="Mar/Ter" data-i18n="dayTue">Ter</div>
+          <div class="chip" data-value="Mié/Qua" data-i18n="dayWed">Qua</div>
+          <div class="chip" data-value="Jue/Qui" data-i18n="dayThu">Qui</div>
+          <div class="chip" data-value="Vie/Sex" data-i18n="dayFri">Sex</div>
+          <div class="chip" data-value="Sáb/Sáb" data-i18n="daySat">Sáb</div>
+          <div class="chip" data-value="Dom" data-i18n="daySun">Dom</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label data-i18n="hours9Label">Dias que trabalhou 9 horas</label>
+        <div class="chip-group multi-select day-group" data-target="hours9">
+          <div class="chip" data-value="Lun/Seg" data-i18n="dayMon">Seg</div>
+          <div class="chip" data-value="Mar/Ter" data-i18n="dayTue">Ter</div>
+          <div class="chip" data-value="Mié/Qua" data-i18n="dayWed">Qua</div>
+          <div class="chip" data-value="Jue/Qui" data-i18n="dayThu">Qui</div>
+          <div class="chip" data-value="Vie/Sex" data-i18n="dayFri">Sex</div>
+          <div class="chip" data-value="Sáb/Sáb" data-i18n="daySat">Sáb</div>
+          <div class="chip" data-value="Dom" data-i18n="daySun">Dom</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label data-i18n="mappedDaysLabel">Quais dias da semana mapeou?</label>
+        <div class="chip-group multi-select day-group" data-target="mapped">
+          <div class="chip" data-value="Lun/Seg" data-i18n="dayMon">Seg</div>
+          <div class="chip" data-value="Mar/Ter" data-i18n="dayTue">Ter</div>
+          <div class="chip" data-value="Mié/Qua" data-i18n="dayWed">Qua</div>
+          <div class="chip" data-value="Jue/Qui" data-i18n="dayThu">Qui</div>
+          <div class="chip" data-value="Vie/Sex" data-i18n="dayFri">Sex</div>
+          <div class="chip" data-value="Sáb/Sáb" data-i18n="daySat">Sáb</div>
+          <div class="chip" data-value="Dom" data-i18n="daySun">Dom</div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label data-i18n="rainDaysLabel">Dias de chuva</label>
+          <div class="chip-group multi-select day-group" data-target="rain" style="flex-wrap:wrap;">
+            <div class="chip" data-value="Lun/Seg" data-i18n="dayMonShort">S</div>
+            <div class="chip" data-value="Mar/Ter" data-i18n="dayTueShort">T</div>
+            <div class="chip" data-value="Mié/Qua" data-i18n="dayWedShort">Q</div>
+            <div class="chip" data-value="Jue/Qui" data-i18n="dayThuShort">Q</div>
+            <div class="chip" data-value="Vie/Sex" data-i18n="dayFriShort">S</div>
+            <div class="chip" data-value="Sáb/Sáb" data-i18n="daySatShort">S</div>
+            <div class="chip" data-value="Dom" data-i18n="daySunShort">D</div>
+          </div>
+        </div>
+        <div class="field">
+          <label data-i18n="mechDaysLabel">Dias com mecânico</label>
+          <div class="chip-group multi-select day-group" data-target="mech" style="flex-wrap:wrap;">
+            <div class="chip" data-value="Lun/Seg" data-i18n="dayMonShort">S</div>
+            <div class="chip" data-value="Mar/Ter" data-i18n="dayTueShort">T</div>
+            <div class="chip" data-value="Mié/Qua" data-i18n="dayWedShort">Q</div>
+            <div class="chip" data-value="Jue/Qui" data-i18n="dayThuShort">Q</div>
+            <div class="chip" data-value="Vie/Sex" data-i18n="dayFriShort">S</div>
+            <div class="chip" data-value="Sáb/Sáb" data-i18n="daySatShort">S</div>
+            <div class="chip" data-value="Dom" data-i18n="daySunShort">D</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label data-i18n="weekendLabel">Vai trabalhar este fim de semana?</label>
+        <div class="yesno-group" data-target="weekend">
+          <button type="button" class="yesno-btn yes" data-value="Sí/Sim" data-i18n="yes">✓ Sim</button>
+          <button type="button" class="yesno-btn no" data-value="No/Não" data-i18n="no">✗ Não</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Performance -->
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num">4</div>
+        <div class="step-title" data-i18n="step4">Performance da semana</div>
+      </div>
+
+      <div class="field">
+        <label class="with-hint" for="odometer-input">
+          <span data-i18n="odometerLabel">Leitura atual do odômetro (km)</span>
+          <span class="label-hint" id="odometer-last-hint"></span>
+        </label>
+        <input type="number" id="odometer-input" min="0" inputmode="numeric" placeholder="12287">
+      </div>
+
+      <div class="field">
+        <label for="targets-input" data-i18n="targetsLabel">Targets cumpridos esta semana</label>
+        <input type="number" id="targets-input" min="0" inputmode="numeric" placeholder="13">
+      </div>
+    </div>
+
+    <!-- Step 5: Disks -->
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num">5</div>
+        <div class="step-title" data-i18n="step5">Discos (SSDs)</div>
+      </div>
+
+      <div class="field">
+        <label class="with-hint" for="disk-count-input">
+          <span data-i18n="diskCountLabel">Quantos discos tem no total?</span>
+          <span class="prefilled-pill prefilled-diskcount hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
+        </label>
+        <input type="number" id="disk-count-input" min="0" inputmode="numeric" placeholder="6">
+      </div>
+
+      <div class="field">
+        <label for="disk-in-use-input" data-i18n="diskInUseLabel">Qual disco está usando AGORA?</label>
+        <input type="text" id="disk-in-use-input" placeholder="S6EPNN0X802880">
+      </div>
+
+      <div class="field">
+        <label class="with-hint" for="disks-other-input">
+          <span data-i18n="disksOtherLabel">Códigos dos outros discos (separados por espaço)</span>
+          <span class="prefilled-pill prefilled-diskother hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
+        </label>
+        <textarea id="disks-other-input" placeholder="S6EPNN0X802604 S6EPNN0X801498 ..."></textarea>
+      </div>
+    </div>
+
+    <!-- Step 6: Phones -->
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num">6</div>
+        <div class="step-title" data-i18n="step6">Celulares do projeto</div>
+      </div>
+
+      <div class="field">
+        <label class="with-hint" for="phone-count-input">
+          <span data-i18n="phoneCountLabel">Quantos celulares do projeto tem?</span>
+          <span class="prefilled-pill prefilled-phonecount hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
+        </label>
+        <input type="number" id="phone-count-input" min="0" inputmode="numeric" placeholder="1">
+      </div>
+
+      <div class="field">
+        <label class="with-hint" for="phone-model-input">
+          <span data-i18n="phoneModelLabel">Modelo do celular</span>
+          <span class="prefilled-pill prefilled-phonemodel hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
+        </label>
+        <input type="text" id="phone-model-input" placeholder="Samsung Galaxy A36">
+      </div>
+
+      <div class="field">
+        <label class="with-hint" for="phone-imei-input">
+          <span data-i18n="phoneImeiLabel">IMEI do(s) celular(es)</span>
+          <span class="prefilled-pill prefilled-phoneimei hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
+        </label>
+        <input type="text" id="phone-imei-input" placeholder="355174186094458">
+      </div>
+    </div>
+
+    <!-- Step 7: Breathalyzer + Hotel mode -->
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num">7</div>
+        <div class="step-title" data-i18n="step7">Outros equipamentos & modo hotel</div>
+      </div>
+
+      <div class="field">
+        <label class="with-hint" for="breath-count-input">
+          <span data-i18n="breathCountLabel">Quantos bafômetros FUNCIONANDO?</span>
+          <span class="prefilled-pill prefilled-breath hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
+        </label>
+        <input type="number" id="breath-count-input" min="0" inputmode="numeric" placeholder="1">
+      </div>
+
+      <div class="field">
+        <label data-i18n="hotelModeLabel">Está em modo hotel?</label>
+        <div class="yesno-group" data-target="hotel">
+          <button type="button" class="yesno-btn yes" data-value="Sí/Sim" data-i18n="yes">✓ Sim</button>
+          <button type="button" class="yesno-btn no" data-value="No/Não" data-i18n="no">✗ Não</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 8: Photos -->
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num">8</div>
+        <div>
+          <div class="step-title" data-i18n="step8">Fotos do veículo</div>
+          <div class="step-sub" data-i18n="step8Sub">4 fotos: frontal, lateral direita, lateral esquerda, traseira</div>
+        </div>
+      </div>
+
+      <div class="photo-grid">
+        <label class="photo-slot" data-slot="front">
+          <input type="file" accept="image/*" capture="environment">
+          <span class="photo-slot-icon">📷</span>
+          <span class="photo-slot-label" data-i18n="photoFront">Foto FRONTAL</span>
+          <button type="button" class="remove-btn" data-remove="front">×</button>
+        </label>
+        <label class="photo-slot" data-slot="right">
+          <input type="file" accept="image/*" capture="environment">
+          <span class="photo-slot-icon">📷</span>
+          <span class="photo-slot-label" data-i18n="photoRight">Foto LATERAL DIREITA</span>
+          <button type="button" class="remove-btn" data-remove="right">×</button>
+        </label>
+        <label class="photo-slot" data-slot="left">
+          <input type="file" accept="image/*" capture="environment">
+          <span class="photo-slot-icon">📷</span>
+          <span class="photo-slot-label" data-i18n="photoLeft">Foto LATERAL ESQUERDA</span>
+          <button type="button" class="remove-btn" data-remove="left">×</button>
+        </label>
+        <label class="photo-slot" data-slot="back">
+          <input type="file" accept="image/*" capture="environment">
+          <span class="photo-slot-icon">📷</span>
+          <span class="photo-slot-label" data-i18n="photoBack">Foto TRASEIRA</span>
+          <button type="button" class="remove-btn" data-remove="back">×</button>
+        </label>
+      </div>
+    </div>
+
+    <!-- Step 9: Comments -->
+    <div class="card">
+      <div class="step-header">
+        <div class="step-num">9</div>
+        <div class="step-title" data-i18n="step9">Comentários</div>
+      </div>
+      <div class="field">
+        <label data-i18n="commentsLabel">Algo a adicionar? (opcional)</label>
+        <textarea id="comments-input" placeholder=""></textarea>
+      </div>
+    </div>
+
+    <button type="button" id="submit-btn" class="submit-btn" data-i18n="submitBtn">Enviar relatório semanal</button>
+
+  </div>
+</div>
+
+<footer>
+  <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="footer-logo" style="height:18px;opacity:0.6;margin-bottom:6px;display:block;margin-left:auto;margin-right:auto;" onerror="this.style.display='none'">
+  <span data-i18n="footerText">Plataforma interna — Aceolution do Brasil Ltda.</span>
+  <br>
+  <a href="https://www.aceolution.com" target="_blank">aceolution.com</a>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  storageKey: 'latam.assetsForm.cache.v1',
+  photoMaxDim: 1600,
+  photoQuality: 0.82,
+};
+
+const I18N = {
+  pt: {
+    title: 'Relatório Semanal de Equipamentos',
+    subtitle: 'Preenche uma vez por semana. Os dados que não mudam ficam pré-preenchidos.',
+    loading: 'Carregando drivers...',
+    navBack: '← Voltar ao check-in diário',
+    step1: 'Identificação',
+    step1Sub: 'Escolhe seu nome — vou puxar suas info da semana passada',
+    chooseOption: '-- Escolha --',
+    step2: 'Veículo & País',
+    vidLabel: 'VID (ID do veículo)',
+    countryLabel: 'País',
+    plateLabel: 'Placa do veículo',
+    vehicleDateLabel: 'Quando recebeu esse carro?',
+    vehicleDateHint: 'Só preenche se mudou de carro',
+    cityLabel: 'Cidade onde está agora',
+    step3: 'Horas trabalhadas',
+    step3Sub: 'Em quais dias você trabalhou 8h e em quais trabalhou 9h?',
+    hours8Label: 'Dias que trabalhou 8 horas',
+    hours9Label: 'Dias que trabalhou 9 horas',
+    mappedDaysLabel: 'Quais dias da semana mapeou?',
+    rainDaysLabel: 'Dias de chuva',
+    mechDaysLabel: 'Dias com mecânico',
+    weekendLabel: 'Vai trabalhar este fim de semana?',
+    yes: '✓ Sim',
+    no: '✗ Não',
+    step4: 'Performance da semana',
+    odometerLabel: 'Leitura atual do odômetro (km)',
+    targetsLabel: 'Targets cumpridos esta semana',
+    step5: 'Discos (SSDs)',
+    diskCountLabel: 'Quantos discos tem no total?',
+    diskInUseLabel: 'Qual disco está usando AGORA?',
+    disksOtherLabel: 'Códigos dos outros discos (separados por espaço)',
+    step6: 'Celulares do projeto',
+    phoneCountLabel: 'Quantos celulares do projeto tem?',
+    phoneModelLabel: 'Modelo do celular',
+    phoneImeiLabel: 'IMEI do(s) celular(es)',
+    step7: 'Outros equipamentos & modo hotel',
+    breathCountLabel: 'Quantos bafômetros FUNCIONANDO?',
+    hotelModeLabel: 'Está em modo hotel?',
+    step8: 'Fotos do veículo',
+    step8Sub: '4 fotos: frontal, lateral direita, lateral esquerda, traseira',
+    photoFront: 'Foto FRONTAL',
+    photoRight: 'Foto LATERAL DIREITA',
+    photoLeft: 'Foto LATERAL ESQUERDA',
+    photoBack: 'Foto TRASEIRA',
+    step9: 'Comentários',
+    commentsLabel: 'Algo a adicionar? (opcional)',
+    submitBtn: 'Enviar relatório semanal',
+    sending: 'Enviando...',
+    success: '✓ Relatório enviado com sucesso!',
+    errorSend: 'Erro ao enviar. Tente novamente.',
+    fillRequired: 'Preencha os campos obrigatórios',
+    pillPrefilled: 'PRÉ-PREENCHIDO',
+    dayMon: 'Seg', dayTue: 'Ter', dayWed: 'Qua', dayThu: 'Qui', dayFri: 'Sex', daySat: 'Sáb', daySun: 'Dom',
+    dayMonShort: 'S', dayTueShort: 'T', dayWedShort: 'Q', dayThuShort: 'Q', dayFriShort: 'S', daySatShort: 'S', daySunShort: 'D',
+    prefillBannerHasData: 'Achei sua última resposta de {date}. Os campos fixos vieram preenchidos — confere e ajusta se mudou algo.',
+    prefillBannerNoData: 'Não achei resposta anterior sua. Você é primeira vez? Preenche tudo com calma.',
+    odometerLastHint: 'Última leitura: {value} km',
+    footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+  },
+  es: {
+    title: 'Reporte Semanal de Equipos',
+    subtitle: 'Rellena una vez por semana. Los datos que no cambian quedan pre-llenados.',
+    loading: 'Cargando drivers...',
+    navBack: '← Volver al check-in diario',
+    step1: 'Identificación',
+    step1Sub: 'Elige tu nombre — voy a traer tu info de la semana pasada',
+    chooseOption: '-- Elige --',
+    step2: 'Vehículo y País',
+    vidLabel: 'VID (ID del vehículo)',
+    countryLabel: 'País',
+    plateLabel: 'Patente del vehículo',
+    vehicleDateLabel: '¿Cuándo recibió ese carro?',
+    vehicleDateHint: 'Solo rellena si cambió de carro',
+    cityLabel: 'Ciudad donde está ahora',
+    step3: 'Horas trabajadas',
+    step3Sub: '¿En qué días trabajaste 8h y en cuáles trabajaste 9h?',
+    hours8Label: 'Días que trabajó 8 horas',
+    hours9Label: 'Días que trabajó 9 horas',
+    mappedDaysLabel: '¿Qué días de la semana mapeaste?',
+    rainDaysLabel: 'Días de lluvia',
+    mechDaysLabel: 'Días con mecánico',
+    weekendLabel: '¿Vas a trabajar este fin de semana?',
+    yes: '✓ Sí',
+    no: '✗ No',
+    step4: 'Performance de la semana',
+    odometerLabel: 'Lectura actual del odómetro (km)',
+    targetsLabel: 'Targets cumplidos esta semana',
+    step5: 'Discos (SSDs)',
+    diskCountLabel: '¿Cuántos discos tienes en total?',
+    diskInUseLabel: '¿Qué disco estás usando AHORA?',
+    disksOtherLabel: 'Códigos de los otros discos (separados por espacio)',
+    step6: 'Celulares del proyecto',
+    phoneCountLabel: '¿Cuántos celulares del proyecto tienes?',
+    phoneModelLabel: 'Modelo del celular',
+    phoneImeiLabel: 'IMEI del/los celular(es)',
+    step7: 'Otros equipos y modo hotel',
+    breathCountLabel: '¿Cuántos alcoholímetros LISTOS?',
+    hotelModeLabel: '¿Está en modo hotel?',
+    step8: 'Fotos del vehículo',
+    step8Sub: '4 fotos: frontal, lateral derecha, lateral izquierda, trasera',
+    photoFront: 'Foto FRONTAL',
+    photoRight: 'Foto LATERAL DERECHA',
+    photoLeft: 'Foto LATERAL IZQUIERDA',
+    photoBack: 'Foto TRASERA',
+    step9: 'Comentarios',
+    commentsLabel: '¿Algo más a agregar? (opcional)',
+    submitBtn: 'Enviar reporte semanal',
+    sending: 'Enviando...',
+    success: '✓ Reporte enviado con éxito!',
+    errorSend: 'Error al enviar. Intenta nuevamente.',
+    fillRequired: 'Rellena los campos obligatorios',
+    pillPrefilled: 'PRE-LLENADO',
+    dayMon: 'Lun', dayTue: 'Mar', dayWed: 'Mié', dayThu: 'Jue', dayFri: 'Vie', daySat: 'Sáb', daySun: 'Dom',
+    dayMonShort: 'L', dayTueShort: 'M', dayWedShort: 'M', dayThuShort: 'J', dayFriShort: 'V', daySatShort: 'S', daySunShort: 'D',
+    prefillBannerHasData: 'Encontré tu última respuesta del {date}. Los campos fijos vienen pre-llenados — revisa y ajusta si algo cambió.',
+    prefillBannerNoData: 'No encontré respuesta anterior tuya. ¿Es la primera vez? Rellena todo con calma.',
+    odometerLastHint: 'Última lectura: {value} km',
+    footerText: 'Plataforma interna — Aceolution Brasil Ltda.',
+  },
+};
+
+let currentLang = (localStorage.getItem('latam.lang') === 'es') ? 'es' : 'pt';
+
+function t(key) {
+  const dict = I18N[currentLang] || I18N.pt;
+  return dict[key] || I18N.pt[key] || key;
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+      // skip — placeholders handled separately
+    } else {
+      el.textContent = val;
+    }
+  });
+  document.title = t('title') + ' · Aceolution LATAM';
+  document.querySelector('.lang-switch').querySelectorAll('button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
+}
+
+document.querySelectorAll('.lang-switch button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentLang = btn.dataset.lang;
+    localStorage.setItem('latam.lang', currentLang);
+    applyI18n();
+    // Re-apply prefill banner if shown
+    if (state.lastAssets) renderPrefillBanner();
+  });
+});
+
+// ================================================================
+// STATE
+// ================================================================
+
+const state = {
+  drivers: [],
+  selectedDriver: null,
+  lastAssets: null,
+  photos: { front: null, right: null, left: null, back: null },
+  selections: {
+    country: null,
+    weekend: null,
+    hotel: null,
+    hours8: new Set(),
+    hours9: new Set(),
+    mapped: new Set(),
+    rain: new Set(),
+    mech: new Set(),
+  },
+};
+
+// ================================================================
+// LOAD DRIVERS
+// ================================================================
+
+async function loadDrivers() {
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getDrivers');
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Erro');
+    state.drivers = data.drivers || [];
+    populateDriverSelect();
+    document.getElementById('app-loader').classList.add('hidden');
+    document.getElementById('app-content').classList.remove('hidden');
+  } catch (err) {
+    console.error('[Assets] Erro carregar drivers:', err);
+    document.getElementById('app-loader').textContent = 'Erro ao carregar. Recarregue a página.';
+  }
+}
+
+function populateDriverSelect() {
+  const select = document.getElementById('driver-select');
+
+  // Ordena por país e depois por nome (dentro de cada país)
+  const sorted = [...state.drivers].sort((a, b) => {
+    const ca = String(a.country || '').localeCompare(String(b.country || ''), 'pt-BR');
+    if (ca !== 0) return ca;
+    return String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR');
+  });
+
+  // Agrupa em <optgroup> por país (mesmo padrão visual do index.html)
+  let lastCountry = '';
+  sorted.forEach(d => {
+    const country = d.country || '—';
+    if (country !== lastCountry) {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = country;
+      select.appendChild(optgroup);
+      lastCountry = country;
+    }
+    const opt = document.createElement('option');
+    opt.value = d.email;
+    opt.textContent = d.name;
+    opt.dataset.name = d.name;
+    opt.dataset.country = d.country || '';
+    select.lastElementChild.appendChild(opt);
+  });
+}
+
+document.getElementById('driver-select').addEventListener('change', async (e) => {
+  const sel = e.target.options[e.target.selectedIndex];
+  if (!sel.value) {
+    document.getElementById('form-cards').classList.add('hidden');
+    return;
+  }
+  state.selectedDriver = {
+    email: sel.value,
+    name: sel.dataset.name || '',
+    country: sel.dataset.country || '',
+  };
+  document.getElementById('form-cards').classList.remove('hidden');
+  await loadDriverAssets();
+});
+
+// ================================================================
+// LOAD LAST ASSETS (pre-fill)
+// ================================================================
+
+async function loadDriverAssets() {
+  // 1) Cache local primeiro (rápido)
+  const cached = readLocalCache(state.selectedDriver.email);
+  if (cached) {
+    state.lastAssets = cached;
+    applyPrefill(cached);
+  }
+
+  // 2) Sempre busca backend (source of truth)
+  try {
+    const url = CONFIG.scriptUrl + '?action=getLastAssetsForm&email=' +
+      encodeURIComponent(state.selectedDriver.email);
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.success && data.assets) {
+      state.lastAssets = data.assets;
+      writeLocalCache(state.selectedDriver.email, data.assets);
+      applyPrefill(data.assets);
+    } else if (!cached) {
+      // Sem cache e sem backend → mostra banner vazio
+      state.lastAssets = null;
+      renderPrefillBanner();
+    }
+  } catch (err) {
+    console.warn('[Assets] backend getDriverAssets falhou:', err);
+    if (!cached) renderPrefillBanner();
+  }
+}
+
+function readLocalCache(email) {
+  try {
+    const raw = localStorage.getItem(CONFIG.storageKey);
+    if (!raw) return null;
+    const all = JSON.parse(raw);
+    return all[email] || null;
+  } catch (e) { return null; }
+}
+
+function writeLocalCache(email, assets) {
+  try {
+    const raw = localStorage.getItem(CONFIG.storageKey);
+    const all = raw ? JSON.parse(raw) : {};
+    all[email] = assets;
+    localStorage.setItem(CONFIG.storageKey, JSON.stringify(all));
+  } catch (e) {
+    console.warn('[Assets] localStorage write falhou:', e);
+  }
+}
+
+// Helper: encontra valor pelo header (match case-insensitive, ignora pontuação)
+function pickHeader(obj, candidates) {
+  if (!obj) return '';
+  for (const cand of candidates) {
+    const normCand = String(cand).toLowerCase().replace(/[^a-z0-9]/g, '');
+    for (const key of Object.keys(obj)) {
+      if (key.startsWith('_')) continue;
+      const normKey = String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (normKey.includes(normCand) || normCand.includes(normKey)) {
+        const val = obj[key];
+        if (val !== null && val !== undefined && val !== '') return val;
+      }
+    }
+  }
+  return '';
+}
+
+function applyPrefill(assets) {
+  renderPrefillBanner();
+
+  // VID (col D)
+  setInput('vid-input', pickHeader(assets, ['VID']), 'prefilled-vid');
+
+  // País (col E) — auto-select chip
+  const country = String(pickHeader(assets, ['Pais', 'País', 'Country'])).trim();
+  if (country) {
+    document.querySelectorAll('#country-group .chip').forEach(c => {
+      // Match liberal: Argentina/Argentina, Brasil/Brazil, etc
+      const v = c.dataset.value.toLowerCase();
+      const k = country.toLowerCase();
+      const match = v === k || k.includes(v) || v.includes(k) ||
+                    (v === 'brazil' && k.startsWith('brasil')) ||
+                    (v === 'mexico' && (k.startsWith('méxico') || k.startsWith('mexico')));
+      if (match) {
+        c.classList.add('selected');
+        state.selections.country = c.dataset.value;
+      }
+    });
+  }
+
+  // Placa (col N)
+  setInput('plate-input', pickHeader(assets, ['patente', 'placa']), 'prefilled-plate');
+
+  // Vehicle received date (col O) — formato pode vir como string ou ISO
+  const vdate = pickHeader(assets, ['cuando recibio', 'quando recebeu', 'vehicle received', 'recibió el carro']);
+  if (vdate) {
+    const iso = parseDateToIso(vdate);
+    if (iso) {
+      const el = document.getElementById('vehicle-date-input');
+      el.value = iso;
+      document.querySelector('.prefilled-vdate').classList.remove('hidden');
+    }
+  }
+
+  // Cidade (col W)
+  setInput('city-input', pickHeader(assets, ['ciudad', 'cidade', 'city']), 'prefilled-city');
+
+  // Disk count (col P)
+  setInput('disk-count-input', pickHeader(assets, ['cuantos discos', 'quantos discos']), 'prefilled-diskcount');
+
+  // Disks other codes (col R) — NÃO inclui o disco em uso (col Q), driver atualiza esse
+  setInput('disks-other-input', pickHeader(assets, ['codigos de los otros', 'codigos dos outros']), 'prefilled-diskother');
+
+  // Phone count (col S)
+  setInput('phone-count-input', pickHeader(assets, ['cuantos celulares', 'quantos celulares']), 'prefilled-phonecount');
+
+  // Phone model (col T)
+  setInput('phone-model-input', pickHeader(assets, ['modelo del celular', 'modelo do celular']), 'prefilled-phonemodel');
+
+  // Phone IMEI (col U)
+  setInput('phone-imei-input', pickHeader(assets, ['imei']), 'prefilled-phoneimei');
+
+  // Breathalyzer count (col V)
+  setInput('breath-count-input', pickHeader(assets, ['alcoholimetros', 'bafometros', 'bafômetros']), 'prefilled-breath');
+
+  // Odometer (col L) — mostra última leitura como hint, NÃO pré-preenche
+  const lastOdo = pickHeader(assets, ['lectura del odometro', 'valor do odometro', 'odometer']);
+  const odoHint = document.getElementById('odometer-last-hint');
+  if (lastOdo) {
+    odoHint.textContent = t('odometerLastHint').replace('{value}', lastOdo);
+  } else {
+    odoHint.textContent = '';
+  }
+}
+
+function setInput(id, value, pillClass) {
+  if (!value || value === '') return;
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = String(value).trim();
+  if (pillClass) {
+    const pill = document.querySelector('.' + pillClass);
+    if (pill) pill.classList.remove('hidden');
+  }
+}
+
+function parseDateToIso(val) {
+  if (!val) return null;
+  if (val instanceof Date) return val.toISOString().slice(0, 10);
+  const s = String(val).trim();
+  // ISO já
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  // DD/MM/YYYY
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) {
+    const d = m[1].padStart(2, '0');
+    const mo = m[2].padStart(2, '0');
+    return `${m[3]}-${mo}-${d}`;
+  }
+  return null;
+}
+
+function renderPrefillBanner() {
+  const banner = document.getElementById('prefill-banner');
+  if (state.lastAssets) {
+    const ts = pickHeader(state.lastAssets, ['carimbo', 'timestamp', 'data/hora']);
+    const dateStr = formatDateLocal(ts) || '—';
+    banner.textContent = t('prefillBannerHasData').replace('{date}', dateStr);
+  } else {
+    banner.textContent = t('prefillBannerNoData');
+  }
+  banner.classList.remove('hidden');
+}
+
+function formatDateLocal(val) {
+  if (!val) return '';
+  try {
+    let d;
+    if (val instanceof Date) d = val;
+    else if (/^\d{4}-\d{2}-\d{2}/.test(String(val))) d = new Date(val);
+    else {
+      const m = String(val).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (m) d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+    }
+    if (!d || isNaN(d)) return String(val);
+    return d.toLocaleDateString(currentLang === 'pt' ? 'pt-BR' : 'es-ES');
+  } catch (e) { return String(val); }
+}
+
+// ================================================================
+// CHIP & YES/NO HANDLERS
+// ================================================================
+
+document.addEventListener('click', (e) => {
+  // Chip in single-select country
+  const chip = e.target.closest('.chip');
+  if (chip) {
+    const parent = chip.parentElement;
+    if (parent.classList.contains('single-select')) {
+      parent.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      const target = parent.id.replace('-group', '');
+      state.selections[target] = chip.dataset.value;
+    } else if (parent.classList.contains('multi-select')) {
+      chip.classList.toggle('selected');
+      const target = parent.dataset.target;
+      const set = state.selections[target];
+      if (chip.classList.contains('selected')) set.add(chip.dataset.value);
+      else set.delete(chip.dataset.value);
+    }
+  }
+
+  // Yes/No buttons
+  const yn = e.target.closest('.yesno-btn');
+  if (yn) {
+    const group = yn.parentElement;
+    group.querySelectorAll('.yesno-btn').forEach(b => b.classList.remove('selected'));
+    yn.classList.add('selected');
+    state.selections[group.dataset.target] = yn.dataset.value;
+  }
+});
+
+// ================================================================
+// PHOTO UPLOAD + RESIZE
+// ================================================================
+
+document.querySelectorAll('.photo-slot input[type="file"]').forEach(input => {
+  input.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const slotKey = e.target.closest('.photo-slot').dataset.slot;
+    try {
+      const resized = await resizeImage(file, CONFIG.photoMaxDim, CONFIG.photoQuality);
+      state.photos[slotKey] = resized;
+      renderPhotoSlot(slotKey, resized.dataUrl);
+    } catch (err) {
+      console.error('[Assets] erro processar foto:', err);
+      showToast(t('errorSend'), 'error');
+    }
+  });
+});
+
+document.querySelectorAll('.photo-slot .remove-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const slotKey = btn.dataset.remove;
+    state.photos[slotKey] = null;
+    const slot = btn.closest('.photo-slot');
+    slot.classList.remove('has-photo');
+    const img = slot.querySelector('img');
+    if (img) img.remove();
+    slot.querySelector('input').value = '';
+  });
+});
+
+function resizeImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const base64 = dataUrl.split(',')[1];
+        resolve({ dataUrl, base64, mimeType: 'image/jpeg' });
+      };
+      img.onerror = reject;
+      img.src = ev.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPhotoSlot(slotKey, dataUrl) {
+  const slot = document.querySelector('.photo-slot[data-slot="' + slotKey + '"]');
+  slot.classList.add('has-photo');
+  let img = slot.querySelector('img');
+  if (!img) {
+    img = document.createElement('img');
+    slot.appendChild(img);
+  }
+  img.src = dataUrl;
+}
+
+// ================================================================
+// SUBMIT
+// ================================================================
+
+document.getElementById('submit-btn').addEventListener('click', submitForm);
+
+async function submitForm() {
+  if (!state.selectedDriver) return;
+
+  // Validação mínima — só campos críticos
+  const required = {
+    'vid-input': 'VID',
+    'plate-input': 'Placa',
+    'odometer-input': 'Odômetro',
+  };
+  const missing = [];
+  for (const id of Object.keys(required)) {
+    if (!document.getElementById(id).value.trim()) missing.push(required[id]);
+  }
+  if (missing.length) {
+    showToast(t('fillRequired') + ': ' + missing.join(', '), 'error');
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span>' + t('sending');
+
+  const payload = {
+    type: 'assetWeekly',
+    driverEmail: state.selectedDriver.email,
+    driverName: state.selectedDriver.name,
+    vid: getVal('vid-input'),
+    country: state.selections.country || state.selectedDriver.country || '',
+    hoursWeek1: Array.from(state.selections.hours8).join(', '),
+    hoursWeek2: Array.from(state.selections.hours9).join(', '),
+    daysMapped: Array.from(state.selections.mapped).join(', '),
+    daysRain: Array.from(state.selections.rain).join(', '),
+    daysMechanic: Array.from(state.selections.mech).join(', '),
+    workingWeekend: state.selections.weekend || '',
+    odometer: getVal('odometer-input'),
+    targets: getVal('targets-input'),
+    licensePlate: getVal('plate-input').toUpperCase(),
+    vehicleReceivedDate: formatVehicleDate(getVal('vehicle-date-input')),
+    diskCount: getVal('disk-count-input'),
+    diskInUse: getVal('disk-in-use-input'),
+    disksOther: getVal('disks-other-input'),
+    phoneCount: getVal('phone-count-input'),
+    phoneModel: getVal('phone-model-input'),
+    phoneImei: getVal('phone-imei-input'),
+    breathalyzerCount: getVal('breath-count-input'),
+    city: getVal('city-input'),
+    hotelMode: state.selections.hotel || '',
+    comments: getVal('comments-input'),
+    photos: {},
+  };
+
+  // Anexa fotos (só as que existem)
+  ['front', 'right', 'left', 'back'].forEach(key => {
+    if (state.photos[key]) {
+      payload.photos[key] = {
+        base64: state.photos[key].base64,
+        mimeType: state.photos[key].mimeType,
+      };
+    }
+  });
+
+  try {
+    // Fire-and-forget pattern (CORS workaround do Apps Script)
+    // Como precisamos enviar fotos pesadas, esperamos a resposta com no-cors:
+    // o response será opaque mas tudo bem — sucesso significa request foi aceito.
+    const res = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      // sem content-type → preflight simples
+    });
+
+    // Tenta ler resposta. Se for opaque (no-cors) ou erro, considera ok mesmo assim
+    // porque o request foi enviado.
+    let ok = true;
+    try {
+      const data = await res.json();
+      if (data && data.success === false) {
+        ok = false;
+        console.error('[Assets] backend retornou erro:', data.error);
+      }
+    } catch (e) { /* opaque response — assume ok */ }
+
+    if (ok) {
+      showToast(t('success'), 'success');
+      // Atualiza cache local com novos valores
+      const newSnapshot = buildLocalCacheSnapshot(payload);
+      writeLocalCache(state.selectedDriver.email, newSnapshot);
+      // Reset form após 2s
+      setTimeout(() => location.reload(), 2000);
+    } else {
+      throw new Error('backend');
+    }
+  } catch (err) {
+    console.error('[Assets] submit falhou:', err);
+    showToast(t('errorSend'), 'error');
+    btn.disabled = false;
+    btn.textContent = t('submitBtn');
+  }
+}
+
+function getVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function formatVehicleDate(iso) {
+  if (!iso) return '';
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return iso;
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}
+
+function buildLocalCacheSnapshot(payload) {
+  // Espelha a estrutura que viria do backend (keys = headers da aba)
+  // Pra próxima vez funcionar mesmo offline.
+  return {
+    'Carimbo de data/hora': new Date().toISOString(),
+    'Endereço de e-mail': payload.driverEmail,
+    'Nombre/Nome Completo': payload.driverName,
+    'VID': payload.vid,
+    'Pais': payload.country,
+    '¿Cuál es la lectura del odómetro?/Qual o valor do odômetro?': payload.odometer,
+    '¿Cuántos targets cumpliste esta semana?/Quantos targets cumpriu na semana?': payload.targets,
+    '¿Cuál es la PATENTE de su vehículo?/ PLACA DO CARRO': payload.licensePlate,
+    '¿Cuánto tiempo hace que tienes este vehículo?': payload.vehicleReceivedDate,
+    '¿Cuantos DISCOS tienes?/ QUANTOS DISCOS TEM?': payload.diskCount,
+    '¿Qué DISCO estás usando? / QUAL DISCO ESTÁ USANDO?': payload.diskInUse,
+    '¿Cuáles son los códigos de los discos que no están en uso? / QUAIS OS CÓDIGOS DOS OUTROS DISCOS?': payload.disksOther,
+    '¿Cuantos celulares de proyecto tienes?/QUANTOS CELULARES VOCÊ TEM?': payload.phoneCount,
+    '¿Cuál es el modelo del celular?/QUAL MODELO DO CELULAR?': payload.phoneModel,
+    '¿Cuáles son los números IMEI de los teléfonos móviles?/ QUAL O IMEI?': payload.phoneImei,
+    '¿Cuántos alcoholímetros LISTOS tienes?/Quantos bafômetros FUNCIONANDO você tem?': payload.breathalyzerCount,
+    '¿En qué ciudad te encuentras?/Qual cidade você está agora?': payload.city,
+    'Modo hotel?': payload.hotelMode,
+  };
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type || '');
+  setTimeout(() => t.classList.add('hidden'), 5000);
+}
+
+// ================================================================
+// INIT
+// ================================================================
+
+applyI18n();
+loadDrivers();
+
+</script>
+
+</body>
+</html>

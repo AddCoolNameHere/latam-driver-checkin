@@ -1,0 +1,315 @@
+/* ============================================================
+ * Aceolution LATAM — Design Tokens
+ * ============================================================
+ *
+ * Arquivo central de cores e variáveis CSS de todo o portal.
+ * Cada HTML linka este arquivo ANTES do seu próprio <style> e
+ * pode sobrescrever uma var pontual no seu próprio :root se
+ * precisar (raro — preferível propor mudança aqui).
+ *
+ * - :root                  → light mode (default)
+ * - [data-theme="dark"]    → dark mode (toggle pelo theme_teste.js)
+ *
+ * O toggle é controlado por theme_teste.js e aparece (botão flutuante
+ * no canto inferior direito) só pra usuários em ADMIN_USERNAMES.
+ *
+ * ============================================================
+ */
+
+:root {
+  /* Brand */
+  --c-primary:        #2C5282;
+  --c-primary-dark:   #1A365D;
+  --c-accent:         #4A9FE0;
+
+  /* Surfaces / backgrounds */
+  --c-bg:             #F8FAFC;   /* page background */
+  --c-bg-tint:        #EBF4FB;   /* subtle accented surface (pills, hover) */
+  --c-surface:        #FFFFFF;   /* cards, modals, top-bars */
+
+  /* Borders */
+  --c-border:         #E2E8F0;   /* default border */
+  --c-border-strong:  #CBD5E1;   /* divisores mais pesados */
+
+  /* Text */
+  --c-text:           #1A202C;
+  --c-text-muted:     #64748B;
+  --c-text-dim:       #94A3B8;
+
+  /* States */
+  --c-success:        #16A34A;
+  --c-warn:           #CA8A04;
+  --c-danger:         #B91C1C;
+
+  /* Shadows — vars pra dark mode poder atenuar */
+  --shadow-sm:        0 1px 2px rgba(15,23,42,0.06);
+  --shadow-md:        0 4px 12px rgba(15,23,42,0.08);
+  --shadow-lg:        0 12px 32px rgba(15,23,42,0.12);
+}
+
+/* ============================================================
+ * DARK MODE
+ * Aplicado quando <html data-theme="dark">. Mesmas vars, valores
+ * trocados. Paleta "slate-900" (não preto puro — mais agradável).
+ * ============================================================ */
+[data-theme="dark"] {
+  /* Brand — acentos um tom mais escuros no dark (ainda claros o bastante pra contrastar) */
+  --c-primary:        #3B82F6;   /* blue-500 — botões, links */
+  --c-primary-dark:   #60A5FA;   /* blue-400 — títulos (mais brilhante = mais proeminente) */
+  --c-accent:         #0EA5E9;   /* sky-500 */
+
+  /* Surfaces — slate scale */
+  --c-bg:             #0F172A;   /* slate-900 (página) */
+  --c-surface:        #1E293B;   /* slate-800 (cards, modais, topbar) */
+  --c-bg-tint:        #1E3A5F;   /* azul-slate (pills, hover accent) */
+
+  /* Borders */
+  --c-border:         #334155;   /* slate-700 */
+  --c-border-strong:  #475569;   /* slate-600 */
+
+  /* Text */
+  --c-text:           #F1F5F9;   /* slate-100 */
+  --c-text-muted:     #94A3B8;   /* slate-400 */
+  --c-text-dim:       #64748B;   /* slate-500 */
+
+  /* States — um tom mais escuros, combinando com os acentos do dark (ainda legíveis) */
+  --c-success:        #22C55E;   /* green-500 */
+  --c-warn:           #F59E0B;   /* amber-500 */
+  --c-danger:         #EF4444;   /* red-500 */
+
+  /* Shadows mais pretas no dark (precisa mais opacidade pra ver) */
+  --shadow-sm:        0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md:        0 4px 12px rgba(0,0,0,0.5);
+  --shadow-lg:        0 12px 32px rgba(0,0,0,0.6);
+
+  /* color-scheme avisa o browser pra estilizar scrollbar/inputs nativos no escuro */
+  color-scheme: dark;
+}
+
+/* ============================================================
+ * Floating theme toggle (injetado pelo theme_teste.js, só pra admins)
+ * ============================================================ */
+.theme-toggle-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  color: var(--c-text);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  z-index: 9998;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  padding: 0;
+}
+.theme-toggle-btn:hover {
+  border-color: var(--c-primary);
+  transform: translateY(-2px);
+}
+.theme-toggle-btn:active { transform: translateY(0); }
+
+/* Em telas pequenas, recolhe pra não cobrir conteúdo */
+@media (max-width: 640px) {
+  .theme-toggle-btn { bottom: 14px; right: 14px; width: 38px; height: 38px; font-size: 15px; }
+}
+
+/* Esconde no print */
+@media print {
+  .theme-toggle-btn { display: none !important; }
+}
+
+/* ============================================================
+ * Componentes compartilhados — usados por common_teste.js
+ * (Login screen + Topbar)
+ * ============================================================ */
+
+/* ---- LOGIN ---- */
+.ac-login-screen {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; z-index: 10000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.ac-login-card {
+  background: var(--c-surface);
+  border-radius: 16px;
+  padding: 36px 32px 28px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(15,23,42,0.25);
+  text-align: center;
+}
+.ac-login-logo { height: 44px; display: block; margin: 0 auto 18px; }
+.ac-login-title {
+  font-size: 20px; font-weight: 700;
+  color: var(--c-primary-dark); margin-bottom: 4px;
+}
+.ac-login-sub {
+  font-size: 13px; color: var(--c-text-muted); margin-bottom: 24px;
+}
+.ac-login-card form { text-align: left; }
+.ac-login-card label {
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--c-text-muted); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.ac-login-card input {
+  width: 100%; padding: 11px 14px;
+  border: 1px solid var(--c-border); border-radius: 8px;
+  font-size: 14px; font-family: inherit;
+  margin-bottom: 12px;
+  background: var(--c-surface); color: var(--c-text);
+}
+.ac-login-card input:focus {
+  outline: none; border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px rgba(74,159,224,0.15);
+}
+.ac-login-btn {
+  width: 100%; padding: 12px;
+  background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+  color: white; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  margin-top: 6px; font-family: inherit;
+}
+.ac-login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.ac-login-error {
+  color: var(--c-danger); font-size: 12px; margin-top: 10px;
+  min-height: 16px; display: none;
+}
+.ac-login-error.visible { display: block; }
+
+/* ---- TOPBAR ---- */
+.ac-topbar {
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border);
+  padding: 12px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.ac-brand { display: flex; align-items: center; gap: 12px; }
+.ac-brand-logo { height: 28px; }
+.ac-brand-divider { width: 1px; height: 22px; background: var(--c-border-strong); }
+.ac-brand-region {
+  font-size: 11px; font-weight: 700;
+  color: var(--c-text-muted); letter-spacing: 1.3px;
+}
+.ac-topbar-right {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.ac-lang-switch {
+  display: flex; gap: 2px;
+  background: var(--c-bg-tint); border-radius: 6px; padding: 2px;
+}
+.ac-lang-switch button {
+  background: none; border: none;
+  padding: 4px 9px; font-size: 11px; font-weight: 600;
+  color: var(--c-text-muted); cursor: pointer;
+  border-radius: 4px; font-family: inherit;
+}
+.ac-lang-switch button.active {
+  background: var(--c-surface);
+  color: var(--c-primary-dark);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+.ac-back-link, .ac-topbar-btn {
+  background: none; border: 1px solid var(--c-border);
+  padding: 6px 12px; border-radius: 8px;
+  font-size: 12px; color: var(--c-text-muted);
+  cursor: pointer; font-family: inherit;
+  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.ac-back-link:hover, .ac-topbar-btn:hover {
+  background: var(--c-bg-tint); color: var(--c-primary); border-color: var(--c-primary);
+}
+.ac-topbar-btn.primary {
+  background: var(--c-primary); color: white;
+  border-color: var(--c-primary); font-weight: 600;
+}
+.ac-topbar-btn.primary:hover { background: var(--c-primary-dark); border-color: var(--c-primary-dark); }
+.ac-extras-slot { display: contents; }
+.ac-user-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px 6px 6px;
+  background: var(--c-bg-tint); border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  color: var(--c-primary-dark);
+}
+.ac-user-avatar {
+  width: 24px; height: 24px;
+  background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+  color: white; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+.ac-logout-btn {
+  background: none; border: 1px solid var(--c-border);
+  padding: 6px 12px; border-radius: 8px;
+  font-size: 12px; color: var(--c-text-muted);
+  cursor: pointer; font-family: inherit;
+}
+.ac-logout-btn:hover {
+  background: var(--c-bg); color: var(--c-danger); border-color: var(--c-danger);
+}
+
+@media print {
+  .ac-topbar { display: none !important; }
+}
+
+/* ============================================================
+ * Dark-mode component fixes — para cores que NÃO conseguimos
+ * trocar pra var() nas páginas (background: white inline, etc).
+ * Aplicados só quando data-theme="dark".
+ * ============================================================ */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: var(--c-surface);
+  color: var(--c-text);
+  border-color: var(--c-border);
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--c-text-dim);
+}
+
+/* Logo da Aceolution (logo2.png é colorido): no dark vira branco pra contrastar
+   com fundos/cards escuros. Cobre QUALQUER logo do portal — por classe E por src —
+   pra valer em todas as páginas que aceitam dark (topbar, login, header, footer, sidebar). */
+[data-theme="dark"] .ac-brand-logo,
+[data-theme="dark"] .ac-login-logo,
+[data-theme="dark"] .brand-logo,
+[data-theme="dark"] .footer-logo,
+[data-theme="dark"] img[src*="logo2"] {
+  filter: brightness(0) invert(1);
+}
+
+/* Tiles do Leaflet (mapa): inverte luminosidade pra encaixar no tema escuro.
+   Não muda muito a cor das ruas/labels, mas escurece o fundo claro do OSM. */
+[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9);
+}
+/* Os markers/popups do Leaflet também precisam ser readonly no escuro */
+[data-theme="dark"] .leaflet-popup-content-wrapper,
+[data-theme="dark"] .leaflet-popup-tip {
+  background: var(--c-surface);
+  color: var(--c-text);
+}
+[data-theme="dark"] .leaflet-control-attribution {
+  background: rgba(15,23,42,0.75) !important;
+  color: var(--c-text-muted) !important;
+}
+[data-theme="dark"] .leaflet-control-attribution a {
+  color: var(--c-primary) !important;
+}

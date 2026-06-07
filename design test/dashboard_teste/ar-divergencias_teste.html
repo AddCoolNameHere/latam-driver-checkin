@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Divergencias de Pago Argentina · Aceolution LATAM</title>
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<link rel="stylesheet" href="theme_teste.css?v=20260518c">
+<script src="theme_teste.js?v=20260518c"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f6f8;
+    color: var(--c-text);
+    padding: 16px;
+    padding-bottom: 80px;
+    max-width: 560px;
+    margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    background: var(--c-surface);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand-wrap { display: flex; align-items: center; gap: 10px; }
+  .brand-logo { height: 28px; width: auto; }
+  .brand-divider { width: 1px; height: 24px; background: #d5d7db; }
+  .brand-sub {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b7280;
+    letter-spacing: 1px;
+    line-height: 1.2;
+  }
+  .brand-sub span { display: block; color: var(--c-primary); font-size: 11px; }
+  .lang-switch { font-size: 13px; color: #666; }
+  .lang-switch button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .lang-switch button.active { color: var(--c-primary); font-weight: 600; }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--c-surface);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card.hidden { display: none; }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--c-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .step-title { font-size: 15px; font-weight: 600; }
+  .step-sub { font-size: 12px; color: var(--c-text-muted); margin-top: 2px; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 6px;
+  }
+
+  select, input, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d5d7db;
+    border-radius: 8px;
+    font-size: 15px;
+    background: var(--c-surface);
+    font-family: inherit;
+    color: var(--c-text);
+  }
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(74,159,224,0.15);
+  }
+  textarea { resize: vertical; min-height: 70px; }
+
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 10px;
+  }
+
+  /* Botões */
+  .btn {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-accent) 100%);
+    color: white;
+    box-shadow: 0 2px 6px rgba(44,82,130,0.2);
+  }
+  .btn-primary:disabled {
+    background: #94B8D9;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+  .btn-secondary {
+    background: var(--c-surface);
+    color: var(--c-primary);
+    border: 1.5px solid var(--c-primary);
+  }
+  .btn-secondary:active { transform: scale(0.98); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--c-text-muted);
+    border: 1px solid var(--c-border);
+  }
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .btn-back {
+    background: none;
+    border: none;
+    color: var(--c-primary);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 6px 0;
+    text-align: left;
+    font-family: inherit;
+    margin-bottom: 10px;
+  }
+
+  /* File upload */
+  .file-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .file-item-icon { font-size: 18px; flex-shrink: 0; }
+  .file-item-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .file-item-size { font-size: 11px; color: var(--c-text-muted); flex-shrink: 0; }
+  .file-item-remove {
+    background: none;
+    border: none;
+    color: var(--c-danger);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  .file-add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    border: 2px dashed var(--c-border-strong);
+    border-radius: 10px;
+    background: var(--c-bg);
+    color: var(--c-primary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .file-add-btn:hover { border-color: var(--c-accent); background: var(--c-bg-tint); }
+  .file-add-btn:disabled { color: var(--c-text-muted); cursor: not-allowed; }
+  .file-add-btn input[type="file"] { display: none; }
+  .file-hint { font-size: 11px; color: var(--c-text-muted); margin-top: 6px; }
+
+  /* Currency segmented control */
+  .currency-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .currency-toggle button {
+    background: var(--c-surface);
+    border: none;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--c-text-muted);
+    font-family: inherit;
+  }
+  .currency-toggle button.active {
+    background: var(--c-bg-tint);
+    color: var(--c-primary-dark);
+    font-weight: 600;
+  }
+  .currency-toggle button:first-child { border-right: 1px solid var(--c-border-strong); }
+
+  /* Resumo de divergências já adicionadas */
+  .divergence-summary {
+    background: var(--c-bg-tint);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+  .divergence-summary-title {
+    font-weight: 600;
+    color: var(--c-primary-dark);
+    margin-bottom: 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .divergence-summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-top: 1px solid rgba(44,82,130,0.1);
+  }
+  .divergence-summary-item:first-of-type { border-top: none; }
+  .divergence-summary-meta { color: var(--c-text-muted); font-size: 11px; }
+
+  .loader {
+    text-align: center;
+    color: var(--c-text-muted);
+    padding: 24px;
+    font-size: 13px;
+  }
+  .loading-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    animation: slideUp 0.3s;
+  }
+  .toast.success { background: var(--c-success); }
+  .toast.error { background: var(--c-danger); }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+
+  /* Tela de sucesso */
+  .success-screen { text-align: center; padding: 32px 20px; }
+  .success-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #D1FAE5;
+    color: var(--c-success);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin: 0 auto 16px;
+  }
+  .success-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+  .success-msg { color: var(--c-text-muted); font-size: 14px; margin-bottom: 20px; }
+
+  footer {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 11px;
+    margin-top: 30px;
+  }
+  .nav-back {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: var(--c-primary);
+    font-size: 13px;
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-wrap">
+    <img src="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0" class="brand-logo" alt="Aceolution">
+    <div class="brand-divider"></div>
+    <div class="brand-sub">LATAM<span data-i18n="brandSub">Argentina</span></div>
+  </div>
+  <div class="lang-switch">
+    <button data-lang="pt">PT</button>
+    <button data-lang="es" class="active">ES</button>
+    <button data-lang="en">EN</button>
+  </div>
+</header>
+
+<a href="index.html" class="nav-back" data-i18n="navBack">← Volver al check-in</a>
+
+<h1 data-i18n="title">Divergencias de Pago</h1>
+<div class="subtitle" data-i18n="subtitle">Reportá diferencias de pago por quincena. Adjuntá comprobantes.</div>
+
+<!-- ============================================================
+     STEP 1: Selecionar driver
+     ============================================================ -->
+<div id="step-1" class="card">
+  <div class="step-header">
+    <div class="step-num">1</div>
+    <div>
+      <div class="step-title" data-i18n="step1Title">Identificación</div>
+      <div class="step-sub" data-i18n="step1Sub">Elegí tu nombre de la lista</div>
+    </div>
+  </div>
+  <div id="drivers-loader" class="loader" data-i18n="loadingDrivers">Cargando lista...</div>
+  <div class="field" id="driver-field" style="display:none;">
+    <label data-i18n="driverLabel">Motorista</label>
+    <select id="driver-select">
+      <option value="" data-i18n="chooseOption">-- Elegí --</option>
+    </select>
+  </div>
+  <button class="btn btn-primary" id="step-1-next" data-i18n="continue" style="display:none;" disabled>Continuar</button>
+</div>
+
+<!-- ============================================================
+     STEP 2: Selecionar quinzena (loop entry point)
+     ============================================================ -->
+<div id="step-2" class="card hidden">
+  <button class="btn-back" id="step-2-back" data-i18n="back">← Volver</button>
+  <div class="step-header">
+    <div class="step-num">2</div>
+    <div>
+      <div class="step-title" data-i18n="step2Title">Quincena con divergencia</div>
+      <div class="step-sub" data-i18n="step2Sub">Elegí la quincena del pago con problema</div>
+    </div>
+  </div>
+
+  <!-- Resumo de divergências já adicionadas -->
+  <div id="divergences-summary" class="divergence-summary" style="display:none;">
+    <div class="divergence-summary-title" data-i18n="alreadyReported">Ya reportadas</div>
+    <div id="divergences-summary-list"></div>
+  </div>
+
+  <div class="field">
+    <label data-i18n="quinzenaLabel">Quincena</label>
+    <select id="quinzena-select">
+      <option value="" data-i18n="chooseOption">-- Elegí --</option>
+    </select>
+  </div>
+
+  <button class="btn btn-primary" id="step-2-next" data-i18n="continue" disabled>Continuar</button>
+</div>
+
+<!-- ============================================================
+     STEP 3: Form da divergência (valor + moeda + comentário + arquivos)
+     ============================================================ -->
+<div id="step-3" class="card hidden">
+  <button class="btn-back" id="step-3-back" data-i18n="back">← Volver</button>
+  <div class="step-header">
+    <div class="step-num">3</div>
+    <div>
+      <div class="step-title" data-i18n="step3Title">Detalles de la divergencia</div>
+      <div class="step-sub" id="step-3-quinzena-info"></div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label data-i18n="amountLabel">Valor divergente</label>
+    <div class="field-row">
+      <input type="number" id="amount-input" step="0.01" inputmode="decimal" placeholder="0.00">
+      <div class="currency-toggle">
+        <button type="button" data-currency="ARS" class="active">ARS</button>
+        <button type="button" data-currency="USD">USD</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label data-i18n="commentLabel">Observación (opcional)</label>
+    <textarea id="comment-input" rows="3" placeholder="" data-i18n-placeholder="commentPlaceholder"></textarea>
+  </div>
+
+  <div class="field">
+    <label data-i18n="filesLabel">Comprobantes (recibos, capturas, etc.)</label>
+    <div id="file-list" class="file-list"></div>
+    <label class="file-add-btn" id="file-add-label">
+      <span>📎</span>
+      <span id="file-add-text" data-i18n="addFile">Agregar archivo</span>
+      <input type="file" id="file-input" accept="image/*,application/pdf" multiple>
+    </label>
+    <div class="file-hint" data-i18n="filesHint">Hasta 5 archivos por divergencia. Imágenes o PDF.</div>
+  </div>
+
+  <button class="btn btn-primary" id="step-3-next" data-i18n="saveAndContinue">Guardar divergencia</button>
+</div>
+
+<!-- ============================================================
+     STEP 4: Outra ou enviar
+     ============================================================ -->
+<div id="step-4" class="card hidden">
+  <div class="step-header">
+    <div class="step-num">4</div>
+    <div>
+      <div class="step-title" data-i18n="step4Title">¿Algo más?</div>
+      <div class="step-sub" data-i18n="step4Sub">Tu divergencia fue guardada. Podés reportar otra o enviar todo.</div>
+    </div>
+  </div>
+
+  <div id="divergences-summary-final" class="divergence-summary">
+    <div class="divergence-summary-title" data-i18n="reportedDivergences">Divergencias reportadas</div>
+    <div id="divergences-summary-final-list"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" id="step-4-another" data-i18n="reportAnother">Otra divergencia</button>
+    <button class="btn btn-primary" id="step-4-send" data-i18n="sendAll">Enviar todo</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     STEP 5: Sucesso
+     ============================================================ -->
+<div id="step-5" class="card hidden">
+  <div class="success-screen">
+    <div class="success-icon">✓</div>
+    <div class="success-title" data-i18n="successTitle">¡Listo!</div>
+    <div class="success-msg" data-i18n="successMsg">Tus divergencias fueron registradas. El equipo de pagos las va a revisar.</div>
+    <button class="btn btn-secondary" id="step-5-restart" data-i18n="newReport">Reportar de otro motorista</button>
+  </div>
+</div>
+
+<footer data-i18n="footer">Plataforma interna — Aceolution do Brasil Ltda.</footer>
+
+<script>
+
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  maxFilesPerDivergence: 5,
+  imageMaxDim: 1800,
+  imageQuality: 0.82,
+};
+
+// ================================================================
+// i18n
+// ================================================================
+const I18N = {
+  pt: {
+    brandSub: 'Argentina',
+    navBack: '← Voltar ao check-in',
+    title: 'Divergências de Pagamento',
+    subtitle: 'Reporta diferenças de pagamento por quinzena. Anexa os comprovantes.',
+    step1Title: 'Identificação',
+    step1Sub: 'Escolhe seu nome na lista',
+    loadingDrivers: 'Carregando lista...',
+    driverLabel: 'Motorista',
+    chooseOption: '-- Escolha --',
+    continue: 'Continuar',
+    back: '← Voltar',
+    step2Title: 'Quinzena com divergência',
+    step2Sub: 'Escolhe a quinzena do pagamento com problema',
+    quinzenaLabel: 'Quinzena',
+    alreadyReported: 'Já reportadas',
+    step3Title: 'Detalhes da divergência',
+    amountLabel: 'Valor divergente',
+    commentLabel: 'Observação (opcional)',
+    commentPlaceholder: 'Explica brevemente o que aconteceu (opcional)',
+    filesLabel: 'Comprovantes (recibos, prints, etc.)',
+    addFile: 'Adicionar arquivo',
+    addFileMore: '+ Adicionar mais ({count}/5)',
+    addFileMax: 'Limite de 5 arquivos atingido',
+    filesHint: 'Até 5 arquivos por divergência. Imagens ou PDF.',
+    saveAndContinue: 'Salvar divergência',
+    step4Title: 'Mais alguma coisa?',
+    step4Sub: 'Sua divergência foi salva. Podes reportar outra ou enviar tudo.',
+    reportedDivergences: 'Divergências reportadas',
+    reportAnother: 'Outra divergência',
+    sendAll: 'Enviar tudo',
+    sending: 'Enviando...',
+    successTitle: 'Pronto!',
+    successMsg: 'Tuas divergências foram registradas. A equipe de pagamentos vai revisar.',
+    newReport: 'Reportar de outro motorista',
+    footer: 'Plataforma interna — Aceolution do Brasil Ltda.',
+    fillAmount: 'Informa o valor da divergência',
+    errorSend: 'Erro ao enviar. Tenta de novo.',
+    errorLoadDrivers: 'Erro carregando motoristas. Recarrega a página.',
+    fileTooBig: 'Arquivo muito grande (máx 10 MB)',
+    months: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+  },
+  es: {
+    brandSub: 'Argentina',
+    navBack: '← Volver al check-in',
+    title: 'Divergencias de Pago',
+    subtitle: 'Reportá diferencias de pago por quincena. Adjuntá los comprobantes.',
+    step1Title: 'Identificación',
+    step1Sub: 'Elegí tu nombre de la lista',
+    loadingDrivers: 'Cargando lista...',
+    driverLabel: 'Motorista',
+    chooseOption: '-- Elegí --',
+    continue: 'Continuar',
+    back: '← Volver',
+    step2Title: 'Quincena con divergencia',
+    step2Sub: 'Elegí la quincena del pago con problema',
+    quinzenaLabel: 'Quincena',
+    alreadyReported: 'Ya reportadas',
+    step3Title: 'Detalles de la divergencia',
+    amountLabel: 'Valor divergente',
+    commentLabel: 'Observación (opcional)',
+    commentPlaceholder: 'Explicá brevemente qué pasó (opcional)',
+    filesLabel: 'Comprobantes (recibos, capturas, etc.)',
+    addFile: 'Agregar archivo',
+    addFileMore: '+ Agregar más ({count}/5)',
+    addFileMax: 'Límite de 5 archivos alcanzado',
+    filesHint: 'Hasta 5 archivos por divergencia. Imágenes o PDF.',
+    saveAndContinue: 'Guardar divergencia',
+    step4Title: '¿Algo más?',
+    step4Sub: 'Tu divergencia fue guardada. Podés reportar otra o enviar todo.',
+    reportedDivergences: 'Divergencias reportadas',
+    reportAnother: 'Otra divergencia',
+    sendAll: 'Enviar todo',
+    sending: 'Enviando...',
+    successTitle: '¡Listo!',
+    successMsg: 'Tus divergencias fueron registradas. El equipo de pagos las va a revisar.',
+    newReport: 'Reportar de otro motorista',
+    footer: 'Plataforma interna — Aceolution do Brasil Ltda.',
+    fillAmount: 'Informá el valor de la divergencia',
+    errorSend: 'Error al enviar. Probá de nuevo.',
+    errorLoadDrivers: 'Error cargando motoristas. Recargá la página.',
+    fileTooBig: 'Archivo muy grande (máx 10 MB)',
+    months: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+  },
+  en: {
+    brandSub: 'Argentina',
+    navBack: '← Back to check-in',
+    title: 'Payment Discrepancies',
+    subtitle: 'Report payment differences by fortnight. Attach receipts.',
+    step1Title: 'Identification',
+    step1Sub: 'Pick your name from the list',
+    loadingDrivers: 'Loading list...',
+    driverLabel: 'Driver',
+    chooseOption: '-- Choose --',
+    continue: 'Continue',
+    back: '← Back',
+    step2Title: 'Fortnight with discrepancy',
+    step2Sub: 'Pick the fortnight of the affected payment',
+    quinzenaLabel: 'Fortnight',
+    alreadyReported: 'Already reported',
+    step3Title: 'Discrepancy details',
+    amountLabel: 'Amount in dispute',
+    commentLabel: 'Note (optional)',
+    commentPlaceholder: 'Briefly explain what happened (optional)',
+    filesLabel: 'Receipts (receipts, screenshots, etc.)',
+    addFile: 'Add file',
+    addFileMore: '+ Add more ({count}/5)',
+    addFileMax: 'Reached 5-file limit',
+    filesHint: 'Up to 5 files per discrepancy. Images or PDF.',
+    saveAndContinue: 'Save discrepancy',
+    step4Title: 'Anything else?',
+    step4Sub: 'Your discrepancy was saved. You can report another or send all.',
+    reportedDivergences: 'Reported discrepancies',
+    reportAnother: 'Another discrepancy',
+    sendAll: 'Send all',
+    sending: 'Sending...',
+    successTitle: 'Done!',
+    successMsg: 'Your discrepancies were registered. The payroll team will review them.',
+    newReport: 'Report for another driver',
+    footer: 'Internal platform — Aceolution do Brasil Ltda.',
+    fillAmount: 'Enter the discrepancy amount',
+    errorSend: 'Error sending. Try again.',
+    errorLoadDrivers: 'Error loading drivers. Reload the page.',
+    fileTooBig: 'File too big (max 10 MB)',
+    months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+  },
+};
+
+let currentLang = 'es';
+function t(key) {
+  const dict = I18N[currentLang] || I18N.es;
+  return dict[key] !== undefined ? dict[key] : key;
+}
+function applyI18n() {
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es-AR' : 'en');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (typeof val === 'string') el.textContent = val;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.setAttribute('placeholder', t(key));
+  });
+  // Atualiza dropdowns de quinzena (label depende do idioma)
+  rebuildQuinzenaSelect();
+  // Atualiza botão "agregar archivo"
+  updateFileAddBtnText();
+  // Atualiza resumos de divergências (rótulos podem variar)
+  refreshDivergencesSummaries();
+}
+document.querySelectorAll('.lang-switch button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const lang = btn.getAttribute('data-lang');
+    currentLang = lang;
+    document.querySelectorAll('.lang-switch button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyI18n();
+  });
+});
+
+// ================================================================
+// ESTADO
+// ================================================================
+const state = {
+  drivers: [],
+  selectedDriver: null,        // { name, email, city }
+  quinzenas: [],               // [{ label, start, end, langKey }]
+  draftDivergence: null,       // { quinzenaLabel, quinzenaStart, quinzenaEnd, amount, currency, comment, files: [] }
+  divergences: [],             // lista de divergências confirmadas
+  currentCurrency: 'ARS',
+};
+
+// ================================================================
+// QUINZENAS — gera as últimas 12 dinamicamente
+// ================================================================
+function generateQuinzenas(count) {
+  const result = [];
+  const today = new Date();
+  let year = today.getFullYear();
+  let month = today.getMonth(); // 0-indexed
+  let isFirst = today.getDate() <= 15;
+
+  for (let i = 0; i < count; i++) {
+    let start, end;
+    if (isFirst) {
+      start = new Date(year, month, 1);
+      end = new Date(year, month, 15);
+    } else {
+      start = new Date(year, month, 16);
+      end = new Date(year, month + 1, 0); // último dia do mês
+    }
+
+    result.push({
+      year: year,
+      month: month,      // 0-indexed
+      isFirst: isFirst,
+      startIso: formatIsoDate(start),
+      endIso: formatIsoDate(end),
+      startDay: start.getDate(),
+      endDay: end.getDate(),
+    });
+
+    // Volta pra quinzena anterior
+    if (isFirst) {
+      month--;
+      if (month < 0) { month = 11; year--; }
+      isFirst = false;
+    } else {
+      isFirst = true;
+    }
+  }
+  return result;
+}
+
+function formatQuinzenaLabel(q) {
+  const dict = I18N[currentLang] || I18N.es;
+  const monthShort = dict.months[q.month];
+  const startStr = String(q.startDay).padStart(2, '0');
+  const endStr = String(q.endDay).padStart(2, '0');
+  return `${startStr}–${endStr} ${monthShort}/${q.year}`;
+}
+
+function formatIsoDate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function rebuildQuinzenaSelect() {
+  const sel = document.getElementById('quinzena-select');
+  if (!sel) return;
+  const currentValue = sel.value;
+  sel.innerHTML = `<option value="">${t('chooseOption')}</option>`;
+  state.quinzenas.forEach((q, idx) => {
+    const opt = document.createElement('option');
+    opt.value = String(idx);
+    opt.textContent = formatQuinzenaLabel(q);
+    sel.appendChild(opt);
+  });
+  if (currentValue) sel.value = currentValue;
+}
+
+// ================================================================
+// STEP 1 — Carrega motoristas
+// ================================================================
+async function loadDrivers() {
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getArgentinaDrivers');
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'unknown');
+    state.drivers = data.drivers || [];
+    populateDriverSelect();
+  } catch (err) {
+    console.error('[AR Divergencias] erro carregando drivers:', err);
+    document.getElementById('drivers-loader').textContent = t('errorLoadDrivers');
+  }
+}
+
+function populateDriverSelect() {
+  const sel = document.getElementById('driver-select');
+  sel.innerHTML = `<option value="">${t('chooseOption')}</option>`;
+
+  // Padrão do projeto: agrupar drivers com optgroup. Como aqui só há Argentina,
+  // usamos um único optgroup "Argentina" pra manter visual consistente.
+  const optgroup = document.createElement('optgroup');
+  optgroup.label = 'Argentina' + (state.drivers.length ? ` (${state.drivers.length})` : '');
+  state.drivers.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.email || d.name;
+    opt.textContent = d.name + (d.city ? ` · ${d.city}` : '');
+    optgroup.appendChild(opt);
+  });
+  sel.appendChild(optgroup);
+
+  document.getElementById('drivers-loader').style.display = 'none';
+  document.getElementById('driver-field').style.display = '';
+  document.getElementById('step-1-next').style.display = '';
+}
+
+document.getElementById('driver-select').addEventListener('change', (e) => {
+  document.getElementById('step-1-next').disabled = !e.target.value;
+});
+
+document.getElementById('step-1-next').addEventListener('click', () => {
+  const sel = document.getElementById('driver-select');
+  const value = sel.value;
+  if (!value) return;
+  const driver = state.drivers.find(d => (d.email || d.name) === value);
+  if (!driver) return;
+  state.selectedDriver = driver;
+  goToStep(2);
+});
+
+// ================================================================
+// STEP 2 — Seleciona quinzena
+// ================================================================
+document.getElementById('quinzena-select').addEventListener('change', (e) => {
+  document.getElementById('step-2-next').disabled = !e.target.value;
+});
+
+document.getElementById('step-2-back').addEventListener('click', () => {
+  // Se já existe divergência salva, voltar pro step 4 (resumo) faz mais sentido
+  if (state.divergences.length > 0) {
+    goToStep(4);
+  } else {
+    goToStep(1);
+  }
+});
+
+document.getElementById('step-2-next').addEventListener('click', () => {
+  const idx = parseInt(document.getElementById('quinzena-select').value, 10);
+  if (isNaN(idx)) return;
+  const q = state.quinzenas[idx];
+  state.draftDivergence = {
+    quinzenaLabel: formatQuinzenaLabel(q),
+    quinzenaStart: q.startIso,
+    quinzenaEnd: q.endIso,
+    amount: '',
+    currency: 'ARS',
+    comment: '',
+    files: [],
+  };
+  state.currentCurrency = 'ARS';
+  resetStep3UI();
+  goToStep(3);
+});
+
+// ================================================================
+// STEP 3 — Form da divergência
+// ================================================================
+document.getElementById('step-3-back').addEventListener('click', () => goToStep(2));
+
+document.querySelectorAll('.currency-toggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const cur = btn.getAttribute('data-currency');
+    state.currentCurrency = cur;
+    document.querySelectorAll('.currency-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+document.getElementById('file-input').addEventListener('change', async (e) => {
+  if (!state.draftDivergence) return;
+  const files = Array.from(e.target.files || []);
+  for (const f of files) {
+    if (state.draftDivergence.files.length >= CONFIG.maxFilesPerDivergence) break;
+    if (f.size > 10 * 1024 * 1024) {
+      showToast(t('fileTooBig'), 'error');
+      continue;
+    }
+    try {
+      const processed = await processFile(f);
+      state.draftDivergence.files.push(processed);
+    } catch (err) {
+      console.error('[AR Divergencias] erro processando arquivo:', err);
+    }
+  }
+  e.target.value = ''; // permite re-selecionar mesmo arquivo
+  renderFileList();
+  updateFileAddBtnText();
+});
+
+async function processFile(file) {
+  const isImage = file.type.startsWith('image/');
+  if (isImage) {
+    return await compressImage(file);
+  }
+  // PDF ou outro tipo — envia bruto em base64
+  const base64 = await readAsBase64(file);
+  return {
+    name: file.name,
+    sizeKb: Math.round(file.size / 1024),
+    base64: base64,
+  };
+}
+
+function readAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        const maxDim = CONFIG.imageMaxDim;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', CONFIG.imageQuality);
+        resolve({
+          name: file.name.replace(/\.[^.]+$/, '') + '.jpg',
+          sizeKb: Math.round(dataUrl.length * 0.75 / 1024),
+          base64: dataUrl,
+        });
+      };
+      img.onerror = reject;
+      img.src = ev.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  list.innerHTML = '';
+  if (!state.draftDivergence) return;
+  state.draftDivergence.files.forEach((f, idx) => {
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    item.innerHTML = `
+      <span class="file-item-icon">📄</span>
+      <span class="file-item-name"></span>
+      <span class="file-item-size">${f.sizeKb} KB</span>
+      <button type="button" class="file-item-remove" data-idx="${idx}">×</button>
+    `;
+    item.querySelector('.file-item-name').textContent = f.name;
+    list.appendChild(item);
+  });
+  list.querySelectorAll('.file-item-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.getAttribute('data-idx'), 10);
+      state.draftDivergence.files.splice(idx, 1);
+      renderFileList();
+      updateFileAddBtnText();
+    });
+  });
+}
+
+function updateFileAddBtnText() {
+  const txt = document.getElementById('file-add-text');
+  const input = document.getElementById('file-input');
+  const label = document.getElementById('file-add-label');
+  if (!txt) return;
+  const count = state.draftDivergence ? state.draftDivergence.files.length : 0;
+  if (count >= CONFIG.maxFilesPerDivergence) {
+    txt.textContent = t('addFileMax');
+    input.disabled = true;
+    label.style.opacity = 0.5;
+    label.style.cursor = 'not-allowed';
+  } else if (count > 0) {
+    txt.textContent = t('addFileMore').replace('{count}', count);
+    input.disabled = false;
+    label.style.opacity = 1;
+    label.style.cursor = 'pointer';
+  } else {
+    txt.textContent = t('addFile');
+    input.disabled = false;
+    label.style.opacity = 1;
+    label.style.cursor = 'pointer';
+  }
+}
+
+function resetStep3UI() {
+  document.getElementById('amount-input').value = '';
+  document.getElementById('comment-input').value = '';
+  document.getElementById('file-list').innerHTML = '';
+  document.querySelectorAll('.currency-toggle button').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-currency') === 'ARS');
+  });
+  updateFileAddBtnText();
+  // Atualiza info da quinzena no header do step 3
+  const info = document.getElementById('step-3-quinzena-info');
+  if (info && state.draftDivergence) {
+    info.textContent = state.draftDivergence.quinzenaLabel;
+  }
+}
+
+document.getElementById('step-3-next').addEventListener('click', () => {
+  if (!state.draftDivergence) return;
+  const amountVal = document.getElementById('amount-input').value.trim();
+  if (!amountVal || isNaN(parseFloat(amountVal))) {
+    showToast(t('fillAmount'), 'error');
+    return;
+  }
+  state.draftDivergence.amount = parseFloat(amountVal);
+  state.draftDivergence.currency = state.currentCurrency;
+  state.draftDivergence.comment = document.getElementById('comment-input').value.trim();
+  state.divergences.push(state.draftDivergence);
+  state.draftDivergence = null;
+  refreshDivergencesSummaries();
+  goToStep(4);
+});
+
+// ================================================================
+// STEP 4 — Outra ou enviar
+// ================================================================
+document.getElementById('step-4-another').addEventListener('click', () => {
+  document.getElementById('quinzena-select').value = '';
+  document.getElementById('step-2-next').disabled = true;
+  goToStep(2);
+});
+
+document.getElementById('step-4-send').addEventListener('click', submitAll);
+
+function refreshDivergencesSummaries() {
+  const summaries = [
+    { box: 'divergences-summary',       list: 'divergences-summary-list'       },
+    { box: 'divergences-summary-final', list: 'divergences-summary-final-list' },
+  ];
+  summaries.forEach(s => {
+    const box = document.getElementById(s.box);
+    const list = document.getElementById(s.list);
+    if (!box || !list) return;
+    if (state.divergences.length === 0) {
+      if (s.box === 'divergences-summary') box.style.display = 'none';
+      list.innerHTML = '';
+      return;
+    }
+    if (s.box === 'divergences-summary') box.style.display = '';
+    list.innerHTML = '';
+    state.divergences.forEach((d, idx) => {
+      const item = document.createElement('div');
+      item.className = 'divergence-summary-item';
+      const amount = d.amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const filesMeta = d.files.length > 0 ? ` · 📎${d.files.length}` : '';
+      item.innerHTML = `
+        <span><strong></strong></span>
+        <span class="divergence-summary-meta">${d.currency} ${amount}${filesMeta}</span>
+      `;
+      item.querySelector('strong').textContent = `${idx + 1}. ${d.quinzenaLabel}`;
+      list.appendChild(item);
+    });
+  });
+}
+
+// ================================================================
+// SUBMIT
+// ================================================================
+async function submitAll() {
+  if (!state.selectedDriver || state.divergences.length === 0) return;
+
+  const btn = document.getElementById('step-4-send');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span>' + t('sending');
+
+  const payload = {
+    type: 'submitArgentinaCash',
+    driverName: state.selectedDriver.name,
+    driverEmail: state.selectedDriver.email || '',
+    divergences: state.divergences.map(d => ({
+      quinzenaLabel: d.quinzenaLabel,
+      quinzenaStart: d.quinzenaStart,
+      quinzenaEnd: d.quinzenaEnd,
+      amount: d.amount,
+      currency: d.currency,
+      comment: d.comment,
+      files: d.files.map(f => ({ name: f.name, base64: f.base64 })),
+    })),
+  };
+
+  try {
+    const res = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    let ok = true;
+    try {
+      const data = await res.json();
+      if (data && data.success === false) {
+        ok = false;
+        console.error('[AR Divergencias] backend retornou erro:', data.error);
+      }
+    } catch (e) { /* opaque response — assume ok */ }
+
+    if (ok) {
+      goToStep(5);
+    } else {
+      throw new Error('backend');
+    }
+  } catch (err) {
+    console.error('[AR Divergencias] submit falhou:', err);
+    showToast(t('errorSend'), 'error');
+    btn.disabled = false;
+    btn.textContent = t('sendAll');
+  }
+}
+
+// ================================================================
+// STEP 5 — Sucesso
+// ================================================================
+document.getElementById('step-5-restart').addEventListener('click', () => {
+  state.selectedDriver = null;
+  state.divergences = [];
+  state.draftDivergence = null;
+  document.getElementById('driver-select').value = '';
+  document.getElementById('step-1-next').disabled = true;
+  refreshDivergencesSummaries();
+  goToStep(1);
+});
+
+// ================================================================
+// Navegação entre steps
+// ================================================================
+function goToStep(n) {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('step-' + i);
+    if (el) el.classList.toggle('hidden', i !== n);
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ================================================================
+// Toast
+// ================================================================
+function showToast(msg, type) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (type ? ' ' + type : '');
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// ================================================================
+// BOOT
+// ================================================================
+state.quinzenas = generateQuinzenas(12);
+applyI18n();
+rebuildQuinzenaSelect();
+loadDrivers();
+
+</script>
+
+</body>
+</html>

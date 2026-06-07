@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recruitment Status · LATAM · Aceolution</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<script src="auth_teste.js?v=20260518b"></script>
+<script src="theme_teste.js?v=20260518c"></script>
+<script src="common_teste.js?v=20260519a"></script>
+<link rel="stylesheet" href="theme_teste.css?v=20260519a">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- REPORT HEADER (sóbrio) ---------- */
+  .report-header {
+    background: linear-gradient(135deg, #0F2443 0%, #1A365D 60%, #2C5282 100%);
+    color: white;
+    padding: 26px 24px 22px;
+    border-bottom: 2px solid var(--c-accent);
+  }
+  .report-header-inner {
+    max-width: 1320px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
+  }
+  .report-eyebrow {
+    font-size: 10px; font-weight: 800; letter-spacing: 2.5px;
+    color: #C8DEF0; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .report-title {
+    font-size: 26px; font-weight: 800;
+    letter-spacing: -0.3px; line-height: 1.1;
+  }
+  .report-subtitle {
+    font-size: 12px; color: #C8DEF0;
+    margin-top: 4px; font-weight: 500;
+  }
+  .report-date {
+    font-size: 12px; font-weight: 700;
+    color: #C8DEF0;
+    text-align: right; letter-spacing: 0.5px;
+  }
+  .report-date strong { color: white; font-size: 16px; display: block; }
+
+  /* ---------- MAIN ---------- */
+  main {
+    max-width: 1320px; margin: 0 auto;
+    padding: 22px 24px 60px;
+  }
+
+  /* ---------- KPI ROW ---------- */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-stripe {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--kpi-color, var(--c-accent));
+  }
+  .kpi-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+    color: var(--c-text-muted); text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .kpi-value {
+    font-size: 32px; font-weight: 800;
+    color: var(--kpi-color, var(--c-text));
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi-sub {
+    font-size: 11px; color: var(--c-text-muted);
+    margin-top: 6px;
+  }
+
+  /* ---------- TWO-COLUMN (table + map) ---------- */
+  .two-col {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+    color: var(--c-primary-dark); text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .panel {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  /* ---------- COUNTRY TABLE ---------- */
+  table.country-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.country-table thead {
+    background: var(--c-primary-dark);
+    color: white;
+  }
+  table.country-table th {
+    text-align: center;
+    padding: 10px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  table.country-table th:first-child { text-align: left; padding-left: 14px; }
+  table.country-table td {
+    padding: 11px 6px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    border-bottom: 1px solid var(--c-border);
+  }
+  table.country-table td:first-child {
+    text-align: left; padding-left: 14px;
+    font-weight: 700; color: var(--c-text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  table.country-table tbody tr:hover td { background: var(--c-bg-tint); cursor: default; }
+  table.country-table tbody tr.totals { background: var(--c-bg-tint); font-weight: 800; }
+  table.country-table tbody tr.totals td { border-bottom: none; font-size: 13px; color: var(--c-primary-dark); }
+  .country-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block; flex-shrink: 0;
+  }
+  td.highlight {
+    color: var(--c-accent);
+    font-weight: 700;
+  }
+
+  /* ---------- MAP ---------- */
+  #map {
+    height: 100%;
+    min-height: 360px;
+    background: var(--c-bg);
+  }
+  .leaflet-container { background: var(--c-bg-tint); }
+  .map-legend {
+    padding: 8px 14px;
+    border-top: 1px solid var(--c-border);
+    background: var(--c-bg-tint);
+    font-size: 11px;
+    color: var(--c-text-muted);
+    display: flex; gap: 14px; flex-wrap: wrap;
+  }
+  .map-legend strong { color: var(--c-primary-dark); }
+
+  /* ---------- AGING TABLE ---------- */
+  .aging-section {
+    margin-bottom: 24px;
+  }
+  table.aging-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  table.aging-table thead {
+    background: var(--c-primary-dark);
+    color: white;
+  }
+  table.aging-table th {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  table.aging-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--c-border);
+    font-variant-numeric: tabular-nums;
+  }
+  table.aging-table tbody tr:hover td { background: var(--c-bg-tint); }
+  table.aging-table tbody tr:last-child td { border-bottom: none; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 10px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.4px;
+    background: var(--pill-bg); color: var(--pill-text);
+  }
+  .pill-open    { --pill-bg: #DCFCE7; --pill-text: #166534; }
+  .pill-hold    { --pill-bg: #FEF3C7; --pill-text: #854D0E; }
+  .pill-short   { --pill-bg: #DBEAFE; --pill-text: #1E40AF; }
+  .pill-progress{ --pill-bg: #E0E7FF; --pill-text: #3730A3; }
+  .days-old {
+    color: var(--c-danger);
+    font-weight: 800;
+  }
+  .days-fresh {
+    color: var(--c-text-muted);
+    font-weight: 600;
+  }
+  .city-name { font-weight: 700; color: var(--c-text); }
+  .remarks-cell { color: var(--c-text-muted); font-style: italic; font-size: 12px; }
+  .empty-row td { text-align: center; color: var(--c-text-muted); padding: 40px; font-style: italic; }
+
+  /* ---------- LOADING/ERROR ---------- */
+  .loading { text-align: center; padding: 60px 20px; color: var(--c-text-muted); }
+  .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid var(--c-border); border-top-color: var(--c-primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box {
+    background: #FEE2E2; color: #991B1B;
+    padding: 16px 20px; border-radius: 10px;
+    font-size: 13px; border: 1px solid #FCA5A5;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer.report-footer {
+    border-top: 1px solid var(--c-border);
+    padding: 14px 24px;
+    background: var(--c-bg-tint);
+    color: var(--c-text-muted);
+    font-size: 11px;
+    display: flex; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 980px) {
+    .two-col { grid-template-columns: 1fr; }
+    #map { min-height: 320px; }
+  }
+  @media (max-width: 680px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .report-title { font-size: 22px; }
+    table.aging-table th:nth-child(6),
+    table.aging-table td:nth-child(6) { display: none; }
+  }
+
+  /* ---------- PRINT ---------- */
+  @media print {
+    @page { size: A4 landscape; margin: 8mm; }
+    body { background: white !important; }
+    header.topbar, footer.report-footer { display: none !important; }
+    .theme-toggle-btn { display: none !important; }
+    main { padding: 8px 0; }
+    .panel, .kpi-card { box-shadow: none !important; }
+    .two-col { gap: 8px; }
+    #map { min-height: 280px; }
+    table.aging-table tbody tr:hover td { background: transparent !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+
+<section class="report-header">
+  <div class="report-header-inner">
+    <div>
+      <div class="report-eyebrow" id="report-eyebrow">Aceolution · Street View LATAM</div>
+      <h1 class="report-title" id="report-title">Recruitment Status Report</h1>
+      <div class="report-subtitle" id="report-subtitle">LATAM Driver Pipeline</div>
+    </div>
+    <div class="report-date" id="report-date">—</div>
+  </div>
+</section>
+
+<main>
+  <div id="content">
+    <div class="loading"><div class="spinner"></div><div style="margin-top:12px;" id="loading-text">Carregando dados...</div></div>
+  </div>
+</main>
+
+<footer class="report-footer">
+  <span id="footer-left">Aceolution · Confidencial · Uso interno</span>
+  <span id="footer-right">Fonte: Mastersheet › Recruitment</span>
+</footer>
+
+</div>
+
+<script>
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+};
+
+const COUNTRY_ORDER = ['Brazil', 'Argentina', 'Chile', 'Peru', 'México', 'Colombia'];
+const COUNTRY_COLOR = {
+  'Brazil': '#009C3B', 'Brasil': '#009C3B',
+  'Argentina': '#74ACDF',
+  'Chile': '#D52B1E',
+  'Peru': '#D91023', 'Perú': '#D91023',
+  'México': '#006847', 'Mexico': '#006847',
+  'Colombia': '#FCD116',
+};
+const COUNTRY_CENTROID = {
+  'Brazil': [-14.2, -51.9], 'Brasil': [-14.2, -51.9],
+  'Argentina': [-38.4, -63.6],
+  'Chile': [-35.7, -71.5],
+  'Peru': [-9.2, -75.0], 'Perú': [-9.2, -75.0],
+  'México': [23.6, -102.5], 'Mexico': [23.6, -102.5],
+  'Colombia': [4.6, -74.3],
+};
+
+const I18N = {
+  pt: {
+    loginTitle: 'Recruitment Status', loginSub: 'Acesso interno',
+    labelUser: 'Usuário', labelPass: 'Senha', loginBtn: 'Entrar',
+    loginErrorEmpty: 'Preencha usuário e senha', loginErrorInvalid: 'Usuário ou senha inválidos',
+    region: 'LATAM · RECRUITMENT STATUS',
+    pdfBtn: 'Imprimir / PDF', backLink: '← Hub', logoutBtn: 'Sair',
+    reportEyebrow: 'Aceolution · Street View LATAM',
+    reportTitle: 'Recruitment Status Report',
+    reportSubtitle: 'LATAM Driver Pipeline',
+    loadingText: 'Carregando dados...',
+    kpiOpen: 'Vagas Abertas', kpiOpenSub: 'Posições em recrutamento',
+    kpiActive: 'Fleet Ativa', kpiActiveSub: 'Motoristas operando',
+    kpiHired: 'Total Contratados', kpiHiredSub: 'Histórico LATAM',
+    kpiStuck: 'Vagas Paradas', kpiStuckSub: '≥ 30 dias abertas',
+    sectionByCountry: 'Pipeline por país',
+    sectionMap: 'Distribuição geográfica',
+    sectionAging: 'Vagas em aberto · ordenadas por idade',
+    colCountry: 'País', colOpen: 'Open', colShort: 'Shortlist',
+    colActive: 'Ativos', colTraining: 'Training', colHired: 'Hired',
+    colOffboarding: 'Offboarding',
+    colCity: 'Cidade', colStatus: 'Status', colRaisedOn: 'Aberta em',
+    colDaysOpen: 'Dias', colRemarks: 'Observações',
+    statusOpen: 'Aberta', statusShortlisted: 'Pré-selecionado',
+    statusOnHold: 'Em pausa', statusInProgress: 'Em andamento',
+    total: 'Total', noOpen: 'Nenhuma vaga aberta no momento.',
+    mapBubbleSize: 'Tamanho da bolha', equalsOpenPositions: 'número de vagas abertas',
+    confirmLogout: 'Sair?',
+    footerLeft: 'Aceolution · Confidencial · Uso interno',
+    footerRight: 'Fonte: Mastersheet › Recruitment',
+  },
+  es: {
+    loginTitle: 'Recruitment Status', loginSub: 'Acceso interno',
+    labelUser: 'Usuario', labelPass: 'Contraseña', loginBtn: 'Entrar',
+    loginErrorEmpty: 'Complete usuario y contraseña', loginErrorInvalid: 'Usuario o contraseña inválidos',
+    region: 'LATAM · RECRUITMENT STATUS',
+    pdfBtn: 'Imprimir / PDF', backLink: '← Hub', logoutBtn: 'Salir',
+    reportEyebrow: 'Aceolution · Street View LATAM',
+    reportTitle: 'Reporte de Reclutamiento',
+    reportSubtitle: 'Pipeline de Conductores LATAM',
+    loadingText: 'Cargando datos...',
+    kpiOpen: 'Vacantes', kpiOpenSub: 'Posiciones abiertas',
+    kpiActive: 'Flota Activa', kpiActiveSub: 'Conductores operando',
+    kpiHired: 'Total Contratados', kpiHiredSub: 'Histórico LATAM',
+    kpiStuck: 'Vacantes Estancadas', kpiStuckSub: '≥ 30 días abiertas',
+    sectionByCountry: 'Pipeline por país',
+    sectionMap: 'Distribución geográfica',
+    sectionAging: 'Vacantes abiertas · ordenadas por antigüedad',
+    colCountry: 'País', colOpen: 'Open', colShort: 'Shortlist',
+    colActive: 'Activos', colTraining: 'Training', colHired: 'Hired',
+    colOffboarding: 'Offboarding',
+    colCity: 'Ciudad', colStatus: 'Estado', colRaisedOn: 'Abierta el',
+    colDaysOpen: 'Días', colRemarks: 'Observaciones',
+    statusOpen: 'Abierta', statusShortlisted: 'Preseleccionado',
+    statusOnHold: 'En pausa', statusInProgress: 'En curso',
+    total: 'Total', noOpen: 'No hay vacantes abiertas en este momento.',
+    mapBubbleSize: 'Tamaño de burbuja', equalsOpenPositions: 'número de vacantes',
+    confirmLogout: '¿Salir?',
+    footerLeft: 'Aceolution · Confidencial · Uso interno',
+    footerRight: 'Fuente: Mastersheet › Recruitment',
+  },
+  en: {
+    loginTitle: 'Recruitment Status', loginSub: 'Internal access',
+    labelUser: 'Username', labelPass: 'Password', loginBtn: 'Sign in',
+    loginErrorEmpty: 'Enter username and password', loginErrorInvalid: 'Invalid username or password',
+    region: 'LATAM · RECRUITMENT STATUS',
+    pdfBtn: 'Print / PDF', backLink: '← Hub', logoutBtn: 'Sign out',
+    reportEyebrow: 'Aceolution · Street View LATAM',
+    reportTitle: 'Recruitment Status Report',
+    reportSubtitle: 'LATAM Driver Pipeline',
+    loadingText: 'Loading data...',
+    kpiOpen: 'Open Positions', kpiOpenSub: 'Currently recruiting',
+    kpiActive: 'Active Fleet', kpiActiveSub: 'Drivers operating',
+    kpiHired: 'Total Hired', kpiHiredSub: 'LATAM all-time',
+    kpiStuck: 'Stuck Openings', kpiStuckSub: '≥ 30 days open',
+    sectionByCountry: 'Pipeline by country',
+    sectionMap: 'Geographic distribution',
+    sectionAging: 'Open positions · by age',
+    colCountry: 'Country', colOpen: 'Open', colShort: 'Shortlist',
+    colActive: 'Active', colTraining: 'Training', colHired: 'Hired',
+    colOffboarding: 'Offboarding',
+    colCity: 'City', colStatus: 'Status', colRaisedOn: 'Opened',
+    colDaysOpen: 'Days', colRemarks: 'Remarks',
+    statusOpen: 'Open', statusShortlisted: 'Shortlisted',
+    statusOnHold: 'On Hold', statusInProgress: 'In Progress',
+    total: 'Total', noOpen: 'No open positions at the moment.',
+    mapBubbleSize: 'Bubble size', equalsOpenPositions: 'open positions',
+    confirmLogout: 'Sign out?',
+    footerLeft: 'Aceolution · Confidential · Internal use',
+    footerRight: 'Source: Mastersheet › Recruitment',
+  },
+};
+
+let currentLang = 'pt';
+let currentUser = null;
+let recruitmentData = null;
+let mapInstance = null;
+let mapBubbles = [];
+
+function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || I18N.pt[key] || key; }
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  applyI18n();
+  if (recruitmentData) renderContent();
+}
+
+function applyI18n() {
+  // Atualiza só os elementos do CONTEÚDO da página
+  // (topbar é gerenciado pelo common_teste.js, login screen idem)
+  const el = (id) => document.getElementById(id);
+  if (el('report-eyebrow'))  el('report-eyebrow').textContent  = t('reportEyebrow');
+  if (el('report-title'))    el('report-title').textContent    = t('reportTitle');
+  if (el('report-subtitle')) el('report-subtitle').textContent = t('reportSubtitle');
+  if (el('loading-text'))    el('loading-text').textContent    = t('loadingText');
+  if (el('footer-left'))     el('footer-left').textContent     = t('footerLeft');
+  if (el('footer-right'))    el('footer-right').textContent    = t('footerRight');
+  document.documentElement.lang = currentLang;
+}
+
+function startApp(user) {
+  currentUser = user;
+  injectTopbar({
+    region: 'LATAM · RECRUITMENT STATUS',
+    user: user,
+    showBack: true,
+    showLangSwitch: true,
+    lang: currentLang,
+    onLangChange: (newLang) => { setLang(newLang); },
+    onRefresh: () => loadData(true),
+    extras: [{
+      html: '⎙ PDF',
+      onClick: () => window.print(),
+      className: 'primary',
+    }],
+  });
+  document.getElementById('app').style.display = '';
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+  loadData();
+}
+
+// ---------- LOAD DATA ----------
+async function loadData(forceRefresh) {
+  try {
+    const url = CONFIG.scriptUrl + '?action=getRecruitmentData';
+    const res = (typeof cachedFetch === 'function')
+      ? await cachedFetch(url, 300, { forceRefresh: !!forceRefresh })
+      : await fetch(url).then(r => r.json());
+    if (!res.success) throw new Error(res.error || 'Erro do backend');
+    recruitmentData = res.data;
+    renderContent();
+  } catch (err) {
+    document.getElementById('content').innerHTML =
+      '<div class="error-box">Erro ao carregar dados: ' + escapeHtml(err.message) + '</div>';
+  }
+}
+
+// ---------- RENDER ----------
+function renderContent() {
+  if (!recruitmentData) return;
+  const demand = recruitmentData.demand || [];
+  const summary = recruitmentData.summary || [];
+  const summaryByCountry = {};
+  summary.forEach(s => { summaryByCountry[s.country] = s; });
+
+  // KPIs
+  const totalOpen = demand.length;
+  const totalActive = summary.reduce((acc, s) => acc + (s.currentlyActive || 0), 0);
+  const totalHired = summary.reduce((acc, s) => acc + (s.hired || 0), 0);
+  const stuck = demand.filter(d => {
+    const days = computeDaysOpen(d.raisedOn);
+    return days !== null && days >= 30;
+  }).length;
+
+  // Aging-sorted demand
+  const demandWithAge = demand.map(d => ({
+    ...d, daysOpen: computeDaysOpen(d.raisedOn)
+  })).sort((a, b) => (b.daysOpen || 0) - (a.daysOpen || 0));
+
+  // Update report date
+  const now = new Date();
+  const locale = currentLang === 'pt' ? 'pt-BR' : currentLang === 'es' ? 'es-ES' : 'en-US';
+  document.getElementById('report-date').innerHTML =
+    `${t('reportSubtitle').toUpperCase()}<strong>${now.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' })}</strong>`;
+
+  // Build content
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="kpi-row">
+      <div class="kpi-card" style="--kpi-color: #4A9FE0"><div class="kpi-stripe"></div>
+        <div class="kpi-label">${t('kpiOpen')}</div>
+        <div class="kpi-value">${totalOpen}</div>
+        <div class="kpi-sub">${t('kpiOpenSub')}</div></div>
+      <div class="kpi-card" style="--kpi-color: #16A34A"><div class="kpi-stripe"></div>
+        <div class="kpi-label">${t('kpiActive')}</div>
+        <div class="kpi-value">${totalActive}</div>
+        <div class="kpi-sub">${t('kpiActiveSub')}</div></div>
+      <div class="kpi-card" style="--kpi-color: #2C5282"><div class="kpi-stripe"></div>
+        <div class="kpi-label">${t('kpiHired')}</div>
+        <div class="kpi-value">${totalHired}</div>
+        <div class="kpi-sub">${t('kpiHiredSub')}</div></div>
+      <div class="kpi-card" style="--kpi-color: ${stuck > 0 ? '#B91C1C' : '#94A3B8'}"><div class="kpi-stripe"></div>
+        <div class="kpi-label">${t('kpiStuck')}</div>
+        <div class="kpi-value">${stuck}</div>
+        <div class="kpi-sub">${t('kpiStuckSub')}</div></div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title">${t('sectionByCountry')}</div>
+        <div class="panel"><table class="country-table">
+          <thead><tr>
+            <th>${t('colCountry')}</th>
+            <th>${t('colOpen')}</th>
+            <th>${t('colShort')}</th>
+            <th>${t('colActive')}</th>
+            <th>${t('colTraining')}</th>
+            <th>${t('colOffboarding')}</th>
+          </tr></thead>
+          <tbody>
+            ${COUNTRY_ORDER.filter(c => summaryByCountry[c]).map(c => {
+              const s = summaryByCountry[c];
+              const color = COUNTRY_COLOR[c] || 'var(--c-accent)';
+              const openCell = (s.open > 0) ? `<td class="highlight">${s.open}</td>` : `<td>${s.open}</td>`;
+              const offCell  = (s.offboarding > 0) ? `<td style="color:#CA8A04; font-weight:700;">${s.offboarding}</td>` : `<td>${s.offboarding || 0}</td>`;
+              return `<tr>
+                <td><span class="country-dot" style="background:${color}"></span>${escapeHtml(c)}</td>
+                ${openCell}
+                <td>${s.shortlisted}</td>
+                <td>${s.currentlyActive}</td>
+                <td>${s.training}</td>
+                ${offCell}
+              </tr>`;
+            }).join('')}
+            <tr class="totals">
+              <td>${t('total').toUpperCase()}</td>
+              <td>${totalOpen}</td>
+              <td>${summary.reduce((a, s) => a + (s.shortlisted || 0), 0)}</td>
+              <td>${totalActive}</td>
+              <td>${summary.reduce((a, s) => a + (s.training || 0), 0)}</td>
+              <td>${summary.reduce((a, s) => a + (s.offboarding || 0), 0)}</td>
+            </tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <div>
+        <div class="section-title">${t('sectionMap')}</div>
+        <div class="panel" style="display: flex; flex-direction: column;">
+          <div id="map" style="flex:1;"></div>
+          <div class="map-legend">
+            <span><strong>${t('mapBubbleSize')}:</strong> ${t('equalsOpenPositions')}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="aging-section">
+      <div class="section-title">${t('sectionAging')} <span style="color: var(--c-text-muted); font-weight: 600;">(${totalOpen})</span></div>
+      <div class="panel"><table class="aging-table">
+        <thead><tr>
+          <th>${t('colCountry')}</th>
+          <th>${t('colCity')}</th>
+          <th>${t('colStatus')}</th>
+          <th>${t('colRaisedOn')}</th>
+          <th>${t('colDaysOpen')}</th>
+          <th>${t('colRemarks')}</th>
+        </tr></thead>
+        <tbody>
+          ${demandWithAge.length === 0
+            ? `<tr class="empty-row"><td colspan="6">${t('noOpen')}</td></tr>`
+            : demandWithAge.map(d => {
+                const sk = (d.status || '').toLowerCase();
+                let pillCls = 'pill-open', label = t('statusOpen');
+                if (sk === 'on hold') { pillCls = 'pill-hold'; label = t('statusOnHold'); }
+                else if (sk === 'shortlisted') { pillCls = 'pill-short'; label = t('statusShortlisted'); }
+                else if (sk === 'in progress') { pillCls = 'pill-progress'; label = t('statusInProgress'); }
+                const isOld = d.daysOpen !== null && d.daysOpen >= 30;
+                const color = COUNTRY_COLOR[d.country] || 'var(--c-accent)';
+                return `<tr>
+                  <td><span class="country-dot" style="background:${color}"></span> ${escapeHtml(d.country)}</td>
+                  <td class="city-name">${escapeHtml(d.city || '—')}</td>
+                  <td><span class="status-pill ${pillCls}">${label}</span></td>
+                  <td>${formatDate(d.raisedOn, locale)}</td>
+                  <td class="${isOld ? 'days-old' : 'days-fresh'}">${d.daysOpen !== null ? d.daysOpen + 'd' : '—'}</td>
+                  <td class="remarks-cell">${escapeHtml(d.remarks || '—')}</td>
+                </tr>`;
+              }).join('')
+          }
+        </tbody>
+      </table></div>
+    </div>
+  `;
+
+  // Build map
+  renderMap(summaryByCountry);
+}
+
+function renderMap(summaryByCountry) {
+  // Destroy existing instance
+  if (mapInstance) {
+    mapInstance.remove();
+    mapInstance = null;
+    mapBubbles = [];
+  }
+
+  const mapEl = document.getElementById('map');
+  if (!mapEl) return;
+
+  mapInstance = L.map(mapEl, {
+    zoomControl: true, attributionControl: true,
+    scrollWheelZoom: false,
+  }).setView([-15, -70], 3);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap, © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 10,
+  }).addTo(mapInstance);
+
+  // Compute max for bubble scaling
+  const maxOpen = Math.max(1, ...Object.values(summaryByCountry).map(s => s.open || 0));
+
+  COUNTRY_ORDER.forEach(country => {
+    const s = summaryByCountry[country];
+    const centroid = COUNTRY_CENTROID[country];
+    if (!s || !centroid) return;
+    const open = s.open || 0;
+    const color = COUNTRY_COLOR[country] || '#4A9FE0';
+    const radius = open > 0 ? 12 + (open / maxOpen) * 22 : 8;
+
+    const marker = L.circleMarker(centroid, {
+      radius: radius,
+      fillColor: color,
+      color: 'white',
+      weight: 2,
+      opacity: 1,
+      fillOpacity: open > 0 ? 0.75 : 0.25,
+    }).addTo(mapInstance);
+
+    const popupHtml = `
+      <div style="font-family: inherit; padding: 4px 2px;">
+        <div style="font-weight: 800; color: #1A365D; font-size: 14px; margin-bottom: 6px;">${escapeHtml(country)}</div>
+        <div style="font-size: 12px; line-height: 1.6;">
+          <div><strong>${open}</strong> ${t('colOpen').toLowerCase()}</div>
+          <div><strong>${s.currentlyActive || 0}</strong> ${t('colActive').toLowerCase()}</div>
+          <div><strong>${s.hired || 0}</strong> ${t('colHired').toLowerCase()}</div>
+        </div>
+      </div>
+    `;
+    marker.bindTooltip(popupHtml, { permanent: false, direction: 'top', opacity: 0.95 });
+
+    // Permanent label with the number (if open > 0)
+    if (open > 0) {
+      const label = L.divIcon({
+        className: 'map-bubble-label',
+        html: `<div style="color: white; font-weight: 800; font-size: ${open >= 10 ? 11 : 13}px; text-shadow: 0 1px 2px rgba(0,0,0,0.4); pointer-events: none; text-align: center; width: ${radius*2}px; margin-left: -${radius}px; margin-top: -7px;">${open}</div>`,
+        iconSize: [0, 0],
+        iconAnchor: [0, 0],
+      });
+      L.marker(centroid, { icon: label, interactive: false }).addTo(mapInstance);
+    }
+    mapBubbles.push(marker);
+  });
+
+  // Fit LATAM
+  mapInstance.fitBounds([[-55, -118], [33, -34]], { padding: [10, 10] });
+}
+
+// ---------- HELPERS ----------
+function computeDaysOpen(raisedOn) {
+  if (!raisedOn) return null;
+  let d;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raisedOn)) {
+    d = new Date(raisedOn + 'T00:00:00');
+  } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(raisedOn)) {
+    const [day, mo, yr] = raisedOn.split('/').map(Number);
+    d = new Date(yr, mo - 1, day);
+  } else {
+    d = new Date(raisedOn);
+  }
+  if (isNaN(d.getTime())) return null;
+  const diff = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+  return diff >= 0 ? diff : null;
+}
+
+function formatDate(s, locale) {
+  if (!s) return '—';
+  let d;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) d = new Date(s + 'T00:00:00');
+  else if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+    const [day, mo, yr] = s.split('/').map(Number);
+    d = new Date(yr, mo - 1, day);
+  } else d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyI18n();
+  injectLogin({
+    title: 'Recruitment Status',
+    sub: 'Acesso interno',
+    lang: currentLang,
+    onSuccess: startApp,
+  });
+});
+</script>
+
+<script src="sv-shell_teste.js"></script>
+</body>
+</html>
