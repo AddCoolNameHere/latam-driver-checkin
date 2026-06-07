@@ -524,72 +524,9 @@ function setThemeIcon() {
   });
 })();
 
-/* ============================================================
- * DEMO bootstrap — torna a página self-contained.
- * Reproduz o formato exato da aba Timesheet (headers + rows) e
- * dos ajustes, pra exercitar parseRows/detectCols de verdade.
- * O fetch real ao Apps Script é interceptado só pra demonstrar
- * o fluxo de adicionar/remover ajuste sem backend.
- * ============================================================ */
-const DEMO_HEADERS = ['Worker Full Name','Country','Situation','Hour Pay','Corporate E-mail','Final Hours','Month Salary','2026-06-13','Final Hours','Final Hours'];
-const DEMO_ROWS = [
-  ['João Pereira','Brazil','Active',6.50,'joao.pereira@aceolution.com',168,1092,520.00,41,39],
-  ['Maria Silva','Brazil','Active',6.50,'maria.silva@aceolution.com',160,1040,507.00,38,40],
-  ['Rafael Souza','Brazil','Active',6.50,'rafael.souza@aceolution.com',168,1092,559.00,44,42],
-  ['Fernanda Lima','Brazil','Active',6.50,'fernanda.lima@aceolution.com',160,1040,500.50,40,37],
-  ['Isabela Ramos','Brazil','Active',6.50,'isabela.ramos@aceolution.com',160,1040,481.00,38,36],
-  ['Carlos Gómez','México','Active',5.80,'carlos.gomez@aceolution.com',168,974,475.60,42,40],
-  ['Andrés Vargas','México','Active',5.80,'andres.vargas@aceolution.com',160,928,429.20,36,38],
-  ['Lucía Fernández','Argentina','Active',5.20,'lucia.fernandez@aceolution.com',160,832,374.40,37,35],
-  ['Mateo Díaz','Argentina','Active',5.20,'mateo.diaz@aceolution.com',168,874,416.00,41,39],
-  ['Santiago Rojas','Colombia','Active',5.00,'santiago.rojas@aceolution.com',168,840,390.00,40,38],
-  ['Valentina Torres','Colombia','Offboarding',5.00,'valentina.torres@aceolution.com',80,400,190.00,18,20],
-  ['Diego Morales','Peru','Active',4.80,'diego.morales@aceolution.com',160,768,384.00,39,41],
-  ['Camila Castro','Chile','Active',6.20,'camila.castro@aceolution.com',168,1042,496.00,40,40],
-  ['Pedro Almeida','Brazil','Inactive',6.50,'pedro.almeida@aceolution.com',0,0,0,0,0],
-];
-const DEMO_META = { nextPayrollDay:'2026-06-13', lastPayrollDay:'2026-05-30', currentWeek:24, nextPayrollWeek:25 };
-let DEMO_ADJ = [
-  { id:'demo-1', addedBy:'fuss', quinzena:'2026-06-13', driverName:'João Pereira', driverEmail:'joao.pereira@aceolution.com', country:'Brazil', category:'reembolso', amount:45.00, note:'Combustível' },
-  { id:'demo-2', addedBy:'fuss', quinzena:'2026-06-13', driverName:'Camila Castro', driverEmail:'camila.castro@aceolution.com', country:'Chile', category:'bonus', amount:120.00, note:'Meta batida' },
-  { id:'demo-3', addedBy:'fuss', quinzena:'2026-06-13', driverName:'Diego Morales', driverEmail:'diego.morales@aceolution.com', country:'Peru', category:'desconto', amount:-30.00, note:'Adiantamento' },
-  { id:'demo-4', addedBy:'fuss', quinzena:'2026-06-13', driverName:'Rafael Souza', driverEmail:'rafael.souza@aceolution.com', country:'Brazil', category:'reembolso', amount:25.50, note:'Pedágio' },
-];
-
-// Stub de cachedFetch (substitui common_teste.js) — serve os dados demo.
-function cachedFetch(url) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      if (url.indexOf('getTimesheetTab') >= 0) {
-        resolve({ success:true, headers:DEMO_HEADERS, rows:DEMO_ROWS, metadata:DEMO_META, _fromCache:false });
-      } else if (url.indexOf('getPayrollAdjustments') >= 0) {
-        resolve({ success:true, adjustments:DEMO_ADJ.slice() });
-      } else {
-        resolve({ success:false, error:'demo' });
-      }
-    }, 280);
-  });
-}
-function clearDataCache() {}
-
-// Shim do fetch real: simula save/delete de ajuste localmente (sem backend).
-const _realFetch = window.fetch ? window.fetch.bind(window) : null;
-window.fetch = function (url, opts) {
-  if (typeof url === 'string' && url.indexOf('script.google.com') >= 0 && opts && opts.method === 'POST') {
-    let body = {};
-    try { body = JSON.parse(opts.body || '{}'); } catch (e) {}
-    if (body.type === 'savePayrollAdjustment') {
-      const adj = { id:'demo-' + Date.now(), addedBy:body.actorUsername, quinzena:body.quinzena, driverName:body.driverName, driverEmail:body.driverEmail, country:body.country, category:body.category, amount:body.amount, note:body.note };
-      DEMO_ADJ.push(adj);
-      return Promise.resolve({ json: () => Promise.resolve({ success:true, adjustment:adj }) });
-    }
-    if (body.type === 'deletePayrollAdjustment') {
-      DEMO_ADJ = DEMO_ADJ.filter(a => a.id !== body.id);
-      return Promise.resolve({ json: () => Promise.resolve({ success:true }) });
-    }
-  }
-  return _realFetch ? _realFetch(url, opts) : Promise.reject(new Error('no fetch'));
-};
+/* DADOS REAIS: cachedFetch + clearDataCache vêm do common_teste.js (head), e os POSTs
+   (save/delete de ajuste) vão direto ao Apps Script via fetch nativo.
+   O bloco DEMO foi removido — ele interceptava o fetch e servia dados de exemplo. */
 
 /* ============================================================
  * Lógica do Timesheet (preservada do original; só os pontos de
