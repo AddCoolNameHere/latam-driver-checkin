@@ -53,16 +53,35 @@ async function cachedFetch(url, ttlSec, opts) {
 
   // Fetch (com timeout opcional via AbortController)
   let res;
-  if (opts.timeoutMs && typeof AbortController !== 'undefined') {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs);
-    try {
-      res = await fetch(url, { signal: ctrl.signal }).then(r => r.json());
-    } finally {
-      clearTimeout(timer);
+  try {
+    if (opts.timeoutMs && typeof AbortController !== 'undefined') {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs);
+      try {
+        res = await fetch(url, { signal: ctrl.signal }).then(r => r.json());
+      } finally {
+        clearTimeout(timer);
+      }
+    } else {
+      res = await fetch(url).then(r => r.json());
     }
-  } else {
-    res = await fetch(url).then(r => r.json());
+  } catch (err) {
+    // staleOnError: se a busca falhou (timeout/rede), devolve o ÚLTIMO cache salvo
+    // (mesmo VENCIDO) marcado com _stale:true, em vez de quebrar. Evita tela vazia.
+    if (opts.staleOnError) {
+      try {
+        const rawOld = localStorage.getItem(key);
+        if (rawOld) {
+          const old = JSON.parse(rawOld);
+          if (old && old.data) {
+            old.data._fromCache = true;
+            old.data._stale = true;
+            return old.data;
+          }
+        }
+      } catch (e) { /* sem cache pra cair — segue pro throw */ }
+    }
+    throw err;
   }
 
   // Só faz cache de respostas success — não cacheia erros
