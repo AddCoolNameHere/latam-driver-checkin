@@ -14,6 +14,8 @@
 <script src="theme.js?v=20260519a"></script>
 <script src="common.js?v=20260519a"></script>
 <link rel="stylesheet" href="theme.css?v=20260519a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }  :root {
     --c-success-bg: #ECFDF5;
@@ -1888,11 +1890,15 @@
   .user-pill .logout-link:hover { color: #EF4444; }
 
 </style>
+<link rel="stylesheet" href="sv-skin.css?v=1">
 </head>
 <body>
 
 <!-- APP (escondido até login) -->
 <div id="app-content" style="display:none;">
+
+<!-- Sidebar removida daqui: agora vem do sv-shell.js (fonte única + gating por
+     permissão), injetada após o login. Mesma sidebar comum de todas as páginas do portal. -->
 
 <div id="loader" class="loader-overlay">
   <div class="spinner"></div>
@@ -2129,6 +2135,11 @@
   }
 </script>
 
+<div class="sv-pagehead">
+  <h1>Visão geral da operação</h1>
+  <p>Frota LATAM em tempo real — quem está ok, onde, e o que precisa de ação</p>
+</div>
+
 <div class="filters">
   <span class="filter-label" data-i18n="filterCountry">País:</span>
   <button class="filter-chip active" data-country="all" onclick="setFilter('country', 'all')" data-i18n="all">Todos</button>
@@ -2224,8 +2235,7 @@
   </div>
   <div id="map"></div>
   <div class="map-legend">
-    <div class="legend-item"><span class="legend-emoji">🏠</span> <span data-i18n="legendHome">Casa</span></div>
-    <div class="legend-item"><span class="legend-emoji">🏨</span> <span data-i18n="legendHotel">Hotel</span></div>
+    <div class="legend-item"><span class="legend-ring"></span> <span>Hotel mode</span></div>
     <div class="legend-item"><span class="legend-dot" style="background:#4A9FE0; opacity:0.4;"></span> <span data-i18n="legendArea">Área de mapeamento</span></div>
     <div class="legend-item"><span class="legend-dot" style="background:#22C55E;"></span> <span data-i18n="legendRecent">Check-in nas últimas 24h</span></div>
     <div class="legend-item"><span class="legend-dot" style="background:#F59E0B;"></span> <span data-i18n="legendOld">Sem check-in &gt; 24h</span></div>
@@ -4193,9 +4203,9 @@ function renderMap(drivers) {
     // Ícone personalizado de base — círculo colorido com emoji do tipo
     const baseIcon = L.divIcon({
       className: 'driver-marker',
-      html: `<div style="width:22px;height:22px;background:${baseColor};border:2px solid var(--c-surface);border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;">${baseTypeIcon}</div>`,
-      iconSize: [22, 22],
-      iconAnchor: [11, 11],
+      html: `<div style="width:16px;height:16px;background:${baseColor};border:3px solid #fff;border-radius:50%;box-shadow:0 2px 5px rgba(14,23,38,0.4)${d.base.type === 'Hotel' ? ',0 0 0 3px rgba(79,70,229,0.55)' : ''};"></div>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
     });
 
     const marker = L.marker([d.base.lat, d.base.lng], { icon: baseIcon });
@@ -8503,5 +8513,7 @@ setLanguage(currentLang);
   </div>
 </div>
 
+<script src="sv-shell.js"></script>
+<script src="sv-enhance.js"></script>
 </body>
 </html>
