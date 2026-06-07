@@ -426,7 +426,7 @@
 
 <div class="print-toolbar" id="print-toolbar" style="display:none;">
   <span class="print-status" id="print-status">Loading…</span>
-  <button class="print-btn" id="print-btn" disabled onclick="window.print()">📄 Print / Save as PDF</button>
+  <button class="print-btn" id="print-btn" disabled onclick="window.print()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / Save as PDF</button>
 </div>
 
 <div id="deck" style="display:none;">
@@ -561,7 +561,7 @@
 <section class="slide">
   <div class="slide-header">
     <div>
-      <div class="slide-eyebrow">Scenario A · 🏆 Recommended (short term)</div>
+      <div class="slide-eyebrow"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><path d="M6 9a6 6 0 0 0 12 0V3H6z"/><path d="M6 4H3v2a3 3 0 0 0 3 3"/><path d="M18 4h3v2a3 3 0 0 1-3 3"/><path d="M9 21h6"/><path d="M12 17v4"/></svg>Scenario A · Recommended (short term)</div>
       <h2 class="slide-title">Unblock operations + targeted tweaks</h2>
       <div class="slide-subtitle">Fix admin/mech blockers · hotel mode Guillermo · expense audit Matías · groom Leandro</div>
     </div>
@@ -787,7 +787,7 @@
     </thead>
     <tbody>
       <tr><td>Baseline (status quo)</td><td class="metric">7</td><td class="metric">0.496</td><td class="metric">29</td><td class="metric">3,155</td><td class="metric">342</td><td class="metric">—</td><td class="metric">—</td><td><span class="pill pill-mid">Misses signals</span></td><td><span class="pill pill-mid">Reference</span></td></tr>
-      <tr class="winner"><td>A — Operational tweaks</td><td class="metric">7</td><td class="metric">0.496+</td><td class="metric">29</td><td class="metric">3,155</td><td class="metric">342</td><td class="metric">+US$ 200</td><td class="metric">US$ 0</td><td><span class="pill pill-ok">Full alignment</span></td><td><span class="pill pill-best">🏆 Start here</span></td></tr>
+      <tr class="winner"><td>A — Operational tweaks</td><td class="metric">7</td><td class="metric">0.496+</td><td class="metric">29</td><td class="metric">3,155</td><td class="metric">342</td><td class="metric">+US$ 200</td><td class="metric">US$ 0</td><td><span class="pill pill-ok">Full alignment</span></td><td><span class="pill pill-best"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M6 9a6 6 0 0 0 12 0V3H6z"/><path d="M6 4H3v2a3 3 0 0 0 3 3"/><path d="M18 4h3v2a3 3 0 0 1-3 3"/><path d="M9 21h6"/><path d="M12 17v4"/></svg>Start here</span></td></tr>
       <tr><td>B — Drop Mauricio</td><td class="metric">6</td><td class="metric">0.495</td><td class="metric">43</td><td class="metric">4,280</td><td class="metric">361</td><td class="metric">−US$ 1,500</td><td class="metric">US$ 1,400</td><td><span class="pill pill-ok">Honors signal</span></td><td><span class="pill pill-bad">Coverage breaks</span></td></tr>
       <tr><td>C — Drop Mauricio + Mendoza</td><td class="metric">7</td><td class="metric">0.499</td><td class="metric">35</td><td class="metric">3,409</td><td class="metric">334</td><td class="metric">US$ 0</td><td class="metric">US$ 2,400</td><td><span class="pill pill-ok">Honors signal</span></td><td><span class="pill pill-mid">BsAs gap</span></td></tr>
       <tr><td>D — Drop Mauricio + Mendoza + BsAs</td><td class="metric">8</td><td class="metric">0.501</td><td class="metric">35</td><td class="metric">3,409</td><td class="metric">334</td><td class="metric">+US$ 1,500</td><td class="metric">US$ 3,400</td><td><span class="pill pill-ok">Honors signal</span></td><td><span class="pill pill-mid">Safe but costly</span></td></tr>
@@ -841,7 +841,7 @@
   </div>
 
   <div class="recommend-banner">
-    <span class="check">✦</span>
+    <span class="check"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
     <div class="recommend-banner-text">
       <h3>Phased rollout — scale to 9 now, return to 7 / 9 vehicles in 60 days</h3>
       <strong>Absorb BsAs fleet today · structural cleanup once production is steady</strong>
@@ -1026,5 +1026,6 @@ function initPresentation() {
 
 </script>
 
+<script src="sv-shell.js"></script>
 </body>
 </html>

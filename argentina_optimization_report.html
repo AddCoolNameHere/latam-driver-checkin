@@ -278,8 +278,18 @@
     letter-spacing: 0.5px;
   }
   .caveat-box ul { list-style: none; padding: 0; margin: 0; }
-  .caveat-box li { padding: 3px 0; }
-  .caveat-box li::before { content: '⚠ '; color: var(--c-warn); }
+  .caveat-box li { padding: 3px 0 3px 20px; position: relative; }
+  .caveat-box li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 9px solid var(--c-warn);
+  }
 
   /* Markers Leaflet customizados */
   .marker-driver {
@@ -324,7 +334,7 @@
 <!-- TOOLBAR (oculta no print) -->
 <div class="print-toolbar" id="print-toolbar" style="display:none;">
   <span class="print-status" id="print-status">Carregando mapa...</span>
-  <button class="print-btn" id="print-btn" disabled onclick="window.print()">📄 Imprimir / Salvar PDF</button>
+  <button class="print-btn" id="print-btn" disabled onclick="window.print()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir / Salvar PDF</button>
 </div>
 
 <!-- RELATÓRIO -->
@@ -707,5 +717,6 @@ function onMapReady() {
 
 </script>
 
+<script src="sv-shell.js"></script>
 </body>
 </html>

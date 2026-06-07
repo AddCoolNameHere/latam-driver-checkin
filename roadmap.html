@@ -283,15 +283,15 @@
   </div>
 
   <div class="tabs">
-    <button class="tab active" data-view="roadmap" onclick="switchView('roadmap')">📍 Roadmap & checklist</button>
-    <button class="tab" data-view="deps" onclick="switchView('deps')">🔗 Fontes & dependências</button>
+    <button class="tab active" data-view="roadmap" onclick="switchView('roadmap')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Roadmap & checklist</button>
+    <button class="tab" data-view="deps" onclick="switchView('deps')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Fontes & dependências</button>
   </div>
 
   <!-- ROADMAP -->
   <div class="view active" id="view-roadmap">
 
     <div class="callout">
-      <div class="c-label">⚠ Por que esse plano mudou</div>
+      <div class="c-label"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Por que esse plano mudou</div>
       <p>A versão anterior tinha sido escrita <b>sem abrir o backend</b>. Reli o <code>Code udpt.gs</code> inteiro e corrigi 4 erros de base.</p>
       <details>
         <summary>Ver o que estava errado</summary>
@@ -305,7 +305,7 @@
     </div>
 
     <div class="next-box" id="next-box">
-      <div class="ico">🎯</div>
+      <div class="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
       <div>
         <div class="label">Próximo passo</div>
         <div class="step-phase" id="next-phase"></div>
@@ -505,6 +505,14 @@ let done = loadDone();
 let depFilter = 'all';
 let openDetails = {};
 
+// Ícones do "próximo passo" (chrome) — alvo enquanto há tarefa, troféu quando tudo concluído
+const ICO_TARGET = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+const ICO_DONE = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89 7 22l5-3 5 3-1.21-8.12"/></svg>';
+
+// Chevrons do expand/collapse (chrome)
+const CHEV_DOWN = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polyline points="6 9 12 15 18 9"/></svg>';
+const CHEV_RIGHT = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polyline points="9 18 15 12 9 6"/></svg>';
+
 function loadDone() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
   catch (e) { return {}; }
@@ -534,14 +542,14 @@ function renderNextStep() {
     const next = p.tasks.find(t => !done[t.id]);
     if (next) {
       box.style.display = '';
-      document.querySelector('#next-box .ico').textContent = '🎯';
+      document.querySelector('#next-box .ico').innerHTML = ICO_TARGET;
       document.getElementById('next-phase').textContent = 'Fase ' + p.n + ' · ' + p.title;
       document.getElementById('next-text').textContent = next.text;
       return;
     }
   }
   box.style.display = '';
-  document.querySelector('#next-box .ico').textContent = '🎉';
+  document.querySelector('#next-box .ico').innerHTML = ICO_DONE;
   document.getElementById('next-phase').textContent = '';
   document.getElementById('next-text').textContent = 'Tudo concluído! A DASHBOARD (HM) virou coadjuvante.';
 }
@@ -555,21 +563,21 @@ function taskHtml(tk) {
   let detail = '';
   if (hasDetail) {
     let inner = '';
-    if (tk.where) inner += `<div class="td-where">📍 <b>Onde:</b> ${tk.where}</div>`;
+    if (tk.where) inner += `<div class="td-where"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> <b>Onde:</b> ${tk.where}</div>`;
     if (tk.prompt) inner += `
       <div class="promptbox">
         <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" onclick="copyPrompt(event, '${tk.id}')">Copiar</button></div>
         <pre class="prompt" id="pr-${tk.id}">${tk.prompt.replace(/</g, '&lt;')}</pre>
       </div>`;
-    if (tk.verify) inner += `<div class="td-verify">✓ <b>Validar:</b> ${tk.verify}</div>`;
+    if (tk.verify) inner += `<div class="td-verify"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg> <b>Validar:</b> ${tk.verify}</div>`;
     detail = `
-      <button class="task-expand" type="button" onclick="toggleDetail('${tk.id}')"><span class="ar">${isOpen ? '▾' : '▸'}</span> ${isOpen ? 'menos' : 'detalhes & prompt'}</button>
+      <button class="task-expand" type="button" onclick="toggleDetail('${tk.id}')"><span class="ar">${isOpen ? CHEV_DOWN : CHEV_RIGHT}</span> ${isOpen ? 'menos' : 'detalhes & prompt'}</button>
       <div class="task-detail ${isOpen ? 'open' : ''}" id="d-${tk.id}">${inner}</div>`;
   }
   const num = tk.id.replace(/^f(\d)-(\d)$/, '$1.$2');
   return `
     <div class="task ${done[tk.id] ? 'checked' : ''}">
-      <div class="box" onclick="toggleTask('${tk.id}')">${done[tk.id] ? '✓' : ''}</div>
+      <div class="box" onclick="toggleTask('${tk.id}')">${done[tk.id] ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
       <div class="tmain">
         <div class="txt" onclick="toggleTask('${tk.id}')"><span class="tid">${num}</span>${tk.text}<span class="tbadges">${badges}</span></div>
         ${detail}
@@ -638,7 +646,7 @@ function toggleDetail(id) {
   const d = document.getElementById('d-' + id);
   const btn = d && d.previousElementSibling;
   if (d) d.classList.toggle('open', openDetails[id]);
-  if (btn) btn.innerHTML = `<span class="ar">${openDetails[id] ? '▾' : '▸'}</span> ${openDetails[id] ? 'menos' : 'detalhes & prompt'}`;
+  if (btn) btn.innerHTML = `<span class="ar">${openDetails[id] ? CHEV_DOWN : CHEV_RIGHT}</span> ${openDetails[id] ? 'menos' : 'detalhes & prompt'}`;
 }
 
 function copyPrompt(ev, id) {
@@ -648,10 +656,10 @@ function copyPrompt(ev, id) {
   const txt = el.textContent.trim();
   const btn = ev.currentTarget;
   const done2 = function () {
-    const old = btn.textContent;
-    btn.textContent = '✓ copiado';
+    const old = btn.innerHTML;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg> copiado';
     btn.classList.add('copied');
-    setTimeout(function () { btn.textContent = old; btn.classList.remove('copied'); }, 1600);
+    setTimeout(function () { btn.innerHTML = old; btn.classList.remove('copied'); }, 1600);
   };
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(txt).then(done2, function () {});
@@ -715,5 +723,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<script src="sv-shell.js"></script>
 </body>
 </html>

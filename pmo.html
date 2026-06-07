@@ -7,6 +7,7 @@
 <title>PMO Hub · LATAM · Aceolution</title>
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <link rel="stylesheet" href="theme.css?v=20260519a">
+<script src="auth.js?v=20260518b"></script>
 <script src="theme.js?v=20260519a"></script>
 <script src="common.js?v=20260519a"></script>
 <style>
@@ -19,60 +20,64 @@
     line-height: 1.5;
   }
 
-  /* HEADER */
-  header {
-    background: linear-gradient(135deg, #1E3A5F 0%, #2C5282 100%);
-    color: white;
-    border-bottom: 3px solid var(--c-accent);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  }
-  .header-inner {
+  /* PAGE HEAD (cabeçalho de página simples — a marca agora é a sidebar) */
+  .page-head {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 14px 20px;
+    padding: 22px 20px 4px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 14px;
     flex-wrap: wrap;
   }
-  .header-logo-wrap {
-    background: var(--c-surface);
-    padding: 8px 12px;
-    border-radius: 6px;
-    flex-shrink: 0;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  .page-head-text { flex: 1; min-width: 0; }
+  .page-head-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    line-height: 1.15;
+    color: var(--c-text);
   }
-  .header-logo { height: 32px; width: auto; display: block; }
-  .header-divider { width: 1px; height: 38px; background: rgba(255,255,255,0.2); }
-  .header-text { flex: 1; min-width: 0; }
-  .header-title { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: 0.3px; line-height: 1.2; }
-  .header-subtitle { font-size: 11px; opacity: 0.75; margin-top: 3px; font-weight: 400; letter-spacing: 0.2px; }
-  .header-right { display: flex; align-items: center; gap: 10px; }
+  .page-head-subtitle {
+    font-size: 13px;
+    color: var(--c-text-muted);
+    margin-top: 4px;
+    font-weight: 400;
+  }
+  .page-head-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .nav-link {
-    padding: 6px 14px;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 16px;
-    color: white;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    color: var(--c-text-muted);
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
     transition: all 0.15s;
   }
-  .nav-link:hover { background: var(--c-surface); color: var(--c-primary); border-color: white; }
+  .nav-link svg { display: block; }
+  .nav-link:hover { color: var(--c-primary); border-color: var(--c-accent); }
   .lang-toggle {
     display: flex;
     gap: 2px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 5px;
-    padding: 2px;
+    background: var(--c-bg-tint);
+    border: 1px solid var(--c-border);
+    border-radius: 999px;
+    padding: 3px;
   }
   .lang-toggle button {
     background: transparent;
     border: none;
-    color: rgba(255,255,255,0.65);
-    padding: 4px 10px;
-    border-radius: 3px;
+    color: var(--c-text-muted);
+    padding: 5px 11px;
+    border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
     cursor: pointer;
@@ -80,8 +85,8 @@
     letter-spacing: 0.5px;
   }
   .lang-toggle button.active {
-    background: var(--c-surface);
-    color: var(--c-primary-dark);
+    background: var(--c-primary);
+    color: #fff;
   }
 
   /* TABS */
@@ -117,7 +122,8 @@
     color: var(--c-primary);
     border-bottom-color: var(--c-primary);
   }
-  .tab-icon { font-size: 16px; }
+  .tab-icon { display: inline-flex; }
+  .tab-icon svg { display: block; }
 
   /* MAIN */
   main {
@@ -145,7 +151,8 @@
     align-items: center;
     gap: 8px;
   }
-  .card-title-icon { font-size: 18px; }
+  .card-title-icon { display: inline-flex; color: var(--c-primary); }
+  .card-title-icon svg { display: block; }
   .card-sub {
     font-size: 12px;
     color: var(--c-text-muted);
@@ -219,6 +226,9 @@
     transition: all 0.15s;
     user-select: none;
   }
+  .cat-chip { display: inline-flex; align-items: center; gap: 7px; }
+  .cat-chip svg, .comment-cat-badge svg { display: block; flex-shrink: 0; }
+  .comment-cat-badge { display: inline-flex; align-items: center; gap: 5px; }
   .cat-chip:hover { background: var(--c-surface); border-color: var(--c-border-strong); }
   .cat-chip.selected { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
   .cat-chip[data-cat="accident"] { background: #FEE2E2; color: #991B1B; }
@@ -344,10 +354,12 @@
     color: var(--c-text-muted);
   }
   .empty-state-icon {
-    font-size: 38px;
     opacity: 0.4;
     margin-bottom: 8px;
+    display: flex;
+    justify-content: center;
   }
+  .empty-state-icon svg { display: block; }
   .empty-state-text {
     font-size: 13px;
     font-style: italic;
@@ -361,7 +373,8 @@
     padding: 60px 30px;
     text-align: center;
   }
-  .placeholder-icon { font-size: 48px; opacity: 0.4; margin-bottom: 12px; }
+  .placeholder-icon { opacity: 0.4; margin-bottom: 12px; display: flex; justify-content: center; color: var(--c-text-muted); }
+  .placeholder-icon svg { display: block; }
   .placeholder-title {
     font-size: 18px;
     font-weight: 700;
@@ -419,40 +432,36 @@
 </head>
 <body>
 
-<header>
-  <div class="header-inner">
-    <div class="header-logo-wrap">
-      <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="header-logo" onerror="this.parentElement.innerHTML='<span style=&quot;font-weight:700;color:#1A365D;font-size:14px;&quot;>Aceolution</span>'">
-    </div>
-    <div class="header-divider"></div>
-    <div class="header-text">
-      <h1 class="header-title" data-i18n="appTitle">PMO Hub · LATAM</h1>
-      <div class="header-subtitle" data-i18n="appSubtitle">Comentários, escopos e alertas pra gestão da operação</div>
-    </div>
-    <div class="header-right">
-      <a href="dashboard.html" class="nav-link" data-i18n="navDashboard">← Dashboard</a>
-      <button class="nav-link" id="refresh-btn" style="cursor:pointer;font:inherit;" title="Atualizar" onclick="refreshPmoPage()">⟳</button>
-      <span class="lang-toggle">
-        <button class="active" data-lang="pt" onclick="setLang('pt')">PT</button>
-        <button data-lang="es" onclick="setLang('es')">ES</button>
-        <button data-lang="en" onclick="setLang('en')">EN</button>
-      </span>
-    </div>
+<div class="page-head">
+  <div class="page-head-text">
+    <h1 class="page-head-title" data-i18n="appTitle">PMO Hub · LATAM</h1>
+    <div class="page-head-subtitle" data-i18n="appSubtitle">Comentários, escopos e alertas pra gestão da operação</div>
   </div>
-</header>
+  <div class="page-head-right">
+    <a href="dashboard.html" class="nav-link" data-i18n="navDashboard">← Dashboard</a>
+    <button class="nav-link" id="refresh-btn" title="Atualizar" onclick="refreshPmoPage()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v5h-5"/></svg>
+    </button>
+    <span class="lang-toggle">
+      <button class="active" data-lang="pt" onclick="setLang('pt')">PT</button>
+      <button data-lang="es" onclick="setLang('es')">ES</button>
+      <button data-lang="en" onclick="setLang('en')">EN</button>
+    </span>
+  </div>
+</div>
 
 <div class="tabs-wrap">
   <nav class="tabs">
     <button class="tab active" data-tab="comments" onclick="setTab('comments')">
-      <span class="tab-icon">💬</span>
+      <span class="tab-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9.7 9.7 0 0 1-4-.9L3 21l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 21 11.5Z"/></svg></span>
       <span data-i18n="tabComments">Comentários</span>
     </button>
     <button class="tab" data-tab="scopes" onclick="setTab('scopes')">
-      <span class="tab-icon">📂</span>
+      <span class="tab-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg></span>
       <span data-i18n="tabScopes">Escopos</span>
     </button>
     <button class="tab" data-tab="alerts" onclick="setTab('alerts')">
-      <span class="tab-icon">🔔</span>
+      <span class="tab-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 0 0-12 0c0 6.5-2.5 8.5-2.5 8.5h17S18 15 18 8.5Z"/><path d="M13.7 20.5a2 2 0 0 1-3.4 0"/></svg></span>
       <span data-i18n="tabAlerts">Alertas</span>
     </button>
   </nav>
@@ -466,7 +475,7 @@
     <!-- Form de novo comentário -->
     <div class="card">
       <div class="card-title">
-        <span class="card-title-icon">✏️</span>
+        <span class="card-title-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></svg></span>
         <span data-i18n="newCommentTitle">Novo comentário</span>
       </div>
       <div class="card-sub" data-i18n="newCommentSub">
@@ -492,19 +501,24 @@
         <label data-i18n="categoryLabel">Categoria <span class="required">*</span></label>
         <div class="cat-chips" id="cat-chips">
           <button type="button" class="cat-chip" data-cat="accident">
-            🚨 <span data-i18n="catAccident">Acidente</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4Z"/><path d="M12 10v4M12 17.5h.01"/></svg>
+            <span data-i18n="catAccident">Acidente</span>
           </button>
           <button type="button" class="cat-chip" data-cat="conduct">
-            ⚠️ <span data-i18n="catConduct">Conduta</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2 19a1.8 1.8 0 0 0 1.6 2.7h16.8A1.8 1.8 0 0 0 22 19L13.7 4.3a1.9 1.9 0 0 0-3.4 0Z"/><path d="M12 9.5v4M12 17h.01"/></svg>
+            <span data-i18n="catConduct">Conduta</span>
           </button>
           <button type="button" class="cat-chip" data-cat="vehicle">
-            🛠 <span data-i18n="catVehicle">Veículo</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5a3.5 3.5 0 0 0-4.6 4.3L4 15.7a2 2 0 0 0 2.8 2.8l5.9-5.9a3.5 3.5 0 0 0 4.3-4.6l-2.2 2.2-2.3-.6-.6-2.3 2.2-2.2Z"/></svg>
+            <span data-i18n="catVehicle">Veículo</span>
           </button>
           <button type="button" class="cat-chip" data-cat="note">
-            📝 <span data-i18n="catNote">Observação</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h10l4 4v14H5V3Z"/><path d="M15 3v4h4"/><path d="M8 12h7M8 16h5"/></svg>
+            <span data-i18n="catNote">Observação</span>
           </button>
           <button type="button" class="cat-chip" data-cat="positive">
-            ✅ <span data-i18n="catPositive">Elogio</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <span data-i18n="catPositive">Elogio</span>
           </button>
         </div>
       </div>
@@ -524,7 +538,7 @@
     <!-- Lista de comentários -->
     <div class="card">
       <div class="card-title">
-        <span class="card-title-icon">📋</span>
+        <span class="card-title-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M9 12h6M9 16h4"/></svg></span>
         <span data-i18n="listTitle">Histórico de comentários</span>
         <span style="margin-left:auto;font-size:11px;font-weight:500;color:var(--c-text-muted);" id="list-count">—</span>
       </div>
@@ -546,7 +560,7 @@
 
       <div class="comments-list" id="comments-list">
         <div class="empty-state">
-          <div class="empty-state-icon">⏳</div>
+          <div class="empty-state-icon"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
           <div class="empty-state-text" data-i18n="loadingComments">Carregando...</div>
         </div>
       </div>
@@ -557,7 +571,7 @@
   <!-- ============ TAB: ESCOPOS ============ -->
   <section id="tab-scopes" class="hidden">
     <div class="placeholder-card">
-      <div class="placeholder-icon">📂</div>
+      <div class="placeholder-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg></div>
       <div class="placeholder-title" data-i18n="scopesSoonTitle">Em breve — Escopos por país</div>
       <div class="placeholder-text" data-i18n="scopesSoonText">
         Aqui você vai poder fazer upload dos escopos de cada país (Brasil, Argentina, Chile, Colombia, México, Peru). Versionado: cada upload mantém o histórico, e o último vira o "atual" pra consulta no dashboard.
@@ -568,7 +582,7 @@
   <!-- ============ TAB: ALERTAS ============ -->
   <section id="tab-alerts" class="hidden">
     <div class="placeholder-card">
-      <div class="placeholder-icon">🔔</div>
+      <div class="placeholder-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 0 0-12 0c0 6.5-2.5 8.5-2.5 8.5h17S18 15 18 8.5Z"/><path d="M13.7 20.5a2 2 0 0 1-3.4 0"/></svg></div>
       <div class="placeholder-title" data-i18n="alertsSoonTitle">Em breve — Central de alertas</div>
       <div class="placeholder-text" data-i18n="alertsSoonText">
         Lista unificada de coisas que precisam atenção: consertos chegando ao prazo (3 dias / 1 dia), pedidos de dinheiro pendentes, recibos novos sem revisão. Estrutura extensível pra adicionar mais alertas depois.
@@ -587,6 +601,22 @@
 <script>
 const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+};
+
+// SVG line icons (apresentação) — substituem emoji no chrome gerado por JS
+const _svg = (paths, size) => `<svg width="${size||38}" height="${size||38}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+const SVG_ICON = {
+  clock: _svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  alert: _svg('<path d="M12 4 2.5 20h19L12 4Z"/><path d="M12 10v4M12 17.5h.01"/>'),
+  chat:  _svg('<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9.7 9.7 0 0 1-4-.9L3 21l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 21 11.5Z"/>'),
+};
+// Ícones de categoria pro badge dos comentários (13px, herdam a cor do badge)
+const SVG_CAT = {
+  accident: _svg('<path d="M12 4 2.5 20h19L12 4Z"/><path d="M12 10v4M12 17.5h.01"/>', 13),
+  conduct:  _svg('<path d="M10.3 4.3 2 19a1.8 1.8 0 0 0 1.6 2.7h16.8A1.8 1.8 0 0 0 22 19L13.7 4.3a1.9 1.9 0 0 0-3.4 0Z"/><path d="M12 9.5v4M12 17h.01"/>', 13),
+  vehicle:  _svg('<path d="M14.5 5.5a3.5 3.5 0 0 0-4.6 4.3L4 15.7a2 2 0 0 0 2.8 2.8l5.9-5.9a3.5 3.5 0 0 0 4.3-4.6l-2.2 2.2-2.3-.6-.6-2.3 2.2-2.2Z"/>', 13),
+  note:     _svg('<path d="M5 3h10l4 4v14H5V3Z"/><path d="M15 3v4h4"/><path d="M8 12h7M8 16h5"/>', 13),
+  positive: _svg('<path d="M20 6 9 17l-5-5"/>', 13),
 };
 
 const I18N = {
@@ -943,7 +973,7 @@ async function submitComment() {
 
 async function loadComments() {
   const listEl = document.getElementById('comments-list');
-  listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-text">${t('loadingComments')}</div></div>`;
+  listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">${SVG_ICON.clock}</div><div class="empty-state-text">${t('loadingComments')}</div></div>`;
 
   try {
     const url = CONFIG.scriptUrl + '?action=getPMONotes&limit=200';
@@ -958,7 +988,7 @@ async function loadComments() {
     }
   } catch (err) {
     console.error('[PMO] Erro carregando comentários:', err);
-    listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠</div><div class="empty-state-text">${t('errorLoad')}</div></div>`;
+    listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">${SVG_ICON.alert}</div><div class="empty-state-text">${t('errorLoad')}</div></div>`;
   }
 }
 
@@ -991,11 +1021,10 @@ function renderCommentsList() {
   if (filtered.length === 0) {
     const isFiltered = search || filterDriver || filterCat;
     const msg = isFiltered ? t('emptyFiltered') : t('emptyComments');
-    listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">💬</div><div class="empty-state-text">${msg}</div></div>`;
+    listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">${SVG_ICON.chat}</div><div class="empty-state-text">${msg}</div></div>`;
     return;
   }
 
-  const catEmoji = { accident: '🚨', conduct: '⚠️', vehicle: '🛠', note: '📝', positive: '✅' };
   const catKey = { accident: 'catAccident', conduct: 'catConduct', vehicle: 'catVehicle', note: 'catNote', positive: 'catPositive' };
 
   listEl.innerHTML = filtered.map(c => {
@@ -1004,7 +1033,7 @@ function renderCommentsList() {
     const catLabel = t(catKey[cat] || 'catNote');
     return `<div class="comment-card" data-cat="${escapeHtml(cat)}">
       <div class="comment-header">
-        <span class="comment-cat-badge" data-cat="${escapeHtml(cat)}">${catEmoji[cat] || '📝'} ${escapeHtml(catLabel)}</span>
+        <span class="comment-cat-badge" data-cat="${escapeHtml(cat)}">${SVG_CAT[cat] || SVG_CAT.note} ${escapeHtml(catLabel)}</span>
         <span class="comment-driver">${escapeHtml(c.driverName || '—')}</span>
         <span class="comment-meta">${escapeHtml(c.author || '—')} · ${escapeHtml(created)}</span>
       </div>
@@ -1053,11 +1082,22 @@ function refreshPmoPage() {
 // Init
 // ================================================================
 
-applyI18n();
-loadSavedAuthor();
-loadDrivers();
-loadComments();
+// Login real (gate) + sessão SSO. Boot só roda após login → a sidebar (sv-shell) monta.
+document.addEventListener('DOMContentLoaded', () => {
+  injectLogin({
+    title: 'PMO Hub',
+    sub: 'Acesso interno',
+    onSuccess: () => {
+      applyI18n();
+      loadSavedAuthor();
+      loadDrivers();
+      loadComments();
+    },
+  });
+});
 </script>
+
+<script src="sv-shell.js"></script>
 
 </body>
 </html>
