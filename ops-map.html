@@ -8,7 +8,7 @@
 <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
 <script src="auth.js?v=20260608"></script>
 <script src="theme.js?v=20260608"></script>
-<script src="common.js?v=20260608"></script>
+<script src="common.js?v=20260608b"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="theme.css?v=20260608">
 <style>
@@ -621,7 +621,7 @@ function startApp(user) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  injectLogin({ title: 'Mapa de Operações', sub: 'Faça login para acessar', lang: currentLang, onSuccess: startApp });
+  injectLogin({ title: 'Mapa de Operações', sub: 'Acesso restrito a administradores', lang: currentLang, adminGate: true, onSuccess: startApp });
 });
 
 // =================================================================

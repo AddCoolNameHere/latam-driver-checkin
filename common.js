@@ -144,15 +144,31 @@ const ACE_LOGIN_I18N = {
  * @param {function} opts.onSuccess - callback(user) — chamado quando logado com sucesso
  * @param {string} [opts.lang] - 'pt' | 'es' | 'en' (default 'pt')
  * @param {string} [opts.superAdminGate] - se setado, só esse username (lowercase) passa
+ * @param {boolean} [opts.adminGate] - se true, só usuários em ADMIN_USERNAMES (isAdmin) passam
  */
 function injectLogin(opts) {
   const lang = opts.lang || 'pt';
   const i18n = ACE_LOGIN_I18N[lang] || ACE_LOGIN_I18N.pt;
 
-  // Auto-login se sessão válida (e passa do superAdminGate se aplicável)
+  // Gate de acesso: superAdminGate (username específico) > adminGate (isAdmin) > livre.
+  // Reaproveitável; quando houver sistema de cargos, dá pra estender aqui (ex: opts.requireRole).
+  function gatePasses(username) {
+    const u = String(username || '').toLowerCase();
+    if (opts.superAdminGate) return u === String(opts.superAdminGate).toLowerCase();
+    if (opts.adminGate) return (typeof isAdmin === 'function') && isAdmin(u);
+    return true;
+  }
+  const GATE_DENIED = {
+    pt: 'Acesso restrito a administradores',
+    es: 'Acceso restringido a administradores',
+    en: 'Restricted to administrators',
+  };
+  const deniedMsg = opts.superAdminGate ? 'Acesso restrito ao super admin' : (GATE_DENIED[lang] || GATE_DENIED.pt);
+
+  // Auto-login se sessão válida (e passa do gate se aplicável)
   const saved = (typeof loadSession === 'function') ? loadSession() : null;
   if (saved) {
-    if (!opts.superAdminGate || String(saved.username).toLowerCase() === opts.superAdminGate.toLowerCase()) {
+    if (gatePasses(saved.username)) {
       Promise.resolve().then(() => opts.onSuccess(saved));
       return;
     }
@@ -207,9 +223,9 @@ function injectLogin(opts) {
         btn.disabled = false; btn.textContent = i18n.submit;
         return;
       }
-      // Super admin gate
-      if (opts.superAdminGate && String(user.username).toLowerCase() !== opts.superAdminGate.toLowerCase()) {
-        err.textContent = 'Acesso restrito ao super admin';
+      // Gate de acesso (super admin / admin)
+      if (!gatePasses(user.username)) {
+        err.textContent = deniedMsg;
         err.classList.add('visible');
         btn.disabled = false; btn.textContent = i18n.submit;
         return;
