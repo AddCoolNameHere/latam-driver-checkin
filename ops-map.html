@@ -264,9 +264,24 @@
   }
   .modal-overlay.show { display: flex; }
   .modal-card {
+    position: relative;
     background: var(--c-surface); border-radius: 14px;
     padding: 24px; width: 100%; max-width: 440px;
     box-shadow: var(--shadow-lg);
+  }
+  .modal-loading {
+    position: absolute; inset: 0; border-radius: 14px;
+    background: rgba(255,255,255,0.93);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; z-index: 5;
+    color: var(--c-text-muted); font-size: 13px; font-weight: 600; text-align: center;
+  }
+  [data-theme="dark"] .modal-loading { background: rgba(30,41,59,0.93); }
+  .modal-loading.show { display: flex; }
+  .mini-spin {
+    display: inline-block; width: 13px; height: 13px; vertical-align: -2px;
+    border: 2px solid rgba(255,255,255,0.45); border-top-color: #fff; border-radius: 50%;
+    animation: spin 0.7s linear infinite;
   }
   .modal-title { font-size: 17px; font-weight: 700; color: var(--c-primary-dark); margin-bottom: 4px; }
   .modal-sub { font-size: 13px; color: var(--c-text-muted); margin-bottom: 18px; }
@@ -384,6 +399,10 @@
 <!-- Modal de upload -->
 <div class="modal-overlay" id="upload-modal">
   <div class="modal-card">
+    <div class="modal-loading" id="modal-loading">
+      <div class="spinner"></div>
+      <span id="modal-loading-text">Salvando…</span>
+    </div>
     <div class="modal-title" data-i18n="modalTitle">Subir mapa do MyMaps</div>
     <div class="modal-sub" data-i18n="modalSub">Exporte o MyMaps como KML/KMZ e selecione o mês que ele representa.</div>
     <div class="modal-fileinfo" id="modal-fileinfo"></div>
@@ -472,6 +491,8 @@ const I18N = {
     storeLocal: 'Modo local: os MyMaps ficam só neste navegador. Reimplante o backend (v5.42) pra compartilhar via Drive.',
     storeDrive: '', uploaded: 'MyMaps salvo', uploadFail: 'Falha ao salvar o MyMaps',
     parseFail: 'Não consegui ler o arquivo (KML/KMZ inválido)', monthRequired: 'Escolha o mês',
+    reading: 'Lendo arquivo…', saving: 'Salvando MyMaps…',
+    saveTimeout: 'Demorou demais — o arquivo pode estar muito grande ou a conexão lenta. Tenta de novo.',
     home: 'Casa', currentPos: 'Posição atual', lastSeen: 'Último check-in', vid: 'VID',
     noVid: 'sem VID', noCheckin: 'Sem check-in recente', atHome: 'Em casa',
     didNotMap: 'Não mapeou hoje', distHome: 'da casa', hoursAgo: 'h atrás', dayAgo: 'd atrás',
@@ -496,6 +517,8 @@ const I18N = {
     storeLocal: 'Modo local: los MyMaps quedan solo en este navegador. Reimplanta el backend (v5.42) para compartir vía Drive.',
     storeDrive: '', uploaded: 'MyMaps guardado', uploadFail: 'Error al guardar el MyMaps',
     parseFail: 'No pude leer el archivo (KML/KMZ inválido)', monthRequired: 'Elige el mes',
+    reading: 'Leyendo archivo…', saving: 'Guardando MyMaps…',
+    saveTimeout: 'Tardó demasiado — el archivo puede ser muy grande o la conexión lenta. Intenta de nuevo.',
     home: 'Casa', currentPos: 'Posición actual', lastSeen: 'Último check-in', vid: 'VID',
     noVid: 'sin VID', noCheckin: 'Sin check-in reciente', atHome: 'En casa',
     didNotMap: 'No mapeó hoy', distHome: 'de la casa', hoursAgo: 'h atrás', dayAgo: 'd atrás',
@@ -520,6 +543,8 @@ const I18N = {
     storeLocal: 'Local mode: MyMaps stay in this browser only. Redeploy the backend (v5.42) to share via Drive.',
     storeDrive: '', uploaded: 'MyMaps saved', uploadFail: 'Failed to save MyMaps',
     parseFail: 'Could not read file (invalid KML/KMZ)', monthRequired: 'Pick a month',
+    reading: 'Reading file…', saving: 'Saving MyMaps…',
+    saveTimeout: 'Took too long — the file may be too large or the connection slow. Try again.',
     home: 'Home', currentPos: 'Current position', lastSeen: 'Last check-in', vid: 'VID',
     noVid: 'no VID', noCheckin: 'No recent check-in', atHome: 'At home',
     didNotMap: 'Did not map today', distHome: 'from home', hoursAgo: 'h ago', dayAgo: 'd ago',
@@ -1108,7 +1133,13 @@ async function onFilePicked(e) {
   const file = e.target.files && e.target.files[0];
   e.target.value = '';   // reseta pra permitir re-upload do mesmo arquivo
   if (!file) return;
-  showToast(t('loading'), '');
+
+  const upBtn = document.getElementById('upload-btn');
+  const upBtnHtml = upBtn.innerHTML;
+  upBtn.disabled = true;
+  upBtn.innerHTML = `<span class="mini-spin"></span> <span>${t('reading')}</span>`;
+  // dá um tick pro browser pintar o estado antes do parse (que pode travar a UI em arquivo grande)
+  await new Promise(r => setTimeout(r, 30));
   try {
     const geo = await parseMapFile(file);
     pendingUpload = { geojson: geo, filename: file.name, featureCount: (geo.features || []).length };
@@ -1118,11 +1149,22 @@ async function onFilePicked(e) {
     mInput.value = state.selectedMonth[state.country] || defaultMonthKey();
     document.getElementById('modal-label').value = '';
     document.getElementById('modal-err').textContent = '';
+    showModalLoading(false);
     openModal();
   } catch (err) {
     console.error('[OpsMap] parse erro:', err);
     showToast(t('parseFail'), 'error');
+  } finally {
+    upBtn.disabled = false;
+    upBtn.innerHTML = upBtnHtml;
   }
+}
+
+function showModalLoading(on, text) {
+  const el = document.getElementById('modal-loading');
+  if (!el) return;
+  if (on && text) document.getElementById('modal-loading-text').textContent = text;
+  el.classList.toggle('show', !!on);
 }
 
 async function doSaveUpload() {
@@ -1136,7 +1178,12 @@ async function doSaveUpload() {
   if (existing && !confirm(t('confirmReplace'))) return;
 
   const saveBtn = document.getElementById('modal-save');
+  const saveBtnHtml = saveBtn.innerHTML;
   saveBtn.disabled = true;
+  document.getElementById('modal-cancel').disabled = true;
+  saveBtn.innerHTML = `<span class="mini-spin"></span> <span>${t('save')}</span>`;
+  document.getElementById('modal-err').textContent = '';
+  showModalLoading(true, t('saving'));
   try {
     const res = await MapStore.save(code, monthKey, label || monthLabel(monthKey), pendingUpload.filename, pendingUpload.geojson, currentUser);
     if (res && res.success === false) throw new Error(res.error || 'backend');
@@ -1160,10 +1207,14 @@ async function doSaveUpload() {
     showToast(t('uploaded') + (res && res.local ? ' (local)' : ''), 'success');
   } catch (err) {
     console.error('[OpsMap] save erro:', err);
-    document.getElementById('modal-err').textContent = t('uploadFail') + ': ' + err.message;
+    const msg = (err && err.message === 'timeout') ? t('saveTimeout') : (t('uploadFail') + ': ' + (err.message || ''));
+    document.getElementById('modal-err').textContent = msg;
     showToast(t('uploadFail'), 'error');
   } finally {
+    showModalLoading(false);
     saveBtn.disabled = false;
+    saveBtn.innerHTML = saveBtnHtml;
+    document.getElementById('modal-cancel').disabled = false;
   }
 }
 
@@ -1233,11 +1284,18 @@ const MapStore = {
         geojson: JSON.stringify(geojson),
       };
       let res;
+      const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      const timer = ctrl ? setTimeout(() => ctrl.abort(), 120000) : null;
       try {
-        res = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
+        const opts = { method: 'POST', body: JSON.stringify(payload) };
+        if (ctrl) opts.signal = ctrl.signal;
+        res = await fetch(CONFIG.scriptUrl, opts).then(r => r.json());
       } catch (e) {
-        // opaque/erro de rede — tenta confirmar relistando
+        if (e && e.name === 'AbortError') throw new Error('timeout');
+        // opaque/erro de rede (não-abort) — assume aceito; o reload confirma via listMyMaps
         res = { success: true };
+      } finally {
+        if (timer) clearTimeout(timer);
       }
       return res || { success: true };
     } else {
