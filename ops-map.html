@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de Operações · Aceolution LATAM</title>
+<link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
+<!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
+<script src="auth.js?v=20260608"></script>
+<script src="theme.js?v=20260608"></script>
+<script src="common.js?v=20260608"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="theme.css?v=20260608">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --st-active:   #16A34A;   /* check-in recente */
+    --st-stale:    #94A3B8;   /* sem check-in recente (na casa) */
+    --st-dnm:      #CA8A04;    /* fez check-in mas não mapeou */
+    --plan-color:  #7C3AED;   /* overlay do MyMaps (plano do mês) */
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- Tabs de país ---- */
+  .country-tabs {
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+    display: flex;
+    padding: 0 20px;
+    gap: 4px;
+    overflow-x: auto;
+  }
+  .country-tab {
+    background: none; border: none;
+    padding: 13px 18px;
+    font-size: 14px; font-weight: 500;
+    color: var(--c-text-muted);
+    cursor: pointer; font-family: inherit;
+    border-bottom: 2px solid transparent;
+    display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .country-tab:hover { color: var(--c-primary); }
+  .country-tab.active {
+    color: var(--c-primary-dark);
+    border-bottom-color: var(--c-accent);
+    font-weight: 600;
+  }
+  .country-tab .flag { font-size: 16px; }
+  .country-tab .tab-count {
+    font-size: 11px; font-weight: 600;
+    background: var(--c-bg-tint); color: var(--c-text-muted);
+    border-radius: 10px; padding: 1px 7px;
+  }
+
+  /* ---- Toolbar ---- */
+  .ops-toolbar {
+    display: flex; align-items: center; gap: 14px;
+    flex-wrap: wrap;
+    padding: 12px 20px;
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+  }
+  .tb-group { display: flex; align-items: center; gap: 8px; }
+  .tb-sep { width: 1px; height: 24px; background: var(--c-border); }
+  .tb-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--c-text-muted);
+  }
+  .tb-select, .tb-search {
+    border: 1px solid var(--c-border); border-radius: 8px;
+    padding: 7px 10px; font-size: 13px; font-family: inherit;
+    background: var(--c-surface); color: var(--c-text);
+  }
+  .tb-search { min-width: 200px; }
+  .tb-select:focus, .tb-search:focus {
+    outline: none; border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(74,159,224,0.15);
+  }
+  .tb-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--c-border); border-radius: 8px;
+    padding: 7px 13px; font-size: 13px; font-weight: 600;
+    color: var(--c-text-muted); background: var(--c-surface);
+    cursor: pointer; font-family: inherit;
+    transition: all 0.15s;
+  }
+  .tb-btn:hover { background: var(--c-bg-tint); color: var(--c-primary); border-color: var(--c-primary); }
+  .tb-btn.primary { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+  .tb-btn.primary:hover { background: var(--c-primary-dark); border-color: var(--c-primary-dark); }
+  .tb-btn svg { width: 15px; height: 15px; }
+
+  /* Toggles de camada (chips) */
+  .layer-toggle {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid var(--c-border); border-radius: 999px;
+    padding: 6px 12px; font-size: 12.5px; font-weight: 600;
+    color: var(--c-text-muted); background: var(--c-surface);
+    cursor: pointer; user-select: none;
+    transition: all 0.15s;
+  }
+  .layer-toggle .dot { width: 11px; height: 11px; border-radius: 3px; }
+  .layer-toggle.cars  .dot { background: var(--st-active); border-radius: 50%; }
+  .layer-toggle.homes .dot { background: var(--c-text-muted); border-radius: 50%; }
+  .layer-toggle.plan  .dot { background: var(--plan-color); }
+  .layer-toggle.off { opacity: 0.45; }
+  .layer-toggle:hover { border-color: var(--c-primary); }
+  .layer-toggle svg { width: 14px; height: 14px; }
+
+  .ops-spacer { flex: 1; }
+  .counts {
+    display: flex; gap: 16px; font-size: 12px; color: var(--c-text-muted);
+  }
+  .counts b { color: var(--c-primary-dark); font-size: 14px; }
+
+  /* Banner de modo de storage */
+  .store-banner {
+    display: none;
+    align-items: center; gap: 8px;
+    padding: 8px 20px; font-size: 12.5px;
+    background: #FEF3C7; color: #78350F;
+    border-bottom: 1px solid #FDE68A;
+  }
+  .store-banner.show { display: flex; }
+  .store-banner svg { width: 15px; height: 15px; flex-shrink: 0; }
+  [data-theme="dark"] .store-banner { background: #422006; color: #FDE68A; border-color: #713f12; }
+
+  /* ---- Corpo: mapa + painel ---- */
+  .ops-body {
+    display: flex;
+    height: calc(100vh - 196px);
+    min-height: 460px;
+  }
+  #map { flex: 1; height: 100%; background: var(--c-surface); }
+
+  .side-panel {
+    width: 330px;
+    border-left: 1px solid var(--c-border);
+    background: var(--c-surface);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .side-head {
+    padding: 12px 14px; border-bottom: 1px solid var(--c-border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .side-title { font-size: 13px; font-weight: 700; color: var(--c-primary-dark); }
+  .side-list { flex: 1; overflow-y: auto; }
+  .side-empty { padding: 24px 16px; text-align: center; color: var(--c-text-dim); font-size: 13px; }
+
+  .driver-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; cursor: pointer;
+    border-bottom: 1px solid var(--c-border);
+    transition: background 0.12s;
+  }
+  .driver-row:hover { background: var(--c-bg-tint); }
+  .driver-row .status-dot {
+    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+  }
+  .status-dot.active { background: var(--st-active); }
+  .status-dot.stale  { background: var(--st-stale); }
+  .status-dot.dnm    { background: var(--st-dnm); }
+  .driver-row-main { flex: 1; min-width: 0; }
+  .driver-row-name {
+    font-size: 13px; font-weight: 600; color: var(--c-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .driver-row-sub { font-size: 11px; color: var(--c-text-muted); margin-top: 1px; }
+  .vid-badge {
+    font-size: 10.5px; font-weight: 700; color: var(--c-primary);
+    background: var(--c-bg-tint); border-radius: 6px;
+    padding: 2px 7px; flex-shrink: 0;
+  }
+  .vid-badge.none { color: var(--c-text-dim); background: transparent; }
+
+  .side-toggle-btn {
+    background: none; border: 1px solid var(--c-border);
+    border-radius: 6px; width: 26px; height: 26px;
+    cursor: pointer; color: var(--c-text-muted);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .side-toggle-btn:hover { color: var(--c-primary); border-color: var(--c-primary); }
+  .ops-body.panel-collapsed .side-panel { width: 0; border-left: none; }
+
+  /* ---- Loader ---- */
+  .map-loader {
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,0.82);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+    color: var(--c-text-muted); font-size: 14px; z-index: 1200;
+  }
+  [data-theme="dark"] .map-loader { background: rgba(15,23,42,0.82); }
+  .map-loader.hidden { display: none; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--c-border); border-top-color: var(--c-primary);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .map-shell { position: relative; flex: 1; height: 100%; }
+
+  /* ---- Legend ---- */
+  .map-legend {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    padding: 9px 20px;
+    font-size: 12px; color: var(--c-text-muted);
+    background: var(--c-surface); border-top: 1px solid var(--c-border);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 13px; height: 13px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.12); }
+  .legend-swatch.sq { border-radius: 3px; }
+
+  /* ---- Markers ---- */
+  .ace-marker { background: transparent; border: none; }
+  .vid-marker {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px 3px 6px;
+    border-radius: 13px; border: 2px solid #fff;
+    color: #fff; font-size: 11px; font-weight: 700;
+    white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    line-height: 1;
+  }
+  .vid-marker svg { width: 13px; height: 13px; }
+  .vid-marker.active { background: var(--st-active); }
+  .vid-marker.stale  { background: var(--st-stale); }
+  .vid-marker.dnm    { background: var(--st-dnm); }
+  .home-marker {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--c-surface); border: 2px solid var(--c-text-muted);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--c-text-muted);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  }
+  .home-marker svg { width: 12px; height: 12px; }
+
+  /* ---- Popups ---- */
+  .leaflet-popup-content { margin: 12px 14px; font-size: 13px; min-width: 210px; }
+  .popup-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--c-primary-dark); }
+  .popup-row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; color: var(--c-text-muted); }
+  .popup-row strong { color: var(--c-text); font-weight: 600; }
+  .popup-tag {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.4px;
+    margin-bottom: 4px;
+  }
+  .popup-tag.active { background: #DCFCE7; color: #14532D; }
+  .popup-tag.stale  { background: #F1F5F9; color: #475569; }
+  .popup-tag.dnm    { background: #FEF3C7; color: #78350F; }
+  .popup-link { color: var(--c-primary); text-decoration: none; font-weight: 600; }
+
+  /* ---- Modal de upload ---- */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 10001;
+    background: rgba(15,23,42,0.5);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-card {
+    background: var(--c-surface); border-radius: 14px;
+    padding: 24px; width: 100%; max-width: 440px;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal-title { font-size: 17px; font-weight: 700; color: var(--c-primary-dark); margin-bottom: 4px; }
+  .modal-sub { font-size: 13px; color: var(--c-text-muted); margin-bottom: 18px; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--c-text-muted); margin-bottom: 6px; }
+  .modal-field input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--c-border);
+    border-radius: 8px; font-size: 14px; font-family: inherit;
+    background: var(--c-surface); color: var(--c-text);
+  }
+  .modal-field input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
+  .modal-fileinfo {
+    background: var(--c-bg-tint); border-radius: 8px; padding: 10px 12px;
+    font-size: 12.5px; color: var(--c-text); margin-bottom: 14px;
+  }
+  .modal-fileinfo .fi-meta { color: var(--c-text-muted); font-size: 11.5px; margin-top: 3px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+  .modal-err { color: var(--c-danger); font-size: 12.5px; min-height: 16px; margin-bottom: 6px; }
+
+  /* Toast */
+  .ops-toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--c-text); color: var(--c-surface);
+    padding: 11px 20px; border-radius: 10px; font-size: 13px; font-weight: 500;
+    box-shadow: var(--shadow-lg); z-index: 10002;
+    opacity: 0; pointer-events: none; transition: all 0.25s;
+  }
+  .ops-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .ops-toast.success { background: var(--c-success); color: #fff; }
+  .ops-toast.error { background: var(--c-danger); color: #fff; }
+
+  @media (max-width: 880px) {
+    .ops-body { flex-direction: column; height: auto; }
+    .map-shell { height: 58vh; min-height: 380px; }
+    .side-panel { width: 100%; max-height: 320px; border-left: none; border-top: 1px solid var(--c-border); }
+    .ops-body.panel-collapsed .side-panel { width: 100%; max-height: 0; }
+    .counts { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app-content" style="display:none;">
+
+  <nav class="country-tabs" id="country-tabs"></nav>
+
+  <div class="store-banner" id="store-banner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4Z"/><path d="M12 10v4M12 17.5h.01"/></svg>
+    <span id="store-banner-text"></span>
+  </div>
+
+  <div class="ops-toolbar">
+    <div class="tb-group">
+      <span class="tb-label" data-i18n="monthLabel">Mês (MyMaps)</span>
+      <select class="tb-select" id="month-select"><option data-i18n="noMaps">Nenhum mapa</option></select>
+      <button class="tb-btn primary" id="upload-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>
+        <span data-i18n="uploadBtn">Subir MyMaps</span>
+      </button>
+      <input type="file" id="file-input" accept=".kml,.kmz,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz" style="display:none">
+    </div>
+
+    <div class="tb-sep"></div>
+
+    <div class="tb-group">
+      <span class="layer-toggle cars" id="tg-cars">
+        <span class="dot"></span><span data-i18n="layerCars">VIDs / posição</span>
+      </span>
+      <span class="layer-toggle homes off" id="tg-homes">
+        <span class="dot"></span><span data-i18n="layerHomes">Casas</span>
+      </span>
+      <span class="layer-toggle plan" id="tg-plan">
+        <span class="dot"></span><span data-i18n="layerPlan">Plano do mês</span>
+      </span>
+    </div>
+
+    <div class="ops-spacer"></div>
+
+    <div class="tb-group">
+      <input type="search" class="tb-search" id="search-input" data-i18n-ph="searchPh" placeholder="Buscar motorista ou VID…">
+    </div>
+
+    <div class="counts" id="counts"></div>
+  </div>
+
+  <div class="ops-body" id="ops-body">
+    <div class="map-shell">
+      <div id="map"></div>
+      <div class="map-loader" id="map-loader">
+        <div class="spinner"></div>
+        <div data-i18n="loading">Carregando…</div>
+      </div>
+    </div>
+    <aside class="side-panel" id="side-panel">
+      <div class="side-head">
+        <span class="side-title" data-i18n="sideTitle">Motoristas & VIDs</span>
+        <button class="side-toggle-btn" id="side-toggle" title="Recolher painel" aria-label="Recolher painel">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <div class="side-list" id="side-list"></div>
+    </aside>
+  </div>
+
+  <div class="map-legend">
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--st-active);"></span> <span data-i18n="legActive">Ativo (check-in recente)</span></div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--st-dnm);"></span> <span data-i18n="legDnm">Não mapeou hoje</span></div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--st-stale);"></span> <span data-i18n="legStale">Sem check-in (mostrado na casa)</span></div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--c-surface);border-color:var(--c-text-muted);"></span> <span data-i18n="legHome">Casa do motorista</span></div>
+    <div class="legend-item"><span class="legend-swatch sq" style="background:var(--plan-color);"></span> <span data-i18n="legPlan">Plano do mês (MyMaps)</span></div>
+  </div>
+
+</div><!-- /#app-content -->
+
+<!-- Modal de upload -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal-card">
+    <div class="modal-title" data-i18n="modalTitle">Subir mapa do MyMaps</div>
+    <div class="modal-sub" data-i18n="modalSub">Exporte o MyMaps como KML/KMZ e selecione o mês que ele representa.</div>
+    <div class="modal-fileinfo" id="modal-fileinfo"></div>
+    <div class="modal-field">
+      <label data-i18n="modalMonth">Mês de referência</label>
+      <input type="month" id="modal-month">
+    </div>
+    <div class="modal-field">
+      <label data-i18n="modalLabel">Rótulo (opcional)</label>
+      <input type="text" id="modal-label" data-i18n-ph="modalLabelPh" placeholder="Ex.: Coleta Junho/2026">
+    </div>
+    <div class="modal-err" id="modal-err"></div>
+    <div class="modal-actions">
+      <button class="tb-btn" id="modal-cancel" data-i18n="cancel">Cancelar</button>
+      <button class="tb-btn primary" id="modal-save" data-i18n="save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="ops-toast" id="ops-toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+// =================================================================
+// CONFIG
+// =================================================================
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  activeHours: 36,   // janela pra considerar um check-in "recente"
+};
+
+// Metadados por país (centro/zoom/flag). Países não listados ganham fallback.
+const COUNTRY_META = {
+  AR: { name: 'Argentina', flag: '🇦🇷', center: [-38, -63], zoom: 4 },
+  CO: { name: 'Colombia',  flag: '🇨🇴', center: [4.5, -73], zoom: 5 },
+  BR: { name: 'Brazil',    flag: '🇧🇷', center: [-14, -51], zoom: 4 },
+  PE: { name: 'Peru',      flag: '🇵🇪', center: [-9.2, -75], zoom: 5 },
+  CL: { name: 'Chile',     flag: '🇨🇱', center: [-35, -71], zoom: 4 },
+  MX: { name: 'Mexico',    flag: '🇲🇽', center: [23, -102], zoom: 4 },
+  EC: { name: 'Ecuador',   flag: '🇪🇨', center: [-1.5, -78], zoom: 6 },
+  UY: { name: 'Uruguay',   flag: '🇺🇾', center: [-32.5, -56], zoom: 6 },
+  PY: { name: 'Paraguay',  flag: '🇵🇾', center: [-23.3, -58], zoom: 6 },
+  BO: { name: 'Bolivia',   flag: '🇧🇴', center: [-17, -65], zoom: 5 },
+};
+// nome (lowercase) -> código
+const NAME_TO_CODE = {};
+Object.keys(COUNTRY_META).forEach(code => {
+  NAME_TO_CODE[COUNTRY_META[code].name.toLowerCase()] = code;
+});
+const EXTRA_NAMES = { argentina: 'AR', colombia: 'CO', brasil: 'BR', brazil: 'BR', peru: 'PE',
+  chile: 'CL', mexico: 'MX', méxico: 'MX', ecuador: 'EC', uruguay: 'UY', uruguai: 'UY',
+  paraguay: 'PY', paraguai: 'PY', bolivia: 'BO', bolívia: 'BO' };
+Object.assign(NAME_TO_CODE, EXTRA_NAMES);
+const PREFERRED_ORDER = ['AR', 'CO', 'BR', 'PE', 'CL', 'MX'];
+
+function countryCodeOf(name) {
+  const n = String(name || '').trim().toLowerCase();
+  if (NAME_TO_CODE[n]) return NAME_TO_CODE[n];
+  // tenta match parcial (ex: "argentina " com sufixos)
+  for (const key in NAME_TO_CODE) { if (n.indexOf(key) === 0) return NAME_TO_CODE[key]; }
+  return n ? n.slice(0, 2).toUpperCase() : '??';
+}
+function metaOf(code) {
+  return COUNTRY_META[code] || { name: code, flag: '🏳️', center: [-15, -60], zoom: 4 };
+}
+
+// =================================================================
+// i18n (pt/es/en)
+// =================================================================
+let currentLang = localStorage.getItem('preferredLang') || 'pt';
+const I18N = {
+  pt: {
+    monthLabel: 'Mês (MyMaps)', noMaps: 'Nenhum mapa', uploadBtn: 'Subir MyMaps',
+    layerCars: 'VIDs / posição', layerHomes: 'Casas', layerPlan: 'Plano do mês',
+    searchPh: 'Buscar motorista ou VID…', loading: 'Carregando…',
+    sideTitle: 'Motoristas & VIDs',
+    legActive: 'Ativo (check-in recente)', legDnm: 'Não mapeou hoje',
+    legStale: 'Sem check-in (mostrado na casa)', legHome: 'Casa do motorista',
+    legPlan: 'Plano do mês (MyMaps)',
+    modalTitle: 'Subir mapa do MyMaps', modalSub: 'Exporte o MyMaps como KML/KMZ e selecione o mês que ele representa.',
+    modalMonth: 'Mês de referência', modalLabel: 'Rótulo (opcional)', modalLabelPh: 'Ex.: Coleta Junho/2026',
+    cancel: 'Cancelar', save: 'Salvar',
+    countDrivers: 'motoristas', countActive: 'ativos hoje', countVids: 'VIDs', countPlan: 'áreas no plano',
+    storeLocal: 'Modo local: os MyMaps ficam só neste navegador. Reimplante o backend (v5.42) pra compartilhar via Drive.',
+    storeDrive: '', uploaded: 'MyMaps salvo', uploadFail: 'Falha ao salvar o MyMaps',
+    parseFail: 'Não consegui ler o arquivo (KML/KMZ inválido)', monthRequired: 'Escolha o mês',
+    home: 'Casa', currentPos: 'Posição atual', lastSeen: 'Último check-in', vid: 'VID',
+    noVid: 'sem VID', noCheckin: 'Sem check-in recente', atHome: 'Em casa',
+    didNotMap: 'Não mapeou hoje', distHome: 'da casa', hoursAgo: 'h atrás', dayAgo: 'd atrás',
+    showHome: 'ver casa', address: 'Endereço', efficiency: 'Eficiência', qc: 'QC',
+    planFeature: 'Área do plano', noDriversCountry: 'Nenhum motorista neste país.',
+    reasonWeather: 'Clima', reasonMech: 'Mecânica', reasonTech: 'Tech (câmera/disp.)',
+    reasonDisks: 'Discos', reasonOther: 'Outro', fetchError: 'Erro ao carregar dados',
+    fitBtn: 'Enquadrar', confirmReplace: 'Já existe um MyMaps pra esse mês. Substituir?',
+  },
+  es: {
+    monthLabel: 'Mes (MyMaps)', noMaps: 'Ningún mapa', uploadBtn: 'Subir MyMaps',
+    layerCars: 'VIDs / posición', layerHomes: 'Casas', layerPlan: 'Plan del mes',
+    searchPh: 'Buscar conductor o VID…', loading: 'Cargando…',
+    sideTitle: 'Conductores y VIDs',
+    legActive: 'Activo (check-in reciente)', legDnm: 'No mapeó hoy',
+    legStale: 'Sin check-in (en la casa)', legHome: 'Casa del conductor',
+    legPlan: 'Plan del mes (MyMaps)',
+    modalTitle: 'Subir mapa de MyMaps', modalSub: 'Exporta MyMaps como KML/KMZ y elige el mes que representa.',
+    modalMonth: 'Mes de referencia', modalLabel: 'Etiqueta (opcional)', modalLabelPh: 'Ej.: Colecta Junio/2026',
+    cancel: 'Cancelar', save: 'Guardar',
+    countDrivers: 'conductores', countActive: 'activos hoy', countVids: 'VIDs', countPlan: 'áreas en el plan',
+    storeLocal: 'Modo local: los MyMaps quedan solo en este navegador. Reimplanta el backend (v5.42) para compartir vía Drive.',
+    storeDrive: '', uploaded: 'MyMaps guardado', uploadFail: 'Error al guardar el MyMaps',
+    parseFail: 'No pude leer el archivo (KML/KMZ inválido)', monthRequired: 'Elige el mes',
+    home: 'Casa', currentPos: 'Posición actual', lastSeen: 'Último check-in', vid: 'VID',
+    noVid: 'sin VID', noCheckin: 'Sin check-in reciente', atHome: 'En casa',
+    didNotMap: 'No mapeó hoy', distHome: 'de la casa', hoursAgo: 'h atrás', dayAgo: 'd atrás',
+    showHome: 'ver casa', address: 'Dirección', efficiency: 'Eficiencia', qc: 'QC',
+    planFeature: 'Área del plan', noDriversCountry: 'Ningún conductor en este país.',
+    reasonWeather: 'Clima', reasonMech: 'Mecánica', reasonTech: 'Tech (cámara/disp.)',
+    reasonDisks: 'Discos', reasonOther: 'Otro', fetchError: 'Error al cargar datos',
+    fitBtn: 'Encuadrar', confirmReplace: 'Ya existe un MyMaps para ese mes. ¿Reemplazar?',
+  },
+  en: {
+    monthLabel: 'Month (MyMaps)', noMaps: 'No map', uploadBtn: 'Upload MyMaps',
+    layerCars: 'VIDs / position', layerHomes: 'Homes', layerPlan: 'Month plan',
+    searchPh: 'Search driver or VID…', loading: 'Loading…',
+    sideTitle: 'Drivers & VIDs',
+    legActive: 'Active (recent check-in)', legDnm: 'Did not map today',
+    legStale: 'No check-in (shown at home)', legHome: 'Driver home',
+    legPlan: 'Month plan (MyMaps)',
+    modalTitle: 'Upload MyMaps file', modalSub: 'Export MyMaps as KML/KMZ and pick the month it represents.',
+    modalMonth: 'Reference month', modalLabel: 'Label (optional)', modalLabelPh: 'e.g. Collection June/2026',
+    cancel: 'Cancel', save: 'Save',
+    countDrivers: 'drivers', countActive: 'active today', countVids: 'VIDs', countPlan: 'plan areas',
+    storeLocal: 'Local mode: MyMaps stay in this browser only. Redeploy the backend (v5.42) to share via Drive.',
+    storeDrive: '', uploaded: 'MyMaps saved', uploadFail: 'Failed to save MyMaps',
+    parseFail: 'Could not read file (invalid KML/KMZ)', monthRequired: 'Pick a month',
+    home: 'Home', currentPos: 'Current position', lastSeen: 'Last check-in', vid: 'VID',
+    noVid: 'no VID', noCheckin: 'No recent check-in', atHome: 'At home',
+    didNotMap: 'Did not map today', distHome: 'from home', hoursAgo: 'h ago', dayAgo: 'd ago',
+    showHome: 'show home', address: 'Address', efficiency: 'Efficiency', qc: 'QC',
+    planFeature: 'Plan area', noDriversCountry: 'No drivers in this country.',
+    reasonWeather: 'Weather', reasonMech: 'Mechanical', reasonTech: 'Tech (camera/devices)',
+    reasonDisks: 'Disks', reasonOther: 'Other', fetchError: 'Error loading data',
+    fitBtn: 'Fit', confirmReplace: 'A MyMaps already exists for that month. Replace?',
+  },
+};
+function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || (I18N.pt[key]) || key; }
+function applyI18n() {
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es' : 'en');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+}
+
+// =================================================================
+// Estado global
+// =================================================================
+let currentUser = null;
+let map = null;
+let carsLayer = null, homesLayer = null, planLayer = null, tempLayer = null;
+
+const state = {
+  country: null,
+  tabs: [],                 // [{code, name, flag, count}]
+  driversByCountry: {},     // code -> [enrichedDriver]
+  maps: {},                 // code -> [ {month,label,fileId,filename,...} ] (lista do storage)
+  selectedMonth: {},        // code -> monthKey
+  overlayGeo: {},           // cacheKey -> geojson
+  layers: { cars: true, homes: false, plan: true },
+  storeMode: null,          // 'drive' | 'local'
+  loaded: false,
+};
+
+// =================================================================
+// Boot
+// =================================================================
+function startApp(user) {
+  currentUser = user;
+  injectTopbar({
+    region: 'LATAM · MAPA DE OPERAÇÕES',
+    user: user,
+    showBack: true,
+    showLangSwitch: true,
+    lang: currentLang,
+    onLangChange: (newLang) => {
+      currentLang = newLang;
+      localStorage.setItem('preferredLang', newLang);
+      applyI18n();
+      renderTabs();
+      if (state.country) { renderSideList(); updateCounts(); }
+    },
+    onRefresh: () => {
+      clearDataCache();
+      state.loaded = false;
+      state.driversByCountry = {};
+      state.maps = {};
+      state.overlayGeo = {};
+      bootData();
+    },
+    extras: [{
+      html: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V3h4M21 7V3h-4M3 17v4h4M21 17v4h-4"/></svg>',
+      className: 'ace-fit-btn',
+      onClick: () => fitToData(),
+    }],
+  });
+  document.getElementById('app-content').style.display = '';
+  applyI18n();
+  wireUI();
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+  bootData();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  injectLogin({ title: 'Mapa de Operações', sub: 'Faça login para acessar', lang: currentLang, onSuccess: startApp });
+});
+
+// =================================================================
+// Carrega dados base (drivers + dashboard) e detecta storage
+// =================================================================
+async function bootData() {
+  showLoader(true);
+  try {
+    const cf = (url, ttl) => (typeof cachedFetch === 'function')
+      ? cachedFetch(url, ttl, { timeoutMs: 60000, staleOnError: true })
+      : fetch(url).then(r => r.json());
+
+    const [listRes, dashRes, modeP] = await Promise.all([
+      cf(`${CONFIG.scriptUrl}?action=getDriversList`, 300).catch(() => ({ drivers: [] })),
+      cf(`${CONFIG.scriptUrl}?action=getDashboardData&days=30`, 300).catch(() => ({ data: null })),
+      MapStore.detectMode(),
+    ]);
+
+    const driversList = listRes.drivers || [];        // {name,email,country,vid,efficiency,qcScore,status}
+    const dash = dashRes.data || {};
+    const bases = dash.bases || {};
+    const checkins = dash.lastCheckins || {};
+    const fullDrivers = dash.drivers || [];           // {name,email,country,homeLat,homeLng,...}
+    const homeByEmail = {};
+    fullDrivers.forEach(d => { if (d.email) homeByEmail[d.email.toLowerCase()] = d; });
+
+    // Enriquece + agrupa por país
+    const byCountry = {};
+    driversList.forEach(d => {
+      const email = (d.email || '').toLowerCase();
+      const code = countryCodeOf(d.country);
+      const base = bases[d.email] || bases[email] || null;
+      const ci = checkins[d.email] || checkins[email] || null;
+      const fd = homeByEmail[email] || {};
+
+      let home = null;
+      if (base && isNum(base.lat) && isNum(base.lng)) {
+        home = { lat: base.lat, lng: base.lng, address: base.address || '', type: base.type || '' };
+      } else if (isNum(fd.homeLat) && isNum(fd.homeLng)) {
+        home = { lat: fd.homeLat, lng: fd.homeLng, address: fd.fullAddress || '', type: '' };
+      }
+
+      let checkin = null;
+      if (ci && isNum(ci.destLat) && isNum(ci.destLng)) {
+        checkin = {
+          lat: ci.destLat, lng: ci.destLng, address: ci.destAddress || '',
+          hoursAgo: ci.hoursAgo, didMap: String(ci.didMap || '').toLowerCase(),
+          dnmReason: String(ci.dnmReason || '').toLowerCase(), notes: ci.notes || '',
+        };
+      }
+
+      const enriched = {
+        name: d.name, email: d.email, country: d.country, countryCode: code,
+        vid: d.vid || null, efficiency: d.efficiency, qcScore: d.qcScore, status: d.status,
+        home, checkin,
+      };
+      (byCountry[code] = byCountry[code] || []).push(enriched);
+    });
+
+    state.driversByCountry = byCountry;
+
+    // Monta tabs ordenadas
+    const codes = Object.keys(byCountry);
+    codes.sort((a, b) => {
+      const ia = PREFERRED_ORDER.indexOf(a), ib = PREFERRED_ORDER.indexOf(b);
+      if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      return metaOf(a).name.localeCompare(metaOf(b).name);
+    });
+    state.tabs = codes.map(code => ({
+      code, name: metaOf(code).name, flag: metaOf(code).flag,
+      count: byCountry[code].length,
+    }));
+
+    renderStoreBanner();
+    renderTabs();
+    state.loaded = true;
+
+    if (!state.country || !byCountry[state.country]) state.country = state.tabs.length ? state.tabs[0].code : null;
+    if (state.country) await loadCountry(state.country);
+    else showLoader(false);
+  } catch (err) {
+    console.error('[OpsMap] boot erro:', err);
+    showToast(t('fetchError') + ': ' + err.message, 'error');
+    showLoader(false);
+  }
+}
+
+// =================================================================
+// Tabs
+// =================================================================
+function renderTabs() {
+  const tabs = document.getElementById('country-tabs');
+  tabs.innerHTML = '';
+  state.tabs.forEach(tab => {
+    const btn = document.createElement('button');
+    btn.className = 'country-tab' + (tab.code === state.country ? ' active' : '');
+    btn.innerHTML = `<span class="flag">${tab.flag}</span> ${escapeHtml(tab.name)} <span class="tab-count">${tab.count}</span>`;
+    btn.addEventListener('click', () => switchCountry(tab.code));
+    tabs.appendChild(btn);
+  });
+}
+async function switchCountry(code) {
+  if (code === state.country) return;
+  state.country = code;
+  document.querySelectorAll('.country-tab').forEach((b, i) => {
+    b.classList.toggle('active', state.tabs[i] && state.tabs[i].code === code);
+  });
+  await loadCountry(code);
+}
+
+// =================================================================
+// Carrega/renderiza um país
+// =================================================================
+async function loadCountry(code) {
+  showLoader(true);
+  try {
+    initMap();
+    renderDriverLayers(code);
+
+    // Lista de MyMaps do país (storage)
+    if (!state.maps[code]) {
+      state.maps[code] = await MapStore.list(code).catch(() => []);
+    }
+    buildMonthSelect(code);
+
+    const monthKey = state.selectedMonth[code];
+    await renderPlanForMonth(code, monthKey);
+
+    renderSideList();
+    updateCounts();
+
+    const m = metaOf(code);
+    map.setView(m.center, m.zoom);
+    setTimeout(() => { if (map) map.invalidateSize(); }, 60);
+  } catch (err) {
+    console.error('[OpsMap] loadCountry erro:', err);
+    showToast(t('fetchError') + ': ' + err.message, 'error');
+  } finally {
+    showLoader(false);
+  }
+}
+
+function initMap() {
+  if (map) return;
+  map = L.map('map', { preferCanvas: false }).setView([-15, -60], 4);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap · © CARTO', subdomains: 'abcd', maxZoom: 19,
+  }).addTo(map);
+  carsLayer = L.layerGroup().addTo(map);
+  homesLayer = L.layerGroup();
+  tempLayer = L.layerGroup().addTo(map);
+  if (state.layers.homes) homesLayer.addTo(map);
+}
+
+// =================================================================
+// Camadas de motorista (carros/VID + casas)
+// =================================================================
+function recencyOf(driver) {
+  // retorna 'active' | 'dnm' | 'stale'
+  const ci = driver.checkin;
+  if (ci && isNum(ci.lat) && isNum(ci.lng) && ci.hoursAgo != null && ci.hoursAgo <= CONFIG.activeHours) {
+    if (ci.didMap === 'no') return 'dnm';
+    return 'active';
+  }
+  return 'stale';
+}
+function plotPointOf(driver) {
+  // onde plotar o carro: check-in recente → lá; senão → casa
+  const ci = driver.checkin, hm = driver.home;
+  const rec = recencyOf(driver);
+  if (rec !== 'stale' && ci) return { lat: ci.lat, lng: ci.lng, rec };
+  if (hm) return { lat: hm.lat, lng: hm.lng, rec: 'stale' };
+  if (ci) return { lat: ci.lat, lng: ci.lng, rec: 'stale' };
+  return null;
+}
+
+const CAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l1.6-4.6A2 2 0 0 1 6.5 7h11a2 2 0 0 1 1.9 1.4L21 13v4.5h-2V19a1 1 0 0 1-2 0v-1.5H7V19a1 1 0 0 1-2 0v-1.5H3V13Z"/><circle cx="7.5" cy="13.5" r="0.6"/><circle cx="16.5" cy="13.5" r="0.6"/></svg>';
+const HOME_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>';
+
+function renderDriverLayers(code) {
+  carsLayer.clearLayers();
+  homesLayer.clearLayers();
+  if (tempLayer) tempLayer.clearLayers();
+
+  const drivers = state.driversByCountry[code] || [];
+  const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
+
+  drivers.forEach(d => {
+    if (q && !matchesQuery(d, q)) return;
+
+    // Casa
+    if (d.home && isNum(d.home.lat) && isNum(d.home.lng)) {
+      const hIcon = L.divIcon({
+        className: 'ace-marker',
+        html: `<div class="home-marker" title="${escapeHtml(d.name)} — ${t('home')}">${HOME_SVG}</div>`,
+        iconSize: [22, 22], iconAnchor: [11, 11],
+      });
+      L.marker([d.home.lat, d.home.lng], { icon: hIcon })
+        .bindPopup(buildHomePopup(d))
+        .addTo(homesLayer);
+    }
+
+    // Carro / VID na posição atual (ou casa, apagado)
+    const pt = plotPointOf(d);
+    if (pt) {
+      const label = d.vid ? String(d.vid) : '—';
+      const w = 34 + label.length * 7;
+      const carIcon = L.divIcon({
+        className: 'ace-marker',
+        html: `<div class="vid-marker ${pt.rec}" title="${escapeHtml(d.name)}">${CAR_SVG}<span>${escapeHtml(label)}</span></div>`,
+        iconSize: [w, 24], iconAnchor: [w / 2, 12],
+      });
+      const marker = L.marker([pt.lat, pt.lng], { icon: carIcon })
+        .bindPopup(buildDriverPopup(d, pt.rec))
+        .addTo(carsLayer);
+      marker.on('click', () => showHomeLink(d, pt));
+      marker._driverEmail = d.email;
+    }
+  });
+}
+
+function showHomeLink(d, pt) {
+  if (!tempLayer) return;
+  tempLayer.clearLayers();
+  if (!d.home || pt.rec === 'stale') return;  // stale já está na casa
+  const dist = haversineKm(d.home.lat, d.home.lng, pt.lat, pt.lng);
+  if (dist < 1) return;
+  L.polyline([[d.home.lat, d.home.lng], [pt.lat, pt.lng]], {
+    color: '#2C5282', weight: 2, opacity: 0.6, dashArray: '6 6',
+  }).addTo(tempLayer);
+  const hIcon = L.divIcon({
+    className: 'ace-marker',
+    html: `<div class="home-marker">${HOME_SVG}</div>`,
+    iconSize: [22, 22], iconAnchor: [11, 11],
+  });
+  L.marker([d.home.lat, d.home.lng], { icon: hIcon })
+    .bindPopup(buildHomePopup(d)).addTo(tempLayer);
+}
+
+function matchesQuery(d, q) {
+  return String(d.name || '').toLowerCase().includes(q)
+      || String(d.vid || '').toLowerCase().includes(q)
+      || String(d.email || '').toLowerCase().includes(q);
+}
+
+// =================================================================
+// Popups
+// =================================================================
+function dnmReasonLabel(reason) {
+  const map = { weather: 'reasonWeather', mech: 'reasonMech', tech: 'reasonTech', disks: 'reasonDisks' };
+  return t(map[reason] || 'reasonOther');
+}
+function freshLabel(hoursAgo) {
+  if (hoursAgo == null) return '—';
+  if (hoursAgo < 24) return Math.round(hoursAgo) + ' ' + t('hoursAgo');
+  return Math.round(hoursAgo / 24) + ' ' + t('dayAgo');
+}
+function buildDriverPopup(d, rec) {
+  const ci = d.checkin;
+  let tagClass = rec, tagText = rec === 'active' ? t('legActive') : (rec === 'dnm' ? t('didNotMap') : t('noCheckin'));
+  let html = `<span class="popup-tag ${tagClass}">${escapeHtml(tagText)}</span>`;
+  html += `<div class="popup-title">${escapeHtml(d.name)}</div>`;
+  html += `<div class="popup-row"><span>${t('vid')}</span><strong>${d.vid ? escapeHtml(String(d.vid)) : t('noVid')}</strong></div>`;
+  html += `<div class="popup-row"><span>${escapeHtml(d.country || '')}</span><strong>${d.efficiency != null ? (Math.round(d.efficiency * 100) + '% ' + t('efficiency').toLowerCase()) : '—'}</strong></div>`;
+
+  if (rec === 'dnm' && ci) {
+    html += `<div class="popup-row"><span>${t('didNotMap')}</span><strong style="color:var(--c-warn);">${escapeHtml(dnmReasonLabel(ci.dnmReason))}</strong></div>`;
+    if (ci.notes) html += `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:11px;">${escapeHtml(ci.notes)}</div>`;
+  } else if (rec === 'active' && ci) {
+    const dist = d.home ? haversineKm(d.home.lat, d.home.lng, ci.lat, ci.lng) : null;
+    html += `<div class="popup-row"><span>${t('currentPos')}</span><strong>${escapeHtml(ci.address || '—')}</strong></div>`;
+    html += `<div class="popup-row"><span>${t('lastSeen')}</span><strong>${freshLabel(ci.hoursAgo)}</strong></div>`;
+    if (dist != null) html += `<div class="popup-row"><span>${t('distHome')}</span><strong>${dist.toFixed(0)} km</strong></div>`;
+  } else {
+    if (d.home) html += `<div class="popup-row"><span>${t('home')}</span><strong>${escapeHtml(d.home.address || '—')}</strong></div>`;
+    html += `<div class="popup-row" style="color:var(--c-text-muted);"><em>${t('noCheckin')}</em></div>`;
+  }
+  return html;
+}
+function buildHomePopup(d) {
+  return `<div class="popup-title">${escapeHtml(d.name)}</div>`
+    + `<div class="popup-row"><span>${t('home')}</span><strong>${d.vid ? ('VID ' + escapeHtml(String(d.vid))) : ''}</strong></div>`
+    + `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:12px;">${escapeHtml((d.home && d.home.address) || '—')}</div>`;
+}
+
+// =================================================================
+// Overlay do plano (MyMaps)
+// =================================================================
+function buildMonthSelect(code) {
+  const sel = document.getElementById('month-select');
+  sel.innerHTML = '';
+  const list = state.maps[code] || [];
+  // dedupe por mês (mantém o mais recente já que a lista vem ordenada desc)
+  const seen = {};
+  const months = [];
+  list.forEach(m => { if (!seen[m.month]) { seen[m.month] = m; months.push(m); } });
+
+  if (!months.length) {
+    const opt = document.createElement('option');
+    opt.value = ''; opt.textContent = t('noMaps');
+    sel.appendChild(opt);
+    state.selectedMonth[code] = null;
+    return;
+  }
+  months.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.month;
+    opt.textContent = m.label || monthLabel(m.month);
+    sel.appendChild(opt);
+  });
+  if (!state.selectedMonth[code] || !seen[state.selectedMonth[code]]) {
+    state.selectedMonth[code] = months[0].month;
+  }
+  sel.value = state.selectedMonth[code];
+}
+
+async function renderPlanForMonth(code, monthKey) {
+  if (planLayer) { map.removeLayer(planLayer); planLayer = null; }
+  if (!monthKey) { updateCounts(); return; }
+  const entry = (state.maps[code] || []).find(m => m.month === monthKey);
+  if (!entry) { updateCounts(); return; }
+
+  const cacheKey = entry.fileId || (code + '|' + monthKey);
+  let geo = state.overlayGeo[cacheKey];
+  if (!geo) {
+    geo = await MapStore.getGeo(code, entry).catch(() => null);
+    if (geo) state.overlayGeo[cacheKey] = geo;
+  }
+  state._planFeatureCount = geo ? (geo.features || []).length : 0;
+  if (geo && state.layers.plan) drawPlan(geo);
+  updateCounts();
+}
+
+function drawPlan(geo) {
+  if (planLayer) { map.removeLayer(planLayer); planLayer = null; }
+  if (!geo) return;
+  planLayer = L.geoJSON(geo, {
+    style: (f) => {
+      const p = f.properties || {};
+      return {
+        color: p.stroke || '#7C3AED',
+        weight: p['stroke-width'] || 2,
+        opacity: p['stroke-opacity'] != null ? p['stroke-opacity'] : 0.85,
+        fillColor: p.fill || '#A78BFA',
+        fillOpacity: p['fill-opacity'] != null ? p['fill-opacity'] : 0.18,
+      };
+    },
+    pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+      radius: 4, color: '#6D28D9', weight: 1.5, fillColor: '#A78BFA', fillOpacity: 0.9,
+    }),
+    onEachFeature: (f, layer) => {
+      const p = f.properties || {};
+      const name = p.name || '';
+      const desc = stripHtml(p.description || '');
+      if (name || desc) {
+        layer.bindPopup(`<div class="popup-title">${escapeHtml(name || t('planFeature'))}</div>`
+          + (desc ? `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:12px;">${escapeHtml(desc.slice(0, 300))}</div>` : ''));
+      }
+    },
+  }).addTo(map);
+  if (planLayer && planLayer.bringToBack) planLayer.bringToBack();
+}
+
+// =================================================================
+// Side list
+// =================================================================
+function renderSideList() {
+  const wrap = document.getElementById('side-list');
+  const drivers = (state.driversByCountry[state.country] || []).slice();
+  const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
+  const filtered = q ? drivers.filter(d => matchesQuery(d, q)) : drivers;
+
+  const rank = { active: 0, dnm: 1, stale: 2 };
+  filtered.sort((a, b) => {
+    const ra = rank[recencyOf(a)], rb = rank[recencyOf(b)];
+    if (ra !== rb) return ra - rb;
+    return String(a.name).localeCompare(String(b.name));
+  });
+
+  if (!filtered.length) {
+    wrap.innerHTML = `<div class="side-empty">${t('noDriversCountry')}</div>`;
+    return;
+  }
+  wrap.innerHTML = filtered.map(d => {
+    const rec = recencyOf(d);
+    let sub = '';
+    if (rec === 'active' && d.checkin) {
+      const dist = d.home ? haversineKm(d.home.lat, d.home.lng, d.checkin.lat, d.checkin.lng) : null;
+      sub = (d.checkin.address || t('currentPos')) + (dist != null ? ` · ${dist.toFixed(0)} km ${t('distHome')}` : '');
+    } else if (rec === 'dnm' && d.checkin) {
+      sub = t('didNotMap') + ' · ' + dnmReasonLabel(d.checkin.dnmReason);
+    } else {
+      sub = t('noCheckin');
+    }
+    return `<div class="driver-row" data-email="${escapeHtml(d.email)}">
+      <span class="status-dot ${rec}"></span>
+      <div class="driver-row-main">
+        <div class="driver-row-name">${escapeHtml(d.name)}</div>
+        <div class="driver-row-sub">${escapeHtml(sub)}</div>
+      </div>
+      <span class="vid-badge ${d.vid ? '' : 'none'}">${d.vid ? escapeHtml(String(d.vid)) : t('noVid')}</span>
+    </div>`;
+  }).join('');
+
+  wrap.querySelectorAll('.driver-row').forEach(row => {
+    row.addEventListener('click', () => focusDriver(row.getAttribute('data-email')));
+  });
+}
+
+function focusDriver(email) {
+  const d = (state.driversByCountry[state.country] || []).find(x => x.email === email);
+  if (!d || !map) return;
+  const pt = plotPointOf(d);
+  if (!pt) return;
+  map.setView([pt.lat, pt.lng], 12, { animate: true });
+  showHomeLink(d, pt);
+  // abre popup do carro correspondente
+  carsLayer.eachLayer(l => { if (l._driverEmail === email && l.openPopup) l.openPopup(); });
+}
+
+// =================================================================
+// Counts
+// =================================================================
+function updateCounts() {
+  const drivers = state.driversByCountry[state.country] || [];
+  const active = drivers.filter(d => recencyOf(d) === 'active').length;
+  const vids = drivers.filter(d => d.vid).length;
+  const plan = state._planFeatureCount || 0;
+  document.getElementById('counts').innerHTML =
+    `<span><b>${drivers.length}</b> ${t('countDrivers')}</span>`
+    + `<span><b>${active}</b> ${t('countActive')}</span>`
+    + `<span><b>${vids}</b> ${t('countVids')}</span>`
+    + (plan ? `<span><b>${plan}</b> ${t('countPlan')}</span>` : '');
+}
+
+function fitToData() {
+  if (!map) return;
+  const pts = [];
+  (state.driversByCountry[state.country] || []).forEach(d => {
+    const pt = plotPointOf(d);
+    if (pt) pts.push([pt.lat, pt.lng]);
+    if (state.layers.homes && d.home) pts.push([d.home.lat, d.home.lng]);
+  });
+  if (planLayer) { try { const b = planLayer.getBounds(); if (b.isValid()) pts.push(b.getNorthEast(), b.getSouthWest()); } catch (e) {} }
+  if (pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.15), { maxZoom: 13 });
+  else { const m = metaOf(state.country); map.setView(m.center, m.zoom); }
+}
+
+// =================================================================
+// UI wiring
+// =================================================================
+function wireUI() {
+  // Toggles de camada
+  document.getElementById('tg-cars').addEventListener('click', () => toggleLayer('cars'));
+  document.getElementById('tg-homes').addEventListener('click', () => toggleLayer('homes'));
+  document.getElementById('tg-plan').addEventListener('click', () => toggleLayer('plan'));
+
+  // Busca
+  let searchTimer = null;
+  document.getElementById('search-input').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      if (state.country) { renderDriverLayers(state.country); renderSideList(); }
+    }, 180);
+  });
+
+  // Mês
+  document.getElementById('month-select').addEventListener('change', (e) => {
+    state.selectedMonth[state.country] = e.target.value || null;
+    renderPlanForMonth(state.country, e.target.value || null);
+  });
+
+  // Upload
+  document.getElementById('upload-btn').addEventListener('click', () => document.getElementById('file-input').click());
+  document.getElementById('file-input').addEventListener('change', onFilePicked);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('modal-save').addEventListener('click', doSaveUpload);
+
+  // Painel lateral
+  document.getElementById('side-toggle').addEventListener('click', () => {
+    document.getElementById('ops-body').classList.toggle('panel-collapsed');
+    setTimeout(() => { if (map) map.invalidateSize(); }, 230);
+  });
+
+  window.addEventListener('resize', () => { if (map) map.invalidateSize(); });
+}
+
+function toggleLayer(key) {
+  state.layers[key] = !state.layers[key];
+  const el = document.getElementById('tg-' + key);
+  el.classList.toggle('off', !state.layers[key]);
+  if (!map) return;
+  if (key === 'homes') {
+    if (state.layers.homes) homesLayer.addTo(map); else map.removeLayer(homesLayer);
+  } else if (key === 'cars') {
+    if (state.layers.cars) carsLayer.addTo(map); else map.removeLayer(carsLayer);
+  } else if (key === 'plan') {
+    if (state.layers.plan) renderPlanForMonth(state.country, state.selectedMonth[state.country]);
+    else if (planLayer) { map.removeLayer(planLayer); planLayer = null; }
+  }
+}
+
+// =================================================================
+// Upload flow
+// =================================================================
+let pendingUpload = null;   // { geojson, filename, featureCount }
+
+async function onFilePicked(e) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';   // reseta pra permitir re-upload do mesmo arquivo
+  if (!file) return;
+  showToast(t('loading'), '');
+  try {
+    const geo = await parseMapFile(file);
+    pendingUpload = { geojson: geo, filename: file.name, featureCount: (geo.features || []).length };
+    document.getElementById('modal-fileinfo').innerHTML =
+      `<strong>${escapeHtml(file.name)}</strong><div class="fi-meta">${pendingUpload.featureCount} ${t('countPlan')} · ${(file.size / 1024).toFixed(0)} KB</div>`;
+    const mInput = document.getElementById('modal-month');
+    mInput.value = state.selectedMonth[state.country] || defaultMonthKey();
+    document.getElementById('modal-label').value = '';
+    document.getElementById('modal-err').textContent = '';
+    openModal();
+  } catch (err) {
+    console.error('[OpsMap] parse erro:', err);
+    showToast(t('parseFail'), 'error');
+  }
+}
+
+async function doSaveUpload() {
+  if (!pendingUpload) return;
+  const monthKey = document.getElementById('modal-month').value;
+  const label = document.getElementById('modal-label').value.trim();
+  if (!monthKey) { document.getElementById('modal-err').textContent = t('monthRequired'); return; }
+
+  const code = state.country;
+  const existing = (state.maps[code] || []).find(m => m.month === monthKey);
+  if (existing && !confirm(t('confirmReplace'))) return;
+
+  const saveBtn = document.getElementById('modal-save');
+  saveBtn.disabled = true;
+  try {
+    const res = await MapStore.save(code, monthKey, label || monthLabel(monthKey), pendingUpload.filename, pendingUpload.geojson, currentUser);
+    if (res && res.success === false) throw new Error(res.error || 'backend');
+
+    // Atualiza estado local da lista
+    const entry = {
+      country: code, month: monthKey, label: label || monthLabel(monthKey),
+      filename: pendingUpload.filename, fileId: res && res.fileId ? res.fileId : null,
+      featureCount: pendingUpload.featureCount, timestamp: new Date().toISOString(),
+    };
+    state.maps[code] = [entry].concat((state.maps[code] || []).filter(m => m.month !== monthKey));
+    const ck = entry.fileId || (code + '|' + monthKey);
+    state.overlayGeo[ck] = pendingUpload.geojson;
+    state.selectedMonth[code] = monthKey;
+    clearDataCache('action=listMyMaps');
+
+    closeModal();
+    pendingUpload = null;
+    buildMonthSelect(code);
+    await renderPlanForMonth(code, monthKey);
+    showToast(t('uploaded') + (res && res.local ? ' (local)' : ''), 'success');
+  } catch (err) {
+    console.error('[OpsMap] save erro:', err);
+    document.getElementById('modal-err').textContent = t('uploadFail') + ': ' + err.message;
+    showToast(t('uploadFail'), 'error');
+  } finally {
+    saveBtn.disabled = false;
+  }
+}
+
+async function parseMapFile(file) {
+  const name = (file.name || '').toLowerCase();
+  let kmlText;
+  if (name.endsWith('.kmz')) {
+    if (typeof JSZip === 'undefined') throw new Error('JSZip não carregou');
+    const buf = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(buf);
+    let kmlEntry = null;
+    zip.forEach((path, entry) => { if (!kmlEntry && /\.kml$/i.test(path)) kmlEntry = entry; });
+    if (!kmlEntry) throw new Error('KMZ sem .kml');
+    kmlText = await kmlEntry.async('string');
+  } else {
+    kmlText = await file.text();
+  }
+  const dom = new DOMParser().parseFromString(kmlText, 'text/xml');
+  if (dom.querySelector('parsererror')) throw new Error('XML inválido');
+  if (typeof toGeoJSON === 'undefined') throw new Error('toGeoJSON não carregou');
+  const geo = toGeoJSON.kml(dom);
+  if (!geo || !Array.isArray(geo.features) || !geo.features.length) throw new Error('Sem features');
+  return geo;
+}
+
+function openModal() { document.getElementById('upload-modal').classList.add('show'); }
+function closeModal() { document.getElementById('upload-modal').classList.remove('show'); }
+
+// =================================================================
+// Storage (Drive primário · IndexedDB fallback)
+// =================================================================
+const MapStore = {
+  async detectMode() {
+    if (state.storeMode) return state.storeMode;
+    try {
+      const res = await fetch(`${CONFIG.scriptUrl}?action=listMyMaps`).then(r => r.json());
+      state.storeMode = (res && res.success && Array.isArray(res.maps)) ? 'drive' : 'local';
+    } catch (e) {
+      state.storeMode = 'local';
+    }
+    return state.storeMode;
+  },
+  async list(code) {
+    if (state.storeMode === 'drive') {
+      const res = await cachedFetch(`${CONFIG.scriptUrl}?action=listMyMaps&country=${encodeURIComponent(code)}`, 120).catch(() => ({ maps: [] }));
+      return res.maps || [];
+    }
+    return await idbList(code);
+  },
+  async getGeo(code, entry) {
+    if (state.storeMode === 'drive' && entry.fileId) {
+      // fetch direto (sem cachedFetch): o GeoJSON pode ser grande e estouraria o
+      // localStorage. A cache de sessão é o state.overlayGeo (em memória).
+      const res = await fetch(`${CONFIG.scriptUrl}?action=getMyMap&fileId=${encodeURIComponent(entry.fileId)}`).then(r => r.json()).catch(() => null);
+      if (res && res.success && res.geojson) { try { return JSON.parse(res.geojson); } catch (e) { return null; } }
+      return null;
+    }
+    return await idbGetGeo(code, entry.month);
+  },
+  async save(code, month, label, filename, geojson, user) {
+    const featureCount = (geojson.features || []).length;
+    if (state.storeMode === 'drive') {
+      const payload = {
+        type: 'saveMyMap', country: code, month, label,
+        originalFilename: filename, featureCount,
+        uploadedBy: (user && user.username) || '',
+        geojson: JSON.stringify(geojson),
+      };
+      let res;
+      try {
+        res = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
+      } catch (e) {
+        // opaque/erro de rede — tenta confirmar relistando
+        res = { success: true };
+      }
+      return res || { success: true };
+    } else {
+      await idbSave(code, month, label, filename, geojson, featureCount, user);
+      return { success: true, local: true };
+    }
+  },
+};
+
+// ---- IndexedDB (fallback local) ----
+const IDB_NAME = 'ace_ops_maps', IDB_STORE = 'maps';
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const r = indexedDB.open(IDB_NAME, 1);
+    r.onupgradeneeded = () => {
+      const db = r.result;
+      if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE, { keyPath: 'key' });
+    };
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+async function idbSave(code, month, label, filename, geojson, featureCount, user) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put({
+      key: code + '|' + month, country: code, month, label, filename, featureCount,
+      uploadedBy: (user && user.username) || '', timestamp: new Date().toISOString(), geojson,
+    });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbList(code) {
+  const db = await idbOpen();
+  return new Promise((resolve) => {
+    const out = [];
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const cur = tx.objectStore(IDB_STORE).openCursor();
+    cur.onsuccess = (e) => {
+      const c = e.target.result;
+      if (c) {
+        const v = c.value;
+        if (v.country === code) out.push({ country: v.country, month: v.month, label: v.label, filename: v.filename, featureCount: v.featureCount, uploadedBy: v.uploadedBy, timestamp: v.timestamp, fileId: null });
+        c.continue();
+      } else {
+        out.sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')));
+        resolve(out);
+      }
+    };
+    cur.onerror = () => resolve(out);
+  });
+}
+async function idbGetGeo(code, month) {
+  const db = await idbOpen();
+  return new Promise((resolve) => {
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const r = tx.objectStore(IDB_STORE).get(code + '|' + month);
+    r.onsuccess = () => resolve(r.result ? r.result.geojson : null);
+    r.onerror = () => resolve(null);
+  });
+}
+
+function renderStoreBanner() {
+  const banner = document.getElementById('store-banner');
+  if (state.storeMode === 'local') {
+    document.getElementById('store-banner-text').textContent = t('storeLocal');
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+// =================================================================
+// Helpers
+// =================================================================
+function isNum(v) { return typeof v === 'number' && !isNaN(v) && isFinite(v); }
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function stripHtml(s) {
+  if (!s) return '';
+  const div = document.createElement('div');
+  div.innerHTML = String(s);
+  return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
+}
+const MONTH_NAMES = {
+  pt: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+  es: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+};
+function monthLabel(key) {
+  const m = String(key || '').match(/^(\d{4})-(\d{2})$/);
+  if (!m) return key || '';
+  const names = MONTH_NAMES[currentLang] || MONTH_NAMES.pt;
+  return `${names[parseInt(m[2], 10) - 1]}/${m[1]}`;
+}
+function defaultMonthKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+function showLoader(on) {
+  const l = document.getElementById('map-loader');
+  if (l) l.classList.toggle('hidden', !on);
+}
+let toastTimer = null;
+function showToast(msg, kind) {
+  const el = document.getElementById('ops-toast');
+  el.textContent = msg;
+  el.className = 'ops-toast show' + (kind ? ' ' + kind : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.classList.remove('show'); }, 2600);
+}
+</script>
+
+<script src="sv-shell.js"></script>
+</body>
+</html>

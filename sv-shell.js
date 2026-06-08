@@ -43,6 +43,7 @@
     fileText: '<path d="M6 3h8l4 4v14H6V3Z"/><path d="M14 3v4h4"/><path d="M9 12.5h6M9 16h5"/>',
     settings: '<circle cx="12" cy="12" r="3.1"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18 6l-2 2M8 16l-2 2M18 18l-2-2M8 8 6 6"/>',
     map: '<path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Z"/><path d="M9 4v14M15 6v14"/>',
+    pin: '<path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/>',
   };
   function svg(name) {
     return '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (ICON[name] || "") + "</svg>";
@@ -55,6 +56,7 @@
       { label: { pt: "Motoristas",       es: "Conductores",      en: "Drivers" },          href: "driver-profile.html", icon: "users",    access: "all" },
       { label: { pt: "Recrutamento",     es: "Reclutamiento",    en: "Recruitment" },      href: "recruitment.html",    icon: "userPlus", access: "all" },
       { label: { pt: "Áreas por país",   es: "Áreas por país",   en: "Country Scopes" },   href: "country_scopes.html", icon: "layers",   access: "admin" },
+      { label: { pt: "Mapa de Operações",es: "Mapa de Operaciones",en: "Ops Map" },        href: "ops-map.html",        icon: "pin",      access: "admin" },
       { label: { pt: "PMO Hub",          es: "PMO Hub",          en: "PMO Hub" },          href: "pmo.html",            icon: "notes",    access: "admin" },
     ]},
     { label: { pt: "Financeiro", es: "Financiero", en: "Finance" }, items: [

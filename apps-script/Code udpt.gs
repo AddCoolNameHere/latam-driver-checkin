@@ -106,6 +106,9 @@ const CONFIG = {
   timesheetTabSheet: 'Timesheet',
   // v5.40: ajustes de payroll (reembolsos/bônus/descontos) lançados pelo super admin no timesheet.html
   payrollAdjustmentsSheet: 'Payroll Adjustments',
+  // v5.42: MyMaps (ops-map.html) — uploads mensais do Google MyMaps (KML/KMZ → GeoJSON)
+  myMapsSheet: 'MyMaps Uploads',           // metadados dos uploads (auto-criada)
+  myMapsFolderName: 'LATAM MyMaps Uploads', // pasta no Drive (auto-criada), subpasta por país
 };
 
 // ================================================================
@@ -273,7 +276,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.41',
+        version: 'v5.42',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -286,7 +289,8 @@ function doGet(e) {
                     'getRecruitmentData', 'getTimesheetTab',
                     'getPayrollAdjustments', 'POST savePayrollAdjustment', 'POST deletePayrollAdjustment',
                     'getCrimeOverlay',
-                    'getArLaunchSchedule', 'POST saveArLaunchSchedule'],
+                    'getArLaunchSchedule', 'POST saveArLaunchSchedule',
+                    'listMyMaps', 'getMyMap', 'POST saveMyMap'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -418,6 +422,14 @@ function doGet(e) {
       return jsonResponse(getCrimeOverlay_(days));
     }
 
+    // v5.42: MyMaps (ops-map.html) — lista os uploads (opcional ?country=AR) e serve o GeoJSON
+    if (action === 'listMyMaps') {
+      return jsonResponse({ success: true, maps: listMyMaps_(e.parameter.country || '') });
+    }
+    if (action === 'getMyMap') {
+      return jsonResponse(getMyMap_(e.parameter.fileId));
+    }
+
     return jsonResponse({ success: false, error: 'Unknown action: ' + action });
   } catch (err) {
     return jsonResponse({ success: false, error: err.toString() });
@@ -504,6 +516,11 @@ function doPost(e) {
     // v5.39: salva cronograma compartilhado do lançamento AR (ar-launch-calendar.html)
     if (data.type === 'saveArLaunchSchedule') {
       return jsonResponse(saveArLaunchSchedule_(data.schedule));
+    }
+
+    // v5.42: upload de MyMaps (ops-map.html) — guarda o GeoJSON no Drive + metadados na aba
+    if (data.type === 'saveMyMap') {
+      return jsonResponse(saveMyMap_(data));
     }
 
     // v5.40: payroll adjustments (timesheet.html) — só super admin (fuss) lança/remove
@@ -4835,6 +4852,111 @@ function uploadReceiptToDrive_(base64Data, originalFilename, driverName) {
   }
 
   return file.getUrl();
+}
+
+
+// ================================================================
+// MyMaps (v5.42) — uploads mensais do Google MyMaps por país.
+// O frontend (ops-map.html) parseia o KML/KMZ pra GeoJSON e manda o
+// GeoJSON já pronto; aqui só guardamos no Drive + metadados na aba.
+// ================================================================
+
+/** Pasta raiz dos MyMaps no Drive (auto-criada), com subpasta por país. */
+function getMyMapsFolder_(countryCode) {
+  const rootName = CONFIG.myMapsFolderName;
+  const it = DriveApp.getFoldersByName(rootName);
+  const root = it.hasNext() ? it.next() : DriveApp.createFolder(rootName);
+  if (!countryCode) return root;
+  const safe = String(countryCode).replace(/[^a-z0-9]/gi, '_').toUpperCase() || 'X';
+  const subIt = root.getFoldersByName(safe);
+  return subIt.hasNext() ? subIt.next() : root.createFolder(safe);
+}
+
+/** Garante a aba de metadados dos MyMaps com cabeçalho. */
+function ensureMyMapsSheet_(ss) {
+  let sheet = ss.getSheetByName(CONFIG.myMapsSheet);
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.myMapsSheet);
+    sheet.appendRow(['Timestamp', 'Country', 'Month', 'Label', 'Filename', 'FileId', 'Url', 'UploadedBy', 'FeatureCount']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+/**
+ * Salva um MyMaps (GeoJSON já parseado no client) no Drive + registra na aba.
+ * data: { country, month ('YYYY-MM'), label, originalFilename, featureCount, uploadedBy, geojson (string) }
+ */
+function saveMyMap_(data) {
+  const country = String(data.country || '').trim();
+  const month = String(data.month || '').trim();
+  if (!country || !month) return { success: false, error: 'country e month são obrigatórios' };
+  const geojsonStr = data.geojson;
+  if (!geojsonStr) return { success: false, error: 'geojson vazio' };
+
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const folder = getMyMapsFolder_(country);
+  const safeCountry = country.replace(/[^a-z0-9]/gi, '_').toUpperCase();
+  const stamp = Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyyy-MM-dd_HH-mm-ss');
+  const filename = `${safeCountry}_${month}_${stamp}.geojson`;
+
+  const blob = Utilities.newBlob(geojsonStr, 'application/json', filename);
+  const file = folder.createFile(blob);
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {
+    Logger.log('MyMaps sharing aviso: ' + e);
+  }
+
+  const sheet = ensureMyMapsSheet_(ss);
+  sheet.appendRow([
+    new Date(), country, month, String(data.label || month),
+    String(data.originalFilename || filename), file.getId(), file.getUrl(),
+    String(data.uploadedBy || ''), data.featureCount || '',
+  ]);
+
+  return { success: true, fileId: file.getId(), url: file.getUrl(), filename: filename };
+}
+
+/** Lista os uploads de MyMaps (mais recentes primeiro). Filtra por país se informado. */
+function listMyMaps_(country) {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(CONFIG.myMapsSheet);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+
+  const data = sheet.getDataRange().getValues();
+  const wanted = String(country || '').toUpperCase();
+  const out = [];
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const c = String(row[1] || '');
+    if (wanted && c.toUpperCase() !== wanted) continue;
+    out.push({
+      timestamp: (row[0] instanceof Date) ? row[0].toISOString() : '',
+      country: c,
+      month: String(row[2] || ''),
+      label: String(row[3] || ''),
+      filename: String(row[4] || ''),
+      fileId: String(row[5] || ''),
+      url: String(row[6] || ''),
+      uploadedBy: String(row[7] || ''),
+      featureCount: row[8] || 0,
+    });
+  }
+  out.sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')));
+  return out;
+}
+
+/** Serve o conteúdo (GeoJSON em texto) de um upload pelo fileId do Drive. */
+function getMyMap_(fileId) {
+  if (!fileId) return { success: false, error: 'fileId obrigatório' };
+  try {
+    const file = DriveApp.getFileById(fileId);
+    const content = file.getBlob().getDataAsString();  // utf-8
+    return { success: true, geojson: content, filename: file.getName() };
+  } catch (e) {
+    return { success: false, error: String(e) };
+  }
 }
 
 /**
