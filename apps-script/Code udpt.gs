@@ -276,7 +276,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.43',
+        version: 'v5.44',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -291,7 +291,7 @@ function doGet(e) {
                     'getCrimeOverlay',
                     'getArLaunchSchedule', 'POST saveArLaunchSchedule',
                     'listMyMaps', 'getMyMap', 'POST saveMyMap',
-                    'getTkmReportOptions', 'getTkmReport'],
+                    'getTkmReportOptions', 'getTkmReport', 'getFleetVids'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -375,6 +375,11 @@ function doGet(e) {
       const country = e.parameter.country || 'ALL';
       if (!month || !year) return jsonResponse({ success: false, error: 'month/year obrigatórios' });
       return jsonResponse(getTkmReport_(month, year, country));
+    }
+
+    // v5.44: frota inteira por VID — última posição conhecida de cada VID (pro ops-map)
+    if (action === 'getFleetVids') {
+      return jsonResponse({ success: true, vids: getFleetVids_() });
     }
 
     // v5.16: drivers ativos agrupados por país (pra dropdown na cash.html)
@@ -1265,6 +1270,146 @@ function getDriversList_() {
       monthUsed: useMonth,  // pra debug
     };
   });
+}
+
+function isFiniteNum_(x) { return typeof x === 'number' && isFinite(x); }
+
+/**
+ * v5.44: Frota inteira por VID — última localização conhecida de CADA VID
+ * (inclusive parados), independente de ser o VID atual do motorista. Usado no ops-map.
+ *
+ * Posição é DATE-AWARE: pro VID, pega o check-in do último motorista que o rodou
+ * MAIS PRÓXIMO da data em que rodou — assim um carro parado fica onde estava no
+ * último dia que rodou, não onde o motorista está hoje (que pode estar com outro
+ * VID em outra cidade). Fallback: casa/base do motorista. Sem nada → lat/lng null.
+ *
+ * Retorna: [{ vid, email, driverName, driverActive, country, lastDate, daysAgo,
+ *             lat, lng, posSource('checkin'|'home'|'none') }]
+ */
+function getFleetVids_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+
+  // 1) RAW CTS → por VID, a linha mais recente {email, data, country}
+  const vidLast = {};
+  const rawSheet = ss.getSheetByName(CONFIG.rawCtsSheet);
+  if (rawSheet && rawSheet.getLastRow() >= 2) {
+    const data = rawSheet.getDataRange().getValues();
+    const h = data[0];
+    const vIdx = h.indexOf('VID'), eIdx = h.indexOf('email'),
+          dIdx = h.indexOf('drive_date'), cIdx = h.indexOf('country');
+    if (vIdx >= 0 && dIdx >= 0) {
+      for (let i = 1; i < data.length; i++) {
+        const vidRaw = data[i][vIdx];
+        if (!vidRaw) continue;
+        const vid = String(vidRaw).trim();
+        if (!vid) continue;
+        const dObj = data[i][dIdx] instanceof Date ? data[i][dIdx] : null;
+        const tm = dObj ? dObj.getTime() : 0;
+        const cur = vidLast[vid];
+        if (!cur || tm > cur.time) {
+          vidLast[vid] = {
+            vid: vid,
+            email: (eIdx >= 0 && data[i][eIdx]) ? String(data[i][eIdx]).trim().toLowerCase() : '',
+            time: tm,
+            dateStr: dObj ? Utilities.formatDate(dObj, 'America/Sao_Paulo', 'yyyy-MM-dd') : null,
+            country: cIdx >= 0 ? String(data[i][cIdx] || '').trim() : '',
+          };
+        }
+      }
+    }
+  }
+
+  // 2) Check-ins por email → [{time, lat, lng}]
+  const ciByEmail = {};
+  const ciSheet = ss.getSheetByName(CONFIG.checkinSheet);
+  if (ciSheet && ciSheet.getLastRow() > 1) {
+    const ci = ciSheet.getDataRange().getValues();
+    for (let i = 1; i < ci.length; i++) {
+      const ts = ci[i][0], email = ci[i][3], lat = ci[i][9], lng = ci[i][10];
+      if (!email || !(ts instanceof Date) || !isFiniteNum_(lat) || !isFiniteNum_(lng)) continue;
+      const key = String(email).trim().toLowerCase();
+      (ciByEmail[key] = ciByEmail[key] || []).push({ time: ts.getTime(), lat: lat, lng: lng });
+    }
+  }
+
+  // 3) Casa/base por email (fallback de posição)
+  const baseByEmail = {};
+  const baseSheet = ss.getSheetByName(CONFIG.baseSheet);
+  if (baseSheet && baseSheet.getLastRow() > 1) {
+    const bd = baseSheet.getDataRange().getValues();
+    for (let i = 1; i < bd.length; i++) {
+      const email = bd[i][1], ts = bd[i][0];
+      if (!email) continue;
+      const key = String(email).trim().toLowerCase();
+      if (!baseByEmail[key] || ts > baseByEmail[key].ts) {
+        baseByEmail[key] = { lat: bd[i][5], lng: bd[i][6], ts: ts };
+      }
+    }
+  }
+
+  // 4) email → nome + ativo (HR Database, todos — inclusive inativos)
+  const nameByEmail = {}, activeByEmail = {};
+  const hrSheet = ss.getSheetByName(CONFIG.hrSheet);
+  if (hrSheet && hrSheet.getLastRow() > 1) {
+    const headers = hrSheet.getRange(1, 1, 1, hrSheet.getLastColumn()).getValues()[0];
+    const findCol = function () {
+      const names = Array.prototype.slice.call(arguments);
+      for (let i = 0; i < headers.length; i++) {
+        const hh = String(headers[i] || '').trim().toLowerCase();
+        for (let j = 0; j < names.length; j++) if (hh === names[j].toLowerCase()) return i;
+      }
+      return -1;
+    };
+    const iName = findCol('Beneficiary Full Name', 'Full Name', 'Driver Name', 'Name');
+    const iEmail = findCol('Corporate E-mail', 'Email', 'Driver Email');
+    const iSit = findCol('Situation', 'Status', 'Driver Status');
+    if (iEmail >= 0) {
+      const hd = hrSheet.getRange(2, 1, hrSheet.getLastRow() - 1, hrSheet.getLastColumn()).getValues();
+      for (let i = 0; i < hd.length; i++) {
+        const key = String(hd[i][iEmail] || '').trim().toLowerCase();
+        if (!key) continue;
+        if (iName >= 0) nameByEmail[key] = String(hd[i][iName] || '').trim();
+        const sit = iSit >= 0 ? String(hd[i][iSit] || '').trim().toLowerCase() : 'active';
+        activeByEmail[key] = (sit === 'active' || sit === 'ativo' || sit === 'activo' || sit === '');
+      }
+    }
+  }
+
+  // 5) Monta saída com posição date-aware
+  const now = Date.now();
+  const out = [];
+  for (const vid in vidLast) {
+    const v = vidLast[vid];
+    let lat = null, lng = null, posSource = 'none';
+    const cis = v.email ? ciByEmail[v.email] : null;
+    if (cis && cis.length) {
+      let best = null, bestDiff = Infinity;
+      const target = v.time || now;
+      for (let k = 0; k < cis.length; k++) {
+        const diff = Math.abs(cis[k].time - target);
+        if (diff < bestDiff) { bestDiff = diff; best = cis[k]; }
+      }
+      if (best) { lat = best.lat; lng = best.lng; posSource = 'checkin'; }
+    }
+    if ((lat === null || lng === null) && v.email && baseByEmail[v.email] &&
+        isFiniteNum_(baseByEmail[v.email].lat) && isFiniteNum_(baseByEmail[v.email].lng)) {
+      lat = baseByEmail[v.email].lat; lng = baseByEmail[v.email].lng; posSource = 'home';
+    }
+    out.push({
+      vid: v.vid,
+      email: v.email,
+      driverName: nameByEmail[v.email] || '',
+      driverActive: !!activeByEmail[v.email],
+      country: v.country,
+      lastDate: v.dateStr,
+      daysAgo: v.time ? Math.floor((now - v.time) / 86400000) : null,
+      lat: lat, lng: lng, posSource: posSource,
+    });
+  }
+  out.sort(function (a, b) {
+    return String(a.country).localeCompare(String(b.country)) || ((a.daysAgo || 0) - (b.daysAgo || 0));
+  });
+  return out;
 }
 
 /**

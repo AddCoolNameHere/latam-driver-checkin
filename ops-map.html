@@ -434,6 +434,8 @@
 const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
   activeHours: 36,   // janela pra considerar um check-in "recente"
+  activeDays: 3,     // VID rodou nos últimos N dias → "em uso" (verde)
+  idleDays: 14,      // rodou nos últimos N dias → "uso recente" (âmbar); além disso = parado (cinza)
 };
 
 // Metadados por país (centro/zoom/flag). Países não listados ganham fallback.
@@ -480,9 +482,9 @@ const I18N = {
     monthLabel: 'Mês (MyMaps)', noMaps: 'Nenhum mapa', uploadBtn: 'Subir MyMaps',
     layerCars: 'VIDs / posição', layerHomes: 'Casas', layerPlan: 'Plano do mês',
     searchPh: 'Buscar motorista ou VID…', loading: 'Carregando…',
-    sideTitle: 'Motoristas & VIDs',
-    legActive: 'Ativo (check-in recente)', legDnm: 'Não mapeou hoje',
-    legStale: 'Sem check-in (mostrado na casa)', legHome: 'Casa do motorista',
+    sideTitle: 'Frota — VIDs',
+    legActive: 'Em uso (últimos dias)', legDnm: 'Uso recente (quinzena)',
+    legStale: 'Parado', legHome: 'Casa do motorista',
     legPlan: 'Plano do mês (MyMaps)',
     modalTitle: 'Subir mapa do MyMaps', modalSub: 'Exporte o MyMaps como KML/KMZ e selecione o mês que ele representa.',
     modalMonth: 'Mês de referência', modalLabel: 'Rótulo (opcional)', modalLabelPh: 'Ex.: Coleta Junho/2026',
@@ -501,14 +503,19 @@ const I18N = {
     reasonWeather: 'Clima', reasonMech: 'Mecânica', reasonTech: 'Tech (câmera/disp.)',
     reasonDisks: 'Discos', reasonOther: 'Outro', fetchError: 'Erro ao carregar dados',
     fitBtn: 'Enquadrar', confirmReplace: 'Já existe um MyMaps pra esse mês. Substituir?',
+    recActive: 'Em uso', recIdle: 'Uso recente', recParked: 'Parado',
+    lastDriver: 'Último motorista', lastDrove: 'Rodou em', daysAgoWord: 'dias atrás',
+    posFromHome: 'Posição aproximada (casa do motorista)', inactive: 'inativo',
+    noDriverVid: 'Sem motorista', onMap: 'no mapa', noPos: 'sem posição', atHomeBadge: 'na casa',
+    countActiveVids: 'em uso', countParked: 'parados',
   },
   es: {
     monthLabel: 'Mes (MyMaps)', noMaps: 'Ningún mapa', uploadBtn: 'Subir MyMaps',
     layerCars: 'VIDs / posición', layerHomes: 'Casas', layerPlan: 'Plan del mes',
     searchPh: 'Buscar conductor o VID…', loading: 'Cargando…',
-    sideTitle: 'Conductores y VIDs',
-    legActive: 'Activo (check-in reciente)', legDnm: 'No mapeó hoy',
-    legStale: 'Sin check-in (en la casa)', legHome: 'Casa del conductor',
+    sideTitle: 'Flota — VIDs',
+    legActive: 'En uso (últimos días)', legDnm: 'Uso reciente (quincena)',
+    legStale: 'Parado', legHome: 'Casa del conductor',
     legPlan: 'Plan del mes (MyMaps)',
     modalTitle: 'Subir mapa de MyMaps', modalSub: 'Exporta MyMaps como KML/KMZ y elige el mes que representa.',
     modalMonth: 'Mes de referencia', modalLabel: 'Etiqueta (opcional)', modalLabelPh: 'Ej.: Colecta Junio/2026',
@@ -527,14 +534,19 @@ const I18N = {
     reasonWeather: 'Clima', reasonMech: 'Mecánica', reasonTech: 'Tech (cámara/disp.)',
     reasonDisks: 'Discos', reasonOther: 'Otro', fetchError: 'Error al cargar datos',
     fitBtn: 'Encuadrar', confirmReplace: 'Ya existe un MyMaps para ese mes. ¿Reemplazar?',
+    recActive: 'En uso', recIdle: 'Uso reciente', recParked: 'Parado',
+    lastDriver: 'Último conductor', lastDrove: 'Rodó en', daysAgoWord: 'días atrás',
+    posFromHome: 'Posición aproximada (casa del conductor)', inactive: 'inactivo',
+    noDriverVid: 'Sin conductor', onMap: 'en el mapa', noPos: 'sin posición', atHomeBadge: 'en la casa',
+    countActiveVids: 'en uso', countParked: 'parados',
   },
   en: {
     monthLabel: 'Month (MyMaps)', noMaps: 'No map', uploadBtn: 'Upload MyMaps',
     layerCars: 'VIDs / position', layerHomes: 'Homes', layerPlan: 'Month plan',
     searchPh: 'Search driver or VID…', loading: 'Loading…',
-    sideTitle: 'Drivers & VIDs',
-    legActive: 'Active (recent check-in)', legDnm: 'Did not map today',
-    legStale: 'No check-in (shown at home)', legHome: 'Driver home',
+    sideTitle: 'Fleet — VIDs',
+    legActive: 'In use (last days)', legDnm: 'Recently used (2 weeks)',
+    legStale: 'Parked', legHome: 'Driver home',
     legPlan: 'Month plan (MyMaps)',
     modalTitle: 'Upload MyMaps file', modalSub: 'Export MyMaps as KML/KMZ and pick the month it represents.',
     modalMonth: 'Reference month', modalLabel: 'Label (optional)', modalLabelPh: 'e.g. Collection June/2026',
@@ -553,6 +565,11 @@ const I18N = {
     reasonWeather: 'Weather', reasonMech: 'Mechanical', reasonTech: 'Tech (camera/devices)',
     reasonDisks: 'Disks', reasonOther: 'Other', fetchError: 'Error loading data',
     fitBtn: 'Fit', confirmReplace: 'A MyMaps already exists for that month. Replace?',
+    recActive: 'In use', recIdle: 'Recently used', recParked: 'Parked',
+    lastDriver: 'Last driver', lastDrove: 'Last drove', daysAgoWord: 'days ago',
+    posFromHome: 'Approx. position (driver home)', inactive: 'inactive',
+    noDriverVid: 'No driver', onMap: 'on map', noPos: 'no position', atHomeBadge: 'at home',
+    countActiveVids: 'in use', countParked: 'parked',
   },
 };
 function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || (I18N.pt[key]) || key; }
@@ -572,7 +589,7 @@ let carsLayer = null, homesLayer = null, planLayer = null, tempLayer = null;
 const state = {
   country: null,
   tabs: [],                 // [{code, name, flag, count}]
-  driversByCountry: {},     // code -> [enrichedDriver]
+  vidsByCountry: {},        // code -> [vidEntry] (frota: 1 por VID, última posição)
   maps: {},                 // code -> [ {month,label,fileId,filename,...} ] (lista do storage)
   selectedMonth: {},        // code -> monthKey
   overlayGeo: {},           // cacheKey -> geojson
@@ -602,7 +619,7 @@ function startApp(user) {
     onRefresh: () => {
       clearDataCache();
       state.loaded = false;
-      state.driversByCountry = {};
+      state.vidsByCountry = {};
       state.maps = {};
       state.overlayGeo = {};
       bootData();
@@ -634,54 +651,54 @@ async function bootData() {
       ? cachedFetch(url, ttl, { timeoutMs: 60000, staleOnError: true })
       : fetch(url).then(r => r.json());
 
-    const [listRes, dashRes, modeP] = await Promise.all([
+    const [listRes, dashRes, fleetRes, modeP] = await Promise.all([
       cf(`${CONFIG.scriptUrl}?action=getDriversList`, 300).catch(() => ({ drivers: [] })),
       cf(`${CONFIG.scriptUrl}?action=getDashboardData&days=30`, 300).catch(() => ({ data: null })),
+      cf(`${CONFIG.scriptUrl}?action=getFleetVids`, 300).catch(() => ({ vids: [] })),
       MapStore.detectMode(),
     ]);
 
-    const driversList = listRes.drivers || [];        // {name,email,country,vid,efficiency,qcScore,status}
+    const driversList = listRes.drivers || [];        // {name,email,country,vid,...}
     const dash = dashRes.data || {};
     const bases = dash.bases || {};
-    const checkins = dash.lastCheckins || {};
-    const fullDrivers = dash.drivers || [];           // {name,email,country,homeLat,homeLng,...}
+    const fullDrivers = dash.drivers || [];           // {name,email,homeLat,homeLng,...}
+    const fleet = fleetRes.vids || [];                // {vid,email,driverName,driverActive,country,lat,lng,daysAgo,lastDate,posSource}
+
     const homeByEmail = {};
     fullDrivers.forEach(d => { if (d.email) homeByEmail[d.email.toLowerCase()] = d; });
+    const nameByEmail = {};
+    driversList.forEach(d => { if (d.email) nameByEmail[d.email.toLowerCase()] = d.name; });
 
-    // Enriquece + agrupa por país
+    // casa/base por email (camada "Casas" + linha de distância)
+    function resolveHome(email) {
+      const base = bases[email] || null;
+      if (base && isNum(base.lat) && isNum(base.lng)) return { lat: base.lat, lng: base.lng, address: base.address || '', type: base.type || '' };
+      const fd = homeByEmail[email];
+      if (fd && isNum(fd.homeLat) && isNum(fd.homeLng)) return { lat: fd.homeLat, lng: fd.homeLng, address: fd.fullAddress || '', type: '' };
+      return null;
+    }
+
+    // Frota: 1 entrada por VID, agrupada por país (na última posição conhecida)
     const byCountry = {};
-    driversList.forEach(d => {
-      const email = (d.email || '').toLowerCase();
-      const code = countryCodeOf(d.country);
-      const base = bases[d.email] || bases[email] || null;
-      const ci = checkins[d.email] || checkins[email] || null;
-      const fd = homeByEmail[email] || {};
-
-      let home = null;
-      if (base && isNum(base.lat) && isNum(base.lng)) {
-        home = { lat: base.lat, lng: base.lng, address: base.address || '', type: base.type || '' };
-      } else if (isNum(fd.homeLat) && isNum(fd.homeLng)) {
-        home = { lat: fd.homeLat, lng: fd.homeLng, address: fd.fullAddress || '', type: '' };
-      }
-
-      let checkin = null;
-      if (ci && isNum(ci.destLat) && isNum(ci.destLng)) {
-        checkin = {
-          lat: ci.destLat, lng: ci.destLng, address: ci.destAddress || '',
-          hoursAgo: ci.hoursAgo, didMap: String(ci.didMap || '').toLowerCase(),
-          dnmReason: String(ci.dnmReason || '').toLowerCase(), notes: ci.notes || '',
-        };
-      }
-
-      const enriched = {
-        name: d.name, email: d.email, country: d.country, countryCode: code,
-        vid: d.vid || null, efficiency: d.efficiency, qcScore: d.qcScore, status: d.status,
-        home, checkin,
+    fleet.forEach(v => {
+      const email = (v.email || '').toLowerCase();
+      const code = countryCodeOf(v.country);
+      const entry = {
+        vid: v.vid, email: v.email || '',
+        driverName: v.driverName || nameByEmail[email] || '',
+        driverActive: !!v.driverActive,
+        country: v.country, countryCode: code,
+        lat: isNum(v.lat) ? v.lat : null,
+        lng: isNum(v.lng) ? v.lng : null,
+        posSource: v.posSource || 'none',
+        daysAgo: (v.daysAgo == null) ? null : v.daysAgo,
+        lastDate: v.lastDate || null,
+        home: resolveHome(email),
       };
-      (byCountry[code] = byCountry[code] || []).push(enriched);
+      (byCountry[code] = byCountry[code] || []).push(entry);
     });
 
-    state.driversByCountry = byCountry;
+    state.vidsByCountry = byCountry;
 
     // Monta tabs ordenadas
     const codes = Object.keys(byCountry);
@@ -779,22 +796,17 @@ function initMap() {
 // =================================================================
 // Camadas de motorista (carros/VID + casas)
 // =================================================================
-function recencyOf(driver) {
-  // retorna 'active' | 'dnm' | 'stale'
-  const ci = driver.checkin;
-  if (ci && isNum(ci.lat) && isNum(ci.lng) && ci.hoursAgo != null && ci.hoursAgo <= CONFIG.activeHours) {
-    if (ci.didMap === 'no') return 'dnm';
-    return 'active';
-  }
-  return 'stale';
+function recencyOf(v) {
+  // 'active' (rodou nos últimos dias) | 'idle' (rodou na quinzena) | 'parked'
+  const d = v.daysAgo;
+  if (d != null && d <= CONFIG.activeDays) return 'active';
+  if (d != null && d <= CONFIG.idleDays) return 'idle';
+  return 'parked';
 }
-function plotPointOf(driver) {
-  // onde plotar o carro: check-in recente → lá; senão → casa
-  const ci = driver.checkin, hm = driver.home;
-  const rec = recencyOf(driver);
-  if (rec !== 'stale' && ci) return { lat: ci.lat, lng: ci.lng, rec };
-  if (hm) return { lat: hm.lat, lng: hm.lng, rec: 'stale' };
-  if (ci) return { lat: ci.lat, lng: ci.lng, rec: 'stale' };
+// classe de COR do marcador (reusa as 3 cores: active=verde, dnm=âmbar, stale=cinza)
+function recClass(rec) { return rec === 'active' ? 'active' : (rec === 'idle' ? 'dnm' : 'stale'); }
+function plotPointOf(v) {
+  if (isNum(v.lat) && isNum(v.lng)) return { lat: v.lat, lng: v.lng, rec: recencyOf(v) };
   return null;
 }
 
@@ -806,51 +818,77 @@ function renderDriverLayers(code) {
   homesLayer.clearLayers();
   if (tempLayer) tempLayer.clearLayers();
 
-  const drivers = state.driversByCountry[code] || [];
+  const vids = state.vidsByCountry[code] || [];
   const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
+  const shown = q ? vids.filter(v => matchesQuery(v, q)) : vids;
 
-  drivers.forEach(d => {
-    if (q && !matchesQuery(d, q)) return;
-
-    // Casa
-    if (d.home && isNum(d.home.lat) && isNum(d.home.lng)) {
+  // Casas (distintas por motorista)
+  const homeSeen = {};
+  shown.forEach(v => {
+    if (v.home && isNum(v.home.lat) && isNum(v.home.lng) && v.email && !homeSeen[v.email]) {
+      homeSeen[v.email] = true;
       const hIcon = L.divIcon({
         className: 'ace-marker',
-        html: `<div class="home-marker" title="${escapeHtml(d.name)} — ${t('home')}">${HOME_SVG}</div>`,
+        html: `<div class="home-marker" title="${escapeHtml(v.driverName || '')} — ${t('home')}">${HOME_SVG}</div>`,
         iconSize: [22, 22], iconAnchor: [11, 11],
       });
-      L.marker([d.home.lat, d.home.lng], { icon: hIcon })
-        .bindPopup(buildHomePopup(d))
+      L.marker([v.home.lat, v.home.lng], { icon: hIcon })
+        .bindPopup(buildHomePopup(v))
         .addTo(homesLayer);
     }
+  });
 
-    // Carro / VID na posição atual (ou casa, apagado)
-    const pt = plotPointOf(d);
-    if (pt) {
-      // No marcador mostra só os últimos 3 dígitos (VID completo fica no popup/painel)
-      const label = d.vid ? String(d.vid).slice(-3) : '—';
-      const w = 34 + label.length * 7;
-      const carIcon = L.divIcon({
-        className: 'ace-marker',
-        html: `<div class="vid-marker ${pt.rec}" title="${escapeHtml(d.name)}">${CAR_SVG}<span>${escapeHtml(label)}</span></div>`,
-        iconSize: [w, 24], iconAnchor: [w / 2, 12],
-      });
-      const marker = L.marker([pt.lat, pt.lng], { icon: carIcon })
-        .bindPopup(buildDriverPopup(d, pt.rec))
-        .addTo(carsLayer);
-      marker.on('click', () => showHomeLink(d, pt));
-      marker._driverEmail = d.email;
-    }
+  // Carros/VIDs — agrupa por coordenada e espalha em leque os que caem no mesmo ponto
+  const groups = {};
+  shown.forEach(v => {
+    const pt = plotPointOf(v);
+    if (!pt) return;
+    const key = pt.lat.toFixed(4) + ',' + pt.lng.toFixed(4);
+    (groups[key] = groups[key] || []).push({ v, pt });
+  });
+  Object.keys(groups).forEach(key => {
+    const g = groups[key];
+    if (g.length === 1) { placeVidMarker(g[0].v, g[0].pt, g[0].pt.lat, g[0].pt.lng, null); return; }
+    const anchorLat = g[0].pt.lat, anchorLng = g[0].pt.lng;
+    const R = 0.0011 + g.length * 0.00018;            // raio do leque (graus)
+    const cosLat = Math.cos(anchorLat * Math.PI / 180) || 1;
+    g.forEach((item, i) => {
+      const ang = (2 * Math.PI * i) / g.length - Math.PI / 2;
+      const mlat = anchorLat + R * Math.sin(ang);
+      const mlng = anchorLng + (R * Math.cos(ang)) / cosLat;
+      placeVidMarker(item.v, item.pt, mlat, mlng, [anchorLat, anchorLng]);
+    });
   });
 }
 
-function showHomeLink(d, pt) {
+function placeVidMarker(v, pt, mlat, mlng, anchor) {
+  // No marcador mostra só os últimos 3 dígitos (VID completo no popup/painel)
+  const label = v.vid ? String(v.vid).slice(-3) : '—';
+  const w = 34 + label.length * 7;
+  if (anchor) {
+    // linha fininha ligando o marcador espalhado ao ponto real
+    L.polyline([anchor, [mlat, mlng]], { color: '#94A3B8', weight: 1, opacity: 0.55 }).addTo(carsLayer);
+  }
+  const title = 'VID ' + String(v.vid) + (v.driverName ? ' — ' + v.driverName : '');
+  const carIcon = L.divIcon({
+    className: 'ace-marker',
+    html: `<div class="vid-marker ${recClass(pt.rec)}" title="${escapeHtml(title)}">${CAR_SVG}<span>${escapeHtml(label)}</span></div>`,
+    iconSize: [w, 24], iconAnchor: [w / 2, 12],
+  });
+  const marker = L.marker([mlat, mlng], { icon: carIcon })
+    .bindPopup(buildVidPopup(v, pt.rec))
+    .addTo(carsLayer);
+  marker.on('click', () => showHomeLink(v, pt));
+  marker._vid = v.vid;
+}
+
+function showHomeLink(v, pt) {
   if (!tempLayer) return;
   tempLayer.clearLayers();
-  if (!d.home || pt.rec === 'stale') return;  // stale já está na casa
-  const dist = haversineKm(d.home.lat, d.home.lng, pt.lat, pt.lng);
-  if (dist < 1) return;
-  L.polyline([[d.home.lat, d.home.lng], [pt.lat, pt.lng]], {
+  if (!v.home || !isNum(v.home.lat) || !isNum(v.home.lng)) return;
+  const dist = haversineKm(v.home.lat, v.home.lng, pt.lat, pt.lng);
+  if (dist < 1) return;  // o carro já está na casa
+  L.polyline([[v.home.lat, v.home.lng], [pt.lat, pt.lng]], {
     color: '#2C5282', weight: 2, opacity: 0.6, dashArray: '6 6',
   }).addTo(tempLayer);
   const hIcon = L.divIcon({
@@ -858,14 +896,14 @@ function showHomeLink(d, pt) {
     html: `<div class="home-marker">${HOME_SVG}</div>`,
     iconSize: [22, 22], iconAnchor: [11, 11],
   });
-  L.marker([d.home.lat, d.home.lng], { icon: hIcon })
-    .bindPopup(buildHomePopup(d)).addTo(tempLayer);
+  L.marker([v.home.lat, v.home.lng], { icon: hIcon })
+    .bindPopup(buildHomePopup(v)).addTo(tempLayer);
 }
 
-function matchesQuery(d, q) {
-  return String(d.name || '').toLowerCase().includes(q)
-      || String(d.vid || '').toLowerCase().includes(q)
-      || String(d.email || '').toLowerCase().includes(q);
+function matchesQuery(v, q) {
+  return String(v.vid || '').toLowerCase().includes(q)
+      || String(v.driverName || '').toLowerCase().includes(q)
+      || String(v.email || '').toLowerCase().includes(q);
 }
 
 // =================================================================
@@ -880,32 +918,25 @@ function freshLabel(hoursAgo) {
   if (hoursAgo < 24) return Math.round(hoursAgo) + ' ' + t('hoursAgo');
   return Math.round(hoursAgo / 24) + ' ' + t('dayAgo');
 }
-function buildDriverPopup(d, rec) {
-  const ci = d.checkin;
-  let tagClass = rec, tagText = rec === 'active' ? t('legActive') : (rec === 'dnm' ? t('didNotMap') : t('noCheckin'));
-  let html = `<span class="popup-tag ${tagClass}">${escapeHtml(tagText)}</span>`;
-  html += `<div class="popup-title">${escapeHtml(d.name)}</div>`;
-  html += `<div class="popup-row"><span>${t('vid')}</span><strong>${d.vid ? escapeHtml(String(d.vid)) : t('noVid')}</strong></div>`;
-  html += `<div class="popup-row"><span>${escapeHtml(d.country || '')}</span><strong>${d.efficiency != null ? (Math.round(d.efficiency * 100) + '% ' + t('efficiency').toLowerCase()) : '—'}</strong></div>`;
-
-  if (rec === 'dnm' && ci) {
-    html += `<div class="popup-row"><span>${t('didNotMap')}</span><strong style="color:var(--c-warn);">${escapeHtml(dnmReasonLabel(ci.dnmReason))}</strong></div>`;
-    if (ci.notes) html += `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:11px;">${escapeHtml(ci.notes)}</div>`;
-  } else if (rec === 'active' && ci) {
-    const dist = d.home ? haversineKm(d.home.lat, d.home.lng, ci.lat, ci.lng) : null;
-    html += `<div class="popup-row"><span>${t('currentPos')}</span><strong>${escapeHtml(ci.address || '—')}</strong></div>`;
-    html += `<div class="popup-row"><span>${t('lastSeen')}</span><strong>${freshLabel(ci.hoursAgo)}</strong></div>`;
-    if (dist != null) html += `<div class="popup-row"><span>${t('distHome')}</span><strong>${dist.toFixed(0)} km</strong></div>`;
-  } else {
-    if (d.home) html += `<div class="popup-row"><span>${t('home')}</span><strong>${escapeHtml(d.home.address || '—')}</strong></div>`;
-    html += `<div class="popup-row" style="color:var(--c-text-muted);"><em>${t('noCheckin')}</em></div>`;
-  }
+function recLabel(rec) {
+  return rec === 'active' ? t('recActive') : (rec === 'idle' ? t('recIdle') : t('recParked'));
+}
+function buildVidPopup(v, rec) {
+  let html = `<span class="popup-tag ${recClass(rec)}">${escapeHtml(recLabel(rec))}</span>`;
+  html += `<div class="popup-title">VID ${escapeHtml(String(v.vid))}</div>`;
+  const driverTxt = v.driverName
+    ? (escapeHtml(v.driverName) + (v.driverActive ? '' : ' (' + t('inactive') + ')'))
+    : '—';
+  html += `<div class="popup-row"><span>${t('lastDriver')}</span><strong>${driverTxt}</strong></div>`;
+  html += `<div class="popup-row"><span>${escapeHtml(v.country || '')}</span><strong>${v.daysAgo != null ? (v.daysAgo + ' ' + t('daysAgoWord')) : '—'}</strong></div>`;
+  if (v.lastDate) html += `<div class="popup-row"><span>${t('lastDrove')}</span><strong>${escapeHtml(v.lastDate)}</strong></div>`;
+  if (v.posSource === 'home') html += `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:11px;"><em>${t('posFromHome')}</em></div>`;
   return html;
 }
-function buildHomePopup(d) {
-  return `<div class="popup-title">${escapeHtml(d.name)}</div>`
-    + `<div class="popup-row"><span>${t('home')}</span><strong>${d.vid ? ('VID ' + escapeHtml(String(d.vid))) : ''}</strong></div>`
-    + `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:12px;">${escapeHtml((d.home && d.home.address) || '—')}</div>`;
+function buildHomePopup(v) {
+  return `<div class="popup-title">${escapeHtml(v.driverName || t('home'))}</div>`
+    + `<div class="popup-row"><span>${t('home')}</span><strong>${v.vid ? ('VID ' + escapeHtml(String(v.vid))) : ''}</strong></div>`
+    + `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:12px;">${escapeHtml((v.home && v.home.address) || '—')}</div>`;
 }
 
 // =================================================================
@@ -991,80 +1022,73 @@ function drawPlan(geo) {
 // =================================================================
 function renderSideList() {
   const wrap = document.getElementById('side-list');
-  const drivers = (state.driversByCountry[state.country] || []).slice();
+  const vids = (state.vidsByCountry[state.country] || []).slice();
   const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
-  const filtered = q ? drivers.filter(d => matchesQuery(d, q)) : drivers;
+  const filtered = q ? vids.filter(v => matchesQuery(v, q)) : vids;
 
-  const rank = { active: 0, dnm: 1, stale: 2 };
+  const rank = { active: 0, idle: 1, parked: 2 };
   filtered.sort((a, b) => {
     const ra = rank[recencyOf(a)], rb = rank[recencyOf(b)];
     if (ra !== rb) return ra - rb;
-    return String(a.name).localeCompare(String(b.name));
+    return String(a.vid).localeCompare(String(b.vid));
   });
 
   if (!filtered.length) {
     wrap.innerHTML = `<div class="side-empty">${t('noDriversCountry')}</div>`;
     return;
   }
-  wrap.innerHTML = filtered.map(d => {
-    const rec = recencyOf(d);
-    let sub = '';
-    if (rec === 'active' && d.checkin) {
-      const dist = d.home ? haversineKm(d.home.lat, d.home.lng, d.checkin.lat, d.checkin.lng) : null;
-      sub = (d.checkin.address || t('currentPos')) + (dist != null ? ` · ${dist.toFixed(0)} km ${t('distHome')}` : '');
-    } else if (rec === 'dnm' && d.checkin) {
-      sub = t('didNotMap') + ' · ' + dnmReasonLabel(d.checkin.dnmReason);
-    } else {
-      sub = t('noCheckin');
-    }
-    return `<div class="driver-row" data-email="${escapeHtml(d.email)}">
-      <span class="status-dot ${rec}"></span>
+  wrap.innerHTML = filtered.map(v => {
+    const rec = recencyOf(v);
+    let sub = v.driverName || t('noDriverVid');
+    if (v.daysAgo != null) sub += ' · ' + recLabel(rec) + (v.daysAgo > CONFIG.activeDays ? ` (${v.daysAgo} ${t('daysAgoWord')})` : '');
+    const posBadge = (v.lat != null) ? (v.posSource === 'home' ? t('atHomeBadge') : t('onMap')) : t('noPos');
+    return `<div class="driver-row" data-vid="${escapeHtml(String(v.vid))}">
+      <span class="status-dot ${recClass(rec)}"></span>
       <div class="driver-row-main">
-        <div class="driver-row-name">${escapeHtml(d.name)}</div>
+        <div class="driver-row-name">VID ${escapeHtml(String(v.vid))}</div>
         <div class="driver-row-sub">${escapeHtml(sub)}</div>
       </div>
-      <span class="vid-badge ${d.vid ? '' : 'none'}">${d.vid ? escapeHtml(String(d.vid)) : t('noVid')}</span>
+      <span class="vid-badge ${v.lat != null ? '' : 'none'}">${escapeHtml(posBadge)}</span>
     </div>`;
   }).join('');
 
   wrap.querySelectorAll('.driver-row').forEach(row => {
-    row.addEventListener('click', () => focusDriver(row.getAttribute('data-email')));
+    row.addEventListener('click', () => focusVid(row.getAttribute('data-vid')));
   });
 }
 
-function focusDriver(email) {
-  const d = (state.driversByCountry[state.country] || []).find(x => x.email === email);
-  if (!d || !map) return;
-  const pt = plotPointOf(d);
+function focusVid(vid) {
+  const v = (state.vidsByCountry[state.country] || []).find(x => String(x.vid) === String(vid));
+  if (!v || !map) return;
+  const pt = plotPointOf(v);
   if (!pt) return;
   map.setView([pt.lat, pt.lng], 12, { animate: true });
-  showHomeLink(d, pt);
-  // abre popup do carro correspondente
-  carsLayer.eachLayer(l => { if (l._driverEmail === email && l.openPopup) l.openPopup(); });
+  showHomeLink(v, pt);
+  carsLayer.eachLayer(l => { if (l._vid === v.vid && l.openPopup) l.openPopup(); });
 }
 
 // =================================================================
 // Counts
 // =================================================================
 function updateCounts() {
-  const drivers = state.driversByCountry[state.country] || [];
-  const active = drivers.filter(d => recencyOf(d) === 'active').length;
-  const vids = drivers.filter(d => d.vid).length;
+  const vids = state.vidsByCountry[state.country] || [];
+  const active = vids.filter(v => recencyOf(v) === 'active').length;
+  const parked = vids.filter(v => recencyOf(v) === 'parked').length;
   const plan = state._planFeatureCount || 0;
   document.getElementById('counts').innerHTML =
-    `<span><b>${drivers.length}</b> ${t('countDrivers')}</span>`
-    + `<span><b>${active}</b> ${t('countActive')}</span>`
-    + `<span><b>${vids}</b> ${t('countVids')}</span>`
+    `<span><b>${vids.length}</b> ${t('countVids')}</span>`
+    + `<span><b>${active}</b> ${t('countActiveVids')}</span>`
+    + `<span><b>${parked}</b> ${t('countParked')}</span>`
     + (plan ? `<span><b>${plan}</b> ${t('countPlan')}</span>` : '');
 }
 
 function fitToData() {
   if (!map) return;
   const pts = [];
-  (state.driversByCountry[state.country] || []).forEach(d => {
-    const pt = plotPointOf(d);
+  (state.vidsByCountry[state.country] || []).forEach(v => {
+    const pt = plotPointOf(v);
     if (pt) pts.push([pt.lat, pt.lng]);
-    if (state.layers.homes && d.home) pts.push([d.home.lat, d.home.lng]);
+    if (state.layers.homes && v.home && isNum(v.home.lat)) pts.push([v.home.lat, v.home.lng]);
   });
   if (planLayer) { try { const b = planLayer.getBounds(); if (b.isValid()) pts.push(b.getNorthEast(), b.getSouthWest()); } catch (e) {} }
   if (pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.15), { maxZoom: 13 });
