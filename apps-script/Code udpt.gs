@@ -4781,10 +4781,17 @@ function getTkmReport_(month, year, country) {
     }
 
     // ---- Bloco de motoristas (cabeçalho linha 20, dados 21+) ----
+    // Só entram motoristas ATIVOS (Situation=Active na HR Database, cruzado por email).
+    // Fail-open: se a HR não puder ser lida (set vazio), não filtra — melhor mostrar
+    // todos do que um relatório vazio por divergência de email.
+    const activeSet = getActiveDriverEmailSet_();
+    const hasActiveSet = Object.keys(activeSet).length > 0;
+
     const dHead = sheet.getRange(20, 1, 1, lastCol).getValues()[0];
     const dIx = {
       name: findHeader_(dHead, ['driver name', 'name']),
       country: findHeader_(dHead, ['country']),
+      email: findHeader_(dHead, ['corporate e-mail', 'corporate email', 'email', 'e-mail']),
       qc: findHeader_(dHead, ['qc score', 'qc']),
       km: findHeader_(dHead, ['km driven', 'km']),
       eff: findHeader_(dHead, ['efficiency', 'eff']),
@@ -4801,6 +4808,11 @@ function getTkmReport_(month, year, country) {
         if (!dName) continue;
         const dCountry = dIx.country >= 0 ? String(row[dIx.country] || '').trim() : '';
         if (!wantAll && !matchCountry_(dCountry, country)) continue;
+        // filtro de ativo (por email)
+        if (hasActiveSet) {
+          const dEmail = dIx.email >= 0 ? String(row[dIx.email] || '').trim().toLowerCase() : '';
+          if (!dEmail || !activeSet[dEmail]) continue;
+        }
         drivers.push({
           name: dName,
           country: dCountry,
@@ -4905,6 +4917,43 @@ function periodMatches_(periodStr, month, year) {
   const parts = String(periodStr == null ? '' : periodStr).split('.');
   if (parts.length < 2) return false;
   return parseInt(parts[0], 10) === month && parseInt(parts[1], 10) === year;
+}
+
+/**
+ * Set (objeto-mapa) de emails (lowercase) de motoristas com Situation=Active na
+ * HR Database. Mesmo critério do getActiveDriversByCountry_ (Active/Ativo/Activo
+ * ou vazio). Retorna {} se não conseguir ler (o chamador deve fazer fail-open).
+ */
+function getActiveDriverEmailSet_() {
+  const set = {};
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = ss.getSheetByName(CONFIG.hrSheet);
+    if (!sheet || sheet.getLastRow() < 2) return set;
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const findCol = function () {
+      const names = Array.prototype.slice.call(arguments);
+      for (let i = 0; i < headers.length; i++) {
+        const h = String(headers[i] || '').trim().toLowerCase();
+        for (let j = 0; j < names.length; j++) if (h === names[j].toLowerCase()) return i;
+      }
+      return -1;
+    };
+    const idxEmail = findCol('Corporate E-mail', 'Email', 'Driver Email');
+    const idxStatus = findCol('Situation', 'Status', 'Driver Status');
+    if (idxEmail < 0) return set;
+    const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+    for (let i = 0; i < data.length; i++) {
+      const email = String(data[i][idxEmail] || '').trim().toLowerCase();
+      if (!email) continue;
+      const status = idxStatus >= 0 ? String(data[i][idxStatus] || '').trim().toLowerCase() : 'active';
+      const isActive = status === 'active' || status === 'ativo' || status === 'activo' || status === '';
+      if (isActive) set[email] = true;
+    }
+  } catch (e) {
+    Logger.log('getActiveDriverEmailSet_ erro: ' + e);
+  }
+  return set;
 }
 
 
