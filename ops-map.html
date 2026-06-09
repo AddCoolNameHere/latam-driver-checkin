@@ -756,6 +756,19 @@ async function bootData() {
     });
     state.driversByCountry = driversByCountry;
 
+    // VIDs "em uso agora": dos motoristas com check-in recente. A RAW CTS (que dá a
+    // cor por idade) costuma estar uns dias atrasada, então o check-in do motorista
+    // tem prioridade pra marcar o VID atual dele como verde.
+    const liveVids = {};
+    Object.keys(driversByCountry).forEach(code => {
+      driversByCountry[code].forEach(d => {
+        if (d.vid && driverRecency(d) !== 'stale') liveVids[String(d.vid).trim()] = true;
+      });
+    });
+    Object.keys(byCountry).forEach(code => {
+      byCountry[code].forEach(v => { v.liveActive = !!liveVids[String(v.vid).trim()]; });
+    });
+
     // Monta tabs ordenadas (união dos países com VID e/ou motorista)
     const codes = Array.from(new Set(Object.keys(byCountry).concat(Object.keys(driversByCountry))));
     codes.sort((a, b) => {
@@ -855,7 +868,9 @@ function initMap() {
 // Camadas de motorista (carros/VID + casas)
 // =================================================================
 function recencyOf(v) {
-  // 'active' (rodou nos últimos dias) | 'idle' (rodou na quinzena) | 'parked'
+  // 'active' (em uso) | 'idle' (rodou na quinzena) | 'parked'
+  // Prioridade: motorista com check-in recente nesse VID → em uso (a RAW CTS atrasa).
+  if (v.liveActive) return 'active';
   const d = v.daysAgo;
   if (d != null && d <= CONFIG.activeDays) return 'active';
   if (d != null && d <= CONFIG.idleDays) return 'idle';
