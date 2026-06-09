@@ -827,7 +827,8 @@ function renderDriverLayers(code) {
     // Carro / VID na posição atual (ou casa, apagado)
     const pt = plotPointOf(d);
     if (pt) {
-      const label = d.vid ? String(d.vid) : '—';
+      // No marcador mostra só os últimos 3 dígitos (VID completo fica no popup/painel)
+      const label = d.vid ? String(d.vid).slice(-3) : '—';
       const w = 34 + label.length * 7;
       const carIcon = L.divIcon({
         className: 'ace-marker',
