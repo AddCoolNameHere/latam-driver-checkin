@@ -2743,7 +2743,8 @@ const I18N = {
     tkmKpiGoal: 'CTS Goal (Target)',
     tkmKpiAch: 'CTS Goal Achievement',
     tkmKpiTkm: 'TKM (done by drivers)',
-    tkmKpiBaseline: 'Baseline',
+    tkmKpiBaseline: '% Overall Baseline',
+    tkmKpiBaselineTgt: 'Baseline',
     tkmDriversSection: 'Motoristas',
     tkmColName: 'Motorista',
     tkmColQc: 'QC Score',
@@ -3064,7 +3065,8 @@ const I18N = {
     tkmKpiGoal: 'CTS Goal (Target)',
     tkmKpiAch: 'CTS Goal Achievement',
     tkmKpiTkm: 'TKM (done by drivers)',
-    tkmKpiBaseline: 'Baseline',
+    tkmKpiBaseline: '% Overall Baseline',
+    tkmKpiBaselineTgt: 'Baseline',
     tkmDriversSection: 'Conductores',
     tkmColName: 'Conductor',
     tkmColQc: 'QC Score',
@@ -3385,7 +3387,8 @@ const I18N = {
     tkmKpiGoal: 'CTS Goal (Target)',
     tkmKpiAch: 'CTS Goal Achievement',
     tkmKpiTkm: 'TKM (done by drivers)',
-    tkmKpiBaseline: 'Baseline',
+    tkmKpiBaseline: '% Overall Baseline',
+    tkmKpiBaselineTgt: 'Baseline',
     tkmDriversSection: 'Drivers',
     tkmColName: 'Driver',
     tkmColQc: 'QC Score',
@@ -6055,7 +6058,7 @@ async function generateTkmReportPdf() {
     const url = `${CONFIG.scriptUrl}?action=getTkmReport&month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}&country=${encodeURIComponent(country)}`;
     const res = await fetch(url).then(r => r.json());
     if (!res.success) throw new Error(res.error || t('exportErrorBackend'));
-    buildTkmReportPdf(res);
+    await buildTkmReportPdf(res);
     closeTkmModal();
   } catch (err) {
     console.error('[TKM Report] erro:', err);
@@ -6065,11 +6068,40 @@ async function generateTkmReportPdf() {
   }
 }
 
+// Carrega uma imagem (same-origin ou CORS) e devolve {dataUrl, w, h} via canvas.
+// Resolve null se falhar (ex: cross-origin sem CORS → canvas "tainted").
+function loadImageDataUrl(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth || 1; c.height = img.naturalHeight || 1;
+        c.getContext('2d').drawImage(img, 0, 0);
+        resolve({ dataUrl: c.toDataURL('image/png'), w: img.naturalWidth || 1, h: img.naturalHeight || 1 });
+      } catch (e) { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+// Tenta o wordmark da Aceolution; cai pro globo local (same-origin) se CORS falhar.
+async function loadPdfLogo() {
+  const srcs = ['https://aceolution.com/img/logo2.png', 'aceolution-globe.png'];
+  for (let i = 0; i < srcs.length; i++) {
+    const r = await loadImageDataUrl(srcs[i]);
+    if (r) return r;
+  }
+  return null;
+}
+
 // Monta o PDF (retrato A4).
-//  - País único: header + 4 big numbers + tabela paginada de motoristas.
+//  - País único: header + 5 big numbers + tabela paginada de motoristas.
 //  - Todos os países: bloco "LATAM (total)" + uma seção por país (título + big
 //    numbers do país + tabela de motoristas do país).
-function buildTkmReportPdf(data) {
+async function buildTkmReportPdf(data) {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageW = 210, pageH = 297, M = 12;
@@ -6113,9 +6145,9 @@ function buildTkmReportPdf(data) {
   ];
   const tableW = pageW - M * 2;
   const rowH = 6.2, headH = 7, bottomLimit = pageH - 13;
-  const kpiH = 24, kpiGap = 4, kpiW = (pageW - M * 2 - kpiGap * 3) / 4;
+  const kpiH = 24, kpiGap = 4, kpiW = (pageW - M * 2 - kpiGap * 4) / 5;
 
-  let pageNum = 0, y = 0;
+  let pageNum = 0, y = 0, logo = null;
 
   function drawHeader() {
     pdf.setFillColor(...C_PRIMARY); pdf.rect(0, 0, pageW, 20, 'F');
@@ -6126,13 +6158,23 @@ function buildTkmReportPdf(data) {
     pdf.text(t('tkmReportTitle').toUpperCase(), M, 14);
     pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.setTextColor(...C_ACCENT_SOFT);
     pdf.text(`${countryLabel}  ·  ${periodLabel}`, M, 18.2);
-    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.5); pdf.setTextColor(...C_ACCENT_SOFT);
-    pdf.text(now.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' }), pageW - M, 7, { align: 'right' });
+    // Logo Aceolution num chip branco (canto sup. direito), em todas as páginas
+    if (logo && logo.dataUrl) {
+      let lh = 10, lw = lh * (logo.w / logo.h);
+      const maxW = 42;
+      if (lw > maxW) { lw = maxW; lh = lw * (logo.h / logo.w); }
+      const padX = 2.5, padY = 1.5;
+      const chipW = lw + padX * 2, chipH = lh + padY * 2;
+      const chipX = pageW - M - chipW, chipY = (20 - chipH) / 2;
+      pdf.setFillColor(255, 255, 255); pdf.roundedRect(chipX, chipY, chipW, chipH, 1.5, 1.5, 'F');
+      pdf.addImage(logo.dataUrl, 'PNG', chipX + padX, chipY + padY, lw, lh, 'aceLogo', 'FAST');
+    }
   }
   function drawFooter() {
+    const dateStr = now.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
     pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(...C_MUTED);
     pdf.text(`${countryLabel} · ${periodLabel}`, M, pageH - 7);
-    pdf.text(`${t('tkmPage') || 'Página'} ${pageNum}`, pageW - M, pageH - 7, { align: 'right' });
+    pdf.text(`${dateStr}  ·  ${t('tkmPage') || 'Página'} ${pageNum}`, pageW - M, pageH - 7, { align: 'right' });
   }
   function startPage(first) {
     if (!first) pdf.addPage();
@@ -6150,17 +6192,18 @@ function buildTkmReportPdf(data) {
       { label: t('tkmKpiGoal'), value: fmtInt(big.ctsGoal), color: C_BRAND },
       { label: t('tkmKpiAch'), value: fmtPct(big.achievementPct, 0), color: achCol(big.achievementPct || 0) },
       { label: t('tkmKpiTkm'), value: fmtInt(big.tkmDone), color: C_ACCENT },
-      { label: t('tkmKpiBaseline'), value: fmtInt(big.baseline), color: C_PRIMARY },
+      { label: t('tkmKpiBaseline'), value: fmtPct(big.baselinePct, 0), color: C_PRIMARY },
+      { label: t('tkmKpiBaselineTgt'), value: fmtInt(big.baseline), color: C_TEXT_2 },
     ];
     items.forEach((it, idx) => {
       const x = M + idx * (kpiW + kpiGap);
       pdf.setFillColor(...C_BG_CARD); pdf.setDrawColor(...C_BORDER);
       pdf.roundedRect(x, y, kpiW, kpiH, 2, 2, 'FD');
       pdf.setFillColor(...it.color); pdf.rect(x, y, kpiW, 1.4, 'F');
-      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6); pdf.setTextColor(...C_MUTED);
-      pdf.text(pdf.splitTextToSize(it.label.toUpperCase(), kpiW - 5).slice(0, 2), x + 3, y + 5.5);
-      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(15); pdf.setTextColor(...it.color);
-      pdf.text(String(it.value), x + 3, y + 18);
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(5.8); pdf.setTextColor(...C_MUTED);
+      pdf.text(pdf.splitTextToSize(it.label.toUpperCase(), kpiW - 4).slice(0, 2), x + 2.5, y + 5.5);
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(13); pdf.setTextColor(...it.color);
+      pdf.text(String(it.value), x + 2.5, y + 18);
     });
     y += kpiH;
   }
@@ -6259,6 +6302,7 @@ function buildTkmReportPdf(data) {
   }
 
   // ---- render ----
+  logo = await loadPdfLogo();
   startPage(true);
   sections.forEach((sec) => {
     // evita órfão: garante título + cards + (cabeçalho + 2 linhas) na mesma página
