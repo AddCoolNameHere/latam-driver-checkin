@@ -1313,7 +1313,8 @@ async function saveVidAdmin() {
   if (!code) return;
   const btn = document.getElementById('vid-admin-save');
   const sels = document.querySelectorAll('#side-list .admin-sel');
-  const items = Array.from(sels).map(s => ({ vid: s.getAttribute('data-vid'), status: s.value }));
+  // manda status (v5.46) + active (compat backend v5.45 antigo, que só entende booleano)
+  const items = Array.from(sels).map(s => ({ vid: s.getAttribute('data-vid'), status: s.value, active: s.value === 'active' }));
   if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
   try {
     const payload = {
