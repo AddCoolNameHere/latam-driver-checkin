@@ -1,4 +1,4 @@
-/**
+﻿/**
  * LATAM Street View — Backend (v5)
  * Google Apps Script
  *
@@ -276,7 +276,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.42',
+        version: 'v5.43',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -290,7 +290,8 @@ function doGet(e) {
                     'getPayrollAdjustments', 'POST savePayrollAdjustment', 'POST deletePayrollAdjustment',
                     'getCrimeOverlay',
                     'getArLaunchSchedule', 'POST saveArLaunchSchedule',
-                    'listMyMaps', 'getMyMap', 'POST saveMyMap'],
+                    'listMyMaps', 'getMyMap', 'POST saveMyMap',
+                    'getTkmReportOptions', 'getTkmReport'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -360,6 +361,20 @@ function doGet(e) {
       const year = parseInt(e.parameter.year, 10);
       if (!month || !year) return jsonResponse({ success: false, error: 'month/year obrigatórios' });
       return jsonResponse({ success: true, data: getMonthlyReportData_(month, year) });
+    }
+
+    // v5.43: opções pros dropdowns do export TKM Report (meses/anos dos seletores B9/D9 + países)
+    if (action === 'getTkmReportOptions') {
+      return jsonResponse(getTkmReportOptions_());
+    }
+
+    // v5.43: dados do TKM Monthly Report pro PDF (big numbers + lista de motoristas) por mês/ano/país
+    if (action === 'getTkmReport') {
+      const month = parseInt(e.parameter.month, 10);
+      const year = parseInt(e.parameter.year, 10);
+      const country = e.parameter.country || 'ALL';
+      if (!month || !year) return jsonResponse({ success: false, error: 'month/year obrigatórios' });
+      return jsonResponse(getTkmReport_(month, year, country));
     }
 
     // v5.16: drivers ativos agrupados por país (pra dropdown na cash.html)
@@ -4442,27 +4457,40 @@ function getMonthlyReportData_(month, year) {
   const monthName = monthNames[month - 1] || ('Month ' + month);
 
   // ---- 1) TKM Report (slide 4) — aba "TKM Monthly Drivers Report" ----
-  // Headers linha 9 (idx 8): Country | CTS Goal | Achievement % | TKM | KM | Eff | Baseline | QC
-  // Dados linha 10-15 (6 países), linha 16 = SUM
+  // Cabeçalho linha 10, dados 11-16 (6 países), SUM linha 17. Lido POR NOME de
+  // cabeçalho (a aba ganhou colunas Swarm/Churn no meio — a leitura por posição
+  // fixa antiga pegava as colunas erradas).
   const tkmReport = [];
   let tkmReportSum = null;
   try {
     const tkmSheet = ss.getSheetByName('TKM Monthly Drivers Report');
-    if (tkmSheet && tkmSheet.getLastRow() >= 16) {
-      const data = tkmSheet.getRange(10, 1, 7, 8).getValues();  // 6 países + SUM
+    if (tkmSheet && tkmSheet.getLastRow() >= 17) {
+      const lastCol = tkmSheet.getLastColumn();
+      const head = tkmSheet.getRange(10, 1, 1, lastCol).getValues()[0];
+      const ix = {
+        country: findHeader_(head, ['country']),
+        ctsGoal: findHeader_(head, ['cts goal (target)', 'cts goal']),
+        achievement: findHeader_(head, ['cts goal achievement %', 'cts goal achievement', 'achievement']),
+        tkm: findHeader_(head, ['tkm (done by drivers)', 'tkm done', 'tkm']),
+        km: findHeader_(head, ['km driven', 'km']),
+        eff: findHeader_(head, ['overall efficiency', 'efficiency', 'eff']),
+        baseline: findHeader_(head, ['% overall baseline', 'overall baseline', 'baseline']),
+        qc: findHeader_(head, ['qc score', 'qc']),
+      };
+      const data = tkmSheet.getRange(11, 1, 7, lastCol).getValues();  // 6 países + SUM
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
-        if (!row[0]) continue;
-        const country = String(row[0]).trim();
+        const country = ix.country >= 0 ? String(row[ix.country] || '').trim() : '';
+        if (!country) continue;
         const obj = {
           country: country,
-          ctsGoal: safeNumber(row[1]),
-          achievementPct: safeNumber(row[2]),
-          tkmDone: safeNumber(row[3]),
-          kmDriven: safeNumber(row[4]),
-          efficiency: safeNumber(row[5]),
-          baselinePct: safeNumber(row[6]),
-          qcScore: safeNumber(row[7]),
+          ctsGoal: safeNumber(row[ix.ctsGoal]),
+          achievementPct: safeNumber(row[ix.achievement]),
+          tkmDone: safeNumber(row[ix.tkm]),
+          kmDriven: safeNumber(row[ix.km]),
+          efficiency: safeNumber(row[ix.eff]),
+          baselinePct: safeNumber(row[ix.baseline]),
+          qcScore: safeNumber(row[ix.qc]),
         };
         if (country.toUpperCase() === 'SUM') {
           tkmReportSum = obj;
@@ -4475,29 +4503,43 @@ function getMonthlyReportData_(month, year) {
     Logger.log('Erro lendo TKM Report: ' + e);
   }
 
-  // ---- 2) Top 10 Best Drivers (slide 5) — mesma aba, drivers a partir da linha 20 ----
-  // Headers linha 19 (idx 18): Driver Name | Country | Email | TKM | KM | Eff | Baseline% | QC | Mapping Days
-  // Ordenado por Baseline% desc
+  // ---- 2) Top 10 Best Drivers (slide 5) — mesma aba, cabeçalho linha 20, dados 21+ ----
+  // Lido por nome de cabeçalho. Ordenado por Baseline% desc.
   const allDrivers = [];
   try {
     const tkmSheet = ss.getSheetByName('TKM Monthly Drivers Report');
     if (tkmSheet) {
       const lastRow = tkmSheet.getLastRow();
-      if (lastRow >= 20) {
-        const data = tkmSheet.getRange(20, 1, lastRow - 19, 10).getValues();
+      const lastCol = tkmSheet.getLastColumn();
+      if (lastRow >= 21) {
+        const head = tkmSheet.getRange(20, 1, 1, lastCol).getValues()[0];
+        const ix = {
+          name: findHeader_(head, ['driver name', 'name']),
+          country: findHeader_(head, ['country']),
+          email: findHeader_(head, ['corporate e-mail', 'corporate email', 'email', 'e-mail']),
+          tkm: findHeader_(head, ['tkm sum', 'tkm']),
+          km: findHeader_(head, ['km driven', 'km']),
+          eff: findHeader_(head, ['efficiency', 'eff']),
+          baseline: findHeader_(head, ['baseline%', 'baseline %', 'baseline']),
+          qc: findHeader_(head, ['qc score', 'qc']),
+          mappingDays: findHeader_(head, ['mapping days', 'mapping']),
+        };
+        const data = tkmSheet.getRange(21, 1, lastRow - 20, lastCol).getValues();
         for (let i = 0; i < data.length; i++) {
           const row = data[i];
-          if (!row[0] || !row[2]) continue;  // sem nome ou email
+          const name = ix.name >= 0 ? String(row[ix.name] || '').trim() : '';
+          const email = ix.email >= 0 ? String(row[ix.email] || '').trim() : '';
+          if (!name || !email) continue;  // sem nome ou email
           allDrivers.push({
-            name: String(row[0]).trim(),
-            country: String(row[1] || '').trim(),
-            email: String(row[2]).trim(),
-            tkm: safeNumber(row[3]),
-            km: safeNumber(row[4]),
-            efficiency: safeNumber(row[5]),
-            baseline: safeNumber(row[6]),
-            qcScore: safeNumber(row[7]),
-            mappingDays: safeNumber(row[8]),
+            name: name,
+            country: ix.country >= 0 ? String(row[ix.country] || '').trim() : '',
+            email: email,
+            tkm: safeNumber(row[ix.tkm]),
+            km: safeNumber(row[ix.km]),
+            efficiency: safeNumber(row[ix.eff]),
+            baseline: safeNumber(row[ix.baseline]),
+            qcScore: safeNumber(row[ix.qc]),
+            mappingDays: safeNumber(row[ix.mappingDays]),
           });
         }
       }
@@ -4594,6 +4636,247 @@ function getMonthlyReportData_(month, year) {
     idlenessTotals: idlenessTotals,
   };
 }
+
+
+// ================================================================
+// v5.43: TKM Monthly Report — export PDF (dashboard)
+// Lê a aba "TKM Monthly Drivers Report":
+//   - bloco de país (cabeçalho linha 10, dados 11-16, SUM 17) → big numbers
+//   - bloco de motoristas (cabeçalho linha 20, dados 21+)
+// O mês/ano é dirigido pelos seletores B9 (mês) e D9 (ano) da aba. Pra exportar
+// um mês específico a gente grava B9/D9, força recalc (flush) e DEPOIS restaura
+// os valores originais. Serializado por LockService pra dois exports simultâneos
+// não brigarem pela mesma célula. Colunas lidas POR NOME do cabeçalho (não por
+// posição fixa) — a aba já foi reestruturada uma vez e quebrou o MBR.
+// ================================================================
+
+var TKM_REPORT_SHEET_ = 'TKM Monthly Drivers Report';
+
+/**
+ * Opções pros dropdowns do modal de export: meses/anos válidos (data-validation
+ * dos seletores B9/D9) + lista de países do bloco de país. NÃO mexe na planilha.
+ */
+function getTkmReportOptions_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(TKM_REPORT_SHEET_);
+  if (!sheet) return { success: false, error: 'aba "' + TKM_REPORT_SHEET_ + '" não encontrada' };
+
+  const months = readValidationList_(sheet.getRange('B9'));
+  const years = readValidationList_(sheet.getRange('D9'));
+
+  // Países = coluna A do bloco de país (linhas 11-16), ignorando SUM/vazio
+  const countries = [];
+  const block = sheet.getRange(11, 1, 6, 1).getValues();
+  for (let i = 0; i < block.length; i++) {
+    const c = String(block[i][0] || '').trim();
+    if (c && c.toUpperCase() !== 'SUM') countries.push(c);
+  }
+
+  return {
+    success: true,
+    months: months.length ? months.map(function (m) { return safeNumber(m); }).filter(Boolean) : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    years: years.length ? years.map(function (y) { return safeNumber(y); }).filter(Boolean) : [safeNumber(sheet.getRange('D9').getValue())],
+    countries: countries,
+    currentMonth: safeNumber(sheet.getRange('B9').getValue()),
+    currentYear: safeNumber(sheet.getRange('D9').getValue()),
+  };
+}
+
+/**
+ * Lê os valores permitidos de uma data-validation (lista direta ou intervalo).
+ * Retorna [] se não houver validação reconhecível.
+ */
+function readValidationList_(range) {
+  try {
+    const dv = range.getDataValidation();
+    if (!dv) return [];
+    const type = dv.getCriteriaType();
+    const vals = dv.getCriteriaValues();
+    if (type === SpreadsheetApp.DataValidationCriteria.VALUE_IN_LIST) {
+      return (vals[0] || []).slice();
+    }
+    if (type === SpreadsheetApp.DataValidationCriteria.VALUE_IN_RANGE) {
+      const r = vals[0];
+      const flat = r.getValues().reduce(function (a, row) { return a.concat(row); }, []);
+      return flat.filter(function (v) { return v !== '' && v !== null; });
+    }
+    return [];
+  } catch (e) {
+    Logger.log('readValidationList_ erro: ' + e);
+    return [];
+  }
+}
+
+/**
+ * Gera os dados do TKM Monthly Report pro mês/ano/país pedidos.
+ * Grava B9 (mês) e D9 (ano), força recalc, lê, e SEMPRE restaura os originais.
+ * @param {number} month 1-12
+ * @param {number} year  ex 2026
+ * @param {string} country  nome do país, ou 'ALL'/'' pra todos
+ */
+function getTkmReport_(month, year, country) {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(TKM_REPORT_SHEET_);
+  if (!sheet) return { success: false, error: 'aba "' + TKM_REPORT_SHEET_ + '" não encontrada' };
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(30000);
+  } catch (e) {
+    return { success: false, error: 'sistema ocupado gerando outro relatório, tenta de novo em instantes' };
+  }
+
+  const wantAll = !country || String(country).toUpperCase() === 'ALL' || String(country).trim() === '';
+  let prevMonth = null, prevYear = null, restored = false;
+
+  try {
+    const mCell = sheet.getRange('B9');
+    const yCell = sheet.getRange('D9');
+    prevMonth = mCell.getValue();
+    prevYear = yCell.getValue();
+
+    // Só escreve se mudou (evita recalc desnecessário)
+    let changed = false;
+    if (month && safeNumber(prevMonth) !== month) { mCell.setValue(month); changed = true; }
+    if (year && safeNumber(prevYear) !== year) { yCell.setValue(year); changed = true; }
+    if (changed) SpreadsheetApp.flush();
+
+    const lastCol = sheet.getLastColumn();
+
+    // ---- Bloco de país (cabeçalho linha 10, dados 11-16, SUM 17) ----
+    const cHead = sheet.getRange(10, 1, 1, lastCol).getValues()[0];
+    const cIx = {
+      country: findHeader_(cHead, ['country']),
+      ctsGoal: findHeader_(cHead, ['cts goal (target)', 'cts goal']),
+      achievement: findHeader_(cHead, ['cts goal achievement %', 'cts goal achievement', 'achievement']),
+      tkm: findHeader_(cHead, ['tkm (done by drivers)', 'tkm done', 'tkm']),
+      baseline: findHeader_(cHead, ['% overall baseline', 'overall baseline', 'baseline']),
+    };
+    const cRows = sheet.getRange(11, 1, 7, lastCol).getValues(); // 6 países + SUM
+    const perCountry = [];
+    let sumRow = null;
+    for (let i = 0; i < cRows.length; i++) {
+      const row = cRows[i];
+      const name = cIx.country >= 0 ? String(row[cIx.country] || '').trim() : '';
+      if (!name) continue;
+      const obj = {
+        country: name,
+        ctsGoal: safeNumber(row[cIx.ctsGoal]),
+        achievementPct: safeNumber(row[cIx.achievement]),
+        tkmDone: safeNumber(row[cIx.tkm]),
+        baselinePct: safeNumber(row[cIx.baseline]),
+      };
+      if (name.toUpperCase() === 'SUM') sumRow = obj; else perCountry.push(obj);
+    }
+
+    let bigNumbers;
+    if (wantAll) {
+      bigNumbers = sumRow || { country: 'SUM', ctsGoal: 0, achievementPct: 0, tkmDone: 0, baselinePct: 0 };
+    } else {
+      bigNumbers = null;
+      for (let i = 0; i < perCountry.length; i++) {
+        if (matchCountry_(perCountry[i].country, country)) { bigNumbers = perCountry[i]; break; }
+      }
+      if (!bigNumbers) bigNumbers = { country: country, ctsGoal: 0, achievementPct: 0, tkmDone: 0, baselinePct: 0 };
+    }
+
+    // ---- Bloco de motoristas (cabeçalho linha 20, dados 21+) ----
+    const dHead = sheet.getRange(20, 1, 1, lastCol).getValues()[0];
+    const dIx = {
+      name: findHeader_(dHead, ['driver name', 'name']),
+      country: findHeader_(dHead, ['country']),
+      qc: findHeader_(dHead, ['qc score', 'qc']),
+      km: findHeader_(dHead, ['km driven', 'km']),
+      eff: findHeader_(dHead, ['efficiency', 'eff']),
+      vidActive: findHeader_(dHead, ['vid active sum', 'vid active']),
+      baseline: findHeader_(dHead, ['baseline%', 'baseline %', 'baseline']),
+    };
+    const drivers = [];
+    const lastRow = sheet.getLastRow();
+    if (lastRow >= 21 && dIx.name >= 0) {
+      const dRows = sheet.getRange(21, 1, lastRow - 20, lastCol).getValues();
+      for (let i = 0; i < dRows.length; i++) {
+        const row = dRows[i];
+        const dName = String(row[dIx.name] || '').trim();
+        if (!dName) continue;
+        const dCountry = dIx.country >= 0 ? String(row[dIx.country] || '').trim() : '';
+        if (!wantAll && !matchCountry_(dCountry, country)) continue;
+        drivers.push({
+          name: dName,
+          country: dCountry,
+          qcScore: safeNumber(row[dIx.qc]),
+          kmDriven: safeNumber(row[dIx.km]),
+          efficiency: safeNumber(row[dIx.eff]),
+          vidActiveSum: safeNumber(row[dIx.vidActive]),
+          baselinePct: safeNumber(row[dIx.baseline]),
+        });
+      }
+    }
+    // ordena por baseline% desc (igual a aba)
+    drivers.sort(function (a, b) { return (b.baselinePct || 0) - (a.baselinePct || 0); });
+
+    // restaura ANTES de retornar (e marca pra não restaurar de novo no finally)
+    if (changed) {
+      mCell.setValue(prevMonth);
+      yCell.setValue(prevYear);
+      SpreadsheetApp.flush();
+    }
+    restored = true;
+
+    return {
+      success: true,
+      month: month,
+      year: year,
+      country: wantAll ? 'ALL' : country,
+      bigNumbers: bigNumbers,
+      drivers: drivers,
+    };
+  } catch (err) {
+    Logger.log('getTkmReport_ erro: ' + err);
+    return { success: false, error: String(err) };
+  } finally {
+    if (!restored && prevMonth !== null) {
+      try {
+        sheet.getRange('B9').setValue(prevMonth);
+        sheet.getRange('D9').setValue(prevYear);
+        SpreadsheetApp.flush();
+      } catch (e) { Logger.log('restore B9/D9 erro: ' + e); }
+    }
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Acha o índice (0-based) da 1ª coluna cujo cabeçalho casa com um dos candidatos
+ * (case-insensitive, ignora espaços extras). Tenta igualdade exata, depois "contém".
+ * Retorna -1 se não achar.
+ */
+function findHeader_(headerRow, candidates) {
+  const norm = function (s) { return String(s == null ? '' : s).toLowerCase().replace(/\s+/g, ' ').trim(); };
+  const H = headerRow.map(norm);
+  const C = candidates.map(norm);
+  for (let j = 0; j < C.length; j++) {
+    const idx = H.indexOf(C[j]);
+    if (idx >= 0) return idx;
+  }
+  for (let j = 0; j < C.length; j++) {
+    for (let i = 0; i < H.length; i++) {
+      if (H[i] && H[i].indexOf(C[j]) >= 0) return i;
+    }
+  }
+  return -1;
+}
+
+/** Compara país de forma tolerante (case-insensitive, trim, ignora acentos). */
+function matchCountry_(a, b) {
+  const strip = function (s) {
+    s = String(s == null ? '' : s).toLowerCase().trim();
+    if (s.normalize) s = s.normalize('NFD').replace(/[̀-ͯ]/g, ''); return s;
+  };
+  const x = strip(a), y = strip(b);
+  return !!x && !!y && x === y;
+}
+
 
 function computeVidManagementTotals_(rows) {
   if (!rows.length) return null;

@@ -1947,6 +1947,10 @@
           <div class="export-title" data-i18n="exportRecruitment">📋 Recruitment Status</div>
           <div class="export-sub" data-i18n="exportRecruitmentSub">PDF executivo: KPIs, mapa LATAM, pipeline e aging</div>
         </button>
+        <button onclick="openTkmReportModal()">
+          <div class="export-title" data-i18n="exportTkm">📈 TKM Monthly Report</div>
+          <div class="export-sub" data-i18n="exportTkmSub">PDF: big numbers + lista de motoristas (por país/mês)</div>
+        </button>
         <button onclick="openMbrModal()" style="border-top:2px solid var(--c-border);">
           <div class="export-title" data-i18n="exportMbr">📊 Monthly Business Review</div>
           <div class="export-sub" data-i18n="exportMbrSub">PowerPoint completo pra reunião do mês</div>
@@ -2115,6 +2119,43 @@
       <button class="primary" id="mbr-generate-btn" onclick="generateMbr()" data-i18n="mbrGenerate">Gerar PowerPoint</button>
     </div>
     <div id="mbr-status" style="margin-top:12px; font-size:13px; color:var(--c-text-muted); text-align:center;"></div>
+  </div>
+</div>
+
+<!-- v5.43: TKM Monthly Report PDF modal -->
+<div id="tkm-modal" class="ts-modal" style="display:none;" onclick="closeTkmModalIfBackdrop(event)">
+  <div class="ts-modal-content" style="max-width:460px;">
+    <div class="ts-modal-header">
+      <h2 data-i18n="tkmModalTitle">📈 TKM Monthly Report</h2>
+      <button class="ts-modal-close" onclick="closeTkmModal()">×</button>
+    </div>
+    <p style="color:var(--c-text-muted); font-size:13px; margin-bottom:16px;" data-i18n="tkmModalSub">
+      PDF com os números do mês (CTS Goal, Achievement, TKM, Baseline) e a lista de motoristas.
+    </p>
+
+    <div class="ts-form-row">
+      <label data-i18n="tkmCountry">País:</label>
+      <select id="tkm-country-select" style="flex:1;padding:8px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;">
+        <option value="ALL" data-i18n="tkmAllCountries">Todos os países</option>
+      </select>
+    </div>
+    <div class="ts-form-row" style="margin-top:10px;">
+      <label data-i18n="tkmMonth">Mês:</label>
+      <select id="tkm-month-select" style="flex:1;padding:8px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;">
+        <option value="" data-i18n="mbrLoadingMonths">Carregando meses...</option>
+      </select>
+    </div>
+    <div class="ts-form-row" style="margin-top:10px;">
+      <label data-i18n="tkmYear">Ano:</label>
+      <select id="tkm-year-select" style="flex:1;padding:8px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;">
+      </select>
+    </div>
+
+    <div class="ts-modal-actions" style="margin-top:18px;">
+      <button onclick="closeTkmModal()" data-i18n="cancel">Cancelar</button>
+      <button class="primary" id="tkm-generate-btn" onclick="generateTkmReportPdf()" data-i18n="tkmGenerate">Gerar PDF</button>
+    </div>
+    <div id="tkm-status" style="margin-top:12px; font-size:13px; color:var(--c-text-muted); text-align:center;"></div>
   </div>
 </div>
 
@@ -2688,6 +2729,30 @@ const I18N = {
     mbrBuilding: 'Montando os slides...',
     mbrSuccess: 'PowerPoint baixado!',
     mbrLibError: 'Biblioteca de PPT não carregou. Verifique sua conexão.',
+    exportTkm: '📈 TKM Monthly Report',
+    exportTkmSub: 'PDF: big numbers + lista de motoristas (por país/mês)',
+    tkmModalTitle: '📈 TKM Monthly Report',
+    tkmModalSub: 'PDF com os números do mês (CTS Goal, Achievement, TKM, Baseline) e a lista de motoristas.',
+    tkmCountry: 'País:',
+    tkmAllCountries: 'Todos os países',
+    tkmMonth: 'Mês:',
+    tkmYear: 'Ano:',
+    tkmGenerate: 'Gerar PDF',
+    tkmGenerating: 'Gerando relatório...',
+    tkmReportTitle: 'TKM Monthly Report',
+    tkmKpiGoal: 'CTS Goal (Target)',
+    tkmKpiAch: 'CTS Goal Achievement',
+    tkmKpiTkm: 'TKM (done by drivers)',
+    tkmKpiBaseline: '% Overall Baseline',
+    tkmDriversSection: 'Motoristas',
+    tkmColName: 'Motorista',
+    tkmColQc: 'QC Score',
+    tkmColKm: 'Km Driven',
+    tkmColEff: 'Efficiency',
+    tkmColVid: 'VID Active',
+    tkmColBaseline: 'Baseline%',
+    tkmPage: 'Página',
+    tkmNoDrivers: 'Sem motoristas para este filtro.',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Recolher',
     tableShowingCount: 'Mostrando',
@@ -2985,6 +3050,30 @@ const I18N = {
     mbrBuilding: 'Montando los slides...',
     mbrSuccess: '¡PowerPoint descargado!',
     mbrLibError: 'La biblioteca PPT no cargó. Verifique su conexión.',
+    exportTkm: '📈 TKM Monthly Report',
+    exportTkmSub: 'PDF: big numbers + lista de conductores (por país/mes)',
+    tkmModalTitle: '📈 TKM Monthly Report',
+    tkmModalSub: 'PDF con los números del mes (CTS Goal, Achievement, TKM, Baseline) y la lista de conductores.',
+    tkmCountry: 'País:',
+    tkmAllCountries: 'Todos los países',
+    tkmMonth: 'Mes:',
+    tkmYear: 'Año:',
+    tkmGenerate: 'Generar PDF',
+    tkmGenerating: 'Generando informe...',
+    tkmReportTitle: 'TKM Monthly Report',
+    tkmKpiGoal: 'CTS Goal (Target)',
+    tkmKpiAch: 'CTS Goal Achievement',
+    tkmKpiTkm: 'TKM (done by drivers)',
+    tkmKpiBaseline: '% Overall Baseline',
+    tkmDriversSection: 'Conductores',
+    tkmColName: 'Conductor',
+    tkmColQc: 'QC Score',
+    tkmColKm: 'Km Driven',
+    tkmColEff: 'Efficiency',
+    tkmColVid: 'VID Active',
+    tkmColBaseline: 'Baseline%',
+    tkmPage: 'Página',
+    tkmNoDrivers: 'Sin conductores para este filtro.',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Contraer',
     tableShowingCount: 'Mostrando',
@@ -3282,6 +3371,30 @@ const I18N = {
     mbrBuilding: 'Building slides...',
     mbrSuccess: 'PowerPoint downloaded!',
     mbrLibError: 'PPT library did not load. Check your connection.',
+    exportTkm: '📈 TKM Monthly Report',
+    exportTkmSub: 'PDF: big numbers + driver list (by country/month)',
+    tkmModalTitle: '📈 TKM Monthly Report',
+    tkmModalSub: 'PDF with the month KPIs (CTS Goal, Achievement, TKM, Baseline) and the driver list.',
+    tkmCountry: 'Country:',
+    tkmAllCountries: 'All countries',
+    tkmMonth: 'Month:',
+    tkmYear: 'Year:',
+    tkmGenerate: 'Generate PDF',
+    tkmGenerating: 'Generating report...',
+    tkmReportTitle: 'TKM Monthly Report',
+    tkmKpiGoal: 'CTS Goal (Target)',
+    tkmKpiAch: 'CTS Goal Achievement',
+    tkmKpiTkm: 'TKM (done by drivers)',
+    tkmKpiBaseline: '% Overall Baseline',
+    tkmDriversSection: 'Drivers',
+    tkmColName: 'Driver',
+    tkmColQc: 'QC Score',
+    tkmColKm: 'Km Driven',
+    tkmColEff: 'Efficiency',
+    tkmColVid: 'VID Active',
+    tkmColBaseline: 'Baseline%',
+    tkmPage: 'Page',
+    tkmNoDrivers: 'No drivers for this filter.',
     showAllDrivers: 'Show all',
     collapseTable: '↑ Collapse',
     tableShowingCount: 'Showing',
@@ -5862,6 +5975,236 @@ function closeMbrModal() {
 
 function closeMbrModalIfBackdrop(evt) {
   if (evt.target.id === 'mbr-modal') closeMbrModal();
+}
+
+// ================================================================
+// v5.43: TKM Monthly Report — export PDF (big numbers + lista de motoristas)
+// Lê a aba "TKM Monthly Drivers Report" via getTkmReport (backend grava os
+// seletores B9/D9, recalcula e restaura). Modal pergunta país + mês + ano.
+// ================================================================
+
+// Nome do mês (1-12) no idioma corrente — só o nome, sem ano.
+function tkmMonthName(m) {
+  const names = currentLang === 'pt'
+    ? ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+    : currentLang === 'es'
+    ? ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  return names[m - 1] || String(m);
+}
+
+function closeTkmModal() {
+  document.getElementById('tkm-modal').style.display = 'none';
+}
+function closeTkmModalIfBackdrop(evt) {
+  if (evt.target.id === 'tkm-modal') closeTkmModal();
+}
+
+async function openTkmReportModal() {
+  document.getElementById('export-menu').style.display = 'none';
+  const modal = document.getElementById('tkm-modal');
+  modal.style.display = 'flex';
+
+  const cSel = document.getElementById('tkm-country-select');
+  const mSel = document.getElementById('tkm-month-select');
+  const ySel = document.getElementById('tkm-year-select');
+  document.getElementById('tkm-status').textContent = '';
+  mSel.innerHTML = `<option>${t('mbrLoadingMonths') || 'Carregando...'}</option>`;
+  cSel.disabled = mSel.disabled = ySel.disabled = true;
+
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getTkmReportOptions').then(r => r.json());
+    if (!res.success) throw new Error(res.error || 'backend');
+
+    cSel.innerHTML = `<option value="ALL">${escapeHtml(t('tkmAllCountries'))}</option>` +
+      (res.countries || []).map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+
+    const months = (res.months && res.months.length) ? res.months : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    mSel.innerHTML = months.map(m => `<option value="${m}"${m === res.currentMonth ? ' selected' : ''}>${escapeHtml(tkmMonthName(m))}</option>`).join('');
+
+    const years = (res.years && res.years.length) ? res.years : [res.currentYear];
+    ySel.innerHTML = years.map(y => `<option value="${y}"${y === res.currentYear ? ' selected' : ''}>${y}</option>`).join('');
+
+    cSel.disabled = mSel.disabled = ySel.disabled = false;
+  } catch (err) {
+    console.error('[TKM Report] erro carregando opções:', err);
+    // Fallback: meses 1-12 + ano atual
+    const now = new Date();
+    cSel.innerHTML = `<option value="ALL">${escapeHtml(t('tkmAllCountries'))}</option>`;
+    mSel.innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => `<option value="${m}"${m === now.getMonth() + 1 ? ' selected' : ''}>${escapeHtml(tkmMonthName(m))}</option>`).join('');
+    ySel.innerHTML = `<option value="${now.getFullYear()}">${now.getFullYear()}</option>`;
+    cSel.disabled = mSel.disabled = ySel.disabled = false;
+  }
+}
+
+async function generateTkmReportPdf() {
+  if (typeof window.jspdf === 'undefined') { alert(t('exportError')); return; }
+
+  const country = document.getElementById('tkm-country-select').value || 'ALL';
+  const month = document.getElementById('tkm-month-select').value;
+  const year = document.getElementById('tkm-year-select').value;
+  const btn = document.getElementById('tkm-generate-btn');
+  const status = document.getElementById('tkm-status');
+
+  if (!month || !year) { status.textContent = t('exportError'); return; }
+
+  btn.disabled = true;
+  status.textContent = t('tkmGenerating') || 'Gerando...';
+
+  try {
+    const url = `${CONFIG.scriptUrl}?action=getTkmReport&month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}&country=${encodeURIComponent(country)}`;
+    const res = await fetch(url).then(r => r.json());
+    if (!res.success) throw new Error(res.error || t('exportErrorBackend'));
+    buildTkmReportPdf(res);
+    closeTkmModal();
+  } catch (err) {
+    console.error('[TKM Report] erro:', err);
+    status.textContent = (t('exportErrorBackend') || 'Erro') + ': ' + (err.message || err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// Monta o PDF (retrato A4): header navy + 4 big numbers + tabela paginada de motoristas.
+function buildTkmReportPdf(data) {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageW = 210, pageH = 297, M = 12;
+
+  // Paleta (mesma do exportRecruitmentPdf)
+  const C_PRIMARY = [15, 36, 67], C_ACCENT = [74, 159, 224], C_ACCENT_SOFT = [200, 222, 240],
+    C_TEXT = [15, 23, 42], C_TEXT_2 = [51, 65, 85], C_MUTED = [100, 116, 139],
+    C_BORDER = [226, 232, 240], C_BG_CARD = [241, 245, 249],
+    C_SUCCESS = [22, 163, 74], C_WARN = [202, 138, 4], C_DANGER = [185, 28, 28], C_BRAND = [44, 82, 130];
+
+  const now = new Date();
+  const locale = currentLang === 'pt' ? 'pt-BR' : currentLang === 'es' ? 'es-ES' : 'en-US';
+  const big = data.bigNumbers || {};
+  const drivers = data.drivers || [];
+  const isAll = (data.country === 'ALL' || !data.country);
+  const countryLabel = isAll ? t('tkmAllCountries') : data.country;
+  const periodLabel = `${tkmMonthName(parseInt(data.month, 10))} ${data.year}`;
+
+  const fmtInt = (v) => formatNumber(v || 0, 0);
+  const fmtPct = (v, d) => ((v || 0) * 100).toFixed(d === undefined ? 0 : d) + '%';
+
+  function drawHeader() {
+    pdf.setFillColor(...C_PRIMARY); pdf.rect(0, 0, pageW, 20, 'F');
+    pdf.setFillColor(...C_ACCENT); pdf.rect(0, 20, pageW, 0.8, 'F');
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7.5); pdf.setTextColor(...C_ACCENT_SOFT);
+    pdf.text('ACEOLUTION  ·  STREET VIEW LATAM', M, 7);
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(13); pdf.setTextColor(255, 255, 255);
+    pdf.text(t('tkmReportTitle').toUpperCase(), M, 14);
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.setTextColor(...C_ACCENT_SOFT);
+    pdf.text(`${countryLabel}  ·  ${periodLabel}`, M, 18.2);
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.5); pdf.setTextColor(...C_ACCENT_SOFT);
+    pdf.text(now.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' }), pageW - M, 7, { align: 'right' });
+  }
+
+  function drawFooter(pageNum) {
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(...C_MUTED);
+    pdf.text(`${countryLabel} · ${periodLabel}`, M, pageH - 7);
+    pdf.text(`${t('tkmPage') || 'Página'} ${pageNum}`, pageW - M, pageH - 7, { align: 'right' });
+  }
+
+  drawHeader();
+
+  // ===== KPI ROW (4 big numbers) =====
+  const kpiY = 27, kpiH = 26, kpiGap = 4;
+  const kpiW = (pageW - M * 2 - kpiGap * 3) / 4;
+  function drawKpi(idx, label, value, color) {
+    const x = M + idx * (kpiW + kpiGap);
+    pdf.setFillColor(...C_BG_CARD); pdf.setDrawColor(...C_BORDER);
+    pdf.roundedRect(x, kpiY, kpiW, kpiH, 2, 2, 'FD');
+    pdf.setFillColor(...color); pdf.rect(x, kpiY, kpiW, 1.4, 'F');
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6); pdf.setTextColor(...C_MUTED);
+    pdf.text(pdf.splitTextToSize(label.toUpperCase(), kpiW - 5).slice(0, 2), x + 3, kpiY + 5.5);
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(15); pdf.setTextColor(...color);
+    pdf.text(String(value), x + 3, kpiY + 19);
+  }
+  const achColor = big.achievementPct >= 1 ? C_SUCCESS : (big.achievementPct >= 0.8 ? C_WARN : C_DANGER);
+  drawKpi(0, t('tkmKpiGoal'), fmtInt(big.ctsGoal), C_BRAND);
+  drawKpi(1, t('tkmKpiAch'), fmtPct(big.achievementPct, 0), achColor);
+  drawKpi(2, t('tkmKpiTkm'), fmtInt(big.tkmDone), C_ACCENT);
+  drawKpi(3, t('tkmKpiBaseline'), fmtPct(big.baselinePct, 0), C_PRIMARY);
+
+  // ===== DRIVER TABLE =====
+  const cols = [
+    { key: 'name', label: t('tkmColName'), w: 0.34, align: 'left' },
+    { key: 'qc', label: t('tkmColQc'), w: 0.13, align: 'center' },
+    { key: 'km', label: t('tkmColKm'), w: 0.15, align: 'right' },
+    { key: 'eff', label: t('tkmColEff'), w: 0.13, align: 'center' },
+    { key: 'vid', label: t('tkmColVid'), w: 0.12, align: 'center' },
+    { key: 'baseline', label: t('tkmColBaseline'), w: 0.13, align: 'center' },
+  ];
+  const tableW = pageW - M * 2;
+  const rowH = 6.2, headH = 7, bottomLimit = pageH - 13;
+
+  function drawTableHeader(y) {
+    pdf.setFillColor(...C_PRIMARY); pdf.rect(M, y, tableW, headH, 'F');
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7); pdf.setTextColor(255, 255, 255);
+    let cur = M;
+    cols.forEach(c => {
+      const w = tableW * c.w;
+      const tx = c.align === 'center' ? cur + w / 2 : c.align === 'right' ? cur + w - 3 : cur + 3;
+      pdf.text(c.label.toUpperCase(), tx, y + 4.7, { align: c.align });
+      cur += w;
+    });
+    return y + headH;
+  }
+
+  const sectionTop = kpiY + kpiH + 8;
+  pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.setTextColor(...C_PRIMARY);
+  pdf.text(`${t('tkmDriversSection')} (${drivers.length})`, M, sectionTop - 2);
+
+  let pageNum = 1;
+  let y = drawTableHeader(sectionTop);
+  drawFooter(pageNum);
+
+  if (!drivers.length) {
+    pdf.setFont('helvetica', 'italic'); pdf.setFontSize(9); pdf.setTextColor(...C_MUTED);
+    pdf.text(t('tkmNoDrivers') || '—', M, y + 8);
+  }
+
+  drivers.forEach((d, idx) => {
+    if (y + rowH > bottomLimit) {
+      pdf.addPage(); pageNum++;
+      drawHeader();
+      y = drawTableHeader(26);
+      drawFooter(pageNum);
+    }
+    if (idx % 2 === 1) { pdf.setFillColor(...C_BG_CARD); pdf.rect(M, y, tableW, rowH, 'F'); }
+    const baselineColor = d.baselinePct >= 1 ? C_SUCCESS : (d.baselinePct >= 0.8 ? C_TEXT_2 : C_DANGER);
+    const cells = [
+      { val: d.name, type: 'name' },
+      { val: fmtPct(d.qcScore, 1), type: 'num' },
+      { val: fmtInt(d.kmDriven), type: 'num' },
+      { val: fmtPct(d.efficiency, 1), type: 'num' },
+      { val: fmtInt(d.vidActiveSum), type: 'num' },
+      { val: fmtPct(d.baselinePct, 1), type: 'baseline' },
+    ];
+    let cur = M;
+    cols.forEach((c, i) => {
+      const w = tableW * c.w;
+      const cell = cells[i];
+      const tx = c.align === 'center' ? cur + w / 2 : c.align === 'right' ? cur + w - 3 : cur + 3;
+      if (cell.type === 'name') {
+        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7.5); pdf.setTextColor(...C_TEXT);
+        pdf.text(pdf.splitTextToSize(String(cell.val), w - 4)[0] || '', tx, y + 4.3, { align: c.align });
+      } else if (cell.type === 'baseline') {
+        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.setTextColor(...baselineColor);
+        pdf.text(String(cell.val), tx, y + 4.3, { align: c.align });
+      } else {
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(...C_TEXT_2);
+        pdf.text(String(cell.val), tx, y + 4.3, { align: c.align });
+      }
+      cur += w;
+    });
+    y += rowH;
+  });
+
+  const safeCountry = (isAll ? 'LATAM' : String(data.country)).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w]+/g, '_');
+  pdf.save(`TKM_Report_${safeCountry}_${data.month}-${data.year}.pdf`);
 }
 
 // ================================================================
