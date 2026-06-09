@@ -1412,6 +1412,7 @@ function wireUI() {
   // Abas do painel (Motoristas | VIDs)
   document.getElementById('tab-drivers').addEventListener('click', () => setSideTab('drivers'));
   document.getElementById('tab-vids').addEventListener('click', () => setSideTab('vids'));
+  document.getElementById('tab-admin').addEventListener('click', () => setSideTab('admin'));
 
   window.addEventListener('resize', () => { if (map) map.invalidateSize(); });
 }
