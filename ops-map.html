@@ -189,15 +189,37 @@
   .side-toggle-btn:hover { color: var(--c-primary); border-color: var(--c-primary); }
   .ops-body.panel-collapsed .side-panel { width: 0; border-left: none; }
 
-  /* Abas do painel (Motoristas | VIDs) */
+  /* Abas do painel (Motoristas | VIDs | Admin) */
   .side-tabs { display: flex; gap: 4px; }
   .side-tab {
     background: none; border: 1px solid var(--c-border); border-radius: 7px;
-    padding: 4px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+    padding: 4px 9px; font-size: 11.5px; font-weight: 700; cursor: pointer;
     color: var(--c-text-muted); font-family: inherit;
   }
   .side-tab.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
   .side-tab:not(.active):hover { color: var(--c-primary); border-color: var(--c-primary); }
+
+  /* Aba Admin — curadoria de VIDs ativos */
+  .admin-bar {
+    position: sticky; top: 0; z-index: 2; background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border); padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .admin-save {
+    background: var(--c-primary); color: #fff; border: none; border-radius: 7px;
+    padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+    white-space: nowrap;
+  }
+  .admin-save:disabled { opacity: 0.6; cursor: default; }
+  .admin-hint { font-size: 10.5px; color: var(--c-text-muted); line-height: 1.3; }
+  .admin-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 14px;
+    border-bottom: 1px solid var(--c-border); cursor: pointer;
+  }
+  .admin-row:hover { background: var(--c-bg-tint); }
+  .admin-row .admin-chk {
+    width: 17px; height: 17px; accent-color: var(--c-primary); cursor: pointer; flex-shrink: 0;
+  }
 
   /* Botão flutuante pra reabrir o painel quando colapsado */
   .side-reopen {
@@ -402,6 +424,7 @@
         <div class="side-tabs">
           <button class="side-tab active" id="tab-drivers" data-i18n="tabDrivers">Motoristas</button>
           <button class="side-tab" id="tab-vids" data-i18n="tabVids">VIDs</button>
+          <button class="side-tab" id="tab-admin" data-i18n="tabAdmin">Admin</button>
         </div>
         <button class="side-toggle-btn" id="side-toggle" title="Recolher painel" aria-label="Recolher painel">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
@@ -537,6 +560,9 @@ const I18N = {
     noDriverVid: 'Sem motorista', onMap: 'no mapa', noPos: 'sem posição', atHomeBadge: 'na casa',
     countActiveVids: 'em uso', countParked: 'parados',
     tabDrivers: 'Motoristas', tabVids: 'VIDs', noVidsCountry: 'Nenhum VID neste país.',
+    tabAdmin: 'Admin', saveActive: 'Salvar ativos', recInactive: 'Inativo',
+    adminVidHint: 'Marque os VIDs que fazem parte da frota ativa deste país.',
+    savedOk: 'Curadoria salva', saveFail: 'Falha ao salvar',
   },
   es: {
     monthLabel: 'Mes (MyMaps)', noMaps: 'Ningún mapa', uploadBtn: 'Subir MyMaps',
@@ -569,6 +595,9 @@ const I18N = {
     noDriverVid: 'Sin conductor', onMap: 'en el mapa', noPos: 'sin posición', atHomeBadge: 'en la casa',
     countActiveVids: 'en uso', countParked: 'parados',
     tabDrivers: 'Conductores', tabVids: 'VIDs', noVidsCountry: 'Ningún VID en este país.',
+    tabAdmin: 'Admin', saveActive: 'Guardar activos', recInactive: 'Inactivo',
+    adminVidHint: 'Marca los VIDs que forman parte de la flota activa de este país.',
+    savedOk: 'Curaduría guardada', saveFail: 'Error al guardar',
   },
   en: {
     monthLabel: 'Month (MyMaps)', noMaps: 'No map', uploadBtn: 'Upload MyMaps',
@@ -601,6 +630,9 @@ const I18N = {
     noDriverVid: 'No driver', onMap: 'on map', noPos: 'no position', atHomeBadge: 'at home',
     countActiveVids: 'in use', countParked: 'parked',
     tabDrivers: 'Drivers', tabVids: 'VIDs', noVidsCountry: 'No VIDs in this country.',
+    tabAdmin: 'Admin', saveActive: 'Save active', recInactive: 'Inactive',
+    adminVidHint: 'Check the VIDs that belong to this country active fleet.',
+    savedOk: 'Saved', saveFail: 'Save failed',
   },
 };
 function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || (I18N.pt[key]) || key; }
@@ -684,10 +716,11 @@ async function bootData() {
       ? cachedFetch(url, ttl, { timeoutMs: 60000, staleOnError: true })
       : fetch(url).then(r => r.json());
 
-    const [listRes, dashRes, fleetRes, modeP] = await Promise.all([
+    const [listRes, dashRes, fleetRes, statusRes, modeP] = await Promise.all([
       cf(`${CONFIG.scriptUrl}?action=getDriversList`, 300).catch(() => ({ drivers: [] })),
       cf(`${CONFIG.scriptUrl}?action=getDashboardData&days=30`, 300).catch(() => ({ data: null })),
       cf(`${CONFIG.scriptUrl}?action=getFleetVids`, 300).catch(() => ({ vids: [] })),
+      cf(`${CONFIG.scriptUrl}?action=getVidStatus`, 120).catch(() => ({ status: [] })),
       MapStore.detectMode(),
     ]);
 
@@ -697,6 +730,11 @@ async function bootData() {
     const checkins = dash.lastCheckins || {};
     const fullDrivers = dash.drivers || [];           // {name,email,homeLat,homeLng,...}
     const fleet = fleetRes.vids || [];                // {vid,email,driverName,driverActive,country,lat,lng,daysAgo,lastDate,posSource}
+
+    // Curadoria manual de VIDs ativos (por VID, vinda da aba "VID Status")
+    const vidStatus = {};
+    (statusRes.status || []).forEach(s => { if (s && s.vid) vidStatus[String(s.vid).trim()] = !!s.active; });
+    state.vidStatus = vidStatus;
 
     const homeByEmail = {};
     fullDrivers.forEach(d => { if (d.email) homeByEmail[d.email.toLowerCase()] = d; });
@@ -768,6 +806,7 @@ async function bootData() {
     Object.keys(byCountry).forEach(code => {
       byCountry[code].forEach(v => { v.liveActive = !!liveVids[String(v.vid).trim()]; });
     });
+    applyVidStatus();   // marca v.manualActive a partir de state.vidStatus
 
     // Monta tabs ordenadas (união dos países com VID e/ou motorista)
     const codes = Array.from(new Set(Object.keys(byCountry).concat(Object.keys(driversByCountry))));
@@ -868,15 +907,15 @@ function initMap() {
 // Camadas de motorista (carros/VID + casas)
 // =================================================================
 function recencyOf(v) {
-  // 'active' (em uso) | 'idle' (rodou na quinzena) | 'parked'
-  // Prioridade: motorista com check-in recente nesse VID → em uso (a RAW CTS atrasa).
-  if (v.liveActive) return 'active';
+  // 'active' (em uso) | 'idle' (quinzena) | 'parked' | 'inactive' (admin tirou da frota)
+  if (v.manualActive === false) return 'inactive';   // curadoria manual manda
+  if (v.liveActive) return 'active';                  // check-in recente do motorista (RAW CTS atrasa)
   const d = v.daysAgo;
   if (d != null && d <= CONFIG.activeDays) return 'active';
   if (d != null && d <= CONFIG.idleDays) return 'idle';
   return 'parked';
 }
-// classe de COR (3 cores: verde=active · âmbar=idle/dnm · cinza=stale/parked)
+// classe de COR (verde=active · âmbar=idle/dnm · cinza=stale/parked/inactive)
 function recClass(rec) {
   if (rec === 'active') return 'active';
   if (rec === 'idle' || rec === 'dnm') return 'dnm';
@@ -885,6 +924,17 @@ function recClass(rec) {
 function plotPointOf(v) {
   if (isNum(v.lat) && isNum(v.lng)) return { lat: v.lat, lng: v.lng, rec: recencyOf(v) };
   return null;
+}
+// Marca v.manualActive em todos os VIDs a partir de state.vidStatus (curadoria).
+function applyVidStatus() {
+  const vs = state.vidStatus || {};
+  const by = state.vidsByCountry || {};
+  Object.keys(by).forEach(code => {
+    by[code].forEach(v => {
+      const k = String(v.vid).trim();
+      v.manualActive = (k in vs) ? vs[k] : null;
+    });
+  });
 }
 
 // ---- versões por-motorista (aba "Motoristas") ----
@@ -1018,7 +1068,10 @@ function freshLabel(hoursAgo) {
   return Math.round(hoursAgo / 24) + ' ' + t('dayAgo');
 }
 function recLabel(rec) {
-  return rec === 'active' ? t('recActive') : (rec === 'idle' ? t('recIdle') : t('recParked'));
+  if (rec === 'active') return t('recActive');
+  if (rec === 'idle') return t('recIdle');
+  if (rec === 'inactive') return t('recInactive');
+  return t('recParked');
 }
 function buildVidPopup(v, rec) {
   let html = `<span class="popup-tag ${recClass(rec)}">${escapeHtml(recLabel(rec))}</span>`;
@@ -1123,14 +1176,16 @@ function renderSideList() {
   const wrap = document.getElementById('side-list');
   const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
   if (state.sideTab === 'vids') renderVidSide(wrap, q);
+  else if (state.sideTab === 'admin') renderAdminSide(wrap, q);
   else renderDriverSide(wrap, q);
 }
 
 function setSideTab(tab) {
   state.sideTab = tab;
-  const dt = document.getElementById('tab-drivers'), vt = document.getElementById('tab-vids');
-  if (dt) dt.classList.toggle('active', tab === 'drivers');
-  if (vt) vt.classList.toggle('active', tab === 'vids');
+  ['drivers', 'vids', 'admin'].forEach(k => {
+    const el = document.getElementById('tab-' + k);
+    if (el) el.classList.toggle('active', tab === k);
+  });
   renderSideList();
 }
 
@@ -1196,6 +1251,64 @@ function renderVidSide(wrap, q) {
   });
 }
 
+// Aba Admin: marcar quais VIDs fazem parte da frota ativa do país (persiste no backend)
+function renderAdminSide(wrap, q) {
+  const vids = (state.vidsByCountry[state.country] || []).slice()
+    .sort((a, b) => String(a.vid).localeCompare(String(b.vid)));
+  const list = q ? vids.filter(v => matchesQuery(v, q)) : vids;
+  const head = `<div class="admin-bar">
+      <button class="admin-save" id="vid-admin-save">${escapeHtml(t('saveActive'))}</button>
+      <span class="admin-hint">${escapeHtml(t('adminVidHint'))}</span>
+    </div>`;
+  if (!list.length) { wrap.innerHTML = head + `<div class="side-empty">${t('noVidsCountry')}</div>`; return; }
+  wrap.innerHTML = head + list.map(v => {
+    const checked = (v.manualActive !== false);   // default = ativo até curar
+    return `<label class="admin-row">
+      <input type="checkbox" class="admin-chk" data-vid="${escapeHtml(String(v.vid))}" ${checked ? 'checked' : ''}>
+      <div class="driver-row-main">
+        <div class="driver-row-name">VID ${escapeHtml(String(v.vid))}</div>
+        <div class="driver-row-sub">${escapeHtml(v.driverName || t('noDriverVid'))}</div>
+      </div>
+    </label>`;
+  }).join('');
+  const btn = document.getElementById('vid-admin-save');
+  if (btn) btn.addEventListener('click', saveVidAdmin);
+}
+
+async function saveVidAdmin() {
+  const code = state.country;
+  if (!code) return;
+  const btn = document.getElementById('vid-admin-save');
+  const chks = document.querySelectorAll('#side-list .admin-chk');
+  const items = Array.from(chks).map(c => ({ vid: c.getAttribute('data-vid'), active: c.checked }));
+  if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+  try {
+    const payload = {
+      type: 'saveVidStatus',
+      country: metaOf(code).name,
+      items: items,
+      updatedBy: (typeof currentUser !== 'undefined' && currentUser && currentUser.username) || '',
+    };
+    try {
+      const res = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
+      if (res && res.success === false) throw new Error(res.error || 'backend');
+    } catch (e) { /* opaque/erro de rede (não-abort): assume aceito, o reload confirma */ }
+    // atualiza estado local + reaplica nas camadas
+    items.forEach(it => { state.vidStatus[String(it.vid).trim()] = !!it.active; });
+    applyVidStatus();
+    if (typeof clearDataCache === 'function') clearDataCache('action=getVidStatus');
+    renderDriverLayers(code);
+    renderSideList();
+    updateCounts();
+    showToast(t('savedOk'), 'success');
+  } catch (err) {
+    console.error('[OpsMap] saveVidStatus erro:', err);
+    showToast(t('saveFail'), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = t('saveActive'); }
+  }
+}
+
 function focusVid(vid) {
   const v = (state.vidsByCountry[state.country] || []).find(x => String(x.vid) === String(vid));
   if (!v || !map) return;
@@ -1234,7 +1347,7 @@ function focusDriver(email) {
 function updateCounts() {
   const vids = state.vidsByCountry[state.country] || [];
   const active = vids.filter(v => recencyOf(v) === 'active').length;
-  const parked = vids.filter(v => recencyOf(v) === 'parked').length;
+  const parked = vids.filter(v => { const r = recencyOf(v); return r === 'parked' || r === 'inactive'; }).length;
   const plan = state._planFeatureCount || 0;
   document.getElementById('counts').innerHTML =
     `<span><b>${vids.length}</b> ${t('countVids')}</span>`

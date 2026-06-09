@@ -109,6 +109,7 @@ const CONFIG = {
   // v5.42: MyMaps (ops-map.html) — uploads mensais do Google MyMaps (KML/KMZ → GeoJSON)
   myMapsSheet: 'MyMaps Uploads',           // metadados dos uploads (auto-criada)
   myMapsFolderName: 'LATAM MyMaps Uploads', // pasta no Drive (auto-criada), subpasta por país
+  vidStatusSheet: 'VID Status',            // curadoria manual de VIDs ativos por país (auto-criada)
 };
 
 // ================================================================
@@ -276,7 +277,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.44',
+        version: 'v5.45',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -291,7 +292,8 @@ function doGet(e) {
                     'getCrimeOverlay',
                     'getArLaunchSchedule', 'POST saveArLaunchSchedule',
                     'listMyMaps', 'getMyMap', 'POST saveMyMap',
-                    'getTkmReportOptions', 'getTkmReport', 'getFleetVids'],
+                    'getTkmReportOptions', 'getTkmReport', 'getFleetVids',
+                    'getVidStatus', 'POST saveVidStatus'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -380,6 +382,11 @@ function doGet(e) {
     // v5.44: frota inteira por VID — última posição conhecida de cada VID (pro ops-map)
     if (action === 'getFleetVids') {
       return jsonResponse({ success: true, vids: getFleetVids_() });
+    }
+
+    // v5.45: curadoria manual de VIDs ativos por país (ops-map admin)
+    if (action === 'getVidStatus') {
+      return jsonResponse({ success: true, status: getVidStatus_() });
     }
 
     // v5.16: drivers ativos agrupados por país (pra dropdown na cash.html)
@@ -541,6 +548,11 @@ function doPost(e) {
     // v5.42: upload de MyMaps (ops-map.html) — guarda o GeoJSON no Drive + metadados na aba
     if (data.type === 'saveMyMap') {
       return jsonResponse(saveMyMap_(data));
+    }
+
+    // v5.45: curadoria de VIDs ativos por país (ops-map admin) — persiste na aba "VID Status"
+    if (data.type === 'saveVidStatus') {
+      return jsonResponse(saveVidStatus_(data));
     }
 
     // v5.40: payroll adjustments (timesheet.html) — só super admin (fuss) lança/remove
@@ -5388,6 +5400,85 @@ function ensureMyMapsSheet_(ss) {
     sheet.setFrozenRows(1);
   }
   return sheet;
+}
+
+// ================================================================
+// v5.45: VID Status — curadoria manual de quais VIDs estão ativos por país
+// (ops-map admin). Persiste na aba "VID Status". Por VID (asset único).
+// ================================================================
+
+/** Garante a aba "VID Status" com cabeçalho. */
+function ensureVidStatusSheet_(ss) {
+  let sheet = ss.getSheetByName(CONFIG.vidStatusSheet);
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.vidStatusSheet);
+    sheet.appendRow(['Country', 'VID', 'Active', 'UpdatedBy', 'UpdatedAt']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+/** Lê a curadoria. Retorna [{ country, vid, active(bool) }]. */
+function getVidStatus_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(CONFIG.vidStatusSheet);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues();
+  const out = [];
+  for (let i = 0; i < data.length; i++) {
+    const country = String(data[i][0] || '').trim();
+    const vid = String(data[i][1] || '').trim();
+    if (!country || !vid) continue;
+    const raw = data[i][2];
+    const active = (raw === true || raw === 1) ||
+      ['yes', 'true', '1', 'active', 'ativo', 'sim'].indexOf(String(raw).trim().toLowerCase()) >= 0;
+    out.push({ country: country, vid: vid, active: active });
+  }
+  return out;
+}
+
+/**
+ * Sobrescreve a curadoria de UM país (mantém os outros países intactos).
+ * data: { country, items: [{vid, active}], updatedBy }
+ */
+function saveVidStatus_(data) {
+  const country = String(data.country || '').trim();
+  if (!country) return { success: false, error: 'country obrigatório' };
+  const items = Array.isArray(data.items) ? data.items : [];
+  const user = String(data.updatedBy || '');
+
+  const lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (e) { return { success: false, error: 'sistema ocupado, tenta de novo' }; }
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = ensureVidStatusSheet_(ss);
+    const now = new Date();
+
+    const all = sheet.getLastRow() >= 2 ? sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues() : [];
+    const kept = all.filter(function (r) {
+      return String(r[0] || '').trim().toLowerCase() !== country.toLowerCase();
+    });
+
+    const fresh = [];
+    const seen = {};
+    for (let i = 0; i < items.length; i++) {
+      const vid = String(items[i].vid || '').trim();
+      if (!vid || seen[vid]) continue;
+      seen[vid] = true;
+      fresh.push([country, vid, items[i].active ? 'Active' : 'Inactive', user, now]);
+    }
+
+    if (sheet.getLastRow() >= 2) sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).clearContent();
+    const rows = kept.concat(fresh);
+    if (rows.length) sheet.getRange(2, 1, rows.length, 5).setValues(rows);
+
+    return { success: true, count: fresh.length };
+  } catch (err) {
+    Logger.log('saveVidStatus_ erro: ' + err);
+    return { success: false, error: String(err) };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /**
