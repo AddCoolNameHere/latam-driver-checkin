@@ -4823,12 +4823,32 @@ function getTkmReport_(month, year, country) {
     }
     restored = true;
 
+    // Baseline (valor absoluto alvo) por país, da aba CTS Goal Management, do período
+    // pedido. A aba TKM tem "% Overall Baseline"; o Lucas quer o baseline-alvo mensal daqui.
+    try {
+      const goals = getCtsGoals();
+      const baseByCountry = {};
+      let baseTotal = 0;
+      for (let i = 0; i < goals.length; i++) {
+        const g = goals[i];
+        if (!periodMatches_(g.period, month, year)) continue;
+        baseByCountry[normCountry_(g.country)] = g.baseline;
+        baseTotal += g.baseline || 0;
+      }
+      for (let i = 0; i < perCountry.length; i++) {
+        perCountry[i].baseline = baseByCountry[normCountry_(perCountry[i].country)] || 0;
+      }
+      bigNumbers.baseline = wantAll ? baseTotal : (baseByCountry[normCountry_(country)] || 0);
+    } catch (e) {
+      Logger.log('Erro lendo baseline da CTS Goal Management: ' + e);
+    }
+
     return {
       success: true,
       month: month,
       year: year,
       country: wantAll ? 'ALL' : country,
-      bigNumbers: bigNumbers,   // país escolhido, ou SUM (LATAM total) quando ALL
+      bigNumbers: bigNumbers,   // país escolhido (ou SUM/LATAM quando ALL); .baseline vem da CTS Goal Mgmt
       perCountry: perCountry,   // big numbers de cada país (pro PDF seccionado de ALL)
       drivers: drivers,
     };
@@ -4868,14 +4888,23 @@ function findHeader_(headerRow, candidates) {
   return -1;
 }
 
+/** Normaliza nome de país: minúsculas, sem acento, trim. */
+function normCountry_(s) {
+  s = String(s == null ? '' : s).toLowerCase().trim();
+  return s.normalize ? s.normalize('NFD').replace(/[̀-ͯ]/g, '') : s;
+}
+
 /** Compara país de forma tolerante (case-insensitive, trim, ignora acentos). */
 function matchCountry_(a, b) {
-  const strip = function (s) {
-    s = String(s == null ? '' : s).toLowerCase().trim();
-    if (s.normalize) s = s.normalize('NFD').replace(/[̀-ͯ]/g, ''); return s;
-  };
-  const x = strip(a), y = strip(b);
+  const x = normCountry_(a), y = normCountry_(b);
   return !!x && !!y && x === y;
+}
+
+/** Período "M.YYYY" (ex "6.2026") casa com mês/ano numéricos? Tolera "06.2026". */
+function periodMatches_(periodStr, month, year) {
+  const parts = String(periodStr == null ? '' : periodStr).split('.');
+  if (parts.length < 2) return false;
+  return parseInt(parts[0], 10) === month && parseInt(parts[1], 10) === year;
 }
 
 

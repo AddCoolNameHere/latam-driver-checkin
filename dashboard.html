@@ -2743,7 +2743,7 @@ const I18N = {
     tkmKpiGoal: 'CTS Goal (Target)',
     tkmKpiAch: 'CTS Goal Achievement',
     tkmKpiTkm: 'TKM (done by drivers)',
-    tkmKpiBaseline: '% Overall Baseline',
+    tkmKpiBaseline: 'Baseline',
     tkmDriversSection: 'Motoristas',
     tkmColName: 'Motorista',
     tkmColQc: 'QC Score',
@@ -3064,7 +3064,7 @@ const I18N = {
     tkmKpiGoal: 'CTS Goal (Target)',
     tkmKpiAch: 'CTS Goal Achievement',
     tkmKpiTkm: 'TKM (done by drivers)',
-    tkmKpiBaseline: '% Overall Baseline',
+    tkmKpiBaseline: 'Baseline',
     tkmDriversSection: 'Conductores',
     tkmColName: 'Conductor',
     tkmColQc: 'QC Score',
@@ -3385,7 +3385,7 @@ const I18N = {
     tkmKpiGoal: 'CTS Goal (Target)',
     tkmKpiAch: 'CTS Goal Achievement',
     tkmKpiTkm: 'TKM (done by drivers)',
-    tkmKpiBaseline: '% Overall Baseline',
+    tkmKpiBaseline: 'Baseline',
     tkmDriversSection: 'Drivers',
     tkmColName: 'Driver',
     tkmColQc: 'QC Score',
@@ -6150,7 +6150,7 @@ function buildTkmReportPdf(data) {
       { label: t('tkmKpiGoal'), value: fmtInt(big.ctsGoal), color: C_BRAND },
       { label: t('tkmKpiAch'), value: fmtPct(big.achievementPct, 0), color: achCol(big.achievementPct || 0) },
       { label: t('tkmKpiTkm'), value: fmtInt(big.tkmDone), color: C_ACCENT },
-      { label: t('tkmKpiBaseline'), value: fmtPct(big.baselinePct, 0), color: C_PRIMARY },
+      { label: t('tkmKpiBaseline'), value: fmtInt(big.baseline), color: C_PRIMARY },
     ];
     items.forEach((it, idx) => {
       const x = M + idx * (kpiW + kpiGap);
