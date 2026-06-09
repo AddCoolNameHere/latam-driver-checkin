@@ -109,6 +109,7 @@
   .layer-toggle.cars  .dot { background: var(--st-active); border-radius: 50%; }
   .layer-toggle.homes .dot { background: var(--c-text-muted); border-radius: 50%; }
   .layer-toggle.plan  .dot { background: var(--plan-color); }
+  .layer-toggle.cancelled .dot { background: var(--c-text-muted); border-radius: 50%; opacity: 0.7; }
   .layer-toggle.off { opacity: 0.45; }
   .layer-toggle:hover { border-color: var(--c-primary); }
   .layer-toggle svg { width: 14px; height: 14px; }
@@ -400,6 +401,9 @@
       <span class="layer-toggle plan" id="tg-plan">
         <span class="dot"></span><span data-i18n="layerPlan">Plano do mês</span>
       </span>
+      <span class="layer-toggle cancelled off" id="tg-cancelled">
+        <span class="dot"></span><span data-i18n="layerCancelled">Cancelados</span>
+      </span>
     </div>
 
     <div class="ops-spacer"></div>
@@ -560,7 +564,8 @@ const I18N = {
     noDriverVid: 'Sem motorista', onMap: 'no mapa', noPos: 'sem posição', atHomeBadge: 'na casa',
     countActiveVids: 'em uso', countParked: 'parados',
     tabDrivers: 'Motoristas', tabVids: 'VIDs', noVidsCountry: 'Nenhum VID neste país.',
-    tabAdmin: 'Admin', saveActive: 'Salvar ativos', recInactive: 'Inativo',
+    tabAdmin: 'Admin', saveActive: 'Salvar ativos', recInactive: 'Cancelado',
+    layerCancelled: 'Cancelados', countCancelled: 'cancelados',
     adminVidHint: 'Marque os VIDs que fazem parte da frota ativa deste país.',
     savedOk: 'Curadoria salva', saveFail: 'Falha ao salvar',
   },
@@ -595,7 +600,8 @@ const I18N = {
     noDriverVid: 'Sin conductor', onMap: 'en el mapa', noPos: 'sin posición', atHomeBadge: 'en la casa',
     countActiveVids: 'en uso', countParked: 'parados',
     tabDrivers: 'Conductores', tabVids: 'VIDs', noVidsCountry: 'Ningún VID en este país.',
-    tabAdmin: 'Admin', saveActive: 'Guardar activos', recInactive: 'Inactivo',
+    tabAdmin: 'Admin', saveActive: 'Guardar activos', recInactive: 'Cancelado',
+    layerCancelled: 'Cancelados', countCancelled: 'cancelados',
     adminVidHint: 'Marca los VIDs que forman parte de la flota activa de este país.',
     savedOk: 'Curaduría guardada', saveFail: 'Error al guardar',
   },
@@ -630,7 +636,8 @@ const I18N = {
     noDriverVid: 'No driver', onMap: 'on map', noPos: 'no position', atHomeBadge: 'at home',
     countActiveVids: 'in use', countParked: 'parked',
     tabDrivers: 'Drivers', tabVids: 'VIDs', noVidsCountry: 'No VIDs in this country.',
-    tabAdmin: 'Admin', saveActive: 'Save active', recInactive: 'Inactive',
+    tabAdmin: 'Admin', saveActive: 'Save active', recInactive: 'Cancelled',
+    layerCancelled: 'Cancelled', countCancelled: 'cancelled',
     adminVidHint: 'Check the VIDs that belong to this country active fleet.',
     savedOk: 'Saved', saveFail: 'Save failed',
   },
@@ -658,7 +665,7 @@ const state = {
   maps: {},                 // code -> [ {month,label,fileId,filename,...} ] (lista do storage)
   selectedMonth: {},        // code -> monthKey
   overlayGeo: {},           // cacheKey -> geojson
-  layers: { cars: true, homes: false, plan: true },
+  layers: { cars: true, homes: false, plan: true, cancelled: false },
   storeMode: null,          // 'drive' | 'local'
   loaded: false,
 };
@@ -968,7 +975,8 @@ function renderDriverLayers(code) {
 
   const vids = state.vidsByCountry[code] || [];
   const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
-  const shown = q ? vids.filter(v => matchesQuery(v, q)) : vids;
+  let shown = q ? vids.filter(v => matchesQuery(v, q)) : vids.slice();
+  if (!state.layers.cancelled) shown = shown.filter(v => v.manualActive !== false);  // esconde cancelados
 
   // Casas dos motoristas (distintas por email) — da lista de motoristas
   const drivers = state.driversByCountry[code] || [];
@@ -1224,7 +1232,8 @@ function renderDriverSide(wrap, q) {
 
 function renderVidSide(wrap, q) {
   const vids = (state.vidsByCountry[state.country] || []).slice();
-  const filtered = q ? vids.filter(v => matchesQuery(v, q)) : vids;
+  let filtered = q ? vids.filter(v => matchesQuery(v, q)) : vids;
+  if (!state.layers.cancelled) filtered = filtered.filter(v => v.manualActive !== false);  // esconde cancelados
   const rank = { active: 0, idle: 1, parked: 2 };
   filtered.sort((a, b) => {
     const ra = rank[recencyOf(a)], rb = rank[recencyOf(b)];
@@ -1346,13 +1355,16 @@ function focusDriver(email) {
 // =================================================================
 function updateCounts() {
   const vids = state.vidsByCountry[state.country] || [];
-  const active = vids.filter(v => recencyOf(v) === 'active').length;
-  const parked = vids.filter(v => { const r = recencyOf(v); return r === 'parked' || r === 'inactive'; }).length;
+  const cancelled = vids.filter(v => v.manualActive === false).length;
+  const visible = state.layers.cancelled ? vids : vids.filter(v => v.manualActive !== false);
+  const active = visible.filter(v => recencyOf(v) === 'active').length;
+  const parked = visible.filter(v => recencyOf(v) === 'parked').length;
   const plan = state._planFeatureCount || 0;
   document.getElementById('counts').innerHTML =
-    `<span><b>${vids.length}</b> ${t('countVids')}</span>`
+    `<span><b>${visible.length}</b> ${t('countVids')}</span>`
     + `<span><b>${active}</b> ${t('countActiveVids')}</span>`
     + `<span><b>${parked}</b> ${t('countParked')}</span>`
+    + (cancelled ? `<span><b>${cancelled}</b> ${t('countCancelled')}</span>` : '')
     + (plan ? `<span><b>${plan}</b> ${t('countPlan')}</span>` : '');
 }
 
@@ -1360,6 +1372,7 @@ function fitToData() {
   if (!map) return;
   const pts = [];
   (state.vidsByCountry[state.country] || []).forEach(v => {
+    if (!state.layers.cancelled && v.manualActive === false) return;  // ignora cancelados
     const pt = plotPointOf(v);
     if (pt) pts.push([pt.lat, pt.lng]);
     if (state.layers.homes && v.home && isNum(v.home.lat)) pts.push([v.home.lat, v.home.lng]);
@@ -1377,6 +1390,7 @@ function wireUI() {
   document.getElementById('tg-cars').addEventListener('click', () => toggleLayer('cars'));
   document.getElementById('tg-homes').addEventListener('click', () => toggleLayer('homes'));
   document.getElementById('tg-plan').addEventListener('click', () => toggleLayer('plan'));
+  document.getElementById('tg-cancelled').addEventListener('click', () => toggleLayer('cancelled'));
 
   // Busca
   let searchTimer = null;
@@ -1429,6 +1443,11 @@ function toggleLayer(key) {
   } else if (key === 'plan') {
     if (state.layers.plan) renderPlanForMonth(state.country, state.selectedMonth[state.country]);
     else if (planLayer) { map.removeLayer(planLayer); planLayer = null; }
+  } else if (key === 'cancelled') {
+    // filtro de render — re-monta camada de VIDs + lista + contadores
+    renderDriverLayers(state.country);
+    renderSideList();
+    updateCounts();
   }
 }
 
