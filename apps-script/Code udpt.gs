@@ -109,6 +109,7 @@ const CONFIG = {
   // v5.42: MyMaps (ops-map.html) — uploads mensais do Google MyMaps (KML/KMZ → GeoJSON)
   myMapsSheet: 'MyMaps Uploads',           // metadados dos uploads (auto-criada)
   myMapsFolderName: 'LATAM MyMaps Uploads', // pasta no Drive (auto-criada), subpasta por país
+  // v5.46: curadoria de VIDs vira tri-estado (Active | Inactive | Cancelled) na coluna Status
   vidStatusSheet: 'VID Status',            // curadoria manual de VIDs ativos por país (auto-criada)
 };
 
@@ -277,7 +278,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.45',
+        version: 'v5.46',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -5412,13 +5413,13 @@ function ensureVidStatusSheet_(ss) {
   let sheet = ss.getSheetByName(CONFIG.vidStatusSheet);
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.vidStatusSheet);
-    sheet.appendRow(['Country', 'VID', 'Active', 'UpdatedBy', 'UpdatedAt']);
+    sheet.appendRow(['Country', 'VID', 'Status', 'UpdatedBy', 'UpdatedAt']);
     sheet.setFrozenRows(1);
   }
   return sheet;
 }
 
-/** Lê a curadoria. Retorna [{ country, vid, active(bool) }]. */
+/** Lê a curadoria. Retorna [{ country, vid, status('active'|'inactive'|'cancelled'), active(bool) }]. */
 function getVidStatus_() {
   const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
   const sheet = ss.getSheetByName(CONFIG.vidStatusSheet);
@@ -5429,17 +5430,20 @@ function getVidStatus_() {
     const country = String(data[i][0] || '').trim();
     const vid = String(data[i][1] || '').trim();
     if (!country || !vid) continue;
-    const raw = data[i][2];
-    const active = (raw === true || raw === 1) ||
-      ['yes', 'true', '1', 'active', 'ativo', 'sim'].indexOf(String(raw).trim().toLowerCase()) >= 0;
-    out.push({ country: country, vid: vid, active: active });
+    const raw = String(data[i][2]).trim().toLowerCase();
+    // tri-estado: ativo (frota) | inativo (parado, mas é nosso) | cancelado (não temos mais)
+    let status = 'active';
+    if (['cancelled', 'canceled', 'cancelado', 'cancelada'].indexOf(raw) >= 0) status = 'cancelled';
+    else if (['inactive', 'inativo', 'inactivo', 'no', 'false', '0'].indexOf(raw) >= 0) status = 'inactive';
+    out.push({ country: country, vid: vid, status: status, active: status === 'active' });
   }
   return out;
 }
 
 /**
  * Sobrescreve a curadoria de UM país (mantém os outros países intactos).
- * data: { country, items: [{vid, active}], updatedBy }
+ * data: { country, items: [{vid, status('active'|'inactive'|'cancelled')}], updatedBy }
+ * (aceita também o legado {vid, active(bool)})
  */
 function saveVidStatus_(data) {
   const country = String(data.country || '').trim();
@@ -5465,7 +5469,10 @@ function saveVidStatus_(data) {
       const vid = String(items[i].vid || '').trim();
       if (!vid || seen[vid]) continue;
       seen[vid] = true;
-      fresh.push([country, vid, items[i].active ? 'Active' : 'Inactive', user, now]);
+      let st = String(items[i].status || '').trim().toLowerCase();
+      if (!st) st = items[i].active ? 'active' : 'inactive';   // fallback legado
+      const label = st === 'cancelled' ? 'Cancelled' : (st === 'inactive' ? 'Inactive' : 'Active');
+      fresh.push([country, vid, label, user, now]);
     }
 
     if (sheet.getLastRow() >= 2) sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).clearContent();

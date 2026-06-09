@@ -215,12 +215,18 @@
   .admin-hint { font-size: 10.5px; color: var(--c-text-muted); line-height: 1.3; }
   .admin-row {
     display: flex; align-items: center; gap: 10px; padding: 9px 14px;
-    border-bottom: 1px solid var(--c-border); cursor: pointer;
+    border-bottom: 1px solid var(--c-border);
   }
   .admin-row:hover { background: var(--c-bg-tint); }
-  .admin-row .admin-chk {
-    width: 17px; height: 17px; accent-color: var(--c-primary); cursor: pointer; flex-shrink: 0;
+  .admin-row .driver-row-main { flex: 1; min-width: 0; }
+  .admin-sel {
+    flex-shrink: 0; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+    border: 1px solid var(--c-border); border-radius: 7px; padding: 5px 8px;
+    background: var(--c-surface); color: var(--c-text);
   }
+  .admin-sel.st-active    { color: var(--st-active); border-color: var(--st-active); }
+  .admin-sel.st-inactive  { color: var(--c-text-muted); }
+  .admin-sel.st-cancelled { color: var(--c-danger); border-color: var(--c-danger); }
 
   /* Botão flutuante pra reabrir o painel quando colapsado */
   .side-reopen {
@@ -564,9 +570,10 @@ const I18N = {
     noDriverVid: 'Sem motorista', onMap: 'no mapa', noPos: 'sem posição', atHomeBadge: 'na casa',
     countActiveVids: 'em uso', countParked: 'parados',
     tabDrivers: 'Motoristas', tabVids: 'VIDs', noVidsCountry: 'Nenhum VID neste país.',
-    tabAdmin: 'Admin', saveActive: 'Salvar ativos', recInactive: 'Cancelado',
+    tabAdmin: 'Admin', saveActive: 'Salvar', recInactive: 'Inativo',
+    recCancelled: 'Cancelado', selActive: 'Ativo',
     layerCancelled: 'Cancelados', countCancelled: 'cancelados',
-    adminVidHint: 'Marque os VIDs que fazem parte da frota ativa deste país.',
+    adminVidHint: 'Estado de cada VID: Ativo (frota), Inativo (parado, mas é nosso) ou Cancelado (não temos mais).',
     savedOk: 'Curadoria salva', saveFail: 'Falha ao salvar',
   },
   es: {
@@ -600,9 +607,10 @@ const I18N = {
     noDriverVid: 'Sin conductor', onMap: 'en el mapa', noPos: 'sin posición', atHomeBadge: 'en la casa',
     countActiveVids: 'en uso', countParked: 'parados',
     tabDrivers: 'Conductores', tabVids: 'VIDs', noVidsCountry: 'Ningún VID en este país.',
-    tabAdmin: 'Admin', saveActive: 'Guardar activos', recInactive: 'Cancelado',
+    tabAdmin: 'Admin', saveActive: 'Guardar', recInactive: 'Inactivo',
+    recCancelled: 'Cancelado', selActive: 'Activo',
     layerCancelled: 'Cancelados', countCancelled: 'cancelados',
-    adminVidHint: 'Marca los VIDs que forman parte de la flota activa de este país.',
+    adminVidHint: 'Estado de cada VID: Activo (flota), Inactivo (parado, pero es nuestro) o Cancelado (ya no lo tenemos).',
     savedOk: 'Curaduría guardada', saveFail: 'Error al guardar',
   },
   en: {
@@ -636,9 +644,10 @@ const I18N = {
     noDriverVid: 'No driver', onMap: 'on map', noPos: 'no position', atHomeBadge: 'at home',
     countActiveVids: 'in use', countParked: 'parked',
     tabDrivers: 'Drivers', tabVids: 'VIDs', noVidsCountry: 'No VIDs in this country.',
-    tabAdmin: 'Admin', saveActive: 'Save active', recInactive: 'Cancelled',
+    tabAdmin: 'Admin', saveActive: 'Save', recInactive: 'Inactive',
+    recCancelled: 'Cancelled', selActive: 'Active',
     layerCancelled: 'Cancelled', countCancelled: 'cancelled',
-    adminVidHint: 'Check the VIDs that belong to this country active fleet.',
+    adminVidHint: 'Set each VID state: Active (fleet), Inactive (idle, still ours) or Cancelled (no longer ours).',
     savedOk: 'Saved', saveFail: 'Save failed',
   },
 };
@@ -740,7 +749,12 @@ async function bootData() {
 
     // Curadoria manual de VIDs ativos (por VID, vinda da aba "VID Status")
     const vidStatus = {};
-    (statusRes.status || []).forEach(s => { if (s && s.vid) vidStatus[String(s.vid).trim()] = !!s.active; });
+    (statusRes.status || []).forEach(s => {
+      if (!s || !s.vid) return;
+      let st = s.status ? String(s.status).toLowerCase() : (s.active ? 'active' : 'inactive');  // fallback backend antigo
+      if (st !== 'cancelled' && st !== 'inactive') st = 'active';
+      vidStatus[String(s.vid).trim()] = st;
+    });
     state.vidStatus = vidStatus;
 
     const homeByEmail = {};
@@ -813,7 +827,7 @@ async function bootData() {
     Object.keys(byCountry).forEach(code => {
       byCountry[code].forEach(v => { v.liveActive = !!liveVids[String(v.vid).trim()]; });
     });
-    applyVidStatus();   // marca v.manualActive a partir de state.vidStatus
+    applyVidStatus();   // marca v.manualStatus a partir de state.vidStatus
 
     // Monta tabs ordenadas (união dos países com VID e/ou motorista)
     const codes = Array.from(new Set(Object.keys(byCountry).concat(Object.keys(driversByCountry))));
@@ -914,8 +928,9 @@ function initMap() {
 // Camadas de motorista (carros/VID + casas)
 // =================================================================
 function recencyOf(v) {
-  // 'active' (em uso) | 'idle' (quinzena) | 'parked' | 'inactive' (admin tirou da frota)
-  if (v.manualActive === false) return 'inactive';   // curadoria manual manda
+  // 'active' (em uso) | 'idle' (quinzena) | 'parked' | 'inactive' (parado, ainda é nosso) | 'cancelled' (não temos mais)
+  if (v.manualStatus === 'cancelled') return 'cancelled';   // curadoria manual manda
+  if (v.manualStatus === 'inactive') return 'inactive';
   if (v.liveActive) return 'active';                  // check-in recente do motorista (RAW CTS atrasa)
   const d = v.daysAgo;
   if (d != null && d <= CONFIG.activeDays) return 'active';
@@ -932,14 +947,14 @@ function plotPointOf(v) {
   if (isNum(v.lat) && isNum(v.lng)) return { lat: v.lat, lng: v.lng, rec: recencyOf(v) };
   return null;
 }
-// Marca v.manualActive em todos os VIDs a partir de state.vidStatus (curadoria).
+// Marca v.manualStatus ('active'|'inactive'|'cancelled'|null) a partir de state.vidStatus (curadoria).
 function applyVidStatus() {
   const vs = state.vidStatus || {};
   const by = state.vidsByCountry || {};
   Object.keys(by).forEach(code => {
     by[code].forEach(v => {
       const k = String(v.vid).trim();
-      v.manualActive = (k in vs) ? vs[k] : null;
+      v.manualStatus = (k in vs) ? vs[k] : null;
     });
   });
 }
@@ -976,7 +991,7 @@ function renderDriverLayers(code) {
   const vids = state.vidsByCountry[code] || [];
   const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
   let shown = q ? vids.filter(v => matchesQuery(v, q)) : vids.slice();
-  if (!state.layers.cancelled) shown = shown.filter(v => v.manualActive !== false);  // esconde cancelados
+  if (!state.layers.cancelled) shown = shown.filter(v => v.manualStatus !== 'cancelled');  // esconde cancelados (inativos seguem visíveis)
 
   // Casas dos motoristas (distintas por email) — da lista de motoristas
   const drivers = state.driversByCountry[code] || [];
@@ -1079,6 +1094,7 @@ function recLabel(rec) {
   if (rec === 'active') return t('recActive');
   if (rec === 'idle') return t('recIdle');
   if (rec === 'inactive') return t('recInactive');
+  if (rec === 'cancelled') return t('recCancelled');
   return t('recParked');
 }
 function buildVidPopup(v, rec) {
@@ -1233,7 +1249,7 @@ function renderDriverSide(wrap, q) {
 function renderVidSide(wrap, q) {
   const vids = (state.vidsByCountry[state.country] || []).slice();
   let filtered = q ? vids.filter(v => matchesQuery(v, q)) : vids;
-  if (!state.layers.cancelled) filtered = filtered.filter(v => v.manualActive !== false);  // esconde cancelados
+  if (!state.layers.cancelled) filtered = filtered.filter(v => v.manualStatus !== 'cancelled');  // esconde cancelados (inativos seguem visíveis)
   const rank = { active: 0, idle: 1, parked: 2 };
   filtered.sort((a, b) => {
     const ra = rank[recencyOf(a)], rb = rank[recencyOf(b)];
@@ -1270,16 +1286,24 @@ function renderAdminSide(wrap, q) {
       <span class="admin-hint">${escapeHtml(t('adminVidHint'))}</span>
     </div>`;
   if (!list.length) { wrap.innerHTML = head + `<div class="side-empty">${t('noVidsCountry')}</div>`; return; }
+  const opt = (cur, val, label) => `<option value="${val}" ${cur === val ? 'selected' : ''}>${escapeHtml(label)}</option>`;
   wrap.innerHTML = head + list.map(v => {
-    const checked = (v.manualActive !== false);   // default = ativo até curar
-    return `<label class="admin-row">
-      <input type="checkbox" class="admin-chk" data-vid="${escapeHtml(String(v.vid))}" ${checked ? 'checked' : ''}>
+    const cur = v.manualStatus || 'active';   // default = ativo até curar
+    return `<div class="admin-row">
       <div class="driver-row-main">
         <div class="driver-row-name">VID ${escapeHtml(String(v.vid))}</div>
         <div class="driver-row-sub">${escapeHtml(v.driverName || t('noDriverVid'))}</div>
       </div>
-    </label>`;
+      <select class="admin-sel st-${cur}" data-vid="${escapeHtml(String(v.vid))}">
+        ${opt(cur, 'active', t('selActive'))}
+        ${opt(cur, 'inactive', t('recInactive'))}
+        ${opt(cur, 'cancelled', t('recCancelled'))}
+      </select>
+    </div>`;
   }).join('');
+  wrap.querySelectorAll('.admin-sel').forEach(sel => {
+    sel.addEventListener('change', () => { sel.className = 'admin-sel st-' + sel.value; });
+  });
   const btn = document.getElementById('vid-admin-save');
   if (btn) btn.addEventListener('click', saveVidAdmin);
 }
@@ -1288,8 +1312,8 @@ async function saveVidAdmin() {
   const code = state.country;
   if (!code) return;
   const btn = document.getElementById('vid-admin-save');
-  const chks = document.querySelectorAll('#side-list .admin-chk');
-  const items = Array.from(chks).map(c => ({ vid: c.getAttribute('data-vid'), active: c.checked }));
+  const sels = document.querySelectorAll('#side-list .admin-sel');
+  const items = Array.from(sels).map(s => ({ vid: s.getAttribute('data-vid'), status: s.value }));
   if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
   try {
     const payload = {
@@ -1303,7 +1327,7 @@ async function saveVidAdmin() {
       if (res && res.success === false) throw new Error(res.error || 'backend');
     } catch (e) { /* opaque/erro de rede (não-abort): assume aceito, o reload confirma */ }
     // atualiza estado local + reaplica nas camadas
-    items.forEach(it => { state.vidStatus[String(it.vid).trim()] = !!it.active; });
+    items.forEach(it => { state.vidStatus[String(it.vid).trim()] = it.status; });
     applyVidStatus();
     if (typeof clearDataCache === 'function') clearDataCache('action=getVidStatus');
     renderDriverLayers(code);
@@ -1355,10 +1379,10 @@ function focusDriver(email) {
 // =================================================================
 function updateCounts() {
   const vids = state.vidsByCountry[state.country] || [];
-  const cancelled = vids.filter(v => v.manualActive === false).length;
-  const visible = state.layers.cancelled ? vids : vids.filter(v => v.manualActive !== false);
+  const cancelled = vids.filter(v => v.manualStatus === 'cancelled').length;
+  const visible = state.layers.cancelled ? vids : vids.filter(v => v.manualStatus !== 'cancelled');
   const active = visible.filter(v => recencyOf(v) === 'active').length;
-  const parked = visible.filter(v => recencyOf(v) === 'parked').length;
+  const parked = visible.filter(v => { const r = recencyOf(v); return r === 'parked' || r === 'inactive'; }).length;
   const plan = state._planFeatureCount || 0;
   document.getElementById('counts').innerHTML =
     `<span><b>${visible.length}</b> ${t('countVids')}</span>`
@@ -1372,7 +1396,7 @@ function fitToData() {
   if (!map) return;
   const pts = [];
   (state.vidsByCountry[state.country] || []).forEach(v => {
-    if (!state.layers.cancelled && v.manualActive === false) return;  // ignora cancelados
+    if (!state.layers.cancelled && v.manualStatus === 'cancelled') return;  // ignora cancelados
     const pt = plotPointOf(v);
     if (pt) pts.push([pt.lat, pt.lng]);
     if (state.layers.homes && v.home && isNum(v.home.lat)) pts.push([v.home.lat, v.home.lng]);
