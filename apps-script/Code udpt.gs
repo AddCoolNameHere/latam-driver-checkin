@@ -4828,7 +4828,8 @@ function getTkmReport_(month, year, country) {
       month: month,
       year: year,
       country: wantAll ? 'ALL' : country,
-      bigNumbers: bigNumbers,
+      bigNumbers: bigNumbers,   // país escolhido, ou SUM (LATAM total) quando ALL
+      perCountry: perCountry,   // big numbers de cada país (pro PDF seccionado de ALL)
       drivers: drivers,
     };
   } catch (err) {
