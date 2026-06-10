@@ -3595,6 +3595,9 @@ function applyI18n() {
     const key = el.dataset.i18n;
     el.textContent = t(key);
   });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
   document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : currentLang;
 }
 

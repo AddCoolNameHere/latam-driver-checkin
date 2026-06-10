@@ -386,6 +386,7 @@
   <div class="lang-switch">
     <button data-lang="pt" class="active">PT</button>
     <button data-lang="es">ES</button>
+    <button data-lang="en">EN</button>
   </div>
 </header>
 
@@ -854,9 +855,69 @@ const I18N = {
     odometerLastHint: 'Última lectura: {value} km',
     footerText: 'Plataforma interna — Aceolution Brasil Ltda.',
   },
+  en: {
+    title: 'Weekly Equipment Report',
+    subtitle: 'Fill it out once a week. Data that does not change stays pre-filled.',
+    loading: 'Loading drivers...',
+    navBack: '← Back to daily check-in',
+    step1: 'Identification',
+    step1Sub: 'Pick your name — I will pull your info from last week',
+    chooseOption: '-- Choose --',
+    step2: 'Vehicle & Country',
+    vidLabel: 'VID (vehicle ID)',
+    countryLabel: 'Country',
+    plateLabel: 'Vehicle license plate',
+    vehicleDateLabel: 'When did you receive this car?',
+    vehicleDateHint: 'Only fill in if you changed cars',
+    cityLabel: 'City where you are now',
+    step3: 'Hours worked',
+    step3Sub: 'On which days did you work 8h and on which did you work 9h?',
+    hours8Label: 'Days you worked 8 hours',
+    hours9Label: 'Days you worked 9 hours',
+    mappedDaysLabel: 'Which days of the week did you map?',
+    rainDaysLabel: 'Rainy days',
+    mechDaysLabel: 'Days with the mechanic',
+    weekendLabel: 'Will you work this weekend?',
+    yes: '✓ Yes',
+    no: '✗ No',
+    step4: 'Weekly performance',
+    odometerLabel: 'Current odometer reading (km)',
+    targetsLabel: 'Targets met this week',
+    step5: 'Drives (SSDs)',
+    diskCountLabel: 'How many drives do you have in total?',
+    diskInUseLabel: 'Which drive are you using RIGHT NOW?',
+    disksOtherLabel: 'Codes of the other drives (separated by spaces)',
+    step6: 'Project phones',
+    phoneCountLabel: 'How many project phones do you have?',
+    phoneModelLabel: 'Phone model',
+    phoneImeiLabel: 'IMEI of the phone(s)',
+    step7: 'Other equipment & hotel mode',
+    breathCountLabel: 'How many WORKING breathalyzers?',
+    hotelModeLabel: 'Are you in hotel mode?',
+    step8: 'Vehicle photos',
+    step8Sub: '4 photos: front, right side, left side, rear',
+    photoFront: 'FRONT photo',
+    photoRight: 'RIGHT SIDE photo',
+    photoLeft: 'LEFT SIDE photo',
+    photoBack: 'REAR photo',
+    step9: 'Comments',
+    commentsLabel: 'Anything to add? (optional)',
+    submitBtn: 'Submit weekly report',
+    sending: 'Sending...',
+    success: '✓ Report submitted successfully!',
+    errorSend: 'Error sending. Please try again.',
+    fillRequired: 'Fill in the required fields',
+    pillPrefilled: 'PRE-FILLED',
+    dayMon: 'Mon', dayTue: 'Tue', dayWed: 'Wed', dayThu: 'Thu', dayFri: 'Fri', daySat: 'Sat', daySun: 'Sun',
+    dayMonShort: 'M', dayTueShort: 'T', dayWedShort: 'W', dayThuShort: 'T', dayFriShort: 'F', daySatShort: 'S', daySunShort: 'S',
+    prefillBannerHasData: 'I found your last response from {date}. The fixed fields came pre-filled — review and adjust if anything changed.',
+    prefillBannerNoData: 'I did not find any previous response from you. Is this your first time? Fill everything in carefully.',
+    odometerLastHint: 'Last reading: {value} km',
+    footerText: 'Internal platform — Aceolution Brasil Ltda.',
+  },
 };
 
-let currentLang = (localStorage.getItem('latam.lang') === 'es') ? 'es' : 'pt';
+let currentLang = ['pt', 'es', 'en'].includes(localStorage.getItem('latam.lang')) ? localStorage.getItem('latam.lang') : 'pt';
 
 function t(key) {
   const dict = I18N[currentLang] || I18N.pt;
@@ -1161,7 +1222,7 @@ function formatDateLocal(val) {
       if (m) d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
     }
     if (!d || isNaN(d)) return String(val);
-    return d.toLocaleDateString(currentLang === 'pt' ? 'pt-BR' : 'es-ES');
+    return d.toLocaleDateString(currentLang === 'pt' ? 'pt-BR' : currentLang === 'en' ? 'en-US' : 'es-ES');
   } catch (e) { return String(val); }
 }
 

@@ -1758,6 +1758,8 @@ const I18N = {
     cashColAttachment: 'Anexo',
     cashColReceipt: 'Recibo',
     loginProduct: 'RAMP EXPENSES',
+    titleRamp: 'DESPESAS RAMP',
+    titleCash: 'TRANSAÇÕES CASH',
     loginTitle: 'Login',
     loginSubtitle: 'Acesse com suas credenciais',
     loginUser: 'Usuário',
@@ -1915,6 +1917,8 @@ const I18N = {
     cashColAttachment: 'Adjunto',
     cashColReceipt: 'Recibo',
     loginProduct: 'RAMP EXPENSES',
+    titleRamp: 'GASTOS RAMP',
+    titleCash: 'TRANSACCIONES CASH',
     loginTitle: 'Iniciar sesión',
     loginSubtitle: 'Accede con tus credenciales',
     loginUser: 'Usuario',
@@ -2064,6 +2068,8 @@ const I18N = {
     cashColAttachment: 'Attachment',
     cashColReceipt: 'Receipt',
     loginProduct: 'RAMP EXPENSES',
+    titleRamp: 'RAMP EXPENSES',
+    titleCash: 'CASH TRANSACTIONS',
     loginTitle: 'Login',
     loginSubtitle: 'Sign in with your credentials',
     loginUser: 'Username',
@@ -2212,6 +2218,9 @@ function applyI18n() {
     const key = el.dataset.i18nPlaceholder;
     el.placeholder = t(key);
   });
+  // título do header (não tem data-i18n; depende do modo ramp/cash)
+  const _tl = document.getElementById('brand-title-line');
+  if (_tl) _tl.textContent = state.mode === 'cash' ? t('titleCash') : t('titleRamp');
   document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : currentLang;
 }
 
@@ -2389,7 +2398,7 @@ function setMode(newMode) {
 
   // Atualiza título do header
   const titleLine = document.getElementById('brand-title-line');
-  if (titleLine) titleLine.textContent = newMode === 'cash' ? 'CASH TRANSACTIONS' : 'RAMP EXPENSES';
+  if (titleLine) titleLine.textContent = newMode === 'cash' ? t('titleCash') : t('titleRamp');
 
   // Mostra/esconde sub-abas do cash
   document.getElementById('cash-tabs').classList.toggle('hidden', newMode !== 'cash');

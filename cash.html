@@ -424,6 +424,7 @@
     <span class="lang-toggle">
       <button class="active" data-lang="pt" onclick="setLang('pt')">PT</button>
       <button data-lang="es" onclick="setLang('es')">ES</button>
+      <button data-lang="en" onclick="setLang('en')">EN</button>
     </span>
   </div>
 </header>
@@ -772,6 +773,86 @@ const I18N = {
     catVehicle: '🔧 Reparo del vehículo',
     catOther: '📝 Otros',
   },
+  en: {
+    appTitle: 'Cash Flow LATAM',
+    appSubtitle: 'Cash requests and receipts for the LATAM team',
+    modeTitle: 'What do you need to do?',
+    modeRequest: 'Request cash',
+    modeRequestSub: 'Request cash for upcoming scheduled project expenses',
+    modeReceipt: 'Upload receipt',
+    modeReceiptSub: 'Submit proof of an expense (reimbursement or justification)',
+    back: 'Back',
+    step1: 'Who are you?',
+    driverLabel: 'Select your name',
+    driverLoading: 'Loading drivers...',
+    driverHint: 'Drivers are grouped by country.',
+    // Request flow
+    reqStep2: 'Reason for the request',
+    reqReasonLabel: 'What do you need it for?',
+    reqReasonSalary: '💵 Salary advance',
+    reqReasonOps: '⛽ Project expenses',
+    reqStep3Cat: 'Category and location',
+    reqStep4: 'How much and when',
+    reqCategoryLabel: 'What specifically?',
+    reqCategoryHint: 'Category of the expense you will make with this money',
+    reqLocationLabel: 'Where are you now?',
+    reqGpsBtn: 'Capture my location',
+    reqLocationManualPlaceholder: 'City, state (e.g. Curitiba, PR)',
+    reqLocationManualHint: 'GPS blocked? Type where you are manually.',
+    gpsCapturing: 'Capturing location...',
+    gpsCaptured: 'Location captured',
+    gpsDenied: '❌ GPS permission denied. Use the manual field below.',
+    gpsError: '❌ Error capturing GPS. Use the manual field below.',
+    gpsNotSupported: '❌ Browser does not support GPS. Use the manual field below.',
+    captureLocation: 'Capture your location or type it manually',
+    reqStep3: 'How much and when',
+    amountLabel: 'Amount',
+    amountHint: 'You can use comma or period. E.g. 1500,50 or 1500.50',
+    neededByLabel: 'Needed by when?',
+    notesLabel: 'Notes',
+    optional: '(optional)',
+    reqNotesPlaceholder: 'Additional details about the request',
+    reqAttachmentLabel: 'Attach proof',
+    reqAttachmentHint: 'Handy for attaching a mechanic\'s quote, a photo of the problem, a proforma invoice, etc. Photo or PDF, max 5MB.',
+    submitRequest: 'Submit request',
+    // Receipt flow
+    recStep2: 'Expense details',
+    categoryLabel: 'Category',
+    selectPlaceholder: '-- Select --',
+    paymentDateLabel: 'When was the payment?',
+    establishmentLabel: 'Establishment name',
+    establishmentPlaceholder: 'E.g. Shell station, Hotel ABC, etc',
+    hotelDatesLabel: 'Hotel dates (check-in / check-out)',
+    hotelDatesPlaceholder: 'E.g. 12/05/2026 to 14/05/2026',
+    recNotesPlaceholder: 'Additional comments or explanations',
+    recStep3: 'Receipt photo',
+    receiptUploadLabel: 'Upload the receipt photo',
+    receiptHint: 'Accepts photo or PDF. Maximum 5MB.',
+    submitReceipt: 'Submit receipt',
+    // Messages
+    sending: 'Sending...',
+    successRequest: '✓ Request submitted successfully!',
+    successReceipt: '✓ Receipt submitted successfully!',
+    errorSend: 'Error submitting. Please try again.',
+    fillAllRequired: 'Fill in the required fields (*)',
+    invalidAmount: 'Invalid amount — check the number',
+    invalidFile: 'Invalid file (max 5MB)',
+    fileTooLarge: 'File too large (maximum 5MB)',
+    selectCategory: 'Select a category',
+    selectReason: 'Select a reason',
+    selectDriver: 'Select your name first',
+    uploadReceipt: 'Upload the receipt photo',
+    removeFile: 'Remove',
+    footerText: 'Internal platform — Aceolution do Brasil Ltda.',
+    // Categories
+    catFood: '🍽 Food',
+    catTolls: '🛣 Tolls',
+    catFuel: '⛽ Fuel',
+    catParking: '🅿 Parking',
+    catHotel: '🏨 Hotel',
+    catVehicle: '🔧 Car Maintenance',
+    catOther: '📝 Other',
+  },
 };
 
 // Map de categorias por idioma → o que é gravado na planilha (deve bater com forms originais)
@@ -794,6 +875,16 @@ const CATEGORIES_BY_LANG = {
     { value: 'Hotel', i18n: 'catHotel' },
     { value: 'Reparo del vehículo', i18n: 'catVehicle' },
     { value: 'Otros', i18n: 'catOther' },
+  ],
+  // EN reaproveita os valores PT (Brasil) gravados na planilha; só os labels mudam (via i18n)
+  en: [
+    { value: 'Alimentação', i18n: 'catFood' },
+    { value: 'Pedágio', i18n: 'catTolls' },
+    { value: 'Combustível', i18n: 'catFuel' },
+    { value: 'Estacionamento', i18n: 'catParking' },
+    { value: 'Hotel', i18n: 'catHotel' },
+    { value: 'Manutenção do Carro', i18n: 'catVehicle' },
+    { value: 'Outros', i18n: 'catOther' },
   ],
 };
 
