@@ -1014,6 +1014,14 @@ function renderDriverLayers(code) {
       L.marker([d.home.lat, d.home.lng], { icon: hIcon })
         .bindPopup(buildHomePopup({ driverName: d.name, vid: d.vid, home: d.home }))
         .addTo(homesLayer);
+      // linha pontilhada fininha ligando a casa à posição atual do motorista
+      // (só quando ele está fora de casa; entra na homesLayer = liga/desliga com o toggle "Casas")
+      const dpt = driverPoint(d);
+      if (dpt && isNum(dpt.lat) && isNum(dpt.lng) && haversineKm(d.home.lat, d.home.lng, dpt.lat, dpt.lng) >= 1) {
+        L.polyline([[d.home.lat, d.home.lng], [dpt.lat, dpt.lng]], {
+          color: '#64748B', weight: 1, opacity: 0.4, dashArray: '2 5', interactive: false,
+        }).addTo(homesLayer);
+      }
     }
   });
 
