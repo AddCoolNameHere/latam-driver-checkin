@@ -860,13 +860,20 @@ async function bootData() {
 // =================================================================
 // Tabs
 // =================================================================
+// Nº de VIDs ATIVOS do país (status Ativo; exclui Inativo e Cancelado). Uncurado = ativo.
+function activeCountFor(code) {
+  const list = (state.vidsByCountry && state.vidsByCountry[code]) || [];
+  return list.filter(v => v.manualStatus !== 'cancelled' && v.manualStatus !== 'inactive').length;
+}
 function renderTabs() {
   const tabs = document.getElementById('country-tabs');
   tabs.innerHTML = '';
   state.tabs.forEach(tab => {
     const btn = document.createElement('button');
     btn.className = 'country-tab' + (tab.code === state.country ? ' active' : '');
-    btn.innerHTML = `<span class="flag">${tab.flag}</span> ${escapeHtml(tab.name)} <span class="tab-count">${tab.count}</span>`;
+    const total = (state.vidsByCountry[tab.code] || []).length;
+    const act = activeCountFor(tab.code);
+    btn.innerHTML = `<span class="flag">${tab.flag}</span> ${escapeHtml(tab.name)} <span class="tab-count" title="${act}/${total}">${act}</span>`;
     btn.addEventListener('click', () => switchCountry(tab.code));
     tabs.appendChild(btn);
   });
@@ -1333,6 +1340,7 @@ async function saveVidAdmin() {
     if (typeof clearDataCache === 'function') clearDataCache('action=getVidStatus');
     renderDriverLayers(code);
     renderSideList();
+    renderTabs();      // atualiza o nº de ativos na bolinha do país
     updateCounts();
     showToast(t('savedOk'), 'success');
   } catch (err) {
