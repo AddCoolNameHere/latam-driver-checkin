@@ -86,9 +86,13 @@ body.sv-shell { padding-left:252px; transition:padding-left .18s ease; }
 .sv-backdrop { position:fixed; inset:0; z-index:55; background:rgba(10,16,30,.5); opacity:0; pointer-events:none; transition:opacity .2s ease; }
 
 /* ---------- page head ---------- */
-.sv-pagehead { margin-bottom:18px; }
+.sv-pagehead { margin-bottom:18px; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; }
 .sv-pagehead h1 { font-size:25px; font-weight:800; letter-spacing:-.6px; color:var(--c-text); }
 .sv-pagehead p { font-size:13.5px; color:var(--c-text-muted); margin-top:3px; }
+.lang-switch { display:inline-flex; gap:4px; flex-shrink:0; }
+.lang-switch button { background:none; border:1px solid var(--c-border); border-radius:7px; padding:4px 10px; font-size:12px; font-weight:700; cursor:pointer; color:var(--c-text-muted); font-family:inherit; }
+.lang-switch button.active { background:var(--c-primary); border-color:var(--c-primary); color:#fff; }
+.lang-switch button:not(.active):hover { color:var(--c-primary); border-color:var(--c-primary); }
 
 /* ---------- quinzena banner ---------- */
 .quinzena-banner {
@@ -322,8 +326,15 @@ body.sv-shell { padding-left:252px; transition:padding-left .18s ease; }
 <div id="app-content" style="display:none;">
 <main data-screen-label="Timesheet & Payroll">
   <div class="sv-pagehead">
-    <h1 id="ts-title">Timesheet &amp; Payroll</h1>
-    <p id="ts-sub">Pagamento quinzenal — todos os países recebem a cada 15 dias</p>
+    <div>
+      <h1 id="ts-title">Timesheet &amp; Payroll</h1>
+      <p id="ts-sub">Pagamento quinzenal — todos os países recebem a cada 15 dias</p>
+    </div>
+    <div class="lang-switch" id="lang-switch">
+      <button type="button" data-lang="pt" class="active">PT</button>
+      <button type="button" data-lang="es">ES</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
   </div>
 
   <div id="ts-content" style="display:none;">
@@ -645,6 +656,14 @@ let state = {
 };
 
 function t() { return I18N[currentLang] || I18N.pt; }
+
+function setLang(lang) {
+  if (!I18N[lang]) return;
+  currentLang = lang;
+  try { localStorage.setItem('preferredLang', lang); } catch (e) {}
+  document.querySelectorAll('#lang-switch button').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  applyI18n();
+}
 
 function applyI18n() {
   const i = t();
@@ -1253,6 +1272,12 @@ function startApp(user) {
   isSuperAdmin = !!(user && String(user.username).toLowerCase() === 'fuss');
   document.getElementById('app-content').style.display = '';
   buildNav(user);
+  // idioma: lê o salvo + liga o seletor PT/ES/EN do header
+  try { const L = localStorage.getItem('preferredLang'); if (L && I18N[L]) currentLang = L; } catch (e) {}
+  document.querySelectorAll('#lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === currentLang);
+    b.addEventListener('click', () => setLang(b.dataset.lang));
+  });
   applyI18n();
   document.getElementById('ts-search').addEventListener('input', applyFilters);
   document.getElementById('f-country').addEventListener('change', applyFilters);
