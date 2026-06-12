@@ -8,7 +8,7 @@
  * próximo commit feito pelo painel. Pra alterar, abra:
  *   admin-users.html (acesso restrito ao usuário "fuss")
  *
- * Última geração: 2026-06-10T20:56:44.030Z
+ * Última geração: 2026-06-12T14:53:14.994Z
  *
  * ⚠ NOTA DE SEGURANÇA:
  * Este é client-side ("teatro de segurança"): qualquer pessoa
@@ -53,13 +53,18 @@ const USERS = [
     passwordHash: "ebaaa905d5a450b9f6d37ca76516127e3edfc491d439ce106a9e2a12110d8c37",
     fullName: "Reshma",
   },
+  {
+    username: "vicky",
+    passwordHash: "ebaaa905d5a450b9f6d37ca76516127e3edfc491d439ce106a9e2a12110d8c37",
+    fullName: "Vicky",
+  },
 ];
 
 // ----------------------------------------------------------------
 // USUÁRIOS COM PRIVILÉGIO ADMIN
 // (veem o botão ⚙ Admin no dashboard e seções restritas)
 // ----------------------------------------------------------------
-const ADMIN_USERNAMES = ["fuss", "bia"];
+const ADMIN_USERNAMES = ["fuss", "bia", "vicky"];
 
 // ----------------------------------------------------------------
 // HELPER: SHA-256 hash (compatível com browser moderno)
