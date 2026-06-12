@@ -278,7 +278,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.46',
+        version: 'v5.47',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -1140,6 +1140,15 @@ const PRODUCTIVE_STATUSES = ['Mapping'];
  * reutilizam. (Apps Script não persiste entre requests, mas dentro de um
  * mesmo doGet() não relê 6k linhas várias vezes.)
  */
+/** Data da RAW CTS: aceita Date ou texto ISO 'yyyy-MM-dd' (export novo manda string). */
+function parseRawCtsDate_(v) {
+  if (v instanceof Date) return v;
+  if (!v) return null;
+  const m = String(v).trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (!m) return null;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
 let _rawCtsCache = null;
 function buildRawCtsIndex_() {
   if (_rawCtsCache) return _rawCtsCache;
@@ -1151,18 +1160,20 @@ function buildRawCtsIndex_() {
     return _rawCtsCache;
   }
 
-  // Header: Month | country | VID | drive_date | email | TKM | total_km | Status | Billable Hours
+  // v5.47: o export trocou o schema (VID→vehicle_id, country→country_code,
+  // total_km→total_kms, Status→status, Billable Hours→Billable CTS Hours).
+  // findHeader_ aceita nome antigo E novo, case-insensitive.
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
-  const monthIdx = headers.indexOf('Month');
-  const countryIdx = headers.indexOf('country');
-  const vidIdx = headers.indexOf('VID');
-  const dateIdx = headers.indexOf('drive_date');
-  const emailIdx = headers.indexOf('email');
-  const tkmIdx = headers.indexOf('TKM');
-  const kmIdx = headers.indexOf('total_km');
-  const statusIdx = headers.indexOf('Status');
-  const hoursIdx = headers.indexOf('Billable Hours');
+  const monthIdx = findHeader_(headers, ['Month']);
+  const countryIdx = findHeader_(headers, ['country', 'country_code']);
+  const vidIdx = findHeader_(headers, ['VID', 'vehicle_id']);
+  const dateIdx = findHeader_(headers, ['drive_date']);
+  const emailIdx = findHeader_(headers, ['email']);
+  const tkmIdx = findHeader_(headers, ['TKM']);
+  const kmIdx = findHeader_(headers, ['total_km', 'total_kms']);
+  const statusIdx = findHeader_(headers, ['Status']);
+  const hoursIdx = findHeader_(headers, ['Billable Hours', 'Billable CTS Hours']);
 
   const index = {};
 
@@ -1191,8 +1202,9 @@ function buildRawCtsIndex_() {
     const km = safeNumber(row[kmIdx]);
     const status = row[statusIdx] || 'Other';
     const hours = safeNumber(row[hoursIdx]);
-    const date = row[dateIdx] instanceof Date
-      ? Utilities.formatDate(row[dateIdx], 'America/Sao_Paulo', 'yyyy-MM-dd')
+    const dateObj = parseRawCtsDate_(row[dateIdx]);
+    const date = dateObj
+      ? Utilities.formatDate(dateObj, 'America/Sao_Paulo', 'yyyy-MM-dd')
       : null;
 
     const monthData = index[emailKey][month];
@@ -1308,15 +1320,15 @@ function getFleetVids_() {
   if (rawSheet && rawSheet.getLastRow() >= 2) {
     const data = rawSheet.getDataRange().getValues();
     const h = data[0];
-    const vIdx = h.indexOf('VID'), eIdx = h.indexOf('email'),
-          dIdx = h.indexOf('drive_date'), cIdx = h.indexOf('country');
+    const vIdx = findHeader_(h, ['VID', 'vehicle_id']), eIdx = findHeader_(h, ['email']),
+          dIdx = findHeader_(h, ['drive_date']), cIdx = findHeader_(h, ['country', 'country_code']);
     if (vIdx >= 0 && dIdx >= 0) {
       for (let i = 1; i < data.length; i++) {
         const vidRaw = data[i][vIdx];
         if (!vidRaw) continue;
         const vid = String(vidRaw).trim();
         if (!vid) continue;
-        const dObj = data[i][dIdx] instanceof Date ? data[i][dIdx] : null;
+        const dObj = parseRawCtsDate_(data[i][dIdx]);
         const tm = dObj ? dObj.getTime() : 0;
         const cur = vidLast[vid];
         if (!cur || tm > cur.time) {
@@ -2906,6 +2918,9 @@ function getSheetWithFallback_(ss, primaryName, fallbacks) {
 function safeNumber(v) {
   if (v === null || v === undefined || v === '') return 0;
   if (typeof v === 'string' && v.startsWith('#')) return 0;  // Excel errors
+  if (typeof v === 'string' && /^-?[\d.]+,\d+$/.test(v.trim())) {
+    v = v.trim().replace(/\./g, '').replace(',', '.');  // '1.234,56' / '0,57' → decimal pt-BR como texto
+  }
   const n = Number(v);
   return isNaN(n) ? 0 : n;
 }
