@@ -55,7 +55,7 @@ const USERS = [
   },
   {
     username: "vicky",
-    passwordHash: "ebaaa905d5a450b9f6d37ca76516127e3edfc491d439ce106a9e2a12110d8c37",
+    passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
     fullName: "Vicky",
   },
 ];
