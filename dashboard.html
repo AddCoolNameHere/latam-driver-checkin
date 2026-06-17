@@ -6177,13 +6177,41 @@ function loadImageDataUrl(src) {
   });
 }
 
-// Tenta o wordmark da Aceolution; cai pro globo local (same-origin) se CORS falhar.
-async function loadPdfLogo() {
-  const srcs = ['https://aceolution.com/img/logo2.png', 'aceolution-globe.png'];
-  for (let i = 0; i < srcs.length; i++) {
-    const r = await loadImageDataUrl(srcs[i]);
-    if (r) return r;
-  }
+// Recolore uma imagem pra uma cor sólida (mantendo o alpha) e devolve {dataUrl,w,h}.
+// É assim que replicamos o "logo branco" do dark mode. null se CORS tainta o canvas.
+function loadImageDataUrlRecolored(src, rgb) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth || 1; c.height = img.naturalHeight || 1;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const id = ctx.getImageData(0, 0, c.width, c.height); // lança se o canvas estiver "tainted"
+        const d = id.data;
+        for (let i = 0; i < d.length; i += 4) {
+          if (d[i + 3] > 0) { d[i] = rgb[0]; d[i + 1] = rgb[1]; d[i + 2] = rgb[2]; }
+        }
+        ctx.putImageData(id, 0, 0);
+        resolve({ dataUrl: c.toDataURL('image/png'), w: c.width, h: c.height });
+      } catch (e) { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+// Wordmark "aceolution" em BRANCO pro header do PDF (igual a sidebar no dark mode).
+//  1) asset branco same-origin se existir (aceolution-white.png) → fidelidade total, sem CORS;
+//  2) recolore o logo2.png oficial pra branco (precisa de CORS; pode falhar por taint).
+// Se nada vier, o drawHeader desenha "aceolution" em texto branco.
+async function loadPdfLogoWhite() {
+  let r = await loadImageDataUrlRecolored('aceolution-white.png', [255, 255, 255]);
+  if (r) return r;
+  r = await loadImageDataUrlRecolored('https://aceolution.com/img/logo2.png', [255, 255, 255]);
+  if (r) return r;
   return null;
 }
 
@@ -6257,16 +6285,16 @@ async function buildTkmReportPdf(data) {
     pdf.text(t('tkmReportTitle').toUpperCase(), M, 14.8);
     pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.5); pdf.setTextColor(...C_ACCENT_SOFT);
     pdf.text(`${countryLabel}  ·  ${periodLabel}`, M, 19.6);
-    // Logo Aceolution num chip branco (canto sup. direito), em todas as páginas
+    // Wordmark "aceolution" em BRANCO no canto sup. direito (sem chip), igual a sidebar no dark mode
     if (logo && logo.dataUrl) {
-      let lh = 11, lw = lh * (logo.w / logo.h);
-      const maxW = 44;
+      let lh = 9, lw = lh * (logo.w / logo.h);
+      const maxW = 46;
       if (lw > maxW) { lw = maxW; lh = lw * (logo.h / logo.w); }
-      const padX = 2.6, padY = 1.6;
-      const chipW = lw + padX * 2, chipH = lh + padY * 2;
-      const chipX = pageW - M - chipW, chipY = (bandH - chipH) / 2;
-      pdf.setFillColor(255, 255, 255); pdf.roundedRect(chipX, chipY, chipW, chipH, 1.6, 1.6, 'F');
-      pdf.addImage(logo.dataUrl, 'PNG', chipX + padX, chipY + padY, lw, lh, 'aceLogo', 'FAST');
+      pdf.addImage(logo.dataUrl, 'PNG', pageW - M - lw, (bandH - lh) / 2, lw, lh, 'aceWm', 'FAST');
+    } else {
+      // Fallback (CORS bloqueou o logo): wordmark em texto branco
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(16); pdf.setTextColor(255, 255, 255);
+      pdf.text('aceolution', pageW - M, bandH / 2 + 2, { align: 'right' });
     }
   }
   function drawFooter() {
@@ -6444,7 +6472,7 @@ async function buildTkmReportPdf(data) {
   }
 
   // ---- render ----
-  logo = await loadPdfLogo();
+  logo = await loadPdfLogoWhite();
   startPage(true);
   sections.forEach((sec) => {
     // evita órfão: garante título + cards na mesma página
