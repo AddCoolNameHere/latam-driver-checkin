@@ -9,3 +9,11 @@
 # Scaffolding de build do "dashboard teste.html" (peças extraídas do bundle
 # do Claude Design + backup do export original). O HTML final é self-contained.
 .tmp_extract/
+
+# Arquivos locais de apoio / material pra mostrar pro Claude — NUNCA publicar.
+# Repo é PÚBLICO e tem PII de motorista (nomes/emails nos PDFs), dados
+# operacionais (CSVs) e imagens soltas. Fica tudo só no PC do Lucas.
+Prints/
+VID_Status.csv
+Gemini_Generated_Image_*.png
+true pgn globe.png
