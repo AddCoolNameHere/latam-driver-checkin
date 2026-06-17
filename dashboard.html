@@ -2124,7 +2124,7 @@
 
 <!-- v5.43: TKM Monthly Report PDF modal -->
 <div id="tkm-modal" class="ts-modal" style="display:none;" onclick="closeTkmModalIfBackdrop(event)">
-  <div class="ts-modal-content" style="max-width:460px;">
+  <div class="ts-modal-content" style="max-width:480px;max-height:88vh;overflow-y:auto;">
     <div class="ts-modal-header">
       <h2 data-i18n="tkmModalTitle">📈 TKM Monthly Report</h2>
       <button class="ts-modal-close" onclick="closeTkmModal()">×</button>
@@ -2135,7 +2135,7 @@
 
     <div class="ts-form-row">
       <label data-i18n="tkmCountry">País:</label>
-      <select id="tkm-country-select" style="flex:1;padding:8px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;">
+      <select id="tkm-country-select" onchange="renderTkmCountryNotes()" style="flex:1;padding:8px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;">
         <option value="ALL" data-i18n="tkmAllCountries">Todos os países</option>
       </select>
     </div>
@@ -2149,6 +2149,17 @@
       <label data-i18n="tkmYear">Ano:</label>
       <select id="tkm-year-select" style="flex:1;padding:8px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;">
       </select>
+    </div>
+
+    <div style="margin-top:16px;border-top:1px solid var(--c-border);padding-top:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--c-primary-dark,#1A365D);margin-bottom:8px;" data-i18n="tkmCommentsHeading">Comentários (entram no PDF)</div>
+      <label style="display:block;font-size:12px;font-weight:600;margin-bottom:3px;" data-i18n="tkmExecSummary">Resumo Executivo</label>
+      <textarea id="tkm-exec-summary" rows="3" data-i18n-placeholder="tkmExecSummaryPh" placeholder="Destaques da semana, países acima/abaixo da meta, principais riscos e ações para a próxima semana..." style="width:100%;padding:7px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:12px;resize:vertical;"></textarea>
+
+      <div id="tkm-country-notes"></div>
+
+      <label style="display:block;font-size:12px;font-weight:600;margin:12px 0 3px;" data-i18n="tkmNextWeek">Prioridades da Próxima Semana</label>
+      <textarea id="tkm-next-week" rows="3" data-i18n-placeholder="tkmNextWeekPh" placeholder="Top 3 prioridades, principais riscos, responsáveis e ETA de conclusão..." style="width:100%;padding:7px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:12px;resize:vertical;"></textarea>
     </div>
 
     <div class="ts-modal-actions" style="margin-top:18px;">
@@ -2754,6 +2765,16 @@ const I18N = {
     tkmColBaseline: 'Baseline%',
     tkmPage: 'Página',
     tkmNoDrivers: 'Sem motoristas para este filtro.',
+    tkmKpiHours: 'AVG System on Hours',
+    tkmKpiCars: 'Carros Ativos',
+    tkmCarsSub: '> 10 dias mapeados',
+    tkmCommentsHeading: 'Comentários (entram no PDF)',
+    tkmExecSummary: 'Resumo Executivo',
+    tkmExecSummaryPh: 'Destaques da semana, países acima/abaixo da meta, principais riscos e ações para a próxima semana...',
+    tkmNotesSection: 'Análise / Plano de Ação',
+    tkmCountryNotePh: 'Status, riscos, causa raiz, plano de ação, responsável, prazo...',
+    tkmNextWeek: 'Prioridades da Próxima Semana',
+    tkmNextWeekPh: 'Top 3 prioridades, principais riscos, responsáveis e ETA de conclusão...',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Recolher',
     tableShowingCount: 'Mostrando',
@@ -3076,6 +3097,16 @@ const I18N = {
     tkmColBaseline: 'Baseline%',
     tkmPage: 'Página',
     tkmNoDrivers: 'Sin conductores para este filtro.',
+    tkmKpiHours: 'AVG System on Hours',
+    tkmKpiCars: 'Autos Activos',
+    tkmCarsSub: '> 10 días mapeados',
+    tkmCommentsHeading: 'Comentarios (van al PDF)',
+    tkmExecSummary: 'Resumen Ejecutivo',
+    tkmExecSummaryPh: 'Aspectos destacados de la semana, países por encima/debajo de la meta, principales riesgos y acciones para la próxima semana...',
+    tkmNotesSection: 'Análisis / Plan de Acción',
+    tkmCountryNotePh: 'Estado, riesgos, causa raíz, plan de acción, responsable, plazo...',
+    tkmNextWeek: 'Prioridades de la Próxima Semana',
+    tkmNextWeekPh: 'Top 3 prioridades, principales riesgos, responsables y ETA de finalización...',
     showAllDrivers: 'Ver todos',
     collapseTable: '↑ Contraer',
     tableShowingCount: 'Mostrando',
@@ -3398,6 +3429,16 @@ const I18N = {
     tkmColBaseline: 'Baseline%',
     tkmPage: 'Page',
     tkmNoDrivers: 'No drivers for this filter.',
+    tkmKpiHours: 'AVG System on Hours',
+    tkmKpiCars: 'Active Cars',
+    tkmCarsSub: '> 10 days mapped',
+    tkmCommentsHeading: 'Comments (included in the PDF)',
+    tkmExecSummary: 'Executive Summary',
+    tkmExecSummaryPh: 'Weekly highlights, countries above/below target, key risks and actions for next week...',
+    tkmNotesSection: 'Analysis / Action Plan',
+    tkmCountryNotePh: 'Status, risks, root cause, action plan, owner, due date...',
+    tkmNextWeek: 'Next Week Priorities',
+    tkmNextWeekPh: 'Top 3 priorities, key risks, owners and completion ETA...',
     showAllDrivers: 'Show all',
     collapseTable: '↑ Collapse',
     tableShowingCount: 'Showing',
@@ -5989,6 +6030,9 @@ function closeMbrModalIfBackdrop(evt) {
 // seletores B9/D9, recalcula e restaura). Modal pergunta país + mês + ano.
 // ================================================================
 
+// Stash dos comentários por país digitados no modal (preserva o texto ao trocar país/escopo).
+const tkmNoteStash = {};
+
 // Nome do mês (1-12) no idioma corrente — só o nome, sem ano.
 function tkmMonthName(m) {
   const names = currentLang === 'pt'
@@ -6004,6 +6048,46 @@ function closeTkmModal() {
 }
 function closeTkmModalIfBackdrop(evt) {
   if (evt.target.id === 'tkm-modal') closeTkmModal();
+}
+
+// Renderiza uma caixa de comentário por país no modal, conforme o país selecionado
+// (Todos → todos; país único → só ele). O texto é preservado em tkmNoteStash ao trocar.
+function renderTkmCountryNotes() {
+  const cSel = document.getElementById('tkm-country-select');
+  const container = document.getElementById('tkm-country-notes');
+  if (!cSel || !container) return;
+  const val = cSel.value || 'ALL';
+  const list = (val === 'ALL')
+    ? Array.from(cSel.options).map(o => o.value).filter(v => v && v !== 'ALL')
+    : [val];
+  container.innerHTML = list.map(c =>
+    `<div style="margin-top:8px;">
+       <label style="display:block;font-size:12px;font-weight:600;color:var(--c-text);opacity:.85;margin-bottom:3px;">${escapeHtml(c)}</label>
+       <textarea data-country="${escapeHtml(c)}" rows="2" placeholder="${escapeHtml(t('tkmCountryNotePh'))}"
+         style="width:100%;padding:7px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:12px;resize:vertical;">${escapeHtml(tkmNoteStash[c] || '')}</textarea>
+     </div>`
+  ).join('');
+  container.querySelectorAll('textarea[data-country]').forEach(ta => {
+    ta.addEventListener('input', () => { tkmNoteStash[ta.dataset.country] = ta.value; });
+  });
+}
+
+// Junta os comentários do modal num objeto pro PDF: { execSummary, nextWeek, byCountry }.
+function collectTkmNotes(country) {
+  const execEl = document.getElementById('tkm-exec-summary');
+  const nextEl = document.getElementById('tkm-next-week');
+  const cSel = document.getElementById('tkm-country-select');
+  const wantAll = !country || country === 'ALL';
+  const list = wantAll
+    ? Array.from(cSel.options).map(o => o.value).filter(v => v && v !== 'ALL')
+    : [country];
+  const byCountry = {};
+  list.forEach(c => { if (tkmNoteStash[c] && tkmNoteStash[c].trim()) byCountry[c] = tkmNoteStash[c].trim(); });
+  return {
+    execSummary: execEl ? execEl.value.trim() : '',
+    nextWeek: nextEl ? nextEl.value.trim() : '',
+    byCountry: byCountry,
+  };
 }
 
 async function openTkmReportModal() {
@@ -6032,6 +6116,7 @@ async function openTkmReportModal() {
     ySel.innerHTML = years.map(y => `<option value="${y}"${y === res.currentYear ? ' selected' : ''}>${y}</option>`).join('');
 
     cSel.disabled = mSel.disabled = ySel.disabled = false;
+    renderTkmCountryNotes();
   } catch (err) {
     console.error('[TKM Report] erro carregando opções:', err);
     // Fallback: meses 1-12 + ano atual
@@ -6040,6 +6125,7 @@ async function openTkmReportModal() {
     mSel.innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => `<option value="${m}"${m === now.getMonth() + 1 ? ' selected' : ''}>${escapeHtml(tkmMonthName(m))}</option>`).join('');
     ySel.innerHTML = `<option value="${now.getFullYear()}">${now.getFullYear()}</option>`;
     cSel.disabled = mSel.disabled = ySel.disabled = false;
+    renderTkmCountryNotes();
   }
 }
 
@@ -6061,6 +6147,7 @@ async function generateTkmReportPdf() {
     const url = `${CONFIG.scriptUrl}?action=getTkmReport&month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}&country=${encodeURIComponent(country)}`;
     const res = await fetch(url).then(r => r.json());
     if (!res.success) throw new Error(res.error || t('exportErrorBackend'));
+    res.notes = collectTkmNotes(country);
     await buildTkmReportPdf(res);
     closeTkmModal();
   } catch (err) {
@@ -6100,20 +6187,23 @@ async function loadPdfLogo() {
   return null;
 }
 
-// Monta o PDF (retrato A4).
-//  - País único: header + 5 big numbers + tabela paginada de motoristas.
-//  - Todos os países: bloco "LATAM (total)" + uma seção por país (título + big
-//    numbers do país + tabela de motoristas do país).
+// Monta o PDF executivo (retrato A4) — visual alinhado ao portal novo (Aceolution navy + accent).
+//  - País único: header + 6 big numbers (3x2) + Executive Summary + nota do país + tabela.
+//  - Todos os países: bloco "LATAM (total)" c/ Executive Summary + uma seção por país
+//    (título, big numbers, nota/plano de ação, tabela de motoristas) + slide final de Prioridades.
+// notes (preenchidas no modal antes de exportar): { execSummary, nextWeek, byCountry:{País:texto} }
 async function buildTkmReportPdf(data) {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const pageW = 210, pageH = 297, M = 12;
+  const pageW = 210, pageH = 297, M = 13;
 
-  // Paleta (mesma do exportRecruitmentPdf)
-  const C_PRIMARY = [15, 36, 67], C_ACCENT = [74, 159, 224], C_ACCENT_SOFT = [200, 222, 240],
-    C_TEXT = [15, 23, 42], C_TEXT_2 = [51, 65, 85], C_MUTED = [100, 116, 139],
-    C_BORDER = [226, 232, 240], C_BG_CARD = [241, 245, 249],
-    C_SUCCESS = [22, 163, 74], C_WARN = [202, 138, 4], C_DANGER = [185, 28, 28], C_BRAND = [44, 82, 130];
+  // Paleta Aceolution (navy + accent), tons de apoio
+  const C_PRIMARY = [26, 54, 93], C_PRIMARY_2 = [44, 82, 130], C_ACCENT = [74, 159, 224],
+    C_ACCENT_SOFT = [205, 226, 245], C_WHITE = [255, 255, 255],
+    C_TEXT = [15, 23, 42], C_TEXT_2 = [51, 65, 85], C_MUTED = [100, 116, 139], C_FAINT = [148, 163, 184],
+    C_BORDER = [224, 230, 238], C_BG_CARD = [248, 250, 252], C_BG_TINT = [240, 246, 252],
+    C_SUCCESS = [22, 163, 74], C_WARN = [202, 138, 4], C_DANGER = [200, 38, 38],
+    C_BRAND = [44, 82, 130], C_TEAL = [13, 148, 136];
 
   // Cor de acento por país (dot do título de cada seção)
   const COUNTRY_ACCENT = {
@@ -6131,8 +6221,10 @@ async function buildTkmReportPdf(data) {
   const isAll = (data.country === 'ALL' || !data.country);
   const countryLabel = isAll ? t('tkmAllCountries') : data.country;
   const periodLabel = `${tkmMonthName(parseInt(data.month, 10))} ${data.year}`;
+  const notes = data.notes || {};
 
   const fmtInt = (v) => formatNumber(v || 0, 0);
+  const fmtNum1 = (v) => formatNumber(v || 0, 1);
   const fmtPct = (v, d) => ((v || 0) * 100).toFixed(d === undefined ? 0 : d) + '%';
   const achCol = (v) => v >= 1 ? C_SUCCESS : (v >= 0.8 ? C_WARN : C_DANGER);
   const normC = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -6147,44 +6239,50 @@ async function buildTkmReportPdf(data) {
     { key: 'baseline', label: t('tkmColBaseline'), w: 0.13, align: 'center' },
   ];
   const tableW = pageW - M * 2;
-  const rowH = 6.2, headH = 7, bottomLimit = pageH - 13;
-  const kpiH = 24, kpiGap = 4, kpiW = (pageW - M * 2 - kpiGap * 4) / 5;
+  const rowH = 6.4, headH = 7.2, bottomLimit = pageH - 14;
+  // KPI grid 3 colunas x 2 linhas
+  const kpiCols = 3, kpiGap = 4, kpiRowGap = 4, kpiH = 22;
+  const kpiW = (tableW - kpiGap * (kpiCols - 1)) / kpiCols;
+  const kpiBlockH = kpiH * 2 + kpiRowGap;
 
   let pageNum = 0, y = 0, logo = null;
 
   function drawHeader() {
-    pdf.setFillColor(...C_PRIMARY); pdf.rect(0, 0, pageW, 20, 'F');
-    pdf.setFillColor(...C_ACCENT); pdf.rect(0, 20, pageW, 0.8, 'F');
-    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7.5); pdf.setTextColor(...C_ACCENT_SOFT);
-    pdf.text('ACEOLUTION  ·  STREET VIEW LATAM', M, 7);
-    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(13); pdf.setTextColor(255, 255, 255);
-    pdf.text(t('tkmReportTitle').toUpperCase(), M, 14);
-    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.setTextColor(...C_ACCENT_SOFT);
-    pdf.text(`${countryLabel}  ·  ${periodLabel}`, M, 18.2);
+    const bandH = 22;
+    pdf.setFillColor(...C_PRIMARY); pdf.rect(0, 0, pageW, bandH, 'F');
+    pdf.setFillColor(...C_ACCENT); pdf.rect(0, bandH, pageW, 0.9, 'F');
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7); pdf.setTextColor(...C_ACCENT_SOFT);
+    pdf.text('ACEOLUTION  ·  STREET VIEW LATAM', M, 7.5);
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(15); pdf.setTextColor(255, 255, 255);
+    pdf.text(t('tkmReportTitle').toUpperCase(), M, 14.8);
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.5); pdf.setTextColor(...C_ACCENT_SOFT);
+    pdf.text(`${countryLabel}  ·  ${periodLabel}`, M, 19.6);
     // Logo Aceolution num chip branco (canto sup. direito), em todas as páginas
     if (logo && logo.dataUrl) {
-      let lh = 10, lw = lh * (logo.w / logo.h);
-      const maxW = 42;
+      let lh = 11, lw = lh * (logo.w / logo.h);
+      const maxW = 44;
       if (lw > maxW) { lw = maxW; lh = lw * (logo.h / logo.w); }
-      const padX = 2.5, padY = 1.5;
+      const padX = 2.6, padY = 1.6;
       const chipW = lw + padX * 2, chipH = lh + padY * 2;
-      const chipX = pageW - M - chipW, chipY = (20 - chipH) / 2;
-      pdf.setFillColor(255, 255, 255); pdf.roundedRect(chipX, chipY, chipW, chipH, 1.5, 1.5, 'F');
+      const chipX = pageW - M - chipW, chipY = (bandH - chipH) / 2;
+      pdf.setFillColor(255, 255, 255); pdf.roundedRect(chipX, chipY, chipW, chipH, 1.6, 1.6, 'F');
       pdf.addImage(logo.dataUrl, 'PNG', chipX + padX, chipY + padY, lw, lh, 'aceLogo', 'FAST');
     }
   }
   function drawFooter() {
     const dateStr = now.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
+    pdf.setDrawColor(...C_BORDER); pdf.setLineWidth(0.3);
+    pdf.line(M, pageH - 10, pageW - M, pageH - 10);
     pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(...C_MUTED);
-    pdf.text(`${countryLabel} · ${periodLabel}`, M, pageH - 7);
-    pdf.text(`${dateStr}  ·  ${t('tkmPage') || 'Página'} ${pageNum}`, pageW - M, pageH - 7, { align: 'right' });
+    pdf.text(`${countryLabel} · ${periodLabel}`, M, pageH - 6);
+    pdf.text(`${dateStr}  ·  ${t('tkmPage') || 'Página'} ${pageNum}`, pageW - M, pageH - 6, { align: 'right' });
   }
   function startPage(first) {
     if (!first) pdf.addPage();
     pageNum++;
     drawHeader();
     drawFooter();
-    y = 26;
+    y = 29;
   }
   function ensure(space) {
     if (y + space > bottomLimit) startPage(false);
@@ -6196,28 +6294,67 @@ async function buildTkmReportPdf(data) {
       { label: t('tkmKpiAch'), value: fmtPct(big.achievementPct, 0), color: achCol(big.achievementPct || 0) },
       { label: t('tkmKpiTkm'), value: fmtInt(big.tkmDone), color: C_ACCENT },
       { label: t('tkmKpiBaseline'), value: fmtPct(big.baselinePct, 0), color: C_PRIMARY },
-      { label: t('tkmKpiBaselineTgt'), value: fmtInt(big.baseline), color: C_TEXT_2 },
+      { label: t('tkmKpiHours'), value: fmtNum1(big.avgHours), color: C_TEAL },
+      { label: t('tkmKpiCars'), value: fmtInt(big.activeCars), sub: t('tkmCarsSub'), color: C_SUCCESS },
     ];
     items.forEach((it, idx) => {
-      const x = M + idx * (kpiW + kpiGap);
-      pdf.setFillColor(...C_BG_CARD); pdf.setDrawColor(...C_BORDER);
-      pdf.roundedRect(x, y, kpiW, kpiH, 2, 2, 'FD');
-      pdf.setFillColor(...it.color); pdf.rect(x, y, kpiW, 1.4, 'F');
-      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(5.8); pdf.setTextColor(...C_MUTED);
-      pdf.text(pdf.splitTextToSize(it.label.toUpperCase(), kpiW - 4).slice(0, 2), x + 2.5, y + 5.5);
-      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(13); pdf.setTextColor(...it.color);
-      pdf.text(String(it.value), x + 2.5, y + 18);
+      const col = idx % kpiCols, rowi = Math.floor(idx / kpiCols);
+      const x = M + col * (kpiW + kpiGap);
+      const cy = y + rowi * (kpiH + kpiRowGap);
+      pdf.setFillColor(...C_WHITE); pdf.setDrawColor(...C_BORDER); pdf.setLineWidth(0.3);
+      pdf.roundedRect(x, cy, kpiW, kpiH, 2.2, 2.2, 'FD');
+      pdf.setFillColor(...it.color); pdf.roundedRect(x, cy, kpiW, 1.7, 0.8, 0.8, 'F');
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6.2); pdf.setTextColor(...C_MUTED);
+      pdf.text(pdf.splitTextToSize(it.label.toUpperCase(), kpiW - 7).slice(0, 2), x + 3.6, cy + 6);
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(16); pdf.setTextColor(...it.color);
+      pdf.text(String(it.value), x + 3.6, cy + 16);
+      if (it.sub) {
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(5.6); pdf.setTextColor(...C_FAINT);
+        pdf.text(it.sub, x + 3.6, cy + 19.4);
+      }
     });
-    y += kpiH;
+    y += kpiBlockH;
   }
 
   function drawSectionTitle(title, accent) {
-    const h = 8;
-    pdf.setFillColor(...C_PRIMARY); pdf.roundedRect(M, y, tableW, h, 1.5, 1.5, 'F');
-    pdf.setFillColor(...accent); pdf.circle(M + 5, y + h / 2, 1.8, 'F');
+    const h = 8.4;
+    pdf.setFillColor(...C_PRIMARY); pdf.roundedRect(M, y, tableW, h, 1.6, 1.6, 'F');
+    pdf.setFillColor(...accent); pdf.circle(M + 5.2, y + h / 2, 1.9, 'F');
     pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10.5); pdf.setTextColor(255, 255, 255);
-    pdf.text(title.toUpperCase(), M + 10, y + 5.5);
-    y += h + 3;
+    pdf.text(String(title).toUpperCase(), M + 10.5, y + 5.7);
+    y += h + 3.5;
+  }
+
+  // Bloco de texto (Executive Summary / nota do país / prioridades). Barra de acento
+  // à esquerda, quebra de linha respeitada, pagina automaticamente.
+  function drawNotes(label, text, accent) {
+    const raw = String(text == null ? '' : text).trim();
+    if (!raw) return;
+    const pad = 4.5, lineH = 4.6;
+    const innerW = tableW - pad - 2;
+    if (label) {
+      ensure(6 + lineH);
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7.4); pdf.setTextColor(...accent);
+      pdf.text(String(label).toUpperCase(), M, y + 3.4);
+      y += 6;
+    }
+    const lines = [];
+    raw.split('\n').forEach(par => {
+      const p = par.replace(/\s+$/, '');
+      if (p === '') { lines.push(''); return; }
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.6);
+      pdf.splitTextToSize(p, innerW).forEach(l => lines.push(l));
+    });
+    lines.forEach(ln => {
+      ensure(lineH + 0.5);
+      pdf.setFillColor(...accent); pdf.rect(M, y - 2.8, 0.9, lineH, 'F');
+      if (ln) {
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.6); pdf.setTextColor(...C_TEXT_2);
+        pdf.text(ln, M + pad, y + 0.6);
+      }
+      y += lineH;
+    });
+    y += 4;
   }
 
   function drawTableHeaderRow() {
@@ -6227,7 +6364,7 @@ async function buildTkmReportPdf(data) {
     cols.forEach(c => {
       const w = tableW * c.w;
       const tx = c.align === 'center' ? cur + w / 2 : c.align === 'right' ? cur + w - 3 : cur + 3;
-      pdf.text(c.label.toUpperCase(), tx, y + 4.7, { align: c.align });
+      pdf.text(c.label.toUpperCase(), tx, y + 4.8, { align: c.align });
       cur += w;
     });
     y += headH;
@@ -6251,23 +6388,26 @@ async function buildTkmReportPdf(data) {
       const tx = c.align === 'center' ? cur + w / 2 : c.align === 'right' ? cur + w - 3 : cur + 3;
       if (cell.type === 'name') {
         pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7.5); pdf.setTextColor(...C_TEXT);
-        pdf.text(pdf.splitTextToSize(String(cell.val), w - 4)[0] || '', tx, y + 4.3, { align: c.align });
+        pdf.text(pdf.splitTextToSize(String(cell.val), w - 4)[0] || '', tx, y + 4.4, { align: c.align });
       } else if (cell.type === 'baseline') {
         pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.setTextColor(...baselineColor);
-        pdf.text(String(cell.val), tx, y + 4.3, { align: c.align });
+        pdf.text(String(cell.val), tx, y + 4.4, { align: c.align });
       } else {
         pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(...C_TEXT_2);
-        pdf.text(String(cell.val), tx, y + 4.3, { align: c.align });
+        pdf.text(String(cell.val), tx, y + 4.4, { align: c.align });
       }
       cur += w;
     });
+    // linha divisória sutil
+    pdf.setDrawColor(...C_BORDER); pdf.setLineWidth(0.2);
+    pdf.line(M, y + rowH, M + tableW, y + rowH);
     y += rowH;
   }
 
   function drawDriverTable(list) {
     pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.setTextColor(...C_MUTED);
     pdf.text(`${t('tkmDriversSection')} (${list.length})`, M, y);
-    y += 2.5;
+    y += 2.8;
     if (!list.length) {
       pdf.setFont('helvetica', 'italic'); pdf.setFontSize(8.5); pdf.setTextColor(...C_MUTED);
       pdf.text(t('tkmNoDrivers') || '—', M, y + 4);
@@ -6285,11 +6425,11 @@ async function buildTkmReportPdf(data) {
   }
 
   // ---- monta as seções ----
+  const byCountryNotes = notes.byCountry || {};
   const sections = [];
   if (isAll) {
-    // LATAM total (só os big numbers, sem tabela)
-    sections.push({ title: `LATAM — ${t('tkmAllCountries')}`, accent: C_ACCENT, big: data.bigNumbers || {}, drivers: null });
-    // por país (ordem preferida + quaisquer extras que apareçam)
+    // LATAM total: big numbers + Executive Summary (sem tabela)
+    sections.push({ title: `LATAM — ${t('tkmAllCountries')}`, accent: C_ACCENT, big: data.bigNumbers || {}, drivers: null, execSummary: notes.execSummary });
     const byCountry = {};
     (data.perCountry || []).forEach(c => { byCountry[c.country] = c; });
     const present = (data.perCountry || []).map(c => c.country);
@@ -6297,26 +6437,34 @@ async function buildTkmReportPdf(data) {
       .concat(present.filter(c => COUNTRY_ORDER.indexOf(c) < 0));
     ordered.forEach(cn => {
       const cd = (data.drivers || []).filter(d => normC(d.country) === normC(cn));
-      sections.push({ title: cn, accent: COUNTRY_ACCENT[cn] || C_ACCENT, big: byCountry[cn] || {}, drivers: cd });
+      sections.push({ title: cn, accent: COUNTRY_ACCENT[cn] || C_ACCENT, big: byCountry[cn] || {}, drivers: cd, note: byCountryNotes[cn] });
     });
   } else {
-    // País único: sem barra de título (o header da página já diz o país)
-    sections.push({ title: countryLabel, accent: COUNTRY_ACCENT[data.country] || C_ACCENT, big: data.bigNumbers || {}, drivers: data.drivers || [], noTitle: true });
+    sections.push({ title: countryLabel, accent: COUNTRY_ACCENT[data.country] || C_ACCENT, big: data.bigNumbers || {}, drivers: data.drivers || [], noTitle: true, execSummary: notes.execSummary, note: byCountryNotes[data.country] });
   }
 
   // ---- render ----
   logo = await loadPdfLogo();
   startPage(true);
   sections.forEach((sec) => {
-    // evita órfão: garante título + cards + (cabeçalho + 2 linhas) na mesma página
-    const need = (sec.noTitle ? 0 : 11) + kpiH + 5 + (sec.drivers ? (headH + rowH * 2 + 5) : 0);
+    // evita órfão: garante título + cards na mesma página
+    const need = (sec.noTitle ? 0 : 12) + kpiBlockH + 6;
     ensure(need);
     if (!sec.noTitle) drawSectionTitle(sec.title, sec.accent);
     drawKpiCards(sec.big);
-    y += 5;
+    y += 6;
+    if (sec.execSummary) drawNotes(t('tkmExecSummary'), sec.execSummary, C_ACCENT);
+    if (sec.note) drawNotes(t('tkmNotesSection'), sec.note, sec.accent);
     if (sec.drivers) drawDriverTable(sec.drivers);
-    y += 7; // respiro entre seções
+    y += 8; // respiro entre seções
   });
+
+  // Slide final: Prioridades da próxima semana
+  if (notes.nextWeek && String(notes.nextWeek).trim()) {
+    ensure(kpiBlockH);
+    drawSectionTitle(t('tkmNextWeek'), C_ACCENT);
+    drawNotes('', notes.nextWeek, C_ACCENT);
+  }
 
   const safeCountry = (isAll ? 'LATAM' : String(data.country)).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w]+/g, '_');
   pdf.save(`TKM_Report_${safeCountry}_${data.month}-${data.year}.pdf`);

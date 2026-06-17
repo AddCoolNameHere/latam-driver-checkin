@@ -278,7 +278,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.47',
+        version: 'v5.49',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -4825,6 +4825,49 @@ function getMonthlyReportData_(month, year) {
 
 var TKM_REPORT_SHEET_ = 'TKM Monthly Drivers Report';
 
+// Active Cars (v5.49): um carro conta como "ativo" se mapeou MAIS de 10 dias no mês
+// (engloba Active + Half Active da terminologia da planilha — "carros que efetivamente
+// mapearam por mais de 10 dias"). Contado por VID distinto direto da RAW CTS (sempre
+// fresco), em vez do "Fleet Active %" da aba (que é percentual e desatualiza).
+var ACTIVE_CAR_MIN_MAPPING_DAYS_ = 10;
+
+/**
+ * Conta carros ativos por país no mês: VIDs distintos da RAW CTS com MAIS de
+ * ACTIVE_CAR_MIN_MAPPING_DAYS_ dias de mapeamento (status produtivo). Uma linha
+ * por VID-dia; agrupa por vehicle_id, soma os dias de Mapping, e conta os que
+ * passam do limite. Retorna { normCountry: count }. Fail-safe: {} se não ler.
+ */
+function getActiveCarCountByCountry_(monthKey) {
+  const out = {};
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = ss.getSheetByName(CONFIG.rawCtsSheet);
+    if (!sheet || sheet.getLastRow() < 2) return out;
+    const data = sheet.getDataRange().getValues();
+    const h = data[0];
+    const monthIdx = findHeader_(h, ['Month']);
+    const vidIdx = findHeader_(h, ['VID', 'vehicle_id']);
+    const countryIdx = findHeader_(h, ['country', 'country_code']);
+    const statusIdx = findHeader_(h, ['Status', 'status']);
+    if (monthIdx < 0 || vidIdx < 0) return out;
+    const byVid = {}; // vid → { country, days }
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][monthIdx] || '') !== monthKey) continue;
+      const vid = String(data[i][vidIdx] || '').trim();
+      if (!vid) continue;
+      if (!byVid[vid]) byVid[vid] = { country: countryIdx >= 0 ? String(data[i][countryIdx] || '').trim() : '', days: 0 };
+      if (PRODUCTIVE_STATUSES.indexOf(data[i][statusIdx]) >= 0) byVid[vid].days++;
+    }
+    for (const v in byVid) {
+      if (byVid[v].days > ACTIVE_CAR_MIN_MAPPING_DAYS_) {
+        const k = normCountry_(byVid[v].country);
+        if (k) out[k] = (out[k] || 0) + 1;
+      }
+    }
+  } catch (e) { Logger.log('getActiveCarCountByCountry_ erro: ' + e); }
+  return out;
+}
+
 /**
  * Opções pros dropdowns do modal de export: meses/anos válidos (data-validation
  * dos seletores B9/D9) + lista de países do bloco de país. NÃO mexe na planilha.
@@ -4900,6 +4943,7 @@ function getTkmReport_(month, year, country) {
   }
 
   const wantAll = !country || String(country).toUpperCase() === 'ALL' || String(country).trim() === '';
+  const monthKey = String(month) + '.' + String(year); // formato da RAW CTS / getCurrentMonthKey_ (ex '6.2026')
   let prevMonth = null, prevYear = null, restored = false;
 
   try {
@@ -4914,6 +4958,44 @@ function getTkmReport_(month, year, country) {
     if (year && safeNumber(prevYear) !== year) { yCell.setValue(year); changed = true; }
     if (changed) SpreadsheetApp.flush();
 
+    // ============================================================
+    // FONTES VIVAS (v5.48): a aba "TKM Monthly Drivers Report" é um rollup
+    // que fica desatualizado (QC/VID/timestamps de update manuais). Em vez de
+    // confiar 100% nela, recalcula o que dá direto da FONTE:
+    //   • TKM done / Km Driven / Efficiency / Baseline% ← RAW CTS DATA (buildRawCtsIndex_)
+    //   • CTS Goal (Target) / Baseline-alvo            ← CTS Goal Management (getCtsGoals)
+    // FAIL-SAFE: se a fonte viva não tiver o dado (motorista/país/mês sem linha,
+    // ou erro de leitura), MANTÉM o valor da aba — nunca fica pior que hoje.
+    // FICAM da aba (não dá pra re-sourcear com segurança): QC Score e VID Active
+    // SUM (por motorista) + "% Overall Baseline" do bloco de país.
+    // ============================================================
+    const goalsByCountry = {};   // normCountry → { ctsGoal, baseline } (do período pedido)
+    const liveByCountry = {};    // normCountry → { tkm, km } (Σ da RAW CTS no mês)
+    let ctsIndex = {};
+    try {
+      const goals = getCtsGoals();
+      for (let i = 0; i < goals.length; i++) {
+        const g = goals[i];
+        if (!periodMatches_(g.period, month, year)) continue;
+        goalsByCountry[normCountry_(g.country)] = { ctsGoal: g.ctsGoal, baseline: g.baseline };
+      }
+    } catch (e) { Logger.log('getTkmReport_: getCtsGoals falhou (fallback p/ aba): ' + e); }
+    try {
+      ctsIndex = buildRawCtsIndex_();
+      for (const em in ctsIndex) {
+        const md = ctsIndex[em][monthKey];
+        if (!md) continue;
+        const k = normCountry_(md.country);
+        if (!k) continue;
+        if (!liveByCountry[k]) liveByCountry[k] = { tkm: 0, km: 0 };
+        liveByCountry[k].tkm += safeNumber(md.tkm);
+        liveByCountry[k].km += safeNumber(md.km);
+      }
+    } catch (e) { Logger.log('getTkmReport_: buildRawCtsIndex_ falhou (fallback p/ aba): ' + e); }
+
+    // Active Cars por país (RAW CTS, VIDs com > 10 dias de mapeamento no mês)
+    const activeCarsByCountry = getActiveCarCountByCountry_(monthKey);
+
     const lastCol = sheet.getLastColumn();
 
     // ---- Bloco de país (cabeçalho linha 10, dados 11-16, SUM 17) ----
@@ -4924,6 +5006,7 @@ function getTkmReport_(month, year, country) {
       achievement: findHeader_(cHead, ['cts goal achievement %', 'cts goal achievement', 'achievement']),
       tkm: findHeader_(cHead, ['tkm (done by drivers)', 'tkm done', 'tkm']),
       baseline: findHeader_(cHead, ['% overall baseline', 'overall baseline', 'baseline']),
+      avgHours: findHeader_(cHead, ['avg system on hours', 'average mapping hours', 'avg mapping hours', 'system on hours', 'avg system']),
     };
     const cRows = sheet.getRange(11, 1, 7, lastCol).getValues(); // 6 países + SUM
     const perCountry = [];
@@ -4937,7 +5020,8 @@ function getTkmReport_(month, year, country) {
         ctsGoal: safeNumber(row[cIx.ctsGoal]),
         achievementPct: safeNumber(row[cIx.achievement]),
         tkmDone: safeNumber(row[cIx.tkm]),
-        baselinePct: safeNumber(row[cIx.baseline]),
+        baselinePct: safeNumber(row[cIx.baseline]),   // "% Overall Baseline" — FICA da aba
+        avgHours: safeNumber(row[cIx.avgHours]),       // "AVG System on Hours" (col N) — FICA da aba
       };
       if (name.toUpperCase() === 'SUM') sumRow = obj; else perCountry.push(obj);
     }
@@ -4951,6 +5035,49 @@ function getTkmReport_(month, year, country) {
         if (matchCountry_(perCountry[i].country, country)) { bigNumbers = perCountry[i]; break; }
       }
       if (!bigNumbers) bigNumbers = { country: country, ctsGoal: 0, achievementPct: 0, tkmDone: 0, baselinePct: 0 };
+    }
+
+    // ---- Override do bloco de país com fontes vivas (CTS Goal + Σ TKM RAW CTS) ----
+    // Mantém "% Overall Baseline" (baselinePct) da aba. Recalcula achievement só
+    // quando ctsGoal ou tkmDone foram efetivamente trocados (evita drift de arredondamento).
+    // Nota: CTS Goal (Target) vem do CTS Goal Management (getCtsGoals) — pode divergir
+    // um pouco do nº na aba (a aba às vezes não é atualizada); o mgmt é o mais fresco.
+    const cmpCountry = [];
+    let anyCountryTouched = false;
+    const overrideCountry = function (obj) {
+      const k = normCountry_(obj.country);
+      const g = goalsByCountry[k];
+      const live = liveByCountry[k];
+      const sheetVals = { tkmDone: obj.tkmDone, ctsGoal: obj.ctsGoal, achievementPct: obj.achievementPct };
+      let touched = false;
+      if (g && g.ctsGoal) { obj.ctsGoal = g.ctsGoal; touched = true; }
+      if (live) { obj.tkmDone = live.tkm; touched = true; }
+      if (touched) {
+        anyCountryTouched = true;
+        obj.achievementPct = obj.ctsGoal > 0 ? obj.tkmDone / obj.ctsGoal : sheetVals.achievementPct;
+      }
+      cmpCountry.push({
+        country: obj.country,
+        tkmDone: { sheet: sheetVals.tkmDone, live: obj.tkmDone },
+        ctsGoal: { sheet: sheetVals.ctsGoal, live: obj.ctsGoal },
+        achievementPct: { sheet: sheetVals.achievementPct, live: obj.achievementPct },
+      });
+    };
+    perCountry.forEach(overrideCountry);
+    if (wantAll && anyCountryTouched) {
+      // SUM/LATAM: soma os países (já com valores vivos quando disponíveis)
+      let sg = 0, st = 0;
+      for (let i = 0; i < perCountry.length; i++) { sg += perCountry[i].ctsGoal || 0; st += perCountry[i].tkmDone || 0; }
+      const sheetSum = { tkmDone: bigNumbers.tkmDone, ctsGoal: bigNumbers.ctsGoal, achievementPct: bigNumbers.achievementPct };
+      if (sg) bigNumbers.ctsGoal = sg;
+      if (st) bigNumbers.tkmDone = st;
+      bigNumbers.achievementPct = bigNumbers.ctsGoal > 0 ? bigNumbers.tkmDone / bigNumbers.ctsGoal : sheetSum.achievementPct;
+      cmpCountry.push({
+        country: 'SUM',
+        tkmDone: { sheet: sheetSum.tkmDone, live: bigNumbers.tkmDone },
+        ctsGoal: { sheet: sheetSum.ctsGoal, live: bigNumbers.ctsGoal },
+        achievementPct: { sheet: sheetSum.achievementPct, live: bigNumbers.achievementPct },
+      });
     }
 
     // ---- Bloco de motoristas (cabeçalho linha 20, dados 21+) ----
@@ -4972,6 +5099,8 @@ function getTkmReport_(month, year, country) {
       baseline: findHeader_(dHead, ['baseline%', 'baseline %', 'baseline']),
     };
     const drivers = [];
+    const driverDiffs = [];
+    let driversWithLive = 0;
     const lastRow = sheet.getLastRow();
     if (lastRow >= 21 && dIx.name >= 0) {
       const dRows = sheet.getRange(21, 1, lastRow - 20, lastCol).getValues();
@@ -4981,19 +5110,43 @@ function getTkmReport_(month, year, country) {
         if (!dName) continue;
         const dCountry = dIx.country >= 0 ? String(row[dIx.country] || '').trim() : '';
         if (!wantAll && !matchCountry_(dCountry, country)) continue;
+        const dEmail = dIx.email >= 0 ? String(row[dIx.email] || '').trim().toLowerCase() : '';
         // filtro de ativo (por email)
-        if (hasActiveSet) {
-          const dEmail = dIx.email >= 0 ? String(row[dIx.email] || '').trim().toLowerCase() : '';
-          if (!dEmail || !activeSet[dEmail]) continue;
+        if (hasActiveSet && (!dEmail || !activeSet[dEmail])) continue;
+
+        // valores da aba (fallback)
+        const sheetKm = safeNumber(row[dIx.km]);
+        const sheetEff = safeNumber(row[dIx.eff]);
+        const sheetBaseline = safeNumber(row[dIx.baseline]);
+
+        // override com RAW CTS + CTS Goal (só se houver linha viva do motorista no mês)
+        let kmDriven = sheetKm, efficiency = sheetEff, baselinePct = sheetBaseline;
+        const liveMd = (dEmail && ctsIndex[dEmail]) ? ctsIndex[dEmail][monthKey] : null;
+        if (liveMd) {
+          driversWithLive++;
+          const lTkm = safeNumber(liveMd.tkm), lKm = safeNumber(liveMd.km);
+          kmDriven = lKm;
+          efficiency = lKm > 0 ? lTkm / lKm : sheetEff;
+          const cb = goalsByCountry[normCountry_(dCountry)];
+          baselinePct = (cb && cb.baseline > 0) ? lTkm / cb.baseline : sheetBaseline;
+          if (driverDiffs.length < 12) {
+            driverDiffs.push({
+              name: dName,
+              km: { sheet: sheetKm, live: kmDriven },
+              eff: { sheet: sheetEff, live: efficiency },
+              baselinePct: { sheet: sheetBaseline, live: baselinePct },
+            });
+          }
         }
+
         drivers.push({
           name: dName,
           country: dCountry,
-          qcScore: safeNumber(row[dIx.qc]),
-          kmDriven: safeNumber(row[dIx.km]),
-          efficiency: safeNumber(row[dIx.eff]),
-          vidActiveSum: safeNumber(row[dIx.vidActive]),
-          baselinePct: safeNumber(row[dIx.baseline]),
+          qcScore: safeNumber(row[dIx.qc]),              // QC Score — FICA da aba
+          kmDriven: kmDriven,
+          efficiency: efficiency,
+          vidActiveSum: safeNumber(row[dIx.vidActive]),  // VID Active SUM — FICA da aba
+          baselinePct: baselinePct,
         });
       }
     }
@@ -5008,24 +5161,30 @@ function getTkmReport_(month, year, country) {
     }
     restored = true;
 
-    // Baseline (valor absoluto alvo) por país, da aba CTS Goal Management, do período
-    // pedido. A aba TKM tem "% Overall Baseline"; o Lucas quer o baseline-alvo mensal daqui.
+    // Baseline (valor absoluto alvo) por país, da CTS Goal Management, do período pedido.
     try {
-      const goals = getCtsGoals();
-      const baseByCountry = {};
       let baseTotal = 0;
-      for (let i = 0; i < goals.length; i++) {
-        const g = goals[i];
-        if (!periodMatches_(g.period, month, year)) continue;
-        baseByCountry[normCountry_(g.country)] = g.baseline;
-        baseTotal += g.baseline || 0;
-      }
+      for (const k in goalsByCountry) baseTotal += goalsByCountry[k].baseline || 0;
       for (let i = 0; i < perCountry.length; i++) {
-        perCountry[i].baseline = baseByCountry[normCountry_(perCountry[i].country)] || 0;
+        const gb = goalsByCountry[normCountry_(perCountry[i].country)];
+        perCountry[i].baseline = gb ? (gb.baseline || 0) : 0;
       }
-      bigNumbers.baseline = wantAll ? baseTotal : (baseByCountry[normCountry_(country)] || 0);
+      bigNumbers.baseline = wantAll ? baseTotal : ((goalsByCountry[normCountry_(country)] || {}).baseline || 0);
     } catch (e) {
-      Logger.log('Erro lendo baseline da CTS Goal Management: ' + e);
+      Logger.log('Erro montando baseline-alvo: ' + e);
+    }
+
+    // Active Cars por país (RAW CTS, > 10 dias de mapeamento) + total LATAM
+    try {
+      let carsTotal = 0;
+      for (let i = 0; i < perCountry.length; i++) {
+        const ac = activeCarsByCountry[normCountry_(perCountry[i].country)] || 0;
+        perCountry[i].activeCars = ac;
+        carsTotal += ac;
+      }
+      bigNumbers.activeCars = wantAll ? carsTotal : (activeCarsByCountry[normCountry_(country)] || 0);
+    } catch (e) {
+      Logger.log('Erro montando activeCars: ' + e);
     }
 
     return {
@@ -5036,6 +5195,12 @@ function getTkmReport_(month, year, country) {
       bigNumbers: bigNumbers,   // país escolhido (ou SUM/LATAM quando ALL); .baseline vem da CTS Goal Mgmt
       perCountry: perCountry,   // big numbers de cada país (pro PDF seccionado de ALL)
       drivers: drivers,
+      // v5.48: auditoria live-vs-aba pra validar o re-sourcing (pode remover depois)
+      comparison: {
+        monthKey: monthKey,
+        perCountry: cmpCountry,
+        drivers: { total: drivers.length, withLiveData: driversWithLive, sampleDiffs: driverDiffs },
+      },
     };
   } catch (err) {
     Logger.log('getTkmReport_ erro: ' + err);
