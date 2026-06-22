@@ -8,7 +8,7 @@
  * próximo commit feito pelo painel. Pra alterar, abra:
  *   admin-users.html (acesso restrito ao usuário "fuss")
  *
- * Última geração: 2026-06-22T17:50:14.546Z
+ * Última geração: 2026-06-22T18:05:14.465Z
  *
  * ⚠ NOTA DE SEGURANÇA:
  * Este é client-side ("teatro de segurança"): qualquer pessoa
@@ -32,31 +32,37 @@ const USERS = [
     username: "pankaj",
     passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
     fullName: "Pankaj",
+    pages: ["dashboard.html", "driver-profile.html", "recruitment.html", "country_scopes.html", "ops-map.html", "pmo.html", "ramp.html", "timesheet.html", "ar-divergencias-admin.html", "argentina_scenarios_presentation.html", "argentina_optimization_report.html", "roadmap.html"],
   },
   {
     username: "bia",
     passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
     fullName: "Bia",
+    pages: ["dashboard.html", "driver-profile.html", "recruitment.html", "country_scopes.html", "ops-map.html", "pmo.html", "ramp.html", "timesheet.html", "ar-divergencias-admin.html", "argentina_scenarios_presentation.html", "argentina_optimization_report.html", "roadmap.html"],
   },
   {
     username: "lucas",
     passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
     fullName: "Outro Lucas",
+    pages: ["dashboard.html", "driver-profile.html", "recruitment.html", "country_scopes.html", "ops-map.html", "pmo.html", "ramp.html", "timesheet.html"],
   },
   {
     username: "payroll",
     passwordHash: "946ef4dd0fb666f73883b6a3de531857d91e97769d540be3d5b2d2fec900606b",
     fullName: "Payroll",
+    pages: ["ramp.html", "timesheet.html"],
   },
   {
     username: "reshma",
-    passwordHash: "ebaaa905d5a450b9f6d37ca76516127e3edfc491d439ce106a9e2a12110d8c37",
+    passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
     fullName: "Reshma",
+    pages: ["dashboard.html", "driver-profile.html", "recruitment.html", "country_scopes.html", "ops-map.html", "pmo.html", "ramp.html", "timesheet.html", "ar-divergencias-admin.html"],
   },
   {
     username: "vicky",
     passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
     fullName: "Vicky",
+    pages: ["dashboard.html", "driver-profile.html", "recruitment.html", "country_scopes.html", "ops-map.html", "pmo.html", "ramp.html", "timesheet.html", "ar-divergencias-admin.html", "argentina_scenarios_presentation.html", "argentina_optimization_report.html"],
   },
   {
     username: "david",
@@ -64,13 +70,25 @@ const USERS = [
     fullName: "David",
     pages: ["dashboard.html", "driver-profile.html", "recruitment.html", "country_scopes.html", "ops-map.html", "pmo.html", "ramp.html", "timesheet.html"],
   },
+  {
+    username: "eduardo",
+    passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
+    fullName: "Eduardo",
+    pages: ["dashboard.html", "driver-profile.html", "recruitment.html", "country_scopes.html", "ops-map.html", "pmo.html", "ramp.html", "timesheet.html"],
+  },
+  {
+    username: "cts",
+    passwordHash: "a73fb77396683238680d5b39601a6bbff657eebde8a5cf7805403300fcf8c49a",
+    fullName: "CTS",
+    pages: ["ops-map.html"],
+  },
 ];
 
 // ----------------------------------------------------------------
 // USUÁRIOS COM PRIVILÉGIO ADMIN
 // (veem o botão ⚙ Admin no dashboard e seções restritas)
 // ----------------------------------------------------------------
-const ADMIN_USERNAMES = ["fuss", "bia", "vicky"];
+const ADMIN_USERNAMES = ["fuss"];
 
 // ----------------------------------------------------------------
 // HELPER: SHA-256 hash (compatível com browser moderno)
