@@ -6,9 +6,9 @@
 <title>Mapa de Operações · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
 <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
-<script src="auth.js?v=20260608"></script>
+<script src="auth.js?v=20260619"></script>
 <script src="theme.js?v=20260608"></script>
-<script src="common.js?v=20260608b"></script>
+<script src="common.js?v=20260619"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="theme.css?v=20260608">
 <style>
@@ -291,6 +291,8 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.25);
   }
   .home-marker svg { width: 12px; height: 12px; }
+  /* base = hotel: destaca em azul accent pra distinguir da casa original */
+  .home-marker.hotel { border-color: var(--c-accent); color: var(--c-accent); }
 
   /* ---- Popups ---- */
   .leaflet-popup-content { margin: 12px 14px; font-size: 13px; min-width: 210px; }
@@ -452,6 +454,7 @@
     <div class="legend-item"><span class="legend-swatch" style="background:var(--st-dnm);"></span> <span data-i18n="legDnm">Não mapeou hoje</span></div>
     <div class="legend-item"><span class="legend-swatch" style="background:var(--st-stale);"></span> <span data-i18n="legStale">Sem check-in (mostrado na casa)</span></div>
     <div class="legend-item"><span class="legend-swatch" style="background:var(--c-surface);border-color:var(--c-text-muted);"></span> <span data-i18n="legHome">Casa do motorista</span></div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--c-surface);border-color:var(--c-accent);"></span> <span data-i18n="legHotel">Hotel (base atual)</span></div>
     <div class="legend-item"><span class="legend-swatch sq" style="background:var(--plan-color);"></span> <span data-i18n="legPlan">Plano do mês (MyMaps)</span></div>
   </div>
 
@@ -545,7 +548,7 @@ const I18N = {
     searchPh: 'Buscar motorista ou VID…', loading: 'Carregando…',
     sideTitle: 'Frota — VIDs',
     legActive: 'Em uso (últimos dias)', legDnm: 'Uso recente (quinzena)',
-    legStale: 'Parado', legHome: 'Casa do motorista',
+    legStale: 'Parado', legHome: 'Casa do motorista', legHotel: 'Hotel (base atual)',
     legPlan: 'Plano do mês (MyMaps)',
     modalTitle: 'Subir mapa do MyMaps', modalSub: 'Exporte o MyMaps como KML/KMZ e selecione o mês que ele representa.',
     modalMonth: 'Mês de referência', modalLabel: 'Rótulo (opcional)', modalLabelPh: 'Ex.: Coleta Junho/2026',
@@ -556,7 +559,7 @@ const I18N = {
     parseFail: 'Não consegui ler o arquivo (KML/KMZ inválido)', monthRequired: 'Escolha o mês',
     reading: 'Lendo arquivo…', saving: 'Salvando MyMaps…',
     saveTimeout: 'Demorou demais — o arquivo pode estar muito grande ou a conexão lenta. Tenta de novo.',
-    home: 'Casa', currentPos: 'Posição atual', lastSeen: 'Último check-in', vid: 'VID',
+    home: 'Casa', hotelLabel: 'Hotel', currentPos: 'Posição atual', lastSeen: 'Último check-in', vid: 'VID',
     noVid: 'sem VID', noCheckin: 'Sem check-in recente', atHome: 'Em casa',
     didNotMap: 'Não mapeou hoje', distHome: 'da casa', hoursAgo: 'h atrás', dayAgo: 'd atrás',
     showHome: 'ver casa', address: 'Endereço', efficiency: 'Eficiência', qc: 'QC',
@@ -582,7 +585,7 @@ const I18N = {
     searchPh: 'Buscar conductor o VID…', loading: 'Cargando…',
     sideTitle: 'Flota — VIDs',
     legActive: 'En uso (últimos días)', legDnm: 'Uso reciente (quincena)',
-    legStale: 'Parado', legHome: 'Casa del conductor',
+    legStale: 'Parado', legHome: 'Casa del conductor', legHotel: 'Hotel (base actual)',
     legPlan: 'Plan del mes (MyMaps)',
     modalTitle: 'Subir mapa de MyMaps', modalSub: 'Exporta MyMaps como KML/KMZ y elige el mes que representa.',
     modalMonth: 'Mes de referencia', modalLabel: 'Etiqueta (opcional)', modalLabelPh: 'Ej.: Colecta Junio/2026',
@@ -593,7 +596,7 @@ const I18N = {
     parseFail: 'No pude leer el archivo (KML/KMZ inválido)', monthRequired: 'Elige el mes',
     reading: 'Leyendo archivo…', saving: 'Guardando MyMaps…',
     saveTimeout: 'Tardó demasiado — el archivo puede ser muy grande o la conexión lenta. Intenta de nuevo.',
-    home: 'Casa', currentPos: 'Posición actual', lastSeen: 'Último check-in', vid: 'VID',
+    home: 'Casa', hotelLabel: 'Hotel', currentPos: 'Posición actual', lastSeen: 'Último check-in', vid: 'VID',
     noVid: 'sin VID', noCheckin: 'Sin check-in reciente', atHome: 'En casa',
     didNotMap: 'No mapeó hoy', distHome: 'de la casa', hoursAgo: 'h atrás', dayAgo: 'd atrás',
     showHome: 'ver casa', address: 'Dirección', efficiency: 'Eficiencia', qc: 'QC',
@@ -619,7 +622,7 @@ const I18N = {
     searchPh: 'Search driver or VID…', loading: 'Loading…',
     sideTitle: 'Fleet — VIDs',
     legActive: 'In use (last days)', legDnm: 'Recently used (2 weeks)',
-    legStale: 'Parked', legHome: 'Driver home',
+    legStale: 'Parked', legHome: 'Driver home', legHotel: 'Hotel (current base)',
     legPlan: 'Month plan (MyMaps)',
     modalTitle: 'Upload MyMaps file', modalSub: 'Export MyMaps as KML/KMZ and pick the month it represents.',
     modalMonth: 'Reference month', modalLabel: 'Label (optional)', modalLabelPh: 'e.g. Collection June/2026',
@@ -630,7 +633,7 @@ const I18N = {
     parseFail: 'Could not read file (invalid KML/KMZ)', monthRequired: 'Pick a month',
     reading: 'Reading file…', saving: 'Saving MyMaps…',
     saveTimeout: 'Took too long — the file may be too large or the connection slow. Try again.',
-    home: 'Home', currentPos: 'Current position', lastSeen: 'Last check-in', vid: 'VID',
+    home: 'Home', hotelLabel: 'Hotel', currentPos: 'Current position', lastSeen: 'Last check-in', vid: 'VID',
     noVid: 'no VID', noCheckin: 'No recent check-in', atHome: 'At home',
     didNotMap: 'Did not map today', distHome: 'from home', hoursAgo: 'h ago', dayAgo: 'd ago',
     showHome: 'show home', address: 'Address', efficiency: 'Efficiency', qc: 'QC',
@@ -767,7 +770,15 @@ async function bootData() {
       const base = bases[email] || null;
       if (base && isNum(base.lat) && isNum(base.lng)) return { lat: base.lat, lng: base.lng, address: base.address || '', type: base.type || '' };
       const fd = homeByEmail[email];
-      if (fd && isNum(fd.homeLat) && isNum(fd.homeLng)) return { lat: fd.homeLat, lng: fd.homeLng, address: fd.fullAddress || '', type: '' };
+      if (fd && isNum(fd.homeLat) && isNum(fd.homeLng)) return { lat: fd.homeLat, lng: fd.homeLng, address: fd.fullAddress || '', type: 'Home' };
+      return null;
+    }
+
+    // Casa ORIGINAL cadastrada na HR (independente da base atual). Usada pra
+    // mostrar a casa do motorista mesmo quando ele está hospedado em hotel.
+    function resolveOriginalHome(email) {
+      const fd = homeByEmail[email];
+      if (fd && isNum(fd.homeLat) && isNum(fd.homeLng)) return { lat: fd.homeLat, lng: fd.homeLng, address: fd.fullAddress || '', type: 'Home' };
       return null;
     }
 
@@ -787,6 +798,7 @@ async function bootData() {
         daysAgo: (v.daysAgo == null) ? null : v.daysAgo,
         lastDate: v.lastDate || null,
         home: resolveHome(email),
+        homeOriginal: resolveOriginalHome(email),
       };
       (byCountry[code] = byCountry[code] || []).push(entry);
     });
@@ -810,7 +822,7 @@ async function bootData() {
       (driversByCountry[code] = driversByCountry[code] || []).push({
         name: d.name, email: d.email, country: d.country, countryCode: code,
         vid: d.vid || null, efficiency: d.efficiency, qcScore: d.qcScore, status: d.status,
-        home: resolveHome(email), checkin,
+        home: resolveHome(email), homeOriginal: resolveOriginalHome(email), checkin,
       });
     });
     state.driversByCountry = driversByCountry;
@@ -989,6 +1001,7 @@ function driverMatches(d, q) {
 
 const CAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l1.6-4.6A2 2 0 0 1 6.5 7h11a2 2 0 0 1 1.9 1.4L21 13v4.5h-2V19a1 1 0 0 1-2 0v-1.5H7V19a1 1 0 0 1-2 0v-1.5H3V13Z"/><circle cx="7.5" cy="13.5" r="0.6"/><circle cx="16.5" cy="13.5" r="0.6"/></svg>';
 const HOME_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>';
+const HOTEL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v16"/><path d="M16 8h3a2 2 0 0 1 2 2v11"/><path d="M2 21h20"/><path d="M6.5 8h.01M10 8h.01M6.5 12h.01M10 12h.01"/></svg>';
 
 function renderDriverLayers(code) {
   carsLayer.clearLayers();
@@ -1006,14 +1019,8 @@ function renderDriverLayers(code) {
   (q ? drivers.filter(d => driverMatches(d, q)) : drivers).forEach(d => {
     if (d.home && isNum(d.home.lat) && isNum(d.home.lng) && d.email && !homeSeen[d.email]) {
       homeSeen[d.email] = true;
-      const hIcon = L.divIcon({
-        className: 'ace-marker',
-        html: `<div class="home-marker" title="${escapeHtml(d.name || '')} — ${t('home')}">${HOME_SVG}</div>`,
-        iconSize: [22, 22], iconAnchor: [11, 11],
-      });
-      L.marker([d.home.lat, d.home.lng], { icon: hIcon })
-        .bindPopup(buildHomePopup({ driverName: d.name, vid: d.vid, home: d.home }))
-        .addTo(homesLayer);
+      // base (hotel/casa) + casa original quando em hotel
+      addHomeMarkers(homesLayer, { driverName: d.name, vid: d.vid, home: d.home, homeOriginal: d.homeOriginal });
       // linha pontilhada fininha ligando a casa à posição atual do motorista
       // (só quando ele está fora de casa; entra na homesLayer = liga/desliga com o toggle "Casas")
       const dpt = driverPoint(d);
@@ -1078,13 +1085,7 @@ function showHomeLink(v, pt) {
   L.polyline([[v.home.lat, v.home.lng], [pt.lat, pt.lng]], {
     color: '#2C5282', weight: 2, opacity: 0.6, dashArray: '6 6',
   }).addTo(tempLayer);
-  const hIcon = L.divIcon({
-    className: 'ace-marker',
-    html: `<div class="home-marker">${HOME_SVG}</div>`,
-    iconSize: [22, 22], iconAnchor: [11, 11],
-  });
-  L.marker([v.home.lat, v.home.lng], { icon: hIcon })
-    .bindPopup(buildHomePopup(v)).addTo(tempLayer);
+  addHomeMarkers(tempLayer, v);
 }
 
 function matchesQuery(v, q) {
@@ -1124,10 +1125,47 @@ function buildVidPopup(v, rec) {
   if (v.posSource === 'home') html += `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:11px;"><em>${t('posFromHome')}</em></div>`;
   return html;
 }
+function isHotelBase(home) { return !!(home && /hotel/i.test(home.type || '')); }
+
+// Ícone certo pro marcador: prédio (hotel) ou casinha (casa).
+function homeDivIcon(home) {
+  const hotel = isHotelBase(home);
+  return L.divIcon({
+    className: 'ace-marker',
+    html: `<div class="home-marker${hotel ? ' hotel' : ''}">${hotel ? HOTEL_SVG : HOME_SVG}</div>`,
+    iconSize: [22, 22], iconAnchor: [11, 11],
+  });
+}
+
+// Desenha o marcador da base do motorista numa layer. Se a base for um HOTEL,
+// também desenha a casa ORIGINAL dele + um tracinho ligando os dois.
+// info: { driverName, vid, home, homeOriginal }. Retorna o marcador da base.
+function addHomeMarkers(layer, info) {
+  const home = info.home;
+  if (!home || !isNum(home.lat) || !isNum(home.lng)) return null;
+
+  const baseMarker = L.marker([home.lat, home.lng], { icon: homeDivIcon(home) })
+    .bindPopup(buildHomePopup(info)).addTo(layer);
+
+  const orig = info.homeOriginal;
+  if (isHotelBase(home) && orig && isNum(orig.lat) && isNum(orig.lng)
+      && haversineKm(home.lat, home.lng, orig.lat, orig.lng) >= 0.2) {
+    L.polyline([[home.lat, home.lng], [orig.lat, orig.lng]], {
+      color: '#4A9FE0', weight: 1, opacity: 0.55, dashArray: '3 4', interactive: false,
+    }).addTo(layer);
+    L.marker([orig.lat, orig.lng], { icon: homeDivIcon(orig) })
+      .bindPopup(buildHomePopup({ driverName: info.driverName, vid: info.vid, home: orig }))
+      .addTo(layer);
+  }
+  return baseMarker;
+}
+
 function buildHomePopup(v) {
-  return `<div class="popup-title">${escapeHtml(v.driverName || t('home'))}</div>`
-    + `<div class="popup-row"><span>${t('home')}</span><strong>${v.vid ? ('VID ' + escapeHtml(String(v.vid))) : ''}</strong></div>`
-    + `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:12px;">${escapeHtml((v.home && v.home.address) || '—')}</div>`;
+  const home = v.home || {};
+  const label = isHotelBase(home) ? t('hotelLabel') : t('home');
+  return `<div class="popup-title">${escapeHtml(v.driverName || label)}</div>`
+    + `<div class="popup-row"><span>${label}</span><strong>${v.vid ? ('VID ' + escapeHtml(String(v.vid))) : ''}</strong></div>`
+    + `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:12px;">${escapeHtml(home.address || '—')}</div>`;
 }
 
 // =================================================================
@@ -1384,10 +1422,8 @@ function focusDriver(email) {
         L.polyline([[d.home.lat, d.home.lng], [pt.lat, pt.lng]], { color: '#2C5282', weight: 2, opacity: 0.6, dashArray: '6 6' }).addTo(tempLayer);
       }
     }
-    const hIcon = L.divIcon({ className: 'ace-marker', html: `<div class="home-marker">${HOME_SVG}</div>`, iconSize: [22, 22], iconAnchor: [11, 11] });
-    L.marker([d.home.lat, d.home.lng], { icon: hIcon })
-      .bindPopup(buildHomePopup({ driverName: d.name, vid: d.vid, home: d.home }))
-      .addTo(tempLayer).openPopup();
+    const bm = addHomeMarkers(tempLayer, { driverName: d.name, vid: d.vid, home: d.home, homeOriginal: d.homeOriginal });
+    if (bm) bm.openPopup();
   }
 }
 
