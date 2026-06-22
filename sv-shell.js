@@ -74,6 +74,10 @@
     ]},
   ];
 
+  // Expõe a NAV como fonte única do catálogo de páginas (ex.: checklist de
+  // acesso por página no admin-users.html). Mantém label {pt,es,en} + access.
+  try { window.SV_NAV = NAV; } catch (e) {}
+
   var RANK = { all: 0, admin: 1, super: 2 };
   var CURRENT_USER = null;
 

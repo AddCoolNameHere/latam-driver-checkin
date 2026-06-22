@@ -151,6 +151,29 @@
   .checkbox-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--c-bg-tint); border-radius: 8px; }
   .checkbox-row input { width: 16px; height: 16px; accent-color: var(--c-primary); }
   .checkbox-row label { margin: 0; text-transform: none; letter-spacing: 0; color: var(--c-text); font-size: 13px; font-weight: 600; }
+
+  /* Segmented control "Tipo de acesso" */
+  .access-modes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .access-mode-btn {
+    padding: 9px 8px; border: 1px solid var(--c-border); border-radius: 8px;
+    background: var(--c-surface); color: var(--c-text); font-size: 12.5px; font-weight: 600;
+    font-family: inherit; cursor: pointer; text-align: center; transition: all 0.12s;
+  }
+  .access-mode-btn:hover:not(.active) { border-color: var(--c-primary); }
+  .access-mode-btn.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+  .access-modes.disabled { opacity: 0.6; pointer-events: none; }
+
+  /* Checklist de páginas */
+  .pages-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .pages-count { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--c-primary); font-size: 11px; }
+  .linklike { background: none; border: none; color: var(--c-primary); font-size: 11px; font-weight: 600; cursor: pointer; padding: 2px 4px; font-family: inherit; }
+  .linklike:hover { text-decoration: underline; }
+  .pages-list { border: 1px solid var(--c-border); border-radius: 8px; max-height: 230px; overflow-y: auto; padding: 4px; background: var(--c-surface); }
+  .page-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--c-text-muted); padding: 8px 8px 4px; }
+  .page-check { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 6px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--c-text); font-size: 13px; margin: 0; }
+  .page-check:hover { background: var(--c-bg-tint); }
+  .page-check input { width: 15px; height: 15px; accent-color: var(--c-primary); flex-shrink: 0; }
+  .page-check .page-href { color: var(--c-text-muted); font-size: 11px; font-family: ui-monospace, 'Courier New', monospace; margin-left: auto; }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
 
   /* Toast */
@@ -243,9 +266,25 @@
     </div>
 
     <div class="field">
-      <label for="modal-role">Tipo de acesso</label>
-      <select id="modal-role"></select>
-      <div class="field-hint" id="modal-role-hint">Define o que o usuário enxerga. "Mapa de Operações (só)" trava o acesso a essa única página.</div>
+      <label>Tipo de acesso</label>
+      <div class="access-modes" id="access-modes">
+        <button type="button" class="access-mode-btn" data-mode="normal">Normal</button>
+        <button type="button" class="access-mode-btn" data-mode="admin">Admin</button>
+        <button type="button" class="access-mode-btn" data-mode="restricted">Restrito a páginas</button>
+      </div>
+      <div class="field-hint" id="modal-role-hint">Normal vê tudo do seu nível · Admin abre as seções restritas · Restrito trava o acesso só às páginas marcadas.</div>
+    </div>
+
+    <div class="field" id="modal-pages-field" style="display:none;">
+      <div class="pages-toolbar">
+        <label style="margin:0;">Páginas permitidas <span class="pages-count" id="pages-count">0 marcadas</span></label>
+        <div>
+          <button type="button" class="linklike" id="pages-all">Todas</button>
+          <button type="button" class="linklike" id="pages-none">Limpar</button>
+        </div>
+      </div>
+      <div class="pages-list" id="modal-pages-list"></div>
+      <div class="field-hint">A 1ª página marcada vira a "home" do usuário — pra onde ele cai ao logar.</div>
     </div>
 
     <div class="field-error" id="modal-error"></div>
@@ -265,13 +304,31 @@ const CONFIG = {
 };
 const SUPER_ADMIN = 'fuss';
 
-// Tipos de acesso (cargos). 'pages' não-vazio = usuário RESTRITO (só vê/acessa essas páginas).
-// Pra criar um novo cargo de página única, é só adicionar 1 entrada aqui.
-const ACCESS_ROLES = [
-  { value: 'normal', label: 'Normal — acesso padrão',          shortLabel: 'Normal',  admin: false, pages: [] },
-  { value: 'admin',  label: 'Admin — seções restritas',        shortLabel: 'Admin',   admin: true,  pages: [] },
-  { value: 'ops',    label: 'Mapa de Operações (só essa página)', shortLabel: 'Ops-map', admin: false, pages: ['ops-map.html'] },
-];
+// Catálogo de páginas do portal admin. FONTE ÚNICA = a NAV do sv-shell.js
+// (window.SV_NAV). Cada item vira: { group, href, label }. Fallback defensivo
+// caso o sv-shell não tenha carregado.
+function getPortalPages() {
+  const nav = (typeof window !== 'undefined' && Array.isArray(window.SV_NAV)) ? window.SV_NAV : null;
+  if (!nav) {
+    return [
+      { group: 'Operação', href: 'dashboard.html',   label: 'Dashboard' },
+      { group: 'Operação', href: 'ops-map.html',      label: 'Mapa de Operações' },
+      { group: 'Sistema',  href: 'admin-users.html',  label: 'Usuários' },
+    ];
+  }
+  const out = [];
+  nav.forEach(g => {
+    const gl = (g.label && (g.label.pt || g.label)) || '';
+    (g.items || []).forEach(it => {
+      out.push({
+        group: gl,
+        href: String(it.href).toLowerCase(),
+        label: (it.label && (it.label.pt || it.label)) || it.href,
+      });
+    });
+  });
+  return out;
+}
 
 // Compara duas listas de páginas ignorando ordem/caixa.
 function samePages(a, b) {
@@ -281,22 +338,12 @@ function samePages(a, b) {
   return x.every((v, i) => v === y[i]);
 }
 
-// Deriva o cargo de um working-user (pra exibir badge e pré-selecionar no modal).
+// Modo de acesso de um working-user (pra badge e pré-seleção no modal).
+// 'admin' (tier) > 'restricted' (pages[] não-vazio) > 'normal'.
 function roleOf(u) {
   if (workingAdmins.has(String(u.username).toLowerCase())) return 'admin';
-  if (u.pages && u.pages.length) {
-    const m = ACCESS_ROLES.find(r => r.pages.length && samePages(r.pages, u.pages));
-    return m ? m.value : ((ACCESS_ROLES.find(r => r.pages.length) || {}).value || 'normal');
-  }
+  if (u.pages && u.pages.length) return 'restricted';
   return 'normal';
-}
-
-function populateRoleSelect() {
-  const sel = document.getElementById('modal-role');
-  if (!sel) return;
-  sel.innerHTML = ACCESS_ROLES.map(r =>
-    '<option value="' + r.value + '">' + escapeHtml(r.label) + '</option>'
-  ).join('');
 }
 
 // Markup do botão Salvar (ícone disco + label) — reutilizado nos resets de estado
@@ -330,9 +377,73 @@ function startApp(user) {
   });
   document.getElementById('app').style.display = '';
   if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
-  populateRoleSelect();
+  buildPagesChecklist();
+  setupAccessControls();
   initWorkingState();
   renderTable();
+}
+
+// =================================================================
+// Tipo de acesso (segmented) + checklist de páginas permitidas
+// =================================================================
+let modalAccessMode = 'normal';   // 'normal' | 'admin' | 'restricted'
+
+function buildPagesChecklist() {
+  const list = document.getElementById('modal-pages-list');
+  if (!list) return;
+  let html = '';
+  let lastGroup = null;
+  getPortalPages().forEach(p => {
+    if (p.group !== lastGroup) {
+      html += '<div class="page-group-label">' + escapeHtml(p.group) + '</div>';
+      lastGroup = p.group;
+    }
+    html += '<label class="page-check">'
+      + '<input type="checkbox" value="' + escapeHtml(p.href) + '">'
+      + '<span>' + escapeHtml(p.label) + '</span>'
+      + '<span class="page-href">' + escapeHtml(p.href) + '</span>'
+      + '</label>';
+  });
+  list.innerHTML = html;
+  list.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', updatePagesCount));
+}
+
+function getCheckedPages() {
+  return Array.from(document.querySelectorAll('#modal-pages-list input:checked')).map(cb => cb.value);
+}
+
+function setCheckedPages(pages) {
+  const set = new Set((pages || []).map(s => String(s).toLowerCase()));
+  document.querySelectorAll('#modal-pages-list input[type="checkbox"]').forEach(cb => { cb.checked = set.has(cb.value); });
+  updatePagesCount();
+}
+
+function updatePagesCount() {
+  const n = getCheckedPages().length;
+  const el = document.getElementById('pages-count');
+  if (el) el.textContent = n + (n === 1 ? ' marcada' : ' marcadas');
+}
+
+function setAccessMode(mode) {
+  modalAccessMode = mode;
+  document.querySelectorAll('#access-modes .access-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  document.getElementById('modal-pages-field').style.display = (mode === 'restricted') ? '' : 'none';
+}
+
+// Listeners registrados 1x (botões de modo + atalhos Todas/Limpar).
+function setupAccessControls() {
+  const modes = document.getElementById('access-modes');
+  modes.querySelectorAll('.access-mode-btn').forEach(b => {
+    b.addEventListener('click', () => { if (!modes.classList.contains('disabled')) setAccessMode(b.dataset.mode); });
+  });
+  document.getElementById('pages-all').addEventListener('click', () => {
+    document.querySelectorAll('#modal-pages-list input[type="checkbox"]').forEach(cb => { cb.checked = true; });
+    updatePagesCount();
+  });
+  document.getElementById('pages-none').addEventListener('click', () => {
+    document.querySelectorAll('#modal-pages-list input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+    updatePagesCount();
+  });
 }
 
 // =================================================================
@@ -383,8 +494,8 @@ function renderTable() {
     const badges = [];
     if (isAdm) badges.push('<span class="badge badge-admin">Admin</span>');
     else if (u.pages && u.pages.length) {
-      const rdef = ACCESS_ROLES.find(r => r.pages.length && samePages(r.pages, u.pages));
-      badges.push('<span class="badge badge-scope">' + escapeHtml(rdef ? rdef.shortLabel : 'Restrito') + '</span>');
+      const n = u.pages.length;
+      badges.push('<span class="badge badge-scope">' + n + (n === 1 ? ' página' : ' páginas') + '</span>');
     }
     if (isLocked) badges.push('<span class="badge badge-locked">Super</span>');
     if (u._isNew) badges.push('<span class="badge badge-new">Novo</span>');
@@ -429,8 +540,9 @@ function openAddModal() {
   document.getElementById('modal-password').value = '';
   document.getElementById('modal-password').placeholder = 'Mín. 6 caracteres';
   document.getElementById('modal-password-hint').textContent = 'A senha é convertida para hash SHA-256 antes de sair do navegador.';
-  document.getElementById('modal-role').value = 'normal';
-  document.getElementById('modal-role').disabled = false;
+  document.getElementById('access-modes').classList.remove('disabled');
+  setCheckedPages([]);
+  setAccessMode('normal');
   document.getElementById('modal-error').textContent = '';
   document.getElementById('user-modal').classList.add('visible');
   setTimeout(() => document.getElementById('modal-username').focus(), 50);
@@ -448,8 +560,10 @@ function openEditModal(idx) {
   document.getElementById('modal-password').value = '';
   document.getElementById('modal-password').placeholder = '(em branco = não muda)';
   document.getElementById('modal-password-hint').textContent = 'Deixe vazio pra manter a senha atual.';
-  document.getElementById('modal-role').value = roleOf(u);
-  document.getElementById('modal-role').disabled = (String(u.username).toLowerCase() === SUPER_ADMIN);
+  const lockAccess = (String(u.username).toLowerCase() === SUPER_ADMIN);
+  document.getElementById('access-modes').classList.toggle('disabled', lockAccess);
+  setCheckedPages(u.pages || []);
+  setAccessMode(roleOf(u));
   document.getElementById('modal-error').textContent = '';
   document.getElementById('user-modal').classList.add('visible');
   setTimeout(() => document.getElementById('modal-fullname').focus(), 50);
@@ -468,15 +582,17 @@ async function saveModal() {
   const username = document.getElementById('modal-username').value.trim().toLowerCase();
   const fullName = document.getElementById('modal-fullname').value.trim();
   const password = document.getElementById('modal-password').value;
-  const role = ACCESS_ROLES.find(r => r.value === document.getElementById('modal-role').value) || ACCESS_ROLES[0];
-  const isAdm = role.admin;
-  const rolePages = role.pages.slice();
+  const isAdm = modalAccessMode === 'admin';
+  const rolePages = (modalAccessMode === 'restricted') ? getCheckedPages() : [];
 
   if (!username) { errEl.textContent = 'Username é obrigatório.'; return; }
   if (!/^[a-z0-9._-]+$/.test(username)) {
     errEl.textContent = 'Username só pode ter letras, números, ponto, traço e underline.'; return;
   }
   if (!fullName) { errEl.textContent = 'Nome completo é obrigatório.'; return; }
+  if (modalAccessMode === 'restricted' && rolePages.length === 0) {
+    errEl.textContent = 'Marque ao menos uma página pro acesso restrito.'; return;
+  }
 
   // Duplicate check
   const dupIdx = workingUsers.findIndex((u, i) =>
