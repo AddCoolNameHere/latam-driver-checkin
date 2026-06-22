@@ -8,7 +8,7 @@
  * próximo commit feito pelo painel. Pra alterar, abra:
  *   admin-users.html (acesso restrito ao usuário "fuss")
  *
- * Última geração: 2026-06-12T14:53:14.994Z
+ * Última geração: 2026-06-22T17:50:14.546Z
  *
  * ⚠ NOTA DE SEGURANÇA:
  * Este é client-side ("teatro de segurança"): qualquer pessoa
@@ -57,6 +57,12 @@ const USERS = [
     username: "vicky",
     passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
     fullName: "Vicky",
+  },
+  {
+    username: "david",
+    passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
+    fullName: "David",
+    pages: ["dashboard.html", "driver-profile.html", "recruitment.html", "country_scopes.html", "ops-map.html", "pmo.html", "ramp.html", "timesheet.html"],
   },
 ];
 
