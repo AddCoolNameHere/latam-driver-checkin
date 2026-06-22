@@ -108,6 +108,12 @@
     var need = (RANK[access] != null) ? RANK[access] : 0;
     return userTier >= need;
   }
+  // Cargo restrito a páginas (ex: ops-only): array de hrefs (lowercase) ou null = sem restrição.
+  // Sobrepõe os tiers — quem é restrito vê SÓ os itens da allowlist.
+  function restrictedPagesOf(user) {
+    if (!user || typeof userPages !== "function") return null;
+    try { return userPages(user.username); } catch (e) { return null; }
+  }
 
   // mapa href→access pra gatear uma sidebar inline já existente (não duplicar)
   var ACCESS_BY_HREF = {};
@@ -118,11 +124,15 @@
   // Monta SÓ o conteúdo da nav (labels na língua dada, gated, com ativo).
   function renderNav(navEl, user, lang) {
     var userTier = tierOf(user);
+    var allow = restrictedPagesOf(user);
     var cur = here();
     var activeSet = false;
     var html = "";
     NAV.forEach(function (g) {
-      var visible = g.items.filter(function (it) { return canSee(it.access, userTier); });
+      var visible = g.items.filter(function (it) {
+        if (allow) return allow.indexOf(it.href.toLowerCase()) >= 0;
+        return canSee(it.access, userTier);
+      });
       if (!visible.length) return;
       html += '<div class="sv-nav-label">' + L(g.label, lang) + "</div>";
       visible.forEach(function (it) {
@@ -228,11 +238,18 @@
   // Gateia uma sidebar inline já presente (sem reconstruir).
   function gateInline(aside, user) {
     var userTier = tierOf(user);
+    var allow = restrictedPagesOf(user);
     var items = aside.querySelectorAll(".sv-nav-item");
     for (var i = 0; i < items.length; i++) {
       var href = (items[i].getAttribute("href") || "").toLowerCase();
-      var acc = ACCESS_BY_HREF[href];
-      items[i].style.display = (acc && !canSee(acc, userTier)) ? "none" : "";
+      var show;
+      if (allow) {
+        show = allow.indexOf(href) >= 0;
+      } else {
+        var acc = ACCESS_BY_HREF[href];
+        show = !(acc && !canSee(acc, userTier));
+      }
+      items[i].style.display = show ? "" : "none";
     }
     var nav = aside.querySelector(".sv-nav");
     if (!nav) return;

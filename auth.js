@@ -99,6 +99,18 @@ function isAdmin(username) {
 }
 
 // ----------------------------------------------------------------
+// HELPER: páginas permitidas pra um usuário restrito (cargo de página única)
+// Retorna array de filenames (lowercase) ou null se o user tem acesso normal.
+// ----------------------------------------------------------------
+function userPages(username) {
+  if (!username) return null;
+  const u = USERS.find(x => x.username.toLowerCase() === String(username).toLowerCase());
+  return (u && Array.isArray(u.pages) && u.pages.length)
+    ? u.pages.map(p => String(p).toLowerCase())
+    : null;
+}
+
+// ----------------------------------------------------------------
 // SESSION: SSO cross-page via localStorage (8h TTL)
 // ----------------------------------------------------------------
 const SESSION_KEY = 'aceolution_latam_session';

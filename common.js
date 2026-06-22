@@ -150,10 +150,23 @@ function injectLogin(opts) {
   const lang = opts.lang || 'pt';
   const i18n = ACE_LOGIN_I18N[lang] || ACE_LOGIN_I18N.pt;
 
-  // Gate de acesso: superAdminGate (username específico) > adminGate (isAdmin) > livre.
-  // Reaproveitável; quando houver sistema de cargos, dá pra estender aqui (ex: opts.requireRole).
+  // Arquivo da página atual (ex: 'ops-map.html') — base do gate por página.
+  function currentPageFile() {
+    const f = (location.pathname.split('/').pop() || '').toLowerCase();
+    return f || 'index.html';
+  }
+  // Página "casa" de um usuário restrito (cargo de página única): a 1ª da allowlist.
+  function restrictedHome(username) {
+    const allow = (typeof userPages === 'function') ? userPages(username) : null;
+    return (allow && allow.length) ? allow[0] : null;
+  }
+
+  // Gate de acesso. Ordem: usuário restrito a páginas (cargo "ops-only" etc.) > superAdminGate
+  // > adminGate > livre. O cargo restrito SOBREPÕE os tiers: só passa nas páginas da allowlist.
   function gatePasses(username) {
     const u = String(username || '').toLowerCase();
+    const allow = (typeof userPages === 'function') ? userPages(u) : null;
+    if (allow) return allow.indexOf(currentPageFile()) >= 0;
     if (opts.superAdminGate) return u === String(opts.superAdminGate).toLowerCase();
     if (opts.adminGate) return (typeof isAdmin === 'function') && isAdmin(u);
     return true;
@@ -172,6 +185,9 @@ function injectLogin(opts) {
       Promise.resolve().then(() => opts.onSuccess(saved));
       return;
     }
+    // Usuário restrito logado fora do seu escopo → manda pra página dele (sem travar numa tela inútil).
+    const home = restrictedHome(saved.username);
+    if (home && home !== currentPageFile()) { location.replace(home); return; }
   }
 
   // Cria o DOM
@@ -223,8 +239,15 @@ function injectLogin(opts) {
         btn.disabled = false; btn.textContent = i18n.submit;
         return;
       }
-      // Gate de acesso (super admin / admin)
+      // Gate de acesso (cargo restrito / super admin / admin)
       if (!gatePasses(user.username)) {
+        // Cargo restrito a páginas: credencial válida, mas página fora do escopo → leva pra página dele.
+        const home = restrictedHome(user.username);
+        if (home && home !== currentPageFile()) {
+          saveSession(user);
+          location.replace(home);
+          return;
+        }
         err.textContent = deniedMsg;
         err.classList.add('visible');
         btn.disabled = false; btn.textContent = i18n.submit;

@@ -157,7 +157,13 @@ function doGet(e) {
 
     if (action === 'getDrivers') {
       // v5.32: inclui drivers em offboarding pro check-in não deixar ninguém de fora
-      return jsonResponse({ success: true, drivers: getActiveDrivers(true) });
+      // v5.51: cache de 30min — a lista quase não muda e a leitura da HR inteira é cara
+      const cache = CacheService.getScriptCache();
+      const cached = cache.get('checkin_drivers_v1');
+      if (cached) return jsonResponse({ success: true, drivers: JSON.parse(cached), cached: true });
+      const drivers = getActiveDrivers(true);
+      try { cache.put('checkin_drivers_v1', JSON.stringify(drivers), 1800); } catch (e) {}
+      return jsonResponse({ success: true, drivers: drivers });
     }
 
     if (action === 'getBase') {
@@ -278,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.49',
+        version: 'v5.51',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -399,7 +405,14 @@ function doGet(e) {
     if (action === 'getDriverSsds') {
       const email = e.parameter.email;
       if (!email) return jsonResponse({ success: false, error: 'email obrigatório' });
-      return jsonResponse({ success: true, ssds: getDriverSsdsByEmail_(email) });
+      // v5.51: cache de 30min por motorista — discos quase não mudam no dia
+      const ssdCache = CacheService.getScriptCache();
+      const ssdKey = 'checkin_ssds_' + email;
+      const ssdCached = ssdCache.get(ssdKey);
+      if (ssdCached) return jsonResponse({ success: true, ssds: JSON.parse(ssdCached), cached: true });
+      const ssds = getDriverSsdsByEmail_(email);
+      try { ssdCache.put(ssdKey, JSON.stringify(ssds), 1800); } catch (e) {}
+      return jsonResponse({ success: true, ssds: ssds });
     }
 
     // v5.14: issues abertas/em-andamento de um driver (pro driver-profile)
@@ -7430,8 +7443,10 @@ function isSuperAdminBackend_(username) {
 }
 
 /**
- * Recebe { users: [{username, passwordHash, fullName}], admins: [usernames],
+ * Recebe { users: [{username, passwordHash, fullName, pages?}], admins: [usernames],
  *          actorUsername, commitMessage? } e commita novo auth.js no GitHub.
+ * v5.50: `pages` (opcional) = lista de páginas .html que um usuário RESTRITO pode
+ *        acessar (ex: ['ops-map.html']). Vazio/ausente = acesso normal (tiers).
  *
  * Requer no Script Properties:
  *   - GITHUB_TOKEN  (Personal Access Token com contents:write no repo)
@@ -7456,6 +7471,17 @@ function updateAuthUsersHandler_(data) {
     }
     if (!/^[a-f0-9]{64}$/.test(u.passwordHash)) {
       return { success: false, error: 'passwordHash inválido (precisa ser SHA-256 hex, 64 chars) pro user: ' + u.username };
+    }
+    // v5.50: pages (opcional) — allowlist de páginas pra usuário restrito (cargo de página única)
+    if (u.pages != null) {
+      if (!Array.isArray(u.pages)) {
+        return { success: false, error: 'pages precisa ser array pro user: ' + u.username };
+      }
+      for (const p of u.pages) {
+        if (typeof p !== 'string' || !/^[a-z0-9._-]+\.html$/i.test(p)) {
+          return { success: false, error: 'pages inválido (esperado nomes de arquivo .html) pro user: ' + u.username };
+        }
+      }
     }
     const key = String(u.username).toLowerCase();
     if (usernamesSeen[key]) {
@@ -7559,10 +7585,16 @@ function updateAuthUsersHandler_(data) {
  */
 function buildAuthJsContent_(users, admins) {
   const usersBlock = users.map(function(u) {
+    var pagesLine = '';
+    if (Array.isArray(u.pages) && u.pages.length) {
+      var ps = u.pages.map(function(p){ return JSON.stringify(String(p).toLowerCase().trim()); }).join(', ');
+      pagesLine = '    pages: [' + ps + '],\n';
+    }
     return '  {\n' +
            '    username: ' + JSON.stringify(String(u.username).toLowerCase().trim()) + ',\n' +
            '    passwordHash: ' + JSON.stringify(String(u.passwordHash).toLowerCase().trim()) + ',\n' +
            '    fullName: ' + JSON.stringify(String(u.fullName).trim()) + ',\n' +
+           pagesLine +
            '  },';
   }).join('\n');
 
@@ -7637,6 +7669,18 @@ function buildAuthJsContent_(users, admins) {
     'function isAdmin(username) {',
     '  if (!username) return false;',
     '  return ADMIN_USERNAMES.indexOf(String(username).toLowerCase()) >= 0;',
+    '}',
+    '',
+    '// ----------------------------------------------------------------',
+    '// HELPER: páginas permitidas pra um usuário restrito (cargo de página única)',
+    '// Retorna array de filenames (lowercase) ou null se o user tem acesso normal.',
+    '// ----------------------------------------------------------------',
+    'function userPages(username) {',
+    '  if (!username) return null;',
+    '  const u = USERS.find(x => x.username.toLowerCase() === String(username).toLowerCase());',
+    '  return (u && Array.isArray(u.pages) && u.pages.length)',
+    '    ? u.pages.map(p => String(p).toLowerCase())',
+    '    : null;',
     '}',
     '',
     '// ----------------------------------------------------------------',

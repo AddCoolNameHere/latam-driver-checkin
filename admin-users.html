@@ -6,9 +6,9 @@
 <title>Gestão de Usuários · LATAM · Aceolution</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="https://imgs.search.brave.com/0HNr7qQkxk0ssJtI7P8WwYHJbSaB8ssjpN1sQ9P_oHc/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9kMWhi/cHIwOXB3ejBzay5j/bG91ZGZyb250Lm5l/dC9sb2dvX3VybC9h/Y2VvbHV0aW9uLTBj/MmQ4NzI0">
-<script src="auth.js?v=20260518b"></script>
+<script src="auth.js?v=20260619"></script>
 <script src="theme.js?v=20260518c"></script>
-<script src="common.js?v=20260519a"></script>
+<script src="common.js?v=20260619"></script>
 <link rel="stylesheet" href="theme.css?v=20260519a">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -85,6 +85,7 @@
     text-transform: uppercase;
   }
   .badge-admin { background: #fef3c7; color: #92400e; }
+  .badge-scope { background: #cffafe; color: #155e75; }
   .badge-locked { background: #ddd6fe; color: #5b21b6; }
   .badge-new { background: #d1fae5; color: #065f46; }
   .badge-dirty { background: #fef9c3; color: #854d0e; }
@@ -136,11 +137,15 @@
   .field { margin-bottom: 14px; }
   .field label { display: block; font-size: 11px; font-weight: 600; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
   .field input[type="text"],
-  .field input[type="password"] {
+  .field input[type="password"],
+  .field select {
     width: 100%; padding: 10px 12px; border: 1px solid var(--c-border);
     border-radius: 8px; font-size: 14px; font-family: inherit;
+    background: var(--c-surface); color: var(--c-text);
   }
-  .field input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
+  .field input:focus,
+  .field select:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
+  .field select:disabled { opacity: 0.6; cursor: not-allowed; }
   .field-hint { font-size: 11px; color: var(--c-text-muted); margin-top: 4px; }
   .field-error { font-size: 12px; color: var(--c-danger); margin-top: 6px; min-height: 14px; }
   .checkbox-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--c-bg-tint); border-radius: 8px; }
@@ -238,10 +243,9 @@
     </div>
 
     <div class="field">
-      <div class="checkbox-row">
-        <input type="checkbox" id="modal-admin">
-        <label for="modal-admin">Privilégio admin (vê seções restritas no dashboard)</label>
-      </div>
+      <label for="modal-role">Tipo de acesso</label>
+      <select id="modal-role"></select>
+      <div class="field-hint" id="modal-role-hint">Define o que o usuário enxerga. "Mapa de Operações (só)" trava o acesso a essa única página.</div>
     </div>
 
     <div class="field-error" id="modal-error"></div>
@@ -260,6 +264,40 @@ const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
 };
 const SUPER_ADMIN = 'fuss';
+
+// Tipos de acesso (cargos). 'pages' não-vazio = usuário RESTRITO (só vê/acessa essas páginas).
+// Pra criar um novo cargo de página única, é só adicionar 1 entrada aqui.
+const ACCESS_ROLES = [
+  { value: 'normal', label: 'Normal — acesso padrão',          shortLabel: 'Normal',  admin: false, pages: [] },
+  { value: 'admin',  label: 'Admin — seções restritas',        shortLabel: 'Admin',   admin: true,  pages: [] },
+  { value: 'ops',    label: 'Mapa de Operações (só essa página)', shortLabel: 'Ops-map', admin: false, pages: ['ops-map.html'] },
+];
+
+// Compara duas listas de páginas ignorando ordem/caixa.
+function samePages(a, b) {
+  const x = (a || []).map(s => String(s).toLowerCase()).sort();
+  const y = (b || []).map(s => String(s).toLowerCase()).sort();
+  if (x.length !== y.length) return false;
+  return x.every((v, i) => v === y[i]);
+}
+
+// Deriva o cargo de um working-user (pra exibir badge e pré-selecionar no modal).
+function roleOf(u) {
+  if (workingAdmins.has(String(u.username).toLowerCase())) return 'admin';
+  if (u.pages && u.pages.length) {
+    const m = ACCESS_ROLES.find(r => r.pages.length && samePages(r.pages, u.pages));
+    return m ? m.value : ((ACCESS_ROLES.find(r => r.pages.length) || {}).value || 'normal');
+  }
+  return 'normal';
+}
+
+function populateRoleSelect() {
+  const sel = document.getElementById('modal-role');
+  if (!sel) return;
+  sel.innerHTML = ACCESS_ROLES.map(r =>
+    '<option value="' + r.value + '">' + escapeHtml(r.label) + '</option>'
+  ).join('');
+}
 
 // Markup do botão Salvar (ícone disco + label) — reutilizado nos resets de estado
 const SAVE_BTN_HTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar e publicar';
@@ -292,6 +330,7 @@ function startApp(user) {
   });
   document.getElementById('app').style.display = '';
   if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+  populateRoleSelect();
   initWorkingState();
   renderTable();
 }
@@ -304,6 +343,7 @@ function initWorkingState() {
     username: u.username,
     passwordHash: u.passwordHash,
     fullName: u.fullName,
+    pages: Array.isArray(u.pages) ? u.pages.slice() : [],
     _origUsername: u.username,
   }));
   workingAdmins = new Set(ADMIN_USERNAMES.map(a => String(a).toLowerCase()));
@@ -342,6 +382,10 @@ function renderTable() {
 
     const badges = [];
     if (isAdm) badges.push('<span class="badge badge-admin">Admin</span>');
+    else if (u.pages && u.pages.length) {
+      const rdef = ACCESS_ROLES.find(r => r.pages.length && samePages(r.pages, u.pages));
+      badges.push('<span class="badge badge-scope">' + escapeHtml(rdef ? rdef.shortLabel : 'Restrito') + '</span>');
+    }
     if (isLocked) badges.push('<span class="badge badge-locked">Super</span>');
     if (u._isNew) badges.push('<span class="badge badge-new">Novo</span>');
     else if (u._isDirty) badges.push('<span class="badge badge-dirty">Alterado</span>');
@@ -385,7 +429,8 @@ function openAddModal() {
   document.getElementById('modal-password').value = '';
   document.getElementById('modal-password').placeholder = 'Mín. 6 caracteres';
   document.getElementById('modal-password-hint').textContent = 'A senha é convertida para hash SHA-256 antes de sair do navegador.';
-  document.getElementById('modal-admin').checked = false;
+  document.getElementById('modal-role').value = 'normal';
+  document.getElementById('modal-role').disabled = false;
   document.getElementById('modal-error').textContent = '';
   document.getElementById('user-modal').classList.add('visible');
   setTimeout(() => document.getElementById('modal-username').focus(), 50);
@@ -403,8 +448,8 @@ function openEditModal(idx) {
   document.getElementById('modal-password').value = '';
   document.getElementById('modal-password').placeholder = '(em branco = não muda)';
   document.getElementById('modal-password-hint').textContent = 'Deixe vazio pra manter a senha atual.';
-  document.getElementById('modal-admin').checked = workingAdmins.has(String(u.username).toLowerCase());
-  document.getElementById('modal-admin').disabled = (String(u.username).toLowerCase() === SUPER_ADMIN);
+  document.getElementById('modal-role').value = roleOf(u);
+  document.getElementById('modal-role').disabled = (String(u.username).toLowerCase() === SUPER_ADMIN);
   document.getElementById('modal-error').textContent = '';
   document.getElementById('user-modal').classList.add('visible');
   setTimeout(() => document.getElementById('modal-fullname').focus(), 50);
@@ -423,7 +468,9 @@ async function saveModal() {
   const username = document.getElementById('modal-username').value.trim().toLowerCase();
   const fullName = document.getElementById('modal-fullname').value.trim();
   const password = document.getElementById('modal-password').value;
-  const isAdm = document.getElementById('modal-admin').checked;
+  const role = ACCESS_ROLES.find(r => r.value === document.getElementById('modal-role').value) || ACCESS_ROLES[0];
+  const isAdm = role.admin;
+  const rolePages = role.pages.slice();
 
   if (!username) { errEl.textContent = 'Username é obrigatório.'; return; }
   if (!/^[a-z0-9._-]+$/.test(username)) {
@@ -452,6 +499,7 @@ async function saveModal() {
       const hash = await sha256(password);
       workingUsers.push({
         username, fullName, passwordHash: hash,
+        pages: rolePages,
         _isNew: true,
       });
       if (isAdm) workingAdmins.add(username);
@@ -482,6 +530,10 @@ async function saveModal() {
       if (!isLocked && curAdmin !== isAdm) {
         if (isAdm) workingAdmins.add(String(u.username).toLowerCase());
         else workingAdmins.delete(String(u.username).toLowerCase());
+        changed = true;
+      }
+      if (!isLocked && !samePages(u.pages || [], rolePages)) {
+        u.pages = rolePages;
         changed = true;
       }
       if (changed && !u._isNew) u._isDirty = true;
@@ -530,6 +582,7 @@ async function commitChanges() {
       username: u.username,
       passwordHash: u.passwordHash,
       fullName: u.fullName,
+      pages: Array.isArray(u.pages) ? u.pages : [],
     }));
   const hasFuss = finalUsers.some(u => String(u.username).toLowerCase() === SUPER_ADMIN);
   if (!hasFuss) {
@@ -574,6 +627,7 @@ async function commitChanges() {
       username: u.username,
       passwordHash: u.passwordHash,
       fullName: u.fullName,
+      pages: Array.isArray(u.pages) ? u.pages.slice() : [],
       _origUsername: u.username,
     }));
     document.getElementById('commit-msg').value = '';
