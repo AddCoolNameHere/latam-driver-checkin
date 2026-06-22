@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Daily Check-in · Aceolution LATAM</title>
+<script>
+  // Dispara o fetch dos drivers o quanto antes (antes do Leaflet/CSS),
+  // pra ida-e-volta ao Apps Script rodar em paralelo com o resto do load.
+  window.__SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec';
+  try {
+    window.__driversFetch = fetch(window.__SCRIPT_URL + '?action=getDrivers')
+      .then(function (r) { return r.json(); })
+      .catch(function () { return null; });
+  } catch (e) { window.__driversFetch = null; }
+</script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -783,11 +793,11 @@
 
 <div id="toast" class="toast hidden"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 
 const CONFIG = {
-  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  scriptUrl: window.__SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
 };
 
 const I18N = {
@@ -1229,31 +1239,74 @@ function toast(msg, type) {
   setTimeout(() => el.classList.add('hidden'), 3500);
 }
 
+const DRIVERS_CACHE_KEY = 'checkin_drivers_v1';
+
+function driversSignature(drivers) {
+  return drivers.map(d => (d.email || '') + '|' + (d.name || '') + '|' + (d.country || '')).join(';');
+}
+
+// Reconstrói o dropdown a partir da lista (idempotente: preserva o placeholder).
+function renderDrivers(drivers) {
+  const select = document.getElementById('driver-select');
+  // Mantém o primeiro <option> (placeholder "-- Escolha --"), remove optgroups antigos
+  while (select.children.length > 1) select.removeChild(select.lastElementChild);
+
+  let lastCountry = '';
+  drivers.forEach(d => {
+    if (d.country !== lastCountry) {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = d.country;
+      select.appendChild(optgroup);
+      lastCountry = d.country;
+    }
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify(d);
+    opt.textContent = d.name;
+    select.lastElementChild.appendChild(opt);
+  });
+}
+
+function revealApp() {
+  document.getElementById('app-loader').classList.add('hidden');
+  document.getElementById('app-content').classList.remove('hidden');
+}
+
 async function loadDrivers() {
+  let renderedSig = null;
+
+  // 1) Stale-while-revalidate: pinta os nomes na hora a partir do cache local
   try {
-    const res = await fetch(CONFIG.scriptUrl + '?action=getDrivers');
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-
-    const select = document.getElementById('driver-select');
-    let lastCountry = '';
-    data.drivers.forEach(d => {
-      if (d.country !== lastCountry) {
-        const optgroup = document.createElement('optgroup');
-        optgroup.label = d.country;
-        select.appendChild(optgroup);
-        lastCountry = d.country;
+    const cached = localStorage.getItem(DRIVERS_CACHE_KEY);
+    if (cached) {
+      const drivers = JSON.parse(cached);
+      if (Array.isArray(drivers) && drivers.length) {
+        renderDrivers(drivers);
+        renderedSig = driversSignature(drivers);
+        revealApp();
       }
-      const opt = document.createElement('option');
-      opt.value = JSON.stringify(d);
-      opt.textContent = d.name;
-      select.lastElementChild.appendChild(opt);
-    });
+    }
+  } catch (e) { /* cache corrompido — ignora e segue pro fetch */ }
 
-    document.getElementById('app-loader').classList.add('hidden');
-    document.getElementById('app-content').classList.remove('hidden');
+  // 2) Revalida no fundo (reusa o prefetch do <head>; se falhou, busca agora)
+  try {
+    let data = window.__driversFetch ? await window.__driversFetch : null;
+    if (!data) {
+      const res = await fetch(CONFIG.scriptUrl + '?action=getDrivers');
+      data = await res.json();
+    }
+    if (!data || !data.success) throw new Error((data && data.error) || 'getDrivers falhou');
+
+    const sig = driversSignature(data.drivers);
+    try { localStorage.setItem(DRIVERS_CACHE_KEY, JSON.stringify(data.drivers)); } catch (e) {}
+
+    // Só re-renderiza se a lista mudou E o motorista ainda não escolheu o nome
+    if (sig !== renderedSig && !state.driver) renderDrivers(data.drivers);
+    revealApp();
   } catch (err) {
-    document.getElementById('app-loader').textContent = 'Error loading drivers: ' + err.message;
+    // Já mostrou a lista do cache? Mantém ela. Senão, mostra o erro.
+    if (renderedSig === null) {
+      document.getElementById('app-loader').textContent = 'Error loading drivers: ' + err.message;
+    }
   }
 }
 
@@ -1317,15 +1370,35 @@ async function loadDriverSsds() {
   const select = document.getElementById('ssd-select');
   if (!select) return;
 
+  const cacheKey = 'checkin_ssds_' + state.driver.email;
+
+  // 1) Cache local: popula as opções na hora
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const ssds = JSON.parse(cached);
+      if (Array.isArray(ssds)) {
+        state.driverSsds = ssds;
+        populateSsdSelect();
+      }
+    }
+  } catch (e) { /* ignora cache corrompido */ }
+
+  // 2) Revalida no fundo
   try {
     const res = await fetch(CONFIG.scriptUrl + '?action=getDriverSsds&email=' + encodeURIComponent(state.driver.email));
     const data = await res.json();
-    state.driverSsds = (data.success && data.ssds) ? data.ssds : [];
-    populateSsdSelect();
+    const ssds = (data.success && data.ssds) ? data.ssds : [];
+    state.driverSsds = ssds;
+    try { localStorage.setItem(cacheKey, JSON.stringify(ssds)); } catch (e) {}
+    // Não sobrescreve uma escolha já feita pelo motorista
+    if (!state.ssdInUse) populateSsdSelect();
   } catch (err) {
     console.warn('[Check-in] Falhou ao carregar SSDs:', err);
-    state.driverSsds = [];
-    populateSsdSelect();
+    if (!Array.isArray(state.driverSsds) || !state.driverSsds.length) {
+      state.driverSsds = [];
+      populateSsdSelect();
+    }
   }
 }
 
