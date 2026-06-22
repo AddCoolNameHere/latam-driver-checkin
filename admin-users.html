@@ -571,6 +571,10 @@ function openEditModal(idx) {
 
 function closeModal() {
   document.getElementById('user-modal').classList.remove('visible');
+  // Reseta o botão de salvar — sem isso ele fica preso em "Salvando..." (disabled)
+  // e a próxima abertura do modal não deixa salvar de novo.
+  const sb = document.getElementById('modal-save-btn');
+  if (sb) { sb.disabled = false; sb.textContent = 'Salvar'; }
   modalCtx = null;
 }
 
