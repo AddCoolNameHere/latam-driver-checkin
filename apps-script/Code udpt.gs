@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.51',
+        version: 'v5.52',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -1203,6 +1203,7 @@ function buildRawCtsIndex_() {
       index[emailKey][month] = {
         country: row[countryIdx] || '',
         vid: row[vidIdx] || null,
+        vids: [],                 // v5.52: todos os VIDs distintos rodados no mês
         tkm: 0, km: 0,
         mappingDays: 0,
         idleDays: { Personal: 0, 'Mech.': 0, 'Tech.': 0, Weather: 0, Disks: 0, Travelling: 0, Holiday: 0, Other: 0, total: 0 },
@@ -1224,6 +1225,13 @@ function buildRawCtsIndex_() {
     monthData.tkm += tkm;
     monthData.km += km;
     monthData.billableHours += hours;
+
+    // v5.52: acumula VIDs distintos (pro relatório TKM mostrar os números de quem usou >1)
+    const vidVal = row[vidIdx];
+    if (vidVal != null && vidVal !== '') {
+      const vidStr = String(vidVal).trim();
+      if (vidStr && monthData.vids.indexOf(vidStr) < 0) monthData.vids.push(vidStr);
+    }
 
     if (PRODUCTIVE_STATUSES.indexOf(status) >= 0) {
       monthData.mappingDays++;
@@ -5110,6 +5118,11 @@ function getTkmReport_(month, year, country) {
       eff: findHeader_(dHead, ['efficiency', 'eff']),
       vidActive: findHeader_(dHead, ['vid active sum', 'vid active']),
       baseline: findHeader_(dHead, ['baseline%', 'baseline %', 'baseline']),
+      // v5.52: TKM por motorista (fallback da aba; fonte viva é a RAW CTS),
+      // AVG System on Hours por motorista, e o VID atual (fallback quando não há RAW CTS)
+      tkm: findHeader_(dHead, ['tkm sum', 'tkm (done by drivers)', 'tkm done']),
+      avgHours: findHeader_(dHead, ['avg system on hours', 'average mapping hours', 'avg mapping hours', 'system on hours', 'avg system']),
+      currentVid: findHeader_(dHead, ['current/last vid', 'current vid', 'last vid']),
     };
     const drivers = [];
     const driverDiffs = [];
@@ -5131,15 +5144,19 @@ function getTkmReport_(month, year, country) {
         const sheetKm = safeNumber(row[dIx.km]);
         const sheetEff = safeNumber(row[dIx.eff]);
         const sheetBaseline = safeNumber(row[dIx.baseline]);
+        const sheetTkm = dIx.tkm >= 0 ? safeNumber(row[dIx.tkm]) : 0;
 
         // override com RAW CTS + CTS Goal (só se houver linha viva do motorista no mês)
-        let kmDriven = sheetKm, efficiency = sheetEff, baselinePct = sheetBaseline;
+        let kmDriven = sheetKm, efficiency = sheetEff, baselinePct = sheetBaseline, tkm = sheetTkm;
+        let vids = [];
         const liveMd = (dEmail && ctsIndex[dEmail]) ? ctsIndex[dEmail][monthKey] : null;
         if (liveMd) {
           driversWithLive++;
           const lTkm = safeNumber(liveMd.tkm), lKm = safeNumber(liveMd.km);
           kmDriven = lKm;
+          tkm = lTkm;
           efficiency = lKm > 0 ? lTkm / lKm : sheetEff;
+          if (liveMd.vids && liveMd.vids.length) vids = liveMd.vids.slice();
           const cb = goalsByCountry[normCountry_(dCountry)];
           baselinePct = (cb && cb.baseline > 0) ? lTkm / cb.baseline : sheetBaseline;
           if (driverDiffs.length < 12) {
@@ -5152,13 +5169,21 @@ function getTkmReport_(month, year, country) {
           }
         }
 
+        // Sem linha viva na RAW CTS: usa o "Current/Last VID" da aba como número único
+        if (!vids.length && dIx.currentVid >= 0 && row[dIx.currentVid] != null && row[dIx.currentVid] !== '') {
+          vids = [String(row[dIx.currentVid]).trim()];
+        }
+
         drivers.push({
           name: dName,
           country: dCountry,
           qcScore: safeNumber(row[dIx.qc]),              // QC Score — FICA da aba
+          tkm: tkm,                                      // v5.52: TKM (RAW CTS, fallback aba)
           kmDriven: kmDriven,
           efficiency: efficiency,
+          avgHours: dIx.avgHours >= 0 ? safeNumber(row[dIx.avgHours]) : 0,  // v5.52: AVG System on Hours — da aba
           vidActiveSum: safeNumber(row[dIx.vidActive]),  // VID Active SUM — FICA da aba
+          vids: vids,                                    // v5.52: VIDs distintos rodados (RAW CTS)
           baselinePct: baselinePct,
         });
       }
@@ -5198,6 +5223,37 @@ function getTkmReport_(month, year, country) {
       bigNumbers.activeCars = wantAll ? carsTotal : (activeCarsByCountry[normCountry_(country)] || 0);
     } catch (e) {
       Logger.log('Erro montando activeCars: ' + e);
+    }
+
+    // v5.52: # motoristas + VIDs (com motoristas / ativos) por país e total LATAM.
+    // Calculado do próprio array de motoristas já filtrado por ativo (consistente com a tabela).
+    // - driversActive  = quantos motoristas ativos
+    // - vidsWithDrivers = nº de VIDs distintos rodados por motoristas (RAW CTS)
+    // - vidsActive      = soma do "VID Active SUM" da aba (ativos as per Google)
+    try {
+      const perC = {};
+      let totVidActive = 0;
+      const totVidSet = {};
+      drivers.forEach(function (d) {
+        const k = normCountry_(d.country);
+        if (!perC[k]) perC[k] = { drivers: 0, vidActive: 0, vidSet: {} };
+        perC[k].drivers++;
+        const va = safeNumber(d.vidActiveSum);
+        perC[k].vidActive += va;
+        totVidActive += va;
+        (d.vids || []).forEach(function (v) { if (v) { perC[k].vidSet[v] = true; totVidSet[v] = true; } });
+      });
+      for (let i = 0; i < perCountry.length; i++) {
+        const pc = perC[normCountry_(perCountry[i].country)] || { drivers: 0, vidActive: 0, vidSet: {} };
+        perCountry[i].driversActive = pc.drivers;
+        perCountry[i].vidsActive = pc.vidActive;
+        perCountry[i].vidsWithDrivers = Object.keys(pc.vidSet).length;
+      }
+      bigNumbers.driversActive = drivers.length;
+      bigNumbers.vidsActive = totVidActive;
+      bigNumbers.vidsWithDrivers = Object.keys(totVidSet).length;
+    } catch (e) {
+      Logger.log('Erro montando driversActive/vids: ' + e);
     }
 
     return {

@@ -2160,6 +2160,9 @@
 
       <label style="display:block;font-size:12px;font-weight:600;margin:12px 0 3px;" data-i18n="tkmNextWeek">Prioridades da Próxima Semana</label>
       <textarea id="tkm-next-week" rows="3" data-i18n-placeholder="tkmNextWeekPh" placeholder="Top 3 prioridades, principais riscos, responsáveis e ETA de conclusão..." style="width:100%;padding:7px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:12px;resize:vertical;"></textarea>
+
+      <label style="display:block;font-size:12px;font-weight:600;margin:12px 0 3px;" data-i18n="tkmCtsNeeds">O que precisamos da CTS</label>
+      <textarea id="tkm-cts-needs" rows="3" data-i18n-placeholder="tkmCtsNeedsPh" placeholder="Dados, acessos, correções ou definições que dependem da CTS para a próxima semana..." style="width:100%;padding:7px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;font-size:12px;resize:vertical;"></textarea>
     </div>
 
     <div class="ts-modal-actions" style="margin-top:18px;">
@@ -2768,6 +2771,14 @@ const I18N = {
     tkmKpiHours: 'AVG System on Hours',
     tkmKpiCars: 'Carros Ativos',
     tkmCarsSub: '> 10 dias mapeados',
+    tkmColTkm: 'TKM',
+    tkmColHours: 'Horas',
+    tkmKpiDrivers: 'Motoristas',
+    tkmKpiVidsWith: 'VIDs com Motoristas',
+    tkmKpiVidsActive: 'VIDs Ativos (Google)',
+    tkmVidsActiveSub: 'ativos p/ Google',
+    tkmCtsNeeds: 'O que precisamos da CTS',
+    tkmCtsNeedsPh: 'Dados, acessos, correções ou definições que dependem da CTS para a próxima semana...',
     tkmCommentsHeading: 'Comentários (entram no PDF)',
     tkmExecSummary: 'Resumo Executivo',
     tkmExecSummaryPh: 'Destaques da semana, países acima/abaixo da meta, principais riscos e ações para a próxima semana...',
@@ -3100,6 +3111,14 @@ const I18N = {
     tkmKpiHours: 'AVG System on Hours',
     tkmKpiCars: 'Autos Activos',
     tkmCarsSub: '> 10 días mapeados',
+    tkmColTkm: 'TKM',
+    tkmColHours: 'Horas',
+    tkmKpiDrivers: 'Conductores',
+    tkmKpiVidsWith: 'VIDs con Conductores',
+    tkmKpiVidsActive: 'VIDs Activos (Google)',
+    tkmVidsActiveSub: 'activos s/ Google',
+    tkmCtsNeeds: 'Lo que necesitamos de CTS',
+    tkmCtsNeedsPh: 'Datos, accesos, correcciones o definiciones que dependen de CTS para la próxima semana...',
     tkmCommentsHeading: 'Comentarios (van al PDF)',
     tkmExecSummary: 'Resumen Ejecutivo',
     tkmExecSummaryPh: 'Aspectos destacados de la semana, países por encima/debajo de la meta, principales riesgos y acciones para la próxima semana...',
@@ -3432,6 +3451,14 @@ const I18N = {
     tkmKpiHours: 'AVG System on Hours',
     tkmKpiCars: 'Active Cars',
     tkmCarsSub: '> 10 days mapped',
+    tkmColTkm: 'TKM',
+    tkmColHours: 'Hours',
+    tkmKpiDrivers: 'Drivers',
+    tkmKpiVidsWith: 'VIDs With Drivers',
+    tkmKpiVidsActive: 'Active VIDs (Google)',
+    tkmVidsActiveSub: 'as per Google',
+    tkmCtsNeeds: 'What We Need From CTS',
+    tkmCtsNeedsPh: 'Data, access, fixes or definitions we need from CTS for next week...',
     tkmCommentsHeading: 'Comments (included in the PDF)',
     tkmExecSummary: 'Executive Summary',
     tkmExecSummaryPh: 'Weekly highlights, countries above/below target, key risks and actions for next week...',
@@ -6076,6 +6103,7 @@ function renderTkmCountryNotes() {
 function collectTkmNotes(country) {
   const execEl = document.getElementById('tkm-exec-summary');
   const nextEl = document.getElementById('tkm-next-week');
+  const ctsEl = document.getElementById('tkm-cts-needs');
   const cSel = document.getElementById('tkm-country-select');
   const wantAll = !country || country === 'ALL';
   const list = wantAll
@@ -6086,6 +6114,7 @@ function collectTkmNotes(country) {
   return {
     execSummary: execEl ? execEl.value.trim() : '',
     nextWeek: nextEl ? nextEl.value.trim() : '',
+    ctsNeeds: ctsEl ? ctsEl.value.trim() : '',
     byCountry: byCountry,
   };
 }
@@ -6259,19 +6288,21 @@ async function buildTkmReportPdf(data) {
 
   // ---- tabela: colunas e dimensões ----
   const cols = [
-    { key: 'name', label: t('tkmColName'), w: 0.34, align: 'left' },
-    { key: 'qc', label: t('tkmColQc'), w: 0.13, align: 'center' },
-    { key: 'km', label: t('tkmColKm'), w: 0.15, align: 'right' },
-    { key: 'eff', label: t('tkmColEff'), w: 0.13, align: 'center' },
+    { key: 'name', label: t('tkmColName'), w: 0.25, align: 'left' },
+    { key: 'qc', label: t('tkmColQc'), w: 0.10, align: 'center' },
+    { key: 'tkm', label: t('tkmColTkm'), w: 0.11, align: 'right' },
+    { key: 'km', label: t('tkmColKm'), w: 0.11, align: 'right' },
+    { key: 'eff', label: t('tkmColEff'), w: 0.10, align: 'center' },
+    { key: 'hours', label: t('tkmColHours'), w: 0.11, align: 'center' },
     { key: 'vid', label: t('tkmColVid'), w: 0.12, align: 'center' },
-    { key: 'baseline', label: t('tkmColBaseline'), w: 0.13, align: 'center' },
+    { key: 'baseline', label: t('tkmColBaseline'), w: 0.10, align: 'center' },
   ];
   const tableW = pageW - M * 2;
   const rowH = 6.4, headH = 7.2, bottomLimit = pageH - 14;
-  // KPI grid 3 colunas x 2 linhas
+  // KPI grid 3 colunas x 3 linhas (v5.52: 9 cards)
   const kpiCols = 3, kpiGap = 4, kpiRowGap = 4, kpiH = 22;
   const kpiW = (tableW - kpiGap * (kpiCols - 1)) / kpiCols;
-  const kpiBlockH = kpiH * 2 + kpiRowGap;
+  const kpiBlockH = kpiH * 3 + kpiRowGap * 2;
 
   let pageNum = 0, y = 0, logo = null;
 
@@ -6324,6 +6355,9 @@ async function buildTkmReportPdf(data) {
       { label: t('tkmKpiBaseline'), value: fmtPct(big.baselinePct, 0), color: C_PRIMARY },
       { label: t('tkmKpiHours'), value: fmtNum1(big.avgHours), color: C_TEAL },
       { label: t('tkmKpiCars'), value: fmtInt(big.activeCars), sub: t('tkmCarsSub'), color: C_SUCCESS },
+      { label: t('tkmKpiDrivers'), value: fmtInt(big.driversActive), color: C_PRIMARY_2 },
+      { label: t('tkmKpiVidsWith'), value: fmtInt(big.vidsWithDrivers), color: C_BRAND },
+      { label: t('tkmKpiVidsActive'), value: fmtInt(big.vidsActive), sub: t('tkmVidsActiveSub'), color: C_TEAL },
     ];
     items.forEach((it, idx) => {
       const col = idx % kpiCols, rowi = Math.floor(idx / kpiCols);
@@ -6398,14 +6432,26 @@ async function buildTkmReportPdf(data) {
     y += headH;
   }
 
+  // v5.52: sub-linha com os números dos VIDs — só quando o motorista usou mais de um.
+  function driverVidLine(d) {
+    return (d && d.vids && d.vids.length > 1) ? 'VIDs: ' + d.vids.join(', ') : null;
+  }
+  function driverRowH(d) {
+    return rowH + (driverVidLine(d) ? 3.6 : 0);
+  }
+
   function drawDriverRow(d, idx) {
-    if (idx % 2 === 1) { pdf.setFillColor(...C_BG_CARD); pdf.rect(M, y, tableW, rowH, 'F'); }
+    const vidLine = driverVidLine(d);
+    const rh = rowH + (vidLine ? 3.6 : 0);
+    if (idx % 2 === 1) { pdf.setFillColor(...C_BG_CARD); pdf.rect(M, y, tableW, rh, 'F'); }
     const baselineColor = d.baselinePct >= 1 ? C_SUCCESS : (d.baselinePct >= 0.8 ? C_TEXT_2 : C_DANGER);
     const cells = [
       { val: d.name, type: 'name' },
       { val: fmtPct(d.qcScore, 1), type: 'num' },
+      { val: fmtInt(d.tkm), type: 'num' },
       { val: fmtInt(d.kmDriven), type: 'num' },
       { val: fmtPct(d.efficiency, 1), type: 'num' },
+      { val: fmtNum1(d.avgHours), type: 'num' },
       { val: fmtInt(d.vidActiveSum), type: 'num' },
       { val: fmtPct(d.baselinePct, 1), type: 'baseline' },
     ];
@@ -6415,21 +6461,26 @@ async function buildTkmReportPdf(data) {
       const cell = cells[i];
       const tx = c.align === 'center' ? cur + w / 2 : c.align === 'right' ? cur + w - 3 : cur + 3;
       if (cell.type === 'name') {
-        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7.5); pdf.setTextColor(...C_TEXT);
-        pdf.text(pdf.splitTextToSize(String(cell.val), w - 4)[0] || '', tx, y + 4.4, { align: c.align });
+        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7.2); pdf.setTextColor(...C_TEXT);
+        pdf.text(pdf.splitTextToSize(String(cell.val), w - 4)[0] || '', tx, y + 4.2, { align: c.align });
       } else if (cell.type === 'baseline') {
-        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.setTextColor(...baselineColor);
-        pdf.text(String(cell.val), tx, y + 4.4, { align: c.align });
+        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(7.4); pdf.setTextColor(...baselineColor);
+        pdf.text(String(cell.val), tx, y + 4.2, { align: c.align });
       } else {
-        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(...C_TEXT_2);
-        pdf.text(String(cell.val), tx, y + 4.4, { align: c.align });
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.4); pdf.setTextColor(...C_TEXT_2);
+        pdf.text(String(cell.val), tx, y + 4.2, { align: c.align });
       }
       cur += w;
     });
+    // v5.52: números dos VIDs usados (só multi-VID) numa sub-linha cinza abaixo do nome
+    if (vidLine) {
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6); pdf.setTextColor(...C_MUTED);
+      pdf.text(pdf.splitTextToSize(vidLine, tableW - 8)[0] || '', M + 3, y + 8.7, { align: 'left' });
+    }
     // linha divisória sutil
     pdf.setDrawColor(...C_BORDER); pdf.setLineWidth(0.2);
-    pdf.line(M, y + rowH, M + tableW, y + rowH);
-    y += rowH;
+    pdf.line(M, y + rh, M + tableW, y + rh);
+    y += rh;
   }
 
   function drawDriverTable(list) {
@@ -6444,7 +6495,7 @@ async function buildTkmReportPdf(data) {
     }
     drawTableHeaderRow();
     list.forEach((d, idx) => {
-      if (y + rowH > bottomLimit) {
+      if (y + driverRowH(d) > bottomLimit) {
         startPage(false);
         drawTableHeaderRow();
       }
@@ -6492,6 +6543,13 @@ async function buildTkmReportPdf(data) {
     ensure(kpiBlockH);
     drawSectionTitle(t('tkmNextWeek'), C_ACCENT);
     drawNotes('', notes.nextWeek, C_ACCENT);
+  }
+
+  // v5.52: Seção final — O que precisamos da CTS (fica no fim do documento)
+  if (notes.ctsNeeds && String(notes.ctsNeeds).trim()) {
+    ensure(24);
+    drawSectionTitle(t('tkmCtsNeeds'), C_ACCENT);
+    drawNotes('', notes.ctsNeeds, C_ACCENT);
   }
 
   const safeCountry = (isAll ? 'LATAM' : String(data.country)).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w]+/g, '_');
