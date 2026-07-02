@@ -6273,11 +6273,17 @@ async function buildTkmReportPdf(data) {
   };
   const COUNTRY_ORDER = ['Brazil', 'Argentina', 'Chile', 'Peru', 'México', 'Colombia'];
 
+  // v5.52b: o PDF sai SEMPRE em inglês (independente do idioma da UI).
+  // t local força I18N.en; meses e locale também em inglês.
+  const t = (key) => (I18N.en && (key in I18N.en)) ? I18N.en[key] : key;
+  const EN_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const enMonthName = (m) => EN_MONTHS[(parseInt(m, 10) || 0) - 1] || String(m);
+
   const now = new Date();
-  const locale = currentLang === 'pt' ? 'pt-BR' : currentLang === 'es' ? 'es-ES' : 'en-US';
+  const locale = 'en-US';
   const isAll = (data.country === 'ALL' || !data.country);
   const countryLabel = isAll ? t('tkmAllCountries') : data.country;
-  const periodLabel = `${tkmMonthName(parseInt(data.month, 10))} ${data.year}`;
+  const periodLabel = `${enMonthName(data.month)} ${data.year}`;
   const notes = data.notes || {};
 
   const fmtInt = (v) => formatNumber(v || 0, 0);
@@ -6354,10 +6360,9 @@ async function buildTkmReportPdf(data) {
       { label: t('tkmKpiTkm'), value: fmtInt(big.tkmDone), color: C_ACCENT },
       { label: t('tkmKpiBaseline'), value: fmtPct(big.baselinePct, 0), color: C_PRIMARY },
       { label: t('tkmKpiHours'), value: fmtNum1(big.avgHours), color: C_TEAL },
-      { label: t('tkmKpiCars'), value: fmtInt(big.activeCars), sub: t('tkmCarsSub'), color: C_SUCCESS },
+      { label: t('tkmKpiCars'), value: fmtInt(big.vidsActive), sub: t('tkmVidsActiveSub'), color: C_SUCCESS },
       { label: t('tkmKpiDrivers'), value: fmtInt(big.driversActive), color: C_PRIMARY_2 },
       { label: t('tkmKpiVidsWith'), value: fmtInt(big.vidsWithDrivers), color: C_BRAND },
-      { label: t('tkmKpiVidsActive'), value: fmtInt(big.vidsActive), sub: t('tkmVidsActiveSub'), color: C_TEAL },
     ];
     items.forEach((it, idx) => {
       const col = idx % kpiCols, rowi = Math.floor(idx / kpiCols);
