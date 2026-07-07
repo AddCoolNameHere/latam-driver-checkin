@@ -500,7 +500,8 @@ const I18N = {
     srcFill:'sem check-in', srcCheckin:'check-in', gap:'gap',
     addExtra:'Valor extra', noEmail:'—',
     aceTitle:'Sincronizar com a LATAM Timesheet ACE',
-    aceSub:'Grava a coluna "Hrs Worked" da aba da quinzena que você escolher. A aba precisa já existir na ACE.',
+    aceSub:'Grava "Hrs Worked" + Reimbursment + Deduction da aba da quinzena que você escolher (casando por nome). A aba precisa já existir na ACE.',
+    aceColMissing:'Coluna não encontrada na aba (não vou gravar essa)',
     aceTabLabel:'Aba da quinzena na ACE', acePreview:'Prévia (dry-run)', aceWrite:'Gravar na ACE',
     aceLoadingTabs:'Carregando abas…', acePickTab:'Escolha a aba',
     aceMatched:'casaram', aceWritten:'gravados', aceNotInTab:'não estão na aba',
@@ -530,7 +531,8 @@ const I18N = {
     srcFill:'sin check-in', srcCheckin:'check-in', gap:'gap',
     addExtra:'Valor extra', noEmail:'—',
     aceTitle:'Sincronizar con la LATAM Timesheet ACE',
-    aceSub:'Escribe la columna "Hrs Worked" de la pestaña de la quincena que elijas. La pestaña debe existir en la ACE.',
+    aceSub:'Escribe "Hrs Worked" + Reimbursment + Deduction de la pestaña de la quincena que elijas (por nombre). La pestaña debe existir en la ACE.',
+    aceColMissing:'Columna no encontrada en la pestaña (no la escribo)',
     aceTabLabel:'Pestaña de la quincena en la ACE', acePreview:'Vista previa (dry-run)', aceWrite:'Escribir en la ACE',
     aceLoadingTabs:'Cargando pestañas…', acePickTab:'Elige la pestaña',
     aceMatched:'coincidieron', aceWritten:'escritos', aceNotInTab:'no están en la pestaña',
@@ -560,7 +562,8 @@ const I18N = {
     srcFill:'no check-in', srcCheckin:'check-in', gap:'gap',
     addExtra:'Adjustment', noEmail:'—',
     aceTitle:'Sync to the LATAM Timesheet ACE',
-    aceSub:'Writes the "Hrs Worked" column of the biweekly tab you pick. The tab must already exist in the ACE.',
+    aceSub:'Writes "Hrs Worked" + Reimbursment + Deduction on the biweekly tab you pick (matched by name). The tab must already exist in the ACE.',
+    aceColMissing:'Column not found in the tab (skipping it)',
     aceTabLabel:'ACE biweekly tab', acePreview:'Preview (dry-run)', aceWrite:'Write to ACE',
     aceLoadingTabs:'Loading tabs…', acePickTab:'Pick the tab',
     aceMatched:'matched', aceWritten:'written', aceNotInTab:'not in tab',
@@ -914,8 +917,12 @@ async function loadAceTabs() {
   } catch (e) { sel.innerHTML = '<option value="">' + escapeHtml(t().error) + '</option>'; }
 }
 function aceRows() {
-  // horas FINAIS (após edições) por nome, só quem tem nome
-  return state.drivers.filter(d => d.name).map(d => ({ name: d.name, hours: computeRow(d).hours }));
+  // horas FINAIS (após edições) + reembolso/desconto por nome, só quem tem nome.
+  // ded é negativo no nosso sistema → mando o abs (a ACE subtrai a Deduction).
+  return state.drivers.filter(d => d.name).map(d => {
+    const r = computeRow(d);
+    return { name: d.name, hours: r.hours, reimb: r.reimb, ded: Math.abs(r.ded) };
+  });
 }
 async function aceSync(confirm) {
   const i = t();
@@ -944,18 +951,27 @@ async function aceSync(confirm) {
 function renderAceResult(res) {
   const i = t();
   const el = document.getElementById('ace-result');
+  const wrote = res.written ? ` ${res.written} ${escapeHtml(i.aceWritten)}${res.reimbWritten ? ' · ' + res.reimbWritten + ' reimb' : ''}${res.dedWritten ? ' · ' + res.dedWritten + ' ded' : ''} · "${escapeHtml(res.tab)}"` : '';
   const head = res.written
-    ? `<div class="ace-msg ok">${svgIcon('report',14,2)} ${escapeHtml(i.aceWroteOk)} ${res.written} ${escapeHtml(i.aceWritten)} · "${escapeHtml(res.tab)}"</div>`
+    ? `<div class="ace-msg ok">${svgIcon('report',14,2)} ${escapeHtml(i.aceWroteOk)}${wrote}</div>`
     : `<div class="ace-msg warn">${escapeHtml(i.aceDryOk)}</div>`;
   const stats = `<div style="margin-top:8px;font-weight:600;">${res.matched} ${escapeHtml(i.aceMatched)}${(res.notInTab && res.notInTab.length) ? ` · ${res.notInTab.length} ${escapeHtml(i.aceNotInTab)}` : ''}</div>`;
+  const miss = [];
+  if (res.reimbCol == null) miss.push('Reimbursment');
+  if (res.dedCol == null) miss.push('Deduction');
+  const cols = miss.length ? `<div class="ace-msg warn" style="margin-top:6px;">${escapeHtml(i.aceColMissing)}: ${escapeHtml(miss.join(', '))}</div>` : '';
   let table = '';
   if (res.preview && res.preview.length) {
-    table = `<table><thead><tr><th>${escapeHtml(i.thDriver)}</th><th class="num">Hrs Worked (${escapeHtml(currentLang === 'en' ? 'current → new' : (currentLang === 'es' ? 'actual → nuevo' : 'atual → novo'))})</th></tr></thead><tbody>` +
-      res.preview.map(p => `<tr><td>${escapeHtml(p.name)}</td><td class="num">${escapeHtml(String(p.de == null ? '—' : p.de))} &rarr; <b>${escapeHtml(String(p.para))}</b></td></tr>`).join('') +
+    const arrow = currentLang === 'en' ? 'current → new' : (currentLang === 'es' ? 'actual → nuevo' : 'atual → novo');
+    table = `<table><thead><tr><th>${escapeHtml(i.thDriver)}</th><th class="num">Hrs Worked (${escapeHtml(arrow)})</th><th class="num">Reimb / Ded</th></tr></thead><tbody>` +
+      res.preview.map(p => {
+        const rd = [(p.reimb ? '+' + p.reimb : ''), (p.ded ? '-' + p.ded : '')].filter(Boolean).join(' / ') || '—';
+        return `<tr><td>${escapeHtml(p.name)}</td><td class="num">${escapeHtml(String(p.de == null ? '—' : p.de))} &rarr; <b>${escapeHtml(String(p.para))}</b></td><td class="num">${escapeHtml(rd)}</td></tr>`;
+      }).join('') +
       `</tbody></table>`;
   }
   const notIn = (res.notInTab && res.notInTab.length) ? `<div style="margin-top:8px;font-size:11.5px;color:var(--c-text-dim);">${escapeHtml(i.aceNotInTab)}: ${escapeHtml(res.notInTab.slice(0,12).join(', '))}${res.notInTab.length > 12 ? '…' : ''}</div>` : '';
-  el.innerHTML = head + stats + table + notIn;
+  el.innerHTML = head + stats + cols + table + notIn;
 }
 
 /* ================= CSV ================= */

@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.56',
+        version: 'v5.57',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -3045,8 +3045,18 @@ function writeAceHoursManual_(data) {
   }
   if (hdrRow < 0) return { success: false, error: 'Cabecalho "Name" + "Hrs Worked" nao achado na aba "' + tabName + '".' };
 
+  // v5.57: colunas Reimbursment / Deduction do bloco de totais (mesma linha de cabecalho)
+  const hdr = values[hdrRow].map(c => String(c || '').trim().toLowerCase());
+  let reimbCol = -1, dedCol = -1;
+  for (let j = 0; j < hdr.length; j++) {
+    if (reimbCol < 0 && /reimburs/.test(hdr[j])) reimbCol = j;   // "Reimbursment"/"Reimbursement"
+    if (dedCol < 0 && /deduc/.test(hdr[j])) dedCol = j;          // "Deduction"/"Deduccion"
+  }
+
   const byName = {};
-  rows.forEach(r => { if (r && r.name != null) byName[nkey(r.name)] = Number(r.hours) || 0; });
+  rows.forEach(r => {
+    if (r && r.name != null) byName[nkey(r.name)] = { hours: Number(r.hours) || 0, reimb: Number(r.reimb) || 0, ded: Number(r.ded) || 0 };
+  });
 
   const plan = [];
   const used = {};
@@ -3054,17 +3064,29 @@ function writeAceHoursManual_(data) {
     const nm = String(values[i][nameCol] || '').trim();
     if (!nm) continue;
     const k = nkey(nm);
-    if (Object.prototype.hasOwnProperty.call(byName, k)) { used[k] = true; plan.push({ row: i + 1, name: nm, oldVal: values[i][workedCol], newVal: byName[k] }); }
+    if (Object.prototype.hasOwnProperty.call(byName, k)) {
+      const rr = byName[k]; used[k] = true;
+      plan.push({ row: i + 1, name: nm, oldVal: values[i][workedCol], hours: rr.hours, reimb: rr.reimb, ded: rr.ded });
+    }
   }
-  let written = 0;
-  if (doWrite) { plan.forEach(p => { sh.getRange(p.row, workedCol + 1).setValue(p.newVal); written++; }); }
+  // Grava horas sempre; reembolso/desconto SO quando ha valor no nosso sistema (nao zera
+  // a coluna de quem nao tem, pra nao apagar o que o time ja pos a mao na ACE).
+  let written = 0, reimbWritten = 0, dedWritten = 0;
+  if (doWrite) {
+    plan.forEach(p => {
+      sh.getRange(p.row, workedCol + 1).setValue(p.hours); written++;
+      if (reimbCol >= 0 && p.reimb) { sh.getRange(p.row, reimbCol + 1).setValue(p.reimb); reimbWritten++; }
+      if (dedCol >= 0 && p.ded) { sh.getRange(p.row, dedCol + 1).setValue(p.ded); dedWritten++; }
+    });
+  }
   const notInTab = rows.filter(r => r && r.name && !used[nkey(r.name)]).map(r => r.name);
 
   return {
-    success: true, version: 'v5.56', dryRun: !doWrite, tab: tabName,
+    success: true, version: 'v5.57', dryRun: !doWrite, tab: tabName,
     headerRow: hdrRow + 1, hrsWorkedCol: workedCol + 1,
-    matched: plan.length, written: written, notInTab: notInTab,
-    preview: plan.slice(0, 15).map(p => ({ name: p.name, de: p.oldVal, para: p.newVal })),
+    reimbCol: reimbCol >= 0 ? reimbCol + 1 : null, dedCol: dedCol >= 0 ? dedCol + 1 : null,
+    matched: plan.length, written: written, reimbWritten: reimbWritten, dedWritten: dedWritten, notInTab: notInTab,
+    preview: plan.slice(0, 15).map(p => ({ name: p.name, de: p.oldVal, para: p.hours, reimb: p.reimb || 0, ded: p.ded || 0 })),
   };
 }
 
