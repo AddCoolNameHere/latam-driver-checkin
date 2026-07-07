@@ -3,27 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Timesheet &amp; Payroll · LATAM · Aceolution</title>
+<title>Payroll · LATAM · Aceolution</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <!-- Shell compartilhado: auth + login (common) + estilos da tela de login (theme.css). -->
 <script src="auth.js?v=20260518b"></script>
 <script src="common.js?v=20260519a"></script>
 <link rel="stylesheet" href="theme.css?v=20260519a">
 <style>
-/* ============================================================
- * Design tokens (de theme.css) — fonte única de cor.
- * ============================================================ */
 :root {
   --c-primary:#2C5282; --c-primary-dark:#1A365D; --c-accent:#4A9FE0;
   --c-bg:#F8FAFC; --c-bg-tint:#EBF4FB; --c-surface:#FFFFFF;
   --c-border:#E2E8F0; --c-border-strong:#CBD5E1;
   --c-text:#1A202C; --c-text-muted:#64748B; --c-text-dim:#94A3B8;
   --c-success:#16A34A; --c-warn:#CA8A04; --c-danger:#B91C1C;
-  /* skin */
   --sv-primary:var(--c-primary); --sv-primary-700:var(--c-primary-dark);
   --sv-primary-soft:var(--c-bg-tint);
   --sv-navy:#0E1830; --sv-navy-line:rgba(255,255,255,.08);
@@ -41,23 +36,16 @@
   --sv-bg:#0F172A; --sv-line:#334155; --sv-line-2:#1E293B; --sv-navy:#0B1220;
   color-scheme:dark;
 }
-
 * { box-sizing:border-box; margin:0; padding:0; }
 body {
   font-family:"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background:var(--sv-bg); color:var(--c-text); min-height:100vh;
-  -webkit-font-smoothing:antialiased;
+  background:var(--sv-bg); color:var(--c-text); min-height:100vh; -webkit-font-smoothing:antialiased;
 }
 body.sv-shell { padding-left:252px; transition:padding-left .18s ease; }
 #app-content { padding:22px 28px 48px; min-height:100vh; }
 
 /* ---------- sidebar ---------- */
-.sv-sidebar {
-  position:fixed; left:0; top:0; bottom:0; width:252px; z-index:60;
-  background:var(--sv-navy); color:var(--sv-navy-txt);
-  display:flex; flex-direction:column; padding:20px 14px;
-  transition:width .18s ease, transform .22s ease;
-}
+.sv-sidebar { position:fixed; left:0; top:0; bottom:0; width:252px; z-index:60; background:var(--sv-navy); color:var(--sv-navy-txt); display:flex; flex-direction:column; padding:20px 14px; transition:width .18s ease, transform .22s ease; }
 .sv-brand { display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding:4px 8px 18px; margin-bottom:8px; border-bottom:1px solid var(--sv-navy-line); }
 .sv-brand-logo { height:30px; width:auto; max-width:170px; filter:brightness(0) invert(1); }
 .sv-brand-mark { width:38px; height:38px; border-radius:11px; flex-shrink:0; background:linear-gradient(140deg, var(--c-primary), var(--c-accent)); color:#fff; font-weight:800; font-size:15px; display:none; place-items:center; box-shadow:0 8px 18px -6px rgba(44,82,130,.7); }
@@ -79,8 +67,6 @@ body.sv-shell { padding-left:252px; transition:padding-left .18s ease; }
 .sv-collapse-btn { flex-shrink:0; width:30px; height:30px; border-radius:8px; background:rgba(255,255,255,.06); border:1px solid var(--sv-navy-line); color:var(--sv-navy-txt); cursor:pointer; display:grid; place-items:center; padding:0; transition:background .14s, color .14s; }
 .sv-collapse-btn:hover { background:rgba(255,255,255,.13); color:#fff; }
 .sv-collapse-btn svg { display:block; transition:transform .2s ease; }
-
-/* hamburger + backdrop (mobile) */
 .sv-burger { display:none; position:fixed; top:12px; left:12px; z-index:56; width:42px; height:42px; border-radius:11px; padding:0; background:var(--c-surface); border:1px solid var(--sv-line); color:var(--c-text); cursor:pointer; place-items:center; box-shadow:var(--sv-shadow); }
 .sv-burger svg { display:block; }
 .sv-backdrop { position:fixed; inset:0; z-index:55; background:rgba(10,16,30,.5); opacity:0; pointer-events:none; transition:opacity .2s ease; }
@@ -94,151 +80,109 @@ body.sv-shell { padding-left:252px; transition:padding-left .18s ease; }
 .lang-switch button.active { background:var(--c-primary); border-color:var(--c-primary); color:#fff; }
 .lang-switch button:not(.active):hover { color:var(--c-primary); border-color:var(--c-primary); }
 
-/* ---------- quinzena banner ---------- */
-.quinzena-banner {
-  background:linear-gradient(135deg, var(--c-primary), var(--c-primary-dark));
-  color:#fff; padding:16px 20px; border-radius:var(--sv-card); margin-bottom:18px;
-  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-  box-shadow:var(--sv-shadow);
-}
-.qb-icon { width:42px; height:42px; border-radius:12px; background:rgba(255,255,255,.16); display:grid; place-items:center; flex-shrink:0; color:#fff; }
-.qb-icon svg { display:block; }
-.qb-text { flex:1; min-width:200px; }
-.qb-label { font-size:11px; opacity:.85; text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:2px; }
-.qb-range { font-size:18px; font-weight:800; letter-spacing:.2px; }
-.qb-weeks { font-size:11.5px; opacity:.82; margin-top:2px; }
-.qb-pay-day { background:rgba(255,255,255,.16); padding:9px 16px; border-radius:12px; text-align:center; }
-.qb-pay-label { font-size:10px; opacity:.85; text-transform:uppercase; letter-spacing:.8px; font-weight:700; }
-.qb-pay-date { font-size:16px; font-weight:800; margin-top:2px; }
+/* ---------- period bar ---------- */
+.period-bar { background:linear-gradient(135deg, var(--c-primary), var(--c-primary-dark)); color:#fff; padding:14px 18px; border-radius:var(--sv-card); margin-bottom:16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; box-shadow:var(--sv-shadow); }
+.period-bar .pb-icon { width:40px; height:40px; border-radius:12px; background:rgba(255,255,255,.16); display:grid; place-items:center; flex-shrink:0; }
+.period-bar .pb-icon svg { display:block; }
+.period-bar label { font-size:10px; opacity:.85; text-transform:uppercase; letter-spacing:.8px; font-weight:700; display:block; margin-bottom:3px; }
+.period-bar input[type=date] { border:none; border-radius:9px; padding:7px 10px; font-family:inherit; font-size:13px; font-weight:600; color:var(--c-text); background:#fff; }
+.period-bar .pb-load { background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:9px; padding:8px 15px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+.period-bar .pb-load:hover { background:rgba(255,255,255,.28); }
+.period-bar .pb-spacer { flex:1; }
+.period-bar .pb-note { font-size:11.5px; opacity:.85; max-width:230px; }
 
-/* ---------- KPI scorecards ---------- */
-.kpi-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin-bottom:18px; }
-.scorecard {
-  display:flex; align-items:center; gap:13px;
-  background:var(--c-surface); border:1px solid var(--sv-line); border-radius:var(--sv-card);
-  box-shadow:var(--sv-shadow); padding:16px; transition:transform .15s, box-shadow .15s;
-}
-.scorecard:hover { transform:translateY(-3px); box-shadow:var(--sv-shadow-lg); }
+/* ---------- KPIs ---------- */
+.kpi-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin-bottom:16px; }
+.scorecard { display:flex; align-items:center; gap:13px; background:var(--c-surface); border:1px solid var(--sv-line); border-radius:var(--sv-card); box-shadow:var(--sv-shadow); padding:16px; }
 .sv-kpi-ico { width:42px; height:42px; border-radius:12px; display:grid; place-items:center; flex-shrink:0; }
 .sv-kpi-ico svg { display:block; }
 .sv-kpi-ico.tone-blue { background:var(--sv-primary-soft); color:var(--sv-primary); }
-.sv-kpi-ico.tone-indigo { background:#ECEDFD; color:#4F46E5; }
 .sv-kpi-ico.tone-green { background:#E7F7EE; color:var(--c-success); }
 .sv-kpi-ico.tone-amber { background:#FDF1DF; color:var(--c-warn); }
-[data-theme="dark"] .sv-kpi-ico.tone-indigo { background:#2A2E54; color:#A5B4FC; }
+.sv-kpi-ico.tone-indigo { background:#ECEDFD; color:#4F46E5; }
 [data-theme="dark"] .sv-kpi-ico.tone-green { background:#10301F; }
 [data-theme="dark"] .sv-kpi-ico.tone-amber { background:#3A2E12; }
-[data-theme="dark"] .sv-kpi-ico { filter:saturate(1.1); }
+[data-theme="dark"] .sv-kpi-ico.tone-indigo { background:#2A2E54; color:#A5B4FC; }
 .sv-kpi-body { min-width:0; flex:1; }
 .kpi-label { font-size:11px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--c-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.kpi-value { font-size:26px; font-weight:800; letter-spacing:-1px; color:var(--c-text); line-height:1.1; font-variant-numeric:tabular-nums; margin-top:2px; }
+.kpi-value { font-size:24px; font-weight:800; letter-spacing:-1px; color:var(--c-text); line-height:1.1; font-variant-numeric:tabular-nums; margin-top:2px; }
 .kpi-hint { font-size:11px; color:var(--c-text-dim); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 /* ---------- filters ---------- */
-.filters-bar {
-  display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px;
-  background:var(--c-surface); padding:14px 16px; border-radius:var(--sv-card);
-  border:1px solid var(--sv-line); box-shadow:var(--sv-shadow);
-}
-.filters-bar input[type=search], .filters-bar select {
-  padding:9px 13px; border:1px solid var(--sv-line); border-radius:10px;
-  font-size:13px; font-family:inherit; font-weight:500;
-  background:var(--c-bg); color:var(--c-text); min-width:170px;
-}
-.filters-bar input[type=search]:focus, .filters-bar select:focus {
-  outline:none; border-color:var(--c-accent); box-shadow:0 0 0 3px rgba(74,159,224,.15);
-}
-.filters-bar button {
-  display:inline-flex; align-items:center; gap:7px;
-  padding:9px 14px; border:1px solid var(--sv-line); background:var(--c-surface);
-  color:var(--c-text-muted); border-radius:10px; cursor:pointer;
-  font-size:13px; font-family:inherit; font-weight:600; transition:all .14s;
-}
-.filters-bar button svg { display:block; }
-.filters-bar button:hover { border-color:var(--c-accent); color:var(--sv-primary); }
-.filters-bar button.icon-only { padding:9px; }
-.filters-bar button.primary { background:var(--sv-primary); color:#fff; border-color:var(--sv-primary); }
-.filters-bar button.primary:hover { background:var(--c-primary-dark); color:#fff; border-color:var(--c-primary-dark); }
+.filters-bar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px; background:var(--c-surface); padding:12px 14px; border-radius:var(--sv-card); border:1px solid var(--sv-line); box-shadow:var(--sv-shadow); }
+.filters-bar input[type=search], .filters-bar select { padding:9px 13px; border:1px solid var(--sv-line); border-radius:10px; font-size:13px; font-family:inherit; font-weight:500; background:var(--c-bg); color:var(--c-text); min-width:160px; }
+.filters-bar input:focus, .filters-bar select:focus { outline:none; border-color:var(--c-accent); box-shadow:0 0 0 3px rgba(74,159,224,.15); }
 .filters-bar .spacer { flex:1; }
 .filters-bar .count { font-size:12px; color:var(--c-text-muted); font-weight:700; }
+.btn { display:inline-flex; align-items:center; gap:7px; padding:9px 14px; border:1px solid var(--sv-line); background:var(--c-surface); color:var(--c-text-muted); border-radius:10px; cursor:pointer; font-size:13px; font-family:inherit; font-weight:600; transition:all .14s; }
+.btn svg { display:block; }
+.btn:hover { border-color:var(--c-accent); color:var(--sv-primary); }
+.btn.primary { background:var(--sv-primary); color:#fff; border-color:var(--sv-primary); }
+.btn.primary:hover { background:var(--c-primary-dark); color:#fff; border-color:var(--c-primary-dark); }
+.btn.icon-only { padding:9px; }
 
-/* ---------- charts ---------- */
-.charts-row { display:grid; grid-template-columns:1.7fr 1fr; gap:14px; margin-bottom:22px; }
-.chart-card {
-  background:var(--c-surface); border:1px solid var(--sv-line); border-radius:var(--sv-card);
-  padding:18px 20px; box-shadow:var(--sv-shadow);
-}
-.chart-title { font-size:16px; font-weight:800; letter-spacing:-.3px; color:var(--c-text); margin-bottom:14px; }
-.chart-wrap { height:320px; position:relative; }
+/* ---------- table ---------- */
+.table-wrap { background:var(--c-surface); border:1px solid var(--sv-line); border-radius:var(--sv-card); box-shadow:var(--sv-shadow); overflow-x:auto; }
+table.pay { width:100%; border-collapse:collapse; font-size:13px; min-width:900px; }
+table.pay thead th { position:sticky; top:0; background:var(--c-surface); text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--c-text-muted); font-weight:700; padding:12px 12px; border-bottom:2px solid var(--sv-line); white-space:nowrap; }
+table.pay thead th.num, table.pay tbody td.num { text-align:right; font-variant-numeric:tabular-nums; }
+table.pay tbody td { padding:10px 12px; border-bottom:1px solid var(--sv-line-2); vertical-align:middle; }
+table.pay tbody tr:hover { background:var(--c-bg-tint); }
+table.pay tbody tr.gap td { background:color-mix(in srgb, var(--c-warn) 7%, transparent); }
+table.pay tbody tr.gap:hover td { background:color-mix(in srgb, var(--c-warn) 12%, transparent); }
+.td-driver { display:flex; align-items:center; gap:10px; min-width:180px; }
+.td-avatar { width:32px; height:32px; border-radius:9px; color:#fff; display:grid; place-items:center; font-weight:800; font-size:12px; flex-shrink:0; }
+.td-name { font-weight:700; color:var(--c-text); white-space:nowrap; }
+.td-email { font-size:11px; color:var(--c-text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
+.country-dot { width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:middle; }
+.hrs-input { width:70px; padding:6px 8px; border:1px solid var(--sv-line); border-radius:8px; font-family:inherit; font-size:13px; font-weight:700; text-align:right; background:var(--c-bg); color:var(--c-text); font-variant-numeric:tabular-nums; }
+.hrs-input:focus { outline:none; border-color:var(--c-accent); box-shadow:0 0 0 3px rgba(74,159,224,.15); }
+.hrs-input.edited { border-color:var(--c-accent); background:color-mix(in srgb, var(--c-accent) 10%, transparent); }
+.hrs-static { font-weight:700; font-variant-numeric:tabular-nums; }
+.ts-cell { font-variant-numeric:tabular-nums; color:var(--c-text-muted); }
+.gap-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px; background:color-mix(in srgb, var(--c-warn) 16%, transparent); color:var(--c-warn); margin-left:6px; white-space:nowrap; }
+.src-pill { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; padding:2px 6px; border-radius:999px; background:var(--c-bg-tint); color:var(--c-text-muted); white-space:nowrap; }
+.src-pill.fill { background:color-mix(in srgb, var(--c-danger) 12%, transparent); color:var(--c-danger); }
+.money { font-weight:700; font-variant-numeric:tabular-nums; }
+.money.pos { color:var(--c-success); }
+.money.neg { color:var(--c-danger); }
+.money.total { font-size:14px; color:var(--c-text); }
+.mini-btn { border:none; background:transparent; color:var(--c-text-dim); cursor:pointer; display:inline-grid; place-items:center; padding:4px; border-radius:6px; line-height:0; }
+.mini-btn:hover { color:var(--c-primary); background:var(--c-bg-tint); }
+.mini-btn svg { display:block; }
+.extra-chip { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:1px 6px; border-radius:999px; margin:1px 2px 1px 0; }
+.extra-chip.pos { background:color-mix(in srgb, var(--c-success) 14%, transparent); color:var(--c-success); }
+.extra-chip.neg { background:color-mix(in srgb, var(--c-danger) 12%, transparent); color:var(--c-danger); }
 
-/* ---------- driver section ---------- */
-.section-label { font-size:11px; text-transform:uppercase; letter-spacing:1.2px; font-weight:700; color:var(--c-text-muted); margin:18px 0 12px; }
-.driver-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(295px, 1fr)); gap:14px; }
-.driver-card {
-  background:var(--c-surface); border:1px solid var(--sv-line); border-radius:var(--sv-card);
-  padding:16px; box-shadow:var(--sv-shadow); transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease; position:relative;
-}
-.driver-card:hover { transform:translateY(-3px); box-shadow:var(--sv-shadow-lg); border-color:var(--c-accent); }
-.dc-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-.dc-avatar { width:44px; height:44px; border-radius:12px; background:var(--c-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; flex-shrink:0; }
-.dc-name-block { flex:1; min-width:0; }
-.dc-name { font-size:14px; font-weight:700; color:var(--c-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.dc-email { font-size:11px; color:var(--c-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.dc-country-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; background:var(--c-bg-tint); border-radius:999px; font-size:11px; color:var(--c-primary); font-weight:700; flex-shrink:0; }
-.dc-country-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.dc-status-badge { position:absolute; top:14px; right:14px; font-size:9px; font-weight:700; padding:3px 8px; border-radius:999px; text-transform:uppercase; letter-spacing:.5px; display:inline-flex; align-items:center; gap:5px; }
-.dc-status-badge::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
-.dc-status-badge.active { background:color-mix(in srgb, var(--c-success) 14%, transparent); color:var(--c-success); }
-.dc-status-badge.offboarding { background:color-mix(in srgb, var(--c-warn) 16%, transparent); color:var(--c-warn); }
-.dc-status-badge.other { background:var(--c-bg-tint); color:var(--c-text-muted); }
-.dc-stats { display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; border-top:1px solid var(--sv-line); padding-top:12px; }
-.dc-stat-label { font-size:10px; color:var(--c-text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px; }
-.dc-stat-value { font-size:15px; font-weight:700; color:var(--c-text); font-variant-numeric:tabular-nums; }
-.dc-stat-value.big { font-size:18px; }
-.dc-stat-value.muted { color:var(--c-text-muted); font-weight:600; }
-.dc-stat-cell { padding:4px 0; }
-.dc-stat-cell.full { grid-column:1 / -1; }
-.dc-payment-highlight { margin-top:10px; padding:11px 13px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; }
-
-/* extras / adjustments */
-.dc-extras { margin-top:10px; border-top:1px dashed var(--sv-line); padding-top:8px; }
-.dc-extra-row { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; padding:3px 0; }
-.dc-extra-cat { display:inline-flex; align-items:center; gap:5px; color:var(--c-text-muted); min-width:0; }
-.dc-extra-cat .tag { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; padding:2px 7px; border-radius:999px; background:var(--c-bg-tint); color:var(--c-primary); white-space:nowrap; }
-.dc-extra-cat .tag.neg { background:color-mix(in srgb, var(--c-danger) 12%, transparent); color:var(--c-danger); }
-.dc-extra-cat .tag.pos { background:color-mix(in srgb, var(--c-success) 14%, transparent); color:var(--c-success); }
-.dc-extra-note { color:var(--c-text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.dc-extra-amount { font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
-.dc-extra-amount.neg { color:var(--c-danger); }
-.dc-extra-amount.pos { color:var(--c-success); }
-.dc-extra-del { border:none; background:transparent; color:var(--c-text-dim); cursor:pointer; display:inline-grid; place-items:center; padding:2px; border-radius:6px; line-height:0; }
-.dc-extra-del svg { display:block; }
-.dc-extra-del:hover { color:var(--c-danger); background:color-mix(in srgb, var(--c-danger) 12%, transparent); }
-.dc-add-extra {
-  display:flex; align-items:center; justify-content:center; gap:6px;
-  margin-top:8px; width:100%; padding:8px; border:1px dashed var(--c-accent);
-  background:transparent; color:var(--c-primary); border-radius:10px; cursor:pointer;
-  font-size:12px; font-weight:700; font-family:inherit; transition:all .14s;
-}
-.dc-add-extra svg { display:block; }
-.dc-add-extra:hover { background:var(--c-bg-tint); }
-.dc-pay-line { display:flex; justify-content:space-between; align-items:baseline; font-size:12px; color:var(--c-text-muted); padding:1px 0; }
-.dc-pay-line .v { font-variant-numeric:tabular-nums; font-weight:600; }
-.dc-pay-total { display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
+/* ---------- ACE sync ---------- */
+.ace-panel { margin-top:20px; background:var(--c-surface); border:1px solid var(--sv-line); border-radius:var(--sv-card); box-shadow:var(--sv-shadow); padding:18px 20px; }
+.ace-panel h2 { font-size:16px; font-weight:800; letter-spacing:-.3px; color:var(--c-text); display:flex; align-items:center; gap:9px; }
+.ace-panel h2 .ico { color:var(--c-primary); display:inline-flex; }
+.ace-panel p.sub { font-size:12.5px; color:var(--c-text-muted); margin:5px 0 14px; }
+.ace-row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+.ace-field label { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--c-text-muted); margin-bottom:5px; }
+.ace-field select { padding:9px 12px; border:1px solid var(--sv-line); border-radius:10px; font-size:13px; font-family:inherit; background:var(--c-bg); color:var(--c-text); min-width:240px; }
+.ace-result { margin-top:14px; font-size:12.5px; }
+.ace-result table { width:100%; border-collapse:collapse; margin-top:8px; font-size:12px; }
+.ace-result th, .ace-result td { text-align:left; padding:6px 10px; border-bottom:1px solid var(--sv-line-2); }
+.ace-result td.num { text-align:right; font-variant-numeric:tabular-nums; }
+.ace-msg { padding:10px 12px; border-radius:10px; font-weight:600; margin-top:10px; }
+.ace-msg.ok { background:color-mix(in srgb, var(--c-success) 12%, transparent); color:var(--c-success); }
+.ace-msg.warn { background:color-mix(in srgb, var(--c-warn) 14%, transparent); color:var(--c-warn); }
+.ace-msg.err { background:color-mix(in srgb, var(--c-danger) 12%, transparent); color:var(--c-danger); }
 
 /* ---------- states ---------- */
-.ts-state { padding:80px 20px; text-align:center; color:var(--c-text-muted); font-size:14px; }
+.ts-state { padding:70px 20px; text-align:center; color:var(--c-text-muted); font-size:14px; }
 .ts-state.error { color:var(--c-danger); }
 .ts-state .icon { display:flex; justify-content:center; margin-bottom:14px; color:var(--c-text-dim); }
 .ts-state.error .icon { color:var(--c-danger); }
-.ts-state .icon svg { display:block; }
 .ts-spin { animation:ts-spin 1s linear infinite; }
 @keyframes ts-spin { to { transform:rotate(360deg); } }
 .ts-info { font-size:11px; color:var(--c-text-dim); margin-top:14px; text-align:right; }
 
 /* ---------- modal ---------- */
 .ts-modal-overlay { position:fixed; inset:0; background:rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px; }
-.ts-modal { background:var(--c-surface); border:1px solid var(--sv-line); border-radius:var(--sv-card); width:100%; max-width:440px; max-height:90vh; overflow-y:auto; box-shadow:var(--sv-shadow-lg); }
+.ts-modal { background:var(--c-surface); border:1px solid var(--sv-line); border-radius:var(--sv-card); width:100%; max-width:460px; max-height:90vh; overflow-y:auto; box-shadow:var(--sv-shadow-lg); }
 .ts-modal-head { padding:18px 20px 12px; border-bottom:1px solid var(--sv-line); }
 .ts-modal-title { font-size:16px; font-weight:800; letter-spacing:-.3px; color:var(--c-text); }
 .ts-modal-sub { font-size:12px; color:var(--c-text-muted); margin-top:2px; }
@@ -254,32 +198,27 @@ body.sv-shell { padding-left:252px; transition:padding-left .18s ease; }
 .ts-btn.primary { background:var(--sv-primary); color:#fff; border-color:var(--sv-primary); }
 .ts-btn.primary:hover { background:var(--c-primary-dark); border-color:var(--c-primary-dark); }
 .ts-btn.primary:disabled { opacity:.6; cursor:default; }
+.ts-btn.danger { background:var(--c-danger); color:#fff; border-color:var(--c-danger); }
 .ts-modal-err { color:var(--c-danger); font-size:12px; margin-top:8px; min-height:14px; }
 
-/* ---------- theme toggle ---------- */
-.theme-toggle-btn { position:fixed; bottom:20px; right:20px; width:44px; height:44px; border-radius:50%; background:var(--c-surface); border:1px solid var(--c-border); color:var(--c-text); cursor:pointer; z-index:9998; box-shadow:var(--shadow-md, 0 4px 12px rgba(15,23,42,.12)); display:grid; place-items:center; font-family:inherit; transition:transform .15s ease, border-color .15s ease; padding:0; }
-.theme-toggle-btn:hover { border-color:var(--c-primary); transform:translateY(-2px); }
+.theme-toggle-btn { position:fixed; bottom:20px; right:20px; width:44px; height:44px; border-radius:50%; background:var(--c-surface); border:1px solid var(--c-border); color:var(--c-text); cursor:pointer; z-index:9998; box-shadow:0 4px 12px rgba(15,23,42,.12); display:grid; place-items:center; font-family:inherit; padding:0; }
+.theme-toggle-btn:hover { border-color:var(--c-primary); }
 .theme-toggle-btn svg { display:block; }
 
-/* ---------- collapse (desktop) ---------- */
 @media (min-width:881px) {
   body.sv-shell.sv-collapsed { padding-left:76px; }
   .sv-collapsed .sv-sidebar { width:76px; padding-left:12px; padding-right:12px; }
   .sv-collapsed .sv-brand { align-items:center; }
   .sv-collapsed .sv-brand-logo { display:none; }
   .sv-collapsed .sv-brand-mark { display:grid; }
-  .sv-collapsed .sv-brand-region { display:none; }
-  .sv-collapsed .sv-nav-label { display:none; }
+  .sv-collapsed .sv-brand-region, .sv-collapsed .sv-nav-label { display:none; }
   .sv-collapsed .sv-nav-item { justify-content:center; padding:10px; gap:0; }
   .sv-collapsed .sv-nav-item > span:last-child { display:none; }
   .sv-collapsed .sv-foot { justify-content:center; }
   .sv-collapsed .sv-foot-status { display:none; }
   .sv-collapsed .sv-collapse-btn svg { transform:rotate(180deg); }
 }
-
-/* ---------- responsive ---------- */
 @media (max-width:1100px) { .kpi-row { grid-template-columns:repeat(2,1fr); } }
-@media (max-width:920px) { .charts-row { grid-template-columns:1fr; } }
 @media (max-width:880px) {
   body.sv-shell, body.sv-shell.sv-collapsed { padding-left:0; }
   .sv-sidebar { transform:translateX(-100%); width:252px; padding-left:14px; padding-right:14px; box-shadow:var(--sv-shadow-lg); }
@@ -289,17 +228,11 @@ body.sv-shell { padding-left:252px; transition:padding-left .18s ease; }
   .sv-collapse-btn { display:none; }
   #app-content { padding:16px 14px 40px; padding-top:64px; }
 }
-@media (max-width:560px) {
-  .kpi-row { grid-template-columns:1fr 1fr; gap:10px; }
-  .kpi-value { font-size:22px; }
-  .scorecard { padding:14px; }
-  .filters-bar input[type=search], .filters-bar select { min-width:0; flex:1 1 140px; }
-}
+@media (max-width:560px) { .kpi-row { grid-template-columns:1fr 1fr; gap:10px; } .kpi-value { font-size:20px; } }
 </style>
 </head>
 <body class="sv-shell">
 
-<!-- ============ SIDEBAR (estática — espelha sv-shell, Payroll ativo) ============ -->
 <aside class="sv-sidebar" data-screen-label="Sidebar">
   <div class="sv-brand">
     <img class="sv-brand-logo" src="https://aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
@@ -310,7 +243,7 @@ body.sv-shell { padding-left:252px; transition:padding-left .18s ease; }
   <div class="sv-foot">
     <div class="sv-foot-status">
       <div class="sv-foot-dot"></div>
-      <div><div class="sv-foot-l1">Apps Script · live</div><div class="sv-foot-l2">v5.21 · build 2026.06</div></div>
+      <div><div class="sv-foot-l1">Apps Script · live</div><div class="sv-foot-l2">v5.56 · payroll do check-in</div></div>
     </div>
     <button type="button" class="sv-collapse-btn" id="sv-collapse" title="Recolher menu" aria-label="Recolher menu">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>
@@ -322,13 +255,12 @@ body.sv-shell { padding-left:252px; transition:padding-left .18s ease; }
 </button>
 <div class="sv-backdrop" id="sv-backdrop"></div>
 
-<!-- ============ APP ============ -->
 <div id="app-content" style="display:none;">
-<main data-screen-label="Timesheet & Payroll">
+<main data-screen-label="Payroll">
   <div class="sv-pagehead">
     <div>
-      <h1 id="ts-title">Timesheet &amp; Payroll</h1>
-      <p id="ts-sub">Pagamento quinzenal — todos os países recebem a cada 15 dias</p>
+      <h1 id="ts-title">Payroll</h1>
+      <p id="ts-sub">Horas da quinzena a partir do check-in — revise e sincronize com a ACE</p>
     </div>
     <div class="lang-switch" id="lang-switch">
       <button type="button" data-lang="pt" class="active">PT</button>
@@ -339,55 +271,41 @@ body.sv-shell { padding-left:252px; transition:padding-left .18s ease; }
 
   <div id="ts-content" style="display:none;">
 
-    <!-- Quinzena banner -->
-    <div class="quinzena-banner" id="quinzena-banner">
-      <div class="qb-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>
+    <!-- Period bar -->
+    <div class="period-bar">
+      <div class="pb-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>
       </div>
-      <div class="qb-text">
-        <div class="qb-label" id="qb-label">Quinzena atual</div>
-        <div class="qb-range" id="qb-range">—</div>
-        <div class="qb-weeks" id="qb-weeks"></div>
+      <div>
+        <label id="pb-start-label">Início</label>
+        <input type="date" id="pb-start">
       </div>
-      <div class="qb-pay-day">
-        <div class="qb-pay-label" id="qb-pay-label">Próximo pagamento</div>
-        <div class="qb-pay-date" id="qb-pay-date">—</div>
+      <div>
+        <label id="pb-end-label">Fim</label>
+        <input type="date" id="pb-end">
       </div>
+      <button type="button" class="pb-load" id="pb-load">Carregar</button>
+      <div class="pb-spacer"></div>
+      <div class="pb-note" id="pb-note"></div>
     </div>
 
-    <!-- KPI scorecards -->
+    <!-- KPIs -->
     <div class="kpi-row">
       <div class="scorecard">
         <div class="sv-kpi-ico tone-blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M16 5.2A3 3 0 0 1 16 11"/><path d="M21 20c0-2.6-1.5-4.2-3.8-4.8"/></svg></div>
-        <div class="sv-kpi-body">
-          <div class="kpi-label" id="kpi-l-drivers">Motoristas</div>
-          <div class="kpi-value" id="kpi-v-drivers">0</div>
-          <div class="kpi-hint" id="kpi-h-drivers">total</div>
-        </div>
+        <div class="sv-kpi-body"><div class="kpi-label" id="kpi-l-drivers">Motoristas</div><div class="kpi-value" id="kpi-v-drivers">0</div><div class="kpi-hint" id="kpi-h-drivers">na quinzena</div></div>
       </div>
       <div class="scorecard">
         <div class="sv-kpi-ico tone-green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
-        <div class="sv-kpi-body">
-          <div class="kpi-label" id="kpi-l-hours">Horas na quinzena</div>
-          <div class="kpi-value" id="kpi-v-hours">0</div>
-          <div class="kpi-hint" id="kpi-h-hours">soma das 2 semanas anteriores</div>
-        </div>
+        <div class="sv-kpi-body"><div class="kpi-label" id="kpi-l-hours">Horas aprovadas</div><div class="kpi-value" id="kpi-v-hours">0</div><div class="kpi-hint" id="kpi-h-hours">soma da quinzena</div></div>
       </div>
       <div class="scorecard">
         <div class="sv-kpi-ico tone-amber"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18a2 2 0 0 1 2 2v1H5.5"/><path d="M3 7.5V17a2 2 0 0 0 2 2h14a1.5 1.5 0 0 0 1.5-1.5V9.5A1.5 1.5 0 0 0 19 8H4.5"/><circle cx="16.5" cy="13.5" r="1.1"/></svg></div>
-        <div class="sv-kpi-body">
-          <div class="kpi-label" id="kpi-l-payroll">Folha quinzenal</div>
-          <div class="kpi-value" id="kpi-v-payroll">$0</div>
-          <div class="kpi-hint" id="kpi-h-payroll">total a pagar (USD)</div>
-        </div>
+        <div class="sv-kpi-body"><div class="kpi-label" id="kpi-l-payroll">Folha quinzenal</div><div class="kpi-value" id="kpi-v-payroll">$0</div><div class="kpi-hint" id="kpi-h-payroll">base + extras (USD)</div></div>
       </div>
       <div class="scorecard">
         <div class="sv-kpi-ico tone-indigo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M7 14l3-3 3 2 4-5"/></svg></div>
-        <div class="sv-kpi-body">
-          <div class="kpi-label" id="kpi-l-rate">Valor hora médio</div>
-          <div class="kpi-value" id="kpi-v-rate">$0</div>
-          <div class="kpi-hint" id="kpi-h-rate">média Hour Pay</div>
-        </div>
+        <div class="sv-kpi-body"><div class="kpi-label" id="kpi-l-reimb">Reembolsos</div><div class="kpi-value" id="kpi-v-reimb">$0</div><div class="kpi-hint" id="kpi-h-reimb">a receber (USD)</div></div>
       </div>
     </div>
 
@@ -395,44 +313,62 @@ body.sv-shell { padding-left:252px; transition:padding-left .18s ease; }
     <div class="filters-bar">
       <input type="search" id="ts-search" placeholder="Buscar motorista…" autocomplete="off">
       <select id="f-country"><option value="">Todos os países</option></select>
-      <select id="f-status"><option value="">Todos status</option></select>
+      <label style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--c-text-muted);cursor:pointer;">
+        <input type="checkbox" id="f-gaponly"> <span id="f-gaponly-label">Só divergências</span>
+      </label>
       <span class="spacer"></span>
       <span class="count" id="ts-count">0 motoristas</span>
-      <button type="button" id="ts-refresh" class="icon-only" title="Atualizar"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></button>
-      <button type="button" id="ts-export" class="primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg><span id="ts-export-txt">Exportar CSV</span></button>
+      <button type="button" id="ts-refresh" class="btn icon-only" title="Atualizar"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></button>
+      <button type="button" id="ts-export" class="btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg><span id="ts-export-txt">Exportar CSV</span></button>
     </div>
 
-    <div class="section-label" id="section-drivers">Detalhes por motorista</div>
-    <div class="driver-grid" id="driver-grid"></div>
+    <!-- Table -->
+    <div class="table-wrap">
+      <table class="pay">
+        <thead>
+          <tr>
+            <th id="th-driver">Motorista</th>
+            <th id="th-country">País</th>
+            <th class="num" id="th-hours">Horas</th>
+            <th class="num" id="th-ts">Timesheet</th>
+            <th class="num" id="th-rate">Valor/h</th>
+            <th class="num" id="th-base">Base</th>
+            <th class="num" id="th-reimb">Reimbursement</th>
+            <th class="num" id="th-ded">Deductions</th>
+            <th class="num" id="th-total">Total</th>
+            <th id="th-act"></th>
+          </tr>
+        </thead>
+        <tbody id="pay-body"></tbody>
+      </table>
+    </div>
 
-    <!-- Charts (movidos pro final) -->
-    <div class="charts-row" style="margin-top:24px;">
-      <div class="chart-card">
-        <div class="chart-title" id="chart-t-bar">Top motoristas por horas trabalhadas</div>
-        <div class="chart-wrap"><canvas id="chart-bar"></canvas></div>
+    <!-- ACE sync -->
+    <div class="ace-panel" id="ace-panel" style="display:none;">
+      <h2><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3Z"/><path d="M4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></span><span id="ace-title">Sincronizar com a LATAM Timesheet ACE</span></h2>
+      <p class="sub" id="ace-sub">Grava a coluna "Hrs Worked" da aba da quinzena que você escolher. A aba precisa já existir na ACE.</p>
+      <div class="ace-row">
+        <div class="ace-field">
+          <label id="ace-tab-label">Aba da quinzena na ACE</label>
+          <select id="ace-tab"><option value="">Carregando abas…</option></select>
+        </div>
+        <button type="button" class="btn" id="ace-preview"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span id="ace-preview-txt">Prévia (dry-run)</span></button>
+        <button type="button" class="btn primary" id="ace-write" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg><span id="ace-write-txt">Gravar na ACE</span></button>
       </div>
-      <div class="chart-card">
-        <div class="chart-title" id="chart-t-donut">Motoristas por país</div>
-        <div class="chart-wrap"><canvas id="chart-donut"></canvas></div>
-      </div>
+      <div class="ace-result" id="ace-result"></div>
     </div>
 
     <div class="ts-info" id="ts-info"></div>
   </div>
 
-  <div class="ts-state" id="ts-state">
-    <span class="icon"></span>
-    <div id="ts-state-msg">Carregando…</div>
-  </div>
+  <div class="ts-state" id="ts-state"><span class="icon"></span><div id="ts-state-msg">Carregando…</div></div>
 </main>
 </div>
 
 <button type="button" class="theme-toggle-btn" id="theme-toggle" title="Alternar tema" aria-label="Alternar tema"></button>
 
 <script>
-/* ============================================================
- * Ícones SVG (line, 24x24, currentColor)
- * ============================================================ */
+/* ================= Ícones ================= */
 const ICON = {
   home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
   users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M16 5.2A3 3 0 0 1 16 11"/><path d="M21 20c0-2.6-1.5-4.2-3.8-4.8"/>',
@@ -453,11 +389,9 @@ const ICON = {
   moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M19 5l-1.4 1.4M6.4 17.6 5 19"/>',
 };
-function svgIcon(name, size, sw) {
-  return '<svg width="' + (size||19) + '" height="' + (size||19) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw||1.9) + '" stroke-linecap="round" stroke-linejoin="round">' + (ICON[name]||'') + '</svg>';
-}
+function svgIcon(name, size, sw) { return '<svg width="'+(size||19)+'" height="'+(size||19)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(sw||1.9)+'" stroke-linecap="round" stroke-linejoin="round">'+(ICON[name]||'')+'</svg>'; }
 
-/* ---- Sidebar nav (espelha o NAV do shell + gating por permissão all/admin/super) ---- */
+/* ================= Sidebar nav ================= */
 const NAV = [
   { label:'Operação', items:[
     { label:'Dashboard', href:'dashboard.html', icon:'home', access:'all' },
@@ -484,11 +418,10 @@ const NAV_RANK = { all:0, admin:1, super:2 };
 function navTier(user) {
   if (!user) return -1;
   const n = String(user.username || '').toLowerCase();
-  if (n === 'fuss') return 2;                                   // super
-  if (typeof isAdmin === 'function' && isAdmin(n)) return 1;    // admin
-  return 0;                                                     // all
+  if (n === 'fuss') return 2;
+  if (typeof isAdmin === 'function' && isAdmin(n)) return 1;
+  return 0;
 }
-// Monta a sidebar com links REAIS, mostrando só o que o usuário pode acessar.
 function buildNav(user) {
   const tier = navTier(user);
   let html = '';
@@ -497,27 +430,23 @@ function buildNav(user) {
     if (!items.length) return;
     html += '<div class="sv-nav-label">' + g.label + '</div>';
     items.forEach(it => {
-      html += '<a class="sv-nav-item' + (it.active ? ' active' : '') + '" href="' + it.href + '" title="' + it.label + '">' +
-        '<span class="sv-ico">' + svgIcon(it.icon) + '</span><span>' + it.label + '</span></a>';
+      html += '<a class="sv-nav-item' + (it.active ? ' active' : '') + '" href="' + it.href + '" title="' + it.label + '"><span class="sv-ico">' + svgIcon(it.icon) + '</span><span>' + it.label + '</span></a>';
     });
   });
   document.getElementById('sv-nav').innerHTML = html;
 }
-
-/* ---- Sidebar controls (collapse desktop + drawer mobile) ---- */
 (function wireShell() {
   const col = document.getElementById('sv-collapse');
   col.addEventListener('click', () => {
     const on = document.body.classList.toggle('sv-collapsed');
     try { localStorage.setItem('AC_SIDEBAR_COLLAPSED', on ? '1' : '0'); } catch (e) {}
-    setTimeout(() => window.dispatchEvent(new Event('resize')), 230);
   });
   try { if (localStorage.getItem('AC_SIDEBAR_COLLAPSED') === '1') document.body.classList.add('sv-collapsed'); } catch (e) {}
   document.getElementById('sv-burger').addEventListener('click', () => document.body.classList.add('sv-nav-open'));
   document.getElementById('sv-backdrop').addEventListener('click', () => document.body.classList.remove('sv-nav-open'));
 })();
 
-/* ---- Dark mode toggle (próprio — substitui theme.js) ---- */
+/* ================= Dark mode ================= */
 function setThemeIcon() {
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
   document.getElementById('theme-toggle').innerHTML = svgIcon(dark ? 'sun' : 'moon', 19, 1.8);
@@ -531,116 +460,117 @@ function setThemeIcon() {
     else document.documentElement.setAttribute('data-theme', 'dark');
     try { localStorage.setItem('AC_THEME', dark ? 'light' : 'dark'); } catch (e) {}
     setThemeIcon();
-    if (typeof state !== 'undefined' && state.parsed.length > 0) render();
   });
 })();
 
-/* DADOS REAIS: cachedFetch + clearDataCache vêm do common.js (head), e os POSTs
-   (save/delete de ajuste) vão direto ao Apps Script via fetch nativo.
-   O bloco DEMO foi removido — ele interceptava o fetch e servia dados de exemplo. */
-
-/* ============================================================
- * Lógica do Timesheet (preservada do original; só os pontos de
- * apresentação — ícones de estado, flags→dot, detecção de dark — mudaram)
- * ============================================================ */
+/* ================= Config ================= */
 const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
-  cacheTtlSec: 300,
+  cacheTtlSec: 120,
+  gapThreshold: 15,   // |calc - timesheet| >= isso => marca divergência
 };
+// Nomes que NÃO entram no payroll (admins/sócios que aparecem no HR mas não são motoristas).
+const EXCLUDE_NAMES = ['lucas ferreira muzitano de souza', 'lucas fuss maia da silva'];
 
-// Flags removidas da UI (regra: zero emoji) → país usa bolinha colorida (getCountryColor).
 const COUNTRY_COLORS = {
-  'Brazil':'#10B981',
+  'Brazil':'#10B981', 'Brasil':'#10B981',
   'México':'#EF4444', 'Mexico':'#EF4444',
-  'Argentina':'#3B82F6',
-  'Colombia':'#F59E0B',
-  'Peru':'#8B5CF6',
-  'Chile':'#EC4899',
+  'Argentina':'#3B82F6', 'Colombia':'#F59E0B', 'Colômbia':'#F59E0B',
+  'Peru':'#8B5CF6', 'Perú':'#8B5CF6', 'Chile':'#EC4899',
 };
 
 const I18N = {
   pt: {
-    title:'Timesheet & Payroll',
-    sub:'Pagamento quinzenal — todos os países recebem a cada 15 dias',
-    qbLabel:'Quinzena atual', qbWeeks:'Semana {prev} + Semana {curr}', qbPayLabel:'Próximo pagamento',
-    kpiDrivers:'Motoristas', kpiDriversHint:'total',
-    kpiHours:'Horas na quinzena', kpiHoursHint:'soma das 2 semanas anteriores',
+    title:'Payroll', sub:'Horas da quinzena a partir do check-in — revise e sincronize com a ACE',
+    startLabel:'Início', endLabel:'Fim', load:'Carregar',
+    note:'Dia útil = dia cheio (AR 9h / resto 8h). Sábado trabalhado = 4h.',
+    kpiDrivers:'Motoristas', kpiDriversHint:'na quinzena',
+    kpiHours:'Horas aprovadas', kpiHoursHint:'soma da quinzena (após edições)',
     kpiPayroll:'Folha quinzenal', kpiPayrollHint:'base + extras (USD)',
-    kpiRate:'Valor hora médio', kpiRateHint:'média Hour Pay',
-    search:'Buscar motorista…', allCountries:'Todos os países', allStatus:'Todos status',
-    drivers:'motoristas', refresh:'Atualizar', export:'Exportar CSV',
-    chartBar:'Top motoristas por horas na quinzena', chartDonut:'Motoristas por país',
-    sectionDrivers:'Detalhes por motorista',
-    loading:'Carregando…', empty:'Aba Timesheet vazia', error:'Erro ao carregar',
-    cached:'Dados do cache · clica em atualizar pra recarregar', fresh:'Dados atualizados',
-    cardQuinzenalPay:'Pagamento base', cardHourRate:'Valor hora', cardHoursQuinzena:'Horas quinzena',
-    cardWeekBreakdown:'Detalhe semanal', cardExtras:'Extras', cardTotalPay:'Total a pagar',
-    addExtra:'Adicionar valor', inactiveHidden:'{n} inativo(s) oculto(s)',
+    kpiReimb:'Reembolsos', kpiReimbHint:'a receber (USD)',
+    search:'Buscar motorista…', allCountries:'Todos os países', gapOnly:'Só divergências',
+    drivers:'motoristas', export:'Exportar CSV',
+    thDriver:'Motorista', thCountry:'País', thHours:'Horas', thTs:'Timesheet', thRate:'Valor/h',
+    thBase:'Base', thReimb:'Reimbursement', thDed:'Deductions', thTotal:'Total',
+    loading:'Carregando…', empty:'Nenhum motorista na quinzena', error:'Erro ao carregar',
+    cached:'Dados do cache · clica em atualizar', fresh:'Dados atualizados',
+    srcFill:'sem check-in', srcCheckin:'check-in', gap:'gap',
+    addExtra:'Valor extra', noEmail:'—',
+    aceTitle:'Sincronizar com a LATAM Timesheet ACE',
+    aceSub:'Grava a coluna "Hrs Worked" da aba da quinzena que você escolher. A aba precisa já existir na ACE.',
+    aceTabLabel:'Aba da quinzena na ACE', acePreview:'Prévia (dry-run)', aceWrite:'Gravar na ACE',
+    aceLoadingTabs:'Carregando abas…', acePickTab:'Escolha a aba',
+    aceMatched:'casaram', aceWritten:'gravados', aceNotInTab:'não estão na aba',
+    aceDryOk:'Prévia (nada gravado). Confira o de→para e clique em Gravar.',
+    aceWroteOk:'Gravado na ACE!', aceConfirmWrite:'Gravar {n} horas na aba "{tab}" da ACE?',
     catReembolso:'Reembolso', catBonus:'Bônus', catDesconto:'Desconto', catOutro:'Outro',
     modalTitle:'Adicionar valor extra', modalCategory:'Categoria', modalCustomCat:'Nome da categoria',
-    modalAmount:'Valor (USD)', modalNote:'Observação (opcional)', modalQuinzena:'Quinzena',
+    modalAmount:'Valor (USD)', modalNote:'Observação (opcional)',
     modalDiscountHint:'Lançado como desconto — será subtraído do pagamento.',
     modalSave:'Salvar', modalCancel:'Cancelar', modalSaving:'Salvando…',
-    errAmount:'Informe um valor diferente de zero', errCat:'Escolha/informe a categoria',
-    delConfirm:'Remover este lançamento?', savedOk:'Lançamento salvo', noEmail:'—',
+    errAmount:'Informe um valor diferente de zero', errCat:'Escolha/informe a categoria', delConfirm:'Remover este lançamento?',
   },
   es: {
-    title:'Timesheet y Payroll',
-    sub:'Pago quincenal — todos los países cobran cada 15 días',
-    qbLabel:'Quincena actual', qbWeeks:'Semana {prev} + Semana {curr}', qbPayLabel:'Próximo pago',
-    kpiDrivers:'Conductores', kpiDriversHint:'total',
-    kpiHours:'Horas de la quincena', kpiHoursHint:'suma de las 2 semanas anteriores',
+    title:'Payroll', sub:'Horas de la quincena desde el check-in — revisa y sincroniza con la ACE',
+    startLabel:'Inicio', endLabel:'Fin', load:'Cargar',
+    note:'Día hábil = día completo (AR 9h / resto 8h). Sábado trabajado = 4h.',
+    kpiDrivers:'Conductores', kpiDriversHint:'en la quincena',
+    kpiHours:'Horas aprobadas', kpiHoursHint:'suma de la quincena (tras ediciones)',
     kpiPayroll:'Nómina quincenal', kpiPayrollHint:'base + extras (USD)',
-    kpiRate:'Valor hora promedio', kpiRateHint:'promedio Hour Pay',
-    search:'Buscar conductor…', allCountries:'Todos los países', allStatus:'Todos los estados',
-    drivers:'conductores', refresh:'Actualizar', export:'Exportar CSV',
-    chartBar:'Top conductores por horas de la quincena', chartDonut:'Conductores por país',
-    sectionDrivers:'Detalles por conductor',
-    loading:'Cargando…', empty:'Pestaña Timesheet vacía', error:'Error al cargar',
-    cached:'Datos en caché · clic en actualizar para recargar', fresh:'Datos actualizados',
-    cardQuinzenalPay:'Pago base', cardHourRate:'Valor hora', cardHoursQuinzena:'Horas quincena',
-    cardWeekBreakdown:'Detalle semanal', cardExtras:'Extras', cardTotalPay:'Total a pagar',
-    addExtra:'Agregar valor', inactiveHidden:'{n} inactivo(s) oculto(s)',
+    kpiReimb:'Reembolsos', kpiReimbHint:'a recibir (USD)',
+    search:'Buscar conductor…', allCountries:'Todos los países', gapOnly:'Solo divergencias',
+    drivers:'conductores', export:'Exportar CSV',
+    thDriver:'Conductor', thCountry:'País', thHours:'Horas', thTs:'Timesheet', thRate:'Valor/h',
+    thBase:'Base', thReimb:'Reimbursement', thDed:'Deductions', thTotal:'Total',
+    loading:'Cargando…', empty:'Sin conductores en la quincena', error:'Error al cargar',
+    cached:'Datos en caché · clic en actualizar', fresh:'Datos actualizados',
+    srcFill:'sin check-in', srcCheckin:'check-in', gap:'gap',
+    addExtra:'Valor extra', noEmail:'—',
+    aceTitle:'Sincronizar con la LATAM Timesheet ACE',
+    aceSub:'Escribe la columna "Hrs Worked" de la pestaña de la quincena que elijas. La pestaña debe existir en la ACE.',
+    aceTabLabel:'Pestaña de la quincena en la ACE', acePreview:'Vista previa (dry-run)', aceWrite:'Escribir en la ACE',
+    aceLoadingTabs:'Cargando pestañas…', acePickTab:'Elige la pestaña',
+    aceMatched:'coincidieron', aceWritten:'escritos', aceNotInTab:'no están en la pestaña',
+    aceDryOk:'Vista previa (nada escrito). Revisa el de→para y haz clic en Escribir.',
+    aceWroteOk:'¡Escrito en la ACE!', aceConfirmWrite:'¿Escribir {n} horas en la pestaña "{tab}" de la ACE?',
     catReembolso:'Reembolso', catBonus:'Bono', catDesconto:'Descuento', catOutro:'Otro',
     modalTitle:'Agregar valor extra', modalCategory:'Categoría', modalCustomCat:'Nombre de la categoría',
-    modalAmount:'Valor (USD)', modalNote:'Observación (opcional)', modalQuinzena:'Quincena',
+    modalAmount:'Valor (USD)', modalNote:'Observación (opcional)',
     modalDiscountHint:'Registrado como descuento — se restará del pago.',
     modalSave:'Guardar', modalCancel:'Cancelar', modalSaving:'Guardando…',
-    errAmount:'Ingrese un valor distinto de cero', errCat:'Elija/ingrese la categoría',
-    delConfirm:'¿Eliminar este registro?', savedOk:'Registro guardado', noEmail:'—',
+    errAmount:'Ingrese un valor distinto de cero', errCat:'Elija/ingrese la categoría', delConfirm:'¿Eliminar este registro?',
   },
   en: {
-    title:'Timesheet & Payroll',
-    sub:'Biweekly payroll — all countries get paid every 15 days',
-    qbLabel:'Current biweekly period', qbWeeks:'Week {prev} + Week {curr}', qbPayLabel:'Next payment',
-    kpiDrivers:'Drivers', kpiDriversHint:'total',
-    kpiHours:'Hours this biweekly', kpiHoursHint:'sum of the 2 previous weeks',
+    title:'Payroll', sub:'Biweekly hours from check-in — review and sync to the ACE',
+    startLabel:'Start', endLabel:'End', load:'Load',
+    note:'Weekday = full day (AR 9h / rest 8h). Saturday worked = 4h.',
+    kpiDrivers:'Drivers', kpiDriversHint:'this biweekly',
+    kpiHours:'Approved hours', kpiHoursHint:'biweekly sum (after edits)',
     kpiPayroll:'Biweekly payroll', kpiPayrollHint:'base + extras (USD)',
-    kpiRate:'Avg hourly rate', kpiRateHint:'average Hour Pay',
-    search:'Search driver…', allCountries:'All countries', allStatus:'All statuses',
-    drivers:'drivers', refresh:'Refresh', export:'Export CSV',
-    chartBar:'Top drivers by biweekly hours', chartDonut:'Drivers by country',
-    sectionDrivers:'Driver details',
-    loading:'Loading…', empty:'Timesheet tab is empty', error:'Loading error',
-    cached:'Cached data · click refresh to reload', fresh:'Fresh data',
-    cardQuinzenalPay:'Base pay', cardHourRate:'Hourly rate', cardHoursQuinzena:'Biweekly hours',
-    cardWeekBreakdown:'Week breakdown', cardExtras:'Extras', cardTotalPay:'Total to pay',
-    addExtra:'Add adjustment', inactiveHidden:'{n} inactive hidden',
+    kpiReimb:'Reimbursements', kpiReimbHint:'to receive (USD)',
+    search:'Search driver…', allCountries:'All countries', gapOnly:'Gaps only',
+    drivers:'drivers', export:'Export CSV',
+    thDriver:'Driver', thCountry:'Country', thHours:'Hours', thTs:'Timesheet', thRate:'Rate',
+    thBase:'Base', thReimb:'Reimbursement', thDed:'Deductions', thTotal:'Total',
+    loading:'Loading…', empty:'No drivers this biweekly', error:'Loading error',
+    cached:'Cached data · click refresh', fresh:'Fresh data',
+    srcFill:'no check-in', srcCheckin:'check-in', gap:'gap',
+    addExtra:'Adjustment', noEmail:'—',
+    aceTitle:'Sync to the LATAM Timesheet ACE',
+    aceSub:'Writes the "Hrs Worked" column of the biweekly tab you pick. The tab must already exist in the ACE.',
+    aceTabLabel:'ACE biweekly tab', acePreview:'Preview (dry-run)', aceWrite:'Write to ACE',
+    aceLoadingTabs:'Loading tabs…', acePickTab:'Pick the tab',
+    aceMatched:'matched', aceWritten:'written', aceNotInTab:'not in tab',
+    aceDryOk:'Preview (nothing written). Check the from→to and click Write.',
+    aceWroteOk:'Written to the ACE!', aceConfirmWrite:'Write {n} hours to tab "{tab}" in the ACE?',
     catReembolso:'Reimbursement', catBonus:'Bonus', catDesconto:'Deduction', catOutro:'Other',
     modalTitle:'Add adjustment', modalCategory:'Category', modalCustomCat:'Category name',
-    modalAmount:'Amount (USD)', modalNote:'Note (optional)', modalQuinzena:'Biweekly period',
+    modalAmount:'Amount (USD)', modalNote:'Note (optional)',
     modalDiscountHint:'Recorded as a deduction — will be subtracted from pay.',
     modalSave:'Save', modalCancel:'Cancel', modalSaving:'Saving…',
-    errAmount:'Enter a non-zero amount', errCat:'Choose/enter a category',
-    delConfirm:'Remove this entry?', savedOk:'Entry saved', noEmail:'—',
+    errAmount:'Enter a non-zero amount', errCat:'Choose/enter a category', delConfirm:'Remove this entry?',
   },
 };
-
-let currentLang = 'pt';
-let currentUser = null;
-let isSuperAdmin = false;
-let chartBar = null;
-let chartDonut = null;
 
 const ADJ_CATEGORIES = [
   { key:'reembolso', i18nKey:'catReembolso', sign:1 },
@@ -649,14 +579,73 @@ const ADJ_CATEGORIES = [
   { key:'outro', i18nKey:'catOutro', sign:1, custom:true },
 ];
 
+let currentLang = 'pt';
+let currentUser = null;
+let isSuperAdmin = false;
 let state = {
-  raw:{ headers:[], rows:[] },
-  parsed:[], filtered:[], metadata:{}, adjustments:[],
-  hiddenInactive:0, fromCache:false,
+  period:{ start:'', end:'' },
+  drivers:[], filtered:[], adjustments:[],
+  overrides:{},          // driverKey -> horas editadas
+  aceTabs:[], fromCache:false,
 };
-
 function t() { return I18N[currentLang] || I18N.pt; }
 
+/* ================= Helpers ================= */
+function round2(n) { return Math.round(n * 100) / 100; }
+function parseNum(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  if (typeof v === 'number') return v;
+  let s = String(v).trim().replace(/[$\sR$]/g, '');
+  if (s === '') return 0;
+  if (s.includes(',') && s.includes('.')) { s = (s.lastIndexOf(',') > s.lastIndexOf('.')) ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, ''); }
+  else if (s.includes(',')) s = s.replace(',', '.');
+  const n = Number(s); return isNaN(n) ? 0 : n;
+}
+function fmtMoney(n) { return '$' + (Math.round(n * 100) / 100).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
+function fmtMoneyCompact(n) { if (Math.abs(n) >= 100000) return '$' + (n / 1000).toFixed(1) + 'K'; return '$' + Math.round(n).toLocaleString('en-US'); }
+function fmtHours(n) { const r = Math.round(n * 10) / 10; return Number.isInteger(r) ? String(r) : r.toLocaleString('en-US', { minimumFractionDigits:1, maximumFractionDigits:1 }); }
+function fmtRate(n) { return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
+function getInitials(name) { if (!name) return '?'; return name.trim().split(/\s+/).map(s => s[0] || '').slice(0, 2).join('').toUpperCase(); }
+function getCountryColor(c) { return COUNTRY_COLORS[c] || '#64748B'; }
+function nkey(n) { return String(n || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+function driverKey(d) { return d.email ? 'e:' + String(d.email).toLowerCase() : 'n:' + nkey(d.name); }
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function fmtDateBR(iso) { if (!iso) return ''; if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; } return String(iso); }
+
+function adjMatchesDriver(adj, d) {
+  const ae = String(adj.driverEmail || '').trim().toLowerCase();
+  const de = String(d.email || '').trim().toLowerCase();
+  if (ae && de) return ae === de;
+  return nkey(adj.driverName) === nkey(d.name);
+}
+function categoryLabel(cat) {
+  const found = ADJ_CATEGORIES.find(c => c.key === cat);
+  if (found && !found.custom) return t()[found.i18nKey];
+  return cat;
+}
+
+// Deriva os números de uma linha (horas finais, base, extras, reembolso, desconto, total).
+function computeRow(d) {
+  const key = driverKey(d);
+  const overridden = Object.prototype.hasOwnProperty.call(state.overrides, key);
+  const hours = overridden ? state.overrides[key] : (Number(d.approvedHours) || 0);
+  const rate = Number(d.rate) || 0;
+  const base = round2(hours * rate);
+  const extras = state.adjustments.filter(a => adjMatchesDriver(a, d));
+  let reimb = 0, ded = 0, other = 0;
+  extras.forEach(a => {
+    const v = Number(a.amount) || 0;
+    if (a.category === 'reembolso') reimb += v;
+    else if (a.category === 'desconto') ded += v;   // já negativo
+    else other += v;
+  });
+  const total = round2(base + reimb + ded + other);
+  const ts = (d.timesheetHours != null) ? Number(d.timesheetHours) : null;
+  const gap = (ts != null) ? Math.abs(hours - ts) : 0;
+  return { key, hours, overridden, rate, base, extras, reimb, ded, other, total, ts, gap, isGap: (ts != null && gap >= CONFIG.gapThreshold) };
+}
+
+/* ================= i18n ================= */
 function setLang(lang) {
   if (!I18N[lang]) return;
   currentLang = lang;
@@ -664,348 +653,179 @@ function setLang(lang) {
   document.querySelectorAll('#lang-switch button').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
   applyI18n();
 }
-
 function applyI18n() {
   const i = t();
-  document.getElementById('ts-title').textContent = i.title;
-  document.getElementById('ts-sub').textContent = i.sub;
-  document.getElementById('qb-label').textContent = i.qbLabel;
-  document.getElementById('qb-pay-label').textContent = i.qbPayLabel;
-  document.getElementById('kpi-l-drivers').textContent = i.kpiDrivers;
-  document.getElementById('kpi-h-drivers').textContent = i.kpiDriversHint;
-  document.getElementById('kpi-l-hours').textContent = i.kpiHours;
-  document.getElementById('kpi-h-hours').textContent = i.kpiHoursHint;
-  document.getElementById('kpi-l-payroll').textContent = i.kpiPayroll;
-  document.getElementById('kpi-h-payroll').textContent = i.kpiPayrollHint;
-  document.getElementById('kpi-l-rate').textContent = i.kpiRate;
-  document.getElementById('kpi-h-rate').textContent = i.kpiRateHint;
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setTxt('ts-title', i.title); setTxt('ts-sub', i.sub);
+  setTxt('pb-start-label', i.startLabel); setTxt('pb-end-label', i.endLabel);
+  document.getElementById('pb-load').textContent = i.load;
+  setTxt('kpi-l-drivers', i.kpiDrivers); setTxt('kpi-h-drivers', i.kpiDriversHint);
+  setTxt('kpi-l-hours', i.kpiHours); setTxt('kpi-h-hours', i.kpiHoursHint);
+  setTxt('kpi-l-payroll', i.kpiPayroll); setTxt('kpi-h-payroll', i.kpiPayrollHint);
+  setTxt('kpi-l-reimb', i.kpiReimb); setTxt('kpi-h-reimb', i.kpiReimbHint);
   document.getElementById('ts-search').placeholder = i.search;
-  document.getElementById('ts-refresh').title = i.refresh;
-  document.getElementById('ts-export-txt').textContent = i.export;
-  document.getElementById('chart-t-bar').textContent = i.chartBar;
-  document.getElementById('chart-t-donut').textContent = i.chartDonut;
-  document.getElementById('section-drivers').textContent = i.sectionDrivers;
+  setTxt('f-gaponly-label', i.gapOnly);
+  setTxt('ts-export-txt', i.export);
+  setTxt('th-driver', i.thDriver); setTxt('th-country', i.thCountry); setTxt('th-hours', i.thHours);
+  setTxt('th-ts', i.thTs); setTxt('th-rate', i.thRate); setTxt('th-base', i.thBase);
+  setTxt('th-reimb', i.thReimb); setTxt('th-ded', i.thDed); setTxt('th-total', i.thTotal);
+  setTxt('ace-title', i.aceTitle); setTxt('ace-sub', i.aceSub);
+  setTxt('ace-tab-label', i.aceTabLabel); setTxt('ace-preview-txt', i.acePreview); setTxt('ace-write-txt', i.aceWrite);
+  const fc = document.getElementById('f-country'); if (fc.options.length) fc.options[0].textContent = i.allCountries;
   document.documentElement.lang = currentLang;
+  updateNote();
+  if (state.drivers.length) render();
+}
+function updateNote() { document.getElementById('pb-note').textContent = t().note; }
 
-  const fc = document.getElementById('f-country');
-  if (fc.options.length > 0) fc.options[0].textContent = i.allCountries;
-  const fs = document.getElementById('f-status');
-  if (fs.options.length > 0) fs.options[0].textContent = i.allStatus;
-
-  updateCount();
-  updateInfo();
-  if (state.parsed.length > 0) { renderBanner(); render(); }
-}
-
-function parseNum(v) {
-  if (v === null || v === undefined || v === '') return 0;
-  if (typeof v === 'number') return v;
-  let s = String(v).trim().replace(/[$\sR$]/g, '');
-  if (s === '') return 0;
-  if (s.includes(',') && s.includes('.')) {
-    if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.');
-    else s = s.replace(/,/g, '');
-  } else if (s.includes(',')) {
-    s = s.replace(',', '.');
-  }
-  const n = Number(s);
-  return isNaN(n) ? 0 : n;
-}
-
-function fmtMoney(n) {
-  return '$' + (Math.round(n * 100) / 100).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
-}
-function fmtMoneyCompact(n) {
-  if (n >= 100000) return '$' + (n / 1000).toFixed(1) + 'K';
-  return '$' + Math.round(n).toLocaleString('en-US');
-}
-function fmtHours(n) {
-  if (Number.isInteger(n)) return String(n);
-  return n.toLocaleString('en-US', { minimumFractionDigits:1, maximumFractionDigits:1 });
-}
-function fmtRate(n) {
-  return '$' + n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }) + '/h';
-}
-function getInitials(name) {
-  if (!name) return '?';
-  return name.trim().split(/\s+/).map(s => s[0] || '').slice(0, 2).join('').toUpperCase();
-}
-function getCountryColor(country) {
-  return COUNTRY_COLORS[country] || '#64748B';
-}
-
-function detectCols(headers) {
-  const lower = headers.map(h => String(h || '').toLowerCase().trim());
-  const findFirst = (...patterns) => {
-    for (const p of patterns) {
-      for (let i = 0; i < lower.length; i++) { if (lower[i].includes(p)) return i; }
-    }
-    return -1;
-  };
-  const finalHoursIdxs = [];
-  lower.forEach((h, i) => { if (h === 'final hours') finalHoursIdxs.push(i); });
-  const dateRe = /^\d{4}-\d{2}-\d{2}$|^\d{2}\/\d{2}\/\d{4}$/;
-  let nextPayDateIdx = -1;
-  for (let i = 0; i < headers.length; i++) {
-    if (dateRe.test(String(headers[i] || '').trim())) { nextPayDateIdx = i; break; }
-  }
-  return {
-    name: findFirst('worker full name', 'beneficiary', 'full name', 'driver name', 'nome'),
-    country: findFirst('country', 'país', 'pais'),
-    status: findFirst('situation', 'status', 'estado'),
-    rate: findFirst('hour pay', 'hourly rate', 'valor hora', 'valor/hora'),
-    email: findFirst('corporate e-mail', 'corporate email', 'email', 'e-mail'),
-    monthlyHours: finalHoursIdxs[0] >= 0 ? finalHoursIdxs[0] : -1,
-    currWeekHours: finalHoursIdxs.length >= 2 ? finalHoursIdxs[1] : -1,
-    prevWeekHours: finalHoursIdxs.length >= 3 ? finalHoursIdxs[2] : -1,
-    quinzenalPay: nextPayDateIdx,
-  };
-}
-
-function parseRows(headers, rows) {
-  const idx = detectCols(headers);
-  console.log('[Timesheet] detected cols:', idx);
-  return rows.map(r => {
-    const name = String(r[idx.name] || '').trim();
-    if (!name) return null;
-    const rate = idx.rate >= 0 ? parseNum(r[idx.rate]) : 0;
-    const hoursCurr = idx.currWeekHours >= 0 ? parseNum(r[idx.currWeekHours]) : 0;
-    const hoursPrev = idx.prevWeekHours >= 0 ? parseNum(r[idx.prevWeekHours]) : 0;
-    const hoursQuinzena = hoursCurr + hoursPrev;
-    let quinzenalPay = idx.quinzenalPay >= 0 ? parseNum(r[idx.quinzenalPay]) : 0;
-    if (!quinzenalPay && rate > 0) quinzenalPay = hoursQuinzena * rate;
-    return {
-      name: name,
-      country: idx.country >= 0 ? String(r[idx.country] || '').trim() : '',
-      status: idx.status >= 0 ? String(r[idx.status] || '').trim() : '',
-      rate: rate,
-      email: idx.email >= 0 ? String(r[idx.email] || '').trim() : '',
-      hoursCurr: hoursCurr, hoursPrev: hoursPrev, hoursQuinzena: hoursQuinzena,
-      quinzenalPay: quinzenalPay, extras: [], extrasTotal: 0, totalPay: quinzenalPay,
-    };
-  }).filter(d => d !== null);
-}
-
-function fmtDateBR(iso) {
-  if (!iso) return '';
-  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    const [y, m, d] = iso.split('-');
-    return `${d}/${m}/${y}`;
-  }
-  return String(iso);
-}
-
-function renderBanner() {
-  const meta = state.metadata || {};
-  const i = t();
-  const next = fmtDateBR(meta.nextPayrollDay);
-  const last = fmtDateBR(meta.lastPayrollDay);
-  const rangeEl = document.getElementById('qb-range');
-  const weeksEl = document.getElementById('qb-weeks');
-  const payEl = document.getElementById('qb-pay-date');
-  if (last && next) rangeEl.textContent = `${last} → ${next}`;
-  else if (next) rangeEl.textContent = next;
-  else rangeEl.textContent = '—';
-  if (meta.currentWeek && meta.nextPayrollWeek) {
-    const prevW = Math.max(1, meta.currentWeek - 1);
-    weeksEl.textContent = i.qbWeeks.replace('{prev}', prevW).replace('{curr}', meta.currentWeek);
-  } else {
-    weeksEl.textContent = '';
-  }
-  payEl.textContent = next || '—';
-}
-
-function buildFilters() {
-  const fc = document.getElementById('f-country');
-  const fs = document.getElementById('f-status');
-  const countries = [...new Set(state.parsed.map(d => d.country).filter(Boolean))].sort();
-  const statuses = [...new Set(state.parsed.map(d => d.status).filter(Boolean))].sort();
-  while (fc.options.length > 1) fc.remove(1);
-  countries.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    fc.appendChild(opt);
-  });
-  while (fs.options.length > 1) fs.remove(1);
-  statuses.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s; opt.textContent = s;
-    fs.appendChild(opt);
-  });
-}
-
+/* ================= Render ================= */
 function applyFilters() {
   const q = document.getElementById('ts-search').value.trim().toLowerCase();
   const country = document.getElementById('f-country').value;
-  const status = document.getElementById('f-status').value;
-  state.filtered = state.parsed.filter(d => {
+  const gapOnly = document.getElementById('f-gaponly').checked;
+  state.filtered = state.drivers.filter(d => {
     if (country && d.country !== country) return false;
-    if (status && d.status !== status) return false;
-    if (q) {
-      const blob = (d.name + ' ' + d.email + ' ' + d.country).toLowerCase();
-      if (!blob.includes(q)) return false;
-    }
+    if (q) { const blob = (d.name + ' ' + d.email + ' ' + d.country).toLowerCase(); if (!blob.includes(q)) return false; }
+    if (gapOnly && !computeRow(d).isGap) return false;
     return true;
   });
   render();
 }
-
+function buildFilters() {
+  const fc = document.getElementById('f-country');
+  const countries = [...new Set(state.drivers.map(d => d.country).filter(Boolean))].sort();
+  while (fc.options.length > 1) fc.remove(1);
+  countries.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; fc.appendChild(o); });
+}
 function renderKpis() {
-  const list = state.filtered;
-  document.getElementById('kpi-v-drivers').textContent = list.length.toLocaleString('en-US');
-  const totalHours = list.reduce((a, d) => a + d.hoursQuinzena, 0);
-  document.getElementById('kpi-v-hours').textContent = fmtHours(totalHours);
-  const totalPay = list.reduce((a, d) => a + (d.totalPay != null ? d.totalPay : d.quinzenalPay), 0);
-  document.getElementById('kpi-v-payroll').textContent = fmtMoneyCompact(totalPay);
-  const rates = list.map(d => d.rate).filter(r => r > 0);
-  const avgRate = rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
-  document.getElementById('kpi-v-rate').textContent = fmtRate(avgRate);
+  const rows = state.filtered.map(computeRow);
+  document.getElementById('kpi-v-drivers').textContent = state.filtered.length.toLocaleString('en-US');
+  document.getElementById('kpi-v-hours').textContent = fmtHours(rows.reduce((a, r) => a + r.hours, 0));
+  document.getElementById('kpi-v-payroll').textContent = fmtMoneyCompact(rows.reduce((a, r) => a + r.total, 0));
+  document.getElementById('kpi-v-reimb').textContent = fmtMoneyCompact(rows.reduce((a, r) => a + r.reimb, 0));
 }
-
-function renderCharts() {
-  const sortedHours = [...state.filtered].sort((a, b) => b.hoursQuinzena - a.hoursQuinzena).slice(0, 10);
-  const barLabels = sortedHours.map(d => d.name);
-  const barData = sortedHours.map(d => d.hoursQuinzena);
-  const barColors = sortedHours.map(d => getCountryColor(d.country));
-
-  // detecção de dark alinhada ao theme.css (data-theme), não classe theme-dark
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const gridCol = isDark ? '#2a3a52' : '#E5E7EB';
-  const tickCol = isDark ? '#b0b8c4' : '#4B5563';
-
-  if (chartBar) chartBar.destroy();
-  const ctxBar = document.getElementById('chart-bar').getContext('2d');
-  chartBar = new Chart(ctxBar, {
-    type:'bar',
-    data:{ labels:barLabels, datasets:[{ data:barData, backgroundColor:barColors, borderRadius:4, barThickness:'flex', maxBarThickness:22 }] },
-    options:{
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:(ctx) => fmtHours(ctx.parsed.x) + ' h' } } },
-      scales:{
-        x:{ beginAtZero:true, grid:{ color:gridCol }, ticks:{ color:tickCol, font:{ size:11 } } },
-        y:{ grid:{ display:false }, ticks:{ color:tickCol, font:{ size:11 } } },
-      },
-    },
-  });
-
-  const byCountry = {};
-  state.filtered.forEach(d => { const c = d.country || '—'; byCountry[c] = (byCountry[c] || 0) + 1; });
-  const donutEntries = Object.entries(byCountry).sort((a, b) => b[1] - a[1]);
-  const donutLabels = donutEntries.map(([c]) => c);
-  const donutData = donutEntries.map(([, n]) => n);
-  const donutColors = donutLabels.map(c => getCountryColor(c));
-
-  if (chartDonut) chartDonut.destroy();
-  const ctxDonut = document.getElementById('chart-donut').getContext('2d');
-  chartDonut = new Chart(ctxDonut, {
-    type:'doughnut',
-    data:{ labels:donutLabels, datasets:[{ data:donutData, backgroundColor:donutColors, borderColor:isDark ? '#1E293B' : '#fff', borderWidth:2 }] },
-    options:{
-      responsive:true, maintainAspectRatio:false, cutout:'60%',
-      plugins:{
-        legend:{ position:'right', labels:{ color:tickCol, font:{ size:12 }, boxWidth:12, padding:10 } },
-        tooltip:{ callbacks:{ label:(ctx) => `${ctx.label}: ${ctx.parsed} ${t().drivers}` } },
-      },
-    },
-  });
-}
-
-function statusClass(s) {
-  const v = String(s || '').toLowerCase();
-  if (isInactiveStatus(s)) return 'other';
-  if (v.includes('active') || v.includes('ativo')) return 'active';
-  if (v.includes('offboard') || v.includes('saída') || v.includes('desligamento')) return 'offboarding';
-  return 'other';
-}
-function isInactiveStatus(s) { return /inactiv|inativ/i.test(String(s || '')); }
-function nameKey(n) { return String(n || '').trim().toLowerCase().replace(/\s+/g, ' '); }
-function adjMatchesDriver(adj, d) {
-  const ae = String(adj.driverEmail || '').trim().toLowerCase();
-  const de = String(d.email || '').trim().toLowerCase();
-  if (ae && de) return ae === de;
-  return nameKey(adj.driverName) === nameKey(d.name);
-}
-function categoryLabel(cat) {
-  const found = ADJ_CATEGORIES.find(c => c.key === cat);
-  if (found && !found.custom) return t()[found.i18nKey];
-  return cat;
-}
-function attachAdjustments() {
-  state.parsed.forEach(d => {
-    const extras = state.adjustments.filter(a => adjMatchesDriver(a, d));
-    d.extras = extras;
-    d.extrasTotal = extras.reduce((s, a) => s + (Number(a.amount) || 0), 0);
-    d.totalPay = d.quinzenalPay + d.extrasTotal;
-  });
-}
-
-function paymentSectionHtml(d, i, accentColor) {
-  const hasExtras = d.extras && d.extras.length > 0;
-  const total = (d.totalPay != null) ? d.totalPay : d.quinzenalPay;
-  let extrasHtml = '';
-  if (hasExtras) {
-    extrasHtml = '<div class="dc-extras">' + d.extras.map(a => {
+function renderTable() {
+  const body = document.getElementById('pay-body');
+  const i = t();
+  let html = '';
+  state.filtered.forEach(d => {
+    const r = computeRow(d);
+    const color = getCountryColor(d.country);
+    const src = d.hasCheckin ? (d.autofilled ? i.srcCheckin : i.srcCheckin) : i.srcFill;
+    const srcCls = d.hasCheckin ? '' : ' fill';
+    const hoursCell = isSuperAdmin
+      ? `<input type="number" step="0.5" min="0" class="hrs-input${r.overridden ? ' edited' : ''}" data-key="${escapeHtml(r.key)}" value="${r.hours}">`
+      : `<span class="hrs-static">${fmtHours(r.hours)}</span>`;
+    const tsCell = (r.ts != null)
+      ? `<span class="ts-cell">${fmtHours(r.ts)}</span>${r.isGap ? `<span class="gap-badge">${svgIcon('alert', 11, 2)} ${i.gap} ${fmtHours(d.approvedHours - r.ts)}</span>` : ''}`
+      : '<span class="ts-cell">—</span>';
+    const extrasChips = r.extras.map(a => {
       const v = Number(a.amount) || 0;
-      const cls = v < 0 ? 'neg' : 'pos';
-      const amtStr = (v < 0 ? '-' : '+') + fmtMoney(Math.abs(v));
-      const delBtn = isSuperAdmin
-        ? `<button type="button" class="dc-extra-del" data-del-id="${escapeHtml(a.id)}" title="Remover" aria-label="remover">${svgIcon('x', 14, 2)}</button>`
-        : '';
-      return `
-        <div class="dc-extra-row">
-          <span class="dc-extra-cat">
-            <span class="tag ${cls}">${escapeHtml(categoryLabel(a.category))}</span>
-            ${a.note ? `<span class="dc-extra-note" title="${escapeHtml(a.note)}">${escapeHtml(a.note)}</span>` : ''}
-          </span>
-          <span style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-            <span class="dc-extra-amount ${cls}">${amtStr}</span>${delBtn}
-          </span>
-        </div>`;
-    }).join('') + '</div>';
+      return `<span class="extra-chip ${v < 0 ? 'neg' : 'pos'}" title="${escapeHtml((categoryLabel(a.category)) + (a.note ? ' — ' + a.note : ''))}">${escapeHtml(categoryLabel(a.category))} ${(v < 0 ? '-' : '+')}${fmtMoney(Math.abs(v)).replace('$','')}</span>`;
+    }).join('');
+    const addBtn = isSuperAdmin
+      ? `<button type="button" class="mini-btn" title="${i.addExtra}" data-add data-name="${escapeHtml(d.name)}" data-email="${escapeHtml(d.email)}" data-country="${escapeHtml(d.country)}">${svgIcon('plus', 16, 2)}</button>`
+      : '';
+    html += `
+      <tr class="${r.isGap ? 'gap' : ''}">
+        <td>
+          <div class="td-driver">
+            <div class="td-avatar" style="background:${color};">${escapeHtml(getInitials(d.name))}</div>
+            <div style="min-width:0;">
+              <div class="td-name">${escapeHtml(d.name)}</div>
+              <div class="td-email" title="${escapeHtml(d.email)}">${escapeHtml(d.email || i.noEmail)}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="country-dot" style="background:${color};"></span>${escapeHtml(d.country || '—')}<div style="margin-top:3px;"><span class="src-pill${srcCls}">${escapeHtml(src)}</span></div></td>
+        <td class="num">${hoursCell}</td>
+        <td class="num">${tsCell}</td>
+        <td class="num">${fmtRate(r.rate)}</td>
+        <td class="num"><span class="money">${fmtMoney(r.base)}</span></td>
+        <td class="num">${r.reimb ? `<span class="money pos">${fmtMoney(r.reimb)}</span>` : '<span style="color:var(--c-text-dim);">—</span>'}</td>
+        <td class="num">${r.ded ? `<span class="money neg">${fmtMoney(r.ded)}</span>` : '<span style="color:var(--c-text-dim);">—</span>'}</td>
+        <td class="num"><span class="money total">${fmtMoney(r.total)}</span>${extrasChips ? `<div style="margin-top:3px;">${extrasChips}</div>` : ''}</td>
+        <td>${addBtn}</td>
+      </tr>`;
+  });
+  body.innerHTML = html;
+}
+function updateCount() { document.getElementById('ts-count').textContent = state.filtered.length + ' ' + t().drivers; }
+function updateInfo() { document.getElementById('ts-info').textContent = state.fromCache ? t().cached : t().fresh; }
+function render() { renderKpis(); renderTable(); updateCount(); updateInfo(); }
+
+function showState(msg, isError) {
+  const el = document.getElementById('ts-state');
+  el.classList.toggle('error', !!isError);
+  const iconEl = el.querySelector('.icon');
+  let name = 'inbox', extra = '';
+  if (isError) name = 'alert';
+  else if (msg === t().loading) { name = 'spinner'; extra = ' class="ts-spin"'; }
+  iconEl.innerHTML = '<span' + extra + '>' + svgIcon(name, 38, 1.7) + '</span>';
+  document.getElementById('ts-state-msg').textContent = msg;
+  el.style.display = '';
+  document.getElementById('ts-content').style.display = 'none';
+}
+function hideState() { document.getElementById('ts-state').style.display = 'none'; document.getElementById('ts-content').style.display = ''; }
+
+/* ================= Data ================= */
+async function loadData(forceRefresh) {
+  showState(t().loading);
+  try {
+    const s = state.period.start, e = state.period.end;
+    const qs = (s && e) ? ('&start=' + s + '&end=' + e) : '';
+    const url = CONFIG.scriptUrl + '?action=getPayrollCheckin' + qs;
+    const res = await cachedFetch(url, CONFIG.cacheTtlSec, { forceRefresh: !!forceRefresh });
+    if (!res || !res.success) { showState((res && res.error) ? (t().error + ' — ' + res.error) : t().error, true); return; }
+    state.fromCache = !!res._fromCache;
+    if (res.period) { state.period = { start: res.period.start, end: res.period.end }; syncPeriodInputs(); }
+    let list = Array.isArray(res.drivers) ? res.drivers : [];
+    list = list.filter(d => EXCLUDE_NAMES.indexOf(nkey(d.name)) < 0);
+    state.drivers = list;
+    if (!forceRefresh) state.overrides = {};   // reset edições ao trocar período
+    if (!state.drivers.length) { showState(t().empty); return; }
+    await loadAdjustments(forceRefresh);
+    buildFilters();
+    hideState();
+    applyFilters();
+    if (isSuperAdmin) { document.getElementById('ace-panel').style.display = ''; loadAceTabs(); }
+  } catch (err) {
+    console.error('[Payroll] erro:', err);
+    showState(t().error + ' — ' + (err && err.message || err), true);
   }
-  const baseLine = hasExtras
-    ? `<div class="dc-pay-line"><span>${i.cardQuinzenalPay}</span><span class="v">${fmtMoney(d.quinzenalPay)}</span></div>`
-    : '';
-  const addBtn = isSuperAdmin
-    ? `<button type="button" class="dc-add-extra"
-         data-name="${escapeHtml(d.name)}" data-email="${escapeHtml(d.email)}" data-country="${escapeHtml(d.country)}">${svgIcon('plus', 15, 2)}<span>${i.addExtra}</span></button>`
-    : '';
-  return `
-    ${extrasHtml}
-    <div class="dc-payment-highlight" style="background:linear-gradient(135deg, ${accentColor}18, ${accentColor}08);">
-      <div style="width:100%;">
-        ${baseLine}
-        <div class="dc-pay-total">
-          <div class="dc-stat-label">${hasExtras ? i.cardTotalPay : i.cardQuinzenalPay}</div>
-          <div class="dc-stat-value big" style="color:${accentColor};">${fmtMoney(total)}</div>
-        </div>
-      </div>
-    </div>
-    ${addBtn}
-  `;
+}
+async function loadAdjustments(forceRefresh) {
+  try {
+    const quinzena = state.period.end || '';
+    const url = CONFIG.scriptUrl + '?action=getPayrollAdjustments' + (quinzena ? '&quinzena=' + encodeURIComponent(quinzena) : '');
+    const res = await cachedFetch(url, 60, { forceRefresh: !!forceRefresh });
+    state.adjustments = (res && res.success && Array.isArray(res.adjustments)) ? res.adjustments : [];
+  } catch (e) { state.adjustments = []; }
 }
 
-function onGridClick(e) {
-  const addBtn = e.target.closest('.dc-add-extra');
-  if (addBtn) {
-    openAdjustModal({ name:addBtn.dataset.name || '', email:addBtn.dataset.email || '', country:addBtn.dataset.country || '' });
-    return;
-  }
-  const delBtn = e.target.closest('.dc-extra-del');
-  if (delBtn) deleteAdjustment(delBtn.dataset.delId);
+/* ================= Period ================= */
+function syncPeriodInputs() {
+  if (state.period.start) document.getElementById('pb-start').value = state.period.start;
+  if (state.period.end) document.getElementById('pb-end').value = state.period.end;
+}
+function onLoadPeriod() {
+  const s = document.getElementById('pb-start').value;
+  const e = document.getElementById('pb-end').value;
+  if (!s || !e) return;
+  state.period = { start: s, end: e };
+  state.overrides = {};
+  loadData(true);
 }
 
+/* ================= Adjustments modal ================= */
 let modalEl = null;
-function onModalKey(e) { if (e.key === 'Escape') closeAdjustModal(); }
-function closeAdjustModal() {
-  if (modalEl) { modalEl.remove(); modalEl = null; }
-  document.removeEventListener('keydown', onModalKey);
-}
+function onModalKey(e) { if (e.key === 'Escape') closeModal(); }
+function closeModal() { if (modalEl) { modalEl.remove(); modalEl = null; } document.removeEventListener('keydown', onModalKey); }
 function openAdjustModal(driver) {
   if (!isSuperAdmin) return;
-  closeAdjustModal();
+  closeModal();
   const i = t();
-  const quinzena = (state.metadata && state.metadata.nextPayrollDay) || '';
+  const quinzena = state.period.end || '';
   const catOptions = ADJ_CATEGORIES.map(c => `<option value="${c.key}">${escapeHtml(i[c.i18nKey])}</option>`).join('');
   modalEl = document.createElement('div');
   modalEl.className = 'ts-modal-overlay';
@@ -1013,34 +833,20 @@ function openAdjustModal(driver) {
     <div class="ts-modal" role="dialog" aria-modal="true">
       <div class="ts-modal-head">
         <div class="ts-modal-title">${i.modalTitle}</div>
-        <div class="ts-modal-sub">${escapeHtml(driver.name)} · ${i.modalQuinzena}: ${escapeHtml(quinzena ? fmtDateBR(quinzena) : '—')}</div>
+        <div class="ts-modal-sub">${escapeHtml(driver.name)} · ${escapeHtml(fmtDateBR(quinzena) || '—')}</div>
       </div>
       <div class="ts-modal-body">
-        <div class="ts-field">
-          <label>${i.modalCategory}</label>
-          <select id="adj-cat">${catOptions}</select>
-        </div>
-        <div class="ts-field" id="adj-custom-wrap" style="display:none;">
-          <label>${i.modalCustomCat}</label>
-          <input type="text" id="adj-custom" maxlength="40" autocomplete="off">
-        </div>
-        <div class="ts-field">
-          <label>${i.modalAmount}</label>
-          <input type="text" id="adj-amount" inputmode="decimal" autocomplete="off" placeholder="0.00">
-          <div class="ts-field-hint" id="adj-hint"></div>
-        </div>
-        <div class="ts-field">
-          <label>${i.modalNote}</label>
-          <input type="text" id="adj-note" maxlength="120" autocomplete="off">
-        </div>
+        <div class="ts-field"><label>${i.modalCategory}</label><select id="adj-cat">${catOptions}</select></div>
+        <div class="ts-field" id="adj-custom-wrap" style="display:none;"><label>${i.modalCustomCat}</label><input type="text" id="adj-custom" maxlength="40" autocomplete="off"></div>
+        <div class="ts-field"><label>${i.modalAmount}</label><input type="text" id="adj-amount" inputmode="decimal" autocomplete="off" placeholder="0.00"><div class="ts-field-hint" id="adj-hint"></div></div>
+        <div class="ts-field"><label>${i.modalNote}</label><input type="text" id="adj-note" maxlength="120" autocomplete="off"></div>
         <div class="ts-modal-err" id="adj-err"></div>
       </div>
       <div class="ts-modal-foot">
         <button type="button" class="ts-btn" id="adj-cancel">${i.modalCancel}</button>
         <button type="button" class="ts-btn primary" id="adj-save">${i.modalSave}</button>
       </div>
-    </div>
-  `;
+    </div>`;
   document.body.appendChild(modalEl);
   const catSel = modalEl.querySelector('#adj-cat');
   const customWrap = modalEl.querySelector('#adj-custom-wrap');
@@ -1050,221 +856,122 @@ function openAdjustModal(driver) {
     customWrap.style.display = (def && def.custom) ? '' : 'none';
     hint.textContent = (def && def.sign < 0) ? i.modalDiscountHint : '';
   };
-  catSel.addEventListener('change', updateCatUi);
-  updateCatUi();
-  modalEl.querySelector('#adj-cancel').addEventListener('click', closeAdjustModal);
-  modalEl.addEventListener('click', (e) => { if (e.target === modalEl) closeAdjustModal(); });
+  catSel.addEventListener('change', updateCatUi); updateCatUi();
+  modalEl.querySelector('#adj-cancel').addEventListener('click', closeModal);
+  modalEl.addEventListener('click', (e) => { if (e.target === modalEl) closeModal(); });
   document.addEventListener('keydown', onModalKey);
   modalEl.querySelector('#adj-save').addEventListener('click', () => submitAdjustment(driver));
   setTimeout(() => { const a = modalEl && modalEl.querySelector('#adj-amount'); if (a) a.focus(); }, 30);
 }
-
 async function submitAdjustment(driver) {
   if (!modalEl) return;
   const i = t();
-  const errEl = modalEl.querySelector('#adj-err');
-  errEl.textContent = '';
+  const errEl = modalEl.querySelector('#adj-err'); errEl.textContent = '';
   const catSel = modalEl.querySelector('#adj-cat');
   const def = ADJ_CATEGORIES.find(c => c.key === catSel.value);
   let category, sign;
-  if (def && def.custom) {
-    category = modalEl.querySelector('#adj-custom').value.trim();
-    if (!category) { errEl.textContent = i.errCat; return; }
-    sign = 1;
-  } else {
-    category = def.key; sign = def.sign;
-  }
+  if (def && def.custom) { category = modalEl.querySelector('#adj-custom').value.trim(); if (!category) { errEl.textContent = i.errCat; return; } sign = 1; }
+  else { category = def.key; sign = def.sign; }
   const amtRaw = Math.abs(parseNum(modalEl.querySelector('#adj-amount').value));
   if (!amtRaw) { errEl.textContent = i.errAmount; return; }
   const amount = sign * amtRaw;
   const note = modalEl.querySelector('#adj-note').value.trim();
-  const saveBtn = modalEl.querySelector('#adj-save');
-  saveBtn.disabled = true; saveBtn.textContent = i.modalSaving;
+  const saveBtn = modalEl.querySelector('#adj-save'); saveBtn.disabled = true; saveBtn.textContent = i.modalSaving;
   try {
-    const payload = {
-      type:'savePayrollAdjustment', actorUsername:currentUser.username,
-      quinzena:(state.metadata && state.metadata.nextPayrollDay) || '',
-      driverName:driver.name, driverEmail:driver.email, country:driver.country,
-      category:category, amount:amount, note:note,
-    };
+    const payload = { type:'savePayrollAdjustment', actorUsername:currentUser.username, quinzena:state.period.end || '', driverName:driver.name, driverEmail:driver.email, country:driver.country, category:category, amount:amount, note:note };
     const res = await fetch(CONFIG.scriptUrl, { method:'POST', headers:{ 'Content-Type':'text/plain' }, body:JSON.stringify(payload) }).then(r => r.json());
-    if (!res || !res.success) {
-      errEl.textContent = (res && res.error) || i.error;
-      saveBtn.disabled = false; saveBtn.textContent = i.modalSave;
-      return;
-    }
+    if (!res || !res.success) { errEl.textContent = (res && res.error) || i.error; saveBtn.disabled = false; saveBtn.textContent = i.modalSave; return; }
     state.adjustments.push(res.adjustment);
-    clearDataCache('getPayrollAdjustments');
-    attachAdjustments();
-    closeAdjustModal();
-    applyFilters();
-  } catch (e) {
-    errEl.textContent = i.error + ' — ' + (e.message || e);
-    saveBtn.disabled = false; saveBtn.textContent = i.modalSave;
-  }
+    if (typeof clearDataCache === 'function') clearDataCache('getPayrollAdjustments');
+    closeModal(); applyFilters();
+  } catch (e) { errEl.textContent = i.error + ' — ' + (e.message || e); saveBtn.disabled = false; saveBtn.textContent = i.modalSave; }
 }
 
-async function deleteAdjustment(id) {
-  if (!id || !isSuperAdmin) return;
-  if (!confirm(t().delConfirm)) return;
+/* ================= ACE sync ================= */
+async function loadAceTabs() {
+  const sel = document.getElementById('ace-tab');
   try {
-    const res = await fetch(CONFIG.scriptUrl, { method:'POST', headers:{ 'Content-Type':'text/plain' }, body:JSON.stringify({ type:'deletePayrollAdjustment', actorUsername:currentUser.username, id:id }) }).then(r => r.json());
-    if (!res || !res.success) { alert((res && res.error) || t().error); return; }
-    state.adjustments = state.adjustments.filter(a => a.id !== id);
-    clearDataCache('getPayrollAdjustments');
-    attachAdjustments();
-    applyFilters();
-  } catch (e) {
-    alert(t().error + ' — ' + (e.message || e));
-  }
+    const res = await fetch(CONFIG.scriptUrl + '?action=writeAceHours').then(r => r.json());
+    if (res && Array.isArray(res.tabs)) {
+      state.aceTabs = res.tabs;
+      sel.innerHTML = '<option value="">' + escapeHtml(t().acePickTab) + '</option>' + res.tabs.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+    } else { sel.innerHTML = '<option value="">' + escapeHtml((res && res.error) || t().error) + '</option>'; }
+  } catch (e) { sel.innerHTML = '<option value="">' + escapeHtml(t().error) + '</option>'; }
 }
-
-function renderDrivers() {
-  const grid = document.getElementById('driver-grid');
-  grid.innerHTML = '';
+function aceRows() {
+  // horas FINAIS (após edições) por nome, só quem tem nome
+  return state.drivers.filter(d => d.name).map(d => ({ name: d.name, hours: computeRow(d).hours }));
+}
+async function aceSync(confirm) {
   const i = t();
-  const frag = document.createDocumentFragment();
-  state.filtered.forEach(d => {
-    const card = document.createElement('div');
-    card.className = 'driver-card';
-    const initials = getInitials(d.name);
-    const sCls = statusClass(d.status);
-    const accentColor = getCountryColor(d.country);
-    const breakdown = (d.hoursPrev > 0 || d.hoursCurr > 0)
-      ? `${fmtHours(d.hoursPrev)} + ${fmtHours(d.hoursCurr)} h` : '—';
-    card.innerHTML = `
-      ${d.status ? `<span class="dc-status-badge ${sCls}">${escapeHtml(d.status)}</span>` : ''}
-      <div class="dc-top">
-        <div class="dc-avatar" style="background:${accentColor};">${escapeHtml(initials)}</div>
-        <div class="dc-name-block">
-          <div class="dc-name">${escapeHtml(d.name)}</div>
-          <div class="dc-email" title="${escapeHtml(d.email)}">${escapeHtml(d.email || i.noEmail)}</div>
-        </div>
-      </div>
-      ${d.country ? `<div class="dc-country-pill"><span class="dc-country-dot" style="background:${accentColor};"></span>${escapeHtml(d.country)}</div>` : ''}
-      <div class="dc-stats" style="margin-top:12px;">
-        <div class="dc-stat-cell">
-          <div class="dc-stat-label">${i.cardHourRate}</div>
-          <div class="dc-stat-value">${fmtRate(d.rate)}</div>
-        </div>
-        <div class="dc-stat-cell">
-          <div class="dc-stat-label">${i.cardHoursQuinzena}</div>
-          <div class="dc-stat-value">${fmtHours(d.hoursQuinzena)} h</div>
-        </div>
-        <div class="dc-stat-cell full">
-          <div class="dc-stat-label">${i.cardWeekBreakdown}</div>
-          <div class="dc-stat-value muted" style="font-size:12px;">${breakdown}</div>
-        </div>
-      </div>
-      ${paymentSectionHtml(d, i, accentColor)}
-    `;
-    frag.appendChild(card);
-  });
-  grid.appendChild(frag);
-}
-
-function escapeHtml(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-function updateCount() {
-  let txt = state.filtered.length + ' ' + t().drivers;
-  if (state.hiddenInactive > 0) txt += ' · ' + t().inactiveHidden.replace('{n}', state.hiddenInactive);
-  document.getElementById('ts-count').textContent = txt;
-}
-function updateInfo() {
-  document.getElementById('ts-info').textContent = state.fromCache ? t().cached : t().fresh;
-}
-function render() {
-  renderKpis(); renderCharts(); renderDrivers(); updateCount(); updateInfo();
-}
-
-function showState(msg, isError) {
-  const stateEl = document.getElementById('ts-state');
-  const msgEl = document.getElementById('ts-state-msg');
-  stateEl.classList.toggle('error', !!isError);
-  // ícone SVG em vez de emoji
-  const iconEl = stateEl.querySelector('.icon');
-  let name = 'inbox', extra = '';
-  if (isError) { name = 'alert'; }
-  else if (msg === t().loading) { name = 'spinner'; extra = ' class="ts-spin"'; }
-  iconEl.innerHTML = '<span' + extra + '>' + svgIcon(name, 38, 1.7) + '</span>';
-  msgEl.textContent = msg;
-  stateEl.style.display = '';
-  document.getElementById('ts-content').style.display = 'none';
-}
-function hideState() {
-  document.getElementById('ts-state').style.display = 'none';
-  document.getElementById('ts-content').style.display = '';
-}
-
-async function loadData(forceRefresh) {
-  showState(t().loading);
+  const tab = document.getElementById('ace-tab').value;
+  const resultEl = document.getElementById('ace-result');
+  if (!tab) { resultEl.innerHTML = `<div class="ace-msg warn">${escapeHtml(i.acePickTab)}</div>`; return; }
+  if (confirm) {
+    const n = aceRows().length;
+    if (!window.confirm(i.aceConfirmWrite.replace('{n}', n).replace('{tab}', tab))) return;
+  }
+  const btnP = document.getElementById('ace-preview'), btnW = document.getElementById('ace-write');
+  btnP.disabled = true; btnW.disabled = true;
+  resultEl.innerHTML = `<div class="ace-msg">${escapeHtml(i.loading)}</div>`;
   try {
-    const url = CONFIG.scriptUrl + '?action=getTimesheetTab';
-    const res = await cachedFetch(url, CONFIG.cacheTtlSec, { forceRefresh: !!forceRefresh });
-    if (!res || !res.success) {
-      showState((res && res.error) ? (t().error + ' — ' + res.error) : t().error, true);
-      return;
-    }
-    state.raw = { headers:res.headers || [], rows:res.rows || [] };
-    state.metadata = res.metadata || {};
-    state.fromCache = !!res._fromCache;
-    state.parsed = parseRows(state.raw.headers, state.raw.rows);
-    const beforeInactive = state.parsed.length;
-    state.parsed = state.parsed.filter(d => !isInactiveStatus(d.status));
-    state.hiddenInactive = beforeInactive - state.parsed.length;
-    if (state.hiddenInactive > 0) console.log('[Timesheet] ' + state.hiddenInactive + ' inativos ocultos');
-    if (state.parsed.length === 0) { showState(t().empty); return; }
-    await loadAdjustments(forceRefresh);
-    attachAdjustments();
-    buildFilters();
-    state.filtered = state.parsed.slice();
-    hideState();
-    renderBanner();
-    render();
+    const payload = { type:'writeAceHoursManual', actorUsername:currentUser.username, tab:tab, rows:aceRows(), confirm: confirm ? '1' : '0' };
+    const res = await fetch(CONFIG.scriptUrl, { method:'POST', headers:{ 'Content-Type':'text/plain' }, body:JSON.stringify(payload) }).then(r => r.json());
+    if (!res || !res.success) { resultEl.innerHTML = `<div class="ace-msg err">${escapeHtml((res && res.error) || i.error)}</div>`; btnP.disabled = false; return; }
+    renderAceResult(res);
+    btnP.disabled = false;
+    btnW.disabled = !!res.written;   // após gravar, trava até nova prévia
   } catch (e) {
-    console.error('[Timesheet] erro:', e);
-    showState(t().error + ' — ' + (e && e.message || e), true);
+    resultEl.innerHTML = `<div class="ace-msg err">${escapeHtml(i.error + ' — ' + (e.message || e))}</div>`;
+    btnP.disabled = false;
   }
 }
-
-async function loadAdjustments(forceRefresh) {
-  try {
-    const quinzena = (state.metadata && state.metadata.nextPayrollDay) || '';
-    const url = CONFIG.scriptUrl + '?action=getPayrollAdjustments' + (quinzena ? '&quinzena=' + encodeURIComponent(quinzena) : '');
-    const res = await cachedFetch(url, 60, { forceRefresh: !!forceRefresh });
-    state.adjustments = (res && res.success && Array.isArray(res.adjustments)) ? res.adjustments : [];
-    console.log('[Timesheet] ajustes carregados:', state.adjustments.length, 'quinzena:', quinzena || '(todas)');
-  } catch (e) {
-    console.warn('[Timesheet] ajustes falharam:', e);
-    state.adjustments = [];
+function renderAceResult(res) {
+  const i = t();
+  const el = document.getElementById('ace-result');
+  const head = res.written
+    ? `<div class="ace-msg ok">${svgIcon('report',14,2)} ${escapeHtml(i.aceWroteOk)} ${res.written} ${escapeHtml(i.aceWritten)} · "${escapeHtml(res.tab)}"</div>`
+    : `<div class="ace-msg warn">${escapeHtml(i.aceDryOk)}</div>`;
+  const stats = `<div style="margin-top:8px;font-weight:600;">${res.matched} ${escapeHtml(i.aceMatched)}${(res.notInTab && res.notInTab.length) ? ` · ${res.notInTab.length} ${escapeHtml(i.aceNotInTab)}` : ''}</div>`;
+  let table = '';
+  if (res.preview && res.preview.length) {
+    table = `<table><thead><tr><th>${escapeHtml(i.thDriver)}</th><th class="num">Hrs Worked (${escapeHtml(currentLang === 'en' ? 'current → new' : (currentLang === 'es' ? 'actual → nuevo' : 'atual → novo'))})</th></tr></thead><tbody>` +
+      res.preview.map(p => `<tr><td>${escapeHtml(p.name)}</td><td class="num">${escapeHtml(String(p.de == null ? '—' : p.de))} &rarr; <b>${escapeHtml(String(p.para))}</b></td></tr>`).join('') +
+      `</tbody></table>`;
   }
+  const notIn = (res.notInTab && res.notInTab.length) ? `<div style="margin-top:8px;font-size:11.5px;color:var(--c-text-dim);">${escapeHtml(i.aceNotInTab)}: ${escapeHtml(res.notInTab.slice(0,12).join(', '))}${res.notInTab.length > 12 ? '…' : ''}</div>` : '';
+  el.innerHTML = head + stats + table + notIn;
 }
 
-function csvEscape(v) {
-  if (v === null || v === undefined) return '';
-  const s = String(v);
-  if (/[",\n\r;]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-  return s;
-}
+/* ================= CSV ================= */
+function csvEscape(v) { if (v === null || v === undefined) return ''; const s = String(v); return /[",\n\r;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
 function exportCsv() {
-  const headers = ['Name','Country','Status','Hour Pay','Email','Hours Prev Week','Hours Curr Week','Hours Quinzena','Base Pay (USD)','Extras (USD)','Total Pay (USD)','Extras Detail'];
+  const headers = ['Name','Country','Email','Hours','Timesheet','Rate','Base Pay','Reimbursement','Deductions','Total','Source'];
   const rows = [headers, ...state.filtered.map(d => {
-    const total = (d.totalPay != null) ? d.totalPay : d.quinzenalPay;
-    const extrasDetail = (d.extras || []).map(a => categoryLabel(a.category) + ': ' + (Number(a.amount) || 0) + (a.note ? ' (' + a.note + ')' : '')).join(' | ');
-    return [d.name, d.country, d.status, d.rate, d.email, d.hoursPrev, d.hoursCurr, d.hoursQuinzena, d.quinzenalPay, d.extrasTotal || 0, total, extrasDetail];
+    const r = computeRow(d);
+    return [d.name, d.country, d.email, r.hours, (r.ts == null ? '' : r.ts), r.rate, r.base, r.reimb, r.ded, r.total, d.hasCheckin ? 'check-in' : 'auto-fill'];
   })];
   const csv = rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
-  const blob = new Blob(['\ufeff' + csv], { type:'text/csv;charset=utf-8' });
+  const blob = new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const dateStr = (state.metadata && state.metadata.nextPayrollDay) || new Date().toISOString().slice(0, 10);
-  a.href = url; a.download = 'timesheet_quinzena_' + dateStr + '.csv';
+  a.href = url; a.download = 'payroll_' + (state.period.start || '') + '_' + (state.period.end || '') + '.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 200);
+}
+
+/* ================= Events ================= */
+function onBodyClick(e) {
+  const add = e.target.closest('[data-add]');
+  if (add) { openAdjustModal({ name:add.dataset.name || '', email:add.dataset.email || '', country:add.dataset.country || '' }); }
+}
+function onBodyChange(e) {
+  const inp = e.target.closest('.hrs-input');
+  if (!inp) return;
+  const key = inp.dataset.key;
+  const v = parseFloat(inp.value);
+  if (isNaN(v) || v < 0) { delete state.overrides[key]; } else { state.overrides[key] = round2(v); }
+  render();   // recalcula base/total/KPIs
 }
 
 function startApp(user) {
@@ -1272,26 +979,25 @@ function startApp(user) {
   isSuperAdmin = !!(user && String(user.username).toLowerCase() === 'fuss');
   document.getElementById('app-content').style.display = '';
   buildNav(user);
-  // idioma: lê o salvo + liga o seletor PT/ES/EN do header
   try { const L = localStorage.getItem('preferredLang'); if (L && I18N[L]) currentLang = L; } catch (e) {}
-  document.querySelectorAll('#lang-switch button').forEach(b => {
-    b.classList.toggle('active', b.dataset.lang === currentLang);
-    b.addEventListener('click', () => setLang(b.dataset.lang));
-  });
+  document.querySelectorAll('#lang-switch button').forEach(b => { b.classList.toggle('active', b.dataset.lang === currentLang); b.addEventListener('click', () => setLang(b.dataset.lang)); });
   applyI18n();
   document.getElementById('ts-search').addEventListener('input', applyFilters);
   document.getElementById('f-country').addEventListener('change', applyFilters);
-  document.getElementById('f-status').addEventListener('change', applyFilters);
+  document.getElementById('f-gaponly').addEventListener('change', applyFilters);
   document.getElementById('ts-refresh').addEventListener('click', () => loadData(true));
   document.getElementById('ts-export').addEventListener('click', exportCsv);
-  document.getElementById('driver-grid').addEventListener('click', onGridClick);
+  document.getElementById('pb-load').addEventListener('click', onLoadPeriod);
+  document.getElementById('pay-body').addEventListener('click', onBodyClick);
+  document.getElementById('pay-body').addEventListener('change', onBodyChange);
+  document.getElementById('ace-preview').addEventListener('click', () => aceSync(false));
+  document.getElementById('ace-write').addEventListener('click', () => aceSync(true));
   loadData(false);
 }
 
-// Login real (tela + sessão SSO via common.js/auth.js).
 document.addEventListener('DOMContentLoaded', () => {
   injectLogin({
-    title: 'Timesheet & Payroll',
+    title: 'Payroll',
     sub: 'Acesso interno',
     onSuccess: (u) => startApp({ username: u.username, name: u.fullName, fullName: u.fullName }),
   });

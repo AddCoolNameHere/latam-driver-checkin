@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.52',
+        version: 'v5.56',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -294,7 +294,7 @@ function doGet(e) {
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
                     'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
                     'POST submitArgentinaCash', 'POST updateAuthUsers',
-                    'getRecruitmentData', 'getTimesheetTab',
+                    'getRecruitmentData', 'getTimesheetTab', 'getPayrollCheckin', 'writeAceHours', 'POST writeAceHoursManual',
                     'getPayrollAdjustments', 'POST savePayrollAdjustment', 'POST deletePayrollAdjustment',
                     'getCrimeOverlay',
                     'getArLaunchSchedule', 'POST saveArLaunchSchedule',
@@ -449,6 +449,18 @@ function doGet(e) {
       return jsonResponse(getTimesheetTab_());
     }
 
+    // v5.53: payroll derivado do check-in — horas "aprovadas" + salario base por driver.
+    // ?start=YYYY-MM-DD&end=YYYY-MM-DD (default: quinzena corrente 1-15 / 16-fim).
+    if (action === 'getPayrollCheckin') {
+      return jsonResponse(getPayrollCheckin_(e.parameter.start, e.parameter.end));
+    }
+
+    // v5.55: escreve as horas calculadas na coluna "Hrs Worked" da aba REAL da quinzena na ACE.
+    // ?tab=<nome exato da aba>&start=&end=&confirm=1. Sem &tab = lista as abas; sem confirm=1 = DRY-RUN.
+    if (action === 'writeAceHours') {
+      return jsonResponse(writeAceHours_(e.parameter.tab, e.parameter.start, e.parameter.end, e.parameter.confirm));
+    }
+
     // v5.40: ajustes de payroll (reembolsos/bônus/descontos) por driver+quinzena
     // ?quinzena=YYYY-MM-DD filtra pra uma quinzena específica (opcional)
     if (action === 'getPayrollAdjustments') {
@@ -581,6 +593,15 @@ function doPost(e) {
         return jsonResponse({ success: false, error: 'Permissão negada. Apenas o super admin pode remover valores.' });
       }
       return jsonResponse(deletePayrollAdjustment_(data));
+    }
+
+    // v5.56: grava as horas revisadas (payroll.html) na coluna "Hrs Worked" da aba da ACE.
+    // { tab, rows:[{name,hours}], confirm }. Sem confirm=1 = dry-run. So super admin.
+    if (data.type === 'writeAceHoursManual') {
+      if (!isSuperAdminBackend_(data.actorUsername)) {
+        return jsonResponse({ success: false, error: 'Permissão negada. Apenas o super admin pode gravar na ACE.' });
+      }
+      return jsonResponse(writeAceHoursManual_(data));
     }
 
     // v5.33: super-admin only — atualiza auth.js commitando direto no GitHub via API
@@ -2655,6 +2676,396 @@ function getTimesheet(startDate, endDate) {
   });
 
   return rows;
+}
+
+
+// ================================================================
+// v5.53: PAYROLL derivado do CHECK-IN — motor de horas "aprovadas"
+// ----------------------------------------------------------------
+// Deriva as horas da quinzena direto da aba Driver Daily Check-in,
+// aplicando a regra tolerante combinada com o Lucas:
+//   - Dia util (seg-sex; domingo conta como dia util se houver check-in):
+//       target = 9h (Argentina) / 8h (demais paises)
+//         * online (checkout - check-in) >= 6h              -> dia cheio (target)
+//         * check-in SEM checkout (sem como medir o online) -> dia cheio (presenca)
+//         * online > 0 e < 6h                               -> conta o online real
+//   - Sabado com check-in -> 4h (>=3h online) / online real (<3h)
+//   - Motorista ativo SEM nenhum check-in no periodo -> 0h (fica pro override manual)
+// Salario base = horasAprovadas x rate (Per Hour Salary da HR).
+// Constantes ajustaveis abaixo.
+// ================================================================
+const PAYROLL_WEEKDAY_TARGET_DEFAULT_ = 8;              // horas/dia (maioria dos paises)
+const PAYROLL_WEEKDAY_9H_COUNTRIES_ = ['argentina'];   // paises com 9h/dia
+const PAYROLL_WEEKDAY_MIN_ONLINE_ = 6;                 // >=6h online = dia cheio
+const PAYROLL_SATURDAY_HOURS_ = 4;                     // sabado trabalhado
+const PAYROLL_SATURDAY_MIN_ONLINE_ = 3;                // >=3h online no sabado = 4h
+
+function countryWeekdayTarget_(country) {
+  const c = String(country || '').trim().toLowerCase();
+  return PAYROLL_WEEKDAY_9H_COUNTRIES_.indexOf(c) >= 0 ? 9 : PAYROLL_WEEKDAY_TARGET_DEFAULT_;
+}
+
+// Situacao "pagavel": exclui inativos; ativo/offboarding/vazio entram (fail-open).
+function isPayableSituation_(sit) {
+  const s = String(sit || '').trim().toLowerCase();
+  if (!s) return true;
+  return !/inactiv|inativ/.test(s);
+}
+
+// Quinzena "corrente" a partir de uma data ref (dia <=15 -> 1-15; senao 16-fim do mes).
+function currentQuinzena_(ref) {
+  const tz = 'America/Sao_Paulo';
+  const d = ref || new Date();
+  const y = Number(Utilities.formatDate(d, tz, 'yyyy'));
+  const m = Number(Utilities.formatDate(d, tz, 'MM'));   // 1-12
+  const day = Number(Utilities.formatDate(d, tz, 'dd'));
+  const pad = n => (n < 10 ? '0' + n : '' + n);
+  const startDay = day <= 15 ? 1 : 16;
+  const endDay = day <= 15 ? 15 : new Date(y, m, 0).getDate();  // dia 0 do mes seguinte = ultimo dia
+  return { start: y + '-' + pad(m) + '-' + pad(startDay), end: y + '-' + pad(m) + '-' + pad(endDay) };
+}
+
+// Conta dias uteis (seg-sex) no periodo [start,end] inclusive — base da "quinzena cheia".
+function countWeekdays_(start, end) {
+  const s = start.split('-'), e = end.split('-');
+  let d = new Date(Number(s[0]), Number(s[1]) - 1, Number(s[2]), 12, 0, 0);
+  const last = new Date(Number(e[0]), Number(e[1]) - 1, Number(e[2]), 12, 0, 0);
+  let n = 0;
+  while (d <= last) { const w = d.getDay(); if (w >= 1 && w <= 5) n++; d.setDate(d.getDate() + 1); }
+  return n;
+}
+
+function getPayrollCheckin_(startParam, endParam) {
+  const tz = 'America/Sao_Paulo';
+  let start = startParam, end = endParam;
+  if (!start || !end) { const q = currentQuinzena_(); start = start || q.start; end = end || q.end; }
+  const weekdays = countWeekdays_(start, end);   // dias uteis da quinzena (p/ quem nao tem check-in)
+
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const nkey = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const round2 = n => Math.round(n * 100) / 100;
+
+  // ---------- 1) roster HR: nome / email / pais / rate / situacao ----------
+  const hrByEmail = {}, hrByName = {}, roster = [];
+  const hrSheet = ss.getSheetByName(CONFIG.hrSheet);
+  if (hrSheet && hrSheet.getLastRow() > 1) {
+    const hd = hrSheet.getDataRange().getValues();
+    const H = hd[0];
+    const col = (...names) => {
+      for (let i = 0; i < H.length; i++) {
+        const h = String(H[i] || '').trim().toLowerCase();
+        for (const n of names) if (h === n.toLowerCase()) return i;
+      }
+      return -1;
+    };
+    const iName = col('Beneficiary Full Name', 'Full Name', 'Driver Name', 'Name');
+    const iEmail = col('Corporate E-mail', 'Email', 'Driver Email');
+    const iCountry = col('Country');
+    const iSit = col('Situation', 'Status', 'Driver Status');
+    const iRate = col('Per Hour Salary (USD)', 'Per Hour Salary', 'Salary');
+    for (let i = 1; i < hd.length; i++) {
+      const row = hd[i];
+      const name = iName >= 0 ? String(row[iName] || '').trim() : '';
+      const email = iEmail >= 0 ? String(row[iEmail] || '').trim() : '';
+      if (!name && !email) continue;
+      const rec = {
+        name: name, email: email,
+        country: iCountry >= 0 ? String(row[iCountry] || '').trim() : '',
+        rate: iRate >= 0 ? safeNumber(row[iRate]) : 0,
+        situation: iSit >= 0 ? String(row[iSit] || '').trim() : '',
+      };
+      roster.push(rec);
+      if (email) hrByEmail[email.toLowerCase()] = rec;
+      if (name) hrByName[nkey(name)] = rec;
+    }
+  }
+
+  // ---------- 2) horas por driver a partir do check-in/checkout ----------
+  const startD = new Date(start + 'T00:00:00-03:00');
+  const endD = new Date(end + 'T23:59:59-03:00');
+  const byDriver = {};   // key -> { name, email, country, days: { 'yyyy-MM-dd': {dow, online} } }
+  const sheet = ss.getSheetByName(CONFIG.checkinSheet);
+  if (sheet && sheet.getLastRow() > 1) {
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const ts = row[0];                            // A: check-in timestamp
+      if (!(ts instanceof Date)) continue;
+      if (ts < startD || ts > endD) continue;
+      const name = String(row[2] || '').trim();     // C: Driver Name
+      const email = String(row[3] || '').trim();    // D: Driver Email
+      const country = String(row[4] || '').trim();  // E: Country
+      const checkoutTs = row[20];                    // U: checkout timestamp
+      let online = null;
+      if (checkoutTs instanceof Date) {
+        const diff = checkoutTs.getTime() - ts.getTime();
+        if (diff > 0) online = diff / 3600000;
+      }
+      const key = email ? 'e:' + email.toLowerCase() : (name ? 'n:' + nkey(name) : '');
+      if (!key) continue;
+      const dayStr = Utilities.formatDate(ts, tz, 'yyyy-MM-dd');
+      const p = dayStr.split('-');
+      const dow = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 12, 0, 0).getDay(); // 0=Dom..6=Sab
+      const drv = byDriver[key] || (byDriver[key] = { name: name, email: email, country: country, days: {} });
+      if (!drv.name && name) drv.name = name;
+      if (!drv.email && email) drv.email = email;
+      if (!drv.country && country) drv.country = country;
+      const prev = drv.days[dayStr];
+      if (!prev) drv.days[dayStr] = { dow: dow, online: online };
+      else if (online != null && (prev.online == null || online > prev.online)) prev.online = online;
+    }
+  }
+
+  // ---------- 3) dias do periodo + calculadora por motorista (com auto-fill) ----------
+  // Regra final (Lucas): TODO dia util (seg-sex) e dia cheio por padrao pra qualquer
+  // ativo; o check-in so serve pra (a) somar sabado/domingo trabalhado e (b) cortar dia
+  // com checkout curto (<6h online). Assim ninguem fica com hora faltando.
+  const pad = n => (n < 10 ? '0' + n : '' + n);
+  const periodDays = [];
+  {
+    const s = start.split('-'), e = end.split('-');
+    let dd = new Date(Number(s[0]), Number(s[1]) - 1, Number(s[2]), 12, 0, 0);
+    const last = new Date(Number(e[0]), Number(e[1]) - 1, Number(e[2]), 12, 0, 0);
+    while (dd <= last) {
+      periodDays.push({ dayStr: dd.getFullYear() + '-' + pad(dd.getMonth() + 1) + '-' + pad(dd.getDate()), dow: dd.getDay() });
+      dd.setDate(dd.getDate() + 1);
+    }
+  }
+
+  const computeDriver = (country, dayMap, autofill) => {
+    const target = countryWeekdayTarget_(country);
+    let approved = 0, worked = 0, filled = 0, trimmed = 0, saturday = 0, sunday = 0;
+    periodDays.forEach(pd => {
+      const rec = dayMap[pd.dayStr];   // {dow, online} ou undefined
+      let h = 0;
+      if (pd.dow === 6) {                                             // sabado: so se trabalhou
+        if (rec) { h = (rec.online == null || rec.online >= PAYROLL_SATURDAY_MIN_ONLINE_) ? PAYROLL_SATURDAY_HOURS_ : round2(rec.online); saturday++; }
+      } else if (pd.dow === 0) {                                      // domingo: so se trabalhou
+        if (rec) { h = (rec.online == null || rec.online >= PAYROLL_WEEKDAY_MIN_ONLINE_) ? target : round2(rec.online); sunday++; }
+      } else {                                                        // seg-sex
+        if (rec) {
+          if (rec.online == null || rec.online >= PAYROLL_WEEKDAY_MIN_ONLINE_) { h = target; worked++; }
+          else { h = round2(rec.online); trimmed++; }
+        } else if (autofill) { h = target; filled++; }               // dia util sem check-in -> cheio
+      }
+      approved += h;
+    });
+    return { approved: round2(approved), breakdown: { worked: worked, filled: filled, trimmed: trimmed, saturday: saturday, sunday: sunday } };
+  };
+  const brkDays = b => b.worked + b.filled + b.trimmed + b.saturday + b.sunday;
+
+  // ---------- 4) motoristas: roster ativo (auto-fill) + check-in orfao (so dias reais) ----------
+  const drivers = [];
+  const usedKeys = {};
+  roster.forEach(r => {
+    if (!isPayableSituation_(r.situation)) return;
+    const kE = r.email ? 'e:' + r.email.toLowerCase() : '';
+    const kN = r.name ? 'n:' + nkey(r.name) : '';
+    const ci = (kE && byDriver[kE]) ? { k: kE, v: byDriver[kE] } : ((kN && byDriver[kN]) ? { k: kN, v: byDriver[kN] } : null);
+    if (ci) usedKeys[ci.k] = true;
+    const c = computeDriver(r.country, ci ? ci.v.days : {}, true);
+    drivers.push({
+      name: r.name, email: r.email, country: r.country, rate: r.rate, situation: r.situation,
+      approvedHours: c.approved, daysWorked: brkDays(c.breakdown), basePay: round2(c.approved * r.rate),
+      breakdown: c.breakdown, inHr: true, hasCheckin: !!ci, autofilled: c.breakdown.filled > 0,
+    });
+  });
+  // check-in de gente fora do roster ativo (nao-HR ou inativo) -> conta so os dias registrados
+  Object.keys(byDriver).forEach(key => {
+    if (usedKeys[key]) return;
+    const d = byDriver[key];
+    const hr = (d.email && hrByEmail[d.email.toLowerCase()]) || (d.name && hrByName[nkey(d.name)]) || null;
+    const country = (hr && hr.country) || d.country || '';
+    const rate = hr ? hr.rate : 0;
+    const c = computeDriver(country, d.days, false);
+    drivers.push({
+      name: (hr && hr.name) || d.name || '', email: d.email || (hr && hr.email) || '',
+      country: country, rate: rate, situation: hr ? hr.situation : '',
+      approvedHours: c.approved, daysWorked: brkDays(c.breakdown), basePay: round2(c.approved * rate),
+      breakdown: c.breakdown, inHr: !!hr, hasCheckin: true, notRosterActive: true,
+    });
+  });
+
+  drivers.sort((a, b) => (a.country || '').localeCompare(b.country || '') || (a.name || '').localeCompare(b.name || ''));
+
+  // ---------- 5) camada de confirmacao: horas da aba "Timesheet" da MASTERSHEET ----------
+  const tsMap = getTimesheetTabHours_();
+  drivers.forEach(d => {
+    const th = (d.email && tsMap.byEmail[d.email.toLowerCase()] != null) ? tsMap.byEmail[d.email.toLowerCase()]
+             : ((d.name && tsMap.byName[nkey(d.name)] != null) ? tsMap.byName[nkey(d.name)] : null);
+    d.timesheetHours = th;                                    // horas da aba Timesheet (2a fonte)
+    d.timesheetDiff = (th != null) ? round2(d.approvedHours - th) : null;
+  });
+
+  return {
+    success: true,
+    version: 'v5.55',
+    period: { start: start, end: end, weekdays: weekdays },
+    rule: {
+      autofillWeekdays: true, weekday9hCountries: PAYROLL_WEEKDAY_9H_COUNTRIES_,
+      weekdayDefault: PAYROLL_WEEKDAY_TARGET_DEFAULT_, weekdayMinOnline: PAYROLL_WEEKDAY_MIN_ONLINE_,
+      saturdayHours: PAYROLL_SATURDAY_HOURS_,
+    },
+    drivers: drivers,
+  };
+}
+
+const ACE_SPREADSHEET_ID_ = '1tGQ9h2oSo7JMYKBtfHJqxhKgqSS-N5Lgg88s_RYebZM';
+
+// Camada de confirmacao: horas quinzenais por driver lidas da aba "Timesheet" da MASTERSHEET.
+// Reaproveita getTimesheetTab_ (headers+rows) e replica o auto-discovery do timesheet.html:
+// soma as 2 ultimas colunas "Final Hours" (semana atual + anterior).
+function getTimesheetTabHours_() {
+  const out = { byEmail: {}, byName: {} };
+  let t;
+  try { t = getTimesheetTab_(); } catch (err) { return out; }
+  if (!t || !t.success || !t.headers) return out;
+  const headers = t.headers.map(h => String(h || '').toLowerCase().trim());
+  const finalIdx = [];
+  headers.forEach((h, i) => { if (h === 'final hours') finalIdx.push(i); });
+  const findFirst = (...ps) => { for (const p of ps) { for (let i = 0; i < headers.length; i++) if (headers[i].indexOf(p) >= 0) return i; } return -1; };
+  const iName = findFirst('worker full name', 'beneficiary', 'full name', 'driver name', 'nome');
+  const iEmail = findFirst('corporate e-mail', 'corporate email', 'email', 'e-mail');
+  const nkey = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const num = v => {
+    if (typeof v === 'number') return v;
+    let s = String(v || '').trim().replace(/[^0-9.,\-]/g, '');
+    if (s.indexOf(',') >= 0 && s.indexOf('.') >= 0) { s = (s.lastIndexOf(',') > s.lastIndexOf('.')) ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, ''); }
+    else if (s.indexOf(',') >= 0) s = s.replace(',', '.');
+    const n = parseFloat(s); return isNaN(n) ? 0 : n;
+  };
+  (t.rows || []).forEach(r => {
+    const name = iName >= 0 ? String(r[iName] || '').trim() : '';
+    const email = iEmail >= 0 ? String(r[iEmail] || '').trim() : '';
+    if (!name && !email) return;
+    let hq = 0;
+    if (finalIdx.length >= 3) hq = num(r[finalIdx[1]]) + num(r[finalIdx[2]]);
+    else if (finalIdx.length) hq = num(r[finalIdx[finalIdx.length - 1]]);
+    if (email) out.byEmail[email.toLowerCase()] = hq;
+    if (name) out.byName[nkey(name)] = hq;
+  });
+  return out;
+}
+
+// ================================================================
+// v5.55: WRITER da ACE — escreve as horas calculadas na coluna "Hrs Worked"
+// da aba REAL da quinzena na planilha "LATAM Timesheet ACE" (id acima),
+// casando cada pessoa por NOME (os emails da ACE sao do lado CTS != check-in).
+// Escreve SO a coluna de totais "Hrs Worked" das linhas que casam — nao toca
+// no resto da aba nem nas colunas diarias.
+// GET ?action=writeAceHours&tab=<nome exato da aba>&start=&end=&confirm=1
+//   - sem &tab   -> devolve a lista de abas da ACE pra voce escolher
+//   - sem confirm=1 -> DRY-RUN (mostra o que gravaria, NAO grava)
+// ================================================================
+function writeAceHours_(tabName, startParam, endParam, confirm) {
+  const res = getPayrollCheckin_(startParam, endParam);
+  if (!res.success) return res;
+
+  let ace;
+  try { ace = SpreadsheetApp.openById(ACE_SPREADSHEET_ID_); }
+  catch (err) { return { success: false, error: 'Sem acesso de edicao a ACE (' + ACE_SPREADSHEET_ID_ + '): ' + err }; }
+
+  const tabs = ace.getSheets().map(s => s.getName());
+  if (!tabName) return { success: false, needTab: true, error: 'Passe &tab=<nome exato da aba da quinzena>.', tabs: tabs };
+  const sh = ace.getSheetByName(tabName);
+  if (!sh) return { success: false, error: 'Aba nao encontrada: "' + tabName + '"', tabs: tabs };
+
+  const values = sh.getDataRange().getValues();
+  const nkey = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const isWorked = h => { const x = h.replace(/[\s.]/g, ''); return x === 'hrsworked' || x === 'hoursworked'; };
+
+  // acha o cabecalho do bloco de totais: linha com "Name/Beneficiary" + "Hrs Worked" (1a ocorrencia = totais)
+  let hdrRow = -1, nameCol = -1, workedCol = -1;
+  for (let i = 0; i < Math.min(values.length, 40); i++) {
+    const rowL = values[i].map(c => String(c || '').trim().toLowerCase());
+    const nc = rowL.findIndex(h => h === 'name' || h === 'nome' || h === 'full name' || h === 'driver name' || h.indexOf('beneficiary') >= 0);
+    let wc = -1;
+    for (let j = 0; j < rowL.length; j++) { if (isWorked(rowL[j])) { wc = j; break; } }
+    if (nc >= 0 && wc >= 0) { hdrRow = i; nameCol = nc; workedCol = wc; break; }
+  }
+  if (hdrRow < 0) return { success: false, error: 'Nao achei cabecalho com "Name" + "Hrs Worked" na aba "' + tabName + '" (primeiras 40 linhas).', tabs: tabs };
+
+  const byName = {};
+  res.drivers.forEach(d => { if (d.name) byName[nkey(d.name)] = d; });
+
+  const plan = [];
+  const usedNames = {};
+  for (let i = hdrRow + 1; i < values.length; i++) {
+    const nm = String(values[i][nameCol] || '').trim();
+    if (!nm) continue;
+    const d = byName[nkey(nm)];
+    if (!d) { plan.push({ row: i + 1, name: nm, matched: false }); continue; }
+    usedNames[nkey(nm)] = true;
+    plan.push({ row: i + 1, name: nm, matched: true, oldVal: values[i][workedCol], newVal: d.approvedHours, timesheetHours: d.timesheetHours });
+  }
+  const matches = plan.filter(p => p.matched);
+  const computedNotInTab = res.drivers.filter(d => d.name && !usedNames[nkey(d.name)]).map(d => ({ name: d.name, country: d.country, computed: d.approvedHours }));
+
+  let written = 0;
+  const doWrite = String(confirm) === '1';
+  if (doWrite) { matches.forEach(p => { sh.getRange(p.row, workedCol + 1).setValue(p.newVal); written++; }); }
+
+  return {
+    success: true, version: 'v5.55', dryRun: !doWrite,
+    tab: tabName, period: res.period,
+    headerRow: hdrRow + 1, nameCol: nameCol + 1, hrsWorkedCol: workedCol + 1,
+    matched: matches.length, written: written,
+    unmatchedInTab: plan.filter(p => !p.matched).map(p => p.name),
+    computedNotInTab: computedNotInTab,
+    preview: matches.slice(0, 12).map(p => ({ name: p.name, de: p.oldVal, para: p.newVal, timesheet: p.timesheetHours })),
+  };
+}
+
+// v5.56: WRITER manual — grava horas JA DECIDIDAS na pagina payroll (apos revisao/edicao
+// dos outliers) na coluna "Hrs Worked" da aba da ACE. POST { tab, rows:[{name,hours}], confirm }.
+// Casa por NOME; sem confirm=1 = DRY-RUN. So super admin (checado no doPost).
+function writeAceHoursManual_(data) {
+  const tabName = data.tab;
+  const rows = Array.isArray(data.rows) ? data.rows : [];
+  const doWrite = String(data.confirm) === '1';
+  if (!tabName) return { success: false, error: 'Parametro "tab" obrigatorio.' };
+  if (!rows.length) return { success: false, error: 'Nenhuma linha para gravar.' };
+
+  let ace;
+  try { ace = SpreadsheetApp.openById(ACE_SPREADSHEET_ID_); }
+  catch (err) { return { success: false, error: 'Sem acesso de edicao a ACE: ' + err }; }
+  const sh = ace.getSheetByName(tabName);
+  if (!sh) return { success: false, error: 'Aba nao encontrada: "' + tabName + '"', tabs: ace.getSheets().map(s => s.getName()) };
+
+  const values = sh.getDataRange().getValues();
+  const nkey = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const isWorked = h => { const x = h.replace(/[\s.]/g, ''); return x === 'hrsworked' || x === 'hoursworked'; };
+  let hdrRow = -1, nameCol = -1, workedCol = -1;
+  for (let i = 0; i < Math.min(values.length, 40); i++) {
+    const rowL = values[i].map(c => String(c || '').trim().toLowerCase());
+    const nc = rowL.findIndex(h => h === 'name' || h === 'nome' || h === 'full name' || h === 'driver name' || h.indexOf('beneficiary') >= 0);
+    let wc = -1;
+    for (let j = 0; j < rowL.length; j++) { if (isWorked(rowL[j])) { wc = j; break; } }
+    if (nc >= 0 && wc >= 0) { hdrRow = i; nameCol = nc; workedCol = wc; break; }
+  }
+  if (hdrRow < 0) return { success: false, error: 'Cabecalho "Name" + "Hrs Worked" nao achado na aba "' + tabName + '".' };
+
+  const byName = {};
+  rows.forEach(r => { if (r && r.name != null) byName[nkey(r.name)] = Number(r.hours) || 0; });
+
+  const plan = [];
+  const used = {};
+  for (let i = hdrRow + 1; i < values.length; i++) {
+    const nm = String(values[i][nameCol] || '').trim();
+    if (!nm) continue;
+    const k = nkey(nm);
+    if (Object.prototype.hasOwnProperty.call(byName, k)) { used[k] = true; plan.push({ row: i + 1, name: nm, oldVal: values[i][workedCol], newVal: byName[k] }); }
+  }
+  let written = 0;
+  if (doWrite) { plan.forEach(p => { sh.getRange(p.row, workedCol + 1).setValue(p.newVal); written++; }); }
+  const notInTab = rows.filter(r => r && r.name && !used[nkey(r.name)]).map(r => r.name);
+
+  return {
+    success: true, version: 'v5.56', dryRun: !doWrite, tab: tabName,
+    headerRow: hdrRow + 1, hrsWorkedCol: workedCol + 1,
+    matched: plan.length, written: written, notInTab: notInTab,
+    preview: plan.slice(0, 15).map(p => ({ name: p.name, de: p.oldVal, para: p.newVal })),
+  };
 }
 
 
