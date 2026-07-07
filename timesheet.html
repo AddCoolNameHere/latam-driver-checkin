@@ -153,6 +153,9 @@ table.pay tbody tr.gap:hover td { background:color-mix(in srgb, var(--c-warn) 12
 .extra-chip { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:1px 6px; border-radius:999px; margin:1px 2px 1px 0; }
 .extra-chip.pos { background:color-mix(in srgb, var(--c-success) 14%, transparent); color:var(--c-success); }
 .extra-chip.neg { background:color-mix(in srgb, var(--c-danger) 12%, transparent); color:var(--c-danger); }
+.extra-chip .chip-del { cursor:pointer; display:inline-flex; opacity:.55; margin-left:2px; }
+.extra-chip .chip-del:hover { opacity:1; }
+.extra-chip .chip-del svg { display:block; }
 
 /* ---------- ACE sync ---------- */
 .ace-panel { margin-top:20px; background:var(--c-surface); border:1px solid var(--sv-line); border-radius:var(--sv-card); box-shadow:var(--sv-shadow); padding:18px 20px; }
@@ -721,7 +724,8 @@ function renderTable() {
       : '<span class="ts-cell">—</span>';
     const extrasChips = r.extras.map(a => {
       const v = Number(a.amount) || 0;
-      return `<span class="extra-chip ${v < 0 ? 'neg' : 'pos'}" title="${escapeHtml((categoryLabel(a.category)) + (a.note ? ' — ' + a.note : ''))}">${escapeHtml(categoryLabel(a.category))} ${(v < 0 ? '-' : '+')}${fmtMoney(Math.abs(v)).replace('$','')}</span>`;
+      const del = isSuperAdmin ? `<span class="chip-del" data-del-id="${escapeHtml(a.id)}" title="${escapeHtml(t().delConfirm)}">${svgIcon('x', 11, 2.4)}</span>` : '';
+      return `<span class="extra-chip ${v < 0 ? 'neg' : 'pos'}" title="${escapeHtml((categoryLabel(a.category)) + (a.note ? ' — ' + a.note : ''))}">${escapeHtml(categoryLabel(a.category))} ${(v < 0 ? '-' : '+')}${fmtMoney(Math.abs(v)).replace('$','')}${del}</span>`;
     }).join('');
     const addBtn = isSuperAdmin
       ? `<button type="button" class="mini-btn" title="${i.addExtra}" data-add data-name="${escapeHtml(d.name)}" data-email="${escapeHtml(d.email)}" data-country="${escapeHtml(d.country)}">${svgIcon('plus', 16, 2)}</button>`
@@ -886,6 +890,17 @@ async function submitAdjustment(driver) {
     closeModal(); applyFilters();
   } catch (e) { errEl.textContent = i.error + ' — ' + (e.message || e); saveBtn.disabled = false; saveBtn.textContent = i.modalSave; }
 }
+async function deleteAdjustment(id) {
+  if (!id || !isSuperAdmin) return;
+  if (!window.confirm(t().delConfirm)) return;
+  try {
+    const res = await fetch(CONFIG.scriptUrl, { method:'POST', headers:{ 'Content-Type':'text/plain' }, body:JSON.stringify({ type:'deletePayrollAdjustment', actorUsername:currentUser.username, id:id }) }).then(r => r.json());
+    if (!res || !res.success) { window.alert((res && res.error) || t().error); return; }
+    state.adjustments = state.adjustments.filter(a => a.id !== id);
+    if (typeof clearDataCache === 'function') clearDataCache('getPayrollAdjustments');
+    applyFilters();
+  } catch (e) { window.alert(t().error + ' — ' + (e.message || e)); }
+}
 
 /* ================= ACE sync ================= */
 async function loadAceTabs() {
@@ -962,6 +977,8 @@ function exportCsv() {
 
 /* ================= Events ================= */
 function onBodyClick(e) {
+  const del = e.target.closest('.chip-del');
+  if (del) { deleteAdjustment(del.dataset.delId); return; }
   const add = e.target.closest('[data-add]');
   if (add) { openAdjustModal({ name:add.dataset.name || '', email:add.dataset.email || '', country:add.dataset.country || '' }); }
 }
