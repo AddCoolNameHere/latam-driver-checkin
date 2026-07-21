@@ -58,6 +58,10 @@ body {
 .sv-nav-item .sv-ico svg { display: block; }
 .sv-nav-item:hover { background: rgba(255,255,255,.05); color: #E7ECF5; }
 .sv-nav-item:hover .sv-ico { color: #C3CEE2; }
+/* seta de "abre em outra aba" (ex: CTS Data, portal do cliente) */
+.sv-nav-item .sv-ext { font-style: normal; font-size: 10.5px; opacity: .5; margin-left: 4px; }
+.sv-nav-item:hover .sv-ext { opacity: .85; }
+
 .sv-nav-item.active { background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; box-shadow: 0 10px 22px -12px rgba(44,82,130,.9); }
 .sv-nav-item.active .sv-ico { color: #fff; }
 .sv-foot { display: flex; align-items: center; gap: 10px; padding: 12px 10px 4px; border-top: 1px solid var(--sv-navy-line); margin-top: 6px; }

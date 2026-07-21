@@ -25,7 +25,7 @@
     l.href = href;
     document.head.appendChild(l);
   }
-  ensureLink("/sv-skin.css?v=5");
+  ensureLink("/sv-skin.css?v=6");
   ensureLink("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
   // ---- ícones (line, 24x24) ----
@@ -65,6 +65,9 @@
       { label: { pt: "Divergências AR",  es: "Divergencias AR",  en: "AR Divergences" },   href: "ar-divergencias-admin.html", icon: "alert",  access: "all" },
     ]},
     { label: { pt: "Relatórios", es: "Reportes", en: "Reports" }, items: [
+      // Portal do cliente (/cts-data). Site público e separado — abre em outra
+      // aba pra não tirar o time de dentro do portal. Ele não tem sidebar.
+      { label: { pt: "CTS Data", es: "CTS Data", en: "CTS Data" }, href: "/cts-data/", icon: "chart", access: "all", external: true },
       { label: { pt: "Cenários Argentina",   es: "Escenarios Argentina",   en: "Argentina Scenarios" },    href: "argentina_scenarios_presentation.html", icon: "chart",    access: "admin" },
       { label: { pt: "Otimização Argentina", es: "Optimización Argentina", en: "Argentina Optimization" }, href: "argentina_optimization_report.html",    icon: "fileText", access: "admin" },
     ]},
@@ -128,9 +131,9 @@
   // rewrite do Cloudflare, então o pathname chega sem ele).
   function slug(p) {
     p = String(p || "").toLowerCase().split("?")[0].split("#")[0];
-    p = p.split("/").pop();
-    if (!p) return "index";
-    return p.replace(/\.html$/, "");
+    var parts = p.split("/").filter(Boolean);
+    var last = parts.pop() || "index";       // "/cts-data/" → "cts-data", "/" → "index"
+    return last.replace(/\.html$/, "");
   }
   function here() { return slug(location.pathname); }
 
@@ -152,8 +155,14 @@
         var isActive = !activeSet && slug(it.href) === cur;
         if (isActive) activeSet = true;
         var label = L(it.label, lang);
-        html += '<a class="sv-nav-item' + (isActive ? " active" : "") + '" href="' + it.href + '" title="' + label + '">' +
-          '<span class="sv-ico">' + svg(it.icon) + "</span><span>" + label + "</span></a>";
+        // Externo abre em outra aba. A seta fica DENTRO do span do label de
+        // propósito: a regra do modo recolhido esconde o último <span>, então
+        // um span solo aqui inverteria o comportamento (sumiria a seta e
+        // apareceria o texto).
+        var ext = it.external ? ' target="_blank" rel="noopener"' : "";
+        var arrow = it.external ? ' <i class="sv-ext" aria-hidden="true">↗</i>' : "";
+        html += '<a class="sv-nav-item' + (isActive ? " active" : "") + '" href="' + it.href + '"' + ext + ' title="' + label + '">' +
+          '<span class="sv-ico">' + svg(it.icon) + "</span><span>" + label + arrow + "</span></a>";
       });
     });
     navEl.innerHTML = html;
