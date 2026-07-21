@@ -17,3 +17,6 @@ Prints/
 VID_Status.csv
 Gemini_Generated_Image_*.png
 true pgn globe.png
+
+# PDFs de relatório gerados localmente
+TKM_Report_*.pdf
