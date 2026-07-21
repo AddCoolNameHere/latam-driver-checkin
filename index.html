@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aceolution LATAM — Street View Operations</title>
+<script>
+  /* O link salvo pelos motoristas apontava pro index.html da raiz, que ERA o
+     check-in. Quem abrir esse endereço vai direto pro lugar novo; a home
+     limpa (latamace.com/) segue sendo esta landing.
+     Roda antes do CSS de propósito — redireciona sem piscar a página. */
+  if (location.pathname.toLowerCase() === '/index.html') {
+    location.replace('/checkin/' + location.search + location.hash);
+  }
+</script>
 <link rel="icon" type="image/png" href="aceolution-globe.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
