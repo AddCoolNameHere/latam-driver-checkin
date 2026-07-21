@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.59',
+        version: 'v5.60',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -394,7 +394,26 @@ function doGet(e) {
       const month = parseInt(e.parameter.month, 10) || null;
       const year = parseInt(e.parameter.year, 10) || null;
       const country = e.parameter.country || 'ALL';
-      return jsonResponse(getClientMetrics_(month, year, country));
+      // v5.59: CACHE DE SERVIDOR (30min). A montagem é cara (lê a RAW CTS
+      // inteira) — 45s+ por chamada. Sem isso, CADA visitante do portal
+      // público pagaria esse custo e estouraria o timeout do frontend.
+      // ?nocache=1 força recalcular.
+      const cacheKey = 'clientMetrics_' + month + '_' + year + '_' + country;
+      const cache = CacheService.getScriptCache();
+      if (e.parameter.nocache !== '1') {
+        const hit = cache.get(cacheKey);
+        if (hit) return ContentService.createTextOutput(hit).setMimeType(ContentService.MimeType.JSON);
+      }
+      const payload = getClientMetrics_(month, year, country);
+      if (payload && payload.success) {
+        try {
+          const str = JSON.stringify(payload);
+          // limite do CacheService é 100KB por chave — acima disso, só não cacheia
+          if (str.length < 95000) cache.put(cacheKey, str, 1800);
+          else Logger.log('getClientMetrics: payload ' + str.length + 'B — grande demais pro cache');
+        } catch (e2) { Logger.log('getClientMetrics cache falhou: ' + e2); }
+      }
+      return jsonResponse(payload);
     }
 
     // v5.44: frota inteira por VID — última posição conhecida de cada VID (pro ops-map)

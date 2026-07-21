@@ -472,7 +472,9 @@ const CM = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
   cachePrefix: 'CM_CACHE_',
   ttlSec: 900,          // 15 min — a RAW CTS é atualizada 1x/dia
-  timeoutMs: 90000,     // Apps Script frio é lento
+  // O backend cacheia 30min do lado dele; só o 1º acesso paga a montagem
+  // completa (lê a RAW CTS inteira), que passa de 1min no LATAM todo.
+  timeoutMs: 170000,
 };
 
 const MONTH_NAMES = ['January','February','March','April','May','June',
@@ -902,7 +904,13 @@ function renderPeriods(months) {
 
 /* ---------- carregar ---------- */
 async function load(force) {
-  $('table-area').innerHTML = '<div class="cm-state"><div class="cm-spinner"></div>Loading operational data…</div>';
+  // O 1º acesso de cada meia hora monta tudo do zero e pode levar ~1min —
+  // avisa depois de 8s pra ninguém achar que travou.
+  $('table-area').innerHTML =
+    '<div class="cm-state"><div class="cm-spinner"></div>Loading operational data…' +
+    '<p id="slow-hint" style="margin-top:12px;opacity:0;transition:opacity .4s ease">' +
+    'Still working — the first load after a while can take up to a minute.</p></div>';
+  setTimeout(() => { const h = $('slow-hint'); if (h) h.style.opacity = '1'; }, 8000);
   $('kpis').innerHTML = Array.from({ length: 8 }, () =>
     '<div class="cm-card"><div class="cm-skeleton" style="width:55%"></div>' +
     '<div class="cm-skeleton" style="width:75%;height:28px"></div>' +
