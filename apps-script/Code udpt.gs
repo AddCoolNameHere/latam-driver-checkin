@@ -5472,6 +5472,11 @@ function getTkmReport_(month, year, country) {
       tkm: findHeader_(cHead, ['tkm (done by drivers)', 'tkm done', 'tkm']),
       baseline: findHeader_(cHead, ['% overall baseline', 'overall baseline', 'baseline']),
       avgHours: findHeader_(cHead, ['avg system on hours', 'average mapping hours', 'avg mapping hours', 'system on hours', 'avg system']),
+      // v5.58: blocos "Swarm Productivity" / "Churn Management" da aba
+      swarmAchieved: findHeader_(cHead, ['swarm achieved']),
+      swarmGoal: findHeader_(cHead, ['swarm goal']),
+      churnAchieved: findHeader_(cHead, ['churn achieved']),
+      churnGoal: findHeader_(cHead, ['churn goal']),
     };
     const cRows = sheet.getRange(11, 1, 7, lastCol).getValues(); // 6 países + SUM
     const perCountry = [];
@@ -5487,6 +5492,12 @@ function getTkmReport_(month, year, country) {
         tkmDone: safeNumber(row[cIx.tkm]),
         baselinePct: safeNumber(row[cIx.baseline]),   // "% Overall Baseline" — FICA da aba
         avgHours: safeNumber(row[cIx.avgHours]),       // "AVG System on Hours" (col N) — FICA da aba
+        // v5.58: swarm/churn são TIPOS DE MAPA distintos, com meta própria.
+        // Não existem na RAW CTS (não há coluna Map Type) — só nesta aba.
+        swarmAchieved: cIx.swarmAchieved >= 0 ? safeNumber(row[cIx.swarmAchieved]) : 0,
+        swarmGoal: cIx.swarmGoal >= 0 ? safeNumber(row[cIx.swarmGoal]) : 0,
+        churnAchieved: cIx.churnAchieved >= 0 ? safeNumber(row[cIx.churnAchieved]) : 0,
+        churnGoal: cIx.churnGoal >= 0 ? safeNumber(row[cIx.churnGoal]) : 0,
       };
       if (name.toUpperCase() === 'SUM') sumRow = obj; else perCountry.push(obj);
     }
@@ -5567,6 +5578,13 @@ function getTkmReport_(month, year, country) {
       tkm: findHeader_(dHead, ['tkm sum', 'tkm (done by drivers)', 'tkm done']),
       avgHours: findHeader_(dHead, ['avg system on hours', 'average mapping hours', 'avg mapping hours', 'system on hours', 'avg system']),
       currentVid: findHeader_(dHead, ['current/last vid', 'current vid', 'last vid']),
+      // v5.58: blocos "Swarm Productivity" / "Churn Maps" por motorista
+      tkmSwarm: findHeader_(dHead, ['tkm swarm']),
+      kmSwarm: findHeader_(dHead, ['km driven swarm']),
+      swarmDays: findHeader_(dHead, ['swarm days']),
+      tkmChurn: findHeader_(dHead, ['tkm churn']),
+      kmChurn: findHeader_(dHead, ['km driven churn']),
+      churnDays: findHeader_(dHead, ['churn days']),
     };
     const drivers = [];
     const driverDiffs = [];
@@ -5629,6 +5647,13 @@ function getTkmReport_(month, year, country) {
           vidActiveSum: safeNumber(row[dIx.vidActive]),  // VID Active SUM — FICA da aba
           vids: vids,                                    // v5.52: VIDs distintos rodados (RAW CTS)
           baselinePct: baselinePct,
+          // v5.58: swarm vs churn por motorista (só existem nesta aba)
+          tkmSwarm: dIx.tkmSwarm >= 0 ? safeNumber(row[dIx.tkmSwarm]) : 0,
+          kmSwarm: dIx.kmSwarm >= 0 ? safeNumber(row[dIx.kmSwarm]) : 0,
+          swarmDays: dIx.swarmDays >= 0 ? safeNumber(row[dIx.swarmDays]) : 0,
+          tkmChurn: dIx.tkmChurn >= 0 ? safeNumber(row[dIx.tkmChurn]) : 0,
+          kmChurn: dIx.kmChurn >= 0 ? safeNumber(row[dIx.kmChurn]) : 0,
+          churnDays: dIx.churnDays >= 0 ? safeNumber(row[dIx.churnDays]) : 0,
         });
       }
     }
@@ -5759,41 +5784,6 @@ function clientCountryName_(raw) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/** Bucket do Map Type: 'swarm' | 'churn' | 'other' (tolerante a variações). */
-function clientMapTypeBucket_(raw) {
-  const s = normCountry_(raw);   // reaproveita: lowercase + sem acento
-  if (!s) return 'other';
-  if (s.indexOf('swarm') >= 0) return 'swarm';
-  if (s.indexOf('churn') >= 0) return 'churn';
-  return 'other';
-}
-
-/** email (lowercase) → { name, country } da HR Database. */
-function getDriverNamesByEmail_() {
-  const map = {};
-  try {
-    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
-    const sheet = ss.getSheetByName(CONFIG.hrSheet);
-    if (!sheet || sheet.getLastRow() < 2) return map;
-    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    const iEmail = findHeader_(headers, ['Corporate E-mail', 'Corporate Email', 'Email', 'Driver Email']);
-    const iName = findHeader_(headers, ['Driver Name', 'Full Name', 'Name', 'Worker']);
-    const iCountry = findHeader_(headers, ['Country']);
-    if (iEmail < 0) return map;
-    const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
-    for (let i = 0; i < data.length; i++) {
-      const email = String(data[i][iEmail] || '').trim().toLowerCase();
-      if (!email) continue;
-      map[email] = {
-        name: iName >= 0 ? String(data[i][iName] || '').trim() : '',
-        country: iCountry >= 0 ? String(data[i][iCountry] || '').trim() : '',
-      };
-    }
-  } catch (e) {
-    Logger.log('getDriverNamesByEmail_ erro: ' + e);
-  }
-  return map;
-}
 
 /**
  * Status da frota per Google por país, da aba VID Monthly CALENDAR
@@ -5854,143 +5844,71 @@ function withFleetPcts_(f) {
 }
 
 /**
- * KPIs + lista de motoristas pro portal do cliente.
- * @param {number} month  1-12 (default: mês corrente)
+ * KPIs + lista de motoristas pro portal do cliente (/cts-data).
+ *
+ * FONTE: a aba "TKM Monthly Drivers Report" (via getTkmReport_), que é
+ * exatamente o que a CTS enxerga — inclui swarm e churn, que são TIPOS DE
+ * MAPA com meta própria e NÃO existem na RAW CTS DATA (não há coluna
+ * Map Type lá). Status da frota vem do VID Monthly CALENDAR.
+ *
+ * ⚠ getTkmReport_ só escreve em B9/D9 quando o mês/ano pedido é diferente
+ * do que já está lá (e restaura sempre, sob lock). Como o portal usa por
+ * padrão o período corrente da aba, o caso normal é leitura pura.
+ *
+ * @param {number} month  1-12 (default: período corrente da aba)
  * @param {number} year   ex 2026
  * @param {string} country nome do país, ou 'ALL'
  */
 function getClientMetrics_(month, year, country) {
   try {
-    const now = new Date();
-    if (!month) month = now.getMonth() + 1;
-    if (!year) year = now.getFullYear();
-    const monthKey = String(month) + '.' + String(year);
+    // Sem mês/ano explícito: usa o período que a aba já está mostrando
+    // (evita qualquer escrita na planilha no acesso padrão do cliente).
+    let opts = null;
+    try { opts = getTkmReportOptions_(); } catch (e) { Logger.log('getClientMetrics_: options falhou: ' + e); }
+    if (!month) month = (opts && opts.currentMonth) || (new Date().getMonth() + 1);
+    if (!year) year = (opts && opts.currentYear) || (new Date().getFullYear());
+
     const wantAll = !country || String(country).toUpperCase() === 'ALL' || String(country).trim() === '';
 
-    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
-    const sheet = ss.getSheetByName(CONFIG.rawCtsSheet);
-    if (!sheet || sheet.getLastRow() < 2) {
-      return { success: false, error: 'aba "' + CONFIG.rawCtsSheet + '" vazia ou não encontrada' };
+    const rep = getTkmReport_(month, year, wantAll ? 'ALL' : country);
+    if (!rep || rep.success === false) {
+      return { success: false, error: (rep && rep.error) || 'falha lendo o relatório mensal' };
     }
 
-    const data = sheet.getDataRange().getValues();
-    const h = data[0];
-    const iMonth = findHeader_(h, ['Month']);
-    const iMapType = findHeader_(h, ['Map Type', 'map_type', 'maptype', 'Map type']);
-    const iCountry = findHeader_(h, ['country', 'country_code']);
-    const iVid = findHeader_(h, ['VID', 'vehicle_id']);
-    const iDate = findHeader_(h, ['drive_date']);
-    const iEmail = findHeader_(h, ['email']);
-    const iStatus = findHeader_(h, ['Status', 'status']);
-    const iTkm = findHeader_(h, ['TKM']);
-    const iKm = findHeader_(h, ['total_km', 'total_kms']);
-    const iHours = findHeader_(h, ['Ace System On Hours', 'System On Hours', 'ace_system_on_hours']);
+    const big = rep.bigNumbers || {};
+    const repDrivers = rep.drivers || [];
 
-    if (iMonth < 0 || iEmail < 0) {
-      return { success: false, error: 'RAW CTS DATA sem colunas Month/email' };
-    }
-
-    const byDriver = {};        // email → agregado
-    const monthsSeen = {};      // 'M.YYYY' → true (pros seletores)
-    const countriesSeen = {};   // normCountry → nome
-    const mapTypesSeen = {};    // rótulo cru → true (diagnóstico)
-
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      const rowMonth = String(row[iMonth] || '').trim();
-      if (rowMonth) monthsSeen[rowMonth] = true;
-
-      const cName = iCountry >= 0 ? clientCountryName_(row[iCountry]) : '';
-      if (cName) countriesSeen[normCountry_(cName)] = cName;
-
-      if (rowMonth !== monthKey) continue;
-      if (!wantAll && !matchCountry_(cName, country)) continue;
-
-      const email = String(row[iEmail] || '').trim().toLowerCase();
-      if (!email) continue;
-
-      const mapRaw = iMapType >= 0 ? String(row[iMapType] || '').trim() : '';
-      if (mapRaw) mapTypesSeen[mapRaw] = true;
-      const bucket = clientMapTypeBucket_(mapRaw);
-
-      const tkm = safeNumber(row[iTkm]);
-      const km = safeNumber(row[iKm]);
-      const hours = iHours >= 0 ? safeNumber(row[iHours]) : 0;
-      const status = iStatus >= 0 ? String(row[iStatus] || '').trim() : '';
-      const isMapping = PRODUCTIVE_STATUSES.indexOf(status) >= 0;
-
-      if (!byDriver[email]) {
-        byDriver[email] = {
-          email: email, country: cName,
-          tkm: 0, km: 0, hours: 0, mappingDays: 0, days: 0,
-          swarmTkm: 0, churnTkm: 0, otherTkm: 0,
-          swarmDays: 0, churnDays: 0,
-          vids: [],
-        };
-      }
-      const d = byDriver[email];
-      if (!d.country && cName) d.country = cName;
-      d.tkm += tkm;
-      d.km += km;
-      d.hours += hours;
-      d.days++;
-      if (isMapping) d.mappingDays++;
-      if (bucket === 'swarm') { d.swarmTkm += tkm; if (isMapping) d.swarmDays++; }
-      else if (bucket === 'churn') { d.churnTkm += tkm; if (isMapping) d.churnDays++; }
-      else { d.otherTkm += tkm; }
-
-      if (iVid >= 0) {
-        const vid = String(row[iVid] == null ? '' : row[iVid]).trim();
-        if (vid && d.vids.indexOf(vid) < 0) d.vids.push(vid);
-      }
-    }
-
-    // ---- nomes (HR) + monta a lista final ----
-    const hr = getDriverNamesByEmail_();
-    const drivers = [];
+    // ---- motoristas ----
     const vidSetAll = {};
-    let totTkm = 0, totKm = 0, totHours = 0, totMappingDays = 0;
-    let totSwarm = 0, totChurn = 0;
+    const drivers = repDrivers.map(function (d) {
+      (d.vids || []).forEach(function (v) { if (v) vidSetAll[v] = true; });
+      const tkmSwarm = safeNumber(d.tkmSwarm);
+      const tkmChurn = safeNumber(d.tkmChurn);
+      const typed = tkmSwarm + tkmChurn;
+      return {
+        name: d.name,
+        country: clientCountryName_(d.country),
+        tkm: safeNumber(d.tkm),
+        kmDriven: safeNumber(d.kmDriven),
+        efficiency: safeNumber(d.efficiency),
+        avgSystemOnHours: safeNumber(d.avgHours),   // "AVG System on Hours" da aba
+        qcScore: safeNumber(d.qcScore),
+        baselinePct: safeNumber(d.baselinePct),
+        tkmSwarm: tkmSwarm,
+        kmSwarm: safeNumber(d.kmSwarm),
+        swarmDays: safeNumber(d.swarmDays),
+        tkmChurn: tkmChurn,
+        kmChurn: safeNumber(d.kmChurn),
+        churnDays: safeNumber(d.churnDays),
+        swarmPct: typed > 0 ? tkmSwarm / typed : 0,
+        churnPct: typed > 0 ? tkmChurn / typed : 0,
+        mappingDays: safeNumber(d.swarmDays) + safeNumber(d.churnDays),
+        vids: d.vids || [],
+        vidCount: (d.vids || []).length,
+      };
+    });
 
-    for (const email in byDriver) {
-      const d = byDriver[email];
-      const info = hr[email] || {};
-      const totalTypeTkm = d.swarmTkm + d.churnTkm + d.otherTkm;
-      drivers.push({
-        name: info.name || email.split('@')[0],
-        country: d.country || clientCountryName_(info.country),
-        tkm: Math.round(d.tkm * 100) / 100,
-        kmDriven: Math.round(d.km * 100) / 100,
-        efficiency: d.km > 0 ? d.tkm / d.km : 0,
-        systemOnHours: Math.round(d.hours * 100) / 100,
-        avgSystemOnHours: d.mappingDays > 0 ? d.hours / d.mappingDays : 0,
-        mappingDays: d.mappingDays,
-        swarmTkm: Math.round(d.swarmTkm * 100) / 100,
-        churnTkm: Math.round(d.churnTkm * 100) / 100,
-        swarmPct: totalTypeTkm > 0 ? d.swarmTkm / totalTypeTkm : 0,
-        churnPct: totalTypeTkm > 0 ? d.churnTkm / totalTypeTkm : 0,
-        vids: d.vids,
-        vidCount: d.vids.length,
-      });
-      d.vids.forEach(function (v) { vidSetAll[v] = true; });
-      totTkm += d.tkm; totKm += d.km; totHours += d.hours;
-      totMappingDays += d.mappingDays;
-      totSwarm += d.swarmTkm; totChurn += d.churnTkm;
-    }
-    drivers.sort(function (a, b) { return b.tkm - a.tkm; });
-
-    // ---- meta do mês (CTS Goal Management) ----
-    let goalTkm = 0;
-    try {
-      const goals = getCtsGoals();
-      for (let i = 0; i < goals.length; i++) {
-        const g = goals[i];
-        if (!periodMatches_(g.period, month, year)) continue;
-        if (wantAll || matchCountry_(clientCountryName_(g.country), country)) goalTkm += g.ctsGoal || 0;
-      }
-    } catch (e) { Logger.log('getClientMetrics_: getCtsGoals falhou: ' + e); }
-
-    // ---- frota per Google ----
+    // ---- frota per Google (VID Monthly CALENDAR) ----
     const fleetSrc = getClientFleetStatus_();
     let fleet;
     if (wantAll) {
@@ -6006,18 +5924,37 @@ function getClientMetrics_(month, year, country) {
     fleet.sourceYear = fleetSrc.year;
     fleet.isCurrentPeriod = (fleetSrc.month === month && fleetSrc.year === year);
 
-    const typeTkmTotal = totSwarm + totChurn;
+    // ---- KPIs ----
+    // AVG System on Hours: usa o da aba (país). No ALL, média ponderada pelos
+    // motoristas — a linha SUM da aba às vezes traz média simples dos países.
+    let avgHours = safeNumber(big.avgHours);
+    if (drivers.length) {
+      let sum = 0, n = 0;
+      drivers.forEach(function (d) { if (d.avgSystemOnHours > 0) { sum += d.avgSystemOnHours; n++; } });
+      if (n > 0) avgHours = sum / n;
+    }
 
-    // ---- meses disponíveis (desc) ----
-    const months = Object.keys(monthsSeen).map(function (k) {
-      const p = k.split('.');
-      return { key: k, month: parseInt(p[0], 10), year: parseInt(p[1], 10) };
-    }).filter(function (m) { return m.month && m.year; });
-    months.sort(function (a, b) { return (b.year - a.year) || (b.month - a.month); });
+    const swarmAch = safeNumber(big.swarmAchieved);
+    const churnAch = safeNumber(big.churnAchieved);
+    const typedTotal = swarmAch + churnAch;
 
-    const countries = [];
-    for (const k in countriesSeen) countries.push(countriesSeen[k]);
-    countries.sort();
+    let totalMappingDays = 0;
+    drivers.forEach(function (d) { totalMappingDays += d.mappingDays; });
+
+    // Meses/países pros seletores (data-validation da aba — o que o relatório aceita)
+    const months = [];
+    if (opts && opts.months && opts.years) {
+      const ys = opts.years.slice().sort(function (a, b) { return b - a; });
+      ys.forEach(function (y) {
+        opts.months.slice().sort(function (a, b) { return b - a; }).forEach(function (m) {
+          months.push({ month: m, year: y });
+        });
+      });
+    } else {
+      months.push({ month: month, year: year });
+    }
+
+    const countries = (rep.perCountry || []).map(function (c) { return clientCountryName_(c.country); });
 
     return {
       success: true,
@@ -6026,24 +5963,46 @@ function getClientMetrics_(month, year, country) {
       country: wantAll ? 'ALL' : country,
       months: months,
       countries: countries,
-      mapTypesFound: Object.keys(mapTypesSeen),
       kpis: {
-        goalTkm: goalTkm,
-        tkmDone: Math.round(totTkm * 100) / 100,
-        achievementPct: goalTkm > 0 ? totTkm / goalTkm : 0,
-        kmDriven: Math.round(totKm * 100) / 100,
-        efficiency: totKm > 0 ? totTkm / totKm : 0,
+        goalTkm: safeNumber(big.ctsGoal),
+        tkmDone: safeNumber(big.tkmDone),
+        achievementPct: safeNumber(big.achievementPct),
+        baselinePct: safeNumber(big.baselinePct),
+        kmDriven: (function () { let k = 0; drivers.forEach(function (d) { k += d.kmDriven; }); return k; })(),
+        efficiency: (function () {
+          let t = 0, k = 0;
+          drivers.forEach(function (d) { t += d.tkm; k += d.kmDriven; });
+          return k > 0 ? t / k : 0;
+        })(),
         totalDrivers: drivers.length,
-        totalVids: Object.keys(vidSetAll).length,
-        systemOnHours: Math.round(totHours * 100) / 100,
-        avgSystemOnHours: totMappingDays > 0 ? totHours / totMappingDays : 0,
-        mappingDays: totMappingDays,
-        swarmTkm: Math.round(totSwarm * 100) / 100,
-        churnTkm: Math.round(totChurn * 100) / 100,
-        swarmPct: typeTkmTotal > 0 ? totSwarm / typeTkmTotal : 0,
-        churnPct: typeTkmTotal > 0 ? totChurn / typeTkmTotal : 0,
+        totalVids: Object.keys(vidSetAll).length || safeNumber(big.vidsActive),
+        avgSystemOnHours: avgHours,
+        mappingDays: totalMappingDays,
+        // swarm/churn: TKM entregue vs meta de cada tipo de mapa
+        swarmTkm: swarmAch,
+        swarmGoal: safeNumber(big.swarmGoal),
+        swarmAchievementPct: safeNumber(big.swarmGoal) > 0 ? swarmAch / safeNumber(big.swarmGoal) : 0,
+        churnTkm: churnAch,
+        churnGoal: safeNumber(big.churnGoal),
+        churnAchievementPct: safeNumber(big.churnGoal) > 0 ? churnAch / safeNumber(big.churnGoal) : 0,
+        swarmPct: typedTotal > 0 ? swarmAch / typedTotal : 0,
+        churnPct: typedTotal > 0 ? churnAch / typedTotal : 0,
         fleet: fleet,
       },
+      perCountry: (rep.perCountry || []).map(function (c) {
+        return {
+          country: clientCountryName_(c.country),
+          goalTkm: safeNumber(c.ctsGoal),
+          tkmDone: safeNumber(c.tkmDone),
+          achievementPct: safeNumber(c.achievementPct),
+          avgSystemOnHours: safeNumber(c.avgHours),
+          swarmTkm: safeNumber(c.swarmAchieved),
+          swarmGoal: safeNumber(c.swarmGoal),
+          churnTkm: safeNumber(c.churnAchieved),
+          churnGoal: safeNumber(c.churnGoal),
+          driversActive: safeNumber(c.driversActive),
+        };
+      }),
       drivers: drivers,
       generatedAt: new Date().toISOString(),
     };
@@ -6052,6 +6011,7 @@ function getClientMetrics_(month, year, country) {
     return { success: false, error: String(err) };
   }
 }
+
 
 
 /**

@@ -560,8 +560,8 @@ function renderKpis(d) {
   cards.push(`
     <div class="cm-card">
       <div class="cm-card-label">Avg system on hours</div>
-      <div class="cm-card-value">${num(k.avgSystemOnHours, 1)}<span class="cm-unit">h/day</span></div>
-      <div class="cm-card-foot"><strong>${num(k.systemOnHours)} h</strong> total system on</div>
+      <div class="cm-card-value">${num(k.avgSystemOnHours, 2)}<span class="cm-unit">h/day</span></div>
+      <div class="cm-card-foot">Average across <strong>${num(k.totalDrivers)}</strong> active drivers</div>
     </div>`);
 
   cards.push(`
@@ -585,21 +585,19 @@ function renderKpis(d) {
       </div>
     </div>`);
 
-  cards.push(`
+  // Swarm e churn são tipos de mapa com META PRÓPRIA. O número grande é o
+  // share do mix; a barra e o rodapé mostram o atingimento da meta do tipo.
+  const mapTypeCard = (label, share, done, goal, achieved) => `
     <div class="cm-card">
-      <div class="cm-card-label">Swarm share</div>
-      <div class="cm-card-value">${pct(k.swarmPct)}</div>
-      <div class="cm-bar"><span class="fill-primary" style="width:${Math.min(100, (k.swarmPct || 0) * 100)}%"></span></div>
-      <div class="cm-card-foot"><strong>${num(k.swarmTkm)} TKM</strong> from swarm maps</div>
-    </div>`);
+      <div class="cm-card-label">${label}</div>
+      <div class="cm-card-value">${pct(share)}<span class="cm-unit">of mix</span></div>
+      <div class="cm-bar"><span class="${achieved >= 1 ? 'fill-success' : 'fill-primary'}"
+           style="width:${Math.min(100, (achieved || 0) * 100)}%"></span></div>
+      <div class="cm-card-foot"><strong>${num(done)}</strong> of ${num(goal)} TKM goal · ${pct(achieved, 0)}</div>
+    </div>`;
 
-  cards.push(`
-    <div class="cm-card">
-      <div class="cm-card-label">Churn share</div>
-      <div class="cm-card-value">${pct(k.churnPct)}</div>
-      <div class="cm-bar"><span class="fill-primary" style="width:${Math.min(100, (k.churnPct || 0) * 100)}%"></span></div>
-      <div class="cm-card-foot"><strong>${num(k.churnTkm)} TKM</strong> from churn maps</div>
-    </div>`);
+  cards.push(mapTypeCard('Swarm maps', k.swarmPct, k.swarmTkm, k.swarmGoal, k.swarmAchievementPct));
+  cards.push(mapTypeCard('Churn maps', k.churnPct, k.churnTkm, k.churnGoal, k.churnAchievementPct));
 
   $('kpis').innerHTML = cards.join('');
 
@@ -621,17 +619,17 @@ function renderKpis(d) {
 
 /* ---------- render: tabela ---------- */
 const COLUMNS = [
-  { key: 'name',             label: 'Driver',        type: 'text' },
-  { key: 'country',          label: 'Country',       type: 'text' },
-  { key: 'tkm',              label: 'TKM',           type: 'num', dec: 0 },
-  { key: 'kmDriven',         label: 'KM driven',     type: 'num', dec: 0 },
-  { key: 'efficiency',       label: 'Efficiency',    type: 'pctPill' },
-  { key: 'swarmPct',         label: 'Swarm %',       type: 'pct' },
-  { key: 'churnPct',         label: 'Churn %',       type: 'pct' },
-  { key: 'systemOnHours',    label: 'System on (h)', type: 'num', dec: 1 },
-  { key: 'avgSystemOnHours', label: 'Avg h/day',     type: 'num', dec: 1 },
-  { key: 'mappingDays',      label: 'Mapping days',  type: 'num', dec: 0 },
-  { key: 'vidCount',         label: 'VIDs',          type: 'num', dec: 0 },
+  { key: 'name',             label: 'Driver',         type: 'text' },
+  { key: 'country',          label: 'Country',        type: 'text' },
+  { key: 'tkm',              label: 'TKM',            type: 'num', dec: 0, total: 'sum' },
+  { key: 'kmDriven',         label: 'KM driven',      type: 'num', dec: 0, total: 'sum' },
+  { key: 'efficiency',       label: 'Efficiency',     type: 'pctPill', total: 'eff' },
+  { key: 'tkmSwarm',         label: 'Swarm TKM',      type: 'num', dec: 0, total: 'sum' },
+  { key: 'tkmChurn',         label: 'Churn TKM',      type: 'num', dec: 0, total: 'sum' },
+  { key: 'swarmPct',         label: 'Swarm %',        type: 'pct', total: 'swarmMix' },
+  { key: 'avgSystemOnHours', label: 'Avg system on h', type: 'num', dec: 2, total: 'avg' },
+  { key: 'mappingDays',      label: 'Mapping days',   type: 'num', dec: 0, total: 'sum' },
+  { key: 'vidCount',         label: 'VIDs',           type: 'num', dec: 0, total: 'vids' },
 ];
 
 function visibleDrivers() {
@@ -691,25 +689,33 @@ function renderTable() {
     return '<tr>' + cells + '</tr>';
   }).join('');
 
-  // Rodapé com os totais do que está visível
+  // Rodapé de totais — dirigido pelo `total` de cada coluna, pra não
+  // dessincronizar quando a lista de colunas mudar.
   const sum = (k) => rows.reduce((a, r) => a + (Number(r[k]) || 0), 0);
-  const totTkm = sum('tkm'), totKm = sum('kmDriven'), totH = sum('systemOnHours');
-  const totDays = sum('mappingDays');
   const vidSet = new Set();
   rows.forEach(r => (r.vids || []).forEach(v => vidSet.add(v)));
 
-  const foot = '<tr>' +
-    '<td>' + rows.length + ' drivers</td>' +
-    '<td></td>' +
-    '<td class="cm-num">' + num(totTkm) + '</td>' +
-    '<td class="cm-num">' + num(totKm) + '</td>' +
-    '<td class="cm-num">' + pct(totKm > 0 ? totTkm / totKm : 0) + '</td>' +
-    '<td></td><td></td>' +
-    '<td class="cm-num">' + num(totH, 1) + '</td>' +
-    '<td class="cm-num">' + num(totDays > 0 ? totH / totDays : 0, 1) + '</td>' +
-    '<td class="cm-num">' + num(totDays) + '</td>' +
-    '<td class="cm-num">' + num(vidSet.size) + '</td>' +
-    '</tr>';
+  const foot = '<tr>' + COLUMNS.map((c, i) => {
+    if (i === 0) return '<td>' + rows.length + ' driver' + (rows.length === 1 ? '' : 's') + '</td>';
+    switch (c.total) {
+      case 'sum': return '<td class="cm-num">' + num(sum(c.key), c.dec || 0) + '</td>';
+      case 'eff': {
+        const t = sum('tkm'), k = sum('kmDriven');
+        return '<td class="cm-num">' + pct(k > 0 ? t / k : 0) + '</td>';
+      }
+      case 'swarmMix': {
+        const s = sum('tkmSwarm'), ch = sum('tkmChurn');
+        return '<td class="cm-num">' + pct(s + ch > 0 ? s / (s + ch) : 0, 0) + '</td>';
+      }
+      case 'avg': {
+        const vals = rows.map(r => Number(r[c.key]) || 0).filter(v => v > 0);
+        const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+        return '<td class="cm-num">' + num(avg, c.dec || 0) + '</td>';
+      }
+      case 'vids': return '<td class="cm-num">' + num(vidSet.size) + '</td>';
+      default: return '<td></td>';
+    }
+  }).join('') + '</tr>';
 
   area.innerHTML = '<div class="cm-scroll"><table class="cm-table">' +
     '<thead><tr>' + head + '</tr></thead>' +
