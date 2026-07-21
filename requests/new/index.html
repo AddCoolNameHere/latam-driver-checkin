@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LATAM Requests — New Request</title>
+<link rel="icon" type="image/png" href="../../aceolution-globe.png">
+<style>
+  :root {
+    --navy:#16243B; --primary:#2C5282; --primary-700:#21405F; --accent:#3B82C4;
+    --bg:#F6F8FB; --surface:#FFFFFF; --border:#E5E9F0; --border-strong:#D4DBE6;
+    --text:#1B2733; --text-2:#56657A; --text-3:#8A98AB;
+    --green:#1F8A53; --green-bg:#E8F5EE; --amber:#A96A12; --amber-bg:#FBF2E0;
+    --red:#C0392B; --red-bg:#FBEBE9; --blue:#2B6CB0; --blue-bg:#EAF2FB;
+    --radius:10px; --radius-sm:8px;
+    --shadow-sm:0 1px 2px rgba(16,33,60,.05);
+    --shadow:0 1px 3px rgba(16,33,60,.06), 0 8px 22px rgba(16,33,60,.05);
+    --font:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:var(--font); background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; line-height:1.5; }
+
+  /* top bar */
+  .topbar { background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:20; }
+  .topbar-inner { max-width:780px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .brand { display:flex; align-items:center; gap:13px; }
+  .brand-logo { height:26px; width:auto; display:block; }
+  .brand-sep { width:1px; height:22px; background:var(--border-strong); }
+  .brand-name { font-size:14px; font-weight:600; color:var(--navy); letter-spacing:-.1px; }
+  .topbar-tag { font-size:11px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); }
+
+  .page { max-width:780px; margin:0 auto; padding:32px 24px 64px; }
+  .page-head { margin-bottom:24px; }
+  .page-title { font-size:22px; font-weight:700; color:var(--navy); margin:0 0 4px; letter-spacing:-.3px; }
+  .page-sub { margin:0; color:var(--text-2); font-size:13.5px; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); }
+  .card-pad { padding:26px; }
+
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:18px 20px; }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field.full { grid-column:1 / -1; }
+  label { font-size:12.5px; font-weight:600; color:#36465B; }
+  label .req { color:var(--red); font-weight:700; }
+  .hint { font-size:11.5px; color:var(--text-3); font-weight:400; }
+  input, select, textarea { font:inherit; font-size:14px; padding:10px 12px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); background:#fff; color:var(--text); transition:border-color .15s, box-shadow .15s; }
+  input::placeholder, textarea::placeholder { color:#A9B4C2; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,196,.15); }
+  textarea { resize:vertical; min-height:104px; }
+  select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A98AB' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px; }
+
+  .sla-note { grid-column:1 / -1; display:flex; align-items:center; gap:10px; background:var(--blue-bg); border:1px solid #CFE0F4; color:var(--primary-700); padding:12px 14px; border-radius:var(--radius-sm); font-size:13px; }
+  .sla-note svg { flex-shrink:0; color:var(--primary); }
+  .sla-note b { font-weight:700; }
+
+  .form-foot { display:flex; gap:14px; align-items:center; margin-top:24px; padding-top:22px; border-top:1px solid var(--border); }
+  .btn { font:inherit; font-weight:600; font-size:14px; border-radius:var(--radius-sm); cursor:pointer; border:1px solid transparent; display:inline-flex; align-items:center; gap:7px; transition:background .15s, border-color .15s; }
+  .btn-primary { background:var(--primary); color:#fff; padding:11px 22px; }
+  .btn-primary:hover { background:var(--primary-700); }
+  .btn-primary:disabled { opacity:.55; cursor:not-allowed; }
+  .btn-outline { background:#fff; color:var(--primary); border-color:var(--border-strong); padding:10px 18px; }
+  .btn-outline:hover { background:#F4F7FB; }
+  .err-msg { color:var(--red); font-size:13px; min-height:18px; }
+  .field.invalid input, .field.invalid select, .field.invalid textarea { border-color:var(--red); box-shadow:0 0 0 3px rgba(192,57,43,.12); }
+
+  .success { text-align:center; padding:48px 28px; }
+  .success .check { width:60px; height:60px; margin:0 auto 20px; border-radius:50%; background:var(--green-bg); color:var(--green); display:grid; place-items:center; }
+  .success h2 { margin:0 0 8px; color:var(--navy); font-size:20px; }
+  .success p { color:var(--text-2); margin:0 auto 8px; max-width:440px; font-size:14px; }
+  .success .ref { display:inline-block; margin:14px 0 6px; background:#F1F4F8; border:1px solid var(--border); padding:7px 16px; border-radius:var(--radius-sm); font-weight:600; font-size:14px; letter-spacing:.3px; color:var(--primary); }
+
+  .foot-note { text-align:center; color:var(--text-3); font-size:12px; margin-top:28px; }
+  .config-warn { display:flex; align-items:center; gap:10px; background:var(--red-bg); border:1px solid #F3C9C4; color:#9A2A1E; padding:12px 14px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:20px; }
+  .config-warn svg { flex-shrink:0; }
+
+  @media (max-width: 620px) { .grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img class="brand-logo" src="https://aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'brand-name',textContent:'ACEOLUTION'}))">
+        <span class="brand-sep"></span>
+        <span class="brand-name">LATAM Requests</span>
+      </div>
+      <span class="topbar-tag">Internal</span>
+    </div>
+  </div>
+
+  <main class="page">
+    <div class="page-head">
+      <h1 class="page-title">New request</h1>
+      <p class="page-sub">Submit a request to the LATAM team. The SLA is calculated automatically from the priority.</p>
+    </div>
+
+    <div id="config-warn" class="config-warn" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span><b>Backend not configured.</b> Paste the Web App URL into <code>CONFIG.scriptUrl</code> at the top of this file.</span>
+    </div>
+
+    <!-- FORM -->
+    <div class="card card-pad" id="form-card">
+      <form id="request-form" novalidate>
+        <div class="grid">
+          <div class="field">
+            <label for="requesterName">Your name <span class="req">*</span></label>
+            <input id="requesterName" name="requesterName" type="text" autocomplete="name" />
+          </div>
+          <div class="field">
+            <label for="requesterEmail">Your email <span class="req">*</span></label>
+            <input id="requesterEmail" name="requesterEmail" type="email" autocomplete="email" placeholder="you@aceolution.com" />
+          </div>
+
+          <div class="field">
+            <label for="category">Category <span class="req">*</span></label>
+            <select id="category" name="category"><option value="">Select…</option></select>
+          </div>
+          <div class="field">
+            <label for="priority">Priority <span class="req">*</span></label>
+            <select id="priority" name="priority"><option value="">Select…</option></select>
+          </div>
+
+          <div class="field full">
+            <label for="subject">Subject <span class="req">*</span></label>
+            <input id="subject" name="subject" type="text" placeholder="Short summary of the request" />
+          </div>
+
+          <div class="field full">
+            <label for="description">What do you need? <span class="req">*</span></label>
+            <textarea id="description" name="description" placeholder="Describe what you need, context, relevant links…"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="project">Project <span class="hint">(optional)</span></label>
+            <input id="project" name="project" type="text" placeholder="e.g. Street View BR, Client X onboarding" />
+          </div>
+          <div class="field">
+            <label for="country">Country / Region <span class="hint">(optional)</span></label>
+            <select id="country" name="country"><option value="">Select…</option></select>
+          </div>
+
+          <div class="field">
+            <label for="responsible">Suggested owner <span class="hint">(optional — confirmed at triage)</span></label>
+            <select id="responsible" name="responsible"><option value="">Select…</option></select>
+          </div>
+          <div class="field">
+            <label for="eta">Suggested ETA <span class="hint">(optional)</span></label>
+            <input id="eta" name="eta" type="date" />
+          </div>
+
+          <div class="field full">
+            <label for="link">Reference link <span class="hint">(Drive, doc, etc — optional)</span></label>
+            <input id="link" name="link" type="url" placeholder="https://…" />
+          </div>
+
+          <div class="sla-note" id="sla-preview" style="display:none">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+            <span id="sla-text"></span>
+          </div>
+        </div>
+
+        <div class="form-foot">
+          <button class="btn btn-primary" type="submit" id="submit-btn">Submit request</button>
+          <span class="err-msg" id="form-err"></span>
+        </div>
+      </form>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="card success" id="success-card" style="display:none">
+      <div class="check">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2>Request submitted</h2>
+      <p>Your request has entered the LATAM team's triage queue. You'll receive an email as soon as it's assigned to an owner.</p>
+      <div class="ref" id="success-proto"></div>
+      <p id="success-sla" class="hint"></p>
+      <div style="margin-top:20px">
+        <button class="btn btn-outline" id="new-btn" type="button">Submit another request</button>
+      </div>
+    </div>
+
+    <div class="foot-note">Aceolution do Brasil — LATAM Team · Internal tool</div>
+  </main>
+
+<script>
+// =====================================================================
+// CONFIG — Apps Script Web App URL (ends in /exec)
+// =====================================================================
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbza2es5niwMkvjzNbmbCfqLOLnxONG0iZPG4hsHtHmgSPioBk7XbMP5Xie-7F0ykCM9/exec',
+};
+
+const DEFAULTS = {
+  categories: ['Operations','Legal','Finance','Billing','HR','Recruiting','Client Requests','Fleet','Accidents','Ramp / Payhawk','Contracts','IT','Procurement','Business Development','New client'],
+  priorities: ['Urgent','High','Normal','Low'],
+  team: ['Bia','Fuss','Lucas Muzitano','David','Eduardo'],
+  countries: ['Brazil','Argentina','Chile','Colombia','Mexico','Peru','LATAM (all)','Other'],
+  sla: { Urgent: 1, High: 3, Normal: 5, Low: 10 },
+};
+
+let META = Object.assign({}, DEFAULTS);
+const $ = function (id) { return document.getElementById(id); };
+
+function fillSelect(id, items, keepFirst) {
+  const sel = $(id);
+  const first = keepFirst ? sel.options[0] : null;
+  sel.innerHTML = '';
+  if (first) sel.appendChild(first);
+  items.forEach(function (v) { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
+}
+
+function addBusinessDays(start, days) {
+  const d = new Date(start.getTime());
+  let added = 0;
+  while (added < days) { d.setDate(d.getDate() + 1); const dow = d.getDay(); if (dow !== 0 && dow !== 6) added++; }
+  return d;
+}
+function fmtDate(d) { return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); }
+
+function updateSlaPreview() {
+  const p = $('priority').value;
+  const box = $('sla-preview');
+  const days = META.sla[p];
+  if (!p || !days) { box.style.display = 'none'; return; }
+  const due = addBusinessDays(new Date(), days);
+  $('sla-text').innerHTML = 'SLA for <b>' + p + '</b> priority: by <b>' + fmtDate(due) + '</b> (' + days + ' business day' + (days > 1 ? 's' : '') + ').';
+  box.style.display = 'flex';
+}
+
+async function loadMeta() {
+  if (!CONFIG.scriptUrl || CONFIG.scriptUrl.indexOf('COLE_A_URL') === 0) { $('config-warn').style.display = 'flex'; return; }
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getMeta');
+    const data = await res.json();
+    if (data && data.success) {
+      META = {
+        categories: data.categories || DEFAULTS.categories,
+        priorities: data.priorities || DEFAULTS.priorities,
+        team: data.team || DEFAULTS.team,
+        countries: data.countries || DEFAULTS.countries,
+        sla: data.sla || DEFAULTS.sla,
+      };
+    }
+  } catch (err) { console.warn('[Requests] getMeta failed, using defaults:', err); }
+}
+
+function populate() {
+  fillSelect('category', META.categories, true);
+  fillSelect('priority', META.priorities, true);
+  fillSelect('responsible', META.team, true);
+  fillSelect('country', META.countries, true);
+}
+
+function setInvalid(fieldId, on) { const el = $(fieldId); const f = el.closest('.field'); if (f) f.classList.toggle('invalid', on); }
+
+function validate() {
+  const required = ['requesterName','requesterEmail','category','priority','subject','description'];
+  let ok = true, firstBad = null;
+  required.forEach(function (id) {
+    const bad = !$(id).value.trim();
+    setInvalid(id, bad);
+    if (bad) { ok = false; if (!firstBad) firstBad = id; }
+  });
+  const email = $('requesterEmail').value.trim();
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setInvalid('requesterEmail', true); ok = false; if (!firstBad) firstBad = 'requesterEmail'; }
+  if (firstBad) $(firstBad).focus();
+  return ok;
+}
+
+function collect() {
+  return {
+    type: 'createRequest',
+    requesterName: $('requesterName').value.trim(),
+    requesterEmail: $('requesterEmail').value.trim(),
+    category: $('category').value,
+    priority: $('priority').value,
+    subject: $('subject').value.trim(),
+    description: $('description').value.trim(),
+    project: $('project').value.trim(),
+    country: $('country').value,
+    responsible: $('responsible').value,
+    eta: $('eta').value,
+    link: $('link').value.trim(),
+  };
+}
+
+async function submitForm(ev) {
+  ev.preventDefault();
+  $('form-err').textContent = '';
+  if (!validate()) { $('form-err').textContent = 'Please fill in the highlighted required fields.'; return; }
+  if (!CONFIG.scriptUrl || CONFIG.scriptUrl.indexOf('COLE_A_URL') === 0) { $('form-err').textContent = 'Backend not configured (CONFIG.scriptUrl).'; return; }
+
+  const payload = collect();
+  const btn = $('submit-btn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  const days = META.sla[payload.priority] || 5;
+  const due = addBusinessDays(new Date(), days);
+
+  try {
+    await fetch(CONFIG.scriptUrl, { method:'POST', mode:'no-cors', headers:{ 'Content-Type':'text/plain' }, body: JSON.stringify(payload) });
+    showSuccess(due);
+  } catch (err) {
+    console.error('[Requests] submit error:', err);
+    $('form-err').textContent = 'Error submitting. Please try again.';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Submit request';
+  }
+}
+
+function showSuccess(due) {
+  $('form-card').style.display = 'none';
+  $('success-card').style.display = 'block';
+  $('success-proto').textContent = $('category').value + ' · ' + $('priority').value;
+  $('success-sla').textContent = 'Estimated SLA: by ' + fmtDate(due) + '.';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm() {
+  $('request-form').reset();
+  $('sla-preview').style.display = 'none';
+  document.querySelectorAll('.field.invalid').forEach(function (f) { f.classList.remove('invalid'); });
+  $('success-card').style.display = 'none';
+  $('form-card').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.addEventListener('DOMContentLoaded', async function () {
+  populate();
+  $('priority').addEventListener('change', updateSlaPreview);
+  $('request-form').addEventListener('submit', submitForm);
+  $('new-btn').addEventListener('click', resetForm);
+  await loadMeta();
+  populate();
+});
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>LATAM Requests — New Request</title>
+<title>LATAM Requests — Dashboard</title>
 <link rel="icon" type="image/png" href="../aceolution-globe.png">
 <style>
   :root {
@@ -18,62 +18,93 @@
     --font:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   * { box-sizing:border-box; }
-  body { margin:0; font-family:var(--font); background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; line-height:1.5; }
+  body { margin:0; font-family:var(--font); background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; }
 
-  /* top bar */
   .topbar { background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:20; }
-  .topbar-inner { max-width:780px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .topbar-inner { max-width:1320px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
   .brand { display:flex; align-items:center; gap:13px; }
   .brand-logo { height:26px; width:auto; display:block; }
   .brand-sep { width:1px; height:22px; background:var(--border-strong); }
   .brand-name { font-size:14px; font-weight:600; color:var(--navy); letter-spacing:-.1px; }
-  .topbar-tag { font-size:11px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); }
+  .topbar-actions { display:flex; align-items:center; gap:14px; }
+  .topbar-actions .meta { font-size:12px; color:var(--text-3); }
 
-  .page { max-width:780px; margin:0 auto; padding:32px 24px 64px; }
-  .page-head { margin-bottom:24px; }
-  .page-title { font-size:22px; font-weight:700; color:var(--navy); margin:0 0 4px; letter-spacing:-.3px; }
+  .btn { font:inherit; font-weight:600; font-size:13px; border-radius:var(--radius-sm); cursor:pointer; border:1px solid transparent; display:inline-flex; align-items:center; gap:6px; transition:background .15s, border-color .15s; }
+  .btn svg { width:14px; height:14px; }
+  .btn-outline { background:#fff; color:var(--primary); border-color:var(--border-strong); padding:8px 14px; }
+  .btn-outline:hover { background:#F4F7FB; }
+
+  .page { max-width:1320px; margin:0 auto; padding:26px 24px 64px; }
+  .page-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px; }
+  .page-title { font-size:22px; font-weight:700; color:var(--navy); margin:0 0 3px; letter-spacing:-.3px; }
   .page-sub { margin:0; color:var(--text-2); font-size:13.5px; }
 
   .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); }
-  .card-pad { padding:26px; }
+  .section-label { font-size:11px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:.7px; }
 
-  .grid { display:grid; grid-template-columns:1fr 1fr; gap:18px 20px; }
-  .field { display:flex; flex-direction:column; gap:6px; }
-  .field.full { grid-column:1 / -1; }
-  label { font-size:12.5px; font-weight:600; color:#36465B; }
-  label .req { color:var(--red); font-weight:700; }
-  .hint { font-size:11.5px; color:var(--text-3); font-weight:400; }
-  input, select, textarea { font:inherit; font-size:14px; padding:10px 12px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); background:#fff; color:var(--text); transition:border-color .15s, box-shadow .15s; }
-  input::placeholder, textarea::placeholder { color:#A9B4C2; }
-  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,196,.15); }
-  textarea { resize:vertical; min-height:104px; }
-  select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A98AB' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px; }
+  .kpis { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:22px; }
+  .kpi { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:16px 18px; position:relative; overflow:hidden; }
+  .kpi::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--border-strong); }
+  .kpi.alert::before { background:var(--red); } .kpi.warn::before { background:var(--amber); } .kpi.ok::before { background:var(--green); } .kpi.info::before { background:var(--accent); }
+  .kpi .label { font-size:11px; color:var(--text-3); font-weight:700; text-transform:uppercase; letter-spacing:.6px; }
+  .kpi .value { font-size:30px; font-weight:750; color:var(--navy); line-height:1.1; margin-top:6px; font-variant-numeric:tabular-nums; }
+  .kpi.alert .value { color:var(--red); } .kpi.warn .value { color:var(--amber); } .kpi.ok .value { color:var(--green); }
 
-  .sla-note { grid-column:1 / -1; display:flex; align-items:center; gap:10px; background:var(--blue-bg); border:1px solid #CFE0F4; color:var(--primary-700); padding:12px 14px; border-radius:var(--radius-sm); font-size:13px; }
-  .sla-note svg { flex-shrink:0; color:var(--primary); }
-  .sla-note b { font-weight:700; }
+  .panels { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:18px; }
+  .card-pad { padding:18px 18px 20px; }
+  .card-head { display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+  .card-head .section-label { margin:0; }
+  .card-head svg { width:15px; height:15px; color:var(--text-3); }
+  .bar-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:13px; }
+  .bar-row:last-child { margin-bottom:0; }
+  .bar-row .name { width:130px; flex-shrink:0; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bar-track { flex:1; background:#EEF2F7; border-radius:5px; height:8px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:5px; background:var(--accent); min-width:2px; transition:width .3s; }
+  .bar-row .count { width:30px; text-align:right; font-weight:700; color:var(--navy); font-variant-numeric:tabular-nums; }
 
-  .form-foot { display:flex; gap:14px; align-items:center; margin-top:24px; padding-top:22px; border-top:1px solid var(--border); }
-  .btn { font:inherit; font-weight:600; font-size:14px; border-radius:var(--radius-sm); cursor:pointer; border:1px solid transparent; display:inline-flex; align-items:center; gap:7px; transition:background .15s, border-color .15s; }
-  .btn-primary { background:var(--primary); color:#fff; padding:11px 22px; }
-  .btn-primary:hover { background:var(--primary-700); }
-  .btn-primary:disabled { opacity:.55; cursor:not-allowed; }
-  .btn-outline { background:#fff; color:var(--primary); border-color:var(--border-strong); padding:10px 18px; }
-  .btn-outline:hover { background:#F4F7FB; }
-  .err-msg { color:var(--red); font-size:13px; min-height:18px; }
-  .field.invalid input, .field.invalid select, .field.invalid textarea { border-color:var(--red); box-shadow:0 0 0 3px rgba(192,57,43,.12); }
+  .risk-card { margin-bottom:18px; }
+  .risk-head { display:flex; align-items:center; gap:8px; padding:16px 18px 0; }
+  .risk-head svg { width:15px; height:15px; color:var(--amber); }
+  .risk-list { display:flex; flex-direction:column; gap:8px; padding:14px 18px 18px; }
+  .risk-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); background:#fff; font-size:13px; }
+  .risk-item.overdue { background:var(--red-bg); border-color:#F3C9C4; }
+  .risk-item.soon { background:var(--amber-bg); border-color:#F0DCAE; }
+  .risk-item .rid { font-weight:700; color:var(--primary); width:92px; flex-shrink:0; font-variant-numeric:tabular-nums; }
+  .risk-item .rsub { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-2); }
+  .risk-item .rdue { font-weight:700; }
+  .risk-item.overdue .rdue { color:var(--red); } .risk-item.soon .rdue { color:var(--amber); }
+  .empty { color:var(--text-3); font-size:13px; }
 
-  .success { text-align:center; padding:48px 28px; }
-  .success .check { width:60px; height:60px; margin:0 auto 20px; border-radius:50%; background:var(--green-bg); color:var(--green); display:grid; place-items:center; }
-  .success h2 { margin:0 0 8px; color:var(--navy); font-size:20px; }
-  .success p { color:var(--text-2); margin:0 auto 8px; max-width:440px; font-size:14px; }
-  .success .ref { display:inline-block; margin:14px 0 6px; background:#F1F4F8; border:1px solid var(--border); padding:7px 16px; border-radius:var(--radius-sm); font-weight:600; font-size:14px; letter-spacing:.3px; color:var(--primary); }
+  .filters { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+  .filters select, .filters input { font:inherit; font-size:13px; padding:8px 11px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); background:#fff; color:var(--text); }
+  .filters select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A98AB' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; }
+  .filters input[type=search] { min-width:240px; }
+  .filters .chk { font-size:13px; color:var(--text-2); display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .filters .count-info { margin-left:auto; color:var(--text-3); font-size:13px; font-variant-numeric:tabular-nums; }
 
-  .foot-note { text-align:center; color:var(--text-3); font-size:12px; margin-top:28px; }
+  .table-card { padding:0; overflow:hidden; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead th { background:#FAFBFD; text-align:left; padding:11px 14px; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-3); font-weight:700; border-bottom:1px solid var(--border); position:sticky; top:57px; white-space:nowrap; }
+  tbody td { padding:11px 14px; border-bottom:1px solid #EEF1F6; vertical-align:middle; }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr:hover { background:#FAFBFD; }
+  tr.overdue td:first-child { box-shadow:inset 3px 0 0 var(--red); }
+  .rid-cell { font-weight:700; color:var(--primary); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .subj-cell { max-width:300px; }
+  .subj-cell .s-main { font-weight:600; color:var(--text); }
+  .subj-cell .s-sub { color:var(--text-3); font-size:12px; margin-top:1px; }
+  .owner-cell { color:var(--text-2); }
+  .pill { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:6px; font-size:11.5px; font-weight:600; white-space:nowrap; }
+  .pill .dot { width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.85; }
+  .due-cell { white-space:nowrap; font-weight:600; color:var(--text-2); font-variant-numeric:tabular-nums; }
+  .due-cell.late { color:var(--red); } .due-cell.soon { color:var(--amber); }
+  .eta-cell { color:var(--text-2); font-variant-numeric:tabular-nums; }
+
+  .loading, .error-box { text-align:center; padding:60px; color:var(--text-3); }
+  .error-box { color:var(--red); }
   .config-warn { display:flex; align-items:center; gap:10px; background:var(--red-bg); border:1px solid #F3C9C4; color:#9A2A1E; padding:12px 14px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:20px; }
-  .config-warn svg { flex-shrink:0; }
 
-  @media (max-width: 620px) { .grid { grid-template-columns:1fr; } }
+  @media (max-width: 1000px) { .kpis { grid-template-columns:repeat(2,1fr); } .panels { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -84,14 +115,26 @@
         <span class="brand-sep"></span>
         <span class="brand-name">LATAM Requests</span>
       </div>
-      <span class="topbar-tag">Internal</span>
+      <div class="topbar-actions">
+        <span class="meta" id="meta-info"></span>
+        <a class="btn btn-outline" href="new/">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          New request
+        </a>
+        <button class="btn btn-outline" id="refresh-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
     </div>
   </div>
 
   <main class="page">
     <div class="page-head">
-      <h1 class="page-title">New request</h1>
-      <p class="page-sub">Submit a request to the LATAM team. The SLA is calculated automatically from the priority.</p>
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-sub">Validated requests across the LATAM team · read-only view</p>
+      </div>
     </div>
 
     <div id="config-warn" class="config-warn" style="display:none">
@@ -99,240 +142,256 @@
       <span><b>Backend not configured.</b> Paste the Web App URL into <code>CONFIG.scriptUrl</code> at the top of this file.</span>
     </div>
 
-    <!-- FORM -->
-    <div class="card card-pad" id="form-card">
-      <form id="request-form" novalidate>
-        <div class="grid">
-          <div class="field">
-            <label for="requesterName">Your name <span class="req">*</span></label>
-            <input id="requesterName" name="requesterName" type="text" autocomplete="name" />
-          </div>
-          <div class="field">
-            <label for="requesterEmail">Your email <span class="req">*</span></label>
-            <input id="requesterEmail" name="requesterEmail" type="email" autocomplete="email" placeholder="you@aceolution.com" />
-          </div>
+    <div id="content" style="display:none">
+      <div class="kpis" id="kpis"></div>
 
-          <div class="field">
-            <label for="category">Category <span class="req">*</span></label>
-            <select id="category" name="category"><option value="">Select…</option></select>
-          </div>
-          <div class="field">
-            <label for="priority">Priority <span class="req">*</span></label>
-            <select id="priority" name="priority"><option value="">Select…</option></select>
-          </div>
-
-          <div class="field full">
-            <label for="subject">Subject <span class="req">*</span></label>
-            <input id="subject" name="subject" type="text" placeholder="Short summary of the request" />
-          </div>
-
-          <div class="field full">
-            <label for="description">What do you need? <span class="req">*</span></label>
-            <textarea id="description" name="description" placeholder="Describe what you need, context, relevant links…"></textarea>
-          </div>
-
-          <div class="field">
-            <label for="project">Project <span class="hint">(optional)</span></label>
-            <input id="project" name="project" type="text" placeholder="e.g. Street View BR, Client X onboarding" />
-          </div>
-          <div class="field">
-            <label for="country">Country / Region <span class="hint">(optional)</span></label>
-            <select id="country" name="country"><option value="">Select…</option></select>
-          </div>
-
-          <div class="field">
-            <label for="responsible">Suggested owner <span class="hint">(optional — confirmed at triage)</span></label>
-            <select id="responsible" name="responsible"><option value="">Select…</option></select>
-          </div>
-          <div class="field">
-            <label for="eta">Suggested ETA <span class="hint">(optional)</span></label>
-            <input id="eta" name="eta" type="date" />
-          </div>
-
-          <div class="field full">
-            <label for="link">Reference link <span class="hint">(Drive, doc, etc — optional)</span></label>
-            <input id="link" name="link" type="url" placeholder="https://…" />
-          </div>
-
-          <div class="sla-note" id="sla-preview" style="display:none">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
-            <span id="sla-text"></span>
-          </div>
+      <div class="card risk-card">
+        <div class="risk-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span class="section-label">Overdue / at risk</span>
         </div>
-
-        <div class="form-foot">
-          <button class="btn btn-primary" type="submit" id="submit-btn">Submit request</button>
-          <span class="err-msg" id="form-err"></span>
-        </div>
-      </form>
-    </div>
-
-    <!-- SUCCESS -->
-    <div class="card success" id="success-card" style="display:none">
-      <div class="check">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <div class="risk-list" id="risk-list"></div>
       </div>
-      <h2>Request submitted</h2>
-      <p>Your request has entered the LATAM team's triage queue. You'll receive an email as soon as it's assigned to an owner.</p>
-      <div class="ref" id="success-proto"></div>
-      <p id="success-sla" class="hint"></p>
-      <div style="margin-top:20px">
-        <button class="btn btn-outline" id="new-btn" type="button">Submit another request</button>
+
+      <div class="panels">
+        <div class="card card-pad"><div class="card-head"><span class="section-label">By status</span></div><div id="by-status"></div></div>
+        <div class="card card-pad"><div class="card-head"><span class="section-label">By category</span></div><div id="by-category"></div></div>
+        <div class="card card-pad"><div class="card-head"><span class="section-label">Workload by owner</span></div><div id="by-responsible"></div></div>
+      </div>
+
+      <div class="filters">
+        <select id="f-status"><option value="">All statuses</option></select>
+        <select id="f-category"><option value="">All categories</option></select>
+        <select id="f-responsible"><option value="">All owners</option></select>
+        <select id="f-country"><option value="">All countries</option></select>
+        <input id="f-search" type="search" placeholder="Search subject, project, requester…" />
+        <label class="chk"><input type="checkbox" id="f-overdue" /> Overdue only</label>
+        <span class="count-info" id="count-info"></span>
+      </div>
+
+      <div class="card table-card">
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Subject</th><th>Category</th><th>Priority</th>
+                <th>Owner</th><th>SLA / Due</th><th>ETA</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div class="foot-note">Aceolution do Brasil — LATAM Team · Internal tool</div>
+    <div class="loading" id="loading">Loading requests…</div>
+    <div class="error-box" id="error" style="display:none"></div>
   </main>
 
 <script>
 // =====================================================================
-// CONFIG — Apps Script Web App URL (ends in /exec)
+// CONFIG — same Web App URL as requests.html / triage.html
 // =====================================================================
 const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbza2es5niwMkvjzNbmbCfqLOLnxONG0iZPG4hsHtHmgSPioBk7XbMP5Xie-7F0ykCM9/exec',
+  autoRefreshMs: 0,
 };
+
+const STATUS_COLORS = {
+  'New':{bg:'#EAF2FB',fg:'#2B6CB0'}, 'Waiting on Me':{bg:'#FBF2E0',fg:'#A96A12'},
+  'Waiting Internal':{bg:'#F0EAFB',fg:'#6B46C1'}, 'Waiting Client':{bg:'#E4F4F4',fg:'#2C7A7B'},
+  'Waiting Vendor':{bg:'#FBEEE0',fg:'#B5651D'}, 'Completed':{bg:'#E8F5EE',fg:'#1F8A53'},
+  'Blocked':{bg:'#FBEBE9',fg:'#C0392B'}, 'Finished':{bg:'#EEF1F5',fg:'#56657A'},
+};
+const PRIORITY_COLORS = {
+  'Urgent':{bg:'#FBEBE9',fg:'#C0392B'}, 'High':{bg:'#FBF2E0',fg:'#A96A12'},
+  'Normal':{bg:'#EAF2FB',fg:'#2B6CB0'}, 'Low':{bg:'#EEF1F5',fg:'#56657A'},
+};
+const CLOSED = ['Completed', 'Finished'];
+const SOON_DAYS = 2;
 
 const DEFAULTS = {
   categories: ['Operations','Legal','Finance','Billing','HR','Recruiting','Client Requests','Fleet','Accidents','Ramp / Payhawk','Contracts','IT','Procurement','Business Development','New client'],
+  statuses: ['New','Waiting on Me','Waiting Internal','Waiting Client','Waiting Vendor','Completed','Blocked','Finished'],
   priorities: ['Urgent','High','Normal','Low'],
   team: ['Bia','Fuss','Lucas Muzitano','David','Eduardo'],
   countries: ['Brazil','Argentina','Chile','Colombia','Mexico','Peru','LATAM (all)','Other'],
-  sla: { Urgent: 1, High: 3, Normal: 5, Low: 10 },
 };
 
 let META = Object.assign({}, DEFAULTS);
+let ALL = [];
+let PENDING = 0;
+
 const $ = function (id) { return document.getElementById(id); };
+function isConfigured() { return CONFIG.scriptUrl && CONFIG.scriptUrl.indexOf('COLE_A_URL') !== 0; }
 
-function fillSelect(id, items, keepFirst) {
-  const sel = $(id);
-  const first = keepFirst ? sel.options[0] : null;
-  sel.innerHTML = '';
-  if (first) sel.appendChild(first);
-  items.forEach(function (v) { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
-}
+function parseDate(iso) { if (!iso) return null; const d = new Date(iso); return isNaN(d.getTime()) ? null : d; }
+function fmtDate(iso) { const d = parseDate(iso); return d ? d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }) : '—'; }
+function daysUntil(iso) { const d = parseDate(iso); if (!d) return null; return Math.ceil((d.getTime() - Date.now()) / 86400000); }
+function isOpen(r) { return CLOSED.indexOf(r.status) === -1; }
+function isOverdue(r) { if (!isOpen(r) || !r.slaDue) return false; const d = parseDate(r.slaDue); return d && d.getTime() < Date.now(); }
+function isSoon(r) { if (!isOpen(r) || isOverdue(r)) return false; const du = daysUntil(r.slaDue); return du !== null && du <= SOON_DAYS; }
 
-function addBusinessDays(start, days) {
-  const d = new Date(start.getTime());
-  let added = 0;
-  while (added < days) { d.setDate(d.getDate() + 1); const dow = d.getDay(); if (dow !== 0 && dow !== 6) added++; }
-  return d;
-}
-function fmtDate(d) { return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]; }); }
+function pill(text, colors) { const c = colors[text] || { bg:'#EEF1F5', fg:'#56657A' }; return '<span class="pill" style="background:' + c.bg + ';color:' + c.fg + '"><span class="dot"></span>' + esc(text || '—') + '</span>'; }
 
-function updateSlaPreview() {
-  const p = $('priority').value;
-  const box = $('sla-preview');
-  const days = META.sla[p];
-  if (!p || !days) { box.style.display = 'none'; return; }
-  const due = addBusinessDays(new Date(), days);
-  $('sla-text').innerHTML = 'SLA for <b>' + p + '</b> priority: by <b>' + fmtDate(due) + '</b> (' + days + ' business day' + (days > 1 ? 's' : '') + ').';
-  box.style.display = 'flex';
-}
-
-async function loadMeta() {
-  if (!CONFIG.scriptUrl || CONFIG.scriptUrl.indexOf('COLE_A_URL') === 0) { $('config-warn').style.display = 'flex'; return; }
+async function loadAll() {
+  if (!isConfigured()) { $('config-warn').style.display = 'flex'; $('loading').style.display = 'none'; return; }
   try {
-    const res = await fetch(CONFIG.scriptUrl + '?action=getMeta');
-    const data = await res.json();
-    if (data && data.success) {
+    const [metaRes, reqRes] = await Promise.all([
+      fetch(CONFIG.scriptUrl + '?action=getMeta').then(function (r) { return r.json(); }).catch(function () { return null; }),
+      fetch(CONFIG.scriptUrl + '?action=getRequests').then(function (r) { return r.json(); }),
+    ]);
+    if (metaRes && metaRes.success) {
       META = {
-        categories: data.categories || DEFAULTS.categories,
-        priorities: data.priorities || DEFAULTS.priorities,
-        team: data.team || DEFAULTS.team,
-        countries: data.countries || DEFAULTS.countries,
-        sla: data.sla || DEFAULTS.sla,
+        categories: metaRes.categories || DEFAULTS.categories,
+        statuses: metaRes.statuses || DEFAULTS.statuses,
+        priorities: metaRes.priorities || DEFAULTS.priorities,
+        team: metaRes.team || DEFAULTS.team,
+        countries: metaRes.countries || DEFAULTS.countries,
       };
     }
-  } catch (err) { console.warn('[Requests] getMeta failed, using defaults:', err); }
-}
+    if (!reqRes || !reqRes.success) throw new Error((reqRes && reqRes.error) || 'invalid response');
+    const all = reqRes.requests || [];
+    PENDING = all.filter(function (r) { return !r.validated; }).length;
+    ALL = all.filter(function (r) { return r.validated; });
 
-function populate() {
-  fillSelect('category', META.categories, true);
-  fillSelect('priority', META.priorities, true);
-  fillSelect('responsible', META.team, true);
-  fillSelect('country', META.countries, true);
-}
+    setupFilters();
+    render();
+    $('loading').style.display = 'none';
+    $('content').style.display = 'block';
 
-function setInvalid(fieldId, on) { const el = $(fieldId); const f = el.closest('.field'); if (f) f.classList.toggle('invalid', on); }
-
-function validate() {
-  const required = ['requesterName','requesterEmail','category','priority','subject','description'];
-  let ok = true, firstBad = null;
-  required.forEach(function (id) {
-    const bad = !$(id).value.trim();
-    setInvalid(id, bad);
-    if (bad) { ok = false; if (!firstBad) firstBad = id; }
-  });
-  const email = $('requesterEmail').value.trim();
-  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setInvalid('requesterEmail', true); ok = false; if (!firstBad) firstBad = 'requesterEmail'; }
-  if (firstBad) $(firstBad).focus();
-  return ok;
-}
-
-function collect() {
-  return {
-    type: 'createRequest',
-    requesterName: $('requesterName').value.trim(),
-    requesterEmail: $('requesterEmail').value.trim(),
-    category: $('category').value,
-    priority: $('priority').value,
-    subject: $('subject').value.trim(),
-    description: $('description').value.trim(),
-    project: $('project').value.trim(),
-    country: $('country').value,
-    responsible: $('responsible').value,
-    eta: $('eta').value,
-    link: $('link').value.trim(),
-  };
-}
-
-async function submitForm(ev) {
-  ev.preventDefault();
-  $('form-err').textContent = '';
-  if (!validate()) { $('form-err').textContent = 'Please fill in the highlighted required fields.'; return; }
-  if (!CONFIG.scriptUrl || CONFIG.scriptUrl.indexOf('COLE_A_URL') === 0) { $('form-err').textContent = 'Backend not configured (CONFIG.scriptUrl).'; return; }
-
-  const payload = collect();
-  const btn = $('submit-btn');
-  btn.disabled = true; btn.textContent = 'Submitting…';
-  const days = META.sla[payload.priority] || 5;
-  const due = addBusinessDays(new Date(), days);
-
-  try {
-    await fetch(CONFIG.scriptUrl, { method:'POST', mode:'no-cors', headers:{ 'Content-Type':'text/plain' }, body: JSON.stringify(payload) });
-    showSuccess(due);
+    const now = new Date();
+    $('meta-info').textContent = (metaRes && metaRes.version ? metaRes.version + ' · ' : '') +
+      ALL.length + ' validated · ' + PENDING + ' pending · ' +
+      now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
   } catch (err) {
-    console.error('[Requests] submit error:', err);
-    $('form-err').textContent = 'Error submitting. Please try again.';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Submit request';
+    $('loading').style.display = 'none';
+    $('error').style.display = 'block';
+    $('error').textContent = 'Error loading: ' + err.message;
   }
 }
 
-function showSuccess(due) {
-  $('form-card').style.display = 'none';
-  $('success-card').style.display = 'block';
-  $('success-proto').textContent = $('category').value + ' · ' + $('priority').value;
-  $('success-sla').textContent = 'Estimated SLA: by ' + fmtDate(due) + '.';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+function setupFilters() {
+  fillFilter('f-status', META.statuses);
+  fillFilter('f-category', META.categories);
+  fillFilter('f-responsible', META.team);
+  fillFilter('f-country', META.countries);
+}
+function fillFilter(id, items) {
+  const sel = $(id); const cur = sel.value; const first = sel.options[0];
+  sel.innerHTML = ''; sel.appendChild(first);
+  items.forEach(function (v) { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
+  sel.value = cur;
 }
 
-function resetForm() {
-  $('request-form').reset();
-  $('sla-preview').style.display = 'none';
-  document.querySelectorAll('.field.invalid').forEach(function (f) { f.classList.remove('invalid'); });
-  $('success-card').style.display = 'none';
-  $('form-card').style.display = 'block';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+function render() { renderKpis(); renderRisk(); renderBars(); renderTable(); }
+
+function renderKpis() {
+  const total = ALL.length;
+  const open = ALL.filter(isOpen).length;
+  const overdue = ALL.filter(isOverdue).length;
+  const blocked = ALL.filter(function (r) { return r.status === 'Blocked'; }).length;
+  const done = ALL.filter(function (r) { return CLOSED.indexOf(r.status) >= 0; }).length;
+  const cards = [
+    { label:'Total', value:total, cls:'info' },
+    { label:'Open', value:open, cls:'' },
+    { label:'Overdue', value:overdue, cls:'alert' },
+    { label:'Blocked', value:blocked, cls:'warn' },
+    { label:'Completed', value:done, cls:'ok' },
+  ];
+  $('kpis').innerHTML = cards.map(function (c) {
+    return '<div class="kpi ' + c.cls + '"><div class="label">' + c.label + '</div><div class="value">' + c.value + '</div></div>';
+  }).join('');
 }
 
-document.addEventListener('DOMContentLoaded', async function () {
-  populate();
-  $('priority').addEventListener('change', updateSlaPreview);
-  $('request-form').addEventListener('submit', submitForm);
-  $('new-btn').addEventListener('click', resetForm);
-  await loadMeta();
-  populate();
+function renderRisk() {
+  const risk = ALL.filter(function (r) { return isOverdue(r) || isSoon(r); })
+    .sort(function (a, b) { return (parseDate(a.slaDue) || 0) - (parseDate(b.slaDue) || 0); });
+  const el = $('risk-list');
+  if (!risk.length) { el.innerHTML = '<div class="empty">Nothing overdue or near the deadline.</div>'; return; }
+  el.innerHTML = risk.map(function (r) {
+    const over = isOverdue(r); const du = daysUntil(r.slaDue);
+    const dueTxt = over ? ('overdue by ' + Math.abs(du) + 'd') : ('due in ' + du + 'd');
+    return '<div class="risk-item ' + (over ? 'overdue' : 'soon') + '">' +
+      '<span class="rid">' + esc(r.id) + '</span>' +
+      '<span class="rsub">' + esc(r.subject) + ' · ' + esc(r.category) + ' · ' + esc(r.responsible || 'no owner') + '</span>' +
+      '<span class="rdue">' + dueTxt + ' (' + fmtDate(r.slaDue) + ')</span></div>';
+  }).join('');
+}
+
+function countBy(key) { const m = {}; ALL.forEach(function (r) { const k = r[key] || '—'; m[k] = (m[k] || 0) + 1; }); return m; }
+function barChart(containerId, counts, order, color) {
+  const entries = order
+    ? order.map(function (k) { return [k, counts[k] || 0]; }).filter(function (e) { return e[1] > 0; })
+    : Object.keys(counts).map(function (k) { return [k, counts[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+  const max = entries.reduce(function (m, e) { return Math.max(m, e[1]); }, 0) || 1;
+  const el = $(containerId);
+  if (!entries.length) { el.innerHTML = '<div class="empty">No data.</div>'; return; }
+  el.innerHTML = entries.map(function (e) {
+    const w = Math.round((e[1] / max) * 100);
+    const col = (typeof color === 'function') ? color(e[0]) : color;
+    return '<div class="bar-row"><span class="name" title="' + esc(e[0]) + '">' + esc(e[0]) + '</span>' +
+      '<span class="bar-track"><span class="bar-fill" style="width:' + w + '%;background:' + col + '"></span></span>' +
+      '<span class="count">' + e[1] + '</span></div>';
+  }).join('');
+}
+function renderBars() {
+  barChart('by-status', countBy('status'), META.statuses, function (k) { return (STATUS_COLORS[k] && STATUS_COLORS[k].fg) || '#3B82C4'; });
+  barChart('by-category', countBy('category'), null, '#3B82C4');
+  const openByResp = {};
+  ALL.filter(isOpen).forEach(function (r) { const k = r.responsible || '— no owner'; openByResp[k] = (openByResp[k] || 0) + 1; });
+  barChart('by-responsible', openByResp, null, '#2C5282');
+}
+
+function applyFilters() {
+  const fs = $('f-status').value, fc = $('f-category').value, fr = $('f-responsible').value,
+        fco = $('f-country').value, fq = $('f-search').value.trim().toLowerCase(), fo = $('f-overdue').checked;
+  return ALL.filter(function (r) {
+    if (fs && r.status !== fs) return false;
+    if (fc && r.category !== fc) return false;
+    if (fr && r.responsible !== fr) return false;
+    if (fco && r.country !== fco) return false;
+    if (fo && !isOverdue(r)) return false;
+    if (fq) {
+      const hay = (r.subject + ' ' + r.project + ' ' + r.requesterName + ' ' + r.description + ' ' + r.id).toLowerCase();
+      if (hay.indexOf(fq) === -1) return false;
+    }
+    return true;
+  });
+}
+
+function renderTable() {
+  const rows = applyFilters();
+  $('count-info').textContent = rows.length + ' of ' + ALL.length;
+  const tb = $('tbody');
+  if (!rows.length) { tb.innerHTML = '<tr><td colspan="8" class="empty" style="padding:28px;text-align:center">No requests match these filters.</td></tr>'; return; }
+  tb.innerHTML = rows.map(function (r) {
+    const over = isOverdue(r), soon = isSoon(r);
+    const dueCls = over ? 'late' : (soon ? 'soon' : '');
+    return '<tr class="' + (over ? 'overdue' : '') + '">' +
+      '<td class="rid-cell">' + esc(r.id) + '</td>' +
+      '<td class="subj-cell"><div class="s-main">' + esc(r.subject) + '</div>' +
+        '<div class="s-sub">' + esc(r.requesterName) + (r.project ? ' · ' + esc(r.project) : '') + '</div></td>' +
+      '<td>' + esc(r.category) + '</td>' +
+      '<td>' + pill(r.priority, PRIORITY_COLORS) + '</td>' +
+      '<td class="owner-cell">' + esc(r.responsible || '—') + '</td>' +
+      '<td class="due-cell ' + dueCls + '">' + fmtDate(r.slaDue) + '</td>' +
+      '<td class="eta-cell">' + fmtDate(r.eta) + '</td>' +
+      '<td>' + pill(r.status, STATUS_COLORS) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  ['f-status','f-category','f-responsible','f-country'].forEach(function (id) { $(id).addEventListener('change', renderTable); });
+  $('f-search').addEventListener('input', renderTable);
+  $('f-overdue').addEventListener('change', renderTable);
+  $('refresh-btn').addEventListener('click', function () {
+    $('loading').style.display = 'block'; $('content').style.display = 'none'; $('error').style.display = 'none'; loadAll();
+  });
+  loadAll();
+  if (CONFIG.autoRefreshMs > 0) setInterval(loadAll, CONFIG.autoRefreshMs);
 });
 </script>
 </body>
