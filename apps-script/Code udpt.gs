@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.60',
+        version: 'v5.61',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -5903,13 +5903,27 @@ function getClientMetrics_(month, year, country) {
       (d.vids || []).forEach(function (v) { if (v) vidSetAll[v] = true; });
       const tkmSwarm = safeNumber(d.tkmSwarm);
       const tkmChurn = safeNumber(d.tkmChurn);
+      const kmSwarm = safeNumber(d.kmSwarm);
+      const kmChurn = safeNumber(d.kmChurn);
       const typed = tkmSwarm + tkmChurn;
+      const typedKm = kmSwarm + kmChurn;
+
+      // v5.61: "TKM SUM" e "Km Driven SUM" da aba são o total do MOTORISTA no
+      // mês. Quem roda em 2 países aparece em 2 linhas com esse mesmo total
+      // repetido — somar a coluna contava o motorista duas vezes. Swarm e
+      // churn, por outro lado, são POR LINHA (por país), então a soma deles
+      // é o valor daquele país. Fallback pro valor da aba se as colunas de
+      // tipo não existirem (nunca fica pior que antes).
+      const rowTkm = typed > 0 ? typed : safeNumber(d.tkm);
+      const rowKm = typedKm > 0 ? typedKm : safeNumber(d.kmDriven);
+
       return {
         name: d.name,
         country: clientCountryName_(d.country),
-        tkm: safeNumber(d.tkm),
-        kmDriven: safeNumber(d.kmDriven),
-        efficiency: safeNumber(d.efficiency),
+        tkm: rowTkm,
+        kmDriven: rowKm,
+        efficiency: rowKm > 0 ? rowTkm / rowKm : safeNumber(d.efficiency),
+        tkmDriverTotal: safeNumber(d.tkm),   // total do motorista (todos os países)
         avgSystemOnHours: safeNumber(d.avgHours),   // "AVG System on Hours" da aba
         qcScore: safeNumber(d.qcScore),
         baselinePct: safeNumber(d.baselinePct),
