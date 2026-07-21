@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LATAM Requests — Triage</title>
+<link rel="icon" type="image/png" href="../aceolution-globe.png">
+<style>
+  :root {
+    --navy:#16243B; --primary:#2C5282; --primary-700:#21405F; --accent:#3B82C4;
+    --bg:#F6F8FB; --surface:#FFFFFF; --border:#E5E9F0; --border-strong:#D4DBE6;
+    --text:#1B2733; --text-2:#56657A; --text-3:#8A98AB;
+    --green:#1F8A53; --green-bg:#E8F5EE; --amber:#A96A12; --amber-bg:#FBF2E0;
+    --red:#C0392B; --red-bg:#FBEBE9; --blue:#2B6CB0; --blue-bg:#EAF2FB;
+    --radius:10px; --radius-sm:8px;
+    --shadow-sm:0 1px 2px rgba(16,33,60,.05);
+    --shadow:0 1px 3px rgba(16,33,60,.06), 0 8px 22px rgba(16,33,60,.05);
+    --font:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:var(--font); background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; }
+
+  .topbar { background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:20; }
+  .topbar-inner { max-width:1280px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .brand { display:flex; align-items:center; gap:13px; }
+  .brand-logo { height:26px; width:auto; display:block; }
+  .brand-sep { width:1px; height:22px; background:var(--border-strong); }
+  .brand-name { font-size:14px; font-weight:600; color:var(--navy); letter-spacing:-.1px; }
+  .topbar-actions { display:flex; align-items:center; gap:14px; }
+  .topbar-actions .meta { font-size:12px; color:var(--text-3); }
+
+  .btn { font:inherit; font-weight:600; font-size:13px; border-radius:var(--radius-sm); cursor:pointer; border:1px solid transparent; display:inline-flex; align-items:center; gap:6px; transition:background .15s, border-color .15s; }
+  .btn svg { width:14px; height:14px; }
+  .btn-outline { background:#fff; color:var(--primary); border-color:var(--border-strong); padding:8px 14px; }
+  .btn-outline:hover { background:#F4F7FB; }
+
+  .page { max-width:1280px; margin:0 auto; padding:26px 24px 64px; }
+  .page-head { margin-bottom:18px; }
+  .page-title { font-size:22px; font-weight:700; color:var(--navy); margin:0 0 3px; letter-spacing:-.3px; }
+  .page-sub { margin:0; color:var(--text-2); font-size:13.5px; }
+
+  .toolbar { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+  .tab { padding:8px 15px; border-radius:var(--radius-sm); border:1px solid var(--border-strong); background:#fff; cursor:pointer; font-weight:600; font-size:13px; color:var(--text-2); display:inline-flex; align-items:center; gap:7px; }
+  .tab:hover { background:#F4F7FB; }
+  .tab.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+  .tab .n { background:rgba(0,0,0,.10); border-radius:20px; padding:0 7px; font-size:11px; font-variant-numeric:tabular-nums; }
+  .tab.active .n { background:rgba(255,255,255,.22); }
+  .filters { margin-left:auto; display:flex; gap:10px; }
+  .filters select, .filters input { font:inherit; font-size:13px; padding:8px 11px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); background:#fff; color:var(--text); }
+  .filters select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A98AB' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; }
+  .filters input[type=search] { min-width:240px; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); }
+  .table-card { padding:0; overflow:hidden; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead th { background:#FAFBFD; text-align:left; padding:11px 14px; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-3); font-weight:700; border-bottom:1px solid var(--border); white-space:nowrap; }
+  tbody td { padding:11px 14px; border-bottom:1px solid #EEF1F6; vertical-align:middle; }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr:hover { background:#FAFBFD; }
+  tr.pending td:first-child { box-shadow:inset 3px 0 0 var(--accent); }
+  .rid-cell { font-weight:700; color:var(--primary); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .subj-cell { max-width:320px; }
+  .subj-cell .s-main { font-weight:600; color:var(--text); }
+  .subj-cell .s-sub { color:var(--text-3); font-size:12px; margin-top:1px; }
+  .owner-cell { color:var(--text-2); }
+  .created-cell { color:var(--text-2); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .pill { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:6px; font-size:11.5px; font-weight:600; white-space:nowrap; }
+  .pill .dot { width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.85; }
+  .badge-new { background:var(--blue-bg); color:var(--blue); }
+  .badge-val { background:var(--green-bg); color:var(--green); }
+  .act-btn { font:inherit; background:var(--primary); color:#fff; border:none; padding:6px 13px; border-radius:7px; font-weight:600; cursor:pointer; font-size:12px; display:inline-flex; align-items:center; gap:5px; }
+  .act-btn svg { width:13px; height:13px; }
+  .act-btn:hover { background:var(--primary-700); }
+  .act-btn.edit { background:#fff; color:var(--primary); border:1px solid var(--border-strong); }
+  .act-btn.edit:hover { background:#F4F7FB; }
+
+  .loading, .error-box { text-align:center; padding:60px; color:var(--text-3); }
+  .error-box { color:var(--red); }
+  .empty { color:var(--text-3); font-size:13px; padding:28px; text-align:center; }
+  .config-warn { display:flex; align-items:center; gap:10px; background:var(--red-bg); border:1px solid #F3C9C4; color:#9A2A1E; padding:12px 14px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:20px; }
+
+  /* modal */
+  .modal-bg { position:fixed; inset:0; background:rgba(22,36,59,.5); display:none; place-items:center; z-index:50; padding:20px; }
+  .modal-bg.open { display:grid; }
+  .modal { background:#fff; border-radius:12px; width:600px; max-width:100%; box-shadow:0 24px 60px rgba(0,0,0,.28); overflow:hidden; max-height:92vh; display:flex; flex-direction:column; }
+  .modal-h { background:var(--navy); color:#fff; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; }
+  .modal-h h3 { margin:0; font-size:15px; font-weight:600; }
+  .modal-h .x { cursor:pointer; line-height:0; opacity:.8; } .modal-h .x:hover { opacity:1; }
+  .modal-b { padding:20px; display:grid; grid-template-columns:1fr 1fr; gap:15px; overflow-y:auto; }
+  .modal-b .full { grid-column:1/-1; }
+  .modal-b label { font-size:12px; font-weight:600; color:#36465B; display:block; margin-bottom:5px; }
+  .modal-b input, .modal-b select, .modal-b textarea { width:100%; font:inherit; font-size:13.5px; padding:8px 10px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); color:var(--text); }
+  .modal-b select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A98AB' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; }
+  .modal-b textarea { min-height:72px; resize:vertical; }
+  .modal-b input:focus, .modal-b select:focus, .modal-b textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,196,.15); }
+  .ctx { grid-column:1/-1; background:#F7F9FC; border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; font-size:13px; color:var(--text-2); }
+  .ctx b { color:var(--text); }
+  .ctx .desc { margin-top:6px; white-space:pre-wrap; }
+  .val-note { grid-column:1/-1; font-size:12.5px; color:var(--green); font-weight:600; background:var(--green-bg); border:1px solid #CDEAD9; border-radius:var(--radius-sm); padding:8px 12px; }
+  .req-mark { color:var(--red); }
+  .modal-f { padding:14px 20px; display:flex; justify-content:space-between; gap:10px; border-top:1px solid var(--border); align-items:center; }
+  .modal-f .right { display:flex; gap:10px; }
+  .btn-save { background:#fff; color:var(--primary); border:1px solid var(--border-strong); padding:9px 16px; border-radius:var(--radius-sm); font-weight:600; cursor:pointer; font:inherit; font-size:13px; }
+  .btn-save:hover { background:#F4F7FB; }
+  .btn-validate { background:var(--green); color:#fff; border:none; padding:9px 18px; border-radius:var(--radius-sm); font-weight:600; cursor:pointer; font:inherit; font-size:13px; }
+  .btn-validate:hover { filter:brightness(.96); }
+  .btn-validate:disabled { opacity:.5; cursor:not-allowed; }
+  .btn-cancel { background:none; color:var(--text-3); border:none; cursor:pointer; font:inherit; font-size:13px; }
+  .btn-cancel:hover { color:var(--text-2); }
+
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--navy); color:#fff; padding:12px 20px; border-radius:var(--radius-sm); font-size:13.5px; box-shadow:0 10px 28px rgba(0,0,0,.25); opacity:0; transition:all .25s; z-index:60; }
+  .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img class="brand-logo" src="https://aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'brand-name',textContent:'ACEOLUTION'}))">
+        <span class="brand-sep"></span>
+        <span class="brand-name">LATAM Requests</span>
+      </div>
+      <div class="topbar-actions">
+        <span class="meta" id="meta-info"></span>
+        <a class="btn btn-outline" href="dashboard.html">
+          Dashboard
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <button class="btn btn-outline" id="refresh-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <main class="page">
+    <div class="page-head">
+      <h1 class="page-title">Triage</h1>
+      <p class="page-sub">Assign an owner, edit, and validate incoming requests</p>
+    </div>
+
+    <div id="config-warn" class="config-warn" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span><b>Backend not configured.</b> Paste the Web App URL into <code>CONFIG.scriptUrl</code> at the top of this file.</span>
+    </div>
+
+    <div id="content" style="display:none">
+      <div class="toolbar">
+        <div class="tab active" data-view="novos" id="tab-novos">New<span class="n" id="n-novos">0</span></div>
+        <div class="tab" data-view="validados" id="tab-validados">Validated<span class="n" id="n-validados">0</span></div>
+        <div class="tab" data-view="todos" id="tab-todos">All<span class="n" id="n-todos">0</span></div>
+        <div class="filters">
+          <select id="f-category"><option value="">All categories</option></select>
+          <input id="f-search" type="search" placeholder="Search…" />
+        </div>
+      </div>
+
+      <div class="card table-card">
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>State</th><th>Subject</th><th>Category</th><th>Priority</th>
+                <th>Owner</th><th>Status</th><th>Created</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading" id="loading">Loading requests…</div>
+    <div class="error-box" id="error" style="display:none"></div>
+  </main>
+
+  <!-- Triage / edit modal -->
+  <div class="modal-bg" id="modal-bg">
+    <div class="modal">
+      <div class="modal-h">
+        <h3 id="m-title">Triage request</h3>
+        <span class="x" id="m-close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+      </div>
+      <div class="modal-b">
+        <div class="ctx" id="m-ctx"></div>
+        <div class="val-note" id="m-valnote" style="display:none"></div>
+        <div>
+          <label>Owner <span class="req-mark" id="m-resp-req">*</span></label>
+          <select id="m-responsible"><option value="">— choose —</option></select>
+        </div>
+        <div>
+          <label>Priority <span style="font-weight:400;color:#8A98AB">(recalculates SLA)</span></label>
+          <select id="m-priority"></select>
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="m-status"></select>
+        </div>
+        <div>
+          <label>ETA</label>
+          <input id="m-eta" type="date" />
+        </div>
+        <div class="full">
+          <label>Internal notes</label>
+          <textarea id="m-notes" placeholder="Team notes (not shown to the requester)…"></textarea>
+        </div>
+      </div>
+      <div class="modal-f">
+        <button class="btn-cancel" id="m-cancel">Cancel</button>
+        <div class="right">
+          <button class="btn-save" id="m-save">Save without validating</button>
+          <button class="btn-validate" id="m-validate">Validate &amp; notify</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+// =====================================================================
+// CONFIG — same Web App URL as requests.html / dashboard.html
+// =====================================================================
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbza2es5niwMkvjzNbmbCfqLOLnxONG0iZPG4hsHtHmgSPioBk7XbMP5Xie-7F0ykCM9/exec',
+};
+
+const STATUS_COLORS = {
+  'New':{bg:'#EAF2FB',fg:'#2B6CB0'}, 'Waiting on Me':{bg:'#FBF2E0',fg:'#A96A12'},
+  'Waiting Internal':{bg:'#F0EAFB',fg:'#6B46C1'}, 'Waiting Client':{bg:'#E4F4F4',fg:'#2C7A7B'},
+  'Waiting Vendor':{bg:'#FBEEE0',fg:'#B5651D'}, 'Completed':{bg:'#E8F5EE',fg:'#1F8A53'},
+  'Blocked':{bg:'#FBEBE9',fg:'#C0392B'}, 'Finished':{bg:'#EEF1F5',fg:'#56657A'},
+};
+const PRIORITY_COLORS = {
+  'Urgent':{bg:'#FBEBE9',fg:'#C0392B'}, 'High':{bg:'#FBF2E0',fg:'#A96A12'},
+  'Normal':{bg:'#EAF2FB',fg:'#2B6CB0'}, 'Low':{bg:'#EEF1F5',fg:'#56657A'},
+};
+const DEFAULTS = {
+  categories: ['Operations','Legal','Finance','Billing','HR','Recruiting','Client Requests','Fleet','Accidents','Ramp / Payhawk','Contracts','IT','Procurement','Business Development','New client'],
+  statuses: ['New','Waiting on Me','Waiting Internal','Waiting Client','Waiting Vendor','Completed','Blocked','Finished'],
+  priorities: ['Urgent','High','Normal','Low'],
+  team: ['Bia','Fuss','Lucas Muzitano','David','Eduardo'],
+};
+
+let META = Object.assign({}, DEFAULTS);
+let ALL = [];
+let VIEW = 'novos';
+let editingId = null;
+
+const $ = function (id) { return document.getElementById(id); };
+function isConfigured() { return CONFIG.scriptUrl && CONFIG.scriptUrl.indexOf('COLE_A_URL') !== 0; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function parseDate(iso) { if (!iso) return null; const d = new Date(iso); return isNaN(d.getTime()) ? null : d; }
+function fmtDate(iso) { const d = parseDate(iso); return d ? d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }) : '—'; }
+function fmtDateInput(iso) { const d = parseDate(iso); if (!d) return ''; return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function pill(text, colors) { const c = colors[text] || {bg:'#EEF1F5',fg:'#56657A'}; return '<span class="pill" style="background:' + c.bg + ';color:' + c.fg + '"><span class="dot"></span>' + esc(text || '—') + '</span>'; }
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._tm); t._tm = setTimeout(function () { t.classList.remove('show'); }, 2800); }
+
+async function loadAll() {
+  if (!isConfigured()) { $('config-warn').style.display = 'flex'; $('loading').style.display = 'none'; return; }
+  try {
+    const [metaRes, reqRes] = await Promise.all([
+      fetch(CONFIG.scriptUrl + '?action=getMeta').then(function (r) { return r.json(); }).catch(function () { return null; }),
+      fetch(CONFIG.scriptUrl + '?action=getRequests').then(function (r) { return r.json(); }),
+    ]);
+    if (metaRes && metaRes.success) {
+      META = {
+        categories: metaRes.categories || DEFAULTS.categories,
+        statuses: metaRes.statuses || DEFAULTS.statuses,
+        priorities: metaRes.priorities || DEFAULTS.priorities,
+        team: metaRes.team || DEFAULTS.team,
+      };
+    }
+    if (!reqRes || !reqRes.success) throw new Error((reqRes && reqRes.error) || 'invalid response');
+    ALL = reqRes.requests || [];
+    setupSelects();
+    render();
+    $('loading').style.display = 'none';
+    $('content').style.display = 'block';
+    const now = new Date();
+    $('meta-info').textContent = (metaRes && metaRes.version ? metaRes.version + ' · ' : '') +
+      'updated ' + now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  } catch (err) {
+    $('loading').style.display = 'none';
+    $('error').style.display = 'block';
+    $('error').textContent = 'Error loading: ' + err.message;
+  }
+}
+
+function setupSelects() {
+  fillSel('f-category', META.categories, true);
+  fillSel('m-responsible', META.team, true);
+  fillSel('m-priority', META.priorities, false);
+  fillSel('m-status', META.statuses, false);
+}
+function fillSel(id, items, keepFirst) {
+  const sel = $(id); const first = keepFirst ? sel.options[0] : null; const cur = sel.value;
+  sel.innerHTML = ''; if (first) sel.appendChild(first);
+  items.forEach(function (v) { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
+  if (cur) sel.value = cur;
+}
+
+function counts() {
+  const novos = ALL.filter(function (r) { return !r.validated; }).length;
+  return { novos: novos, validados: ALL.length - novos, todos: ALL.length };
+}
+
+function currentRows() {
+  const fc = $('f-category').value, fq = $('f-search').value.trim().toLowerCase();
+  return ALL.filter(function (r) {
+    if (VIEW === 'novos' && r.validated) return false;
+    if (VIEW === 'validados' && !r.validated) return false;
+    if (fc && r.category !== fc) return false;
+    if (fq) {
+      const hay = (r.subject + ' ' + r.project + ' ' + r.requesterName + ' ' + r.description + ' ' + r.id + ' ' + r.responsible).toLowerCase();
+      if (hay.indexOf(fq) === -1) return false;
+    }
+    return true;
+  });
+}
+
+function render() {
+  const c = counts();
+  $('n-novos').textContent = c.novos; $('n-validados').textContent = c.validados; $('n-todos').textContent = c.todos;
+  document.querySelectorAll('.tab').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-view') === VIEW); });
+
+  const rows = currentRows();
+  const tb = $('tbody');
+  if (!rows.length) { tb.innerHTML = '<tr><td colspan="9" class="empty">Nothing here.</td></tr>'; return; }
+  const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+  tb.innerHTML = rows.map(function (r) {
+    const badge = r.validated ? '<span class="pill badge-val"><span class="dot"></span>Validated</span>' : '<span class="pill badge-new"><span class="dot"></span>New</span>';
+    const btn = r.validated
+      ? '<button class="act-btn edit" data-id="' + esc(r.id) + '">Edit</button>'
+      : '<button class="act-btn" data-id="' + esc(r.id) + '">Triage' + arrow + '</button>';
+    return '<tr class="' + (r.validated ? '' : 'pending') + '">' +
+      '<td class="rid-cell">' + esc(r.id) + '</td>' +
+      '<td>' + badge + '</td>' +
+      '<td class="subj-cell"><div class="s-main">' + esc(r.subject) + '</div>' +
+        '<div class="s-sub">' + esc(r.requesterName) + (r.project ? ' · ' + esc(r.project) : '') + '</div></td>' +
+      '<td>' + esc(r.category) + '</td>' +
+      '<td>' + pill(r.priority, PRIORITY_COLORS) + '</td>' +
+      '<td class="owner-cell">' + esc(r.responsible || '—') + '</td>' +
+      '<td>' + pill(r.status, STATUS_COLORS) + '</td>' +
+      '<td class="created-cell">' + fmtDate(r.createdAt) + '</td>' +
+      '<td>' + btn + '</td></tr>';
+  }).join('');
+
+  tb.querySelectorAll('.act-btn').forEach(function (b) { b.addEventListener('click', function () { openModal(b.getAttribute('data-id')); }); });
+}
+
+function openModal(id) {
+  const r = ALL.find(function (x) { return x.id === id; });
+  if (!r) return;
+  editingId = id;
+  $('m-title').textContent = (r.validated ? 'Edit ' : 'Triage ') + r.id;
+  $('m-ctx').innerHTML =
+    '<b>' + esc(r.subject) + '</b><br>' +
+    esc(r.category) + ' · ' + esc(r.priority) + ' · ' + esc(r.requesterName) + ' (' + esc(r.requesterEmail) + ')' +
+    (r.country ? ' · ' + esc(r.country) : '') +
+    (r.link ? '<br><a href="' + esc(r.link) + '" target="_blank">' + esc(r.link) + '</a>' : '') +
+    '<div class="desc">' + esc(r.description || '') + '</div>';
+  $('m-responsible').value = r.responsible || '';
+  $('m-priority').value = r.priority || 'Normal';
+  $('m-status').value = r.status || 'New';
+  $('m-eta').value = fmtDateInput(r.eta);
+  $('m-notes').value = r.notes || '';
+
+  if (r.validated) {
+    $('m-valnote').style.display = 'block';
+    $('m-valnote').textContent = 'Already validated' + (r.validatedAt ? ' on ' + fmtDate(r.validatedAt) : '') + ' — it is on the dashboard. Editing will not resend the email.';
+    $('m-validate').style.display = 'none';
+    $('m-resp-req').style.display = 'none';
+    $('m-save').textContent = 'Save changes';
+  } else {
+    $('m-valnote').style.display = 'none';
+    $('m-validate').style.display = 'inline-block';
+    $('m-resp-req').style.display = 'inline';
+    $('m-save').textContent = 'Save without validating';
+  }
+  updateValidateBtn();
+  $('modal-bg').classList.add('open');
+}
+function closeModal() { $('modal-bg').classList.remove('open'); editingId = null; }
+function updateValidateBtn() { $('m-validate').disabled = !$('m-responsible').value; }
+
+function collectEdits() {
+  return { id: editingId, responsible: $('m-responsible').value, priority: $('m-priority').value, status: $('m-status').value, eta: $('m-eta').value, notes: $('m-notes').value };
+}
+function applyOptimistic(r, p, validated) {
+  if (!r) return;
+  r.responsible = p.responsible; r.priority = p.priority; r.status = p.status;
+  r.eta = p.eta ? new Date(p.eta).toISOString() : ''; r.notes = p.notes;
+  if (validated) { r.validated = true; r.validatedAt = new Date().toISOString(); }
+}
+function post(type, payload) {
+  return fetch(CONFIG.scriptUrl, { method:'POST', mode:'no-cors', headers:{ 'Content-Type':'text/plain' }, body: JSON.stringify(Object.assign({ type: type }, payload)) });
+}
+
+async function saveOnly() {
+  const p = collectEdits(); const r = ALL.find(function (x) { return x.id === editingId; });
+  applyOptimistic(r, p, false);
+  closeModal(); render();
+  try { await post('updateRequest', p); toast('Changes saved: ' + p.id); setTimeout(loadAll, 1200); }
+  catch (e) { toast('Error saving'); }
+}
+async function validateNow() {
+  const p = collectEdits();
+  if (!p.responsible) { toast('Assign an owner before validating.'); return; }
+  const r = ALL.find(function (x) { return x.id === editingId; });
+  applyOptimistic(r, p, true);
+  closeModal(); render();
+  try { await post('validateRequest', p); toast('Validated. Requester notified: ' + p.id); setTimeout(loadAll, 1400); }
+  catch (e) { toast('Error validating'); }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.tab').forEach(function (t) { t.addEventListener('click', function () { VIEW = t.getAttribute('data-view'); render(); }); });
+  $('f-category').addEventListener('change', render);
+  $('f-search').addEventListener('input', render);
+  $('refresh-btn').addEventListener('click', function () {
+    $('loading').style.display = 'block'; $('content').style.display = 'none'; $('error').style.display = 'none'; loadAll();
+  });
+  $('m-responsible').addEventListener('change', updateValidateBtn);
+  $('m-close').addEventListener('click', closeModal);
+  $('m-cancel').addEventListener('click', closeModal);
+  $('m-save').addEventListener('click', saveOnly);
+  $('m-validate').addEventListener('click', validateNow);
+  $('modal-bg').addEventListener('click', function (e) { if (e.target === $('modal-bg')) closeModal(); });
+  loadAll();
+});
+</script>
+</body>
+</html>
