@@ -1,15 +1,3868 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Redirecionando…</title>
-<link rel="icon" type="image/png" href="/aceolution-globe.png">
-<!-- Esta página mudou de lugar (foi pra /app/, atrás do Cloudflare Access).
-     Este arquivo existe só pra não quebrar links salvos e bookmarks do time. -->
-<meta http-equiv="refresh" content="0; url=/app/driver-profile">
-<script>location.replace('/app/driver-profile' + location.search + location.hash);</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Driver Profile · LATAM · Aceolution</title>
+  <link rel="icon" type="image/png" href="/aceolution-globe.png">
+  <!-- Leaflet pra mapa de histórico do driver (mesma lib do dashboard) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
+  <script src="/auth.js?v=20260518b"></script>
+<script src="/theme.js?v=20260519a"></script>
+<script src="/common.js?v=20260519a"></script>
+<link rel="stylesheet" href="/theme.css?v=20260519a">
+<style>  :root {
+    --c-good: #16A34A;
+    --c-bad: #DC2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--c-text);
+    background: var(--c-bg);
+  }
+
+  /* APP */
+  #app { display: none; }
+  #app.shown { display: block; }
+
+  /* HEADER */
+  .header {
+    background: var(--c-surface);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--c-border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand-wrap { display: flex; align-items: center; gap: 12px; }
+  .brand-logo { height: 32px; width: auto; }
+  .brand-divider { width: 1px; height: 28px; background: var(--c-border-strong); }
+  .brand-sub { font-size: 10px; font-weight: 600; color: var(--c-text-muted); letter-spacing: 1.2px; line-height: 1.2; }
+  .brand-title-line { font-size: 10px; color: var(--c-text-muted); letter-spacing: 1.2px; }
+  .brand-region-line { color: var(--c-primary); font-size: 18px; font-weight: 700; letter-spacing: 2px; margin-top: 2px; }
+  .header-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .nav-link {
+    padding: 6px 14px;
+    background: var(--c-bg-tint);
+    border: 1px solid var(--c-accent);
+    border-radius: 16px;
+    color: var(--c-primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 12px;
+    transition: all 0.15s;
+  }
+  .nav-link:hover { background: var(--c-primary); color: white; }
+  /* Ícone line inline no chrome (nav-links, busca, títulos de card) */
+  .chrome-ico { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; flex-shrink: 0; color: currentColor; }
+  .chrome-ico svg { display: block; }
+  .nav-link .chrome-ico { margin-right: 5px; }
+  .lang-switch {
+    display: inline-flex;
+    background: var(--c-bg);
+    border-radius: 16px;
+    padding: 2px;
+    border: 1px solid var(--c-border);
+  }
+  .lang-switch button {
+    padding: 4px 10px;
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    color: var(--c-text-muted);
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .lang-switch button.active {
+    background: var(--c-surface);
+    color: var(--c-primary);
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .user-pill {
+    padding: 5px 12px;
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .user-pill .logout-btn {
+    background: none;
+    border: none;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .user-pill .logout-btn:hover { color: #EF4444; }
+
+  /* SEARCH BAR */
+  .search-section {
+    background: var(--c-surface);
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .search-wrap {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .search-input {
+    width: 100%;
+    padding: 12px 18px 12px 42px;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: all 0.15s;
+  }
+  .search-input:focus {
+    outline: none;
+    border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(74, 159, 224, 0.15);
+  }
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--c-text-muted);
+    font-size: 16px;
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+  }
+  .search-icon svg { display: block; }
+  .search-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.15);
+    max-height: 320px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+  }
+  .search-suggestions.show { display: block; }
+  .suggestion-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--c-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .suggestion-item:last-child { border-bottom: none; }
+  .suggestion-item:hover, .suggestion-item.highlighted {
+    background: var(--c-bg-tint);
+  }
+  .suggestion-name { font-weight: 500; color: var(--c-primary-dark); }
+  .suggestion-meta {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    display: flex;
+    gap: 8px;
+  }
+  .suggestion-meta .country {
+    background: var(--c-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .suggestion-meta .eff {
+    color: var(--c-good);
+    font-weight: 600;
+  }
+  .suggestion-meta .eff.warn { color: var(--c-warn); }
+  .suggestion-meta .eff.bad { color: var(--c-bad); }
+  .suggestion-empty {
+    padding: 16px;
+    text-align: center;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  /* WELCOME / RANKING (quando nenhum driver selecionado) */
+  .welcome-section {
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .welcome-icon {
+    font-size: 48px;
+    opacity: 0.4;
+    margin-bottom: 12px;
+  }
+  .welcome-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 6px;
+  }
+  .welcome-subtitle {
+    font-size: 13px;
+    color: var(--c-text-muted);
+    margin-bottom: 28px;
+  }
+  .ranking-card {
+    background: var(--c-surface);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    max-width: 720px;
+    margin: 0 auto;
+    overflow: hidden;
+    text-align: left;
+  }
+  .ranking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--c-border);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .ranking-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+  }
+  .ranking-toggle {
+    display: inline-flex;
+    background: var(--c-bg);
+    border-radius: 16px;
+    padding: 2px;
+    gap: 0;
+  }
+  .ranking-toggle-btn {
+    padding: 5px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--c-text-muted);
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .ranking-toggle-btn.active {
+    background: var(--c-surface);
+    color: var(--c-primary);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .ranking-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .ranking-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--c-border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .ranking-item:last-child { border-bottom: none; }
+  .ranking-item:hover { background: var(--c-bg-tint); }
+  .ranking-position {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    background: var(--c-bg);
+    border-radius: 50%;
+  }
+  .ranking-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .ranking-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-primary-dark);
+  }
+  .ranking-meta {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+  .ranking-eff {
+    flex-shrink: 0;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .ranking-eff.good { color: var(--c-good); }
+  .ranking-eff.warn { color: var(--c-warn); }
+  .ranking-eff.bad { color: var(--c-bad); }
+  /* Botão "Mostrar Top 10" */
+  .ranking-expand-btn {
+    width: 100%;
+    padding: 10px 16px;
+    background: var(--c-bg);
+    border: none;
+    border-top: 1px solid var(--c-border);
+    color: var(--c-primary);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .ranking-expand-btn:hover {
+    background: var(--c-bg-tint);
+  }
+
+  /* PROFILE CONTENT (quando driver selecionado) */
+  .profile-section {
+    display: none;
+    padding: 24px;
+  }
+  .profile-section.shown { display: block; }
+
+  /* Banner quando vem via ?email (link externo) */
+  .from-link-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    background: #FEF3C7;
+    border: 1px solid #FDE68A;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #92400E;
+  }
+  .from-link-back {
+    background: var(--c-surface);
+    border: 1px solid #FDE68A;
+    color: #92400E;
+    padding: 4px 10px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .from-link-back:hover { background: #FDE68A; }
+
+  /* HERO */
+  .profile-hero {
+    background: linear-gradient(135deg, #1A365D 0%, #2C5282 50%, #4A9FE0 100%);
+    color: white;
+    padding: 22px 24px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .hero-avatar {
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .hero-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .hero-name {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+  .hero-meta {
+    font-size: 12px;
+    opacity: 0.85;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .hero-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .hero-status-active { color: #BBF7D0; font-weight: 600; }
+  .hero-status-inactive { color: #FECACA; font-weight: 600; }
+  /* Botão X pra fechar perfil e voltar pra busca */
+  .hero-close {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+  }
+  .hero-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+  }
+
+  /* SCORECARDS */
+  .profile-scorecards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .scorecard {
+    background: var(--c-surface);
+    padding: 18px;
+    border-radius: 12px;
+    border-left: 3px solid var(--c-primary);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  }
+  .scorecard.color-good { border-left-color: var(--c-good); }
+  .scorecard.color-warn { border-left-color: var(--c-warn); }
+  .scorecard.color-bad { border-left-color: var(--c-bad); }
+  .sc-label {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .sc-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin: 6px 0 4px;
+    line-height: 1.1;
+  }
+  .sc-sub {
+    font-size: 11px;
+    color: var(--c-text-muted);
+  }
+  .sc-sub strong { color: var(--c-primary); }
+
+  /* DETAIL CARDS (eficiência + idle) */
+  .detail-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .detail-card {
+    background: var(--c-surface);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  }
+  .detail-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ASSETS CARD */
+  .assets-card { margin-bottom: 18px; }
+  .assets-update {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--c-text-muted);
+  }
+  .assets-content { font-size: 12px; }
+  .assets-empty {
+    padding: 18px 14px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .assets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .assets-stat {
+    background: var(--c-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--c-primary);
+  }
+  .assets-stat-label {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+    font-weight: 600;
+  }
+  .assets-stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    line-height: 1.2;
+  }
+  .assets-stat-value.small { font-size: 13px; }
+  .assets-stat-sub {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+  .assets-discs-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--c-border);
+  }
+  .assets-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .assets-disc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin: 0 4px 4px 0;
+    font-size: 11px;
+    font-family: 'SF Mono', Monaco, Menlo, monospace;
+    color: var(--c-text);
+  }
+  .assets-disc-chip.in-use {
+    background: #EBF4FB;
+    border-color: var(--c-accent);
+    color: var(--c-primary-dark);
+    font-weight: 600;
+  }
+  .assets-disc-chip.in-use .disc-arrow {
+    color: var(--c-accent);
+    font-size: 9px;
+  }
+  .disc-fill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  /* Barra estilo "bateria horizontal" */
+  .disc-fill-bar {
+    display: inline-block;
+    width: 28px;
+    height: 8px;
+    background: #E2E8F0;
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .disc-fill-bar-inner {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    background: #94A3B8;
+    transition: width 0.3s;
+  }
+  .disc-fill-bar.fill-low .disc-fill-bar-inner { background: #22C55E; }
+  .disc-fill-bar.fill-mid .disc-fill-bar-inner { background: #F59E0B; }
+  .disc-fill-bar.fill-high .disc-fill-bar-inner { background: #EF4444; }
+  .disc-fill-bar.fill-unknown {
+    background: repeating-linear-gradient(
+      45deg,
+      #E2E8F0,
+      #E2E8F0 4px,
+      #F1F5F9 4px,
+      #F1F5F9 8px
+    );
+  }
+  .disc-fill-pct {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    font-weight: 500;
+    font-family: -apple-system, sans-serif;
+    min-width: 26px;
+  }
+  .disc-fill-pct.unknown {
+    color: #CBD5E1;
+    font-style: italic;
+  }
+  .disc-fill-note {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--c-text-dim);
+    font-size: 10px;
+    font-style: italic;
+    margin-left: 4px;
+  }
+  .assets-comments {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: var(--c-bg-tint, #FFFBEB);
+    border-left: 3px solid var(--c-warn);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--c-text-muted);
+    font-style: italic;
+  }
+
+  /* COMPLIANCE CARD */
+  .compliance-card { margin-bottom: 18px; }
+  .compliance-content { font-size: 12px; }
+  .compliance-empty {
+    padding: 24px 14px;
+    text-align: center;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .compliance-empty-icon {
+    font-size: 30px;
+    opacity: 0.4;
+    margin-bottom: 8px;
+  }
+  .compliance-summary {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .compliance-summary-item {
+    flex: 1;
+    min-width: 110px;
+    background: var(--c-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--c-border-strong);
+  }
+  .compliance-summary-item.has-pending { border-left-color: var(--c-warn); background: #FFFBEB; }
+  .compliance-summary-item.has-paid { border-left-color: var(--c-good); background: #F0FDF4; }
+  .compliance-summary-label {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .compliance-summary-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+  }
+  .compliance-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 14px;
+    margin-bottom: 8px;
+  }
+  .fine-item {
+    background: var(--c-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--c-border-strong);
+    font-size: 11px;
+  }
+  .fine-item.status-open { border-left-color: var(--c-warn); }
+  .fine-item.status-paid { border-left-color: var(--c-good); }
+  .fine-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+    gap: 8px;
+  }
+  .fine-item-reason {
+    font-weight: 600;
+    color: var(--c-primary-dark);
+    font-size: 12px;
+  }
+  .fine-item-amount {
+    font-weight: 700;
+    font-family: 'SF Mono', Monaco, Menlo, monospace;
+    white-space: nowrap;
+  }
+  .fine-item-amount.open { color: var(--c-warn); }
+  .fine-item-amount.paid { color: var(--c-good); }
+  .fine-item-meta {
+    color: var(--c-text-muted);
+    line-height: 1.5;
+  }
+  .fine-item-status-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .fine-item-status-badge.open { background: #FEF3C7; color: #92400E; }
+  .fine-item-status-badge.paid { background: #D1FAE5; color: #065F46; }
+  .fine-item-link {
+    color: var(--c-primary);
+    text-decoration: none;
+    font-size: 10px;
+  }
+  .fine-item-link:hover { text-decoration: underline; }
+
+  /* v5.14: Vehicle Issues (acidentes, mech, tech) */
+  .vehicle-issue-item {
+    background: var(--c-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--c-border-strong);
+    font-size: 12px;
+  }
+  .vehicle-issue-item.critical { border-left-color: #DC2626; background: #FEF2F2; }
+  .vehicle-issue-item.minor { border-left-color: #F59E0B; background: #FFFBEB; }
+  .vehicle-issue-item.closed { border-left-color: var(--c-good); background: #F0FDF4; opacity: 0.85; }
+  .vi-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .vi-severity {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .vi-severity.critical { background: #FEE2E2; color: #991B1B; }
+  .vi-severity.minor { background: #FEF3C7; color: #92400E; }
+  .vi-severity.closed { background: #D1FAE5; color: #065F46; }
+  .vi-status-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--c-bg);
+  }
+  .vi-status-badge.not-started { background: #DBEAFE; color: #1E40AF; }
+  .vi-status-badge.in-progress { background: #FEF3C7; color: #92400E; }
+  .vi-status-badge.awaiting-payment { background: #FFE4E6; color: #9F1239; }
+  .vi-status-badge.picked-up { background: #D1FAE5; color: #065F46; }
+  .vi-status-badge.done { background: #D1FAE5; color: #065F46; }
+  .vi-description {
+    color: var(--c-text);
+    font-size: 12px;
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .vi-meta {
+    color: var(--c-text-muted);
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  /* PMO Notes section — agora populada via fetch real do backend */
+  .pmo-section-title {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pmo-notes-container { margin-top: 4px; }
+  .pmo-notes-loading,
+  .pmo-notes-empty,
+  .pmo-notes-error {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    background: var(--c-bg);
+    border: 1px dashed var(--c-border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .pmo-notes-error {
+    color: #991B1B;
+    background: #FEF2F2;
+    border-color: #FCA5A5;
+  }
+  .pmo-coming-soon {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--c-text-muted);
+    background: var(--c-bg);
+    padding: 1px 6px;
+    border-radius: 3px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .pmo-notes-preview {
+    margin-top: 8px;
+    padding: 14px;
+    background: linear-gradient(180deg, var(--c-bg) 0%, white 100%);
+    border-radius: 8px;
+    border: 1px dashed var(--c-border-strong);
+    opacity: 0.85;
+    position: relative;
+  }
+  .pmo-preview-header {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .pmo-preview-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .pmo-preview-header strong {
+    color: var(--c-primary-dark);
+    font-size: 12px;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .pmo-preview-sub {
+    color: var(--c-text-muted);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .pmo-note-example {
+    background: var(--c-surface);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--c-border-strong);
+    filter: grayscale(0.3);  /* indica que é exemplo */
+  }
+  .pmo-note-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .pmo-category {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--c-bg);
+    color: var(--c-text);
+  }
+  .pmo-category.accident { background: #FEE2E2; color: #991B1B; }
+  .pmo-category.conduct { background: #FEF3C7; color: #92400E; }
+  .pmo-category.vehicle { background: #DBEAFE; color: #1E40AF; }
+  .pmo-category.note { background: #F3F4F6; color: #374151; }
+  .pmo-category.positive { background: #D1FAE5; color: #065F46; }
+  .pmo-meta {
+    font-size: 10px;
+    color: var(--c-text-muted);
+  }
+  .pmo-note-body {
+    font-size: 11px;
+    color: var(--c-text);
+    line-height: 1.5;
+  }
+  .pmo-preview-footer {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--c-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+  }
+  .pmo-preview-cats {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  .pmo-cat-chip {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--c-bg);
+  }
+  .pmo-cat-chip.accident { background: #FEE2E2; color: #991B1B; }
+  .pmo-cat-chip.conduct { background: #FEF3C7; color: #92400E; }
+  .pmo-cat-chip.vehicle { background: #DBEAFE; color: #1E40AF; }
+  .pmo-cat-chip.note { background: #F3F4F6; color: #374151; }
+  .pmo-cat-chip.positive { background: #D1FAE5; color: #065F46; }
+
+  /* AI ANALYSIS CARD */
+  .ai-card { margin-bottom: 18px; }
+  .ai-card .detail-card-title { display: flex; align-items: center; gap: 8px; }
+  .ai-analyze-btn {
+    margin-left: auto;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .ai-analyze-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(44, 82, 130, 0.4);
+  }
+  .ai-analyze-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .ai-content { min-height: 80px; }
+  .ai-empty {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 14px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .ai-empty-icon { font-size: 24px; opacity: 0.5; }
+  .ai-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 30px 14px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+  }
+  .ai-loading .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--c-border);
+    border-top-color: var(--c-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .ai-error {
+    background: #FEF2F2;
+    border-left: 3px solid var(--c-bad);
+    padding: 12px 14px;
+    border-radius: 4px;
+    color: #991B1B;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .ai-error strong { display: block; margin-bottom: 4px; }
+  .ai-section {
+    margin-bottom: 14px;
+  }
+  .ai-section:last-child { margin-bottom: 0; }
+  .ai-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ai-item {
+    background: var(--c-bg);
+    border-left: 3px solid var(--c-border-strong);
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+  .ai-item:last-child { margin-bottom: 0; }
+  .ai-item.severity-high { border-left-color: var(--c-bad); background: #FEF2F2; }
+  .ai-item.severity-medium { border-left-color: var(--c-warn); background: #FFFBEB; }
+  .ai-item.severity-low { border-left-color: var(--c-accent); background: var(--c-bg-tint); }
+  .ai-item.kind-suggestion { border-left-color: #8B5CF6; background: #F5F3FF; }
+  .ai-item.kind-strength { border-left-color: var(--c-good); background: #F0FDF4; }
+  .ai-item-title {
+    font-weight: 600;
+    color: var(--c-primary-dark);
+    margin-bottom: 3px;
+  }
+  .ai-item-desc {
+    color: var(--c-text);
+    line-height: 1.5;
+  }
+  .ai-meta {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--c-border);
+    font-size: 10px;
+    color: var(--c-text-dim);
+    text-align: right;
+  }
+
+  /* MAPA — driver-profile geographic activity */
+  .map-card { margin-bottom: 18px; }
+  .map-card .detail-card-title { margin-bottom: 10px; }
+  .map-period {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--c-text-muted);
+  }
+  .profile-map {
+    width: 100%;
+    height: 450px;
+    border-radius: 8px;
+    background: var(--c-bg);
+    overflow: hidden;
+    border: 1px solid var(--c-border);
+  }
+  .profile-map .leaflet-popup-content-wrapper {
+    border-radius: 6px;
+  }
+  .profile-map .leaflet-popup-content {
+    margin: 8px 10px;
+    font-family: inherit;
+    font-size: 12px;
+  }
+  .map-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--c-text-muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+  }
+  .map-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    flex-direction: column;
+    gap: 10px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+  }
+  .map-loading .spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--c-border);
+    border-top-color: var(--c-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .map-legend {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 11px;
+    color: var(--c-text-muted);
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+  .legend-circle {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border-width: 2px;
+    border-style: solid;
+  }
+  .legend-line {
+    display: inline-block;
+    width: 16px;
+    height: 0;
+    border-top: 2px dashed #4A9FE0;
+  }
+
+  /* EFICIÊNCIA */
+  .eff-display {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .eff-value {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    line-height: 1;
+  }
+  .eff-value.good { color: var(--c-good); }
+  .eff-value.warn { color: var(--c-warn); }
+  .eff-value.bad { color: var(--c-bad); }
+  .eff-vs-baseline {
+    font-size: 12px;
+    color: var(--c-text-muted);
+  }
+  .eff-vs-baseline strong { color: var(--c-primary-dark); }
+  .eff-vs-baseline.good strong { color: var(--c-good); }
+  .eff-vs-baseline.bad strong { color: var(--c-bad); }
+  .eff-formula {
+    background: var(--c-bg);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--c-text-muted);
+    line-height: 1.6;
+  }
+  .eff-formula code {
+    background: var(--c-surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', Monaco, Menlo, monospace;
+    color: var(--c-primary);
+    font-size: 11px;
+  }
+  .eff-bar {
+    height: 8px;
+    background: var(--c-bg);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0 12px;
+    position: relative;
+  }
+  .eff-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+  .eff-bar-fill.good { background: linear-gradient(90deg, var(--c-good), #10B981); }
+  .eff-bar-fill.warn { background: linear-gradient(90deg, var(--c-warn), #FBBF24); }
+  .eff-bar-fill.bad { background: linear-gradient(90deg, var(--c-bad), #EF4444); }
+  .eff-baseline-marker {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 2px;
+    background: var(--c-primary-dark);
+    z-index: 2;
+  }
+  .eff-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--c-text-muted);
+  }
+
+  /* IDLE DAYS */
+  .idle-total {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .idle-total.zero { color: var(--c-good); }
+  .idle-total-label {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    margin-bottom: 14px;
+  }
+  .idle-breakdown {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .idle-cell {
+    background: var(--c-bg);
+    border-radius: 8px;
+    padding: 10px 6px;
+    text-align: center;
+  }
+  .idle-cell.has-value { border-left: 3px solid var(--c-warn); padding-left: 3px; }
+  .idle-cell-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    line-height: 1;
+  }
+  .idle-cell.has-value .idle-cell-value { color: var(--c-warn); }
+  .idle-cell-label {
+    font-size: 9px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    margin-top: 4px;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+  }
+
+  /* v5.14.1: Issues do mês cruzadas com Mech/Tech */
+  .idle-issues-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--c-border);
+  }
+  .idle-issue-block {
+    background: var(--c-bg);
+    border-radius: 6px;
+    padding: 8px 10px;
+    border-left: 3px solid var(--c-border-strong);
+  }
+  .idle-issue-block.mech { border-left-color: #DC2626; background: #FEF2F2; }
+  .idle-issue-block.tech { border-left-color: #6366F1; background: #EEF2FF; }
+  .idle-issue-block-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
+  }
+  .idle-issue-row {
+    background: var(--c-surface);
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .idle-issue-row:last-child { margin-bottom: 0; }
+  .idle-issue-row.closed { opacity: 0.7; }
+  .ii-line1 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .ii-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--c-bg);
+    white-space: nowrap;
+  }
+  .ii-badge.not-started { background: #DBEAFE; color: #1E40AF; }
+  .ii-badge.in-progress { background: #FEF3C7; color: #92400E; }
+  .ii-badge.awaiting-payment { background: #FFE4E6; color: #9F1239; }
+  .ii-badge.done { background: #D1FAE5; color: #065F46; }
+  .ii-meta {
+    font-size: 10px;
+    color: var(--c-text-muted);
+  }
+  .ii-meta strong { color: var(--c-warn); font-weight: 700; }
+  .ii-desc {
+    font-size: 11px;
+    color: var(--c-text);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+
+  /* PLACEHOLDER (sessão B) */
+  /* HISTÓRICO MENSAL */
+  #history-card { margin-bottom: 18px; }
+  .history-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 80px;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-month {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    font-weight: 500;
+  }
+  .history-bar-track {
+    height: 8px;
+    background: var(--c-bg);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .history-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  .history-bar-fill.good { background: linear-gradient(90deg, var(--c-good), #10B981); }
+  .history-bar-fill.warn { background: linear-gradient(90deg, var(--c-warn), #FBBF24); }
+  .history-bar-fill.bad { background: linear-gradient(90deg, var(--c-bad), #EF4444); }
+  .history-eff {
+    text-align: right;
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .history-eff.good { color: var(--c-good); }
+  .history-eff.warn { color: var(--c-warn); }
+  .history-eff.bad { color: var(--c-bad); }
+  .history-meta {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+  }
+  .history-summary {
+    background: var(--c-bg-tint);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--c-text);
+    line-height: 1.5;
+  }
+  .history-summary strong { color: var(--c-primary-dark); }
+  .history-trend-up { color: var(--c-good); font-weight: 600; }
+  .history-trend-down { color: var(--c-bad); font-weight: 600; }
+  .history-trend-flat { color: var(--c-text-muted); font-weight: 600; }
+
+  .placeholder-section {
+    background: var(--c-surface);
+    border: 2px dashed var(--c-border);
+    padding: 32px;
+    border-radius: 12px;
+    text-align: center;
+    color: var(--c-text-muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+  .placeholder-section .ph-icon { font-size: 32px; opacity: 0.4; margin-bottom: 8px; }
+
+  /* === CALENDÁRIO === */
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+  .cal-weekday {
+    font-size: 10px;
+    text-align: center;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 4px 0;
+    letter-spacing: 0.5px;
+  }
+  .cal-day {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--c-bg);
+    color: var(--c-text-muted);
+    font-size: 11px;
+    cursor: default;
+    transition: transform 0.15s;
+    position: relative;
+  }
+  .cal-day:hover { transform: scale(1.06); z-index: 2; }
+  .cal-day-num { font-weight: 600; line-height: 1; }
+  .cal-day-icon { font-size: 13px; text-align: center; }
+  .cal-empty { background: transparent; }
+  /* Status colors */
+  .cal-mapping { background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; }
+  .cal-mech { background: #FEE2E2; color: #B91C1C; border: 1px solid #FECACA; }
+  .cal-tech { background: #FFE4E6; color: #BE123C; border: 1px solid #FECDD3; }
+  .cal-personal { background: #E0E7FF; color: #4338CA; border: 1px solid #C7D2FE; }
+  .cal-weather { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+  .cal-disks { background: #F3E8FF; color: #6B21A8; border: 1px solid #E9D5FF; }
+  .cal-travelling { background: #CFFAFE; color: #155E75; border: 1px solid #A5F3FC; }
+  .cal-holiday { background: #FFE4E6; color: #BE185D; border: 1px solid #FBCFE8; }
+  .cal-other { background: #F1F5F9; color: var(--c-text-muted); border: 1px solid var(--c-border); }
+  .cal-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 10px;
+    color: var(--c-text-muted);
+    padding-top: 12px;
+    border-top: 1px solid var(--c-border);
+  }
+  .cal-legend-item { display: inline-flex; align-items: center; gap: 4px; }
+  .cal-swatch { width: 10px; height: 10px; border-radius: 2px; }
+  .cal-swatch.cal-mapping { background: #DCFCE7; border-color: #BBF7D0; }
+  .cal-swatch.cal-mech { background: #FEE2E2; border-color: #FECACA; }
+  .cal-swatch.cal-tech { background: #FFE4E6; border-color: #FECDD3; }
+  .cal-swatch.cal-personal { background: #E0E7FF; border-color: #C7D2FE; }
+  .cal-swatch.cal-weather { background: #FEF3C7; border-color: #FDE68A; }
+  .cal-swatch.cal-disks { background: #F3E8FF; border-color: #E9D5FF; }
+  .cal-swatch.cal-travelling { background: #CFFAFE; border-color: #A5F3FC; }
+  .cal-swatch.cal-holiday { background: #FFE4E6; border-color: #FBCFE8; }
+  .cal-swatch.cal-other { background: #F1F5F9; border-color: var(--c-border); }
+
+  /* LOADER */
+  .loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.85);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .loader-overlay.show { display: flex; }
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--c-border);
+    border-top-color: var(--c-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { font-size: 13px; color: var(--c-text-muted); }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--c-text-dim);
+    font-size: 11px;
+  }
+
+  @media (max-width: 760px) {
+    .profile-scorecards { grid-template-columns: repeat(2, 1fr); }
+    .detail-row { grid-template-columns: 1fr; }
+    .idle-breakdown { grid-template-columns: repeat(5, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .profile-scorecards { grid-template-columns: 1fr; }
+    .hero-name { font-size: 17px; }
+  }
+</style>
 </head>
-<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#F8FAFC;color:#64748B">
-  <p>Esta página mudou de endereço. <a href="/app/driver-profile" style="color:#2C5282">Ir agora</a></p>
+<body>
+
+<!-- LOADER -->
+<div id="loader" class="loader-overlay">
+  <div class="spinner"></div>
+  <div class="loader-text" id="loader-text" data-i18n="loading">Carregando…</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <div class="brand-wrap">
+      <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
+      <div class="brand-divider"></div>
+      <div class="brand-sub">
+        <div class="brand-title-line">DRIVER PROFILE</div>
+        <div class="brand-region-line">LATAM</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="lang-switch">
+        <button data-lang="pt">PT</button>
+        <button data-lang="es">ES</button>
+        <button data-lang="en">EN</button>
+      </div>
+      <a href="dashboard.html" class="nav-link"><span class="chrome-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M7 14l3-3 3 2 4-5"/></svg></span>Dashboard</a>
+      <a href="ramp.html" class="nav-link"><span class="chrome-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18a2 2 0 0 1 2 2v1H5.5"/><path d="M3 7.5V17a2 2 0 0 0 2 2h14a1.5 1.5 0 0 0 1.5-1.5V9.5A1.5 1.5 0 0 0 19 8H4.5"/><circle cx="16.5" cy="13.5" r="1.1"/></svg></span>Ramp</a>
+      <button class="nav-link" id="refresh-btn" style="cursor:pointer;font:inherit;" title="Atualizar" onclick="refreshProfilePage()"><span class="chrome-ico" style="margin:0;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-1.5 5.5"/><path d="M20 5v6h-6"/></svg></span></button>
+      <div class="user-pill" id="user-pill"></div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div class="search-wrap">
+      <span class="search-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg></span>
+      <input
+        type="text"
+        class="search-input"
+        id="search-input"
+        placeholder="Buscar motorista por nome…" data-i18n-placeholder="searchPlaceholder"
+        autocomplete="off"
+        oninput="onSearchInput()"
+      >
+      <div class="search-suggestions" id="search-suggestions"></div>
+    </div>
+  </div>
+
+  <!-- Welcome (quando nenhum driver selecionado) -->
+  <div class="welcome-section" id="welcome-section">
+    <div class="welcome-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 20c0-3.9 3.1-6 7-6s7 2.1 7 6"/></svg></div>
+    <div class="welcome-title" data-i18n="welcomeTitle">Selecione um motorista</div>
+    <div class="welcome-subtitle" data-i18n="welcomeSubtitle">Use a busca acima ou clique em um dos rankings abaixo</div>
+
+    <div class="ranking-card">
+      <div class="ranking-header">
+        <div class="ranking-title" id="ranking-title" data-i18n="rankingTopTitle">🏆 Top 5 — maior eficiência</div>
+        <div class="ranking-toggle">
+          <button class="ranking-toggle-btn active" id="rank-mode-top" onclick="setRankingMode('top')" data-i18n="rankingTop">Top 5</button>
+          <button class="ranking-toggle-btn" id="rank-mode-bottom" onclick="setRankingMode('bottom')" data-i18n="rankingBottom">Bottom 5</button>
+        </div>
+      </div>
+      <ul class="ranking-list" id="ranking-list">
+        <!-- Populado via JS -->
+      </ul>
+      <button class="ranking-expand-btn" id="ranking-expand-btn" onclick="toggleRankingExpanded()" style="display:none;">
+        <span data-i18n="rankingShowMore">Mostrar Top 10 ↓</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Profile (quando driver selecionado) -->
+  <div class="profile-section" id="profile-section">
+    <!-- Banner que aparece quando perfil foi aberto via ?email= (link externo) -->
+    <div class="from-link-banner" id="from-link-banner" style="display:none;">
+      <span>🔗 <span data-i18n="fromLinkText">Aberto via link externo (Dashboard ou Ramp)</span></span>
+      <button onclick="goBackToSearch()" class="from-link-back" data-i18n="fromLinkBack">← Voltar pra busca</button>
+    </div>
+    <!-- Hero -->
+    <div class="profile-hero">
+      <div class="hero-avatar" id="hero-avatar">?</div>
+      <div class="hero-info">
+        <div class="hero-name" id="hero-name">—</div>
+        <div class="hero-meta" id="hero-meta">—</div>
+      </div>
+      <button class="hero-close" onclick="goBackToSearch()" title="Fechar e voltar para busca" aria-label="Fechar">×</button>
+    </div>
+
+    <!-- Scorecards -->
+    <div class="profile-scorecards">
+      <div class="scorecard" id="sc-eff">
+        <div class="sc-label" data-i18n="scEff">Eficiência</div>
+        <div class="sc-value" id="sc-eff-value">—</div>
+        <div class="sc-sub" id="sc-eff-sub">—</div>
+      </div>
+      <div class="scorecard" id="sc-tkm">
+        <div class="sc-label" data-i18n="scTkm">TKM mês</div>
+        <div class="sc-value" id="sc-tkm-value">—</div>
+        <div class="sc-sub" id="sc-tkm-sub">—</div>
+      </div>
+      <div class="scorecard" id="sc-idle">
+        <div class="sc-label" data-i18n="scIdle">Idle days</div>
+        <div class="sc-value" id="sc-idle-value">—</div>
+        <div class="sc-sub" id="sc-idle-sub">—</div>
+      </div>
+      <div class="scorecard" id="sc-qc">
+        <div class="sc-label" data-i18n="scQc">QC Score</div>
+        <div class="sc-value" id="sc-qc-value">—</div>
+        <div class="sc-sub" id="sc-qc-sub">—</div>
+      </div>
+    </div>
+
+    <!-- Detail row: eficiência + idle -->
+    <div class="detail-row">
+      <!-- Eficiência detalhada -->
+      <div class="detail-card">
+        <div class="detail-card-title" data-i18n="effCardTitle">📈 Como foi calculada a eficiência?</div>
+        <div class="eff-display">
+          <div class="eff-value" id="eff-detail-value">—</div>
+          <div class="eff-vs-baseline" id="eff-vs-baseline">—</div>
+        </div>
+
+        <!-- Barra com marcador do baseline -->
+        <div class="eff-bar">
+          <div class="eff-bar-fill" id="eff-bar-fill" style="width:0%;"></div>
+          <div class="eff-baseline-marker" id="eff-baseline-marker" style="display:none;"></div>
+        </div>
+        <div class="eff-bar-labels">
+          <span>0%</span>
+          <span>50%</span>
+          <span>100%</span>
+        </div>
+
+        <div class="eff-formula" id="eff-formula" style="margin-top:14px;">
+          —
+        </div>
+      </div>
+
+      <!-- Idle days detalhado -->
+      <div class="detail-card">
+        <div class="detail-card-title" data-i18n="idleCardTitle">🔧 Idle days do mês</div>
+        <div class="idle-total" id="idle-total">—</div>
+        <div class="idle-total-label" id="idle-total-label">dias parados neste mês</div>
+
+        <div class="idle-breakdown" id="idle-breakdown">
+          <!-- Populado via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Histórico mensal (dados reais da RAW CTS DATA) -->
+    <div class="detail-card" id="history-card" style="display:none;">
+      <div class="detail-card-title"><span class="chrome-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 16v-4M12 16v-7M16 16v-3"/></svg></span> <span data-i18n="historyCardTitle">Histórico mensal</span></div>
+      <div id="history-content"></div>
+    </div>
+
+    <!-- Calendário visual do mês (RAW CTS DATA) -->
+    <div class="detail-card" style="margin-bottom:18px;">
+      <div class="detail-card-title"><span class="chrome-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg></span> <span data-i18n="calendarTitle">Calendário do mês</span></div>
+      <div id="calendar-content"></div>
+    </div>
+
+    <!-- Mapa: histórico geográfico do driver (Sessão B) -->
+    <div class="detail-card map-card">
+      <div class="detail-card-title"><span class="chrome-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Z"/><path d="M9 4v14M15 6v14"/></svg></span> <span data-i18n="mapCardTitle">Mapa de atividade</span>
+        <span class="map-period" id="map-period-label">— últimos 60 dias</span>
+      </div>
+      <div id="profile-map" class="profile-map"></div>
+      <div class="map-legend" id="map-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#2C5282;"></span> <span data-i18n="legendBase">Base atual</span></span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--c-surface);border:2px solid #22C55E;"></span> 🏠 <span data-i18n="legendHome">Casa</span></span>
+        <span class="legend-item"><span class="legend-circle" style="border-color:#2C5282;background:rgba(74,159,224,0.2);"></span> <span data-i18n="legendArea">Área de mapeamento</span></span>
+        <span class="legend-item"><span class="legend-line"></span> <span data-i18n="legendHistory">Histórico (mais transparente = mais antigo)</span></span>
+      </div>
+    </div>
+
+    <!-- Assets card: SSDs, telefone, placa, odômetro -->
+    <div class="detail-card assets-card" id="assets-card">
+      <div class="detail-card-title">
+        <span class="chrome-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5V3Z"/><path d="M8 3v5h7V3M8 21v-6h8v6"/></svg></span> <span data-i18n="assetsCardTitle">Assets</span>
+        <span class="assets-update" id="assets-update-label"></span>
+      </div>
+      <div id="assets-content" class="assets-content"></div>
+    </div>
+
+    <!-- Compliance & Notes card: multas + notas dos gerentes -->
+    <div class="detail-card compliance-card" id="compliance-card">
+      <div class="detail-card-title">
+        <span class="chrome-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4v1H9V4Z"/><path d="M9 11h6M9 15h4"/></svg></span> <span data-i18n="complianceCardTitle">Compliance & Notes</span>
+      </div>
+      <div id="compliance-content" class="compliance-content"></div>
+    </div>
+
+    <!-- AI Analysis card (substitui o placeholder Smart comments) -->
+    <div class="detail-card ai-card" id="ai-card">
+      <div class="detail-card-title">
+        <span class="chrome-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4.5V8M12 4.5a1.3 1.3 0 1 0 0-.1"/><path d="M1.5 13h2.5M20 13h2.5"/><circle cx="9" cy="13.5" r="1.1"/><circle cx="15" cy="13.5" r="1.1"/></svg></span> <span data-i18n="aiCardTitle">AI Analysis</span>
+        <button class="ai-analyze-btn" id="ai-analyze-btn" onclick="runAiAnalysis()">
+          <span data-i18n="aiAnalyzeBtn">Analyze with AI</span>
+        </button>
+      </div>
+      <div id="ai-content" class="ai-content">
+        <div class="ai-empty">
+          <div class="ai-empty-icon">💡</div>
+          <div data-i18n="aiEmptyText">Click the button above to generate AI-powered insights about this driver — alerts, suggestions, and strengths based on the data above.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" style="height:24px;opacity:0.6;" onerror="this.style.display='none'"><br>
+    Aceolution do Brasil Ltda. · Driver Profile · Sessão A
+  </footer>
+</div>
+
+<script>
+// ================================================================
+// LOGIN — UI vem de common.js (injectLogin); auth vem de auth.js
+// ================================================================
+
+let currentUser = null;
+
+function _finishLogin(user) {
+  document.getElementById('app').classList.add('shown');
+  document.getElementById('user-pill').innerHTML =
+    `<span>👤 ${user.fullName}</span><button class="logout-btn" onclick="doLogout()" title="Sair">✕</button>`;
+  initApp();
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(currentUser);
+}
+
+function doLogout() {
+  if (typeof aceLogout === 'function') {
+    aceLogout('Sair?');
+  } else {
+    clearSession();
+    currentUser = null;
+    location.reload();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const lang = localStorage.getItem('preferredLang') || 'pt';
+  injectLogin({
+    title: 'LATAM · Driver Profile',
+    sub: 'Acesse com suas credenciais',
+    lang,
+    onSuccess: (user) => { currentUser = user; _finishLogin(user); },
+  });
+});
+
+// ================================================================
+// CONFIG E STATE
+// ================================================================
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+};
+
+let state = {
+  drivers: [],          // lista completa carregada do backend
+  selectedEmail: null,  // email do driver atualmente sendo exibido
+  profile: null,        // payload de getDriverProfile do driver atual
+  rankingMode: 'top',   // 'top' | 'bottom'
+  rankingExpanded: false, // false = Top 5, true = Top 10
+  searchHighlightIdx: -1, // pra navegação por teclado
+  visibleSuggestions: [],
+  openedViaLink: false, // true se veio via ?email= na URL (mostra banner)
+};
+
+// ================================================================
+// I18N (PT / ES / EN)
+// ================================================================
+const I18N = {
+  pt: {
+    loginTitle: 'Login',
+    loginSubtitle: 'Acesse com suas credenciais',
+    loginUser: 'Usuário',
+    loginPass: 'Senha',
+    loginBtn: 'Entrar',
+    loading: 'Carregando…',
+    loadingDrivers: 'Carregando lista de motoristas…',
+    loadingProfile: 'Carregando perfil…',
+    searchPlaceholder: 'Buscar motorista por nome…',
+    welcomeTitle: 'Selecione um motorista',
+    welcomeSubtitle: 'Use a busca acima ou clique em um dos rankings abaixo',
+    rankingTopTitle: '🏆 Top 5 — maior eficiência',
+    rankingBottomTitle: '⚠ Bottom 5 — menor eficiência',
+    rankingTop10Title: '🏆 Top 10 — maior eficiência',
+    rankingBottom10Title: '⚠ Bottom 10 — menor eficiência',
+    rankingShowMore: 'Mostrar Top 10 ↓',
+    rankingShowLess: 'Mostrar só Top 5 ↑',
+    rankingTop: 'Top 5',
+    rankingBottom: 'Bottom 5',
+    rankingEmpty: 'Sem dados de eficiência disponíveis',
+    rankingEmptyHint: 'O backend pode não ter sido atualizado. Verifique no console (F12).',
+    scEff: 'Eficiência',
+    scTkm: 'TKM mês',
+    scIdle: 'Idle days',
+    scQc: 'QC Score',
+    effCardTitle: '📈 Como foi calculada a eficiência?',
+    idleCardTitle: '🔧 Idle days do mês',
+    noVid: 'Sem VID atribuída',
+    noQc: 'Sem QC disponível',
+    noBaseline: 'Sem baseline disponível',
+    daysParked: 'dias parados neste mês',
+    dayParked: 'dia parado neste mês',
+    zeroIdleDays: 'Sem dias parados ✓',
+    needsAttention: 'dias parados — atenção',
+    aboveBaseline: 'acima do baseline',
+    belowBaseline: 'abaixo do baseline',
+    nearBaseline: 'próximo do baseline',
+    formula: 'Cálculo:',
+    values: 'Valores:',
+    meaning: 'Significado:',
+    meaningText: 'a cada km dirigido, {pct}% efetivamente "valeu" pro mapeamento (TKM = trackable km).',
+    noVidNoEff: 'Sem VID atribuída — não há dados de eficiência pra calcular.',
+    placeholderMap: 'Mapa com histórico de mapeamento e base',
+    placeholderCalendar: 'Calendário visual do mês',
+    placeholderComments: 'Comentários inteligentes',
+    comingSoon: '— em breve',
+    nextSession: 'Próxima sessão:',
+    calendarTitle: 'Calendário do mês',
+    historyTitle: 'Histórico mensal',
+    fromLinkText: 'Aberto via link externo (Dashboard ou Ramp)',
+    fromLinkBack: '← Voltar pra busca',
+    historyCardTitle: 'Histórico mensal',
+    historyBestMonth: 'Mês mais alto',
+    historyTrendUp: 'tendência ↗ {diff}pp últimos 3 meses',
+    historyTrendDown: 'tendência ↘ {diff}pp últimos 3 meses',
+    historyTrendFlat: 'tendência → estável',
+    mapCardTitle: 'Mapa de atividade',
+    mapPeriod: 'últimos {days} dias',
+    mapLastDays: 'últimos {days} dias',
+    mapLoading: 'Carregando histórico…',
+    mapNoData: 'Sem dados de localização disponíveis',
+    mapBase: 'Base',
+    mapHome: 'Casa do driver',
+    mapLatestArea: 'Área mais recente',
+    mapPastArea: 'Área histórica',
+    mapRadius: 'Raio',
+    legendBase: 'Base atual',
+    legendHome: 'Casa',
+    legendArea: 'Área de mapeamento',
+    legendHistory: 'Histórico (mais transparente = mais antigo)',
+    aiCardTitle: 'Análise IA',
+    aiAnalyzeBtn: 'Analisar com IA',
+    aiEmptyText: 'Clique no botão acima para gerar insights via IA sobre este motorista — alertas, sugestões e pontos positivos baseados nos dados acima.',
+    aiLoading: 'Analisando dados do motorista com IA… (5-15s)',
+    aiErrorTitle: 'Não foi possível executar a análise',
+    aiNothingToReport: 'A IA não retornou observações específicas. Tente novamente em alguns instantes.',
+    aiAlertsTitle: 'Pontos de atenção',
+    aiSuggestionsTitle: 'Sugestões operacionais',
+    aiStrengthsTitle: 'Pontos positivos',
+    aiGenerated: 'Gerado em',
+    assetsCardTitle: 'Assets',
+    assetsLastUpdate: 'atualizado em',
+    assetsEmpty: 'Sem dados de assets registrados ainda.',
+    assetsDiscs: 'Discos',
+    assetsInUse: 'em uso',
+    assetsPlate: 'Placa',
+    assetsPhone: 'Celular',
+    assetsCity: 'Cidade',
+    assetsHotelYes: 'Hotel mode',
+    assetsHotelNo: 'Home mode',
+    assetsAllDiscs: 'Códigos dos discos',
+    assetsDiscFillSoon: 'ocupação será coletada no novo check-in',
+    assetsDiscFillUnknown: 'Ocupação ainda não medida',
+    complianceCardTitle: 'Compliance & Notas',
+    complianceFinesOpen: 'Multas em aberto',
+    complianceFinesPaid: 'Multas pagas',
+    complianceFinesList: 'Histórico de multas',
+    complianceFineDoc: 'documento',
+    complianceNoFines: 'Nenhuma multa registrada para este motorista.',
+    compliancePmoNotes: 'Notas dos PMOs',
+    pmoNotesLoading: 'Carregando notas dos PMOs...',
+    pmoNotesEmpty: 'Nenhuma nota registrada para este motorista.',
+    pmoNotesError: 'Erro ao carregar notas dos PMOs.',
+    compliancePmoSoon: 'em breve',
+    compliancePmoPreviewTitle: 'Preview do sistema futuro',
+    compliancePmoPreviewSub: 'Os PMOs registrarão observações semanais sobre acidentes, conduta, incidentes e elogios. Aqui aparecerão assim:',
+    compliancePmoCategories: 'Categorias previstas',
+    compliancePmoCatAccident: 'Acidente',
+    compliancePmoCatConduct: 'Conduta',
+    compliancePmoCatVehicle: 'Veículo',
+    compliancePmoCatGeneral: 'Observação',
+    compliancePmoCatPositive: 'Elogio',
+    compliancePmoExampleAuthor1: 'Lucas (Brazil PMO)',
+    compliancePmoExampleAuthor2: 'Bia (LATAM PMO)',
+    compliancePmoExampleAuthor3: 'Pankaj',
+    compliancePmoExampleDate1: '15/04/2026',
+    compliancePmoExampleDate2: '08/04/2026',
+    compliancePmoExampleDate3: '01/04/2026',
+    compliancePmoExample1: 'Pequena colisão traseira em Curitiba, sem feridos. Carro levado pro mecânico, retorno previsto em 3 dias. Driver fez o B.O. corretamente.',
+    compliancePmoExample2: 'Atraso de 2h no check-in sem aviso prévio. Conversamos por telefone, justificativa aceita mas alertado sobre comunicação proativa.',
+    compliancePmoExample3: 'Top performer do mês — eficiência 90%+, zero idle days, comunicação exemplar.',
+    vehicleIssuesOpen: 'Issues do veículo em aberto',
+    vehicleIssuesClosed: 'Issues encerradas',
+    vehicleIssueCritical: 'Crítico',
+    vehicleIssueMinor: 'Alerta',
+    vehicleIssueNotStarted: 'Não começou',
+    vehicleIssueInProgress: 'Em andamento',
+    vehicleIssueAwaitingPayment: 'Aguardando pagamento',
+    vehicleIssuePickedUp: 'Carro pego',
+    vehicleIssueDone: 'Resolvido',
+    vehicleIssueStopped: 'Parou',
+    vehicleIssueExpected: 'Previsão',
+    vehicleIssueDaysOff: 'dia(s) parado',
+    idleIssuesMech: 'Detalhes mecânicos',
+    idleIssuesTech: 'Detalhes técnicos',
+  },
+  es: {
+    loginTitle: 'Login',
+    loginSubtitle: 'Accede con tus credenciales',
+    loginUser: 'Usuario',
+    loginPass: 'Contraseña',
+    loginBtn: 'Entrar',
+    loading: 'Cargando…',
+    loadingDrivers: 'Cargando lista de conductores…',
+    loadingProfile: 'Cargando perfil…',
+    searchPlaceholder: 'Buscar conductor por nombre…',
+    welcomeTitle: 'Selecciona un conductor',
+    welcomeSubtitle: 'Usa la búsqueda arriba o haz clic en uno de los rankings abajo',
+    rankingTopTitle: '🏆 Top 5 — mayor eficiencia',
+    rankingBottomTitle: '⚠ Bottom 5 — menor eficiencia',
+    rankingTop10Title: '🏆 Top 10 — mayor eficiencia',
+    rankingBottom10Title: '⚠ Bottom 10 — menor eficiencia',
+    rankingShowMore: 'Mostrar Top 10 ↓',
+    rankingShowLess: 'Mostrar solo Top 5 ↑',
+    rankingTop: 'Top 5',
+    rankingBottom: 'Bottom 5',
+    rankingEmpty: 'Sin datos de eficiencia disponibles',
+    rankingEmptyHint: 'El backend puede no haber sido actualizado. Revisa la consola (F12).',
+    scEff: 'Eficiencia',
+    scTkm: 'TKM mes',
+    scIdle: 'Idle days',
+    scQc: 'QC Score',
+    effCardTitle: '📈 ¿Cómo se calculó la eficiencia?',
+    idleCardTitle: '🔧 Idle days del mes',
+    noVid: 'Sin VID asignada',
+    noQc: 'Sin QC disponible',
+    noBaseline: 'Sin baseline disponible',
+    daysParked: 'días parados este mes',
+    dayParked: 'día parado este mes',
+    zeroIdleDays: 'Sin días parados ✓',
+    needsAttention: 'días parados — atención',
+    aboveBaseline: 'arriba del baseline',
+    belowBaseline: 'abajo del baseline',
+    nearBaseline: 'cerca del baseline',
+    formula: 'Cálculo:',
+    values: 'Valores:',
+    meaning: 'Significado:',
+    meaningText: 'por cada km manejado, {pct}% efectivamente "valió" para el mapeo (TKM = trackable km).',
+    noVidNoEff: 'Sin VID asignada — no hay datos de eficiencia para calcular.',
+    placeholderMap: 'Mapa con historial de mapeo y base',
+    placeholderCalendar: 'Calendario visual del mes',
+    placeholderComments: 'Comentarios inteligentes',
+    comingSoon: '— próximamente',
+    nextSession: 'Próxima sesión:',
+    calendarTitle: 'Calendario del mes',
+    historyTitle: 'Historial mensual',
+    fromLinkText: 'Abierto vía enlace externo (Dashboard o Ramp)',
+    fromLinkBack: '← Volver a la búsqueda',
+    historyCardTitle: 'Historial mensual',
+    historyBestMonth: 'Mes más alto',
+    historyTrendUp: 'tendencia ↗ {diff}pp últimos 3 meses',
+    historyTrendDown: 'tendencia ↘ {diff}pp últimos 3 meses',
+    historyTrendFlat: 'tendencia → estable',
+    mapCardTitle: 'Mapa de actividad',
+    mapPeriod: 'últimos {days} días',
+    mapLastDays: 'últimos {days} días',
+    mapLoading: 'Cargando historial…',
+    mapNoData: 'Sin datos de ubicación disponibles',
+    mapBase: 'Base',
+    mapHome: 'Casa del conductor',
+    mapLatestArea: 'Área más reciente',
+    mapPastArea: 'Área histórica',
+    mapRadius: 'Radio',
+    legendBase: 'Base actual',
+    legendHome: 'Casa',
+    legendArea: 'Área de mapeo',
+    legendHistory: 'Historial (más transparente = más antiguo)',
+    aiCardTitle: 'Análisis IA',
+    aiAnalyzeBtn: 'Analizar con IA',
+    aiEmptyText: 'Haz clic en el botón arriba para generar insights vía IA sobre este conductor — alertas, sugerencias y puntos positivos basados en los datos.',
+    aiLoading: 'Analizando datos del conductor con IA… (5-15s)',
+    aiErrorTitle: 'No se pudo ejecutar el análisis',
+    aiNothingToReport: 'La IA no devolvió observaciones específicas. Intenta de nuevo en unos momentos.',
+    aiAlertsTitle: 'Puntos de atención',
+    aiSuggestionsTitle: 'Sugerencias operativas',
+    aiStrengthsTitle: 'Puntos positivos',
+    aiGenerated: 'Generado el',
+    assetsCardTitle: 'Assets',
+    assetsLastUpdate: 'actualizado el',
+    assetsEmpty: 'Aún no hay datos de assets registrados.',
+    assetsDiscs: 'Discos',
+    assetsInUse: 'en uso',
+    assetsPlate: 'Placa',
+    assetsPhone: 'Celular',
+    assetsCity: 'Ciudad',
+    assetsHotelYes: 'Hotel mode',
+    assetsHotelNo: 'Home mode',
+    assetsAllDiscs: 'Códigos de los discos',
+    assetsDiscFillSoon: 'ocupación se medirá en el nuevo check-in',
+    assetsDiscFillUnknown: 'Ocupación aún no medida',
+    complianceCardTitle: 'Compliance & Notas',
+    complianceFinesOpen: 'Multas abiertas',
+    complianceFinesPaid: 'Multas pagadas',
+    complianceFinesList: 'Historial de multas',
+    complianceFineDoc: 'documento',
+    complianceNoFines: 'Ninguna multa registrada para este conductor.',
+    compliancePmoNotes: 'Notas de los PMOs',
+    pmoNotesLoading: 'Cargando notas de los PMOs...',
+    pmoNotesEmpty: 'Ninguna nota registrada para este conductor.',
+    pmoNotesError: 'Error al cargar las notas de los PMOs.',
+    compliancePmoSoon: 'próximamente',
+    compliancePmoPreviewTitle: 'Vista previa del sistema futuro',
+    compliancePmoPreviewSub: 'Los PMOs registrarán observaciones semanales sobre accidentes, conducta, incidentes y elogios. Así aparecerán:',
+    compliancePmoCategories: 'Categorías previstas',
+    compliancePmoCatAccident: 'Accidente',
+    compliancePmoCatConduct: 'Conducta',
+    compliancePmoCatVehicle: 'Vehículo',
+    compliancePmoCatGeneral: 'Observación',
+    compliancePmoCatPositive: 'Elogio',
+    compliancePmoExampleAuthor1: 'Lucas (Brazil PMO)',
+    compliancePmoExampleAuthor2: 'Bia (LATAM PMO)',
+    compliancePmoExampleAuthor3: 'Pankaj',
+    compliancePmoExampleDate1: '15/04/2026',
+    compliancePmoExampleDate2: '08/04/2026',
+    compliancePmoExampleDate3: '01/04/2026',
+    compliancePmoExample1: 'Pequeña colisión trasera en Curitiba, sin heridos. Auto llevado al mecánico, regreso previsto en 3 días. Driver hizo el reporte correctamente.',
+    compliancePmoExample2: 'Retraso de 2h en el check-in sin aviso. Hablamos por teléfono, justificación aceptada pero alertado sobre comunicación proactiva.',
+    compliancePmoExample3: 'Top performer del mes — eficiencia 90%+, cero días idle, comunicación ejemplar.',
+    vehicleIssuesOpen: 'Issues del vehículo abiertas',
+    vehicleIssuesClosed: 'Issues cerradas',
+    vehicleIssueCritical: 'Crítico',
+    vehicleIssueMinor: 'Alerta',
+    vehicleIssueNotStarted: 'No empezó',
+    vehicleIssueInProgress: 'En curso',
+    vehicleIssueAwaitingPayment: 'Esperando pago',
+    vehicleIssuePickedUp: 'Auto retirado',
+    vehicleIssueDone: 'Resuelto',
+    vehicleIssueStopped: 'Paró',
+    vehicleIssueExpected: 'Previsión',
+    vehicleIssueDaysOff: 'día(s) parado',
+    idleIssuesMech: 'Detalles mecánicos',
+    idleIssuesTech: 'Detalles técnicos',
+  },
+  en: {
+    loginTitle: 'Login',
+    loginSubtitle: 'Sign in with your credentials',
+    loginUser: 'Username',
+    loginPass: 'Password',
+    loginBtn: 'Sign in',
+    loading: 'Loading…',
+    loadingDrivers: 'Loading drivers list…',
+    loadingProfile: 'Loading profile…',
+    searchPlaceholder: 'Search driver by name…',
+    welcomeTitle: 'Select a driver',
+    welcomeSubtitle: 'Use the search above or click one of the rankings below',
+    rankingTopTitle: '🏆 Top 5 — highest efficiency',
+    rankingBottomTitle: '⚠ Bottom 5 — lowest efficiency',
+    rankingTop10Title: '🏆 Top 10 — highest efficiency',
+    rankingBottom10Title: '⚠ Bottom 10 — lowest efficiency',
+    rankingShowMore: 'Show Top 10 ↓',
+    rankingShowLess: 'Show only Top 5 ↑',
+    rankingTop: 'Top 5',
+    rankingBottom: 'Bottom 5',
+    rankingEmpty: 'No efficiency data available',
+    rankingEmptyHint: 'The backend may not have been updated. Check the console (F12).',
+    scEff: 'Efficiency',
+    scTkm: 'TKM month',
+    scIdle: 'Idle days',
+    scQc: 'QC Score',
+    effCardTitle: '📈 How was efficiency calculated?',
+    idleCardTitle: '🔧 Idle days this month',
+    noVid: 'No VID assigned',
+    noQc: 'No QC available',
+    noBaseline: 'No baseline available',
+    daysParked: 'days idle this month',
+    dayParked: 'day idle this month',
+    zeroIdleDays: 'No idle days ✓',
+    needsAttention: 'idle days — attention',
+    aboveBaseline: 'above baseline',
+    belowBaseline: 'below baseline',
+    nearBaseline: 'near baseline',
+    formula: 'Formula:',
+    values: 'Values:',
+    meaning: 'Meaning:',
+    meaningText: 'for every km driven, {pct}% effectively "counted" for mapping (TKM = trackable km).',
+    noVidNoEff: 'No VID assigned — no efficiency data to calculate.',
+    placeholderMap: 'Map with mapping history and base',
+    placeholderCalendar: 'Visual calendar of the month',
+    placeholderComments: 'Smart comments',
+    comingSoon: '— coming soon',
+    nextSession: 'Next session:',
+    calendarTitle: 'Monthly calendar',
+    historyTitle: 'Monthly history',
+    fromLinkText: 'Opened via external link (Dashboard or Ramp)',
+    fromLinkBack: '← Back to search',
+    historyCardTitle: 'Monthly history',
+    historyBestMonth: 'Best month',
+    historyTrendUp: 'trend ↗ {diff}pp last 3 months',
+    historyTrendDown: 'trend ↘ {diff}pp last 3 months',
+    historyTrendFlat: 'trend → stable',
+    mapCardTitle: 'Activity map',
+    mapPeriod: 'last {days} days',
+    mapLastDays: 'last {days} days',
+    mapLoading: 'Loading history…',
+    mapNoData: 'No location data available',
+    mapBase: 'Base',
+    mapHome: 'Driver home',
+    mapLatestArea: 'Latest area',
+    mapPastArea: 'Past area',
+    mapRadius: 'Radius',
+    legendBase: 'Current base',
+    legendHome: 'Home',
+    legendArea: 'Mapping area',
+    legendHistory: 'History (more transparent = older)',
+    aiCardTitle: 'AI Analysis',
+    aiAnalyzeBtn: 'Analyze with AI',
+    aiEmptyText: 'Click the button above to generate AI-powered insights about this driver — alerts, suggestions, and strengths based on the data above.',
+    aiLoading: 'Analyzing driver data with AI… (5-15s)',
+    aiErrorTitle: 'Could not run AI analysis',
+    aiNothingToReport: 'AI returned no specific observations. Try again in a moment.',
+    aiAlertsTitle: 'Points of attention',
+    aiSuggestionsTitle: 'Operational suggestions',
+    aiStrengthsTitle: 'Strengths',
+    aiGenerated: 'Generated',
+    assetsCardTitle: 'Assets',
+    assetsLastUpdate: 'updated on',
+    assetsEmpty: 'No assets data registered yet.',
+    assetsDiscs: 'Discs',
+    assetsInUse: 'in use',
+    assetsPlate: 'Plate',
+    assetsPhone: 'Phone',
+    assetsCity: 'City',
+    assetsHotelYes: 'Hotel mode',
+    assetsHotelNo: 'Home mode',
+    assetsAllDiscs: 'Disc codes',
+    assetsDiscFillSoon: 'fill % will be collected in the new check-in',
+    assetsDiscFillUnknown: 'Fill % not yet measured',
+    complianceCardTitle: 'Compliance & Notes',
+    complianceFinesOpen: 'Open fines',
+    complianceFinesPaid: 'Paid fines',
+    complianceFinesList: 'Fines history',
+    complianceFineDoc: 'document',
+    complianceNoFines: 'No fines registered for this driver.',
+    compliancePmoNotes: 'PMO Notes',
+    pmoNotesLoading: 'Loading PMO notes...',
+    pmoNotesEmpty: 'No notes registered for this driver.',
+    pmoNotesError: 'Error loading PMO notes.',
+    compliancePmoSoon: 'coming soon',
+    compliancePmoPreviewTitle: 'Preview of the future system',
+    compliancePmoPreviewSub: 'PMOs will record weekly observations about accidents, conduct, incidents and praise. They will appear like this:',
+    compliancePmoCategories: 'Planned categories',
+    compliancePmoCatAccident: 'Accident',
+    compliancePmoCatConduct: 'Conduct',
+    compliancePmoCatVehicle: 'Vehicle',
+    compliancePmoCatGeneral: 'General Note',
+    compliancePmoCatPositive: 'Positive',
+    compliancePmoExampleAuthor1: 'Lucas (Brazil PMO)',
+    compliancePmoExampleAuthor2: 'Bia (LATAM PMO)',
+    compliancePmoExampleAuthor3: 'Pankaj',
+    compliancePmoExampleDate1: '04/15/2026',
+    compliancePmoExampleDate2: '04/08/2026',
+    compliancePmoExampleDate3: '04/01/2026',
+    compliancePmoExample1: 'Minor rear collision in Curitiba, no injuries. Vehicle taken to mechanic, expected back in 3 days. Driver filed the report correctly.',
+    compliancePmoExample2: '2-hour delay on check-in without prior notice. Called and discussed; justification accepted but alerted on proactive communication.',
+    compliancePmoExample3: 'Top performer of the month — 90%+ efficiency, zero idle days, exemplary communication.',
+    vehicleIssuesOpen: 'Open vehicle issues',
+    vehicleIssuesClosed: 'Closed issues',
+    vehicleIssueCritical: 'Critical',
+    vehicleIssueMinor: 'Minor',
+    vehicleIssueNotStarted: 'Not started',
+    vehicleIssueInProgress: 'In progress',
+    vehicleIssueAwaitingPayment: 'Awaiting payment',
+    vehicleIssuePickedUp: 'Picked up',
+    vehicleIssueDone: 'Done',
+    vehicleIssueStopped: 'Stopped',
+    vehicleIssueExpected: 'Expected',
+    vehicleIssueDaysOff: 'day(s) stopped',
+    idleIssuesMech: 'Mechanical details',
+    idleIssuesTech: 'Technical details',
+  },
+};
+
+let currentLang = localStorage.getItem('driverProfileLang') || 'pt';
+
+function t(key) {
+  if (I18N[currentLang] && key in I18N[currentLang]) return I18N[currentLang][key];
+  return I18N.pt[key] || key;
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.setAttribute('placeholder', t(key));
+  });
+  // Atualiza botões de língua (active class)
+  document.querySelectorAll('.lang-switch button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
+  // Atualiza textos dinâmicos que mudam baseado em estado
+  document.getElementById('ranking-title').textContent =
+    state.rankingMode === 'top' ? t('rankingTopTitle') : t('rankingBottomTitle');
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('driverProfileLang', lang);
+  applyI18n();
+  // Re-renderiza conteúdo dinâmico (que tem strings hardcoded em JS)
+  if (state.drivers.length > 0) renderRanking();
+  if (state.profile) renderProfile(state.profile);
+}
+
+// Wire up dos botões de língua
+document.querySelectorAll('.lang-switch button').forEach(btn => {
+  btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+});
+
+// ================================================================
+// INIT
+// ================================================================
+async function initApp() {
+  // Aplica idioma logo de cara (do localStorage ou default PT)
+  applyI18n();
+
+  // Loga a URL completa pra debug — útil pra ver se ?email vem da URL
+  console.log('[Driver Profile] URL completa:', window.location.href);
+
+  showLoader(true, t('loadingDrivers'));
+  try {
+    // 1) Ping de saúde primeiro — confirma que o deploy do backend tem v5.6
+    console.log('[Driver Profile] Testing backend ping…');
+    try {
+      const pingRes = await fetch(CONFIG.scriptUrl + '?action=ping').then(r => r.json());
+      console.log('[Driver Profile] Backend ping:', pingRes);
+      if (pingRes && pingRes.version) {
+        console.log(`[Driver Profile] ✓ Backend version ${pingRes.version} deployed`);
+      } else {
+        console.warn('[Driver Profile] ⚠ Backend respondeu mas sem versão — provavelmente é versão antiga (não tem ping). Você precisa fazer deploy do Apps Script novo.');
+      }
+    } catch (pingErr) {
+      console.error('[Driver Profile] Ping falhou:', pingErr);
+    }
+
+    // 2) Busca lista de drivers
+    const url = CONFIG.scriptUrl + '?action=getDriversList';
+    console.log('[Driver Profile] Fetching:', url);
+    const res = (typeof cachedFetch === 'function')
+      ? await cachedFetch(url, 600)
+      : await fetch(url).then(r => r.json());
+    console.log('[Driver Profile] getDriversList Response:', res);
+
+    if (!res.success) {
+      throw new Error(res.error || 'Backend retornou success=false');
+    }
+    state.drivers = res.drivers || [];
+
+    if (state.drivers.length === 0) {
+      // Backend OK mas lista vazia — mostra erro claro
+      const list = document.getElementById('ranking-list');
+      list.innerHTML = `<li class="ranking-item">
+        <div class="ranking-info">
+          <div class="ranking-name" style="color:var(--c-bad);">⚠ Lista vazia</div>
+          <div class="ranking-meta">O backend não retornou nenhum motorista. Verifique se o Apps Script foi atualizado e republicado.</div>
+        </div>
+      </li>`;
+      console.warn('[Driver Profile] Backend retornou lista vazia');
+      return;
+    }
+
+    // Conta quantos têm eficiência válida (debug útil)
+    const withEff = state.drivers.filter(d => d.efficiency !== null && d.efficiency > 0);
+    console.log(`[Driver Profile] ${state.drivers.length} drivers carregados, ${withEff.length} com eficiência válida`);
+
+    renderRanking();
+
+    // Se a URL tem ?email=xxx, abre direto o perfil desse driver
+    // (vindo do dashboard ou ramp via "Ver perfil completo")
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get('email');
+    if (emailParam) {
+      console.log('[Driver Profile] URL tem ?email=', emailParam, '— abrindo perfil automático');
+      // Mostra o banner amarelo informando que veio via link
+      state.openedViaLink = true;
+      const found = state.drivers.find(d =>
+        d.email && d.email.toLowerCase() === emailParam.toLowerCase()
+      );
+      if (found) {
+        selectDriver(found.email);
+      } else {
+        // Driver pode estar inativo (não está em getDriversList que filtra Active)
+        // Tenta mesmo assim — getDriverProfile aceita qualquer email da HR
+        selectDriver(emailParam);
+      }
+    } else {
+      console.log('[Driver Profile] URL sem ?email — aguardando user selecionar driver');
+    }
+  } catch (err) {
+    console.error('[Driver Profile] Erro ao buscar lista:', err);
+    // Erro VISÍVEL no ranking — sem alert intrusivo
+    const list = document.getElementById('ranking-list');
+    list.innerHTML = `<li class="ranking-item">
+      <div class="ranking-info">
+        <div class="ranking-name" style="color:var(--c-bad);">⚠ Erro ao carregar dados</div>
+        <div class="ranking-meta">${escapeHtml(err.message)}<br>Verifique no console (F12) e confirme que o Apps Script foi atualizado.</div>
+      </div>
+    </li>`;
+  } finally {
+    showLoader(false);
+  }
+}
+
+function showLoader(show, msg) {
+  const ld = document.getElementById('loader');
+  if (msg) document.getElementById('loader-text').textContent = msg;
+  ld.classList.toggle('show', show);
+}
+
+// ================================================================
+// SEARCH AUTOCOMPLETE
+// ================================================================
+function onSearchInput() {
+  const term = document.getElementById('search-input').value.trim().toLowerCase();
+  if (!term) {
+    // Input vazio → fecha sugestões (não mostra todas alfabeticamente,
+    // pra evitar o user clicar em algo sem querer)
+    hideSuggestions();
+    return;
+  }
+  // Filtra por substring no nome
+  const filtered = state.drivers.filter(d => d.name.toLowerCase().includes(term));
+  renderSuggestions(filtered.slice(0, 8));  // top 8
+}
+
+/**
+ * @deprecated mantida só pra compatibilidade — não é mais chamada por onfocus.
+ * O usuário precisa digitar algo pra ver sugestões.
+ */
+function showSuggestions() {
+  // Não faz nada — comportamento removido pra evitar selects acidentais.
+  // Se quiser voltar o comportamento antigo, basta chamar:
+  //   const sorted = state.drivers.slice().sort((a, b) => a.name.localeCompare(b.name));
+  //   renderSuggestions(sorted.slice(0, 8));
+}
+
+function renderSuggestions(drivers) {
+  const box = document.getElementById('search-suggestions');
+  state.visibleSuggestions = drivers;
+  state.searchHighlightIdx = -1;
+
+  if (drivers.length === 0) {
+    box.innerHTML = '<div class="suggestion-empty">Nenhum motorista encontrado</div>';
+    box.classList.add('show');
+    return;
+  }
+
+  box.innerHTML = drivers.map((d, i) => {
+    const effPct = d.efficiency !== null ? (d.efficiency * 100).toFixed(0) : '—';
+    let effClass = '';
+    if (d.efficiency !== null) {
+      if (d.efficiency >= 0.7) effClass = 'good';
+      else if (d.efficiency >= 0.5) effClass = 'warn';
+      else effClass = 'bad';
+    }
+    return `<div class="suggestion-item" data-idx="${i}" onclick="selectDriver('${escapeAttr(d.email)}')">
+      <div>
+        <div class="suggestion-name">${escapeHtml(d.name)}</div>
+      </div>
+      <div class="suggestion-meta">
+        <span class="country">${escapeHtml(d.country || '—')}</span>
+        ${d.vid ? `<span>VID ${d.vid}</span>` : ''}
+        ${d.efficiency !== null ? `<span class="eff ${effClass}">${effPct}%</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  box.classList.add('show');
+}
+
+function hideSuggestions() {
+  document.getElementById('search-suggestions').classList.remove('show');
+}
+
+// Click fora fecha sugestões
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-wrap')) hideSuggestions();
+});
+
+// Navegação por teclado nas sugestões
+document.getElementById('search-input').addEventListener('keydown', (e) => {
+  const items = document.querySelectorAll('.suggestion-item');
+  if (items.length === 0) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    state.searchHighlightIdx = Math.min(state.searchHighlightIdx + 1, items.length - 1);
+    items.forEach((item, i) => item.classList.toggle('highlighted', i === state.searchHighlightIdx));
+    items[state.searchHighlightIdx].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    state.searchHighlightIdx = Math.max(state.searchHighlightIdx - 1, 0);
+    items.forEach((item, i) => item.classList.toggle('highlighted', i === state.searchHighlightIdx));
+    items[state.searchHighlightIdx].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter' && state.searchHighlightIdx >= 0) {
+    e.preventDefault();
+    const driver = state.visibleSuggestions[state.searchHighlightIdx];
+    if (driver) selectDriver(driver.email);
+  } else if (e.key === 'Escape') {
+    hideSuggestions();
+  }
+});
+
+// ================================================================
+// RANKING (Top/Bottom 5)
+// ================================================================
+function setRankingMode(mode) {
+  state.rankingMode = mode;
+  document.getElementById('rank-mode-top').classList.toggle('active', mode === 'top');
+  document.getElementById('rank-mode-bottom').classList.toggle('active', mode === 'bottom');
+  // renderRanking() atualiza o título considerando rankingExpanded
+  renderRanking();
+}
+
+/**
+ * Volta pra tela de busca (limpa profile + URL + state).
+ * Útil quando perfil foi aberto via ?email=  e o user quer voltar.
+ */
+function goBackToSearch() {
+  state.openedViaLink = false;
+  state.profile = null;
+  state.selectedEmail = null;
+  document.getElementById('profile-section').classList.remove('shown');
+  document.getElementById('welcome-section').style.display = '';
+  // Limpa ?email da URL sem recarregar a página
+  if (window.history && window.history.replaceState) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
+function renderRanking() {
+  const list = document.getElementById('ranking-list');
+  const withEff = state.drivers.filter(d => d.efficiency !== null && d.efficiency > 0);
+  const sorted = withEff.slice().sort((a, b) =>
+    state.rankingMode === 'top' ? b.efficiency - a.efficiency : a.efficiency - b.efficiency
+  );
+  const limit = state.rankingExpanded ? 10 : 5;
+  const top = sorted.slice(0, limit);
+
+  if (top.length === 0) {
+    list.innerHTML = `<li class="ranking-item"><div class="ranking-info"><div class="ranking-meta">${t('rankingEmpty')}<br><small>${t('rankingEmptyHint')}</small></div></div></li>`;
+    return;
+  }
+
+  list.innerHTML = top.map((d, i) => {
+    const pct = (d.efficiency * 100).toFixed(0);
+    let cls = 'good';
+    if (d.efficiency < 0.5) cls = 'bad';
+    else if (d.efficiency < 0.7) cls = 'warn';
+    return `<li class="ranking-item" onclick="selectDriver('${escapeAttr(d.email)}')">
+      <div class="ranking-position">#${i + 1}</div>
+      <div class="ranking-info">
+        <div class="ranking-name">${escapeHtml(d.name)}</div>
+        <div class="ranking-meta">${escapeHtml(d.country)} · VID ${d.vid || '—'}</div>
+      </div>
+      <div class="ranking-eff ${cls}">${pct}%</div>
+    </li>`;
+  }).join('');
+
+  // Botão "Mostrar mais / menos" só aparece se há mais de 5
+  const expander = document.getElementById('ranking-expand-btn');
+  if (expander) {
+    if (sorted.length > 5) {
+      expander.style.display = '';
+      expander.textContent = state.rankingExpanded
+        ? t('rankingShowLess')
+        : t('rankingShowMore');
+    } else {
+      expander.style.display = 'none';
+    }
+  }
+
+  // Atualiza o título com a quantidade real
+  const titleEl = document.getElementById('ranking-title');
+  if (titleEl) {
+    titleEl.textContent = state.rankingMode === 'top'
+      ? (state.rankingExpanded ? t('rankingTop10Title') : t('rankingTopTitle'))
+      : (state.rankingExpanded ? t('rankingBottom10Title') : t('rankingBottomTitle'));
+  }
+}
+
+/**
+ * Toggle entre Top 5 e Top 10.
+ */
+function toggleRankingExpanded() {
+  state.rankingExpanded = !state.rankingExpanded;
+  renderRanking();
+}
+
+// ================================================================
+// DRIVER PROFILE (quando seleciona)
+// ================================================================
+async function selectDriver(email, forceRefresh) {
+  console.log('[Driver Profile] selectDriver chamado com email:', email);
+  // Stack trace pra ajudar a debugar quem disparou (acidentalmente ou não)
+  console.trace('[Driver Profile] origem da chamada selectDriver');
+
+  state.selectedEmail = email;
+  hideSuggestions();
+  document.getElementById('search-input').value = '';
+
+  showLoader(true, t('loadingProfile'));
+  try {
+    const url = CONFIG.scriptUrl + '?action=getDriverProfile&email=' + encodeURIComponent(email);
+    const res = (typeof cachedFetch === 'function')
+      ? await cachedFetch(url, 120, { forceRefresh: !!forceRefresh })
+      : await fetch(url).then(r => r.json());
+    if (!res.success) throw new Error(res.error || 'Erro carregando perfil');
+
+    // ============ DEBUG: payload completo do backend ============
+    console.group('[Driver Profile] Backend payload');
+    console.log('Profile completo:', res.profile);
+    console.log('  → currentBase:', res.profile.currentBase);
+    console.log('  → driverHome:', res.profile.driverHome);
+    console.log('  → vid:', res.profile.vid);
+    console.log('  → metrics:', res.profile.metrics);
+    console.groupEnd();
+    // =============================================================
+
+    state.profile = res.profile;
+    renderProfile(res.profile);
+  } catch (err) {
+    console.error('[Driver Profile] Erro selectDriver:', err);
+    alert('Erro ao carregar perfil: ' + err.message);
+  } finally {
+    showLoader(false);
+  }
+}
+
+// Refresh manual: invalida cache e recarrega. Se tem driver aberto, recarrega
+// o perfil dele forçado; senão recarrega a lista de drivers.
+function refreshProfilePage() {
+  if (typeof clearDataCache === 'function') clearDataCache();
+  if (state.selectedEmail) {
+    selectDriver(state.selectedEmail, true);
+  } else {
+    initApp();
+  }
+}
+
+function renderProfile(p) {
+  if (!p || !p.driver) {
+    alert('Perfil não encontrado pra esse motorista.');
+    return;
+  }
+
+  // Switch das views
+  document.getElementById('welcome-section').style.display = 'none';
+  document.getElementById('profile-section').classList.add('shown');
+
+  // Banner "aberto via link" (se veio via ?email= na URL)
+  const linkBanner = document.getElementById('from-link-banner');
+  if (linkBanner) {
+    linkBanner.style.display = state.openedViaLink ? '' : 'none';
+  }
+
+  // Hero
+  const initials = p.driver.name.split(' ').slice(0, 2).map(s => s[0] || '').join('').toUpperCase();
+  document.getElementById('hero-avatar').textContent = initials;
+  document.getElementById('hero-name').textContent = p.driver.name;
+
+  const statusClass = p.driver.status === 'Active' ? 'hero-status-active' : 'hero-status-inactive';
+  const statusLabel = p.driver.status || '—';
+  let metaHtml = `
+    <span class="hero-meta-item">📍 ${escapeHtml(p.driver.country || '—')}</span>
+    <span class="hero-meta-item">📧 ${escapeHtml(p.driver.email || '—')}</span>
+    <span class="hero-meta-item ${statusClass}">${escapeHtml(statusLabel)}</span>
+  `;
+  // VID atual: prioriza o do mês corrente (RAW CTS DATA), fallback pra VID CALENDAR.
+  let currentVid = null;
+  let isFloating = false;
+  if (p.metrics && p.metrics.vid) {
+    currentVid = p.metrics.vid;
+  }
+  if (!currentVid && p.vid && p.vid.vid) {
+    currentVid = p.vid.vid;
+  }
+  if (p.vid && p.vid.isFloating === 'Yes') {
+    isFloating = true;
+  }
+  if (currentVid) {
+    metaHtml += `<span class="hero-meta-item">🚗 VID ${currentVid}${isFloating ? ' (Floating)' : ''}</span>`;
+  }
+  document.getElementById('hero-meta').innerHTML = metaHtml;
+
+  // Scorecards
+  renderEfficiencyScorecard(p);
+  renderTkmScorecard(p);
+  renderIdleScorecard(p);
+  renderQcScorecard(p);
+
+  // Detail cards
+  renderEfficiencyDetail(p);
+  renderIdleDetail(p);
+  renderMonthlyHistory(p);
+  renderProfileMap(p);
+  renderAssets(p);
+  renderCompliance(p);
+  resetAiCard();
+}
+
+/**
+ * Reseta o card de AI ao trocar de driver (limpa análise antiga, mostra estado vazio).
+ */
+function resetAiCard() {
+  const content = document.getElementById('ai-content');
+  if (!content) return;
+  content.innerHTML = `
+    <div class="ai-empty">
+      <div class="ai-empty-icon">💡</div>
+      <div>${t('aiEmptyText') || 'Click the button above to generate AI-powered insights about this driver — alerts, suggestions, and strengths based on the data above.'}</div>
+    </div>
+  `;
+}
+
+// ================================================================
+// ASSETS — discos (SSDs), celular, placa, odômetro
+// ================================================================
+
+function renderAssets(p) {
+  const content = document.getElementById('assets-content');
+  const updateLabel = document.getElementById('assets-update-label');
+  if (!content) return;
+
+  const a = p.assets;
+
+  if (!a) {
+    content.innerHTML = `
+      <div class="assets-empty">
+        ${t('assetsEmpty') || 'Sem dados de assets registrados ainda. Aguardando primeiro check-in semanal.'}
+      </div>
+    `;
+    if (updateLabel) updateLabel.textContent = '';
+    return;
+  }
+
+  // Label de última atualização
+  if (updateLabel) {
+    const dateStr = a.lastUpdate
+      ? new Date(a.lastUpdate).toLocaleDateString(
+          currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR')
+        )
+      : '—';
+    updateLabel.textContent = `— ${t('assetsLastUpdate') || 'atualizado em'} ${dateStr}`;
+  }
+
+  let html = '<div class="assets-grid">';
+
+  // Card de discos (destaque)
+  if (a.discCount || a.discInUse) {
+    html += `
+      <div class="assets-stat">
+        <div class="assets-stat-label">💽 ${t('assetsDiscs') || 'Discos'}</div>
+        <div class="assets-stat-value">${a.discCount || '?'}</div>
+        ${a.discInUse ? `<div class="assets-stat-sub">${t('assetsInUse') || 'em uso'}: ${escapeHtml(a.discInUse)}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // Placa do carro
+  if (a.plate) {
+    html += `
+      <div class="assets-stat">
+        <div class="assets-stat-label">🚗 ${t('assetsPlate') || 'Placa'}</div>
+        <div class="assets-stat-value small">${escapeHtml(a.plate)}</div>
+        ${a.odometer > 0 ? `<div class="assets-stat-sub">${a.odometer.toLocaleString()} km</div>` : ''}
+      </div>
+    `;
+  }
+
+  // Celular
+  if (a.phoneModel) {
+    html += `
+      <div class="assets-stat">
+        <div class="assets-stat-label">📱 ${t('assetsPhone') || 'Celular'}</div>
+        <div class="assets-stat-value small">${escapeHtml(a.phoneModel)}</div>
+        ${a.phoneImei ? `<div class="assets-stat-sub">IMEI: ${escapeHtml(a.phoneImei.split(/[\s\/]/)[0])}</div>` : ''}
+      </div>
+    `;
+  }
+
+  // Cidade atual + hotel mode
+  if (a.city) {
+    const isHotel = String(a.hotelMode).toLowerCase().includes('sí') || String(a.hotelMode).toLowerCase().includes('sim');
+    html += `
+      <div class="assets-stat">
+        <div class="assets-stat-label">📍 ${t('assetsCity') || 'Cidade'}</div>
+        <div class="assets-stat-value small">${escapeHtml(a.city)}</div>
+        <div class="assets-stat-sub">${isHotel ? '🏨 ' + (t('assetsHotelYes') || 'Hotel mode') : '🏠 ' + (t('assetsHotelNo') || 'Home mode')}</div>
+      </div>
+    `;
+  }
+
+  html += '</div>';
+
+  // Lista detalhada dos discos (em uso + outros)
+  const allDiscs = [];
+  if (a.discInUse) allDiscs.push({ code: a.discInUse, inUse: true });
+  if (a.otherDiscs && a.otherDiscs.length) {
+    a.otherDiscs.forEach(d => allDiscs.push({ code: d, inUse: false }));
+  }
+
+  if (allDiscs.length > 0) {
+    // Conta quantos têm % conhecido (futuro: contagem real). Por enquanto sempre 0
+    // já que ainda não coletamos esse dado — mostramos placeholder cinza tracejado.
+    const knownCount = allDiscs.filter(d => typeof d.fillPct === 'number').length;
+    const fillNote = knownCount === 0
+      ? ` <span class="disc-fill-note">— ${t('assetsDiscFillSoon') || 'ocupação será coletada no novo check-in'}</span>`
+      : '';
+
+    html += `<div class="assets-discs-section">
+      <div class="assets-section-title">💽 ${t('assetsAllDiscs') || 'Códigos dos discos'} (${allDiscs.length})${fillNote}</div>
+      <div>`;
+    allDiscs.forEach(d => {
+      html += renderDiscChip(d);
+    });
+    html += `</div></div>`;
+  }
+
+  // Comentários do último check-in (se houver)
+  if (a.comments && a.comments.length > 1) {
+    html += `<div class="assets-comments">💬 "${escapeHtml(a.comments)}"</div>`;
+  }
+
+  content.innerHTML = html;
+}
+
+/**
+ * Renderiza um chip de disco com indicador de ocupação.
+ *
+ * @param {Object} d - {code, inUse, fillPct?}
+ *   fillPct é opcional. Se ausente → placeholder hachurado cinza (dado ainda não coletado).
+ *   Quando o check-in diário com % de ocupação for implementado, o backend
+ *   passará fillPct (0-100) e a barra será colorida automaticamente:
+ *     <40% verde · 40-80% amarelo · ≥80% vermelho
+ */
+function renderDiscChip(d) {
+  const arrow = d.inUse ? '<span class="disc-arrow">▶</span>' : '';
+  let fillBarClass = 'fill-unknown';
+  let pctText = '?';
+  let pctClass = 'unknown';
+  let innerStyle = 'width: 0%';
+
+  if (typeof d.fillPct === 'number') {
+    const pct = Math.max(0, Math.min(100, Math.round(d.fillPct)));
+    pctText = pct + '%';
+    pctClass = '';
+    innerStyle = `width: ${pct}%`;
+    if (pct >= 80) fillBarClass = 'fill-high';
+    else if (pct >= 40) fillBarClass = 'fill-mid';
+    else fillBarClass = 'fill-low';
+  }
+
+  return `<span class="assets-disc-chip ${d.inUse ? 'in-use' : ''}">
+    ${arrow}<span>${escapeHtml(d.code)}</span>
+    <span class="disc-fill" title="${pctText === '?' ? (t('assetsDiscFillUnknown') || 'Ocupação ainda não medida') : pctText}">
+      <span class="disc-fill-bar ${fillBarClass}"><span class="disc-fill-bar-inner" style="${innerStyle}"></span></span>
+      <span class="disc-fill-pct ${pctClass}">${pctText}</span>
+    </span>
+  </span>`;
+}
+
+// ================================================================
+// COMPLIANCE — multas (Fines LATAM) + placeholder pra notas futuras
+// ================================================================
+
+function renderCompliance(p) {
+  const content = document.getElementById('compliance-content');
+  if (!content) return;
+
+  const fines = p.fines || [];
+  const vehicleIssues = p.vehicleIssues || [];
+
+  let html = '';
+
+  // === v5.14: Vehicle Issues (acidentes, mech, tech tracking) ===
+  // Mostra issues abertas/em-andamento primeiro, antes das multas
+  if (vehicleIssues.length > 0) {
+    const openIssues = vehicleIssues.filter(i =>
+      i.serviceStatus !== 'finished' || i.endStatus === 'awaiting_payment'
+    );
+    const closedIssues = vehicleIssues.filter(i =>
+      i.serviceStatus === 'finished' && i.endStatus !== 'awaiting_payment'
+    );
+
+    if (openIssues.length > 0) {
+      html += `<div class="compliance-section-title" style="margin-top:0;">
+        🚗 ${t('vehicleIssuesOpen') || 'Issues do veículo em aberto'} (${openIssues.length})
+      </div>`;
+      openIssues.forEach(iss => { html += renderVehicleIssue(iss, false); });
+    }
+
+    if (closedIssues.length > 0) {
+      html += `<div class="compliance-section-title">
+        ✅ ${t('vehicleIssuesClosed') || 'Issues encerradas'} (${closedIssues.length})
+      </div>`;
+      // Mostra só os 3 mais recentes
+      closedIssues.slice(0, 3).forEach(iss => { html += renderVehicleIssue(iss, true); });
+    }
+  }
+
+  // Resumo: contagem + valor pendente
+  if (fines.length > 0) {
+    const openFines = fines.filter(f => String(f.status).toLowerCase() === 'open');
+    const paidFines = fines.filter(f => String(f.status).toLowerCase() !== 'open');
+    const totalPendingUsd = openFines.reduce((s, f) => s + (f.usdAmount || 0), 0);
+    const totalPaidUsd = paidFines.reduce((s, f) => s + (f.usdAmount || 0), 0);
+
+    html += `<div class="compliance-summary"${vehicleIssues.length > 0 ? ' style="margin-top:14px;"' : ''}>
+      <div class="compliance-summary-item ${openFines.length > 0 ? 'has-pending' : ''}">
+        <div class="compliance-summary-label">${t('complianceFinesOpen') || 'Multas em aberto'}</div>
+        <div class="compliance-summary-value">${openFines.length}</div>
+        ${totalPendingUsd > 0 ? `<div class="assets-stat-sub">$${totalPendingUsd.toFixed(2)} USD</div>` : ''}
+      </div>
+      <div class="compliance-summary-item ${paidFines.length > 0 ? 'has-paid' : ''}">
+        <div class="compliance-summary-label">${t('complianceFinesPaid') || 'Multas pagas'}</div>
+        <div class="compliance-summary-value">${paidFines.length}</div>
+        ${totalPaidUsd > 0 ? `<div class="assets-stat-sub">$${totalPaidUsd.toFixed(2)} USD</div>` : ''}
+      </div>
+    </div>`;
+
+    // Lista de multas (mais recentes primeiro)
+    html += `<div class="compliance-section-title">⚠ ${t('complianceFinesList') || 'Histórico de multas'}</div>`;
+    fines.forEach(f => {
+      const isOpen = String(f.status).toLowerCase() === 'open';
+      const statusClass = isOpen ? 'status-open' : 'status-paid';
+      const dateStr = f.issueDate
+        ? new Date(f.issueDate).toLocaleDateString(
+            currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR')
+          )
+        : '—';
+
+      html += `<div class="fine-item ${statusClass}">
+        <div class="fine-item-header">
+          <div class="fine-item-reason">
+            ${escapeHtml(f.reason || f.code || '—')}
+            <span class="fine-item-status-badge ${isOpen ? 'open' : 'paid'}">${escapeHtml(f.status || '—')}</span>
+          </div>
+          <div class="fine-item-amount ${isOpen ? 'open' : 'paid'}">$${(f.usdAmount || 0).toFixed(2)}</div>
+        </div>
+        <div class="fine-item-meta">
+          📅 ${dateStr} · 🚗 ${escapeHtml(f.plate || '—')} · 📍 ${escapeHtml(f.location || f.country || '—')}
+          ${f.responsibleOfPayment ? ` · 💼 ${escapeHtml(f.responsibleOfPayment)}` : ''}
+          ${f.copyLink ? ` · <a href="${escapeAttr(f.copyLink)}" target="_blank" class="fine-item-link">📎 ${t('complianceFineDoc') || 'doc'}</a>` : ''}
+        </div>
+      </div>`;
+    });
+  } else {
+    // Sem multas
+    html += `<div class="compliance-empty">
+      <div class="compliance-empty-icon">✅</div>
+      <div>${t('complianceNoFines') || 'Nenhuma multa registrada para este motorista.'}</div>
+    </div>`;
+  }
+
+  // Notas dos PMOs — render do container; fetch async logo abaixo
+  // popula #pmo-notes-content via loadPMONotesForDriver().
+  html += `<div class="compliance-section-title pmo-section-title">
+    📝 ${t('compliancePmoNotes') || 'Notas dos PMOs'}
+  </div>`;
+
+  html += `<div id="pmo-notes-content" class="pmo-notes-container">
+    <div class="pmo-notes-loading">⏳ ${t('pmoNotesLoading') || 'Carregando notas...'}</div>
+  </div>`;
+
+  content.innerHTML = html;
+
+  // Dispara fetch async (sem await — não bloqueia o render do resto do profile).
+  const driverEmail = p && p.driver && p.driver.email ? p.driver.email : '';
+  if (driverEmail) {
+    loadPMONotesForDriver(driverEmail);
+  } else {
+    const c = document.getElementById('pmo-notes-content');
+    if (c) c.innerHTML = `<div class="pmo-notes-empty">${t('pmoNotesEmpty') || 'Nenhuma nota registrada.'}</div>`;
+  }
+}
+
+/**
+ * Busca PMO Notes do driver (via endpoint getPMONotes) e renderiza no
+ * container #pmo-notes-content. Reutiliza o CSS já existente
+ * (.pmo-note-example / .pmo-category / .pmo-note-header / .pmo-note-body).
+ */
+async function loadPMONotesForDriver(email) {
+  const container = document.getElementById('pmo-notes-content');
+  if (!container) return;
+
+  const url = CONFIG.scriptUrl
+    + '?action=getPMONotes&limit=200&driverEmail=' + encodeURIComponent(email);
+
+  console.log('[Driver Profile PMO] Buscando notas:', email);
+
+  try {
+    const res = await fetch(url).then(r => r.json());
+    if (!res || !res.success || !Array.isArray(res.notes)) {
+      throw new Error((res && res.error) || 'Backend retornou erro');
+    }
+    console.log('[Driver Profile PMO] Recebidas', res.notes.length, 'notas');
+    renderPMONotes(res.notes);
+  } catch (err) {
+    console.error('[Driver Profile PMO] Erro:', err);
+    container.innerHTML = `<div class="pmo-notes-error">⚠ ${t('pmoNotesError') || 'Erro ao carregar notas dos PMOs.'}</div>`;
+  }
+}
+
+function renderPMONotes(notes) {
+  const container = document.getElementById('pmo-notes-content');
+  if (!container) return;
+
+  if (!notes || notes.length === 0) {
+    container.innerHTML = `<div class="pmo-notes-empty">${t('pmoNotesEmpty') || 'Nenhuma nota registrada para este motorista.'}</div>`;
+    return;
+  }
+
+  const catEmoji = { accident: '🚨', conduct: '⚠️', vehicle: '🛠', note: '📝', positive: '✅' };
+  const catLabelKey = {
+    accident: 'compliancePmoCatAccident',
+    conduct:  'compliancePmoCatConduct',
+    vehicle:  'compliancePmoCatVehicle',
+    note:     'compliancePmoCatGeneral',
+    positive: 'compliancePmoCatPositive',
+  };
+  const fmtDate = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString(
+      currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR')
+    );
+  };
+
+  const html = notes.map(n => {
+    const cat = (n.category || 'note').toLowerCase();
+    const catKey = catLabelKey[cat] || 'compliancePmoCatGeneral';
+    const catLabel = t(catKey) || cat;
+    const emoji = catEmoji[cat] || '📝';
+    return `<div class="pmo-note-example">
+      <div class="pmo-note-header">
+        <span class="pmo-category ${escapeAttr(cat)}">${emoji} ${escapeHtml(catLabel)}</span>
+        <span class="pmo-meta">— ${escapeHtml(n.author || '—')} · ${escapeHtml(fmtDate(n.created))}</span>
+      </div>
+      <div class="pmo-note-body">${escapeHtml(n.body || '')}</div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+/**
+ * Renderiza um item de Vehicle Issue.
+ * @param {Object} iss - { id, created, severity, description, stopDate, serviceStatus,
+ *                         expectedEndDate, endStatus, resolvedDate, lastUpdate }
+ * @param {boolean} isClosed - se já foi resolvido (afeta cor)
+ */
+function renderVehicleIssue(iss, isClosed) {
+  const fmtDate = (iso) => iso
+    ? new Date(iso).toLocaleDateString(
+        currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR')
+      )
+    : '—';
+
+  const isCritical = String(iss.severity).toLowerCase().includes('critical');
+  const sevClass = isClosed ? 'closed' : (isCritical ? 'critical' : 'minor');
+  const sevLabel = isCritical
+    ? '🚨 ' + (t('vehicleIssueCritical') || 'Crítico')
+    : '⚠ ' + (t('vehicleIssueMinor') || 'Alerta');
+
+  // Status do serviço
+  let statusBadge = '';
+  if (iss.serviceStatus === 'not_started') {
+    statusBadge = `<span class="vi-status-badge not-started">🔵 ${t('vehicleIssueNotStarted') || 'Não começou'}</span>`;
+  } else if (iss.serviceStatus === 'in_progress') {
+    statusBadge = `<span class="vi-status-badge in-progress">🟡 ${t('vehicleIssueInProgress') || 'Em andamento'}</span>`;
+  } else if (iss.serviceStatus === 'finished') {
+    if (iss.endStatus === 'awaiting_payment') {
+      statusBadge = `<span class="vi-status-badge awaiting-payment">💰 ${t('vehicleIssueAwaitingPayment') || 'Aguardando pagamento'}</span>`;
+    } else if (iss.endStatus === 'picked_up') {
+      statusBadge = `<span class="vi-status-badge picked-up">🚗 ${t('vehicleIssuePickedUp') || 'Carro pego'}</span>`;
+    } else {
+      statusBadge = `<span class="vi-status-badge done">✅ ${t('vehicleIssueDone') || 'Resolvido'}</span>`;
+    }
+  }
+
+  // Datas relevantes
+  const stopStr = iss.stopDate ? fmtDate(iss.stopDate) : '—';
+  const expectedStr = iss.expectedEndDate ? fmtDate(iss.expectedEndDate) : null;
+
+  // Calcula dias parado (se aplicável)
+  let daysOffStr = '';
+  if (iss.stopDate && !isClosed) {
+    const stopMs = new Date(iss.stopDate).getTime();
+    const refMs = iss.resolvedDate ? new Date(iss.resolvedDate).getTime() : Date.now();
+    const days = Math.max(0, Math.round((refMs - stopMs) / (1000 * 60 * 60 * 24)));
+    if (days > 0) {
+      daysOffStr = ` · <span style="color:var(--c-warn);font-weight:600;">${days} ${t('vehicleIssueDaysOff') || 'dia(s) parado'}</span>`;
+    }
+  }
+
+  return `<div class="vehicle-issue-item ${sevClass}">
+    <div class="vi-header">
+      <span class="vi-severity ${sevClass}">${sevLabel}</span>
+      ${statusBadge}
+    </div>
+    ${iss.description ? `<div class="vi-description">${escapeHtml(iss.description)}</div>` : ''}
+    <div class="vi-meta">
+      📅 ${t('vehicleIssueStopped') || 'Parou'}: <strong>${stopStr}</strong>${daysOffStr}
+      ${expectedStr && !isClosed ? `<br>🎯 ${t('vehicleIssueExpected') || 'Previsão'}: ${expectedStr}` : ''}
+    </div>
+  </div>`;
+}
+
+/**
+ * Helper: pega métricas do mês corrente (priorizando RAW CTS, fallback VID).
+ * Retorna: { tkm, km, efficiency, mappingDays, idle: {personal, disks, mech, tech, weather, travelling, holiday, other, total} }
+ * Ou null se não tiver dado nenhum.
+ */
+function getDriverMetrics(p) {
+  if (p.metrics && p.metrics.km > 0) {
+    // Fonte primária: RAW CTS DATA
+    const idle = p.metrics.idleDays;
+    return {
+      source: 'cts',
+      tkm: p.metrics.tkm,
+      km: p.metrics.km,
+      efficiency: p.metrics.efficiency,
+      mappingDays: p.metrics.mappingDays,
+      billableHours: p.metrics.billableHours,
+      idle: {
+        personal: idle.Personal || 0,
+        disks: idle.Disks || 0,
+        mech: idle['Mech.'] || 0,
+        tech: idle['Tech.'] || 0,
+        weather: idle.Weather || 0,
+        travelling: idle.Travelling || 0,
+        holiday: idle.Holiday || 0,
+        other: idle.Other || 0,
+        total: idle.total || 0,
+      },
+    };
+  }
+  if (p.vid && p.vid.vidCalendarEfficiency > 0) {
+    // Fallback: VID CALENDAR (sem breakdown de idle)
+    return {
+      source: 'vid',
+      tkm: p.vid.vidCalendarTkm,
+      km: p.vid.vidCalendarKm,
+      efficiency: p.vid.vidCalendarEfficiency,
+      mappingDays: 0,
+      billableHours: 0,
+      idle: { personal: 0, disks: 0, mech: 0, tech: 0, weather: 0, travelling: 0, holiday: 0, other: 0, total: 0 },
+    };
+  }
+  return null;
+}
+
+function renderEfficiencyScorecard(p) {
+  const card = document.getElementById('sc-eff');
+  const valEl = document.getElementById('sc-eff-value');
+  const subEl = document.getElementById('sc-eff-sub');
+  card.classList.remove('color-good', 'color-warn', 'color-bad');
+
+  const m = getDriverMetrics(p);
+  if (!m || !m.efficiency) {
+    valEl.textContent = '—';
+    subEl.textContent = t('noVid');
+    return;
+  }
+
+  const eff = m.efficiency;
+  const pct = (eff * 100).toFixed(0);
+  valEl.textContent = pct + '%';
+
+  if (eff >= 0.7) card.classList.add('color-good');
+  else if (eff >= 0.5) card.classList.add('color-warn');
+  else card.classList.add('color-bad');
+
+  // Comparação com baseline
+  if (p.baseline && p.baseline.countryAvgEfficiency) {
+    const baselinePct = (p.baseline.countryAvgEfficiency * 100).toFixed(0);
+    const diff = eff - p.baseline.countryAvgEfficiency;
+    const diffPct = (diff * 100).toFixed(0);
+    if (Math.abs(diff) < 0.02) {
+      subEl.innerHTML = `${t('nearBaseline')} (<strong>${baselinePct}%</strong>)`;
+    } else if (diff > 0) {
+      subEl.innerHTML = `<strong style="color:var(--c-good)">+${diffPct}pp</strong> vs ${baselinePct}%`;
+    } else {
+      subEl.innerHTML = `<strong style="color:var(--c-bad)">${diffPct}pp</strong> vs ${baselinePct}%`;
+    }
+  } else {
+    subEl.textContent = t('noBaseline');
+  }
+}
+
+function renderTkmScorecard(p) {
+  const valEl = document.getElementById('sc-tkm-value');
+  const subEl = document.getElementById('sc-tkm-sub');
+  const m = getDriverMetrics(p);
+  if (!m || !m.tkm) {
+    valEl.textContent = '—';
+    subEl.textContent = '—';
+    return;
+  }
+  valEl.textContent = Math.round(m.tkm).toLocaleString();
+  if (m.mappingDays > 0) {
+    const avg = m.tkm / m.mappingDays;
+    subEl.innerHTML = `<strong>${avg.toFixed(0)}</strong> TKM/dia · ${m.mappingDays} dias mapeando`;
+  } else {
+    subEl.textContent = `${Math.round(m.km).toLocaleString()} KM dirigidos`;
+  }
+}
+
+function renderIdleScorecard(p) {
+  const card = document.getElementById('sc-idle');
+  const valEl = document.getElementById('sc-idle-value');
+  const subEl = document.getElementById('sc-idle-sub');
+  card.classList.remove('color-good', 'color-warn', 'color-bad');
+
+  const m = getDriverMetrics(p);
+  const total = m ? m.idle.total : 0;
+  valEl.textContent = total;
+  if (total === 0) {
+    card.classList.add('color-good');
+    subEl.textContent = t('zeroIdleDays');
+  } else if (total <= 3) {
+    card.classList.add('color-warn');
+    subEl.textContent = total + ' ' + (total === 1 ? t('dayParked') : t('daysParked'));
+  } else {
+    card.classList.add('color-bad');
+    subEl.textContent = total + ' ' + t('needsAttention');
+  }
+}
+
+function renderQcScorecard(p) {
+  const card = document.getElementById('sc-qc');
+  const valEl = document.getElementById('sc-qc-value');
+  const subEl = document.getElementById('sc-qc-sub');
+  card.classList.remove('color-good', 'color-warn', 'color-bad');
+
+  if (!p.vid || p.vid.qcScore === null || p.vid.qcScore === 0) {
+    valEl.textContent = '—';
+    subEl.textContent = t('noQc');
+    return;
+  }
+
+  const qc = p.vid.qcScore;
+  const pct = (qc * 100).toFixed(0);
+  valEl.textContent = pct + '%';
+  if (qc >= 0.9) card.classList.add('color-good');
+  else if (qc >= 0.7) card.classList.add('color-warn');
+  else card.classList.add('color-bad');
+
+  if (p.baseline && p.baseline.countryAvgQc) {
+    const baselinePct = (p.baseline.countryAvgQc * 100).toFixed(0);
+    subEl.innerHTML = `Baseline: <strong>${baselinePct}%</strong>`;
+  } else {
+    subEl.textContent = '—';
+  }
+}
+
+function renderEfficiencyDetail(p) {
+  const valEl = document.getElementById('eff-detail-value');
+  const vsEl = document.getElementById('eff-vs-baseline');
+  const formulaEl = document.getElementById('eff-formula');
+  const barFill = document.getElementById('eff-bar-fill');
+  const baselineMarker = document.getElementById('eff-baseline-marker');
+
+  const m = getDriverMetrics(p);
+  if (!m || !m.efficiency) {
+    valEl.textContent = '—';
+    valEl.className = 'eff-value';
+    vsEl.textContent = '';
+    formulaEl.innerHTML = `<em>${t('noVidNoEff')}</em>`;
+    barFill.style.width = '0%';
+    baselineMarker.style.display = 'none';
+    return;
+  }
+
+  const eff = m.efficiency;
+  const pct = (eff * 100).toFixed(1);
+  valEl.textContent = pct + '%';
+
+  let cls = 'good';
+  if (eff < 0.5) cls = 'bad';
+  else if (eff < 0.7) cls = 'warn';
+  valEl.className = 'eff-value ' + cls;
+  barFill.className = 'eff-bar-fill ' + cls;
+  barFill.style.width = Math.min(100, eff * 100) + '%';
+
+  // Baseline marker
+  if (p.baseline && p.baseline.countryAvgEfficiency) {
+    baselineMarker.style.display = '';
+    baselineMarker.style.left = Math.min(100, p.baseline.countryAvgEfficiency * 100) + '%';
+    baselineMarker.title = 'Baseline ' + p.driver.country + ': ' + (p.baseline.countryAvgEfficiency * 100).toFixed(0) + '%';
+  } else {
+    baselineMarker.style.display = 'none';
+  }
+
+  // VS baseline label
+  if (p.baseline && p.baseline.countryAvgEfficiency) {
+    const diff = eff - p.baseline.countryAvgEfficiency;
+    const baselinePct = (p.baseline.countryAvgEfficiency * 100).toFixed(0);
+    if (diff > 0.02) {
+      vsEl.innerHTML = `${t('aboveBaseline')} <strong>${baselinePct}%</strong> (${p.driver.country})`;
+      vsEl.className = 'eff-vs-baseline good';
+    } else if (diff < -0.02) {
+      vsEl.innerHTML = `${t('belowBaseline')} <strong>${baselinePct}%</strong> (${p.driver.country})`;
+      vsEl.className = 'eff-vs-baseline bad';
+    } else {
+      vsEl.innerHTML = `${t('nearBaseline')} <strong>${baselinePct}%</strong> (${p.driver.country})`;
+      vsEl.className = 'eff-vs-baseline';
+    }
+  } else {
+    vsEl.textContent = '';
+  }
+
+  // Fórmula explicada
+  const tkm = Math.round(m.tkm).toLocaleString();
+  const km = Math.round(m.km).toLocaleString();
+  const sourceNote = m.source === 'cts'
+    ? `<small style="color:var(--c-text-dim);">Fonte: RAW CTS DATA · mês ${p.currentMonth}</small>`
+    : `<small style="color:var(--c-text-dim);">Fonte: VID CALENDAR (RAW CTS sem dados pra esse driver)</small>`;
+  formulaEl.innerHTML = `
+    <strong>${t('formula')}</strong> <code>TKM ÷ KM Driven</code><br>
+    <strong>${t('values')}</strong> ${tkm} TKM ÷ ${km} KM = ${pct}%<br>
+    <strong>${t('meaning')}</strong> ${t('meaningText').replace('{pct}', (eff * 100).toFixed(0))}<br>
+    ${sourceNote}
+  `;
+}
+
+function renderIdleDetail(p) {
+  const totalEl = document.getElementById('idle-total');
+  const labelEl = document.getElementById('idle-total-label');
+  const breakdownEl = document.getElementById('idle-breakdown');
+
+  const m = getDriverMetrics(p);
+  const idle = m ? m.idle : { personal: 0, disks: 0, mech: 0, tech: 0, weather: 0, total: 0 };
+
+  totalEl.textContent = idle.total;
+  totalEl.classList.toggle('zero', idle.total === 0);
+  labelEl.textContent = idle.total === 1 ? t('dayParked') : t('daysParked');
+
+  // 5 cells principais
+  const categories = [
+    { key: 'personal', label: 'Personal', icon: '🏠' },
+    { key: 'disks', label: 'Disks', icon: '💾' },
+    { key: 'mech', label: 'Mech.', icon: '🔧' },
+    { key: 'tech', label: 'Tech.', icon: '💻' },
+    { key: 'weather', label: 'Weather', icon: '⛅' },
+  ];
+  let html = categories.map(cat => {
+    const value = idle[cat.key];
+    return `<div class="idle-cell ${value > 0 ? 'has-value' : ''}">
+      <div class="idle-cell-value">${value}</div>
+      <div class="idle-cell-label">${cat.label}</div>
+    </div>`;
+  }).join('');
+
+  // Travelling/Holiday/Other como linha extra se > 0
+  const extras = [];
+  if (idle.travelling > 0) extras.push(`✈ Travelling: ${idle.travelling}`);
+  if (idle.holiday > 0) extras.push(`🎉 Holiday: ${idle.holiday}`);
+  if (idle.other > 0) extras.push(`❓ Other: ${idle.other}`);
+  if (extras.length > 0) {
+    html += `<div style="grid-column:1/-1;font-size:11px;color:var(--c-text-muted);padding:8px 0 0;border-top:1px solid var(--c-border);margin-top:6px;">${extras.join(' · ')}</div>`;
+  }
+
+  // === v5.14.1: Issues do mês corrente, separadas por categoria ===
+  // Filtra issues do mês atual (do payload do profile)
+  const allIssues = p.vehicleIssues || [];
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const issuesThisMonth = allIssues.filter(iss => {
+    // Usa stopDate se tiver (mais relevante), senão created
+    const refDate = iss.stopDate || iss.created;
+    if (!refDate) return false;
+    const d = new Date(refDate);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
+  const mechIssues = issuesThisMonth.filter(i => i.category === 'mech');
+  const techIssues = issuesThisMonth.filter(i => i.category === 'tech');
+
+  if (mechIssues.length > 0 || techIssues.length > 0) {
+    html += `<div class="idle-issues-row">`;
+    if (mechIssues.length > 0) {
+      html += renderIdleIssuesBlock(mechIssues, 'mech');
+    }
+    if (techIssues.length > 0) {
+      html += renderIdleIssuesBlock(techIssues, 'tech');
+    }
+    html += `</div>`;
+  }
+
+  breakdownEl.innerHTML = html;
+}
+
+/**
+ * v5.14.1: Renderiza bloco de issues (Mech ou Tech) abaixo do grid de idle days.
+ */
+function renderIdleIssuesBlock(issues, category) {
+  const icon = category === 'mech' ? '🔧' : '💻';
+  const label = category === 'mech'
+    ? (t('idleIssuesMech') || 'Detalhes mecânicos')
+    : (t('idleIssuesTech') || 'Detalhes técnicos');
+
+  const fmtDate = (iso) => iso
+    ? new Date(iso).toLocaleDateString(
+        currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR'),
+        { day: '2-digit', month: '2-digit' }
+      )
+    : '—';
+
+  let html = `<div class="idle-issue-block ${category}">
+    <div class="idle-issue-block-title">${icon} ${label} (${issues.length})</div>`;
+
+  issues.forEach(iss => {
+    const isOpen = iss.serviceStatus !== 'finished' || iss.endStatus === 'awaiting_payment';
+    const stopStr = fmtDate(iss.stopDate);
+
+    let statusBadge = '';
+    if (iss.serviceStatus === 'not_started') {
+      statusBadge = `<span class="ii-badge not-started">🔵 ${t('vehicleIssueNotStarted') || 'Não começou'}</span>`;
+    } else if (iss.serviceStatus === 'in_progress') {
+      statusBadge = `<span class="ii-badge in-progress">🟡 ${t('vehicleIssueInProgress') || 'Em andamento'}</span>`;
+    } else if (iss.serviceStatus === 'finished') {
+      if (iss.endStatus === 'awaiting_payment') {
+        statusBadge = `<span class="ii-badge awaiting-payment">💰 ${t('vehicleIssueAwaitingPayment') || 'Aguardando pagamento'}</span>`;
+      } else {
+        statusBadge = `<span class="ii-badge done">✅ ${t('vehicleIssueDone') || 'Resolvido'}</span>`;
+      }
+    }
+
+    // Calcula dias parado
+    let daysOff = '';
+    if (iss.stopDate && isOpen) {
+      const stopMs = new Date(iss.stopDate).getTime();
+      const refMs = iss.resolvedDate ? new Date(iss.resolvedDate).getTime() : Date.now();
+      const days = Math.max(0, Math.round((refMs - stopMs) / (1000 * 60 * 60 * 24)));
+      if (days > 0) daysOff = ` · <strong>${days}d</strong>`;
+    }
+
+    const expectedStr = iss.expectedEndDate && isOpen
+      ? ` · 🎯 ${fmtDate(iss.expectedEndDate)}`
+      : '';
+
+    html += `<div class="idle-issue-row ${isOpen ? 'open' : 'closed'}">
+      <div class="ii-line1">
+        ${statusBadge}
+        <span class="ii-meta">📅 ${stopStr}${daysOff}${expectedStr}</span>
+      </div>
+      ${iss.description ? `<div class="ii-desc">${escapeHtml(iss.description)}</div>` : ''}
+    </div>`;
+  });
+
+  html += '</div>';
+  return html;
+}
+
+/**
+ * Renderiza histórico mensal (TKM, eficiência, idle por mês passado).
+ * Mostra todos os meses do driver no formato barra horizontal + summary.
+ */
+function renderMonthlyHistory(p) {
+  const card = document.getElementById('history-card');
+  const container = document.getElementById('history-content');
+  if (!card || !container) return;
+
+  // Esconde o card se só tem 1 mês (não há histórico, só o atual)
+  if (!p.monthlyHistory || p.monthlyHistory.length < 2) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+
+  // p.monthlyHistory já vem ordenado do mais antigo pro mais recente.
+  // Pra exibição: mostra na ordem do mais recente primeiro
+  const history = p.monthlyHistory.slice().reverse();
+
+  // Summary em cima: melhor mês + tendência últimos 3 meses
+  const withEff = history.filter(h => h.efficiency !== null && h.efficiency > 0);
+  let summaryHtml = '';
+  if (withEff.length > 0) {
+    const best = withEff.reduce((a, b) => a.efficiency > b.efficiency ? a : b);
+    const bestPct = (best.efficiency * 100).toFixed(0);
+
+    // Tendência: compara últimos meses com anteriores
+    let trendHtml = '';
+    if (withEff.length >= 3) {
+      // Os 3 mais recentes (lembrando que history está ordem reversa, então slice(0, 3))
+      const recent3 = history.slice(0, 3).filter(h => h.efficiency !== null);
+      if (recent3.length >= 2) {
+        const newest = recent3[0].efficiency;
+        const oldest = recent3[recent3.length - 1].efficiency;
+        const diff = (newest - oldest) * 100;
+        if (diff > 5) {
+          trendHtml = ` · ${t('historyTrendUp').replace('{diff}', '+' + diff.toFixed(0))}`;
+        } else if (diff < -5) {
+          trendHtml = ` · ${t('historyTrendDown').replace('{diff}', diff.toFixed(0))}`;
+        } else {
+          trendHtml = ` · ${t('historyTrendFlat')}`;
+        }
+      }
+    }
+
+    summaryHtml = `<div class="history-summary">
+      ${t('historyBestMonth')}: <strong>${bestPct}%</strong> (${formatMonth(best.month)})${trendHtml}
+    </div>`;
+  }
+
+  // Linhas: 1 por mês com [mês] [barra] [eff %]
+  const rowsHtml = history.map(h => {
+    const effPct = h.efficiency !== null ? (h.efficiency * 100).toFixed(0) : '—';
+    let cls = 'good';
+    if (h.efficiency === null) cls = '';
+    else if (h.efficiency < 0.5) cls = 'bad';
+    else if (h.efficiency < 0.7) cls = 'warn';
+
+    const barWidth = h.efficiency !== null ? Math.min(100, h.efficiency * 100) : 0;
+    return `<div class="history-row">
+      <div>
+        <div class="history-month">${formatMonth(h.month)}</div>
+        <div class="history-meta">${h.mappingDays}d · ${Math.round(h.tkm).toLocaleString()} TKM</div>
+      </div>
+      <div class="history-bar-track">
+        <div class="history-bar-fill ${cls}" style="width:${barWidth}%;"></div>
+      </div>
+      <div class="history-eff ${cls}">${h.efficiency !== null ? effPct + '%' : '—'}</div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = summaryHtml + rowsHtml;
+}
+
+/**
+ * Formata 'M.YYYY' (ex 5.2026) em algo mais legível por idioma.
+ */
+function formatMonth(monthKey) {
+  if (!monthKey) return '—';
+  const [m, y] = monthKey.split('.').map(Number);
+  const monthNames = {
+    pt: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+    es: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+    en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+  };
+  const names = monthNames[currentLang] || monthNames.pt;
+  return `${names[m - 1]}/${y}`;
+}
+
+// ================================================================
+// MAPA — visualização geográfica (adaptado de renderPanelMap do dashboard)
+// ================================================================
+let profileMap = null;
+let profileMapLayer = null;
+
+/**
+ * Renderiza o mapa do driver. Mostra:
+ *   - Pin azul: base atual (Hotel/Home/Mixed)
+ *   - Pin verde 🏠: casa (se diferente da base)
+ *   - Círculo azul: área de mapeamento mais recente
+ *   - Círculos azuis com fade: histórico de áreas (mais antigo = mais transparente)
+ *   - Linha tracejada: base → área de mapeamento mais recente
+ *   - Linha verde tracejada: casa → hotel (se em hotel mode)
+ *
+ * Busca histórico via getDriverHistory (60 dias) — não precisa endpoint novo.
+ */
+async function renderProfileMap(p) {
+  const container = document.getElementById('profile-map');
+  const periodLabel = document.getElementById('map-period-label');
+  if (!container) return;
+
+  // ============ DEBUG: o que o backend mandou pra esse driver ============
+  console.group('[Driver Profile MAP] Diagnóstico de coordenadas');
+  console.log('Driver:', p.driver.name, '(' + p.driver.email + ')');
+  console.log('p.currentBase:', p.currentBase);
+  console.log('  → hasBase?', !!(p.currentBase && p.currentBase.lat));
+  console.log('p.driverHome:', p.driverHome);
+  console.log('  → hasHome?', !!(p.driverHome && p.driverHome.lat));
+  console.log('p.lastCheckin:', p.lastCheckin);
+  console.groupEnd();
+  // =======================================================================
+
+  // Cleanup: se já tinha mapa renderizado, destrói antes
+  if (profileMap) {
+    profileMap.remove();
+    profileMap = null;
+    profileMapLayer = null;
+  }
+
+  // Loading state
+  container.innerHTML = `
+    <div class="map-loading">
+      <div class="spinner"></div>
+      <div>${t('mapLoading') || 'Carregando histórico…'}</div>
+    </div>
+  `;
+
+  // Busca histórico (reusa endpoint que o dashboard já usa)
+  const days = 60;
+  let history = [];
+  try {
+    const res = await fetch(
+      CONFIG.scriptUrl + '?action=getDriverHistory&email=' + encodeURIComponent(p.driver.email) + '&days=' + days
+    ).then(r => r.json());
+    if (res.success && res.history) {
+      history = res.history;
+    }
+    console.log(`[Driver Profile] Histórico (${days} dias):`, history.length, 'check-ins');
+  } catch (err) {
+    console.warn('[Driver Profile] Falha ao buscar histórico:', err);
+    // Continua sem histórico — pode ser que driver não tenha check-ins
+  }
+
+  // Atualiza label do período
+  if (periodLabel) {
+    periodLabel.textContent = '— ' + (t('mapLastDays') || 'últimos {days} dias').replace('{days}', days);
+  }
+
+  // Decide se tem QUALQUER coordenada pra mostrar
+  const hasBase = p.currentBase && p.currentBase.lat;
+  const lastCheckin = history.length > 0 ? history[0] : null;  // mais recente
+  const hasArea = lastCheckin && lastCheckin.destLat && lastCheckin.destLng;
+
+  if (!hasBase && !hasArea && history.length === 0) {
+    container.innerHTML = `<div class="map-empty">📍 ${t('mapNoData') || 'Sem dados de localização disponíveis'}</div>`;
+    return;
+  }
+
+  container.innerHTML = ''; // limpa loading
+
+  // Define centro inicial: base > última área
+  let initialCenter;
+  if (hasBase) initialCenter = [p.currentBase.lat, p.currentBase.lng];
+  else initialCenter = [lastCheckin.destLat, lastCheckin.destLng];
+
+  profileMap = L.map('profile-map').setView(initialCenter, 10);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(profileMap);
+
+  profileMapLayer = L.layerGroup().addTo(profileMap);
+  const bounds = [];
+
+  // ---- Pin da BASE (atual) ----
+  if (hasBase) {
+    const baseType = p.currentBase.type || '—';
+    const isHotel = baseType.toLowerCase().includes('hotel');
+    const baseIcon = L.divIcon({
+      className: 'driver-marker',
+      html: `<div style="width:18px;height:18px;background:#2C5282;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+      iconSize: [18, 18],
+      iconAnchor: [9, 9],
+    });
+    const baseTooltip = `<strong>${t('mapBase') || 'Base'}: ${escapeHtml(baseType)}</strong><br>${escapeHtml(p.currentBase.address || '')}`;
+    L.marker([p.currentBase.lat, p.currentBase.lng], { icon: baseIcon })
+      .bindPopup(baseTooltip)
+      .addTo(profileMapLayer);
+    bounds.push([p.currentBase.lat, p.currentBase.lng]);
+  }
+
+  // ---- Pin da CASA (homeLat/homeLng da HR — fonte primária e confiável) ----
+  // Fallback: se HR não tem coords, usa originLat/Lng do último check-in.
+  let homeCoords = null;
+  if (p.driverHome && p.driverHome.lat && p.driverHome.lng) {
+    homeCoords = { lat: p.driverHome.lat, lng: p.driverHome.lng, address: p.driverHome.address || '' };
+  } else if (lastCheckin && lastCheckin.originLat && lastCheckin.originLng) {
+    homeCoords = { lat: lastCheckin.originLat, lng: lastCheckin.originLng, address: '' };
+  }
+
+  if (homeCoords) {
+    // Não duplica se a base é Home E está bem perto (< 1km)
+    const tooClose = hasBase && (p.currentBase.type || '').toLowerCase() === 'home' &&
+      haversineKm(homeCoords.lat, homeCoords.lng, p.currentBase.lat, p.currentBase.lng) < 1;
+
+    if (!tooClose) {
+      const homeIcon = L.divIcon({
+        className: 'driver-marker',
+        html: `<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:var(--c-surface);border:2px solid #22C55E;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:14px;">🏠</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+      const homeTooltip = `<strong>${t('mapHome') || 'Casa do driver'}</strong>${homeCoords.address ? '<br>' + escapeHtml(homeCoords.address) : ''}`;
+      L.marker([homeCoords.lat, homeCoords.lng], { icon: homeIcon })
+        .bindPopup(homeTooltip)
+        .addTo(profileMapLayer);
+      bounds.push([homeCoords.lat, homeCoords.lng]);
+
+      // Linha verde tracejada casa → hotel (se base é Hotel)
+      if (hasBase && (p.currentBase.type || '').toLowerCase().includes('hotel')) {
+        L.polyline([
+          [homeCoords.lat, homeCoords.lng],
+          [p.currentBase.lat, p.currentBase.lng]
+        ], {
+          color: '#22C55E',
+          weight: 1.5,
+          opacity: 0.6,
+          dashArray: '3 6',
+        }).addTo(profileMapLayer);
+      }
+    }
+  }
+
+  // ---- Histórico de áreas (fade gradual) ----
+  // Pega áreas únicas (deduplica por proximidade) das últimas check-ins
+  const areas = [];
+  history.forEach(h => {
+    if (!h.destLat || !h.destLng) return;
+    // Verifica se essa área já foi adicionada (deduplica em raio de 5km)
+    const exists = areas.some(a =>
+      haversineKm(a.lat, a.lng, h.destLat, h.destLng) < 5
+    );
+    if (!exists) {
+      areas.push({
+        lat: h.destLat,
+        lng: h.destLng,
+        radius: h.destRadius || 10,
+        address: h.destAddress || '',
+        date: h.timestamp,
+      });
+    }
+  });
+
+  // Mais recente primeiro (i=0). Mais antigo = mais transparente.
+  areas.forEach((area, idx) => {
+    const isLatest = idx === 0;
+    const fadeOpacity = Math.max(0.15, 0.85 - idx * 0.1);
+
+    // Círculo da área (raio em km × 1000 = metros)
+    const circle = L.circle([area.lat, area.lng], {
+      radius: (area.radius || 10) * 1000,
+      color: isLatest ? '#1A365D' : '#4A9FE0',
+      fillColor: '#4A9FE0',
+      fillOpacity: isLatest ? 0.25 : fadeOpacity * 0.15,
+      weight: isLatest ? 2 : 1,
+      opacity: isLatest ? 1 : fadeOpacity * 0.7,
+      dashArray: isLatest ? null : '3 4',
+    }).addTo(profileMapLayer);
+
+    // Tooltip com data e endereço
+    const dateStr = new Date(area.date).toLocaleDateString(
+      currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR')
+    );
+    const labelPrefix = isLatest
+      ? (t('mapLatestArea') || 'Área mais recente')
+      : (t('mapPastArea') || 'Área #' + (idx + 1));
+    circle.bindPopup(
+      `<strong>${labelPrefix}</strong><br>` +
+      `📅 ${dateStr}<br>` +
+      `${escapeHtml(area.address)}<br>` +
+      `<small>${t('mapRadius') || 'Raio'}: ${area.radius} km</small>`
+    );
+
+    bounds.push([area.lat, area.lng]);
+  });
+
+  // Linha tracejada base → área mais recente (se ambos existem e são diferentes)
+  if (hasBase && areas.length > 0) {
+    const dist = haversineKm(p.currentBase.lat, p.currentBase.lng, areas[0].lat, areas[0].lng);
+    if (dist > 0.5) {
+      L.polyline([
+        [p.currentBase.lat, p.currentBase.lng],
+        [areas[0].lat, areas[0].lng]
+      ], {
+        color: '#2C5282',
+        weight: 1.5,
+        opacity: 0.5,
+        dashArray: '5 5',
+      }).addTo(profileMapLayer);
+    }
+  }
+
+  // Ajusta viewport
+  setTimeout(() => {
+    profileMap.invalidateSize();
+    if (bounds.length > 1) {
+      profileMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 11 });
+    } else if (bounds.length === 1) {
+      profileMap.setView(bounds[0], 12);
+    }
+  }, 200);
+}
+
+/**
+ * Distância entre 2 coordenadas em km (Haversine).
+ */
+// ================================================================
+// AI ANALYSIS — chama backend que chama Claude API
+// ================================================================
+
+let aiAnalysisInFlight = false;
+
+/**
+ * Roda análise IA do driver atualmente selecionado.
+ * POST pro Apps Script com {type: 'analyzeDriver', email}.
+ */
+async function runAiAnalysis() {
+  if (aiAnalysisInFlight) return;
+  if (!state.profile || !state.profile.driver) {
+    console.warn('[Driver Profile AI] Nenhum driver selecionado');
+    return;
+  }
+
+  const email = state.profile.driver.email;
+  const btn = document.getElementById('ai-analyze-btn');
+  const content = document.getElementById('ai-content');
+
+  aiAnalysisInFlight = true;
+  btn.disabled = true;
+  content.innerHTML = `
+    <div class="ai-loading">
+      <div class="spinner"></div>
+      <div>${t('aiLoading') || 'Analyzing driver data with AI… (5-15s)'}</div>
+    </div>
+  `;
+
+  try {
+    console.log('[Driver Profile AI] Calling backend for', email);
+    const res = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      // Apps Script Web Apps não suportam preflight CORS com Content-Type custom.
+      // Mandamos como text/plain — o backend faz JSON.parse(e.postData.contents).
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ type: 'analyzeDriver', email: email }),
+    }).then(r => r.json());
+
+    console.log('[Driver Profile AI] Response:', res);
+
+    if (!res.success) {
+      renderAiError(res.error || 'Unknown error');
+      return;
+    }
+
+    renderAiAnalysis(res.analysis, res.model, res.timestamp);
+  } catch (err) {
+    console.error('[Driver Profile AI] Fetch failed:', err);
+    renderAiError(err.message);
+  } finally {
+    aiAnalysisInFlight = false;
+    btn.disabled = false;
+  }
+}
+
+function renderAiError(message) {
+  const content = document.getElementById('ai-content');
+  content.innerHTML = `
+    <div class="ai-error">
+      <strong>⚠ ${t('aiErrorTitle') || 'Could not run AI analysis'}</strong>
+      ${escapeHtml(message)}
+    </div>
+  `;
+}
+
+function renderAiAnalysis(analysis, model, timestamp) {
+  const content = document.getElementById('ai-content');
+
+  if (!analysis ||
+      ((analysis.alerts || []).length === 0 &&
+       (analysis.suggestions || []).length === 0 &&
+       (analysis.strengths || []).length === 0)) {
+    content.innerHTML = `<div class="ai-empty">
+      <div class="ai-empty-icon">✓</div>
+      <div>${t('aiNothingToReport') || 'AI returned no specific observations for this driver. Try again later or check the data.'}</div>
+    </div>`;
+    return;
+  }
+
+  let html = '';
+
+  // Alerts
+  if (analysis.alerts && analysis.alerts.length > 0) {
+    html += `<div class="ai-section">
+      <div class="ai-section-title">⚠ ${t('aiAlertsTitle') || 'Points of attention'}</div>`;
+    analysis.alerts.forEach(item => {
+      const sev = (item.severity || 'medium').toLowerCase();
+      html += `<div class="ai-item severity-${sev}">
+        <div class="ai-item-title">${escapeHtml(item.title || '')}</div>
+        <div class="ai-item-desc">${escapeHtml(item.description || '')}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Suggestions
+  if (analysis.suggestions && analysis.suggestions.length > 0) {
+    html += `<div class="ai-section">
+      <div class="ai-section-title">💡 ${t('aiSuggestionsTitle') || 'Operational suggestions'}</div>`;
+    analysis.suggestions.forEach(item => {
+      html += `<div class="ai-item kind-suggestion">
+        <div class="ai-item-title">${escapeHtml(item.title || '')}</div>
+        <div class="ai-item-desc">${escapeHtml(item.description || '')}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Strengths
+  if (analysis.strengths && analysis.strengths.length > 0) {
+    html += `<div class="ai-section">
+      <div class="ai-section-title">✅ ${t('aiStrengthsTitle') || 'Strengths'}</div>`;
+    analysis.strengths.forEach(item => {
+      html += `<div class="ai-item kind-strength">
+        <div class="ai-item-title">${escapeHtml(item.title || '')}</div>
+        <div class="ai-item-desc">${escapeHtml(item.description || '')}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Meta
+  const dateStr = new Date(timestamp).toLocaleString(
+    currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR')
+  );
+  html += `<div class="ai-meta">${t('aiGenerated') || 'Generated'} ${dateStr} · ${escapeHtml(model || 'Claude')}</div>`;
+
+  content.innerHTML = html;
+}
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ================================================================
+// HELPERS
+// ================================================================
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function escapeAttr(s) {
+  return String(s || '')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '&quot;');
+}
+</script>
+
+<!-- Sidebar enterprise comum (fonte única de navegação + gating). Monta após login. -->
+<script src="/sv-shell.js"></script>
 </body>
 </html>

@@ -124,9 +124,8 @@
   NAV.forEach(function (g) { g.items.forEach(function (it) { ACCESS_BY_HREF[slug(it.href)] = it.access; }); });
 
   // Nome da página atual, normalizado. Tolera as duas formas de URL que o site
-  // serve: /app/dashboard.html e /app/dashboard (o .html é adicionado pela
-  // regra de rewrite do Cloudflare, então o pathname chega sem ele).
-  // "/app/" (sem página) conta como o hub = index.
+  // serve: /dashboard.html e /dashboard (o .html é adicionado pela regra de
+  // rewrite do Cloudflare, então o pathname chega sem ele).
   function slug(p) {
     p = String(p || "").toLowerCase().split("?")[0].split("#")[0];
     p = p.split("/").pop();

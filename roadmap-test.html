@@ -2,14 +2,472 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Redirecionando…</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap · Mastersheet · LATAM · Aceolution</title>
+<meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="/aceolution-globe.png">
-<!-- Esta página mudou de lugar (foi pra /app/, atrás do Cloudflare Access).
-     Este arquivo existe só pra não quebrar links salvos e bookmarks do time. -->
-<meta http-equiv="refresh" content="0; url=/app/roadmap-test">
-<script>location.replace('/app/roadmap-test' + location.search + location.hash);</script>
+<script src="/auth.js?v=20260518b"></script>
+<script src="/theme.js?v=20260518c"></script>
+<script src="/common.js?v=20260519a"></script>
+<link rel="stylesheet" href="/theme.css?v=20260519a">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 22px 18px 60px; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #0F2443 0%, #1A365D 60%, #2C5282 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 26px 28px;
+    border: 1px solid var(--c-border);
+  }
+  .hero .eyebrow {
+    font-size: 10px; font-weight: 800; letter-spacing: 2.5px;
+    color: #C8DEF0; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .hero h1 { font-size: 25px; font-weight: 800; letter-spacing: -0.4px; line-height: 1.15; }
+  .hero p { color: #C8DEF0; font-size: 13.5px; margin-top: 8px; max-width: 640px; line-height: 1.55; }
+
+  .progress-wrap { margin-top: 20px; }
+  .progress-top {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12px; color: #C8DEF0; margin-bottom: 7px;
+  }
+  .progress-top b { color: #fff; font-size: 14px; }
+  .progress-bar {
+    height: 12px; background: rgba(255,255,255,0.16);
+    border-radius: 99px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #4ADE80, #38BDF8);
+    border-radius: 99px; transition: width .4s ease;
+  }
+
+  /* ---------- TABS ---------- */
+  .tabs { display: flex; gap: 8px; margin: 22px 0 4px; flex-wrap: wrap; }
+  .tab {
+    padding: 9px 18px; border-radius: 99px;
+    border: 1px solid var(--c-border-strong);
+    background: var(--c-surface); color: var(--c-text-muted);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit;
+  }
+  .tab.active { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ---------- NEXT STEP ---------- */
+  .next-box {
+    margin: 18px 0 10px;
+    background: var(--c-bg-tint);
+    border: 1px solid var(--c-accent);
+    border-radius: 12px; padding: 16px 18px;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .next-box .ico { font-size: 22px; line-height: 1.2; }
+  .next-box .label {
+    font-size: 10px; font-weight: 800; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--c-primary); margin-bottom: 3px;
+  }
+  .next-box .step-phase { font-size: 12px; color: var(--c-text-muted); }
+  .next-box .step-text { font-size: 14.5px; font-weight: 600; color: var(--c-text); margin-top: 2px; }
+
+  /* ---------- PHASE CARDS ---------- */
+  .phase {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-left: 4px solid var(--c-accent);
+    border-radius: 12px;
+    padding: 16px 18px; margin: 14px 0;
+  }
+  .phase.win { border-left-color: var(--c-success); }
+  .phase.done { opacity: 0.72; }
+  .phase-head { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; }
+  .phase-num {
+    width: 26px; height: 26px; flex-shrink: 0;
+    background: var(--c-primary); color: #fff;
+    border-radius: 7px; font-weight: 800; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .phase.win .phase-num { background: var(--c-success); }
+  .phase-title { font-size: 15.5px; font-weight: 700; color: var(--c-primary-dark); flex: 1; }
+  .phase-badge {
+    font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
+    background: var(--c-success); color: #fff; padding: 3px 8px; border-radius: 99px;
+  }
+  .phase-when { font-size: 11.5px; color: var(--c-accent); font-weight: 600; margin: 0 0 12px 37px; }
+  .phase-count { font-size: 11px; color: var(--c-text-dim); font-weight: 600; }
+
+  .task {
+    display: flex; align-items: flex-start; gap: 11px;
+    padding: 9px 10px; border-radius: 9px; cursor: pointer;
+    margin: 2px 0 2px 27px;
+    transition: background .12s;
+  }
+  .task:hover { background: var(--c-bg-tint); }
+  .task .box {
+    width: 19px; height: 19px; flex-shrink: 0; margin-top: 1px;
+    border: 2px solid var(--c-border-strong); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #fff; transition: all .12s;
+  }
+  .task.checked .box { background: var(--c-success); border-color: var(--c-success); }
+  .task .txt { font-size: 13.5px; line-height: 1.5; color: var(--c-text); }
+  .task.checked .txt { color: var(--c-text-dim); text-decoration: line-through; }
+  .task code, .deps code, .legend code {
+    background: var(--c-bg-tint); border-radius: 4px; padding: 1px 5px;
+    font-family: 'SF Mono', Consolas, monospace; font-size: 11.5px; color: var(--c-primary-dark);
+  }
+
+  /* ---------- DEPENDÊNCIAS ---------- */
+  .deps-intro { font-size: 13px; color: var(--c-text-muted); margin: 16px 0 4px; line-height: 1.6; }
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap; margin: 12px 0 16px;
+    font-size: 12px; color: var(--c-text-muted);
+  }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .filters { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
+  .chip {
+    padding: 6px 13px; border-radius: 99px; cursor: pointer;
+    border: 1px solid var(--c-border-strong); background: var(--c-surface);
+    color: var(--c-text-muted); font-size: 12px; font-weight: 600; font-family: inherit;
+  }
+  .chip.active { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+
+  .dep {
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-radius: 11px; padding: 14px 16px; margin: 10px 0;
+    border-left: 4px solid var(--c-border-strong);
+  }
+  .dep.g { border-left-color: var(--c-success); }
+  .dep.y { border-left-color: var(--c-warn); }
+  .dep.r { border-left-color: var(--c-danger); }
+  .dep-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  .dep-feature { font-size: 14.5px; font-weight: 700; color: var(--c-text); }
+  .dep-used { font-size: 11.5px; color: var(--c-text-dim); margin-top: 2px; }
+  .dep-type {
+    font-size: 10px; font-weight: 800; white-space: nowrap;
+    padding: 4px 9px; border-radius: 99px; text-transform: uppercase; letter-spacing: .3px;
+  }
+  .dep-type.g { background: rgba(22,163,74,.14); color: var(--c-success); }
+  .dep-type.y { background: rgba(202,138,4,.16); color: var(--c-warn); }
+  .dep-type.r { background: rgba(185,28,28,.13); color: var(--c-danger); }
+  .dep-flow {
+    margin-top: 11px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size: 12.5px;
+  }
+  .dep-flow .from, .dep-flow .to {
+    padding: 5px 11px; border-radius: 8px; background: var(--c-bg-tint);
+  }
+  .dep-flow .arrow { color: var(--c-accent); font-weight: 800; font-size: 15px; }
+  .dep-flow .to { font-weight: 600; }
+  .dep-phase {
+    font-size: 10.5px; font-weight: 700; color: var(--c-primary);
+    background: var(--c-bg-tint); padding: 3px 9px; border-radius: 99px; margin-left: auto;
+  }
+
+  .save-note {
+    margin-top: 26px; text-align: center; font-size: 11px; color: var(--c-text-dim);
+  }
+  .save-note a { color: var(--c-accent); cursor: pointer; text-decoration: underline; }
+</style>
 </head>
-<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#F8FAFC;color:#64748B">
-  <p>Esta página mudou de endereço. <a href="/app/roadmap-test" style="color:#2C5282">Ir agora</a></p>
+<body>
+
+<div id="app" class="wrap" style="display:none;">
+
+  <div class="hero">
+    <div class="eyebrow">Aceolution · Street View LATAM</div>
+    <h1>Roadmap — saindo da Mastersheet</h1>
+    <p>Reduzir a dependência da planilha mantida à mão, usando cada vez mais o que os motoristas geram e as fontes originais. Tique o que já fez — fica salvo neste navegador.</p>
+    <div class="progress-wrap">
+      <div class="progress-top">
+        <span><b id="prog-pct">0%</b> concluído</span>
+        <span id="prog-count">0 / 0 tarefas</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-view="roadmap" onclick="switchView('roadmap')">📍 Roadmap & checklist</button>
+    <button class="tab" data-view="deps" onclick="switchView('deps')">🔗 O que depende do quê</button>
+  </div>
+
+  <!-- ROADMAP -->
+  <div class="view active" id="view-roadmap">
+    <div class="next-box" id="next-box">
+      <div class="ico">🎯</div>
+      <div>
+        <div class="label">Próximo passo</div>
+        <div class="step-phase" id="next-phase"></div>
+        <div class="step-text" id="next-text"></div>
+      </div>
+    </div>
+    <div id="phases"></div>
+  </div>
+
+  <!-- DEPENDÊNCIAS -->
+  <div class="view" id="view-deps">
+    <div class="deps-intro">
+      Cada linha é um dado que o sistema mostra hoje, <b>de onde ele vem</b> e <b>pra onde deveria ir</b>.
+      A ideia é subir a escada: 🔴 manual → 🟡 API da fonte → 🟢 derivado do que a gente mesmo coleta.
+    </div>
+    <div class="legend">
+      <span class="item"><span class="dep-type g">🟢 First-party</span> o app/motorista gera</span>
+      <span class="item"><span class="dep-type y">🟡 Externa</span> sistema com API própria</span>
+      <span class="item"><span class="dep-type r">🔴 Manual</span> digitado/derivado à mão</span>
+    </div>
+    <div class="filters" id="dep-filters">
+      <button class="chip active" data-f="all" onclick="filterDeps('all')">Todos</button>
+      <button class="chip" data-f="r" onclick="filterDeps('r')">🔴 Manual</button>
+      <button class="chip" data-f="y" onclick="filterDeps('y')">🟡 Externa</button>
+      <button class="chip" data-f="g" onclick="filterDeps('g')">🟢 First-party</button>
+    </div>
+    <div id="deps-list"></div>
+  </div>
+
+  <div class="save-note">
+    Progresso salvo localmente neste navegador. <a onclick="resetProgress()">Limpar tudo</a>
+  </div>
+
+</div>
+
+<script>
+// =================================================================
+// DADOS DO ROADMAP
+// =================================================================
+const PHASES = [
+  {
+    n: '0', title: 'Tornar a dependência visível', when: '1–2 dias · risco zero',
+    tasks: [
+      { id: 'f0-1', text: 'Mapa de proveniência: cada campo do dashboard → aba/coluna → tipo 🟢🟡🔴' },
+      { id: 'f0-2', text: 'Métrica de progresso: "% de campos que não tocam aba manual"' },
+    ],
+  },
+  {
+    n: '1', title: 'Recalcular produção do checkout, não da DASHBOARD (HM)', when: 'maior ganho · menor risco', win: true,
+    tasks: [
+      { id: 'f1-1', text: 'Endpoint getProductionFromCheckins(start, end): soma TKM e KM por motorista a partir do checkout' },
+      { id: 'f1-2', text: 'Mapping Days = contagem de dias com checkout; efficiency = TKM/KM derivado' },
+      { id: 'f1-3', text: 'Dashboard passa a ler as métricas derivadas; DASHBOARD (HM) vira fallback' },
+      { id: 'f1-4', text: 'Validação paralela 1–2 semanas: mostrar derivado vs. planilha lado a lado' },
+      { id: 'f1-5', text: 'Onde os números baterem, desligar a leitura da planilha pra aquele campo' },
+    ],
+  },
+  {
+    n: '2', title: 'Cadastro mestre de motorista', when: 'isolar e blindar, não eliminar',
+    tasks: [
+      { id: 'f2-1', text: 'Eleger UMA aba como cadastro canônico (HR and Vendors Database)' },
+      { id: 'f2-2', text: 'Tudo referencia por email; parar de duplicar nome/país em outras abas' },
+      { id: 'f2-3', text: 'Endpoint único getDriverRegistry() cacheado, usado por todas as páginas' },
+    ],
+  },
+  {
+    n: '3', title: 'Fontes externas direto da API', when: 'fim das cópias manuais',
+    tasks: [
+      { id: 'f3-1', text: 'Ramp via API REST (token no PropertiesService) → matar a aba Ramp DATABASE' },
+      { id: 'f3-2', text: 'VID / Driver Calendar via Google Calendar API' },
+      { id: 'f3-3', text: 'Produção/QC do Street View via API onde houver; senão proxy pelo checkout' },
+    ],
+  },
+  {
+    n: '4', title: 'Decisão: Sheets continua sendo o banco?', when: 'bifurcação a decidir',
+    tasks: [
+      { id: 'f4-1', text: 'Decidir Caminho A (Sheets saneado) vs. Caminho B (banco real)' },
+      { id: 'f4-2', text: 'Caminho A: abas viram tabelas limpas, só de escrita do app' },
+      { id: 'f4-3', text: 'Caminho B: mover first-party pra Firestore/Supabase; Sheets vira view exportada' },
+    ],
+  },
+];
+
+const DEPS = [
+  { feature: 'KM Mapeados / KM Driven', used: 'Dashboard, Ranking', from: 'DASHBOARD (HM)', type: 'r', to: 'Soma do checkout (Total KM Driven)', phase: 'Fase 1' },
+  { feature: 'TKM', used: 'Dashboard, Profile', from: 'DASHBOARD (HM)', type: 'r', to: 'Soma do checkout (TKM Mapped)', phase: 'Fase 1' },
+  { feature: 'Mapping Days', used: 'Dashboard, Profile', from: 'DASHBOARD (HM)', type: 'r', to: 'Contagem de dias com checkout', phase: 'Fase 1' },
+  { feature: 'Efficiency (TKM / KM)', used: 'Dashboard, Ranking', from: 'DASHBOARD (HM)', type: 'r', to: 'Derivado de TKM/KM do checkout', phase: 'Fase 1' },
+  { feature: 'Hotel Mode (Yes/No)', used: 'Dashboard', from: 'DASHBOARD (HM)', type: 'r', to: 'Cadastro / base do motorista', phase: 'Fase 2' },
+  { feature: 'Breakeven %', used: 'Dashboard', from: 'DASHBOARD (HM)', type: 'r', to: 'Derivado de custo + produção', phase: 'Fase 3' },
+  { feature: 'Paid Salary / Custo direto', used: 'Dashboard', from: 'DASHBOARD (HM)', type: 'r', to: 'Folha de pagamento (fonte financeira)', phase: 'Fase 3' },
+  { feature: 'CTS Goals', used: 'Dashboard (CTS)', from: 'CTS Goal Management', type: 'r', to: 'Meta derivada da produção real', phase: 'Fase 1/3' },
+  { feature: 'Roster (nome, email, país, casa, status)', used: 'Todas as páginas', from: 'HR and Vendors Database', type: 'r', to: 'getDriverRegistry() canônico', phase: 'Fase 2' },
+  { feature: 'Transações Ramp', used: 'Dashboard, Ramp', from: 'Ramp DATABASE', type: 'y', to: 'Ramp API direto', phase: 'Fase 3' },
+  { feature: 'Base (casa / hotel)', used: 'Dashboard, Profile', from: 'Driver Base Location', type: 'y', to: 'Cadastro + check-in', phase: 'Fase 2' },
+  { feature: 'VID / Driver Calendar', used: 'Profile, Calendário', from: 'VID Monthly CALENDAR', type: 'y', to: 'Google Calendar API', phase: 'Fase 3' },
+  { feature: 'Timesheet / Payroll', used: 'Timesheet', from: 'Timesheet (aba)', type: 'y', to: 'Derivar horas do check-in/out', phase: 'Fase 1' },
+  { feature: 'Check-in (GPS, área, didMap, veículo)', used: 'Dashboard, Profile, Scopes', from: 'Driver Daily Check-in', type: 'g', to: '✓ Já é first-party', phase: '—' },
+  { feature: 'Checkout (TKM, KM, notas)', used: 'Profile, Timesheet', from: 'Driver Daily Check-in', type: 'g', to: '✓ Já é first-party', phase: '—' },
+  { feature: 'Recruitment', used: 'Recruitment', from: 'Recruitment (aba)', type: 'r', to: 'Mantém manual (entrada de RH)', phase: '—' },
+];
+
+// =================================================================
+// ESTADO + PERSISTÊNCIA
+// =================================================================
+const STORE_KEY = 'AC_ROADMAP_v1';
+let done = loadDone();
+let depFilter = 'all';
+
+function loadDone() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+function saveDone() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(done)); } catch (e) {}
+}
+
+function allTasks() { return PHASES.reduce((acc, p) => acc.concat(p.tasks), []); }
+
+// =================================================================
+// RENDER
+// =================================================================
+function renderProgress() {
+  const tasks = allTasks();
+  const total = tasks.length;
+  const count = tasks.filter(t => done[t.id]).length;
+  const pct = total ? Math.round(count / total * 100) : 0;
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-count').textContent = count + ' / ' + total + ' tarefas';
+  document.getElementById('prog-fill').style.width = pct + '%';
+}
+
+function renderNextStep() {
+  const box = document.getElementById('next-box');
+  for (const p of PHASES) {
+    const next = p.tasks.find(t => !done[t.id]);
+    if (next) {
+      box.style.display = '';
+      document.getElementById('next-phase').textContent = 'Fase ' + p.n + ' · ' + p.title;
+      document.getElementById('next-text').textContent = next.text;
+      return;
+    }
+  }
+  // tudo feito
+  box.style.display = '';
+  document.querySelector('#next-box .ico').textContent = '🎉';
+  document.getElementById('next-phase').textContent = '';
+  document.getElementById('next-text').textContent = 'Tudo concluído! A Mastersheet virou coadjuvante.';
+}
+
+function renderPhases() {
+  const wrap = document.getElementById('phases');
+  wrap.innerHTML = PHASES.map(p => {
+    const total = p.tasks.length;
+    const count = p.tasks.filter(t => done[t.id]).length;
+    const phaseDone = count === total;
+    const tasksHtml = p.tasks.map(tk => `
+      <div class="task ${done[tk.id] ? 'checked' : ''}" onclick="toggleTask('${tk.id}')">
+        <div class="box">${done[tk.id] ? '✓' : ''}</div>
+        <div class="txt">${tk.text}</div>
+      </div>`).join('');
+    return `
+      <div class="phase ${p.win ? 'win' : ''} ${phaseDone ? 'done' : ''}">
+        <div class="phase-head">
+          <div class="phase-num">${p.n}</div>
+          <div class="phase-title">${p.title}</div>
+          ${p.win ? '<span class="phase-badge">maior ganho</span>' : ''}
+          <span class="phase-count">${count}/${total}</span>
+        </div>
+        <div class="phase-when">${p.when}</div>
+        ${tasksHtml}
+      </div>`;
+  }).join('');
+}
+
+function renderDeps() {
+  const list = document.getElementById('deps-list');
+  const rows = DEPS.filter(d => depFilter === 'all' || d.type === depFilter);
+  list.innerHTML = rows.map(d => `
+    <div class="dep ${d.type}">
+      <div class="dep-top">
+        <div>
+          <div class="dep-feature">${d.feature}</div>
+          <div class="dep-used">aparece em: ${d.used}</div>
+        </div>
+        <span class="dep-type ${d.type}">${d.type === 'g' ? '🟢 First-party' : d.type === 'y' ? '🟡 Externa' : '🔴 Manual'}</span>
+      </div>
+      <div class="dep-flow">
+        <span class="from">${d.from}</span>
+        <span class="arrow">→</span>
+        <span class="to">${d.to}</span>
+        ${d.phase !== '—' ? `<span class="dep-phase">${d.phase}</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// =================================================================
+// INTERAÇÃO
+// =================================================================
+function toggleTask(id) {
+  done[id] = !done[id];
+  if (!done[id]) delete done[id];
+  saveDone();
+  renderPhases();
+  renderProgress();
+  renderNextStep();
+}
+
+function switchView(view) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+  document.getElementById('view-roadmap').classList.toggle('active', view === 'roadmap');
+  document.getElementById('view-deps').classList.toggle('active', view === 'deps');
+}
+
+function filterDeps(f) {
+  depFilter = f;
+  document.querySelectorAll('#dep-filters .chip').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  renderDeps();
+}
+
+function resetProgress() {
+  if (!confirm('Limpar todo o progresso marcado neste navegador?')) return;
+  done = {};
+  saveDone();
+  renderPhases();
+  renderProgress();
+  renderNextStep();
+}
+
+function renderAll() {
+  renderPhases();
+  renderDeps();
+  renderProgress();
+  renderNextStep();
+}
+
+// =================================================================
+// LOGIN + TOPBAR (via common.js)
+// =================================================================
+function startApp(user) {
+  injectTopbar({
+    region: 'LATAM · ROADMAP',
+    user: user,
+    showBack: true,
+  });
+  document.getElementById('app').style.display = '';
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+  renderAll();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  injectLogin({
+    title: 'Roadmap LATAM',
+    sub: 'Acesso restrito ao super admin',
+    superAdminGate: 'fuss',
+    onSuccess: startApp,
+  });
+});
+</script>
+
 </body>
 </html>

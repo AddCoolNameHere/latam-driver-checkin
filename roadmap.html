@@ -2,14 +2,727 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Redirecionando…</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap · Mastersheet · LATAM · Aceolution</title>
+<meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="/aceolution-globe.png">
-<!-- Esta página mudou de lugar (foi pra /app/, atrás do Cloudflare Access).
-     Este arquivo existe só pra não quebrar links salvos e bookmarks do time. -->
-<meta http-equiv="refresh" content="0; url=/app/roadmap">
-<script>location.replace('/app/roadmap' + location.search + location.hash);</script>
+<script src="/auth.js?v=20260518b"></script>
+<script src="/theme.js?v=20260518c"></script>
+<script src="/common.js?v=20260519a"></script>
+<link rel="stylesheet" href="/theme.css?v=20260519a">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 22px 18px 60px; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    background: linear-gradient(135deg, #0F2443 0%, #1A365D 60%, #2C5282 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 26px 28px;
+    border: 1px solid var(--c-border);
+  }
+  .hero .eyebrow {
+    font-size: 10px; font-weight: 800; letter-spacing: 2.5px;
+    color: #C8DEF0; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .hero h1 { font-size: 25px; font-weight: 800; letter-spacing: -0.4px; line-height: 1.15; }
+  .hero p { color: #C8DEF0; font-size: 13.5px; margin-top: 8px; max-width: 660px; line-height: 1.55; }
+  .hero .stamp { margin-top: 10px; font-size: 11px; color: #9FC2E2; }
+  .hero .stamp code { background: rgba(255,255,255,.13); color: #E6F1FB; border-radius: 4px; padding: 1px 6px; font-family: 'SF Mono', Consolas, monospace; font-size: 11px; }
+
+  .progress-wrap { margin-top: 20px; }
+  .progress-top {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12px; color: #C8DEF0; margin-bottom: 7px;
+  }
+  .progress-top b { color: #fff; font-size: 14px; }
+  .progress-bar {
+    height: 12px; background: rgba(255,255,255,0.16);
+    border-radius: 99px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #4ADE80, #38BDF8);
+    border-radius: 99px; transition: width .4s ease;
+  }
+
+  /* ---------- TABS ---------- */
+  .tabs { display: flex; gap: 8px; margin: 22px 0 4px; flex-wrap: wrap; }
+  .tab {
+    padding: 9px 18px; border-radius: 99px;
+    border: 1px solid var(--c-border-strong);
+    background: var(--c-surface); color: var(--c-text-muted);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit;
+  }
+  .tab.active { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ---------- CALLOUT (revisão crítica) ---------- */
+  .callout {
+    margin: 18px 0 6px;
+    background: var(--c-bg-tint);
+    border: 1px solid var(--c-border);
+    border-left: 4px solid var(--c-warn);
+    border-radius: 12px; padding: 14px 18px;
+  }
+  .callout .c-label {
+    font-size: 10px; font-weight: 800; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--c-warn); margin-bottom: 6px;
+  }
+  .callout p { font-size: 12.5px; color: var(--c-text-muted); line-height: 1.55; margin: 5px 0; }
+  .callout details { margin-top: 6px; }
+  .callout summary { cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--c-primary); }
+  .callout ol { margin: 8px 0 0; padding-left: 20px; }
+  .callout li { font-size: 12.5px; color: var(--c-text-muted); line-height: 1.5; margin: 7px 0; }
+  .callout code { background: var(--c-surface); border-radius: 4px; padding: 1px 5px; font-family: 'SF Mono', Consolas, monospace; font-size: 11px; color: var(--c-primary-dark); }
+
+  /* ---------- NEXT STEP ---------- */
+  .next-box {
+    margin: 18px 0 10px;
+    background: var(--c-bg-tint);
+    border: 1px solid var(--c-accent);
+    border-radius: 12px; padding: 16px 18px;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .next-box .ico { font-size: 22px; line-height: 1.2; }
+  .next-box .label {
+    font-size: 10px; font-weight: 800; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--c-primary); margin-bottom: 3px;
+  }
+  .next-box .step-phase { font-size: 12px; color: var(--c-text-muted); }
+  .next-box .step-text { font-size: 14.5px; font-weight: 600; color: var(--c-text); margin-top: 2px; }
+
+  /* ---------- PHASE CARDS ---------- */
+  .phase {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-left: 4px solid var(--c-accent);
+    border-radius: 12px;
+    padding: 16px 18px; margin: 14px 0;
+  }
+  .phase.win { border-left-color: var(--c-success); }
+  .phase.opt { border-left-color: var(--c-border-strong); }
+  .phase.done { opacity: 0.72; }
+  .phase-head { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; }
+  .phase-num {
+    width: 26px; height: 26px; flex-shrink: 0;
+    background: var(--c-primary); color: #fff;
+    border-radius: 7px; font-weight: 800; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .phase.win .phase-num { background: var(--c-success); }
+  .phase.opt .phase-num { background: var(--c-text-muted); }
+  .phase-title { font-size: 15.5px; font-weight: 700; color: var(--c-primary-dark); flex: 1; }
+  .phase-badge {
+    font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
+    background: var(--c-success); color: #fff; padding: 3px 8px; border-radius: 99px;
+  }
+  .phase-badge.opt { background: var(--c-text-muted); }
+  .phase-when { font-size: 11.5px; color: var(--c-accent); font-weight: 600; margin: 0 0 12px 37px; }
+  .phase-count { font-size: 11px; color: var(--c-text-dim); font-weight: 600; }
+
+  /* ---------- TASK ---------- */
+  .task {
+    display: flex; align-items: flex-start; gap: 11px;
+    padding: 9px 10px; border-radius: 9px;
+    margin: 2px 0 2px 27px;
+  }
+  .task:hover { background: var(--c-bg-tint); }
+  .task .box {
+    width: 19px; height: 19px; flex-shrink: 0; margin-top: 1px;
+    border: 2px solid var(--c-border-strong); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #fff; transition: all .12s; cursor: pointer;
+  }
+  .task.checked .box { background: var(--c-success); border-color: var(--c-success); }
+  .task .tmain { flex: 1; min-width: 0; }
+  .task .txt { font-size: 13.5px; line-height: 1.5; color: var(--c-text); cursor: pointer; }
+  .task.checked .txt { color: var(--c-text-dim); text-decoration: line-through; }
+  .tid { font-size: 11px; font-weight: 800; color: var(--c-accent); margin-right: 5px; }
+  .task code, .deps code, .legend code, .task-detail code {
+    background: var(--c-bg-tint); border-radius: 4px; padding: 1px 5px;
+    font-family: 'SF Mono', Consolas, monospace; font-size: 11.5px; color: var(--c-primary-dark);
+  }
+
+  /* badges na task */
+  .tbadges { display: inline-flex; gap: 5px; flex-wrap: wrap; margin-left: 4px; vertical-align: middle; }
+  .tbadge {
+    font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .3px;
+    padding: 2px 7px; border-radius: 99px; background: var(--c-bg-tint); color: var(--c-text-muted);
+  }
+  .tbadge.impact { color: var(--c-success); background: rgba(22,163,74,.13); }
+  .tbadge.risk { color: var(--c-warn); background: rgba(202,138,4,.14); }
+  .tbadge.dep { color: var(--c-primary); background: rgba(74,159,224,.16); }
+
+  /* expand + detail */
+  .task-expand {
+    margin-top: 5px; background: none; border: none; cursor: pointer;
+    font-family: inherit; font-size: 11.5px; font-weight: 700; color: var(--c-accent);
+    padding: 0; display: inline-flex; align-items: center; gap: 4px;
+  }
+  .task-expand .ar { transition: transform .15s; font-size: 9px; }
+  .task-detail { margin: 8px 0 4px; display: none; }
+  .task-detail.open { display: block; }
+  .td-line { font-size: 12.5px; color: var(--c-text-muted); margin: 7px 0; line-height: 1.5; }
+  .td-line b { color: var(--c-text); font-weight: 700; }
+  .td-where {
+    font-size: 12px; background: var(--c-bg-tint); border: 1px solid var(--c-border);
+    border-radius: 8px; padding: 7px 11px; color: var(--c-text-muted);
+  }
+  .td-verify {
+    font-size: 12px; border: 1px solid rgba(22,163,74,.3); background: rgba(22,163,74,.08);
+    border-radius: 8px; padding: 7px 11px; color: var(--c-text); margin-top: 8px;
+  }
+
+  /* prompt box */
+  .promptbox { border: 1px dashed var(--c-accent); border-radius: 9px; background: var(--c-bg-tint); margin-top: 8px; }
+  .promptbox-top { display: flex; align-items: center; justify-content: space-between; padding: 6px 11px; border-bottom: 1px dashed var(--c-border-strong); }
+  .promptbox-top span { font-size: 10px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--c-accent); }
+  .btn-copy { border: 1px solid var(--c-accent); background: var(--c-surface); color: var(--c-primary); font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 7px; cursor: pointer; font-family: inherit; }
+  .btn-copy:hover { background: var(--c-accent); color: #fff; }
+  .btn-copy.copied { background: var(--c-success); border-color: var(--c-success); color: #fff; }
+  pre.prompt { margin: 0; padding: 10px 12px; font-family: 'SF Mono', Consolas, monospace; font-size: 11.5px; line-height: 1.55; color: var(--c-text); white-space: pre-wrap; word-break: break-word; }
+
+  /* ---------- DEPENDÊNCIAS ---------- */
+  .deps-intro { font-size: 13px; color: var(--c-text-muted); margin: 16px 0 4px; line-height: 1.6; }
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap; margin: 12px 0 16px;
+    font-size: 12px; color: var(--c-text-muted);
+  }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .filters { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
+  .chip {
+    padding: 6px 13px; border-radius: 99px; cursor: pointer;
+    border: 1px solid var(--c-border-strong); background: var(--c-surface);
+    color: var(--c-text-muted); font-size: 12px; font-weight: 600; font-family: inherit;
+  }
+  .chip.active { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+
+  .dep {
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-radius: 11px; padding: 14px 16px; margin: 10px 0;
+    border-left: 4px solid var(--c-border-strong);
+  }
+  .dep.g { border-left-color: var(--c-success); }
+  .dep.y { border-left-color: var(--c-warn); }
+  .dep.r { border-left-color: var(--c-danger); }
+  .dep-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  .dep-feature { font-size: 14.5px; font-weight: 700; color: var(--c-text); }
+  .dep-used { font-size: 11.5px; color: var(--c-text-dim); margin-top: 2px; }
+  .dep-type {
+    font-size: 10px; font-weight: 800; white-space: nowrap;
+    padding: 4px 9px; border-radius: 99px; text-transform: uppercase; letter-spacing: .3px;
+  }
+  .dep-type.g { background: rgba(22,163,74,.14); color: var(--c-success); }
+  .dep-type.y { background: rgba(202,138,4,.16); color: var(--c-warn); }
+  .dep-type.r { background: rgba(185,28,28,.13); color: var(--c-danger); }
+  .dep-flow {
+    margin-top: 11px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size: 12.5px;
+  }
+  .dep-flow .from, .dep-flow .to {
+    padding: 5px 11px; border-radius: 8px; background: var(--c-bg-tint);
+  }
+  .dep-flow .arrow { color: var(--c-accent); font-weight: 800; font-size: 15px; }
+  .dep-flow .to { font-weight: 600; }
+  .dep-phase {
+    font-size: 10.5px; font-weight: 700; color: var(--c-primary);
+    background: var(--c-bg-tint); padding: 3px 9px; border-radius: 99px; margin-left: auto;
+  }
+
+  /* sources mini-table no topo das deps */
+  .sources { display: grid; gap: 10px; margin: 6px 0 18px; }
+  .src {
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-left: 4px solid var(--c-border-strong); border-radius: 11px; padding: 12px 15px;
+  }
+  .src.r { border-left-color: var(--c-danger); }
+  .src.y { border-left-color: var(--c-warn); }
+  .src.g { border-left-color: var(--c-success); }
+  .src-name { font-size: 13.5px; font-weight: 700; color: var(--c-text); }
+  .src-desc { font-size: 12px; color: var(--c-text-muted); margin-top: 3px; line-height: 1.5; }
+  .src-role { font-size: 11.5px; font-weight: 700; margin-top: 6px; }
+  .src.r .src-role { color: var(--c-danger); }
+  .src.y .src-role { color: var(--c-warn); }
+  .src.g .src-role { color: var(--c-success); }
+
+  .save-note {
+    margin-top: 26px; text-align: center; font-size: 11px; color: var(--c-text-dim);
+  }
+  .save-note a { color: var(--c-accent); cursor: pointer; text-decoration: underline; }
+</style>
 </head>
-<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#F8FAFC;color:#64748B">
-  <p>Esta página mudou de endereço. <a href="/app/roadmap" style="color:#2C5282">Ir agora</a></p>
+<body>
+
+<div id="app" class="wrap" style="display:none;">
+
+  <div class="hero">
+    <div class="eyebrow">Aceolution · Street View LATAM</div>
+    <h1>Roadmap — saindo da Mastersheet</h1>
+    <p>Fazer o dashboard parar de ler da soma feita à mão (<b style="color:#fff">DASHBOARD (HM)</b>) e passar a derivar do que o sistema já coleta. Tique o que já fez — fica salvo neste navegador. Cada tarefa tem onde mexer no código e um prompt pronto pra colar pro Claude.</p>
+    <div class="stamp">Revisado conferindo cada afirmação contra o <code>Code udpt.gs</code> real · backend atual <code>v5.41</code></div>
+    <div class="progress-wrap">
+      <div class="progress-top">
+        <span><b id="prog-pct">0%</b> concluído</span>
+        <span id="prog-count">0 / 0 tarefas</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-view="roadmap" onclick="switchView('roadmap')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Roadmap & checklist</button>
+    <button class="tab" data-view="deps" onclick="switchView('deps')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Fontes & dependências</button>
+  </div>
+
+  <!-- ROADMAP -->
+  <div class="view active" id="view-roadmap">
+
+    <div class="callout">
+      <div class="c-label"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Por que esse plano mudou</div>
+      <p>A versão anterior tinha sido escrita <b>sem abrir o backend</b>. Reli o <code>Code udpt.gs</code> inteiro e corrigi 4 erros de base.</p>
+      <details>
+        <summary>Ver o que estava errado</summary>
+        <ol>
+          <li><b>Nomes de função fantasma.</b> Não existe <code>getDashboard_</code>/<code>getTimesheet_</code>/<code>getRamp_</code>. Os reais: <code>getHotelModeByDriver</code>, <code>getDashboardData</code>, <code>getTimesheet</code>, <code>getRampData</code>. Os prompts agora apontam pro código certo.</li>
+          <li><b>Produção não vem do checkout — vem do <code>RAW CTS DATA</code>.</b> O <code>getDriverProfile_</code> agrega dessa aba (export oficial) via <code>buildRawCtsIndex_</code>, não do checkout. Isso ajuda: a agregação já existe e roda.</li>
+          <li><b>São 3 fontes de produção, não 1.</b> DASHBOARD (HM) manual · RAW CTS oficial · checkout auto-reportado. A verdade escolhida é o <b>RAW CTS</b> (é o que é faturado); o checkout vira conferência.</li>
+          <li><b>Quem alimenta o RAW CTS é incógnita.</b> Virou auditoria de gating (tarefa 0.2) antes do dashboard depender dele.</li>
+        </ol>
+      </details>
+    </div>
+
+    <div class="next-box" id="next-box">
+      <div class="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+      <div>
+        <div class="label">Próximo passo</div>
+        <div class="step-phase" id="next-phase"></div>
+        <div class="step-text" id="next-text"></div>
+      </div>
+    </div>
+    <div id="phases"></div>
+  </div>
+
+  <!-- DEPENDÊNCIAS -->
+  <div class="view" id="view-deps">
+    <div class="deps-intro">
+      A jogada é subir a escada: 🔴 somado à mão → 🟡 fonte oficial/API → 🟢 derivado do que a gente mesmo coleta.
+      Antes do mapa campo-a-campo, as <b>3 fontes de produção</b> que o plano anterior confundia numa só:
+    </div>
+    <div class="sources">
+      <div class="src r">
+        <div class="src-name">🔴 DASHBOARD (HM)</div>
+        <div class="src-desc">TKM/KM/Efic/Days/custo <b>somados à mão</b> por motorista. Lido por <code>getHotelModeByDriver</code>.</div>
+        <div class="src-role">→ é o que a gente elimina</div>
+      </div>
+      <div class="src y">
+        <div class="src-name">🟡 RAW CTS DATA</div>
+        <div class="src-desc">Produção oficial por dia (<code>email · TKM · total_km · Status</code>), agregada em código por <code>buildRawCtsIndex_</code> — o perfil do motorista já usa.</div>
+        <div class="src-role">→ a nova fonte da verdade (sua escolha)</div>
+      </div>
+      <div class="src g">
+        <div class="src-name">🟢 Checkout (X/Y)</div>
+        <div class="src-desc"><code>TKM Mapped</code>/<code>Total KM Driven</code> auto-reportados pelo motorista (grava no <code>saveCheckout</code>). Hoje ninguém agrega.</div>
+        <div class="src-role">→ cruzamento de conferência, não a fonte</div>
+      </div>
+    </div>
+    <div class="legend">
+      <span class="item"><span class="dep-type g">🟢 First-party</span> o app/motorista gera</span>
+      <span class="item"><span class="dep-type y">🟡 Oficial/API</span> fonte autoritativa</span>
+      <span class="item"><span class="dep-type r">🔴 Manual</span> somado à mão</span>
+    </div>
+    <div class="filters" id="dep-filters">
+      <button class="chip active" data-f="all" onclick="filterDeps('all')">Todos</button>
+      <button class="chip" data-f="r" onclick="filterDeps('r')">🔴 Manual</button>
+      <button class="chip" data-f="y" onclick="filterDeps('y')">🟡 Oficial/API</button>
+      <button class="chip" data-f="g" onclick="filterDeps('g')">🟢 First-party</button>
+    </div>
+    <div id="deps-list"></div>
+  </div>
+
+  <div class="save-note">
+    Progresso salvo localmente neste navegador. <a onclick="resetProgress()">Limpar tudo</a>
+  </div>
+
+</div>
+
+<script>
+// =================================================================
+// DADOS DO ROADMAP — conferidos contra Code udpt.gs v5.41
+// =================================================================
+const PHASES = [
+  {
+    n: '0', title: 'Medir e destravar', when: '1–2 dias · risco zero · pré-requisito de tudo',
+    tasks: [
+      {
+        id: 'f0-1', text: 'Mapa de proveniência + selo de fonte 🟢🟡🔴 no dashboard',
+        where: 'Novo <code>DATA_SOURCES.md</code> · <code>dashboard.html</code> (KPIs da seção Hotel Mode)',
+        prompt: 'Cria um DATA_SOURCES.md mapeando cada ação que o dashboard.html consome (getHotelModeByDriver, getHotelModeByCountry, getDashboardData, getCtsGoals, getRampData, getTimesheet) pra sua aba/coluna de origem no Code udpt.gs e o tier 🟢🟡🔴. Depois adiciona no dashboard.html um selo de fonte (🟢/🟡/🔴) ao lado de cada KPI da seção de produção, lendo de um objeto central FIELD_SOURCES, pra deixar a dependência da DASHBOARD (HM) manual visível na própria tela.',
+        verify: 'Abrir o dashboard e ver o selo em cada KPI. Produção começa 🔴 — é o ponto de partida do placar.',
+      },
+      {
+        id: 'f0-2', text: 'Auditoria do RAW CTS DATA (freshness + cobertura)',
+        badges: [{ t: 'destrava F1', c: 'impact' }],
+        where: '<code>Code udpt.gs</code> → nova <code>getRawCtsAudit_</code> + rota no doGet · lê <code>CONFIG.rawCtsSheet</code>',
+        prompt: 'No Code udpt.gs cria a ação ?action=rawCtsAudit (getRawCtsAudit_) que inspeciona a aba RAW CTS DATA (CONFIG.rawCtsSheet): data do registro mais recente (freshness), quantos drivers ativos têm dados no mês corrente vs quantos faltam (cruzando com getActiveDrivers), e total de linhas por mês. Quero descobrir se o RAW CTS está sendo alimentado de forma automática e completa antes de fazer o dashboard depender dele. Bumpa a versão e me lembra de reimplantar.',
+        verify: 'Bater ?action=rawCtsAudit: registro recente (não parou semana passada) e quase todo ativo com dados no mês. Se estiver furado, resolver a alimentação antes de virar a chave.',
+      },
+      {
+        id: 'f0-3', text: 'Higiene do cadastro HR (emails dup, país inconsistente)',
+        badges: [{ t: 'destrava F1+F2', c: 'impact' }],
+        where: '<code>Code udpt.gs</code> → nova <code>getRegistryAudit_</code> · cruza <code>hrSheet</code> × <code>rawCtsSheet</code> × <code>checkinSheet</code>',
+        prompt: 'No Code udpt.gs cria ?action=registryAudit (getRegistryAudit_) que lê a HR and Vendors Database (CONFIG.hrSheet) e aponta: emails duplicados, motoristas sem email, país/situação inconsistentes entre HR e DASHBOARD (HM), e emails presentes no RAW CTS DATA / Driver Daily Check-in mas ausentes no HR. Retorna a lista de divergências pra eu limpar. Bumpa a versão.',
+        verify: 'Rodar ?action=registryAudit, zerar as divergências na planilha, rodar de novo e ver a lista vazia.',
+      },
+    ],
+  },
+  {
+    n: '1', title: 'Produção derivada do RAW CTS', when: 'menor risco, maior impacto · a agregação já existe', win: true,
+    tasks: [
+      {
+        id: 'f1-1', text: 'getProductionByPeriod_(start, end) — agrega RAW CTS por período',
+        badges: [{ t: 'alto impacto', c: 'impact' }],
+        where: '<code>Code udpt.gs</code> → reaproveita <code>buildRawCtsIndex_</code> · ação <code>?action=productionByPeriod</code>',
+        prompt: 'No Code udpt.gs cria getProductionByPeriod_(startDate, endDate): reaproveita a agregação que o buildRawCtsIndex_ já faz a partir do RAW CTS DATA e retorna por email TKM, KM (total_km), Mapping Days (status produtivo) e Efficiency=TKM/KM no período. É basicamente o que o getDriversList_ já faz pro mês corrente, mas com range de datas. Ainda não muda nada no dashboard; só cria a função e uma ação ?action=productionByPeriod pra eu testar. Bumpa a versão.',
+        verify: 'Chamar ?action=productionByPeriod num mês conhecido e conferir que bate com o perfil do motorista (que já lê a mesma fonte).',
+      },
+      {
+        id: 'f1-2', text: 'Validação tripla: RAW CTS vs DASHBOARD (HM) vs checkout',
+        badges: [{ t: 'depende de 1.1', c: 'dep' }],
+        where: '<code>Code udpt.gs</code> → <code>productionCheck</code> (combina as 3 fontes) · <code>dashboard.html</code> (view de conferência)',
+        prompt: 'No Code udpt.gs cria ?action=productionCheck que, por motorista, retorna lado a lado: (a) o valor manual da DASHBOARD (HM) via getHotelModeByDriver, (b) o derivado do RAW CTS via getProductionByPeriod_, e (c) o auto-reportado no checkout (somar tkmMapped/totalKmDriven da aba Driver Daily Check-in) — com a diferença % entre eles. Depois adiciona uma view de conferência no dashboard.html mostrando as 3 colunas e destacando quem diverge acima de X%. Bumpa a versão.',
+        verify: 'Deixar rodando ~1–2 semanas. Onde RAW CTS ≈ DASHBOARD (HM) de forma estável, o campo está pronto pra virar (1.3). Divergência grande do checkout vira alerta de motorista reportando errado.',
+      },
+      {
+        id: 'f1-3', text: 'Virar a chave: dashboard lê o derivado',
+        badges: [{ t: 'risco médio', c: 'risk' }, { t: 'depende de 1.2', c: 'dep' }, { t: 'migra 4 campos', c: 'impact' }],
+        where: '<code>dashboard.html</code> (troca a fonte da seção de produção pra getProductionByPeriod_)',
+        prompt: 'Agora que a validação bateu, faz o dashboard.html consumir produção (TKM, KM, Mapping Days, Efficiency) do getProductionByPeriod_ (RAW CTS) em vez do getHotelModeByDriver (DASHBOARD HM manual). Deixa o Hotel Mode como fallback/conferência se o derivado vier vazio. Atualiza os selos desses 4 campos pra 🟡. Bumpa a versão se mexer no backend e me lembra de reimplantar (Nova versão).',
+        verify: 'Conferir o dashboard pós-deploy (Ctrl+Shift+R). +4 campos fora da HM: KM, TKM, Mapping Days, Efficiency.',
+      },
+    ],
+  },
+  {
+    n: '2', title: 'Cadastro mestre de motorista', when: 'isolar o que não dá pra derivar e referenciar por email',
+    tasks: [
+      {
+        id: 'f2-1', text: 'getDriverRegistry_ cacheado (HR canônico)',
+        where: '<code>Code udpt.gs</code> → <code>getDriverRegistry_</code> (CONFIG.hrSheet, reusa getDriversWithAddress) · <code>common.js</code> cachedFetch',
+        prompt: 'No Code udpt.gs cria ?action=driverRegistry (getDriverRegistry_) que lê a HR and Vendors Database (CONFIG.hrSheet) e retorna por motorista: nome, email (chave), país, cidade, situação e casa (Home Lat/Lng/Full Adress), reaproveitando o que getDriversWithAddress já faz. Adiciona cache (CacheService). No front, expõe via cachedFetch do common.js com um TTL razoável. Bumpa a versão.',
+        verify: 'Bater ?action=driverRegistry e conferir lista completa e sem duplicado (já limpo na 0.3).',
+      },
+      {
+        id: 'f2-2', text: 'Hotel Mode referencia nome/país/status por email',
+        badges: [{ t: 'risco médio', c: 'risk' }, { t: 'depende de 2.1', c: 'dep' }, { t: 'migra 3 campos', c: 'impact' }],
+        where: '<code>dashboard.html</code> (join por email com o registry, em vez das colunas da HM)',
+        prompt: 'No dashboard.html, faz a seção de produção pegar nome, país e situação do getDriverRegistry_ (join por email) em vez de confiar nas colunas Driver Full Name / Country / Situation da DASHBOARD (HM). Garante fallback pra driver sem registry. Atualiza os selos desses 3 campos pra 🟢. Bumpa a versão se mexer no backend.',
+        verify: 'Conferir nomes/países no dashboard. +3 campos 🟢: Driver, Country, Status.',
+      },
+      {
+        id: 'f2-3', text: 'Salary do Timesheet + Payroll Adjustments (não da HM)',
+        badges: [{ t: 'migra Salary', c: 'impact' }],
+        where: '<code>dashboard.html</code> / <code>Code udpt.gs</code> · reusa <code>getTimesheetTab_</code> + <code>getPayrollAdjustments_</code>',
+        prompt: 'Faz o Salary do dashboard vir da fonte que o timesheet já usa — a aba Timesheet (getTimesheetTab_) + os ajustes da Payroll Adjustments (getPayrollAdjustments_, CONFIG.payrollAdjustmentsSheet, v5.40) — em vez do Paid Salary manual da DASHBOARD (HM). Atualiza o selo do Salary. Bumpa a versão se mexer no backend.',
+        verify: 'Comparar Salary do dashboard com o do timesheet pra alguns motoristas — têm que bater.',
+      },
+    ],
+  },
+  {
+    n: '3', title: 'Fontes externas via API', when: 'opcional · só se o ROI fechar e o acesso existir', opt: true,
+    tasks: [
+      {
+        id: 'f3-0', text: 'Checar acesso e decidir se vale (gate de decisão)',
+        where: 'Sem código — avaliação de viabilidade (Ramp API / Calendar API)',
+        prompt: 'Me ajuda a avaliar a Fase 3: o getRampData hoje lê da aba Ramp DATABASE (cópia manual). Lista o que a Ramp API exige (tipo de token, escopo, tier) pra eu trocar a fonte, e o que a Google Calendar API exige pra a conta de serviço deste Apps Script ler VID/Driver Calendar em vez das abas. Com base nisso, me dá uma recomendação de seguir ou pular, considerando que a cópia hoje é pouco frequente.',
+        verify: 'Decisão registrada: seguir (3.1/3.2) ou pular pra Fase 4. Marca só esta se a decisão for "pular".',
+      },
+      {
+        id: 'f3-1', text: 'Ramp via API → mata Ramp DATABASE + alimenta Cost',
+        badges: [{ t: 'risco médio', c: 'risk' }, { t: 'depende de 3.0', c: 'dep' }],
+        where: '<code>Code udpt.gs</code> → <code>getRampData</code> (aba → API) · token em <code>PropertiesService</code> · <code>ramp.html</code>',
+        prompt: 'No Code udpt.gs, troca o getRampData pra buscar transações direto na Ramp API (token lido do PropertiesService, nunca hardcoded), com cache, em vez da aba Ramp DATABASE. Depois faz o Cost do dashboard vir de Ramp + Payroll em vez do Total Direct Cost manual da DASHBOARD (HM). Atualiza os selos. Bumpa a versão e me lembra de reimplantar.',
+        verify: 'Comparar transações da API com a aba antiga por um período. Cost → 🟡.',
+      },
+      {
+        id: 'f3-2', text: 'Calendar via API + Breakeven derivado',
+        badges: [{ t: 'risco médio', c: 'risk' }, { t: 'depende de F1+3.1', c: 'dep' }, { t: 'migra Breakeven', c: 'impact' }],
+        where: '<code>Code udpt.gs</code> → <code>getDriverCalendar</code>/<code>getVidCalendar</code> (Calendar API) · <code>dashboard.html</code>',
+        prompt: 'No Code udpt.gs, faz o getDriverCalendar/getVidCalendar lerem do Google Calendar real em vez das abas DRIVER CALENDAR / VID Monthly CALENDAR. Depois calcula o Breakeven no dashboard a partir da produção derivada (RAW CTS, F1) e do custo (Ramp+Payroll, 3.1), em vez do BREAKEVEN TKM% manual da DASHBOARD (HM). Atualiza os selos. Bumpa a versão.',
+        verify: 'Conferir eventos vs calendário e breakeven vs cálculo. Breakeven → 🟢. Aqui a DASHBOARD (HM) não é fonte de nada.',
+      },
+    ],
+  },
+  {
+    n: '4', title: 'Decisão de arquitetura', when: 'bifurcação a decidir — só quando o resto estiver pronto', opt: true,
+    tasks: [
+      {
+        id: 'f4-1', text: 'Escolher: A (Sheets saneado) vs B (banco real)',
+        where: '<b>A (recomendado):</b> abas viram tabelas limpas só de escrita do app/export. <b>B:</b> first-party num banco leve, Sheets vira view.',
+        prompt: 'Com os campos manuais já migrados, me ajuda a decidir a Fase 4. Mede o tamanho da aba Driver Daily Check-in e do RAW CTS DATA e a latência das chamadas do dashboard, e me diz se o Caminho A (Sheets saneado) ainda aguenta ou se já vale prototipar o Caminho B (banco real). Recomenda um dos dois com base nos números.',
+        verify: 'Decisão registrada. Pro tamanho de hoje, esperar A — marcar quando a escolha estiver documentada.',
+      },
+    ],
+  },
+];
+
+const DEPS = [
+  { feature: 'KM Driven', used: 'Dashboard, Ranking', from: 'DASHBOARD (HM) · getHotelModeByDriver', type: 'r', to: 'RAW CTS DATA (Σ total_km)', phase: 'Fase 1' },
+  { feature: 'TKM Mapped', used: 'Dashboard, Profile', from: 'DASHBOARD (HM) · getHotelModeByDriver', type: 'r', to: 'RAW CTS DATA (Σ TKM)', phase: 'Fase 1' },
+  { feature: 'Mapping Days', used: 'Dashboard, Profile', from: 'DASHBOARD (HM) · getHotelModeByDriver', type: 'r', to: 'RAW CTS (status produtivo)', phase: 'Fase 1' },
+  { feature: 'Efficiency (TKM / KM)', used: 'Dashboard, Ranking', from: 'DASHBOARD (HM) · getHotelModeByDriver', type: 'r', to: 'Derivado (TKM/KM do RAW CTS)', phase: 'Fase 1' },
+  { feature: 'Driver / Country / Status', used: 'Dashboard', from: 'DASHBOARD (HM)', type: 'r', to: 'getDriverRegistry_ (HR, por email)', phase: 'Fase 2' },
+  { feature: 'Paid Salary', used: 'Dashboard', from: 'DASHBOARD (HM)', type: 'r', to: 'Timesheet + Payroll Adjustments', phase: 'Fase 2' },
+  { feature: 'Total Direct Cost', used: 'Dashboard', from: 'DASHBOARD (HM)', type: 'r', to: 'Ramp + Payroll', phase: 'Fase 3' },
+  { feature: 'Breakeven TKM%', used: 'Dashboard', from: 'DASHBOARD (HM)', type: 'r', to: 'Derivado (produção vs custo)', phase: 'Fase 3' },
+  { feature: 'Hotel Mode (Yes/No)', used: 'Dashboard', from: 'DASHBOARD (HM)', type: 'r', to: 'Cadastro / base do motorista', phase: 'Fase 2' },
+  { feature: 'CTS Goals', used: 'Dashboard (CTS)', from: 'CTS Goal Management', type: 'r', to: 'Meta de negócio — segue digitada à mão', phase: '—' },
+  { feature: 'Roster (nome, email, país, casa)', used: 'Todas as páginas', from: 'HR and Vendors Database', type: 'r', to: 'getDriverRegistry_ canônico', phase: 'Fase 2' },
+  { feature: 'Produção oficial (TKM/KM por dia)', used: 'Profile, Ranking', from: 'RAW CTS DATA · buildRawCtsIndex_', type: 'y', to: '✓ fonte da verdade (auditar alimentação na 0.2)', phase: 'Fase 0' },
+  { feature: 'Transações Ramp', used: 'Dashboard, Ramp', from: 'Ramp DATABASE (cópia)', type: 'y', to: 'Ramp API direto', phase: 'Fase 3' },
+  { feature: 'VID / Driver Calendar', used: 'Profile, Calendário', from: 'VID Monthly CALENDAR (cópia)', type: 'y', to: 'Google Calendar API', phase: 'Fase 3' },
+  { feature: 'Timesheet / Payroll', used: 'Timesheet, Dashboard', from: 'Timesheet + Payroll Adjustments', type: 'y', to: '✓ já é a fonte financeira (v5.40)', phase: '—' },
+  { feature: 'Check-in (GPS, área, didMap, veículo)', used: 'Dashboard, Profile, Scopes', from: 'Driver Daily Check-in', type: 'g', to: '✓ Já é first-party', phase: '—' },
+  { feature: 'Checkout (TKM/KM auto-reportado)', used: 'Conferência', from: 'Driver Daily Check-in (X/Y)', type: 'g', to: 'Cruzamento de validação (1.2)', phase: 'Fase 1' },
+];
+
+// =================================================================
+// ESTADO + PERSISTÊNCIA
+// =================================================================
+const STORE_KEY = 'AC_ROADMAP_v2';
+let done = loadDone();
+let depFilter = 'all';
+let openDetails = {};
+
+// Ícones do "próximo passo" (chrome) — alvo enquanto há tarefa, troféu quando tudo concluído
+const ICO_TARGET = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+const ICO_DONE = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89 7 22l5-3 5 3-1.21-8.12"/></svg>';
+
+// Chevrons do expand/collapse (chrome)
+const CHEV_DOWN = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polyline points="6 9 12 15 18 9"/></svg>';
+const CHEV_RIGHT = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polyline points="9 18 15 12 9 6"/></svg>';
+
+function loadDone() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+function saveDone() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(done)); } catch (e) {}
+}
+
+function allTasks() { return PHASES.reduce((acc, p) => acc.concat(p.tasks), []); }
+
+// =================================================================
+// RENDER
+// =================================================================
+function renderProgress() {
+  const tasks = allTasks();
+  const total = tasks.length;
+  const count = tasks.filter(t => done[t.id]).length;
+  const pct = total ? Math.round(count / total * 100) : 0;
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-count').textContent = count + ' / ' + total + ' tarefas';
+  document.getElementById('prog-fill').style.width = pct + '%';
+}
+
+function renderNextStep() {
+  const box = document.getElementById('next-box');
+  for (const p of PHASES) {
+    const next = p.tasks.find(t => !done[t.id]);
+    if (next) {
+      box.style.display = '';
+      document.querySelector('#next-box .ico').innerHTML = ICO_TARGET;
+      document.getElementById('next-phase').textContent = 'Fase ' + p.n + ' · ' + p.title;
+      document.getElementById('next-text').textContent = next.text;
+      return;
+    }
+  }
+  box.style.display = '';
+  document.querySelector('#next-box .ico').innerHTML = ICO_DONE;
+  document.getElementById('next-phase').textContent = '';
+  document.getElementById('next-text').textContent = 'Tudo concluído! A DASHBOARD (HM) virou coadjuvante.';
+}
+
+function escAttr(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
+
+function taskHtml(tk) {
+  const badges = (tk.badges || []).map(b => `<span class="tbadge ${b.c}">${b.t}</span>`).join('');
+  const hasDetail = tk.where || tk.prompt || tk.verify;
+  const isOpen = openDetails[tk.id];
+  let detail = '';
+  if (hasDetail) {
+    let inner = '';
+    if (tk.where) inner += `<div class="td-where"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> <b>Onde:</b> ${tk.where}</div>`;
+    if (tk.prompt) inner += `
+      <div class="promptbox">
+        <div class="promptbox-top"><span>prompt pronto</span><button class="btn-copy" type="button" onclick="copyPrompt(event, '${tk.id}')">Copiar</button></div>
+        <pre class="prompt" id="pr-${tk.id}">${tk.prompt.replace(/</g, '&lt;')}</pre>
+      </div>`;
+    if (tk.verify) inner += `<div class="td-verify"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg> <b>Validar:</b> ${tk.verify}</div>`;
+    detail = `
+      <button class="task-expand" type="button" onclick="toggleDetail('${tk.id}')"><span class="ar">${isOpen ? CHEV_DOWN : CHEV_RIGHT}</span> ${isOpen ? 'menos' : 'detalhes & prompt'}</button>
+      <div class="task-detail ${isOpen ? 'open' : ''}" id="d-${tk.id}">${inner}</div>`;
+  }
+  const num = tk.id.replace(/^f(\d)-(\d)$/, '$1.$2');
+  return `
+    <div class="task ${done[tk.id] ? 'checked' : ''}">
+      <div class="box" onclick="toggleTask('${tk.id}')">${done[tk.id] ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
+      <div class="tmain">
+        <div class="txt" onclick="toggleTask('${tk.id}')"><span class="tid">${num}</span>${tk.text}<span class="tbadges">${badges}</span></div>
+        ${detail}
+      </div>
+    </div>`;
+}
+
+function renderPhases() {
+  const wrap = document.getElementById('phases');
+  wrap.innerHTML = PHASES.map(p => {
+    const total = p.tasks.length;
+    const count = p.tasks.filter(t => done[t.id]).length;
+    const phaseDone = count === total;
+    const cls = p.win ? 'win' : (p.opt ? 'opt' : '');
+    const badge = p.win ? '<span class="phase-badge">maior ganho</span>'
+      : (p.opt ? '<span class="phase-badge opt">opcional</span>' : '');
+    return `
+      <div class="phase ${cls} ${phaseDone ? 'done' : ''}">
+        <div class="phase-head">
+          <div class="phase-num">${p.n}</div>
+          <div class="phase-title">${p.title}</div>
+          ${badge}
+          <span class="phase-count">${count}/${total}</span>
+        </div>
+        <div class="phase-when">${p.when}</div>
+        ${p.tasks.map(taskHtml).join('')}
+      </div>`;
+  }).join('');
+}
+
+function renderDeps() {
+  const list = document.getElementById('deps-list');
+  const rows = DEPS.filter(d => depFilter === 'all' || d.type === depFilter);
+  list.innerHTML = rows.map(d => `
+    <div class="dep ${d.type}">
+      <div class="dep-top">
+        <div>
+          <div class="dep-feature">${d.feature}</div>
+          <div class="dep-used">aparece em: ${d.used}</div>
+        </div>
+        <span class="dep-type ${d.type}">${d.type === 'g' ? '🟢 First-party' : d.type === 'y' ? '🟡 Oficial/API' : '🔴 Manual'}</span>
+      </div>
+      <div class="dep-flow">
+        <span class="from">${d.from}</span>
+        <span class="arrow">→</span>
+        <span class="to">${d.to}</span>
+        ${d.phase !== '—' ? `<span class="dep-phase">${d.phase}</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// =================================================================
+// INTERAÇÃO
+// =================================================================
+function toggleTask(id) {
+  done[id] = !done[id];
+  if (!done[id]) delete done[id];
+  saveDone();
+  renderPhases();
+  renderProgress();
+  renderNextStep();
+}
+
+function toggleDetail(id) {
+  openDetails[id] = !openDetails[id];
+  const d = document.getElementById('d-' + id);
+  const btn = d && d.previousElementSibling;
+  if (d) d.classList.toggle('open', openDetails[id]);
+  if (btn) btn.innerHTML = `<span class="ar">${openDetails[id] ? CHEV_DOWN : CHEV_RIGHT}</span> ${openDetails[id] ? 'menos' : 'detalhes & prompt'}`;
+}
+
+function copyPrompt(ev, id) {
+  ev.stopPropagation();
+  const el = document.getElementById('pr-' + id);
+  if (!el) return;
+  const txt = el.textContent.trim();
+  const btn = ev.currentTarget;
+  const done2 = function () {
+    const old = btn.innerHTML;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg> copiado';
+    btn.classList.add('copied');
+    setTimeout(function () { btn.innerHTML = old; btn.classList.remove('copied'); }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(done2, function () {});
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done2(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+}
+
+function switchView(view) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+  document.getElementById('view-roadmap').classList.toggle('active', view === 'roadmap');
+  document.getElementById('view-deps').classList.toggle('active', view === 'deps');
+}
+
+function filterDeps(f) {
+  depFilter = f;
+  document.querySelectorAll('#dep-filters .chip').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  renderDeps();
+}
+
+function resetProgress() {
+  if (!confirm('Limpar todo o progresso marcado neste navegador?')) return;
+  done = {};
+  saveDone();
+  renderPhases();
+  renderProgress();
+  renderNextStep();
+}
+
+function renderAll() {
+  renderPhases();
+  renderDeps();
+  renderProgress();
+  renderNextStep();
+}
+
+// =================================================================
+// LOGIN + TOPBAR (via common.js)
+// =================================================================
+function startApp(user) {
+  injectTopbar({
+    region: 'LATAM · ROADMAP',
+    user: user,
+    showBack: true,
+  });
+  document.getElementById('app').style.display = '';
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+  renderAll();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  injectLogin({
+    title: 'Roadmap LATAM',
+    sub: 'Acesso restrito ao super admin',
+    superAdminGate: 'fuss',
+    onSuccess: startApp,
+  });
+});
+</script>
+
+<script src="/sv-shell.js"></script>
 </body>
 </html>
