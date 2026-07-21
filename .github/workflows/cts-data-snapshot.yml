@@ -1,0 +1,41 @@
+name: CTS data snapshot
+
+# Pré-computa os JSONs do portal do cliente (/cts-data).
+#
+# Por quê: montar as métricas no Apps Script custa ~45s por país (lê a RAW
+# CTS inteira) e passa de 2min no LATAM todo. Em vez de cada visitante pagar
+# isso, este job roda 2x por dia, salva o resultado em cts-data/data/ e a
+# página lê o arquivo estático — abre instantânea.
+#
+# A RAW CTS é atualizada 1x/dia, então 2 execuções/dia já sobra.
+
+on:
+  schedule:
+    - cron: '0 9 * * *'    # 06:00 BRT
+    - cron: '0 14 * * *'   # 11:00 BRT
+  workflow_dispatch:        # permite rodar na mão pelo site do GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Buscar métricas de cada país
+        run: node .github/scripts/fetch-cts-data.mjs
+
+      - name: Commitar se mudou
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cts-data/data
+          if git diff --staged --quiet; then
+            echo "Nada mudou — sem commit."
+          else
+            git commit -m "chore(cts-data): snapshot automático [skip ci]"
+            git push
+          fi

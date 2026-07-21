@@ -399,7 +399,7 @@ table.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; min-wi
 <!-- SPLASH: escolha do país (some depois do clique) -->
 <div class="cm-splash" id="splash">
   <div class="cm-splash-head">
-    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution"
+    <img src="aceolution-white.png" alt="Aceolution"
          onerror="this.style.display='none';">
     <div class="cm-splash-kicker">Street View LATAM</div>
     <h1>Operations Metrics</h1>
@@ -413,7 +413,8 @@ table.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; min-wi
   <div class="cm-header-inner">
     <div class="cm-header-top">
       <div class="cm-brand">
-        <img src="https://aceolution.com/img/logo2.png" alt="Aceolution"
+        <!-- logo local (não hotlink do site da empresa): já é branco/transparente -->
+        <img src="aceolution-white.png" alt="Aceolution"
              onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
         <div class="cm-brand-mark">ACE</div>
         <div class="cm-brand-divider"></div>
@@ -502,6 +503,53 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
 const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
 function periodLabel(m, y) { return MONTH_NAMES[(m || 1) - 1] + ' ' + y; }
+
+/* Rótulo de frescor mostrado no header. O cliente precisa saber de quando
+   é o número que está olhando. */
+function stamp(d) {
+  if (d && d._snapshot && d.generatedAt) {
+    const t = new Date(d.generatedAt);
+    if (!isNaN(t)) {
+      const mins = Math.round((Date.now() - t.getTime()) / 60000);
+      if (mins < 90) return 'updated ' + mins + ' min ago';
+      const hrs = Math.round(mins / 60);
+      if (hrs < 36) return 'updated ' + hrs + 'h ago';
+      return 'updated ' + t.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  }
+  if (d && d._stale) return 'showing cached data';
+  if (d && d._fromCache) return 'cached';
+  return 'updated just now';
+}
+
+/* ------------------------------------------------------------------
+ * SNAPSHOT ESTÁTICO (data/*.json)
+ * Gerado 2x/dia pelo GitHub Action (.github/workflows/cts-data-snapshot).
+ * É a fonte PADRÃO: abre instantâneo em vez dos ~45s do Apps Script.
+ * Se não existir, estiver de outro período ou vier quebrado, o load()
+ * cai no Apps Script sozinho.
+ * ------------------------------------------------------------------ */
+function countrySlug(country) {
+  if (!country || country === 'ALL') return 'all';
+  return country.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+async function fetchSnapshot(month, year, country) {
+  try {
+    const res = await fetch('data/' + countrySlug(country) + '.json', { cache: 'no-cache' });
+    if (!res.ok) return null;
+    const d = await res.json();
+    if (!d || d.success === false) return null;
+    // Só serve se for o período pedido (o snapshot cobre o mês corrente)
+    if (month && year && (d.month !== month || d.year !== year)) return null;
+    d._snapshot = true;
+    return d;
+  } catch (e) {
+    return null;
+  }
+}
 
 /* Cache leve em localStorage (mesma ideia do common.js, sem a dependência). */
 async function fetchMetrics(month, year, country, force) {
@@ -920,7 +968,12 @@ async function load(force) {
 
   try {
     console.log('[Client Metrics] fetching', state.country, state.month + '.' + state.year);
-    const d = await fetchMetrics(state.month, state.year, state.country, force);
+
+    // 1) snapshot estático (instantâneo)  2) Apps Script (lento, sempre fresco)
+    let d = force ? null : await fetchSnapshot(state.month, state.year, state.country);
+    if (d) console.log('[Client Metrics] snapshot de', d.generatedAt);
+    else d = await fetchMetrics(state.month, state.year, state.country, force);
+
     if (!d || d.success === false) throw new Error((d && d.error) || 'unknown error');
 
     state.data = d;
@@ -933,7 +986,7 @@ async function load(force) {
 
     $('overview-note').textContent =
       (state.country === 'ALL' ? 'All LATAM' : state.country) + ' · ' + periodLabel(d.month, d.year);
-    $('updated').textContent = d._fromCache ? 'cached' : 'updated just now';
+    $('updated').textContent = stamp(d);
   } catch (err) {
     console.error('[Client Metrics] load failed', err);
     $('kpis').innerHTML = '';
