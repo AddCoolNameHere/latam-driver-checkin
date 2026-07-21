@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de Operações · Aceolution LATAM</title>
+<link rel="icon" type="image/png" href="/aceolution-globe.png">
+<!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
+<script src="/auth.js?v=20260619"></script>
+<script src="/theme.js?v=20260608"></script>
+<script src="/common.js?v=20260619"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="/theme.css?v=20260608">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --st-active:   #16A34A;   /* check-in recente */
+    --st-stale:    #94A3B8;   /* sem check-in recente (na casa) */
+    --st-dnm:      #CA8A04;    /* fez check-in mas não mapeou */
+    --plan-color:  #7C3AED;   /* overlay do MyMaps (plano do mês) */
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- Tabs de país ---- */
+  .country-tabs {
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+    display: flex;
+    padding: 0 20px;
+    gap: 4px;
+    overflow-x: auto;
+  }
+  .country-tab {
+    background: none; border: none;
+    padding: 13px 18px;
+    font-size: 14px; font-weight: 500;
+    color: var(--c-text-muted);
+    cursor: pointer; font-family: inherit;
+    border-bottom: 2px solid transparent;
+    display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .country-tab:hover { color: var(--c-primary); }
+  .country-tab.active {
+    color: var(--c-primary-dark);
+    border-bottom-color: var(--c-accent);
+    font-weight: 600;
+  }
+  .country-tab .flag { font-size: 16px; }
+  .country-tab .tab-count {
+    font-size: 11px; font-weight: 600;
+    background: var(--c-bg-tint); color: var(--c-text-muted);
+    border-radius: 10px; padding: 1px 7px;
+  }
+
+  /* ---- Toolbar ---- */
+  .ops-toolbar {
+    display: flex; align-items: center; gap: 14px;
+    flex-wrap: wrap;
+    padding: 12px 20px;
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+  }
+  .tb-group { display: flex; align-items: center; gap: 8px; }
+  .tb-sep { width: 1px; height: 24px; background: var(--c-border); }
+  .tb-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--c-text-muted);
+  }
+  .tb-select, .tb-search {
+    border: 1px solid var(--c-border); border-radius: 8px;
+    padding: 7px 10px; font-size: 13px; font-family: inherit;
+    background: var(--c-surface); color: var(--c-text);
+  }
+  .tb-search { min-width: 200px; }
+  .tb-select:focus, .tb-search:focus {
+    outline: none; border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(74,159,224,0.15);
+  }
+  .tb-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--c-border); border-radius: 8px;
+    padding: 7px 13px; font-size: 13px; font-weight: 600;
+    color: var(--c-text-muted); background: var(--c-surface);
+    cursor: pointer; font-family: inherit;
+    transition: all 0.15s;
+  }
+  .tb-btn:hover { background: var(--c-bg-tint); color: var(--c-primary); border-color: var(--c-primary); }
+  .tb-btn.primary { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+  .tb-btn.primary:hover { background: var(--c-primary-dark); border-color: var(--c-primary-dark); }
+  .tb-btn svg { width: 15px; height: 15px; }
+
+  /* Toggles de camada (chips) */
+  .layer-toggle {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid var(--c-border); border-radius: 999px;
+    padding: 6px 12px; font-size: 12.5px; font-weight: 600;
+    color: var(--c-text-muted); background: var(--c-surface);
+    cursor: pointer; user-select: none;
+    transition: all 0.15s;
+  }
+  .layer-toggle .dot { width: 11px; height: 11px; border-radius: 3px; }
+  .layer-toggle.cars  .dot { background: var(--st-active); border-radius: 50%; }
+  .layer-toggle.homes .dot { background: var(--c-text-muted); border-radius: 50%; }
+  .layer-toggle.plan  .dot { background: var(--plan-color); }
+  .layer-toggle.cancelled .dot { background: var(--c-text-muted); border-radius: 50%; opacity: 0.7; }
+  .layer-toggle.off { opacity: 0.45; }
+  .layer-toggle:hover { border-color: var(--c-primary); }
+  .layer-toggle svg { width: 14px; height: 14px; }
+
+  .ops-spacer { flex: 1; }
+  .counts {
+    display: flex; gap: 16px; font-size: 12px; color: var(--c-text-muted);
+  }
+  .counts b { color: var(--c-primary-dark); font-size: 14px; }
+
+  /* Banner de modo de storage */
+  .store-banner {
+    display: none;
+    align-items: center; gap: 8px;
+    padding: 8px 20px; font-size: 12.5px;
+    background: #FEF3C7; color: #78350F;
+    border-bottom: 1px solid #FDE68A;
+  }
+  .store-banner.show { display: flex; }
+  .store-banner svg { width: 15px; height: 15px; flex-shrink: 0; }
+  [data-theme="dark"] .store-banner { background: #422006; color: #FDE68A; border-color: #713f12; }
+
+  /* ---- Corpo: mapa + painel ---- */
+  .ops-body {
+    display: flex;
+    height: calc(100vh - 196px);
+    min-height: 460px;
+  }
+  #map { flex: 1; height: 100%; background: var(--c-surface); }
+
+  .side-panel {
+    width: 330px;
+    border-left: 1px solid var(--c-border);
+    background: var(--c-surface);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .side-head {
+    padding: 12px 14px; border-bottom: 1px solid var(--c-border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .side-title { font-size: 13px; font-weight: 700; color: var(--c-primary-dark); }
+  .side-list { flex: 1; overflow-y: auto; }
+  .side-empty { padding: 24px 16px; text-align: center; color: var(--c-text-dim); font-size: 13px; }
+
+  .driver-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; cursor: pointer;
+    border-bottom: 1px solid var(--c-border);
+    transition: background 0.12s;
+  }
+  .driver-row:hover { background: var(--c-bg-tint); }
+  .driver-row .status-dot {
+    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+  }
+  .status-dot.active { background: var(--st-active); }
+  .status-dot.stale  { background: var(--st-stale); }
+  .status-dot.dnm    { background: var(--st-dnm); }
+  .driver-row-main { flex: 1; min-width: 0; }
+  .driver-row-name {
+    font-size: 13px; font-weight: 600; color: var(--c-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .driver-row-sub { font-size: 11px; color: var(--c-text-muted); margin-top: 1px; }
+  .vid-badge {
+    font-size: 10.5px; font-weight: 700; color: var(--c-primary);
+    background: var(--c-bg-tint); border-radius: 6px;
+    padding: 2px 7px; flex-shrink: 0;
+  }
+  .vid-badge.none { color: var(--c-text-dim); background: transparent; }
+
+  .side-toggle-btn {
+    background: none; border: 1px solid var(--c-border);
+    border-radius: 6px; width: 26px; height: 26px;
+    cursor: pointer; color: var(--c-text-muted);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .side-toggle-btn:hover { color: var(--c-primary); border-color: var(--c-primary); }
+  .ops-body.panel-collapsed .side-panel { width: 0; border-left: none; }
+
+  /* Abas do painel (Motoristas | VIDs | Admin) */
+  .side-tabs { display: flex; gap: 4px; }
+  .side-tab {
+    background: none; border: 1px solid var(--c-border); border-radius: 7px;
+    padding: 4px 9px; font-size: 11.5px; font-weight: 700; cursor: pointer;
+    color: var(--c-text-muted); font-family: inherit;
+  }
+  .side-tab.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+  .side-tab:not(.active):hover { color: var(--c-primary); border-color: var(--c-primary); }
+
+  /* Aba Admin — curadoria de VIDs ativos */
+  .admin-bar {
+    position: sticky; top: 0; z-index: 2; background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border); padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .admin-save {
+    background: var(--c-primary); color: #fff; border: none; border-radius: 7px;
+    padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+    white-space: nowrap;
+  }
+  .admin-save:disabled { opacity: 0.6; cursor: default; }
+  .admin-hint { font-size: 10.5px; color: var(--c-text-muted); line-height: 1.3; }
+  .admin-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 14px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .admin-row:hover { background: var(--c-bg-tint); }
+  .admin-row .driver-row-main { flex: 1; min-width: 0; }
+  .admin-sel {
+    flex-shrink: 0; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+    border: 1px solid var(--c-border); border-radius: 7px; padding: 5px 8px;
+    background: var(--c-surface); color: var(--c-text);
+  }
+  .admin-sel.st-active    { color: var(--st-active); border-color: var(--st-active); }
+  .admin-sel.st-inactive  { color: var(--c-text-muted); }
+  .admin-sel.st-cancelled { color: var(--c-danger); border-color: var(--c-danger); }
+
+  /* Botão flutuante pra reabrir o painel quando colapsado */
+  .side-reopen {
+    position: fixed; top: 50%; right: 10px; transform: translateY(-50%);
+    z-index: 600; width: 30px; height: 46px; border-radius: 9px;
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    display: none; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--c-text-muted);
+  }
+  .side-reopen:hover { color: var(--c-primary); border-color: var(--c-primary); }
+  .ops-body.panel-collapsed .side-reopen { display: flex; }
+
+  /* ---- Loader ---- */
+  .map-loader {
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,0.82);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+    color: var(--c-text-muted); font-size: 14px; z-index: 1200;
+  }
+  [data-theme="dark"] .map-loader { background: rgba(15,23,42,0.82); }
+  .map-loader.hidden { display: none; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--c-border); border-top-color: var(--c-primary);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .map-shell { position: relative; flex: 1; height: 100%; }
+
+  /* ---- Legend ---- */
+  .map-legend {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    padding: 9px 20px;
+    font-size: 12px; color: var(--c-text-muted);
+    background: var(--c-surface); border-top: 1px solid var(--c-border);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 13px; height: 13px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.12); }
+  .legend-swatch.sq { border-radius: 3px; }
+
+  /* ---- Markers ---- */
+  .ace-marker { background: transparent; border: none; }
+  .vid-marker {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px 3px 6px;
+    border-radius: 13px; border: 2px solid #fff;
+    color: #fff; font-size: 11px; font-weight: 700;
+    white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    line-height: 1;
+  }
+  .vid-marker svg { width: 13px; height: 13px; }
+  .vid-marker.active { background: var(--st-active); }
+  .vid-marker.stale  { background: var(--st-stale); }
+  .vid-marker.dnm    { background: var(--st-dnm); }
+  .home-marker {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--c-surface); border: 2px solid var(--c-text-muted);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--c-text-muted);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  }
+  .home-marker svg { width: 12px; height: 12px; }
+  /* base = hotel: destaca em azul accent pra distinguir da casa original */
+  .home-marker.hotel { border-color: var(--c-accent); color: var(--c-accent); }
+
+  /* ---- Popups ---- */
+  .leaflet-popup-content { margin: 12px 14px; font-size: 13px; min-width: 210px; }
+  .popup-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--c-primary-dark); }
+  .popup-row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; color: var(--c-text-muted); }
+  .popup-row strong { color: var(--c-text); font-weight: 600; }
+  .popup-tag {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.4px;
+    margin-bottom: 4px;
+  }
+  .popup-tag.active { background: #DCFCE7; color: #14532D; }
+  .popup-tag.stale  { background: #F1F5F9; color: #475569; }
+  .popup-tag.dnm    { background: #FEF3C7; color: #78350F; }
+  .popup-link { color: var(--c-primary); text-decoration: none; font-weight: 600; }
+
+  /* ---- Modal de upload ---- */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 10001;
+    background: rgba(15,23,42,0.5);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-card {
+    position: relative;
+    background: var(--c-surface); border-radius: 14px;
+    padding: 24px; width: 100%; max-width: 440px;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal-loading {
+    position: absolute; inset: 0; border-radius: 14px;
+    background: rgba(255,255,255,0.93);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; z-index: 5;
+    color: var(--c-text-muted); font-size: 13px; font-weight: 600; text-align: center;
+  }
+  [data-theme="dark"] .modal-loading { background: rgba(30,41,59,0.93); }
+  .modal-loading.show { display: flex; }
+  .mini-spin {
+    display: inline-block; width: 13px; height: 13px; vertical-align: -2px;
+    border: 2px solid rgba(255,255,255,0.45); border-top-color: #fff; border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  .modal-title { font-size: 17px; font-weight: 700; color: var(--c-primary-dark); margin-bottom: 4px; }
+  .modal-sub { font-size: 13px; color: var(--c-text-muted); margin-bottom: 18px; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--c-text-muted); margin-bottom: 6px; }
+  .modal-field input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--c-border);
+    border-radius: 8px; font-size: 14px; font-family: inherit;
+    background: var(--c-surface); color: var(--c-text);
+  }
+  .modal-field input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
+  .modal-fileinfo {
+    background: var(--c-bg-tint); border-radius: 8px; padding: 10px 12px;
+    font-size: 12.5px; color: var(--c-text); margin-bottom: 14px;
+  }
+  .modal-fileinfo .fi-meta { color: var(--c-text-muted); font-size: 11.5px; margin-top: 3px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+  .modal-err { color: var(--c-danger); font-size: 12.5px; min-height: 16px; margin-bottom: 6px; }
+
+  /* Toast */
+  .ops-toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--c-text); color: var(--c-surface);
+    padding: 11px 20px; border-radius: 10px; font-size: 13px; font-weight: 500;
+    box-shadow: var(--shadow-lg); z-index: 10002;
+    opacity: 0; pointer-events: none; transition: all 0.25s;
+  }
+  .ops-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .ops-toast.success { background: var(--c-success); color: #fff; }
+  .ops-toast.error { background: var(--c-danger); color: #fff; }
+
+  @media (max-width: 880px) {
+    .ops-body { flex-direction: column; height: auto; }
+    .map-shell { height: 58vh; min-height: 380px; }
+    .side-panel { width: 100%; max-height: 320px; border-left: none; border-top: 1px solid var(--c-border); }
+    .ops-body.panel-collapsed .side-panel { width: 100%; max-height: 0; }
+    .counts { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app-content" style="display:none;">
+
+  <nav class="country-tabs" id="country-tabs"></nav>
+
+  <div class="store-banner" id="store-banner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4Z"/><path d="M12 10v4M12 17.5h.01"/></svg>
+    <span id="store-banner-text"></span>
+  </div>
+
+  <div class="ops-toolbar">
+    <div class="tb-group">
+      <span class="tb-label" data-i18n="monthLabel">Mês (MyMaps)</span>
+      <select class="tb-select" id="month-select"><option data-i18n="noMaps">Nenhum mapa</option></select>
+      <button class="tb-btn primary" id="upload-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>
+        <span data-i18n="uploadBtn">Subir MyMaps</span>
+      </button>
+      <input type="file" id="file-input" accept=".kml,.kmz,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz" style="display:none">
+    </div>
+
+    <div class="tb-sep"></div>
+
+    <div class="tb-group">
+      <span class="layer-toggle cars" id="tg-cars">
+        <span class="dot"></span><span data-i18n="layerCars">VIDs / posição</span>
+      </span>
+      <span class="layer-toggle homes off" id="tg-homes">
+        <span class="dot"></span><span data-i18n="layerHomes">Casas</span>
+      </span>
+      <span class="layer-toggle plan" id="tg-plan">
+        <span class="dot"></span><span data-i18n="layerPlan">Plano do mês</span>
+      </span>
+      <span class="layer-toggle cancelled off" id="tg-cancelled">
+        <span class="dot"></span><span data-i18n="layerCancelled">Cancelados</span>
+      </span>
+    </div>
+
+    <div class="ops-spacer"></div>
+
+    <div class="tb-group">
+      <input type="search" class="tb-search" id="search-input" data-i18n-ph="searchPh" placeholder="Buscar motorista ou VID…">
+    </div>
+
+    <div class="counts" id="counts"></div>
+  </div>
+
+  <div class="ops-body" id="ops-body">
+    <div class="map-shell">
+      <div id="map"></div>
+      <div class="map-loader" id="map-loader">
+        <div class="spinner"></div>
+        <div data-i18n="loading">Carregando…</div>
+      </div>
+    </div>
+    <aside class="side-panel" id="side-panel">
+      <div class="side-head">
+        <div class="side-tabs">
+          <button class="side-tab active" id="tab-drivers" data-i18n="tabDrivers">Motoristas</button>
+          <button class="side-tab" id="tab-vids" data-i18n="tabVids">VIDs</button>
+          <button class="side-tab" id="tab-admin" data-i18n="tabAdmin">Admin</button>
+        </div>
+        <button class="side-toggle-btn" id="side-toggle" title="Recolher painel" aria-label="Recolher painel">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <div class="side-list" id="side-list"></div>
+    </aside>
+    <button class="side-reopen" id="side-reopen" title="Mostrar painel" aria-label="Mostrar painel">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+  </div>
+
+  <div class="map-legend">
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--st-active);"></span> <span data-i18n="legActive">Ativo (check-in recente)</span></div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--st-dnm);"></span> <span data-i18n="legDnm">Não mapeou hoje</span></div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--st-stale);"></span> <span data-i18n="legStale">Sem check-in (mostrado na casa)</span></div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--c-surface);border-color:var(--c-text-muted);"></span> <span data-i18n="legHome">Casa do motorista</span></div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--c-surface);border-color:var(--c-accent);"></span> <span data-i18n="legHotel">Hotel (base atual)</span></div>
+    <div class="legend-item"><span class="legend-swatch sq" style="background:var(--plan-color);"></span> <span data-i18n="legPlan">Plano do mês (MyMaps)</span></div>
+  </div>
+
+</div><!-- /#app-content -->
+
+<!-- Modal de upload -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal-card">
+    <div class="modal-loading" id="modal-loading">
+      <div class="spinner"></div>
+      <span id="modal-loading-text">Salvando…</span>
+    </div>
+    <div class="modal-title" data-i18n="modalTitle">Subir mapa do MyMaps</div>
+    <div class="modal-sub" data-i18n="modalSub">Exporte o MyMaps como KML/KMZ e selecione o mês que ele representa.</div>
+    <div class="modal-fileinfo" id="modal-fileinfo"></div>
+    <div class="modal-field">
+      <label data-i18n="modalMonth">Mês de referência</label>
+      <input type="month" id="modal-month">
+    </div>
+    <div class="modal-field">
+      <label data-i18n="modalLabel">Rótulo (opcional)</label>
+      <input type="text" id="modal-label" data-i18n-ph="modalLabelPh" placeholder="Ex.: Coleta Junho/2026">
+    </div>
+    <div class="modal-err" id="modal-err"></div>
+    <div class="modal-actions">
+      <button class="tb-btn" id="modal-cancel" data-i18n="cancel">Cancelar</button>
+      <button class="tb-btn primary" id="modal-save" data-i18n="save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="ops-toast" id="ops-toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+// =================================================================
+// CONFIG
+// =================================================================
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  activeHours: 36,   // janela pra considerar um check-in "recente"
+  activeDays: 3,     // VID rodou nos últimos N dias → "em uso" (verde)
+  idleDays: 14,      // rodou nos últimos N dias → "uso recente" (âmbar); além disso = parado (cinza)
+};
+
+// Metadados por país (centro/zoom/flag). Países não listados ganham fallback.
+const COUNTRY_META = {
+  AR: { name: 'Argentina', flag: '🇦🇷', center: [-38, -63], zoom: 4 },
+  CO: { name: 'Colombia',  flag: '🇨🇴', center: [4.5, -73], zoom: 5 },
+  BR: { name: 'Brazil',    flag: '🇧🇷', center: [-14, -51], zoom: 4 },
+  PE: { name: 'Peru',      flag: '🇵🇪', center: [-9.2, -75], zoom: 5 },
+  CL: { name: 'Chile',     flag: '🇨🇱', center: [-35, -71], zoom: 4 },
+  MX: { name: 'Mexico',    flag: '🇲🇽', center: [23, -102], zoom: 4 },
+  EC: { name: 'Ecuador',   flag: '🇪🇨', center: [-1.5, -78], zoom: 6 },
+  UY: { name: 'Uruguay',   flag: '🇺🇾', center: [-32.5, -56], zoom: 6 },
+  PY: { name: 'Paraguay',  flag: '🇵🇾', center: [-23.3, -58], zoom: 6 },
+  BO: { name: 'Bolivia',   flag: '🇧🇴', center: [-17, -65], zoom: 5 },
+};
+// nome (lowercase) -> código
+const NAME_TO_CODE = {};
+Object.keys(COUNTRY_META).forEach(code => {
+  NAME_TO_CODE[COUNTRY_META[code].name.toLowerCase()] = code;
+});
+const EXTRA_NAMES = { argentina: 'AR', colombia: 'CO', brasil: 'BR', brazil: 'BR', peru: 'PE',
+  chile: 'CL', mexico: 'MX', méxico: 'MX', ecuador: 'EC', uruguay: 'UY', uruguai: 'UY',
+  paraguay: 'PY', paraguai: 'PY', bolivia: 'BO', bolívia: 'BO' };
+Object.assign(NAME_TO_CODE, EXTRA_NAMES);
+const PREFERRED_ORDER = ['AR', 'CO', 'BR', 'PE', 'CL', 'MX'];
+
+function countryCodeOf(name) {
+  const n = String(name || '').trim().toLowerCase();
+  if (NAME_TO_CODE[n]) return NAME_TO_CODE[n];
+  // tenta match parcial (ex: "argentina " com sufixos)
+  for (const key in NAME_TO_CODE) { if (n.indexOf(key) === 0) return NAME_TO_CODE[key]; }
+  return n ? n.slice(0, 2).toUpperCase() : '??';
+}
+function metaOf(code) {
+  return COUNTRY_META[code] || { name: code, flag: '🏳️', center: [-15, -60], zoom: 4 };
+}
+
+// =================================================================
+// i18n (pt/es/en)
+// =================================================================
+let currentLang = localStorage.getItem('preferredLang') || 'pt';
+const I18N = {
+  pt: {
+    monthLabel: 'Mês (MyMaps)', noMaps: 'Nenhum mapa', uploadBtn: 'Subir MyMaps',
+    layerCars: 'VIDs / posição', layerHomes: 'Casas', layerPlan: 'Plano do mês',
+    searchPh: 'Buscar motorista ou VID…', loading: 'Carregando…',
+    sideTitle: 'Frota — VIDs',
+    legActive: 'Em uso (últimos dias)', legDnm: 'Uso recente (quinzena)',
+    legStale: 'Parado', legHome: 'Casa do motorista', legHotel: 'Hotel (base atual)',
+    legPlan: 'Plano do mês (MyMaps)',
+    modalTitle: 'Subir mapa do MyMaps', modalSub: 'Exporte o MyMaps como KML/KMZ e selecione o mês que ele representa.',
+    modalMonth: 'Mês de referência', modalLabel: 'Rótulo (opcional)', modalLabelPh: 'Ex.: Coleta Junho/2026',
+    cancel: 'Cancelar', save: 'Salvar',
+    countDrivers: 'motoristas', countActive: 'ativos hoje', countVids: 'VIDs', countPlan: 'áreas no plano',
+    storeLocal: 'Modo local: os MyMaps ficam só neste navegador. Reimplante o backend (v5.42) pra compartilhar via Drive.',
+    storeDrive: '', uploaded: 'MyMaps salvo', uploadFail: 'Falha ao salvar o MyMaps',
+    parseFail: 'Não consegui ler o arquivo (KML/KMZ inválido)', monthRequired: 'Escolha o mês',
+    reading: 'Lendo arquivo…', saving: 'Salvando MyMaps…',
+    saveTimeout: 'Demorou demais — o arquivo pode estar muito grande ou a conexão lenta. Tenta de novo.',
+    home: 'Casa', hotelLabel: 'Hotel', currentPos: 'Posição atual', lastSeen: 'Último check-in', vid: 'VID',
+    noVid: 'sem VID', noCheckin: 'Sem check-in recente', atHome: 'Em casa',
+    didNotMap: 'Não mapeou hoje', distHome: 'da casa', hoursAgo: 'h atrás', dayAgo: 'd atrás',
+    showHome: 'ver casa', address: 'Endereço', efficiency: 'Eficiência', qc: 'QC',
+    planFeature: 'Área do plano', noDriversCountry: 'Nenhum motorista neste país.',
+    reasonWeather: 'Clima', reasonMech: 'Mecânica', reasonTech: 'Tech (câmera/disp.)',
+    reasonDisks: 'Discos', reasonOther: 'Outro', fetchError: 'Erro ao carregar dados',
+    fitBtn: 'Enquadrar', confirmReplace: 'Já existe um MyMaps pra esse mês. Substituir?',
+    recActive: 'Em uso', recIdle: 'Uso recente', recParked: 'Parado',
+    lastDriver: 'Último motorista', lastDrove: 'Rodou em', daysAgoWord: 'dias atrás',
+    posFromHome: 'Posição aproximada (casa do motorista)', inactive: 'inativo',
+    noDriverVid: 'Sem motorista', onMap: 'no mapa', noPos: 'sem posição', atHomeBadge: 'na casa',
+    countActiveVids: 'em uso', countParked: 'parados',
+    tabDrivers: 'Motoristas', tabVids: 'VIDs', noVidsCountry: 'Nenhum VID neste país.',
+    tabAdmin: 'Admin', saveActive: 'Salvar', recInactive: 'Inativo',
+    recCancelled: 'Cancelado', selActive: 'Ativo',
+    layerCancelled: 'Cancelados', countCancelled: 'cancelados',
+    adminVidHint: 'Estado de cada VID: Ativo (frota), Inativo (parado, mas é nosso) ou Cancelado (não temos mais).',
+    savedOk: 'Curadoria salva', saveFail: 'Falha ao salvar',
+  },
+  es: {
+    monthLabel: 'Mes (MyMaps)', noMaps: 'Ningún mapa', uploadBtn: 'Subir MyMaps',
+    layerCars: 'VIDs / posición', layerHomes: 'Casas', layerPlan: 'Plan del mes',
+    searchPh: 'Buscar conductor o VID…', loading: 'Cargando…',
+    sideTitle: 'Flota — VIDs',
+    legActive: 'En uso (últimos días)', legDnm: 'Uso reciente (quincena)',
+    legStale: 'Parado', legHome: 'Casa del conductor', legHotel: 'Hotel (base actual)',
+    legPlan: 'Plan del mes (MyMaps)',
+    modalTitle: 'Subir mapa de MyMaps', modalSub: 'Exporta MyMaps como KML/KMZ y elige el mes que representa.',
+    modalMonth: 'Mes de referencia', modalLabel: 'Etiqueta (opcional)', modalLabelPh: 'Ej.: Colecta Junio/2026',
+    cancel: 'Cancelar', save: 'Guardar',
+    countDrivers: 'conductores', countActive: 'activos hoy', countVids: 'VIDs', countPlan: 'áreas en el plan',
+    storeLocal: 'Modo local: los MyMaps quedan solo en este navegador. Reimplanta el backend (v5.42) para compartir vía Drive.',
+    storeDrive: '', uploaded: 'MyMaps guardado', uploadFail: 'Error al guardar el MyMaps',
+    parseFail: 'No pude leer el archivo (KML/KMZ inválido)', monthRequired: 'Elige el mes',
+    reading: 'Leyendo archivo…', saving: 'Guardando MyMaps…',
+    saveTimeout: 'Tardó demasiado — el archivo puede ser muy grande o la conexión lenta. Intenta de nuevo.',
+    home: 'Casa', hotelLabel: 'Hotel', currentPos: 'Posición actual', lastSeen: 'Último check-in', vid: 'VID',
+    noVid: 'sin VID', noCheckin: 'Sin check-in reciente', atHome: 'En casa',
+    didNotMap: 'No mapeó hoy', distHome: 'de la casa', hoursAgo: 'h atrás', dayAgo: 'd atrás',
+    showHome: 'ver casa', address: 'Dirección', efficiency: 'Eficiencia', qc: 'QC',
+    planFeature: 'Área del plan', noDriversCountry: 'Ningún conductor en este país.',
+    reasonWeather: 'Clima', reasonMech: 'Mecánica', reasonTech: 'Tech (cámara/disp.)',
+    reasonDisks: 'Discos', reasonOther: 'Otro', fetchError: 'Error al cargar datos',
+    fitBtn: 'Encuadrar', confirmReplace: 'Ya existe un MyMaps para ese mes. ¿Reemplazar?',
+    recActive: 'En uso', recIdle: 'Uso reciente', recParked: 'Parado',
+    lastDriver: 'Último conductor', lastDrove: 'Rodó en', daysAgoWord: 'días atrás',
+    posFromHome: 'Posición aproximada (casa del conductor)', inactive: 'inactivo',
+    noDriverVid: 'Sin conductor', onMap: 'en el mapa', noPos: 'sin posición', atHomeBadge: 'en la casa',
+    countActiveVids: 'en uso', countParked: 'parados',
+    tabDrivers: 'Conductores', tabVids: 'VIDs', noVidsCountry: 'Ningún VID en este país.',
+    tabAdmin: 'Admin', saveActive: 'Guardar', recInactive: 'Inactivo',
+    recCancelled: 'Cancelado', selActive: 'Activo',
+    layerCancelled: 'Cancelados', countCancelled: 'cancelados',
+    adminVidHint: 'Estado de cada VID: Activo (flota), Inactivo (parado, pero es nuestro) o Cancelado (ya no lo tenemos).',
+    savedOk: 'Curaduría guardada', saveFail: 'Error al guardar',
+  },
+  en: {
+    monthLabel: 'Month (MyMaps)', noMaps: 'No map', uploadBtn: 'Upload MyMaps',
+    layerCars: 'VIDs / position', layerHomes: 'Homes', layerPlan: 'Month plan',
+    searchPh: 'Search driver or VID…', loading: 'Loading…',
+    sideTitle: 'Fleet — VIDs',
+    legActive: 'In use (last days)', legDnm: 'Recently used (2 weeks)',
+    legStale: 'Parked', legHome: 'Driver home', legHotel: 'Hotel (current base)',
+    legPlan: 'Month plan (MyMaps)',
+    modalTitle: 'Upload MyMaps file', modalSub: 'Export MyMaps as KML/KMZ and pick the month it represents.',
+    modalMonth: 'Reference month', modalLabel: 'Label (optional)', modalLabelPh: 'e.g. Collection June/2026',
+    cancel: 'Cancel', save: 'Save',
+    countDrivers: 'drivers', countActive: 'active today', countVids: 'VIDs', countPlan: 'plan areas',
+    storeLocal: 'Local mode: MyMaps stay in this browser only. Redeploy the backend (v5.42) to share via Drive.',
+    storeDrive: '', uploaded: 'MyMaps saved', uploadFail: 'Failed to save MyMaps',
+    parseFail: 'Could not read file (invalid KML/KMZ)', monthRequired: 'Pick a month',
+    reading: 'Reading file…', saving: 'Saving MyMaps…',
+    saveTimeout: 'Took too long — the file may be too large or the connection slow. Try again.',
+    home: 'Home', hotelLabel: 'Hotel', currentPos: 'Current position', lastSeen: 'Last check-in', vid: 'VID',
+    noVid: 'no VID', noCheckin: 'No recent check-in', atHome: 'At home',
+    didNotMap: 'Did not map today', distHome: 'from home', hoursAgo: 'h ago', dayAgo: 'd ago',
+    showHome: 'show home', address: 'Address', efficiency: 'Efficiency', qc: 'QC',
+    planFeature: 'Plan area', noDriversCountry: 'No drivers in this country.',
+    reasonWeather: 'Weather', reasonMech: 'Mechanical', reasonTech: 'Tech (camera/devices)',
+    reasonDisks: 'Disks', reasonOther: 'Other', fetchError: 'Error loading data',
+    fitBtn: 'Fit', confirmReplace: 'A MyMaps already exists for that month. Replace?',
+    recActive: 'In use', recIdle: 'Recently used', recParked: 'Parked',
+    lastDriver: 'Last driver', lastDrove: 'Last drove', daysAgoWord: 'days ago',
+    posFromHome: 'Approx. position (driver home)', inactive: 'inactive',
+    noDriverVid: 'No driver', onMap: 'on map', noPos: 'no position', atHomeBadge: 'at home',
+    countActiveVids: 'in use', countParked: 'parked',
+    tabDrivers: 'Drivers', tabVids: 'VIDs', noVidsCountry: 'No VIDs in this country.',
+    tabAdmin: 'Admin', saveActive: 'Save', recInactive: 'Inactive',
+    recCancelled: 'Cancelled', selActive: 'Active',
+    layerCancelled: 'Cancelled', countCancelled: 'cancelled',
+    adminVidHint: 'Set each VID state: Active (fleet), Inactive (idle, still ours) or Cancelled (no longer ours).',
+    savedOk: 'Saved', saveFail: 'Save failed',
+  },
+};
+function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || (I18N.pt[key]) || key; }
+function applyI18n() {
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es' : 'en');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+}
+
+// =================================================================
+// Estado global
+// =================================================================
+let currentUser = null;
+let map = null;
+let carsLayer = null, homesLayer = null, planLayer = null, tempLayer = null;
+
+const state = {
+  country: null,
+  tabs: [],                 // [{code, name, flag, count}]
+  vidsByCountry: {},        // code -> [vidEntry] (frota: 1 por VID, última posição)
+  driversByCountry: {},     // code -> [driverEntry] (aba "Motoristas" + casas no mapa)
+  sideTab: 'drivers',       // 'drivers' | 'vids' — aba ativa do painel lateral
+  maps: {},                 // code -> [ {month,label,fileId,filename,...} ] (lista do storage)
+  selectedMonth: {},        // code -> monthKey
+  overlayGeo: {},           // cacheKey -> geojson
+  layers: { cars: true, homes: false, plan: true, cancelled: false },
+  storeMode: null,          // 'drive' | 'local'
+  loaded: false,
+};
+
+// =================================================================
+// Boot
+// =================================================================
+function startApp(user) {
+  currentUser = user;
+  injectTopbar({
+    region: 'LATAM · MAPA DE OPERAÇÕES',
+    user: user,
+    showBack: true,
+    showLangSwitch: true,
+    lang: currentLang,
+    onLangChange: (newLang) => {
+      currentLang = newLang;
+      localStorage.setItem('preferredLang', newLang);
+      applyI18n();
+      renderTabs();
+      if (state.country) { renderSideList(); updateCounts(); }
+    },
+    onRefresh: () => {
+      clearDataCache();
+      state.loaded = false;
+      state.vidsByCountry = {};
+      state.maps = {};
+      state.overlayGeo = {};
+      bootData();
+    },
+    extras: [{
+      html: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V3h4M21 7V3h-4M3 17v4h4M21 17v4h-4"/></svg>',
+      className: 'ace-fit-btn',
+      onClick: () => fitToData(),
+    }],
+  });
+  document.getElementById('app-content').style.display = '';
+  applyI18n();
+  wireUI();
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+  bootData();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  injectLogin({ title: 'Mapa de Operações', sub: 'Acesso restrito a administradores', lang: currentLang, adminGate: true, onSuccess: startApp });
+});
+
+// =================================================================
+// Carrega dados base (drivers + dashboard) e detecta storage
+// =================================================================
+async function bootData() {
+  showLoader(true);
+  try {
+    const cf = (url, ttl) => (typeof cachedFetch === 'function')
+      ? cachedFetch(url, ttl, { timeoutMs: 60000, staleOnError: true })
+      : fetch(url).then(r => r.json());
+
+    const [listRes, dashRes, fleetRes, statusRes, modeP] = await Promise.all([
+      cf(`${CONFIG.scriptUrl}?action=getDriversList`, 300).catch(() => ({ drivers: [] })),
+      cf(`${CONFIG.scriptUrl}?action=getDashboardData&days=30`, 300).catch(() => ({ data: null })),
+      cf(`${CONFIG.scriptUrl}?action=getFleetVids`, 300).catch(() => ({ vids: [] })),
+      cf(`${CONFIG.scriptUrl}?action=getVidStatus`, 120).catch(() => ({ status: [] })),
+      MapStore.detectMode(),
+    ]);
+
+    const driversList = listRes.drivers || [];        // {name,email,country,vid,...}
+    const dash = dashRes.data || {};
+    const bases = dash.bases || {};
+    const checkins = dash.lastCheckins || {};
+    const fullDrivers = dash.drivers || [];           // {name,email,homeLat,homeLng,...}
+    const fleet = fleetRes.vids || [];                // {vid,email,driverName,driverActive,country,lat,lng,daysAgo,lastDate,posSource}
+
+    // Curadoria manual de VIDs ativos (por VID, vinda da aba "VID Status")
+    const vidStatus = {};
+    (statusRes.status || []).forEach(s => {
+      if (!s || !s.vid) return;
+      let st = s.status ? String(s.status).toLowerCase() : (s.active ? 'active' : 'inactive');  // fallback backend antigo
+      if (st !== 'cancelled' && st !== 'inactive') st = 'active';
+      vidStatus[String(s.vid).trim()] = st;
+    });
+    state.vidStatus = vidStatus;
+
+    const homeByEmail = {};
+    fullDrivers.forEach(d => { if (d.email) homeByEmail[d.email.toLowerCase()] = d; });
+    const nameByEmail = {};
+    driversList.forEach(d => { if (d.email) nameByEmail[d.email.toLowerCase()] = d.name; });
+
+    // casa/base por email (camada "Casas" + linha de distância)
+    function resolveHome(email) {
+      const base = bases[email] || null;
+      if (base && isNum(base.lat) && isNum(base.lng)) return { lat: base.lat, lng: base.lng, address: base.address || '', type: base.type || '' };
+      const fd = homeByEmail[email];
+      if (fd && isNum(fd.homeLat) && isNum(fd.homeLng)) return { lat: fd.homeLat, lng: fd.homeLng, address: fd.fullAddress || '', type: 'Home' };
+      return null;
+    }
+
+    // Casa ORIGINAL cadastrada na HR (independente da base atual). Usada pra
+    // mostrar a casa do motorista mesmo quando ele está hospedado em hotel.
+    function resolveOriginalHome(email) {
+      const fd = homeByEmail[email];
+      if (fd && isNum(fd.homeLat) && isNum(fd.homeLng)) return { lat: fd.homeLat, lng: fd.homeLng, address: fd.fullAddress || '', type: 'Home' };
+      return null;
+    }
+
+    // Frota: 1 entrada por VID, agrupada por país (na última posição conhecida)
+    const byCountry = {};
+    fleet.forEach(v => {
+      const email = (v.email || '').toLowerCase();
+      const code = countryCodeOf(v.country);
+      const entry = {
+        vid: v.vid, email: v.email || '',
+        driverName: v.driverName || nameByEmail[email] || '',
+        driverActive: !!v.driverActive,
+        country: v.country, countryCode: code,
+        lat: isNum(v.lat) ? v.lat : null,
+        lng: isNum(v.lng) ? v.lng : null,
+        posSource: v.posSource || 'none',
+        daysAgo: (v.daysAgo == null) ? null : v.daysAgo,
+        lastDate: v.lastDate || null,
+        home: resolveHome(email),
+        homeOriginal: resolveOriginalHome(email),
+      };
+      (byCountry[code] = byCountry[code] || []).push(entry);
+    });
+
+    state.vidsByCountry = byCountry;
+
+    // Motoristas (aba "Motoristas" do painel + casas no mapa) — modelo por-motorista
+    const driversByCountry = {};
+    driversList.forEach(d => {
+      const email = (d.email || '').toLowerCase();
+      const code = countryCodeOf(d.country);
+      const ci = checkins[d.email] || checkins[email] || null;
+      let checkin = null;
+      if (ci && isNum(ci.destLat) && isNum(ci.destLng)) {
+        checkin = {
+          lat: ci.destLat, lng: ci.destLng, address: ci.destAddress || '',
+          hoursAgo: ci.hoursAgo, didMap: String(ci.didMap || '').toLowerCase(),
+          dnmReason: String(ci.dnmReason || '').toLowerCase(), notes: ci.notes || '',
+        };
+      }
+      (driversByCountry[code] = driversByCountry[code] || []).push({
+        name: d.name, email: d.email, country: d.country, countryCode: code,
+        vid: d.vid || null, efficiency: d.efficiency, qcScore: d.qcScore, status: d.status,
+        home: resolveHome(email), homeOriginal: resolveOriginalHome(email), checkin,
+      });
+    });
+    state.driversByCountry = driversByCountry;
+
+    // VIDs "em uso agora": dos motoristas com check-in recente. A RAW CTS (que dá a
+    // cor por idade) costuma estar uns dias atrasada, então o check-in do motorista
+    // tem prioridade pra marcar o VID atual dele como verde.
+    const liveVids = {};
+    Object.keys(driversByCountry).forEach(code => {
+      driversByCountry[code].forEach(d => {
+        if (d.vid && driverRecency(d) !== 'stale') liveVids[String(d.vid).trim()] = true;
+      });
+    });
+    Object.keys(byCountry).forEach(code => {
+      byCountry[code].forEach(v => { v.liveActive = !!liveVids[String(v.vid).trim()]; });
+    });
+    applyVidStatus();   // marca v.manualStatus a partir de state.vidStatus
+
+    // Monta tabs ordenadas (união dos países com VID e/ou motorista)
+    const codes = Array.from(new Set(Object.keys(byCountry).concat(Object.keys(driversByCountry))));
+    codes.sort((a, b) => {
+      const ia = PREFERRED_ORDER.indexOf(a), ib = PREFERRED_ORDER.indexOf(b);
+      if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      return metaOf(a).name.localeCompare(metaOf(b).name);
+    });
+    state.tabs = codes.map(code => ({
+      code, name: metaOf(code).name, flag: metaOf(code).flag,
+      count: (byCountry[code] || []).length,
+    }));
+
+    renderStoreBanner();
+    renderTabs();
+    state.loaded = true;
+
+    if (!state.country || (!byCountry[state.country] && !driversByCountry[state.country])) {
+      state.country = state.tabs.length ? state.tabs[0].code : null;
+    }
+    if (state.country) await loadCountry(state.country);
+    else showLoader(false);
+  } catch (err) {
+    console.error('[OpsMap] boot erro:', err);
+    showToast(t('fetchError') + ': ' + err.message, 'error');
+    showLoader(false);
+  }
+}
+
+// =================================================================
+// Tabs
+// =================================================================
+// Nº de VIDs ATIVOS do país (status Ativo; exclui Inativo e Cancelado). Uncurado = ativo.
+function activeCountFor(code) {
+  const list = (state.vidsByCountry && state.vidsByCountry[code]) || [];
+  return list.filter(v => v.manualStatus !== 'cancelled' && v.manualStatus !== 'inactive').length;
+}
+function renderTabs() {
+  const tabs = document.getElementById('country-tabs');
+  tabs.innerHTML = '';
+  state.tabs.forEach(tab => {
+    const btn = document.createElement('button');
+    btn.className = 'country-tab' + (tab.code === state.country ? ' active' : '');
+    const total = (state.vidsByCountry[tab.code] || []).length;
+    const act = activeCountFor(tab.code);
+    btn.innerHTML = `<span class="flag">${tab.flag}</span> ${escapeHtml(tab.name)} <span class="tab-count" title="${act}/${total}">${act}</span>`;
+    btn.addEventListener('click', () => switchCountry(tab.code));
+    tabs.appendChild(btn);
+  });
+}
+async function switchCountry(code) {
+  if (code === state.country) return;
+  state.country = code;
+  document.querySelectorAll('.country-tab').forEach((b, i) => {
+    b.classList.toggle('active', state.tabs[i] && state.tabs[i].code === code);
+  });
+  await loadCountry(code);
+}
+
+// =================================================================
+// Carrega/renderiza um país
+// =================================================================
+async function loadCountry(code) {
+  showLoader(true);
+  try {
+    initMap();
+    renderDriverLayers(code);
+
+    // Lista de MyMaps do país (storage)
+    if (!state.maps[code]) {
+      state.maps[code] = await MapStore.list(code).catch(() => []);
+    }
+    buildMonthSelect(code);
+
+    const monthKey = state.selectedMonth[code];
+    await renderPlanForMonth(code, monthKey);
+
+    renderSideList();
+    updateCounts();
+
+    const m = metaOf(code);
+    map.setView(m.center, m.zoom);
+    setTimeout(() => { if (map) map.invalidateSize(); }, 60);
+  } catch (err) {
+    console.error('[OpsMap] loadCountry erro:', err);
+    showToast(t('fetchError') + ': ' + err.message, 'error');
+  } finally {
+    showLoader(false);
+  }
+}
+
+function initMap() {
+  if (map) return;
+  map = L.map('map', { preferCanvas: false }).setView([-15, -60], 4);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap · © CARTO', subdomains: 'abcd', maxZoom: 19,
+  }).addTo(map);
+  carsLayer = L.layerGroup().addTo(map);
+  homesLayer = L.layerGroup();
+  tempLayer = L.layerGroup().addTo(map);
+  if (state.layers.homes) homesLayer.addTo(map);
+}
+
+// =================================================================
+// Camadas de motorista (carros/VID + casas)
+// =================================================================
+function recencyOf(v) {
+  // 'active' (em uso) | 'idle' (quinzena) | 'parked' | 'inactive' (parado, ainda é nosso) | 'cancelled' (não temos mais)
+  if (v.manualStatus === 'cancelled') return 'cancelled';   // curadoria manual manda
+  if (v.manualStatus === 'inactive') return 'inactive';
+  if (v.liveActive) return 'active';                  // check-in recente do motorista (RAW CTS atrasa)
+  const d = v.daysAgo;
+  if (d != null && d <= CONFIG.activeDays) return 'active';
+  if (d != null && d <= CONFIG.idleDays) return 'idle';
+  return 'parked';
+}
+// classe de COR (verde=active · âmbar=idle/dnm · cinza=stale/parked/inactive)
+function recClass(rec) {
+  if (rec === 'active') return 'active';
+  if (rec === 'idle' || rec === 'dnm') return 'dnm';
+  return 'stale';
+}
+function plotPointOf(v) {
+  if (isNum(v.lat) && isNum(v.lng)) return { lat: v.lat, lng: v.lng, rec: recencyOf(v) };
+  return null;
+}
+// Marca v.manualStatus ('active'|'inactive'|'cancelled'|null) a partir de state.vidStatus (curadoria).
+function applyVidStatus() {
+  const vs = state.vidStatus || {};
+  const by = state.vidsByCountry || {};
+  Object.keys(by).forEach(code => {
+    by[code].forEach(v => {
+      const k = String(v.vid).trim();
+      v.manualStatus = (k in vs) ? vs[k] : null;
+    });
+  });
+}
+
+// ---- versões por-motorista (aba "Motoristas") ----
+function driverRecency(d) {
+  const ci = d.checkin;
+  if (ci && isNum(ci.lat) && isNum(ci.lng) && ci.hoursAgo != null && ci.hoursAgo <= CONFIG.activeHours) {
+    return ci.didMap === 'no' ? 'dnm' : 'active';
+  }
+  return 'stale';
+}
+function driverPoint(d) {
+  const ci = d.checkin, hm = d.home, rec = driverRecency(d);
+  if (rec !== 'stale' && ci) return { lat: ci.lat, lng: ci.lng, rec };
+  if (hm && isNum(hm.lat) && isNum(hm.lng)) return { lat: hm.lat, lng: hm.lng, rec: 'stale' };
+  if (ci && isNum(ci.lat) && isNum(ci.lng)) return { lat: ci.lat, lng: ci.lng, rec: 'stale' };
+  return null;
+}
+function driverMatches(d, q) {
+  return String(d.name || '').toLowerCase().includes(q)
+      || String(d.vid || '').toLowerCase().includes(q)
+      || String(d.email || '').toLowerCase().includes(q);
+}
+
+const CAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l1.6-4.6A2 2 0 0 1 6.5 7h11a2 2 0 0 1 1.9 1.4L21 13v4.5h-2V19a1 1 0 0 1-2 0v-1.5H7V19a1 1 0 0 1-2 0v-1.5H3V13Z"/><circle cx="7.5" cy="13.5" r="0.6"/><circle cx="16.5" cy="13.5" r="0.6"/></svg>';
+const HOME_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>';
+const HOTEL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v16"/><path d="M16 8h3a2 2 0 0 1 2 2v11"/><path d="M2 21h20"/><path d="M6.5 8h.01M10 8h.01M6.5 12h.01M10 12h.01"/></svg>';
+
+function renderDriverLayers(code) {
+  carsLayer.clearLayers();
+  homesLayer.clearLayers();
+  if (tempLayer) tempLayer.clearLayers();
+
+  const vids = state.vidsByCountry[code] || [];
+  const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
+  let shown = q ? vids.filter(v => matchesQuery(v, q)) : vids.slice();
+  if (!state.layers.cancelled) shown = shown.filter(v => v.manualStatus !== 'cancelled');  // esconde cancelados (inativos seguem visíveis)
+
+  // Casas dos motoristas (distintas por email) — da lista de motoristas
+  const drivers = state.driversByCountry[code] || [];
+  const homeSeen = {};
+  (q ? drivers.filter(d => driverMatches(d, q)) : drivers).forEach(d => {
+    if (d.home && isNum(d.home.lat) && isNum(d.home.lng) && d.email && !homeSeen[d.email]) {
+      homeSeen[d.email] = true;
+      // base (hotel/casa) + casa original quando em hotel
+      addHomeMarkers(homesLayer, { driverName: d.name, vid: d.vid, home: d.home, homeOriginal: d.homeOriginal });
+      // linha pontilhada fininha ligando a casa à posição atual do motorista
+      // (só quando ele está fora de casa; entra na homesLayer = liga/desliga com o toggle "Casas")
+      const dpt = driverPoint(d);
+      if (dpt && isNum(dpt.lat) && isNum(dpt.lng) && haversineKm(d.home.lat, d.home.lng, dpt.lat, dpt.lng) >= 1) {
+        L.polyline([[d.home.lat, d.home.lng], [dpt.lat, dpt.lng]], {
+          color: '#64748B', weight: 1, opacity: 0.4, dashArray: '2 5', interactive: false,
+        }).addTo(homesLayer);
+      }
+    }
+  });
+
+  // Carros/VIDs — agrupa por coordenada e espalha em leque os que caem no mesmo ponto
+  const groups = {};
+  shown.forEach(v => {
+    const pt = plotPointOf(v);
+    if (!pt) return;
+    const key = pt.lat.toFixed(4) + ',' + pt.lng.toFixed(4);
+    (groups[key] = groups[key] || []).push({ v, pt });
+  });
+  Object.keys(groups).forEach(key => {
+    const g = groups[key];
+    if (g.length === 1) { placeVidMarker(g[0].v, g[0].pt, g[0].pt.lat, g[0].pt.lng, null); return; }
+    const anchorLat = g[0].pt.lat, anchorLng = g[0].pt.lng;
+    const R = 0.0011 + g.length * 0.00018;            // raio do leque (graus)
+    const cosLat = Math.cos(anchorLat * Math.PI / 180) || 1;
+    g.forEach((item, i) => {
+      const ang = (2 * Math.PI * i) / g.length - Math.PI / 2;
+      const mlat = anchorLat + R * Math.sin(ang);
+      const mlng = anchorLng + (R * Math.cos(ang)) / cosLat;
+      placeVidMarker(item.v, item.pt, mlat, mlng, [anchorLat, anchorLng]);
+    });
+  });
+}
+
+function placeVidMarker(v, pt, mlat, mlng, anchor) {
+  // No marcador mostra só os últimos 3 dígitos (VID completo no popup/painel)
+  const label = v.vid ? String(v.vid).slice(-3) : '—';
+  const w = 34 + label.length * 7;
+  if (anchor) {
+    // linha fininha ligando o marcador espalhado ao ponto real
+    L.polyline([anchor, [mlat, mlng]], { color: '#94A3B8', weight: 1, opacity: 0.55 }).addTo(carsLayer);
+  }
+  const title = 'VID ' + String(v.vid) + (v.driverName ? ' — ' + v.driverName : '');
+  const carIcon = L.divIcon({
+    className: 'ace-marker',
+    html: `<div class="vid-marker ${recClass(pt.rec)}" title="${escapeHtml(title)}">${CAR_SVG}<span>${escapeHtml(label)}</span></div>`,
+    iconSize: [w, 24], iconAnchor: [w / 2, 12],
+  });
+  const marker = L.marker([mlat, mlng], { icon: carIcon })
+    .bindPopup(buildVidPopup(v, pt.rec))
+    .addTo(carsLayer);
+  marker.on('click', () => showHomeLink(v, pt));
+  marker._vid = v.vid;
+}
+
+function showHomeLink(v, pt) {
+  if (!tempLayer) return;
+  tempLayer.clearLayers();
+  if (!v.home || !isNum(v.home.lat) || !isNum(v.home.lng)) return;
+  const dist = haversineKm(v.home.lat, v.home.lng, pt.lat, pt.lng);
+  if (dist < 1) return;  // o carro já está na casa
+  L.polyline([[v.home.lat, v.home.lng], [pt.lat, pt.lng]], {
+    color: '#2C5282', weight: 2, opacity: 0.6, dashArray: '6 6',
+  }).addTo(tempLayer);
+  addHomeMarkers(tempLayer, v);
+}
+
+function matchesQuery(v, q) {
+  return String(v.vid || '').toLowerCase().includes(q)
+      || String(v.driverName || '').toLowerCase().includes(q)
+      || String(v.email || '').toLowerCase().includes(q);
+}
+
+// =================================================================
+// Popups
+// =================================================================
+function dnmReasonLabel(reason) {
+  const map = { weather: 'reasonWeather', mech: 'reasonMech', tech: 'reasonTech', disks: 'reasonDisks' };
+  return t(map[reason] || 'reasonOther');
+}
+function freshLabel(hoursAgo) {
+  if (hoursAgo == null) return '—';
+  if (hoursAgo < 24) return Math.round(hoursAgo) + ' ' + t('hoursAgo');
+  return Math.round(hoursAgo / 24) + ' ' + t('dayAgo');
+}
+function recLabel(rec) {
+  if (rec === 'active') return t('recActive');
+  if (rec === 'idle') return t('recIdle');
+  if (rec === 'inactive') return t('recInactive');
+  if (rec === 'cancelled') return t('recCancelled');
+  return t('recParked');
+}
+function buildVidPopup(v, rec) {
+  let html = `<span class="popup-tag ${recClass(rec)}">${escapeHtml(recLabel(rec))}</span>`;
+  html += `<div class="popup-title">VID ${escapeHtml(String(v.vid))}</div>`;
+  const driverTxt = v.driverName
+    ? (escapeHtml(v.driverName) + (v.driverActive ? '' : ' (' + t('inactive') + ')'))
+    : '—';
+  html += `<div class="popup-row"><span>${t('lastDriver')}</span><strong>${driverTxt}</strong></div>`;
+  html += `<div class="popup-row"><span>${escapeHtml(v.country || '')}</span><strong>${v.daysAgo != null ? (v.daysAgo + ' ' + t('daysAgoWord')) : '—'}</strong></div>`;
+  if (v.lastDate) html += `<div class="popup-row"><span>${t('lastDrove')}</span><strong>${escapeHtml(v.lastDate)}</strong></div>`;
+  if (v.posSource === 'home') html += `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:11px;"><em>${t('posFromHome')}</em></div>`;
+  return html;
+}
+function isHotelBase(home) { return !!(home && /hotel/i.test(home.type || '')); }
+
+// Ícone certo pro marcador: prédio (hotel) ou casinha (casa).
+function homeDivIcon(home) {
+  const hotel = isHotelBase(home);
+  return L.divIcon({
+    className: 'ace-marker',
+    html: `<div class="home-marker${hotel ? ' hotel' : ''}">${hotel ? HOTEL_SVG : HOME_SVG}</div>`,
+    iconSize: [22, 22], iconAnchor: [11, 11],
+  });
+}
+
+// Desenha o marcador da base do motorista numa layer. Se a base for um HOTEL,
+// também desenha a casa ORIGINAL dele + um tracinho ligando os dois.
+// info: { driverName, vid, home, homeOriginal }. Retorna o marcador da base.
+function addHomeMarkers(layer, info) {
+  const home = info.home;
+  if (!home || !isNum(home.lat) || !isNum(home.lng)) return null;
+
+  const baseMarker = L.marker([home.lat, home.lng], { icon: homeDivIcon(home) })
+    .bindPopup(buildHomePopup(info)).addTo(layer);
+
+  const orig = info.homeOriginal;
+  if (isHotelBase(home) && orig && isNum(orig.lat) && isNum(orig.lng)
+      && haversineKm(home.lat, home.lng, orig.lat, orig.lng) >= 0.2) {
+    L.polyline([[home.lat, home.lng], [orig.lat, orig.lng]], {
+      color: '#4A9FE0', weight: 1, opacity: 0.55, dashArray: '3 4', interactive: false,
+    }).addTo(layer);
+    L.marker([orig.lat, orig.lng], { icon: homeDivIcon(orig) })
+      .bindPopup(buildHomePopup({ driverName: info.driverName, vid: info.vid, home: orig }))
+      .addTo(layer);
+  }
+  return baseMarker;
+}
+
+function buildHomePopup(v) {
+  const home = v.home || {};
+  const label = isHotelBase(home) ? t('hotelLabel') : t('home');
+  return `<div class="popup-title">${escapeHtml(v.driverName || label)}</div>`
+    + `<div class="popup-row"><span>${label}</span><strong>${v.vid ? ('VID ' + escapeHtml(String(v.vid))) : ''}</strong></div>`
+    + `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:12px;">${escapeHtml(home.address || '—')}</div>`;
+}
+
+// =================================================================
+// Overlay do plano (MyMaps)
+// =================================================================
+function buildMonthSelect(code) {
+  const sel = document.getElementById('month-select');
+  sel.innerHTML = '';
+  const list = state.maps[code] || [];
+  // dedupe por mês (mantém o mais recente já que a lista vem ordenada desc)
+  const seen = {};
+  const months = [];
+  list.forEach(m => { if (!seen[m.month]) { seen[m.month] = m; months.push(m); } });
+
+  if (!months.length) {
+    const opt = document.createElement('option');
+    opt.value = ''; opt.textContent = t('noMaps');
+    sel.appendChild(opt);
+    state.selectedMonth[code] = null;
+    return;
+  }
+  months.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.month;
+    opt.textContent = m.label || monthLabel(m.month);
+    sel.appendChild(opt);
+  });
+  if (!state.selectedMonth[code] || !seen[state.selectedMonth[code]]) {
+    state.selectedMonth[code] = months[0].month;
+  }
+  sel.value = state.selectedMonth[code];
+}
+
+async function renderPlanForMonth(code, monthKey) {
+  if (planLayer) { map.removeLayer(planLayer); planLayer = null; }
+  if (!monthKey) { updateCounts(); return; }
+  const entry = (state.maps[code] || []).find(m => m.month === monthKey);
+  if (!entry) { updateCounts(); return; }
+
+  const cacheKey = entry.fileId || (code + '|' + monthKey);
+  let geo = state.overlayGeo[cacheKey];
+  if (!geo) {
+    geo = await MapStore.getGeo(code, entry).catch(() => null);
+    if (geo) state.overlayGeo[cacheKey] = geo;
+  }
+  state._planFeatureCount = geo ? (geo.features || []).length : 0;
+  if (geo && state.layers.plan) drawPlan(geo);
+  updateCounts();
+}
+
+function drawPlan(geo) {
+  if (planLayer) { map.removeLayer(planLayer); planLayer = null; }
+  if (!geo) return;
+  planLayer = L.geoJSON(geo, {
+    style: (f) => {
+      const p = f.properties || {};
+      return {
+        color: p.stroke || '#7C3AED',
+        weight: p['stroke-width'] || 2,
+        opacity: p['stroke-opacity'] != null ? p['stroke-opacity'] : 0.85,
+        fillColor: p.fill || '#A78BFA',
+        fillOpacity: p['fill-opacity'] != null ? p['fill-opacity'] : 0.18,
+      };
+    },
+    pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+      radius: 4, color: '#6D28D9', weight: 1.5, fillColor: '#A78BFA', fillOpacity: 0.9,
+    }),
+    onEachFeature: (f, layer) => {
+      const p = f.properties || {};
+      const name = p.name || '';
+      const desc = stripHtml(p.description || '');
+      if (name || desc) {
+        layer.bindPopup(`<div class="popup-title">${escapeHtml(name || t('planFeature'))}</div>`
+          + (desc ? `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:12px;">${escapeHtml(desc.slice(0, 300))}</div>` : ''));
+      }
+    },
+  }).addTo(map);
+  if (planLayer && planLayer.bringToBack) planLayer.bringToBack();
+}
+
+// =================================================================
+// Side list
+// =================================================================
+function renderSideList() {
+  const wrap = document.getElementById('side-list');
+  const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
+  if (state.sideTab === 'vids') renderVidSide(wrap, q);
+  else if (state.sideTab === 'admin') renderAdminSide(wrap, q);
+  else renderDriverSide(wrap, q);
+}
+
+function setSideTab(tab) {
+  state.sideTab = tab;
+  ['drivers', 'vids', 'admin'].forEach(k => {
+    const el = document.getElementById('tab-' + k);
+    if (el) el.classList.toggle('active', tab === k);
+  });
+  renderSideList();
+}
+
+function renderDriverSide(wrap, q) {
+  const drivers = (state.driversByCountry[state.country] || []).slice();
+  const filtered = q ? drivers.filter(d => driverMatches(d, q)) : drivers;
+  const rank = { active: 0, dnm: 1, stale: 2 };
+  filtered.sort((a, b) => {
+    const ra = rank[driverRecency(a)], rb = rank[driverRecency(b)];
+    if (ra !== rb) return ra - rb;
+    return String(a.name).localeCompare(String(b.name));
+  });
+  if (!filtered.length) { wrap.innerHTML = `<div class="side-empty">${t('noDriversCountry')}</div>`; return; }
+  wrap.innerHTML = filtered.map(d => {
+    const rec = driverRecency(d);
+    let sub;
+    if (rec === 'active' && d.checkin) {
+      const dist = d.home ? haversineKm(d.home.lat, d.home.lng, d.checkin.lat, d.checkin.lng) : null;
+      sub = (d.checkin.address || t('currentPos')) + (dist != null ? ` · ${dist.toFixed(0)} km ${t('distHome')}` : '');
+    } else if (rec === 'dnm' && d.checkin) {
+      sub = t('didNotMap') + ' · ' + dnmReasonLabel(d.checkin.dnmReason);
+    } else { sub = t('noCheckin'); }
+    return `<div class="driver-row" data-email="${escapeHtml(d.email)}">
+      <span class="status-dot ${recClass(rec)}"></span>
+      <div class="driver-row-main">
+        <div class="driver-row-name">${escapeHtml(d.name)}</div>
+        <div class="driver-row-sub">${escapeHtml(sub)}</div>
+      </div>
+      <span class="vid-badge ${d.vid ? '' : 'none'}">${d.vid ? escapeHtml(String(d.vid)) : t('noVid')}</span>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.driver-row').forEach(row => {
+    row.addEventListener('click', () => focusDriver(row.getAttribute('data-email')));
+  });
+}
+
+function renderVidSide(wrap, q) {
+  const vids = (state.vidsByCountry[state.country] || []).slice();
+  let filtered = q ? vids.filter(v => matchesQuery(v, q)) : vids;
+  if (!state.layers.cancelled) filtered = filtered.filter(v => v.manualStatus !== 'cancelled');  // esconde cancelados (inativos seguem visíveis)
+  const rank = { active: 0, idle: 1, parked: 2 };
+  filtered.sort((a, b) => {
+    const ra = rank[recencyOf(a)], rb = rank[recencyOf(b)];
+    if (ra !== rb) return ra - rb;
+    return String(a.vid).localeCompare(String(b.vid));
+  });
+  if (!filtered.length) { wrap.innerHTML = `<div class="side-empty">${t('noVidsCountry')}</div>`; return; }
+  wrap.innerHTML = filtered.map(v => {
+    const rec = recencyOf(v);
+    let sub = v.driverName || t('noDriverVid');
+    if (v.daysAgo != null) sub += ' · ' + recLabel(rec) + (v.daysAgo > CONFIG.activeDays ? ` (${v.daysAgo} ${t('daysAgoWord')})` : '');
+    const posBadge = (v.lat != null) ? (v.posSource === 'home' ? t('atHomeBadge') : t('onMap')) : t('noPos');
+    return `<div class="driver-row" data-vid="${escapeHtml(String(v.vid))}">
+      <span class="status-dot ${recClass(rec)}"></span>
+      <div class="driver-row-main">
+        <div class="driver-row-name">VID ${escapeHtml(String(v.vid))}</div>
+        <div class="driver-row-sub">${escapeHtml(sub)}</div>
+      </div>
+      <span class="vid-badge ${v.lat != null ? '' : 'none'}">${escapeHtml(posBadge)}</span>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.driver-row').forEach(row => {
+    row.addEventListener('click', () => focusVid(row.getAttribute('data-vid')));
+  });
+}
+
+// Aba Admin: marcar quais VIDs fazem parte da frota ativa do país (persiste no backend)
+function renderAdminSide(wrap, q) {
+  const vids = (state.vidsByCountry[state.country] || []).slice()
+    .sort((a, b) => String(a.vid).localeCompare(String(b.vid)));
+  const list = q ? vids.filter(v => matchesQuery(v, q)) : vids;
+  const head = `<div class="admin-bar">
+      <button class="admin-save" id="vid-admin-save">${escapeHtml(t('saveActive'))}</button>
+      <span class="admin-hint">${escapeHtml(t('adminVidHint'))}</span>
+    </div>`;
+  if (!list.length) { wrap.innerHTML = head + `<div class="side-empty">${t('noVidsCountry')}</div>`; return; }
+  const opt = (cur, val, label) => `<option value="${val}" ${cur === val ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+  wrap.innerHTML = head + list.map(v => {
+    const cur = v.manualStatus || 'active';   // default = ativo até curar
+    return `<div class="admin-row">
+      <div class="driver-row-main">
+        <div class="driver-row-name">VID ${escapeHtml(String(v.vid))}</div>
+        <div class="driver-row-sub">${escapeHtml(v.driverName || t('noDriverVid'))}</div>
+      </div>
+      <select class="admin-sel st-${cur}" data-vid="${escapeHtml(String(v.vid))}">
+        ${opt(cur, 'active', t('selActive'))}
+        ${opt(cur, 'inactive', t('recInactive'))}
+        ${opt(cur, 'cancelled', t('recCancelled'))}
+      </select>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.admin-sel').forEach(sel => {
+    sel.addEventListener('change', () => { sel.className = 'admin-sel st-' + sel.value; });
+  });
+  const btn = document.getElementById('vid-admin-save');
+  if (btn) btn.addEventListener('click', saveVidAdmin);
+}
+
+async function saveVidAdmin() {
+  const code = state.country;
+  if (!code) return;
+  const btn = document.getElementById('vid-admin-save');
+  const sels = document.querySelectorAll('#side-list .admin-sel');
+  // manda status (v5.46) + active (compat backend v5.45 antigo, que só entende booleano)
+  const items = Array.from(sels).map(s => ({ vid: s.getAttribute('data-vid'), status: s.value, active: s.value === 'active' }));
+  if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+  try {
+    const payload = {
+      type: 'saveVidStatus',
+      country: metaOf(code).name,
+      items: items,
+      updatedBy: (typeof currentUser !== 'undefined' && currentUser && currentUser.username) || '',
+    };
+    try {
+      const res = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
+      if (res && res.success === false) throw new Error(res.error || 'backend');
+    } catch (e) { /* opaque/erro de rede (não-abort): assume aceito, o reload confirma */ }
+    // atualiza estado local + reaplica nas camadas
+    items.forEach(it => { state.vidStatus[String(it.vid).trim()] = it.status; });
+    applyVidStatus();
+    if (typeof clearDataCache === 'function') clearDataCache('action=getVidStatus');
+    renderDriverLayers(code);
+    renderSideList();
+    renderTabs();      // atualiza o nº de ativos na bolinha do país
+    updateCounts();
+    showToast(t('savedOk'), 'success');
+  } catch (err) {
+    console.error('[OpsMap] saveVidStatus erro:', err);
+    showToast(t('saveFail'), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = t('saveActive'); }
+  }
+}
+
+function focusVid(vid) {
+  const v = (state.vidsByCountry[state.country] || []).find(x => String(x.vid) === String(vid));
+  if (!v || !map) return;
+  const pt = plotPointOf(v);
+  if (!pt) return;
+  map.setView([pt.lat, pt.lng], 12, { animate: true });
+  showHomeLink(v, pt);
+  carsLayer.eachLayer(l => { if (l._vid === v.vid && l.openPopup) l.openPopup(); });
+}
+
+function focusDriver(email) {
+  const d = (state.driversByCountry[state.country] || []).find(x => x.email === email);
+  if (!d || !map) return;
+  const pt = driverPoint(d);
+  if (!pt) return;
+  map.setView([pt.lat, pt.lng], 12, { animate: true });
+  // realça a casa do motorista (se tiver)
+  if (tempLayer && d.home && isNum(d.home.lat) && isNum(d.home.lng)) {
+    tempLayer.clearLayers();
+    if (pt.rec !== 'stale') {
+      const dist = haversineKm(d.home.lat, d.home.lng, pt.lat, pt.lng);
+      if (dist >= 1) {
+        L.polyline([[d.home.lat, d.home.lng], [pt.lat, pt.lng]], { color: '#2C5282', weight: 2, opacity: 0.6, dashArray: '6 6' }).addTo(tempLayer);
+      }
+    }
+    const bm = addHomeMarkers(tempLayer, { driverName: d.name, vid: d.vid, home: d.home, homeOriginal: d.homeOriginal });
+    if (bm) bm.openPopup();
+  }
+}
+
+// =================================================================
+// Counts
+// =================================================================
+function updateCounts() {
+  const vids = state.vidsByCountry[state.country] || [];
+  const cancelled = vids.filter(v => v.manualStatus === 'cancelled').length;
+  const visible = state.layers.cancelled ? vids : vids.filter(v => v.manualStatus !== 'cancelled');
+  const active = visible.filter(v => recencyOf(v) === 'active').length;
+  const parked = visible.filter(v => { const r = recencyOf(v); return r === 'parked' || r === 'inactive'; }).length;
+  const plan = state._planFeatureCount || 0;
+  document.getElementById('counts').innerHTML =
+    `<span><b>${visible.length}</b> ${t('countVids')}</span>`
+    + `<span><b>${active}</b> ${t('countActiveVids')}</span>`
+    + `<span><b>${parked}</b> ${t('countParked')}</span>`
+    + (cancelled ? `<span><b>${cancelled}</b> ${t('countCancelled')}</span>` : '')
+    + (plan ? `<span><b>${plan}</b> ${t('countPlan')}</span>` : '');
+}
+
+function fitToData() {
+  if (!map) return;
+  const pts = [];
+  (state.vidsByCountry[state.country] || []).forEach(v => {
+    if (!state.layers.cancelled && v.manualStatus === 'cancelled') return;  // ignora cancelados
+    const pt = plotPointOf(v);
+    if (pt) pts.push([pt.lat, pt.lng]);
+    if (state.layers.homes && v.home && isNum(v.home.lat)) pts.push([v.home.lat, v.home.lng]);
+  });
+  if (planLayer) { try { const b = planLayer.getBounds(); if (b.isValid()) pts.push(b.getNorthEast(), b.getSouthWest()); } catch (e) {} }
+  if (pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.15), { maxZoom: 13 });
+  else { const m = metaOf(state.country); map.setView(m.center, m.zoom); }
+}
+
+// =================================================================
+// UI wiring
+// =================================================================
+function wireUI() {
+  // Toggles de camada
+  document.getElementById('tg-cars').addEventListener('click', () => toggleLayer('cars'));
+  document.getElementById('tg-homes').addEventListener('click', () => toggleLayer('homes'));
+  document.getElementById('tg-plan').addEventListener('click', () => toggleLayer('plan'));
+  document.getElementById('tg-cancelled').addEventListener('click', () => toggleLayer('cancelled'));
+
+  // Busca
+  let searchTimer = null;
+  document.getElementById('search-input').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      if (state.country) { renderDriverLayers(state.country); renderSideList(); }
+    }, 180);
+  });
+
+  // Mês
+  document.getElementById('month-select').addEventListener('change', (e) => {
+    state.selectedMonth[state.country] = e.target.value || null;
+    renderPlanForMonth(state.country, e.target.value || null);
+  });
+
+  // Upload
+  document.getElementById('upload-btn').addEventListener('click', () => document.getElementById('file-input').click());
+  document.getElementById('file-input').addEventListener('change', onFilePicked);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('modal-save').addEventListener('click', doSaveUpload);
+
+  // Painel lateral — recolher/reabrir
+  document.getElementById('side-toggle').addEventListener('click', () => {
+    document.getElementById('ops-body').classList.toggle('panel-collapsed');
+    setTimeout(() => { if (map) map.invalidateSize(); }, 230);
+  });
+  document.getElementById('side-reopen').addEventListener('click', () => {
+    document.getElementById('ops-body').classList.remove('panel-collapsed');
+    setTimeout(() => { if (map) map.invalidateSize(); }, 230);
+  });
+
+  // Abas do painel (Motoristas | VIDs)
+  document.getElementById('tab-drivers').addEventListener('click', () => setSideTab('drivers'));
+  document.getElementById('tab-vids').addEventListener('click', () => setSideTab('vids'));
+  document.getElementById('tab-admin').addEventListener('click', () => setSideTab('admin'));
+
+  window.addEventListener('resize', () => { if (map) map.invalidateSize(); });
+}
+
+function toggleLayer(key) {
+  state.layers[key] = !state.layers[key];
+  const el = document.getElementById('tg-' + key);
+  el.classList.toggle('off', !state.layers[key]);
+  if (!map) return;
+  if (key === 'homes') {
+    if (state.layers.homes) homesLayer.addTo(map); else map.removeLayer(homesLayer);
+  } else if (key === 'cars') {
+    if (state.layers.cars) carsLayer.addTo(map); else map.removeLayer(carsLayer);
+  } else if (key === 'plan') {
+    if (state.layers.plan) renderPlanForMonth(state.country, state.selectedMonth[state.country]);
+    else if (planLayer) { map.removeLayer(planLayer); planLayer = null; }
+  } else if (key === 'cancelled') {
+    // filtro de render — re-monta camada de VIDs + lista + contadores
+    renderDriverLayers(state.country);
+    renderSideList();
+    updateCounts();
+  }
+}
+
+// =================================================================
+// Upload flow
+// =================================================================
+let pendingUpload = null;   // { geojson, filename, featureCount }
+
+async function onFilePicked(e) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';   // reseta pra permitir re-upload do mesmo arquivo
+  if (!file) return;
+
+  const upBtn = document.getElementById('upload-btn');
+  const upBtnHtml = upBtn.innerHTML;
+  upBtn.disabled = true;
+  upBtn.innerHTML = `<span class="mini-spin"></span> <span>${t('reading')}</span>`;
+  // dá um tick pro browser pintar o estado antes do parse (que pode travar a UI em arquivo grande)
+  await new Promise(r => setTimeout(r, 30));
+  try {
+    const geo = await parseMapFile(file);
+    pendingUpload = { geojson: geo, filename: file.name, featureCount: (geo.features || []).length };
+    document.getElementById('modal-fileinfo').innerHTML =
+      `<strong>${escapeHtml(file.name)}</strong><div class="fi-meta">${pendingUpload.featureCount} ${t('countPlan')} · ${(file.size / 1024).toFixed(0)} KB</div>`;
+    const mInput = document.getElementById('modal-month');
+    mInput.value = state.selectedMonth[state.country] || defaultMonthKey();
+    document.getElementById('modal-label').value = '';
+    document.getElementById('modal-err').textContent = '';
+    showModalLoading(false);
+    openModal();
+  } catch (err) {
+    console.error('[OpsMap] parse erro:', err);
+    showToast(t('parseFail'), 'error');
+  } finally {
+    upBtn.disabled = false;
+    upBtn.innerHTML = upBtnHtml;
+  }
+}
+
+function showModalLoading(on, text) {
+  const el = document.getElementById('modal-loading');
+  if (!el) return;
+  if (on && text) document.getElementById('modal-loading-text').textContent = text;
+  el.classList.toggle('show', !!on);
+}
+
+async function doSaveUpload() {
+  if (!pendingUpload) return;
+  const monthKey = document.getElementById('modal-month').value;
+  const label = document.getElementById('modal-label').value.trim();
+  if (!monthKey) { document.getElementById('modal-err').textContent = t('monthRequired'); return; }
+
+  const code = state.country;
+  const existing = (state.maps[code] || []).find(m => m.month === monthKey);
+  if (existing && !confirm(t('confirmReplace'))) return;
+
+  const saveBtn = document.getElementById('modal-save');
+  const saveBtnHtml = saveBtn.innerHTML;
+  saveBtn.disabled = true;
+  document.getElementById('modal-cancel').disabled = true;
+  saveBtn.innerHTML = `<span class="mini-spin"></span> <span>${t('save')}</span>`;
+  document.getElementById('modal-err').textContent = '';
+  showModalLoading(true, t('saving'));
+  try {
+    const res = await MapStore.save(code, monthKey, label || monthLabel(monthKey), pendingUpload.filename, pendingUpload.geojson, currentUser);
+    if (res && res.success === false) throw new Error(res.error || 'backend');
+
+    // Atualiza estado local da lista
+    const entry = {
+      country: code, month: monthKey, label: label || monthLabel(monthKey),
+      filename: pendingUpload.filename, fileId: res && res.fileId ? res.fileId : null,
+      featureCount: pendingUpload.featureCount, timestamp: new Date().toISOString(),
+    };
+    state.maps[code] = [entry].concat((state.maps[code] || []).filter(m => m.month !== monthKey));
+    const ck = entry.fileId || (code + '|' + monthKey);
+    state.overlayGeo[ck] = pendingUpload.geojson;
+    state.selectedMonth[code] = monthKey;
+    clearDataCache('action=listMyMaps');
+
+    closeModal();
+    pendingUpload = null;
+    buildMonthSelect(code);
+    await renderPlanForMonth(code, monthKey);
+    showToast(t('uploaded') + (res && res.local ? ' (local)' : ''), 'success');
+  } catch (err) {
+    console.error('[OpsMap] save erro:', err);
+    const msg = (err && err.message === 'timeout') ? t('saveTimeout') : (t('uploadFail') + ': ' + (err.message || ''));
+    document.getElementById('modal-err').textContent = msg;
+    showToast(t('uploadFail'), 'error');
+  } finally {
+    showModalLoading(false);
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = saveBtnHtml;
+    document.getElementById('modal-cancel').disabled = false;
+  }
+}
+
+async function parseMapFile(file) {
+  const name = (file.name || '').toLowerCase();
+  let kmlText;
+  if (name.endsWith('.kmz')) {
+    if (typeof JSZip === 'undefined') throw new Error('JSZip não carregou');
+    const buf = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(buf);
+    let kmlEntry = null;
+    zip.forEach((path, entry) => { if (!kmlEntry && /\.kml$/i.test(path)) kmlEntry = entry; });
+    if (!kmlEntry) throw new Error('KMZ sem .kml');
+    kmlText = await kmlEntry.async('string');
+  } else {
+    kmlText = await file.text();
+  }
+  const dom = new DOMParser().parseFromString(kmlText, 'text/xml');
+  if (dom.querySelector('parsererror')) throw new Error('XML inválido');
+  if (typeof toGeoJSON === 'undefined') throw new Error('toGeoJSON não carregou');
+  const geo = toGeoJSON.kml(dom);
+  if (!geo || !Array.isArray(geo.features) || !geo.features.length) throw new Error('Sem features');
+  return geo;
+}
+
+function openModal() { document.getElementById('upload-modal').classList.add('show'); }
+function closeModal() { document.getElementById('upload-modal').classList.remove('show'); }
+
+// =================================================================
+// Storage (Drive primário · IndexedDB fallback)
+// =================================================================
+const MapStore = {
+  async detectMode() {
+    if (state.storeMode) return state.storeMode;
+    try {
+      const res = await fetch(`${CONFIG.scriptUrl}?action=listMyMaps`).then(r => r.json());
+      state.storeMode = (res && res.success && Array.isArray(res.maps)) ? 'drive' : 'local';
+    } catch (e) {
+      state.storeMode = 'local';
+    }
+    return state.storeMode;
+  },
+  async list(code) {
+    if (state.storeMode === 'drive') {
+      const res = await cachedFetch(`${CONFIG.scriptUrl}?action=listMyMaps&country=${encodeURIComponent(code)}`, 120).catch(() => ({ maps: [] }));
+      return res.maps || [];
+    }
+    return await idbList(code);
+  },
+  async getGeo(code, entry) {
+    if (state.storeMode === 'drive' && entry.fileId) {
+      // fetch direto (sem cachedFetch): o GeoJSON pode ser grande e estouraria o
+      // localStorage. A cache de sessão é o state.overlayGeo (em memória).
+      const res = await fetch(`${CONFIG.scriptUrl}?action=getMyMap&fileId=${encodeURIComponent(entry.fileId)}`).then(r => r.json()).catch(() => null);
+      if (res && res.success && res.geojson) { try { return JSON.parse(res.geojson); } catch (e) { return null; } }
+      return null;
+    }
+    return await idbGetGeo(code, entry.month);
+  },
+  async save(code, month, label, filename, geojson, user) {
+    const featureCount = (geojson.features || []).length;
+    if (state.storeMode === 'drive') {
+      const payload = {
+        type: 'saveMyMap', country: code, month, label,
+        originalFilename: filename, featureCount,
+        uploadedBy: (user && user.username) || '',
+        geojson: JSON.stringify(geojson),
+      };
+      let res;
+      const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      const timer = ctrl ? setTimeout(() => ctrl.abort(), 120000) : null;
+      try {
+        const opts = { method: 'POST', body: JSON.stringify(payload) };
+        if (ctrl) opts.signal = ctrl.signal;
+        res = await fetch(CONFIG.scriptUrl, opts).then(r => r.json());
+      } catch (e) {
+        if (e && e.name === 'AbortError') throw new Error('timeout');
+        // opaque/erro de rede (não-abort) — assume aceito; o reload confirma via listMyMaps
+        res = { success: true };
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
+      return res || { success: true };
+    } else {
+      await idbSave(code, month, label, filename, geojson, featureCount, user);
+      return { success: true, local: true };
+    }
+  },
+};
+
+// ---- IndexedDB (fallback local) ----
+const IDB_NAME = 'ace_ops_maps', IDB_STORE = 'maps';
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const r = indexedDB.open(IDB_NAME, 1);
+    r.onupgradeneeded = () => {
+      const db = r.result;
+      if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE, { keyPath: 'key' });
+    };
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+async function idbSave(code, month, label, filename, geojson, featureCount, user) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put({
+      key: code + '|' + month, country: code, month, label, filename, featureCount,
+      uploadedBy: (user && user.username) || '', timestamp: new Date().toISOString(), geojson,
+    });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbList(code) {
+  const db = await idbOpen();
+  return new Promise((resolve) => {
+    const out = [];
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const cur = tx.objectStore(IDB_STORE).openCursor();
+    cur.onsuccess = (e) => {
+      const c = e.target.result;
+      if (c) {
+        const v = c.value;
+        if (v.country === code) out.push({ country: v.country, month: v.month, label: v.label, filename: v.filename, featureCount: v.featureCount, uploadedBy: v.uploadedBy, timestamp: v.timestamp, fileId: null });
+        c.continue();
+      } else {
+        out.sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')));
+        resolve(out);
+      }
+    };
+    cur.onerror = () => resolve(out);
+  });
+}
+async function idbGetGeo(code, month) {
+  const db = await idbOpen();
+  return new Promise((resolve) => {
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const r = tx.objectStore(IDB_STORE).get(code + '|' + month);
+    r.onsuccess = () => resolve(r.result ? r.result.geojson : null);
+    r.onerror = () => resolve(null);
+  });
+}
+
+function renderStoreBanner() {
+  const banner = document.getElementById('store-banner');
+  if (state.storeMode === 'local') {
+    document.getElementById('store-banner-text').textContent = t('storeLocal');
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+// =================================================================
+// Helpers
+// =================================================================
+function isNum(v) { return typeof v === 'number' && !isNaN(v) && isFinite(v); }
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function stripHtml(s) {
+  if (!s) return '';
+  const div = document.createElement('div');
+  div.innerHTML = String(s);
+  return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
+}
+const MONTH_NAMES = {
+  pt: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+  es: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+};
+function monthLabel(key) {
+  const m = String(key || '').match(/^(\d{4})-(\d{2})$/);
+  if (!m) return key || '';
+  const names = MONTH_NAMES[currentLang] || MONTH_NAMES.pt;
+  return `${names[parseInt(m[2], 10) - 1]}/${m[1]}`;
+}
+function defaultMonthKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+function showLoader(on) {
+  const l = document.getElementById('map-loader');
+  if (l) l.classList.toggle('hidden', !on);
+}
+let toastTimer = null;
+function showToast(msg, kind) {
+  const el = document.getElementById('ops-toast');
+  el.textContent = msg;
+  el.className = 'ops-toast show' + (kind ? ' ' + kind : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.classList.remove('show'); }, 2600);
+}
+</script>
+
+<script src="/sv-shell.js"></script>
+</body>
+</html>

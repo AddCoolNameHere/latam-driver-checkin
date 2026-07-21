@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão de Usuários · LATAM · Aceolution</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="/aceolution-globe.png">
+<script src="/auth.js?v=20260619"></script>
+<script src="/theme.js?v=20260518c"></script>
+<script src="/common.js?v=20260619"></script>
+<link rel="stylesheet" href="/theme.css?v=20260519a">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  main {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+  .page-title {
+    font-size: 24px; font-weight: 700;
+    color: var(--c-primary-dark); margin-bottom: 4px;
+  }
+  .page-sub {
+    font-size: 13px; color: var(--c-text-muted); margin-bottom: 20px;
+  }
+
+  .toolbar {
+    display: flex; gap: 10px; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .toolbar-left { font-size: 13px; color: var(--c-text-muted); }
+  .toolbar-left strong { color: var(--c-primary-dark); }
+  .toolbar-right { display: flex; gap: 8px; }
+
+  .btn {
+    padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    border: 1px solid transparent; cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--c-primary); color: white; }
+  .btn-primary:hover { background: var(--c-primary-dark); }
+  .btn-primary:disabled { background: var(--c-text-dim); cursor: not-allowed; }
+  .btn-ghost { background: var(--c-surface); color: var(--c-text); border-color: var(--c-border-strong); }
+  .btn-ghost:hover { background: var(--c-bg-tint); border-color: var(--c-primary); }
+  .btn-danger { background: var(--c-surface); color: var(--c-danger); border-color: var(--c-danger); }
+  .btn-danger:hover { background: var(--c-danger); color: white; }
+  .btn-success { background: var(--c-success); color: white; }
+  .btn-success:hover { background: #15803d; }
+
+  /* Users table */
+  .users-card {
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-radius: 12px; overflow: hidden;
+  }
+  table.users {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  table.users thead th {
+    text-align: left; padding: 12px 14px;
+    background: var(--c-bg-tint); color: var(--c-primary-dark);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+    font-weight: 700; border-bottom: 1px solid var(--c-border);
+  }
+  table.users tbody td {
+    padding: 12px 14px; border-bottom: 1px solid var(--c-border);
+    vertical-align: middle;
+  }
+  table.users tbody tr:last-child td { border-bottom: none; }
+  table.users tbody tr.dirty { background: #fefce8; }
+  table.users tbody tr.new-row { background: #ecfdf5; }
+  table.users tbody tr.deleted { opacity: 0.4; text-decoration: line-through; background: #fef2f2; }
+  .user-username { font-family: ui-monospace, 'Courier New', monospace; color: var(--c-primary-dark); font-weight: 700; }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge-admin { background: #fef3c7; color: #92400e; }
+  .badge-scope { background: #cffafe; color: #155e75; }
+  .badge-locked { background: #ddd6fe; color: #5b21b6; }
+  .badge-new { background: #d1fae5; color: #065f46; }
+  .badge-dirty { background: #fef9c3; color: #854d0e; }
+  .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+  .icon-btn {
+    background: none; border: 1px solid var(--c-border);
+    padding: 5px 10px; border-radius: 6px; font-size: 12px;
+    cursor: pointer; color: var(--c-text-muted); font-family: inherit;
+  }
+  .icon-btn:hover { background: var(--c-bg-tint); border-color: var(--c-primary); color: var(--c-primary); }
+  .icon-btn.danger:hover { background: var(--c-danger); border-color: var(--c-danger); color: white; }
+
+  /* Save area */
+  .save-area {
+    margin-top: 18px; padding: 16px; background: var(--c-surface);
+    border: 1px solid var(--c-border); border-radius: 12px;
+  }
+  .save-area label {
+    display: block; font-size: 11px; font-weight: 600;
+    color: var(--c-text-muted); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 6px;
+  }
+  .save-area input[type="text"] {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--c-border);
+    border-radius: 8px; font-size: 13px; font-family: inherit;
+  }
+  .save-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+  .save-status {
+    font-size: 12px; color: var(--c-text-muted); flex: 1;
+    display: flex; align-items: center;
+  }
+  .save-status.error { color: var(--c-danger); }
+  .save-status.success { color: var(--c-success); font-weight: 600; }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.55);
+    display: none; align-items: center; justify-content: center;
+    padding: 20px; z-index: 200;
+  }
+  .modal-backdrop.visible { display: flex; }
+  .modal {
+    background: var(--c-surface); border-radius: 14px; padding: 24px;
+    max-width: 460px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal-title { font-size: 17px; font-weight: 700; color: var(--c-primary-dark); margin-bottom: 4px; }
+  .modal-sub { font-size: 12px; color: var(--c-text-muted); margin-bottom: 18px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; font-weight: 600; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .field input[type="text"],
+  .field input[type="password"],
+  .field select {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--c-border);
+    border-radius: 8px; font-size: 14px; font-family: inherit;
+    background: var(--c-surface); color: var(--c-text);
+  }
+  .field input:focus,
+  .field select:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
+  .field select:disabled { opacity: 0.6; cursor: not-allowed; }
+  .field-hint { font-size: 11px; color: var(--c-text-muted); margin-top: 4px; }
+  .field-error { font-size: 12px; color: var(--c-danger); margin-top: 6px; min-height: 14px; }
+  .checkbox-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--c-bg-tint); border-radius: 8px; }
+  .checkbox-row input { width: 16px; height: 16px; accent-color: var(--c-primary); }
+  .checkbox-row label { margin: 0; text-transform: none; letter-spacing: 0; color: var(--c-text); font-size: 13px; font-weight: 600; }
+
+  /* Segmented control "Tipo de acesso" */
+  .access-modes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .access-mode-btn {
+    padding: 9px 8px; border: 1px solid var(--c-border); border-radius: 8px;
+    background: var(--c-surface); color: var(--c-text); font-size: 12.5px; font-weight: 600;
+    font-family: inherit; cursor: pointer; text-align: center; transition: all 0.12s;
+  }
+  .access-mode-btn:hover:not(.active) { border-color: var(--c-primary); }
+  .access-mode-btn.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+  .access-modes.disabled { opacity: 0.6; pointer-events: none; }
+
+  /* Checklist de páginas */
+  .pages-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .pages-count { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--c-primary); font-size: 11px; }
+  .linklike { background: none; border: none; color: var(--c-primary); font-size: 11px; font-weight: 600; cursor: pointer; padding: 2px 4px; font-family: inherit; }
+  .linklike:hover { text-decoration: underline; }
+  .pages-list { border: 1px solid var(--c-border); border-radius: 8px; max-height: 230px; overflow-y: auto; padding: 4px; background: var(--c-surface); }
+  .page-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--c-text-muted); padding: 8px 8px 4px; }
+  .page-check { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 6px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--c-text); font-size: 13px; margin: 0; }
+  .page-check:hover { background: var(--c-bg-tint); }
+  .page-check input { width: 15px; height: 15px; accent-color: var(--c-primary); flex-shrink: 0; }
+  .page-check .page-href { color: var(--c-text-muted); font-size: 11px; font-family: ui-monospace, 'Courier New', monospace; margin-left: auto; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--c-text); color: white; padding: 12px 18px;
+    border-radius: 8px; font-size: 13px; font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 300;
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 0.2s, transform 0.2s; pointer-events: none;
+  }
+  .toast.visible { opacity: 1; transform: translateY(0); }
+  .toast.success { background: var(--c-success); }
+  .toast.error { background: var(--c-danger); }
+
+  @media (max-width: 640px) {
+    table.users thead th:nth-child(2),
+    table.users tbody td:nth-child(2) { display: none; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+  }
+</style>
+</head>
+<body>
+
+<!-- APP (oculto até login bem-sucedido) -->
+<div id="app" style="display:none;">
+
+<main>
+  <h1 class="page-title">Gestão de usuários</h1>
+  <p class="page-sub">Adicione, remova ou troque senhas dos usuários do portal. Mudanças são commitadas direto no GitHub e ficam ativas em 1–10min.</p>
+
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <strong id="user-count">0</strong> usuário(s) ·
+      <strong id="admin-count">0</strong> admin(s)
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-ghost" onclick="resetChanges()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Descartar mudanças</button>
+      <button class="btn btn-primary" onclick="openAddModal()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Adicionar usuário</button>
+    </div>
+  </div>
+
+  <div class="users-card">
+    <table class="users">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Nome completo</th>
+          <th>Privilégios</th>
+          <th style="text-align:right;">Ações</th>
+        </tr>
+      </thead>
+      <tbody id="users-tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="save-area">
+    <label for="commit-msg">Mensagem do commit (opcional)</label>
+    <input type="text" id="commit-msg" placeholder="ex: adiciona joao, remove maria">
+    <div class="save-actions">
+      <div class="save-status" id="save-status"></div>
+      <button class="btn btn-success" id="save-btn" onclick="commitChanges()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar e publicar</button>
+    </div>
+  </div>
+</main>
+
+</div>
+
+<!-- MODAL — add/edit user -->
+<div id="user-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Novo usuário</div>
+    <div class="modal-sub" id="modal-sub">Os campos abaixo são exigidos.</div>
+
+    <div class="field">
+      <label for="modal-username">Username (login)</label>
+      <input type="text" id="modal-username" autocomplete="off" placeholder="ex: joao">
+      <div class="field-hint">Apenas letras, números, ponto, traço e underline. É convertido pra minúscula automaticamente.</div>
+    </div>
+
+    <div class="field">
+      <label for="modal-fullname">Nome completo</label>
+      <input type="text" id="modal-fullname" autocomplete="off" placeholder="ex: João Silva">
+    </div>
+
+    <div class="field">
+      <label for="modal-password">Senha</label>
+      <input type="password" id="modal-password" autocomplete="new-password" placeholder="Mín. 6 caracteres">
+      <div class="field-hint" id="modal-password-hint">A senha é convertida para hash SHA-256 antes de sair do navegador.</div>
+    </div>
+
+    <div class="field">
+      <label>Tipo de acesso</label>
+      <div class="access-modes" id="access-modes">
+        <button type="button" class="access-mode-btn" data-mode="normal">Normal</button>
+        <button type="button" class="access-mode-btn" data-mode="admin">Admin</button>
+        <button type="button" class="access-mode-btn" data-mode="restricted">Restrito a páginas</button>
+      </div>
+      <div class="field-hint" id="modal-role-hint">Normal vê tudo do seu nível · Admin abre as seções restritas · Restrito trava o acesso só às páginas marcadas.</div>
+    </div>
+
+    <div class="field" id="modal-pages-field" style="display:none;">
+      <div class="pages-toolbar">
+        <label style="margin:0;">Páginas permitidas <span class="pages-count" id="pages-count">0 marcadas</span></label>
+        <div>
+          <button type="button" class="linklike" id="pages-all">Todas</button>
+          <button type="button" class="linklike" id="pages-none">Limpar</button>
+        </div>
+      </div>
+      <div class="pages-list" id="modal-pages-list"></div>
+      <div class="field-hint">A 1ª página marcada vira a "home" do usuário — pra onde ele cai ao logar.</div>
+    </div>
+
+    <div class="field-error" id="modal-error"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="modal-save-btn" onclick="saveModal()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+};
+const SUPER_ADMIN = 'fuss';
+
+// Catálogo de páginas do portal admin. FONTE ÚNICA = a NAV do sv-shell.js
+// (window.SV_NAV). Cada item vira: { group, href, label }. Fallback defensivo
+// caso o sv-shell não tenha carregado.
+function getPortalPages() {
+  const nav = (typeof window !== 'undefined' && Array.isArray(window.SV_NAV)) ? window.SV_NAV : null;
+  if (!nav) {
+    return [
+      { group: 'Operação', href: 'dashboard.html',   label: 'Dashboard' },
+      { group: 'Operação', href: 'ops-map.html',      label: 'Mapa de Operações' },
+      { group: 'Sistema',  href: 'admin-users.html',  label: 'Usuários' },
+    ];
+  }
+  const out = [];
+  nav.forEach(g => {
+    const gl = (g.label && (g.label.pt || g.label)) || '';
+    (g.items || []).forEach(it => {
+      out.push({
+        group: gl,
+        href: String(it.href).toLowerCase(),
+        label: (it.label && (it.label.pt || it.label)) || it.href,
+      });
+    });
+  });
+  return out;
+}
+
+// Compara duas listas de páginas ignorando ordem/caixa.
+function samePages(a, b) {
+  const x = (a || []).map(s => String(s).toLowerCase()).sort();
+  const y = (b || []).map(s => String(s).toLowerCase()).sort();
+  if (x.length !== y.length) return false;
+  return x.every((v, i) => v === y[i]);
+}
+
+// Modo de acesso de um working-user (pra badge e pré-seleção no modal).
+// 'admin' (tier) > 'restricted' (pages[] não-vazio) > 'normal'.
+function roleOf(u) {
+  if (workingAdmins.has(String(u.username).toLowerCase())) return 'admin';
+  if (u.pages && u.pages.length) return 'restricted';
+  return 'normal';
+}
+
+// Markup do botão Salvar (ícone disco + label) — reutilizado nos resets de estado
+const SAVE_BTN_HTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar e publicar';
+
+// Estado
+let currentUser = null;
+let workingUsers = [];
+let workingAdmins = new Set();
+let modalCtx = null;
+
+// =================================================================
+// Bootstrap: login (common.js) → startApp
+// =================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  injectLogin({
+    title: 'Gestão de Usuários',
+    sub: 'Acesso restrito — super admin',
+    superAdminGate: SUPER_ADMIN,
+    onSuccess: startApp,
+  });
+});
+
+function startApp(user) {
+  currentUser = user;
+  injectTopbar({
+    region: 'LATAM · USUÁRIOS',
+    user: user,
+    showBack: true,
+    extras: [],
+  });
+  document.getElementById('app').style.display = '';
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+  buildPagesChecklist();
+  setupAccessControls();
+  initWorkingState();
+  renderTable();
+}
+
+// =================================================================
+// Tipo de acesso (segmented) + checklist de páginas permitidas
+// =================================================================
+let modalAccessMode = 'normal';   // 'normal' | 'admin' | 'restricted'
+
+function buildPagesChecklist() {
+  const list = document.getElementById('modal-pages-list');
+  if (!list) return;
+  let html = '';
+  let lastGroup = null;
+  getPortalPages().forEach(p => {
+    if (p.group !== lastGroup) {
+      html += '<div class="page-group-label">' + escapeHtml(p.group) + '</div>';
+      lastGroup = p.group;
+    }
+    html += '<label class="page-check">'
+      + '<input type="checkbox" value="' + escapeHtml(p.href) + '">'
+      + '<span>' + escapeHtml(p.label) + '</span>'
+      + '<span class="page-href">' + escapeHtml(p.href) + '</span>'
+      + '</label>';
+  });
+  list.innerHTML = html;
+  list.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', updatePagesCount));
+}
+
+function getCheckedPages() {
+  return Array.from(document.querySelectorAll('#modal-pages-list input:checked')).map(cb => cb.value);
+}
+
+function setCheckedPages(pages) {
+  const set = new Set((pages || []).map(s => String(s).toLowerCase()));
+  document.querySelectorAll('#modal-pages-list input[type="checkbox"]').forEach(cb => { cb.checked = set.has(cb.value); });
+  updatePagesCount();
+}
+
+function updatePagesCount() {
+  const n = getCheckedPages().length;
+  const el = document.getElementById('pages-count');
+  if (el) el.textContent = n + (n === 1 ? ' marcada' : ' marcadas');
+}
+
+function setAccessMode(mode) {
+  modalAccessMode = mode;
+  document.querySelectorAll('#access-modes .access-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  document.getElementById('modal-pages-field').style.display = (mode === 'restricted') ? '' : 'none';
+}
+
+// Listeners registrados 1x (botões de modo + atalhos Todas/Limpar).
+function setupAccessControls() {
+  const modes = document.getElementById('access-modes');
+  modes.querySelectorAll('.access-mode-btn').forEach(b => {
+    b.addEventListener('click', () => { if (!modes.classList.contains('disabled')) setAccessMode(b.dataset.mode); });
+  });
+  document.getElementById('pages-all').addEventListener('click', () => {
+    document.querySelectorAll('#modal-pages-list input[type="checkbox"]').forEach(cb => { cb.checked = true; });
+    updatePagesCount();
+  });
+  document.getElementById('pages-none').addEventListener('click', () => {
+    document.querySelectorAll('#modal-pages-list input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+    updatePagesCount();
+  });
+}
+
+// =================================================================
+// Working state (snapshot mutável de USERS + ADMIN_USERNAMES)
+// =================================================================
+function initWorkingState() {
+  workingUsers = USERS.map(u => ({
+    username: u.username,
+    passwordHash: u.passwordHash,
+    fullName: u.fullName,
+    pages: Array.isArray(u.pages) ? u.pages.slice() : [],
+    _origUsername: u.username,
+  }));
+  workingAdmins = new Set(ADMIN_USERNAMES.map(a => String(a).toLowerCase()));
+}
+
+function resetChanges() {
+  if (hasChanges() && !confirm('Descartar todas as mudanças não salvas?')) return;
+  initWorkingState();
+  renderTable();
+  clearStatus();
+}
+
+function hasChanges() {
+  return workingUsers.some(u => u._isNew || u._isDirty || u._isDeleted);
+}
+
+// =================================================================
+// Render
+// =================================================================
+function renderTable() {
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = '';
+  let userCount = 0;
+  let adminCount = 0;
+
+  workingUsers.forEach((u, idx) => {
+    if (!u._isDeleted) userCount++;
+    const isAdm = workingAdmins.has(String(u.username).toLowerCase());
+    if (isAdm && !u._isDeleted) adminCount++;
+    const isLocked = String(u.username).toLowerCase() === SUPER_ADMIN;
+
+    const tr = document.createElement('tr');
+    if (u._isDeleted) tr.classList.add('deleted');
+    else if (u._isNew) tr.classList.add('new-row');
+    else if (u._isDirty) tr.classList.add('dirty');
+
+    const badges = [];
+    if (isAdm) badges.push('<span class="badge badge-admin">Admin</span>');
+    else if (u.pages && u.pages.length) {
+      const n = u.pages.length;
+      badges.push('<span class="badge badge-scope">' + n + (n === 1 ? ' página' : ' páginas') + '</span>');
+    }
+    if (isLocked) badges.push('<span class="badge badge-locked">Super</span>');
+    if (u._isNew) badges.push('<span class="badge badge-new">Novo</span>');
+    else if (u._isDirty) badges.push('<span class="badge badge-dirty">Alterado</span>');
+
+    tr.innerHTML = `
+      <td><span class="user-username">${escapeHtml(u.username)}</span></td>
+      <td>${escapeHtml(u.fullName)}</td>
+      <td>${badges.join(' ') || '<span style="color:var(--c-text-dim);font-size:12px;">—</span>'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" onclick="openEditModal(${idx})" ${u._isDeleted ? 'disabled' : ''}><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Editar</button>
+          <button class="icon-btn danger" onclick="toggleDelete(${idx})" ${isLocked ? 'disabled title="Não pode remover o super admin"' : ''}>${u._isDeleted
+            ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Restaurar'
+            : '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Remover'}</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('user-count').textContent = userCount;
+  document.getElementById('admin-count').textContent = adminCount;
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// =================================================================
+// Modal — add/edit
+// =================================================================
+function openAddModal() {
+  modalCtx = { mode: 'add' };
+  document.getElementById('modal-title').textContent = 'Novo usuário';
+  document.getElementById('modal-sub').textContent = 'Preencha os campos. A senha é hashada antes de sair do browser.';
+  document.getElementById('modal-username').value = '';
+  document.getElementById('modal-username').disabled = false;
+  document.getElementById('modal-fullname').value = '';
+  document.getElementById('modal-password').value = '';
+  document.getElementById('modal-password').placeholder = 'Mín. 6 caracteres';
+  document.getElementById('modal-password-hint').textContent = 'A senha é convertida para hash SHA-256 antes de sair do navegador.';
+  document.getElementById('access-modes').classList.remove('disabled');
+  setCheckedPages([]);
+  setAccessMode('normal');
+  document.getElementById('modal-error').textContent = '';
+  document.getElementById('user-modal').classList.add('visible');
+  setTimeout(() => document.getElementById('modal-username').focus(), 50);
+}
+
+function openEditModal(idx) {
+  const u = workingUsers[idx];
+  if (!u || u._isDeleted) return;
+  modalCtx = { mode: 'edit', idx: idx };
+  document.getElementById('modal-title').textContent = 'Editar usuário';
+  document.getElementById('modal-sub').textContent = 'Deixe a senha em branco pra mantê-la inalterada.';
+  document.getElementById('modal-username').value = u.username;
+  document.getElementById('modal-username').disabled = (String(u.username).toLowerCase() === SUPER_ADMIN);
+  document.getElementById('modal-fullname').value = u.fullName;
+  document.getElementById('modal-password').value = '';
+  document.getElementById('modal-password').placeholder = '(em branco = não muda)';
+  document.getElementById('modal-password-hint').textContent = 'Deixe vazio pra manter a senha atual.';
+  const lockAccess = (String(u.username).toLowerCase() === SUPER_ADMIN);
+  document.getElementById('access-modes').classList.toggle('disabled', lockAccess);
+  setCheckedPages(u.pages || []);
+  setAccessMode(roleOf(u));
+  document.getElementById('modal-error').textContent = '';
+  document.getElementById('user-modal').classList.add('visible');
+  setTimeout(() => document.getElementById('modal-fullname').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('user-modal').classList.remove('visible');
+  // Reseta o botão de salvar — sem isso ele fica preso em "Salvando..." (disabled)
+  // e a próxima abertura do modal não deixa salvar de novo.
+  const sb = document.getElementById('modal-save-btn');
+  if (sb) { sb.disabled = false; sb.textContent = 'Salvar'; }
+  modalCtx = null;
+}
+
+async function saveModal() {
+  if (!modalCtx) return;
+  const errEl = document.getElementById('modal-error');
+  errEl.textContent = '';
+
+  const username = document.getElementById('modal-username').value.trim().toLowerCase();
+  const fullName = document.getElementById('modal-fullname').value.trim();
+  const password = document.getElementById('modal-password').value;
+  const isAdm = modalAccessMode === 'admin';
+  const rolePages = (modalAccessMode === 'restricted') ? getCheckedPages() : [];
+
+  if (!username) { errEl.textContent = 'Username é obrigatório.'; return; }
+  if (!/^[a-z0-9._-]+$/.test(username)) {
+    errEl.textContent = 'Username só pode ter letras, números, ponto, traço e underline.'; return;
+  }
+  if (!fullName) { errEl.textContent = 'Nome completo é obrigatório.'; return; }
+  if (modalAccessMode === 'restricted' && rolePages.length === 0) {
+    errEl.textContent = 'Marque ao menos uma página pro acesso restrito.'; return;
+  }
+
+  // Duplicate check
+  const dupIdx = workingUsers.findIndex((u, i) =>
+    !u._isDeleted &&
+    String(u.username).toLowerCase() === username &&
+    !(modalCtx.mode === 'edit' && i === modalCtx.idx)
+  );
+  if (dupIdx >= 0) { errEl.textContent = 'Já existe um usuário com esse username.'; return; }
+
+  const saveBtn = document.getElementById('modal-save-btn');
+  saveBtn.disabled = true; saveBtn.textContent = 'Salvando...';
+
+  try {
+    if (modalCtx.mode === 'add') {
+      if (!password || password.length < 6) {
+        errEl.textContent = 'Senha precisa ter no mínimo 6 caracteres.';
+        saveBtn.disabled = false; saveBtn.textContent = 'Salvar';
+        return;
+      }
+      const hash = await sha256(password);
+      workingUsers.push({
+        username, fullName, passwordHash: hash,
+        pages: rolePages,
+        _isNew: true,
+      });
+      if (isAdm) workingAdmins.add(username);
+      else workingAdmins.delete(username);
+    } else {
+      const u = workingUsers[modalCtx.idx];
+      const isLocked = String(u._origUsername).toLowerCase() === SUPER_ADMIN;
+      let changed = false;
+
+      if (!isLocked && username !== String(u.username).toLowerCase()) {
+        const wasAdmin = workingAdmins.has(String(u.username).toLowerCase());
+        workingAdmins.delete(String(u.username).toLowerCase());
+        if (wasAdmin) workingAdmins.add(username);
+        u.username = username;
+        changed = true;
+      }
+      if (fullName !== u.fullName) { u.fullName = fullName; changed = true; }
+      if (password) {
+        if (password.length < 6) {
+          errEl.textContent = 'Senha precisa ter no mínimo 6 caracteres.';
+          saveBtn.disabled = false; saveBtn.textContent = 'Salvar';
+          return;
+        }
+        u.passwordHash = await sha256(password);
+        changed = true;
+      }
+      const curAdmin = workingAdmins.has(String(u.username).toLowerCase());
+      if (!isLocked && curAdmin !== isAdm) {
+        if (isAdm) workingAdmins.add(String(u.username).toLowerCase());
+        else workingAdmins.delete(String(u.username).toLowerCase());
+        changed = true;
+      }
+      if (!isLocked && !samePages(u.pages || [], rolePages)) {
+        u.pages = rolePages;
+        changed = true;
+      }
+      if (changed && !u._isNew) u._isDirty = true;
+    }
+    closeModal();
+    renderTable();
+    clearStatus();
+  } catch (err) {
+    errEl.textContent = 'Erro: ' + err.message;
+    saveBtn.disabled = false; saveBtn.textContent = 'Salvar';
+  }
+}
+
+// =================================================================
+// Delete / restore
+// =================================================================
+function toggleDelete(idx) {
+  const u = workingUsers[idx];
+  if (!u) return;
+  if (String(u.username).toLowerCase() === SUPER_ADMIN) {
+    toast('Não pode remover o super admin', 'error');
+    return;
+  }
+  if (u._isNew && !u._isDeleted) {
+    workingUsers.splice(idx, 1);
+    workingAdmins.delete(String(u.username).toLowerCase());
+  } else {
+    u._isDeleted = !u._isDeleted;
+    if (u._isDeleted) workingAdmins.delete(String(u.username).toLowerCase());
+  }
+  renderTable();
+  clearStatus();
+}
+
+// =================================================================
+// Salvar — POST pro Apps Script
+// =================================================================
+async function commitChanges() {
+  if (!hasChanges()) {
+    toast('Nenhuma mudança pra publicar', 'error');
+    return;
+  }
+  const finalUsers = workingUsers
+    .filter(u => !u._isDeleted)
+    .map(u => ({
+      username: u.username,
+      passwordHash: u.passwordHash,
+      fullName: u.fullName,
+      pages: Array.isArray(u.pages) ? u.pages : [],
+    }));
+  const hasFuss = finalUsers.some(u => String(u.username).toLowerCase() === SUPER_ADMIN);
+  if (!hasFuss) {
+    toast('Erro: usuário "fuss" não pode ser removido', 'error');
+    return;
+  }
+  const finalUsernames = new Set(finalUsers.map(u => String(u.username).toLowerCase()));
+  const finalAdmins = [...workingAdmins].filter(a => finalUsernames.has(a));
+  if (finalAdmins.indexOf(SUPER_ADMIN) < 0) finalAdmins.push(SUPER_ADMIN);
+
+  const summary = summarizeChanges();
+  if (!confirm('Vai publicar ' + summary + '. Confirmar?\n\nIsso commita o auth.js no GitHub. GitHub Pages atualiza em 1–10 min.')) return;
+
+  const btn = document.getElementById('save-btn');
+  const statusEl = document.getElementById('save-status');
+  btn.disabled = true; btn.textContent = 'Publicando...';
+  statusEl.className = 'save-status';
+  statusEl.textContent = 'Enviando para o GitHub...';
+
+  try {
+    const payload = {
+      type: 'updateAuthUsers',
+      actorUsername: currentUser.username,
+      users: finalUsers,
+      admins: finalAdmins,
+      commitMessage: document.getElementById('commit-msg').value.trim(),
+    };
+    const res = await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload),
+    }).then(r => r.json());
+
+    if (!res.success) throw new Error(res.error || 'Erro desconhecido');
+
+    statusEl.className = 'save-status success';
+    statusEl.textContent = '✓ ' + (res.message || 'Publicado');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Publicado';
+    toast('Publicado! GitHub Pages atualiza em 1–10min', 'success');
+
+    workingUsers = workingUsers.filter(u => !u._isDeleted).map(u => ({
+      username: u.username,
+      passwordHash: u.passwordHash,
+      fullName: u.fullName,
+      pages: Array.isArray(u.pages) ? u.pages.slice() : [],
+      _origUsername: u.username,
+    }));
+    document.getElementById('commit-msg').value = '';
+    renderTable();
+    setTimeout(() => { btn.disabled = false; btn.innerHTML = SAVE_BTN_HTML; }, 3000);
+  } catch (err) {
+    statusEl.className = 'save-status error';
+    statusEl.textContent = '✗ ' + err.message;
+    btn.disabled = false;
+    btn.innerHTML = SAVE_BTN_HTML;
+    toast('Erro: ' + err.message, 'error');
+  }
+}
+
+function summarizeChanges() {
+  const added = workingUsers.filter(u => u._isNew && !u._isDeleted).length;
+  const edited = workingUsers.filter(u => u._isDirty && !u._isNew && !u._isDeleted).length;
+  const removed = workingUsers.filter(u => u._isDeleted && !u._isNew).length;
+  const parts = [];
+  if (added) parts.push(added + ' add');
+  if (edited) parts.push(edited + ' edit');
+  if (removed) parts.push(removed + ' remove');
+  return parts.length ? parts.join(', ') : 'mudanças';
+}
+
+function clearStatus() {
+  const statusEl = document.getElementById('save-status');
+  statusEl.className = 'save-status';
+  statusEl.textContent = '';
+}
+
+// Toast
+let toastTimer = null;
+function toast(msg, kind) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast visible' + (kind ? ' ' + kind : '');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = 'toast', 3500);
+}
+
+// ESC fecha modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+document.getElementById('user-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'user-modal') closeModal();
+});
+</script>
+<script src="/sv-shell.js"></script>
+</body>
+</html>

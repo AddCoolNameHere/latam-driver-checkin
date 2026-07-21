@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>PMO Hub · LATAM · Aceolution</title>
+<link rel="icon" type="image/png" href="/aceolution-globe.png">
+<link rel="stylesheet" href="/theme.css?v=20260519a">
+<script src="/auth.js?v=20260518b"></script>
+<script src="/theme.js?v=20260519a"></script>
+<script src="/common.js?v=20260519a"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  /* PAGE HEAD (cabeçalho de página simples — a marca agora é a sidebar) */
+  .page-head {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 22px 20px 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .page-head-text { flex: 1; min-width: 0; }
+  .page-head-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    line-height: 1.15;
+    color: var(--c-text);
+  }
+  .page-head-subtitle {
+    font-size: 13px;
+    color: var(--c-text-muted);
+    margin-top: 4px;
+    font-weight: 400;
+  }
+  .page-head-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    color: var(--c-text-muted);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .nav-link svg { display: block; }
+  .nav-link:hover { color: var(--c-primary); border-color: var(--c-accent); }
+  .lang-toggle {
+    display: flex;
+    gap: 2px;
+    background: var(--c-bg-tint);
+    border: 1px solid var(--c-border);
+    border-radius: 999px;
+    padding: 3px;
+  }
+  .lang-toggle button {
+    background: transparent;
+    border: none;
+    color: var(--c-text-muted);
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+  }
+  .lang-toggle button.active {
+    background: var(--c-primary);
+    color: #fff;
+  }
+
+  /* TABS */
+  .tabs-wrap {
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+  }
+  .tabs {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    padding: 0 20px;
+    gap: 4px;
+  }
+  .tab {
+    background: none;
+    border: none;
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--c-text); background: var(--c-bg); }
+  .tab.active {
+    color: var(--c-primary);
+    border-bottom-color: var(--c-primary);
+  }
+  .tab-icon { display: inline-flex; }
+  .tab-icon svg { display: block; }
+
+  /* MAIN */
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .hidden { display: none !important; }
+
+  /* CARDS */
+  .card {
+    background: var(--c-surface);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    border: 1px solid var(--c-border);
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title-icon { display: inline-flex; color: var(--c-primary); }
+  .card-title-icon svg { display: block; }
+  .card-sub {
+    font-size: 12px;
+    color: var(--c-text-muted);
+    margin-top: -10px;
+    margin-bottom: 14px;
+  }
+
+  /* FORMS */
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-text);
+    margin-bottom: 6px;
+    letter-spacing: 0.2px;
+  }
+  label .required { color: #DC2626; }
+  input[type="text"],
+  input[type="email"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--c-surface);
+    color: var(--c-text);
+    transition: all 0.15s;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px rgba(44,82,130,0.12);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+  .field-hint {
+    font-size: 11px;
+    color: var(--c-text-dim);
+    margin-top: 4px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+  /* CATEGORY CHIPS */
+  .cat-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .cat-chip {
+    background: var(--c-bg);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--c-text);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .cat-chip { display: inline-flex; align-items: center; gap: 7px; }
+  .cat-chip svg, .comment-cat-badge svg { display: block; flex-shrink: 0; }
+  .comment-cat-badge { display: inline-flex; align-items: center; gap: 5px; }
+  .cat-chip:hover { background: var(--c-surface); border-color: var(--c-border-strong); }
+  .cat-chip.selected { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+  .cat-chip[data-cat="accident"] { background: #FEE2E2; color: #991B1B; }
+  .cat-chip[data-cat="accident"].selected { border-color: #DC2626; background: #FEE2E2; }
+  .cat-chip[data-cat="conduct"] { background: #FEF3C7; color: #92400E; }
+  .cat-chip[data-cat="conduct"].selected { border-color: #F59E0B; }
+  .cat-chip[data-cat="vehicle"] { background: #DBEAFE; color: #1E40AF; }
+  .cat-chip[data-cat="vehicle"].selected { border-color: #2563EB; }
+  .cat-chip[data-cat="note"] { background: #F1F5F9; color: #475569; }
+  .cat-chip[data-cat="note"].selected { border-color: #64748B; }
+  .cat-chip[data-cat="positive"] { background: #D1FAE5; color: #065F46; }
+  .cat-chip[data-cat="positive"].selected { border-color: #10B981; }
+
+  /* SUBMIT BUTTON */
+  .btn-submit {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(44,82,130,0.25); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-submit-wrap {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
+  /* LOADING SPINNER */
+  .loading-spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* COMMENT LIST */
+  .comments-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .comments-filters input,
+  .comments-filters select {
+    flex: 1;
+    min-width: 160px;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .comment-card {
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-left: 3px solid var(--c-border-strong);
+    border-radius: 8px;
+    padding: 14px 16px;
+    transition: all 0.15s;
+  }
+  .comment-card:hover { background: var(--c-surface); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .comment-card[data-cat="accident"] { border-left-color: #DC2626; }
+  .comment-card[data-cat="conduct"] { border-left-color: #F59E0B; }
+  .comment-card[data-cat="vehicle"] { border-left-color: #2563EB; }
+  .comment-card[data-cat="note"] { border-left-color: #64748B; }
+  .comment-card[data-cat="positive"] { border-left-color: #10B981; }
+  .comment-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .comment-cat-badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .comment-cat-badge[data-cat="accident"] { background: #FEE2E2; color: #991B1B; }
+  .comment-cat-badge[data-cat="conduct"] { background: #FEF3C7; color: #92400E; }
+  .comment-cat-badge[data-cat="vehicle"] { background: #DBEAFE; color: #1E40AF; }
+  .comment-cat-badge[data-cat="note"] { background: #F1F5F9; color: #475569; }
+  .comment-cat-badge[data-cat="positive"] { background: #D1FAE5; color: #065F46; }
+  .comment-driver {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--c-text);
+  }
+  .comment-meta {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-left: auto;
+  }
+  .comment-body {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--c-text);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--c-text-muted);
+  }
+  .empty-state-icon {
+    opacity: 0.4;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: center;
+  }
+  .empty-state-icon svg { display: block; }
+  .empty-state-text {
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  /* PLACEHOLDER (escopos / alertas em breve) */
+  .placeholder-card {
+    background: var(--c-surface);
+    border: 2px dashed var(--c-border-strong);
+    border-radius: 12px;
+    padding: 60px 30px;
+    text-align: center;
+  }
+  .placeholder-icon { opacity: 0.4; margin-bottom: 12px; display: flex; justify-content: center; color: var(--c-text-muted); }
+  .placeholder-icon svg { display: block; }
+  .placeholder-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 6px;
+  }
+  .placeholder-text {
+    font-size: 13px;
+    color: var(--c-text-muted);
+    max-width: 460px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--c-primary-dark);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .toast.success { background: #16A34A; }
+  .toast.error { background: #DC2626; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--c-text-dim);
+    padding: 24px 14px 30px;
+  }
+
+  /* DRIVER SELECT GROUPS */
+  select.driver-select optgroup {
+    font-weight: 700;
+    color: var(--c-primary);
+  }
+  select.driver-select option {
+    font-weight: 400;
+    color: var(--c-text);
+  }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <div class="page-head-text">
+    <h1 class="page-head-title" data-i18n="appTitle">PMO Hub · LATAM</h1>
+    <div class="page-head-subtitle" data-i18n="appSubtitle">Comentários, escopos e alertas pra gestão da operação</div>
+  </div>
+  <div class="page-head-right">
+    <a href="dashboard.html" class="nav-link" data-i18n="navDashboard">← Dashboard</a>
+    <button class="nav-link" id="refresh-btn" title="Atualizar" onclick="refreshPmoPage()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v5h-5"/></svg>
+    </button>
+    <span class="lang-toggle">
+      <button class="active" data-lang="pt" onclick="setLang('pt')">PT</button>
+      <button data-lang="es" onclick="setLang('es')">ES</button>
+      <button data-lang="en" onclick="setLang('en')">EN</button>
+    </span>
+  </div>
+</div>
+
+<div class="tabs-wrap">
+  <nav class="tabs">
+    <button class="tab active" data-tab="comments" onclick="setTab('comments')">
+      <span class="tab-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9.7 9.7 0 0 1-4-.9L3 21l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 21 11.5Z"/></svg></span>
+      <span data-i18n="tabComments">Comentários</span>
+    </button>
+    <button class="tab" data-tab="scopes" onclick="setTab('scopes')">
+      <span class="tab-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg></span>
+      <span data-i18n="tabScopes">Escopos</span>
+    </button>
+    <button class="tab" data-tab="alerts" onclick="setTab('alerts')">
+      <span class="tab-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 0 0-12 0c0 6.5-2.5 8.5-2.5 8.5h17S18 15 18 8.5Z"/><path d="M13.7 20.5a2 2 0 0 1-3.4 0"/></svg></span>
+      <span data-i18n="tabAlerts">Alertas</span>
+    </button>
+  </nav>
+</div>
+
+<main>
+
+  <!-- ============ TAB: COMENTÁRIOS ============ -->
+  <section id="tab-comments">
+
+    <!-- Form de novo comentário -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-title-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></svg></span>
+        <span data-i18n="newCommentTitle">Novo comentário</span>
+      </div>
+      <div class="card-sub" data-i18n="newCommentSub">
+        Comentários ficam visíveis no perfil do motorista (driver profile) e nesta lista.
+      </div>
+
+      <div class="form-grid">
+        <div>
+          <label data-i18n="authorLabel">Seu nome <span class="required">*</span></label>
+          <input type="text" id="author-name" data-i18n-placeholder="authorPlaceholder" placeholder="Ex: Lucas Fuss" autocomplete="name">
+          <div class="field-hint" data-i18n="authorHint">Salvo no navegador pra você não digitar de novo.</div>
+        </div>
+        <div>
+          <label data-i18n="driverLabel">Motorista <span class="required">*</span></label>
+          <select id="driver-select" class="driver-select">
+            <option value="" data-i18n="driverLoading">Carregando motoristas...</option>
+          </select>
+          <div class="field-hint" data-i18n="driverHint">Agrupados por país.</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label data-i18n="categoryLabel">Categoria <span class="required">*</span></label>
+        <div class="cat-chips" id="cat-chips">
+          <button type="button" class="cat-chip" data-cat="accident">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4Z"/><path d="M12 10v4M12 17.5h.01"/></svg>
+            <span data-i18n="catAccident">Acidente</span>
+          </button>
+          <button type="button" class="cat-chip" data-cat="conduct">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2 19a1.8 1.8 0 0 0 1.6 2.7h16.8A1.8 1.8 0 0 0 22 19L13.7 4.3a1.9 1.9 0 0 0-3.4 0Z"/><path d="M12 9.5v4M12 17h.01"/></svg>
+            <span data-i18n="catConduct">Conduta</span>
+          </button>
+          <button type="button" class="cat-chip" data-cat="vehicle">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5a3.5 3.5 0 0 0-4.6 4.3L4 15.7a2 2 0 0 0 2.8 2.8l5.9-5.9a3.5 3.5 0 0 0 4.3-4.6l-2.2 2.2-2.3-.6-.6-2.3 2.2-2.2Z"/></svg>
+            <span data-i18n="catVehicle">Veículo</span>
+          </button>
+          <button type="button" class="cat-chip" data-cat="note">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h10l4 4v14H5V3Z"/><path d="M15 3v4h4"/><path d="M8 12h7M8 16h5"/></svg>
+            <span data-i18n="catNote">Observação</span>
+          </button>
+          <button type="button" class="cat-chip" data-cat="positive">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <span data-i18n="catPositive">Elogio</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label data-i18n="bodyLabel">Comentário <span class="required">*</span></label>
+        <textarea id="comment-body" rows="4" data-i18n-placeholder="bodyPlaceholder" placeholder="Descreva a situação, contexto, ações tomadas..."></textarea>
+      </div>
+
+      <div class="btn-submit-wrap">
+        <button type="button" class="btn-submit" id="submit-btn" onclick="submitComment()">
+          <span data-i18n="submitBtn">Salvar comentário</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Lista de comentários -->
+    <div class="card">
+      <div class="card-title">
+        <span class="card-title-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M9 12h6M9 16h4"/></svg></span>
+        <span data-i18n="listTitle">Histórico de comentários</span>
+        <span style="margin-left:auto;font-size:11px;font-weight:500;color:var(--c-text-muted);" id="list-count">—</span>
+      </div>
+
+      <div class="comments-filters">
+        <input type="text" id="filter-search" data-i18n-placeholder="filterSearchPlaceholder" placeholder="Buscar por texto, autor ou motorista..." oninput="renderCommentsList()">
+        <select id="filter-driver" onchange="renderCommentsList()">
+          <option value="" data-i18n="filterAllDrivers">Todos motoristas</option>
+        </select>
+        <select id="filter-cat" onchange="renderCommentsList()">
+          <option value="" data-i18n="filterAllCats">Todas categorias</option>
+          <option value="accident" data-i18n="catAccident">Acidente</option>
+          <option value="conduct" data-i18n="catConduct">Conduta</option>
+          <option value="vehicle" data-i18n="catVehicle">Veículo</option>
+          <option value="note" data-i18n="catNote">Observação</option>
+          <option value="positive" data-i18n="catPositive">Elogio</option>
+        </select>
+      </div>
+
+      <div class="comments-list" id="comments-list">
+        <div class="empty-state">
+          <div class="empty-state-icon"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <div class="empty-state-text" data-i18n="loadingComments">Carregando...</div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============ TAB: ESCOPOS ============ -->
+  <section id="tab-scopes" class="hidden">
+    <div class="placeholder-card">
+      <div class="placeholder-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg></div>
+      <div class="placeholder-title" data-i18n="scopesSoonTitle">Em breve — Escopos por país</div>
+      <div class="placeholder-text" data-i18n="scopesSoonText">
+        Aqui você vai poder fazer upload dos escopos de cada país (Brasil, Argentina, Chile, Colombia, México, Peru). Versionado: cada upload mantém o histórico, e o último vira o "atual" pra consulta no dashboard.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB: ALERTAS ============ -->
+  <section id="tab-alerts" class="hidden">
+    <div class="placeholder-card">
+      <div class="placeholder-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 0 0-12 0c0 6.5-2.5 8.5-2.5 8.5h17S18 15 18 8.5Z"/><path d="M13.7 20.5a2 2 0 0 1-3.4 0"/></svg></div>
+      <div class="placeholder-title" data-i18n="alertsSoonTitle">Em breve — Central de alertas</div>
+      <div class="placeholder-text" data-i18n="alertsSoonText">
+        Lista unificada de coisas que precisam atenção: consertos chegando ao prazo (3 dias / 1 dia), pedidos de dinheiro pendentes, recibos novos sem revisão. Estrutura extensível pra adicionar mais alertas depois.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span data-i18n="footerText">Plataforma interna — Aceolution do Brasil Ltda.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+};
+
+// SVG line icons (apresentação) — substituem emoji no chrome gerado por JS
+const _svg = (paths, size) => `<svg width="${size||38}" height="${size||38}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+const SVG_ICON = {
+  clock: _svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  alert: _svg('<path d="M12 4 2.5 20h19L12 4Z"/><path d="M12 10v4M12 17.5h.01"/>'),
+  chat:  _svg('<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9.7 9.7 0 0 1-4-.9L3 21l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 21 11.5Z"/>'),
+};
+// Ícones de categoria pro badge dos comentários (13px, herdam a cor do badge)
+const SVG_CAT = {
+  accident: _svg('<path d="M12 4 2.5 20h19L12 4Z"/><path d="M12 10v4M12 17.5h.01"/>', 13),
+  conduct:  _svg('<path d="M10.3 4.3 2 19a1.8 1.8 0 0 0 1.6 2.7h16.8A1.8 1.8 0 0 0 22 19L13.7 4.3a1.9 1.9 0 0 0-3.4 0Z"/><path d="M12 9.5v4M12 17h.01"/>', 13),
+  vehicle:  _svg('<path d="M14.5 5.5a3.5 3.5 0 0 0-4.6 4.3L4 15.7a2 2 0 0 0 2.8 2.8l5.9-5.9a3.5 3.5 0 0 0 4.3-4.6l-2.2 2.2-2.3-.6-.6-2.3 2.2-2.2Z"/>', 13),
+  note:     _svg('<path d="M5 3h10l4 4v14H5V3Z"/><path d="M15 3v4h4"/><path d="M8 12h7M8 16h5"/>', 13),
+  positive: _svg('<path d="M20 6 9 17l-5-5"/>', 13),
+};
+
+const I18N = {
+  pt: {
+    appTitle: 'PMO Hub · LATAM',
+    appSubtitle: 'Comentários, escopos e alertas pra gestão da operação',
+    navDashboard: '← Dashboard',
+    tabComments: 'Comentários',
+    tabScopes: 'Escopos',
+    tabAlerts: 'Alertas',
+    newCommentTitle: 'Novo comentário',
+    newCommentSub: 'Comentários ficam visíveis no perfil do motorista (driver profile) e nesta lista.',
+    authorLabel: 'Seu nome',
+    authorPlaceholder: 'Ex: Lucas Fuss',
+    authorHint: 'Salvo no navegador pra você não digitar de novo.',
+    driverLabel: 'Motorista',
+    driverHint: 'Agrupados por país.',
+    driverLoading: 'Carregando motoristas...',
+    categoryLabel: 'Categoria',
+    catAccident: 'Acidente',
+    catConduct: 'Conduta',
+    catVehicle: 'Veículo',
+    catNote: 'Observação',
+    catPositive: 'Elogio',
+    bodyLabel: 'Comentário',
+    bodyPlaceholder: 'Descreva a situação, contexto, ações tomadas...',
+    submitBtn: 'Salvar comentário',
+    listTitle: 'Histórico de comentários',
+    filterSearchPlaceholder: 'Buscar por texto, autor ou motorista...',
+    filterAllDrivers: 'Todos motoristas',
+    filterAllCats: 'Todas categorias',
+    loadingComments: 'Carregando...',
+    emptyComments: 'Nenhum comentário ainda. Seja o primeiro a registrar uma observação.',
+    emptyFiltered: 'Nenhum comentário bate com os filtros.',
+    sending: 'Enviando...',
+    successSave: '✓ Comentário salvo!',
+    errorSave: 'Erro ao salvar. Tente novamente.',
+    errorLoad: 'Erro ao carregar comentários.',
+    fillAuthor: 'Digite seu nome',
+    fillDriver: 'Selecione um motorista',
+    fillCategory: 'Selecione uma categoria',
+    fillBody: 'Escreva o comentário',
+    scopesSoonTitle: 'Em breve — Escopos por país',
+    scopesSoonText: 'Aqui você vai poder fazer upload dos escopos de cada país (Brasil, Argentina, Chile, Colombia, México, Peru). Versionado: cada upload mantém o histórico, e o último vira o "atual" pra consulta no dashboard.',
+    alertsSoonTitle: 'Em breve — Central de alertas',
+    alertsSoonText: 'Lista unificada de coisas que precisam atenção: consertos chegando ao prazo (3 dias / 1 dia), pedidos de dinheiro pendentes, recibos novos sem revisão. Estrutura extensível pra adicionar mais alertas depois.',
+    footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+    countLabel: 'comentários',
+  },
+  es: {
+    appTitle: 'PMO Hub · LATAM',
+    appSubtitle: 'Comentarios, scopes y alertas para la gestión de la operación',
+    navDashboard: '← Dashboard',
+    tabComments: 'Comentarios',
+    tabScopes: 'Scopes',
+    tabAlerts: 'Alertas',
+    newCommentTitle: 'Nuevo comentario',
+    newCommentSub: 'Los comentarios quedan visibles en el perfil del conductor (driver profile) y en esta lista.',
+    authorLabel: 'Tu nombre',
+    authorPlaceholder: 'Ej: Lucas Fuss',
+    authorHint: 'Guardado en el navegador para no tener que escribirlo otra vez.',
+    driverLabel: 'Conductor',
+    driverHint: 'Agrupados por país.',
+    driverLoading: 'Cargando conductores...',
+    categoryLabel: 'Categoría',
+    catAccident: 'Accidente',
+    catConduct: 'Conducta',
+    catVehicle: 'Vehículo',
+    catNote: 'Observación',
+    catPositive: 'Elogio',
+    bodyLabel: 'Comentario',
+    bodyPlaceholder: 'Describe la situación, contexto, acciones tomadas...',
+    submitBtn: 'Guardar comentario',
+    listTitle: 'Histórico de comentarios',
+    filterSearchPlaceholder: 'Buscar por texto, autor o conductor...',
+    filterAllDrivers: 'Todos los conductores',
+    filterAllCats: 'Todas las categorías',
+    loadingComments: 'Cargando...',
+    emptyComments: 'Aún no hay comentarios. Sé el primero en registrar una observación.',
+    emptyFiltered: 'Ningún comentario coincide con los filtros.',
+    sending: 'Enviando...',
+    successSave: '✓ ¡Comentario guardado!',
+    errorSave: 'Error al guardar. Intenta de nuevo.',
+    errorLoad: 'Error al cargar comentarios.',
+    fillAuthor: 'Escribe tu nombre',
+    fillDriver: 'Selecciona un conductor',
+    fillCategory: 'Selecciona una categoría',
+    fillBody: 'Escribe el comentario',
+    scopesSoonTitle: 'Próximamente — Scopes por país',
+    scopesSoonText: 'Aquí podrás subir los scopes de cada país (Brasil, Argentina, Chile, Colombia, México, Perú). Versionado: cada upload mantiene el histórico, y el último se vuelve el "actual" para consulta en el dashboard.',
+    alertsSoonTitle: 'Próximamente — Central de alertas',
+    alertsSoonText: 'Lista unificada de cosas que requieren atención: reparaciones llegando al plazo (3 días / 1 día), pedidos de dinero pendientes, recibos nuevos sin revisión. Estructura extensible para añadir más alertas después.',
+    footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
+    countLabel: 'comentarios',
+  },
+  en: {
+    appTitle: 'PMO Hub · LATAM',
+    appSubtitle: 'Comments, scopes and alerts for ops management',
+    navDashboard: '← Dashboard',
+    tabComments: 'Comments',
+    tabScopes: 'Scopes',
+    tabAlerts: 'Alerts',
+    newCommentTitle: 'New comment',
+    newCommentSub: 'Comments become visible in the driver profile and in the list below.',
+    authorLabel: 'Your name',
+    authorPlaceholder: 'E.g.: Lucas Fuss',
+    authorHint: 'Saved in your browser so you don\'t have to type it again.',
+    driverLabel: 'Driver',
+    driverHint: 'Grouped by country.',
+    driverLoading: 'Loading drivers...',
+    categoryLabel: 'Category',
+    catAccident: 'Accident',
+    catConduct: 'Conduct',
+    catVehicle: 'Vehicle',
+    catNote: 'Note',
+    catPositive: 'Praise',
+    bodyLabel: 'Comment',
+    bodyPlaceholder: 'Describe the situation, context, actions taken...',
+    submitBtn: 'Save comment',
+    listTitle: 'Comment history',
+    filterSearchPlaceholder: 'Search by text, author or driver...',
+    filterAllDrivers: 'All drivers',
+    filterAllCats: 'All categories',
+    loadingComments: 'Loading...',
+    emptyComments: 'No comments yet. Be the first to log an observation.',
+    emptyFiltered: 'No comments match the filters.',
+    sending: 'Sending...',
+    successSave: '✓ Comment saved!',
+    errorSave: 'Error saving. Try again.',
+    errorLoad: 'Error loading comments.',
+    fillAuthor: 'Type your name',
+    fillDriver: 'Select a driver',
+    fillCategory: 'Select a category',
+    fillBody: 'Write the comment',
+    scopesSoonTitle: 'Coming soon — Country scopes',
+    scopesSoonText: 'Here you\'ll be able to upload scopes per country (Brazil, Argentina, Chile, Colombia, Mexico, Peru). Versioned: each upload keeps history, and the latest becomes the "current" one for dashboard use.',
+    alertsSoonTitle: 'Coming soon — Alerts center',
+    alertsSoonText: 'Unified list of things that need attention: car repairs nearing deadline (3 days / 1 day), pending cash requests, new receipts without review. Extensible structure for adding more alerts later.',
+    footerText: 'Internal platform — Aceolution do Brasil Ltda.',
+    countLabel: 'comments',
+  },
+};
+
+let currentLang = 'pt';
+function t(key) { return I18N[currentLang][key] || key; }
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  applyI18n();
+  // Re-render lista pra atualizar labels das categorias
+  renderCommentsList();
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+}
+
+// ================================================================
+// State
+// ================================================================
+
+let state = {
+  driversByCountry: {},
+  selectedDriver: null,    // { name, email, country }
+  selectedCategory: null,  // 'accident' | 'conduct' | 'vehicle' | 'note' | 'positive'
+  comments: [],
+};
+
+// ================================================================
+// Tabs
+// ================================================================
+
+function setTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  document.querySelectorAll('main > section').forEach(s => {
+    s.classList.toggle('hidden', s.id !== 'tab-' + tab);
+  });
+}
+
+// ================================================================
+// Author name (persistido no localStorage)
+// ================================================================
+
+function loadSavedAuthor() {
+  const saved = localStorage.getItem('pmo_author_name');
+  if (saved) {
+    document.getElementById('author-name').value = saved;
+  }
+}
+
+document.getElementById('author-name').addEventListener('input', e => {
+  localStorage.setItem('pmo_author_name', e.target.value.trim());
+});
+
+// ================================================================
+// Drivers — carrega + popula dropdown agrupado por país
+// ================================================================
+
+async function loadDrivers() {
+  const select = document.getElementById('driver-select');
+  try {
+    const url = CONFIG.scriptUrl + '?action=getActiveDriversByCountry';
+    const res = (typeof cachedFetch === 'function')
+      ? await cachedFetch(url, 600)
+      : await fetch(url).then(r => r.json());
+    if (res.success && res.drivers) {
+      state.driversByCountry = res.drivers;
+      populateDriverSelect();
+      populateFilterDriverSelect();
+    } else {
+      select.innerHTML = '<option>' + t('errorLoad') + '</option>';
+    }
+  } catch (err) {
+    console.error('[PMO] Erro carregando drivers:', err);
+    select.innerHTML = '<option>' + t('errorLoad') + '</option>';
+  }
+}
+
+function populateDriverSelect() {
+  const select = document.getElementById('driver-select');
+  const flags = {
+    'Argentina': '🇦🇷', 'Brazil': '🇧🇷', 'Brasil': '🇧🇷', 'Chile': '🇨🇱',
+    'Colombia': '🇨🇴', 'Mexico': '🇲🇽', 'México': '🇲🇽', 'Peru': '🇵🇪', 'Perú': '🇵🇪',
+  };
+  const countries = Object.keys(state.driversByCountry).sort();
+  let html = '<option value="">-- ' + t('driverLabel') + ' --</option>';
+  countries.forEach(country => {
+    const flag = flags[country] || '🌎';
+    const drivers = state.driversByCountry[country];
+    html += `<optgroup label="${flag} ${country} (${drivers.length})">`;
+    drivers.forEach(d => {
+      const data = JSON.stringify({ name: d.name, email: d.email, country: d.country })
+        .replace(/'/g, '&apos;').replace(/"/g, '&quot;');
+      html += `<option value="${data}">${escapeHtml(d.name)}</option>`;
+    });
+    html += '</optgroup>';
+  });
+  select.innerHTML = html;
+  select.onchange = onDriverChange;
+}
+
+function populateFilterDriverSelect() {
+  const filterSelect = document.getElementById('filter-driver');
+  // Reune todos drivers em uma lista flat
+  const allDrivers = [];
+  Object.keys(state.driversByCountry).forEach(c => {
+    state.driversByCountry[c].forEach(d => allDrivers.push(d));
+  });
+  allDrivers.sort((a, b) => a.name.localeCompare(b.name));
+
+  const previous = filterSelect.value;
+  let html = `<option value="">${t('filterAllDrivers')}</option>`;
+  allDrivers.forEach(d => {
+    html += `<option value="${escapeHtml(d.email)}">${escapeHtml(d.name)}</option>`;
+  });
+  filterSelect.innerHTML = html;
+  if (previous) filterSelect.value = previous;
+}
+
+function onDriverChange() {
+  const select = document.getElementById('driver-select');
+  if (!select.value) {
+    state.selectedDriver = null;
+    return;
+  }
+  try {
+    state.selectedDriver = JSON.parse(select.value);
+  } catch (e) {
+    console.error('Erro parse driver:', e);
+  }
+}
+
+// ================================================================
+// Category chips
+// ================================================================
+
+document.getElementById('cat-chips').addEventListener('click', e => {
+  const chip = e.target.closest('.cat-chip');
+  if (!chip) return;
+  document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('selected'));
+  chip.classList.add('selected');
+  state.selectedCategory = chip.dataset.cat;
+});
+
+// ================================================================
+// Submit comment
+// ================================================================
+
+async function submitComment() {
+  const author = document.getElementById('author-name').value.trim();
+  const body = document.getElementById('comment-body').value.trim();
+
+  if (!author) return toast(t('fillAuthor'), 'error');
+  if (!state.selectedDriver) return toast(t('fillDriver'), 'error');
+  if (!state.selectedCategory) return toast(t('fillCategory'), 'error');
+  if (!body) return toast(t('fillBody'), 'error');
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> ' + t('sending');
+
+  const payload = {
+    type: 'savePMONote',
+    author: author,
+    driverEmail: state.selectedDriver.email,
+    driverName: state.selectedDriver.name,
+    country: state.selectedDriver.country,
+    category: state.selectedCategory,
+    body: body,
+  };
+
+  try {
+    // Fire-and-forget pattern (CORS limita ler resposta no Apps Script)
+    await fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    toast(t('successSave'), 'success');
+
+    // Limpa form (mantém autor)
+    document.getElementById('comment-body').value = '';
+    document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('selected'));
+    state.selectedCategory = null;
+    document.getElementById('driver-select').value = '';
+    state.selectedDriver = null;
+
+    // Recarrega lista após 1s (dá tempo do backend gravar) — cache invalidado
+    setTimeout(() => {
+      if (typeof clearDataCache === 'function') clearDataCache();
+      loadComments();
+    }, 1500);
+  } catch (err) {
+    console.error('[PMO] Erro ao salvar:', err);
+    toast(t('errorSave'), 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span data-i18n="submitBtn">' + t('submitBtn') + '</span>';
+  }
+}
+
+// ================================================================
+// Load + render comments list
+// ================================================================
+
+async function loadComments() {
+  const listEl = document.getElementById('comments-list');
+  listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">${SVG_ICON.clock}</div><div class="empty-state-text">${t('loadingComments')}</div></div>`;
+
+  try {
+    const url = CONFIG.scriptUrl + '?action=getPMONotes&limit=200';
+    const res = (typeof cachedFetch === 'function')
+      ? await cachedFetch(url, 60)
+      : await fetch(url).then(r => r.json());
+    if (res.success && Array.isArray(res.notes)) {
+      state.comments = res.notes;
+      renderCommentsList();
+    } else {
+      throw new Error(res.error || 'Backend retornou erro');
+    }
+  } catch (err) {
+    console.error('[PMO] Erro carregando comentários:', err);
+    listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">${SVG_ICON.alert}</div><div class="empty-state-text">${t('errorLoad')}</div></div>`;
+  }
+}
+
+function renderCommentsList() {
+  const listEl = document.getElementById('comments-list');
+  const countEl = document.getElementById('list-count');
+
+  // Aplica filtros
+  const search = document.getElementById('filter-search').value.trim().toLowerCase();
+  const filterDriver = document.getElementById('filter-driver').value;
+  const filterCat = document.getElementById('filter-cat').value;
+
+  let filtered = state.comments;
+  if (filterDriver) {
+    filtered = filtered.filter(c => (c.driverEmail || '').toLowerCase() === filterDriver.toLowerCase());
+  }
+  if (filterCat) {
+    filtered = filtered.filter(c => c.category === filterCat);
+  }
+  if (search) {
+    filtered = filtered.filter(c =>
+      (c.body || '').toLowerCase().includes(search) ||
+      (c.author || '').toLowerCase().includes(search) ||
+      (c.driverName || '').toLowerCase().includes(search)
+    );
+  }
+
+  countEl.textContent = `${filtered.length} ${t('countLabel')}`;
+
+  if (filtered.length === 0) {
+    const isFiltered = search || filterDriver || filterCat;
+    const msg = isFiltered ? t('emptyFiltered') : t('emptyComments');
+    listEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">${SVG_ICON.chat}</div><div class="empty-state-text">${msg}</div></div>`;
+    return;
+  }
+
+  const catKey = { accident: 'catAccident', conduct: 'catConduct', vehicle: 'catVehicle', note: 'catNote', positive: 'catPositive' };
+
+  listEl.innerHTML = filtered.map(c => {
+    const cat = c.category || 'note';
+    const created = c.created ? formatDate(c.created) : '';
+    const catLabel = t(catKey[cat] || 'catNote');
+    return `<div class="comment-card" data-cat="${escapeHtml(cat)}">
+      <div class="comment-header">
+        <span class="comment-cat-badge" data-cat="${escapeHtml(cat)}">${SVG_CAT[cat] || SVG_CAT.note} ${escapeHtml(catLabel)}</span>
+        <span class="comment-driver">${escapeHtml(c.driverName || '—')}</span>
+        <span class="comment-meta">${escapeHtml(c.author || '—')} · ${escapeHtml(created)}</span>
+      </div>
+      <div class="comment-body">${escapeHtml(c.body || '')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// Helpers
+// ================================================================
+
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (type || '');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const locale = currentLang === 'en' ? 'en-US' : (currentLang === 'es' ? 'es-ES' : 'pt-BR');
+    return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' +
+           d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+  } catch (e) { return ''; }
+}
+
+// Refresh manual: invalida cache e recarrega drivers + comentários
+function refreshPmoPage() {
+  if (typeof clearDataCache === 'function') clearDataCache();
+  loadDrivers();
+  loadComments();
+}
+
+// ================================================================
+// Init
+// ================================================================
+
+// Login real (gate) + sessão SSO. Boot só roda após login → a sidebar (sv-shell) monta.
+document.addEventListener('DOMContentLoaded', () => {
+  injectLogin({
+    title: 'PMO Hub',
+    sub: 'Acesso interno',
+    onSuccess: () => {
+      applyI18n();
+      loadSavedAuthor();
+      loadDrivers();
+      loadComments();
+    },
+  });
+});
+</script>
+
+<script src="/sv-shell.js"></script>
+
+</body>
+</html>

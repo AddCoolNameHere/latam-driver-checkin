@@ -25,7 +25,7 @@
     l.href = href;
     document.head.appendChild(l);
   }
-  ensureLink("sv-skin.css?v=5");
+  ensureLink("/sv-skin.css?v=5");
   ensureLink("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
   // ---- ícones (line, 24x24) ----
@@ -121,9 +121,19 @@
 
   // mapa href→access pra gatear uma sidebar inline já existente (não duplicar)
   var ACCESS_BY_HREF = {};
-  NAV.forEach(function (g) { g.items.forEach(function (it) { ACCESS_BY_HREF[it.href.toLowerCase()] = it.access; }); });
+  NAV.forEach(function (g) { g.items.forEach(function (it) { ACCESS_BY_HREF[slug(it.href)] = it.access; }); });
 
-  function here() { return (location.pathname.split("/").pop() || "dashboard.html").toLowerCase(); }
+  // Nome da página atual, normalizado. Tolera as duas formas de URL que o site
+  // serve: /app/dashboard.html e /app/dashboard (o .html é adicionado pela
+  // regra de rewrite do Cloudflare, então o pathname chega sem ele).
+  // "/app/" (sem página) conta como o hub = index.
+  function slug(p) {
+    p = String(p || "").toLowerCase().split("?")[0].split("#")[0];
+    p = p.split("/").pop();
+    if (!p) return "index";
+    return p.replace(/\.html$/, "");
+  }
+  function here() { return slug(location.pathname); }
 
   // Monta SÓ o conteúdo da nav (labels na língua dada, gated, com ativo).
   function renderNav(navEl, user, lang) {
@@ -134,13 +144,13 @@
     var html = "";
     NAV.forEach(function (g) {
       var visible = g.items.filter(function (it) {
-        if (allow) return allow.indexOf(it.href.toLowerCase()) >= 0;
+        if (allow) return allow.map(slug).indexOf(slug(it.href)) >= 0;
         return canSee(it.access, userTier);
       });
       if (!visible.length) return;
       html += '<div class="sv-nav-label">' + L(g.label, lang) + "</div>";
       visible.forEach(function (it) {
-        var isActive = !activeSet && it.href.toLowerCase() === cur;
+        var isActive = !activeSet && slug(it.href) === cur;
         if (isActive) activeSet = true;
         var label = L(it.label, lang);
         html += '<a class="sv-nav-item' + (isActive ? " active" : "") + '" href="' + it.href + '" title="' + label + '">' +
@@ -160,7 +170,7 @@
   function build(user) {
     var html = '<div class="sv-brand">' +
       '<img class="sv-brand-logo" src="https://aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'logo-failed\')">' +
-      '<img class="sv-brand-globe" src="aceolution-globe.png?v=2" alt="Aceolution" aria-hidden="true">' +
+      '<img class="sv-brand-globe" src="/aceolution-globe.png?v=2" alt="Aceolution" aria-hidden="true">' +
       '<div class="sv-brand-mark">SV</div>' +
       '<div class="sv-brand-region">Street View · LATAM</div></div>' +
       '<nav class="sv-nav"></nav>' +
@@ -245,10 +255,10 @@
     var allow = restrictedPagesOf(user);
     var items = aside.querySelectorAll(".sv-nav-item");
     for (var i = 0; i < items.length; i++) {
-      var href = (items[i].getAttribute("href") || "").toLowerCase();
+      var href = slug(items[i].getAttribute("href") || "");
       var show;
       if (allow) {
-        show = allow.indexOf(href) >= 0;
+        show = allow.map(slug).indexOf(href) >= 0;
       } else {
         var acc = ACCESS_BY_HREF[href];
         show = !(acc && !canSee(acc, userTier));

@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Divergências AR — Admin · Aceolution LATAM</title>
+<link rel="icon" type="image/png" href="/aceolution-globe.png">
+<script src="/auth.js?v=20260518b"></script>
+<script src="/theme.js?v=20260518c"></script>
+<script src="/common.js?v=20260519a"></script>
+<link rel="stylesheet" href="/theme.css?v=20260519a">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 0 20px;
+  }
+
+  /* Page title */
+  .page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+  }
+  .page-sub {
+    font-size: 13px;
+    color: var(--c-text-muted);
+    margin-bottom: 18px;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .stat-card {
+    background: var(--c-surface);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .stat-label {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--c-primary-dark);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-sub { font-size: 11px; color: var(--c-text-muted); margin-top: 2px; }
+
+  /* Filters */
+  .filters {
+    background: var(--c-surface);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: end;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; min-width: 160px; }
+  .filter-group label {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  .filter-group select, .filter-group input {
+    padding: 8px 10px;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--c-surface);
+  }
+  .filter-clear {
+    background: none;
+    border: 1px solid var(--c-border-strong);
+    color: var(--c-text-muted);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* Driver sections */
+  .driver-section {
+    background: var(--c-surface);
+    border-radius: 12px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .driver-header {
+    padding: 14px 18px;
+    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-accent) 100%);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .driver-name {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+  .driver-email { font-size: 11px; opacity: 0.85; margin-top: 1px; }
+  .driver-totals {
+    text-align: right;
+    font-size: 12px;
+  }
+  .driver-totals strong { font-size: 15px; font-weight: 700; }
+  .driver-totals .total-line { line-height: 1.4; }
+
+  /* Submission card */
+  .submission {
+    border-top: 1px solid var(--c-border);
+    padding: 14px 18px;
+  }
+  .submission:first-of-type { border-top: none; }
+  .submission-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .submission-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-primary-dark);
+  }
+  .submission-meta {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .submission-id {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    color: var(--c-text-muted);
+    background: var(--c-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+
+  /* Divergence cards */
+  .div-list { display: flex; flex-direction: column; gap: 8px; }
+  .div-card {
+    background: var(--c-bg);
+    border-left: 3px solid var(--c-accent);
+    border-radius: 6px;
+    padding: 10px 14px;
+  }
+  .div-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .div-quinzena {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-primary-dark);
+  }
+  .div-quinzena-range {
+    font-size: 10px;
+    color: var(--c-text-muted);
+    font-weight: 400;
+    margin-left: 6px;
+  }
+  .div-amount {
+    font-size: 17px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--c-danger);
+  }
+  .div-currency {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .div-comment {
+    font-size: 12px;
+    color: var(--c-text);
+    margin: 4px 0 6px;
+    padding: 6px 10px;
+    background: var(--c-surface);
+    border-radius: 4px;
+    font-style: italic;
+  }
+  .div-comment::before { content: '“'; color: var(--c-text-muted); }
+  .div-comment::after { content: '”'; color: var(--c-text-muted); }
+
+  /* Files */
+  .div-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .file-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: var(--c-primary);
+    text-decoration: none;
+    font-family: inherit;
+  }
+  .file-link:hover { background: var(--c-bg-tint); }
+  .file-link::before {
+    content: '';
+    width: 12px; height: 12px; flex-shrink: 0;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48'/%3E%3C/svg%3E") center / contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  /* Empty state */
+  .empty {
+    background: var(--c-surface);
+    padding: 48px 20px;
+    text-align: center;
+    color: var(--c-text-muted);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--c-text-muted);
+    font-size: 13px;
+  }
+  .spinner {
+    display: inline-block;
+    width: 26px; height: 26px;
+    border: 3px solid var(--c-border);
+    border-top-color: var(--c-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* PRINT — layout PDF debulhado */
+  @media print {
+    body { background: var(--c-surface); }
+    .ac-login-screen, .ac-topbar { display: none !important; }
+    main { padding: 0 14mm; max-width: 100%; margin: 8mm 0; }
+    .filters { display: none !important; }
+    .driver-section {
+      page-break-inside: avoid;
+      box-shadow: none;
+      border: 1px solid var(--c-border);
+      margin-bottom: 8mm;
+    }
+    .driver-header {
+      background: var(--c-primary) !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .submission { page-break-inside: avoid; }
+    .div-card { page-break-inside: avoid; }
+    .file-link {
+      color: var(--c-primary) !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    /* Mostra URL completa após cada link no print */
+    .file-link::after {
+      content: ' (' attr(href) ')';
+      font-size: 8px;
+      color: var(--c-text-muted);
+      display: inline;
+      margin-left: 4px;
+    }
+    .page-title { margin-top: 0; }
+  }
+  @page { size: A4 portrait; margin: 10mm; }
+</style>
+</head>
+<body>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+
+<main>
+  <h1 class="page-title">Divergências de Pagamento — Argentina</h1>
+  <p class="page-sub">Reportadas pelos motoristas via formulário · agrupadas por driver e envio</p>
+
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card"><div class="stat-label">Motoristas</div><div class="stat-value" id="stat-drivers">—</div></div>
+    <div class="stat-card"><div class="stat-label">Envios</div><div class="stat-value" id="stat-sessions">—</div></div>
+    <div class="stat-card"><div class="stat-label">Divergências</div><div class="stat-value" id="stat-divergences">—</div></div>
+    <div class="stat-card"><div class="stat-label">Total reportado</div><div class="stat-value" id="stat-total" style="font-size:15px;">—</div></div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <label>Motorista</label>
+      <select id="filter-driver"><option value="">Todos</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Moeda</label>
+      <select id="filter-currency">
+        <option value="">Todas</option>
+        <option value="ARS">ARS</option>
+        <option value="USD">USD</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>De (data)</label>
+      <input type="date" id="filter-from">
+    </div>
+    <div class="filter-group">
+      <label>Até (data)</label>
+      <input type="date" id="filter-to">
+    </div>
+    <button class="filter-clear" onclick="clearFilters()">Limpar</button>
+  </div>
+
+  <div id="content">
+    <div class="loading"><div class="spinner"></div><div>Carregando divergências...</div></div>
+  </div>
+</main>
+
+</div>
+
+<script>
+
+// =================================================================
+// Login + topbar (via common.js)
+// =================================================================
+let currentUser = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  injectLogin({
+    title: 'Divergências AR — Admin',
+    sub: 'Acesso restrito',
+    onSuccess: (user) => {
+      currentUser = user;
+      injectTopbar({
+        region: 'LATAM · DIVERGÊNCIAS AR',
+        user: user,
+        showBack: true,
+        onRefresh: () => loadSubmissions(),
+        extras: [{
+          html: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Exportar PDF',
+          onClick: () => window.print(),
+          className: 'primary',
+        }],
+      });
+      document.getElementById('app').style.display = '';
+      if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+      loadSubmissions();
+    },
+  });
+});
+
+// =================================================================
+// Config + estado
+// =================================================================
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+};
+
+let allRows = [];
+let filterState = { driver: '', currency: '', from: '', to: '' };
+
+// =================================================================
+// Fetch
+// =================================================================
+async function loadSubmissions() {
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getArgentinaCashSubmissions');
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'unknown');
+    allRows = data.submissions || [];
+    populateDriverFilter();
+    render();
+  } catch (err) {
+    console.error('[Divergencias Admin]', err);
+    document.getElementById('content').innerHTML = `
+      <div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <div>Erro ao carregar: ${escapeHtml(err.message)}</div></div>`;
+  }
+}
+
+function populateDriverFilter() {
+  const drivers = [...new Set(allRows.map(r => r.driverName).filter(n => n))].sort();
+  const sel = document.getElementById('filter-driver');
+  sel.innerHTML = '<option value="">Todos</option>';
+  drivers.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
+}
+
+['filter-driver', 'filter-currency', 'filter-from', 'filter-to'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    filterState.driver = document.getElementById('filter-driver').value;
+    filterState.currency = document.getElementById('filter-currency').value;
+    filterState.from = document.getElementById('filter-from').value;
+    filterState.to = document.getElementById('filter-to').value;
+    render();
+  });
+});
+function clearFilters() {
+  document.getElementById('filter-driver').value = '';
+  document.getElementById('filter-currency').value = '';
+  document.getElementById('filter-from').value = '';
+  document.getElementById('filter-to').value = '';
+  filterState = { driver: '', currency: '', from: '', to: '' };
+  render();
+}
+
+// =================================================================
+// Render
+// =================================================================
+function applyFilters(rows) {
+  return rows.filter(r => {
+    if (filterState.driver && r.driverName !== filterState.driver) return false;
+    if (filterState.currency && r.currency !== filterState.currency) return false;
+    if (filterState.from) {
+      const ts = (r.timestamp || '').slice(0, 10);
+      if (ts < filterState.from) return false;
+    }
+    if (filterState.to) {
+      const ts = (r.timestamp || '').slice(0, 10);
+      if (ts > filterState.to) return false;
+    }
+    return true;
+  });
+}
+
+function render() {
+  const rows = applyFilters(allRows);
+
+  // Stats
+  const drivers = new Set(rows.map(r => r.driverName));
+  const sessions = new Set(rows.map(r => r.sessionId));
+  const totals = {};
+  rows.forEach(r => {
+    if (!totals[r.currency]) totals[r.currency] = 0;
+    totals[r.currency] += r.amount;
+  });
+  document.getElementById('stat-drivers').textContent = drivers.size;
+  document.getElementById('stat-sessions').textContent = sessions.size;
+  document.getElementById('stat-divergences').textContent = rows.length;
+  const totalStr = Object.keys(totals).map(c => `${c} ${fmtMoney(totals[c])}`).join(' · ') || '—';
+  document.getElementById('stat-total').textContent = totalStr;
+
+  if (rows.length === 0) {
+    document.getElementById('content').innerHTML = `
+      <div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></div>
+      <div>Nenhuma divergência encontrada para os filtros atuais</div></div>`;
+    return;
+  }
+
+  // Agrupa por driver -> sessão
+  const byDriver = {};
+  rows.forEach(r => {
+    if (!byDriver[r.driverName]) byDriver[r.driverName] = { email: r.driverEmail, sessions: {} };
+    if (!byDriver[r.driverName].sessions[r.sessionId]) {
+      byDriver[r.driverName].sessions[r.sessionId] = { ts: r.timestamp, divergences: [] };
+    }
+    byDriver[r.driverName].sessions[r.sessionId].divergences.push(r);
+  });
+
+  const html = Object.entries(byDriver)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([name, info]) => renderDriverSection(name, info))
+    .join('');
+
+  document.getElementById('content').innerHTML = html;
+}
+
+function renderDriverSection(name, info) {
+  // Totais por driver
+  const driverTotals = {};
+  let totalDivs = 0;
+  Object.values(info.sessions).forEach(s => {
+    s.divergences.forEach(d => {
+      if (!driverTotals[d.currency]) driverTotals[d.currency] = 0;
+      driverTotals[d.currency] += d.amount;
+      totalDivs++;
+    });
+  });
+  const totalsHtml = Object.entries(driverTotals).map(([c, v]) =>
+    `<div class="total-line">${c} <strong>${fmtMoney(v)}</strong></div>`
+  ).join('');
+
+  // Sessões ordenadas mais recente primeiro
+  const sessionsArr = Object.entries(info.sessions)
+    .sort((a, b) => (b[1].ts || '').localeCompare(a[1].ts || ''));
+
+  const sessionsHtml = sessionsArr.map(([sid, s]) => renderSession(sid, s)).join('');
+
+  return `
+    <section class="driver-section">
+      <div class="driver-header">
+        <div>
+          <div class="driver-name">${escapeHtml(name)}</div>
+          <div class="driver-email">${escapeHtml(info.email || '—')}</div>
+        </div>
+        <div class="driver-totals">
+          <div style="font-size:10px;opacity:0.75;text-transform:uppercase;letter-spacing:0.5px;">
+            ${sessionsArr.length} envio${sessionsArr.length > 1 ? 's' : ''} · ${totalDivs} divergência${totalDivs > 1 ? 's' : ''}
+          </div>
+          ${totalsHtml}
+        </div>
+      </div>
+      ${sessionsHtml}
+    </section>
+  `;
+}
+
+function renderSession(sid, sess) {
+  const ts = sess.ts ? new Date(sess.ts) : null;
+  const tsStr = ts ? ts.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+
+  const divs = sess.divergences.map(d => renderDivergence(d)).join('');
+
+  return `
+    <div class="submission">
+      <div class="submission-head">
+        <div class="submission-title">
+          Envio em ${tsStr}
+          <span class="submission-id">${escapeHtml(sid.slice(0, 8))}</span>
+        </div>
+        <div class="submission-meta">
+          ${sess.divergences.length} divergência${sess.divergences.length > 1 ? 's' : ''}
+        </div>
+      </div>
+      <div class="div-list">${divs}</div>
+    </div>
+  `;
+}
+
+function renderDivergence(d) {
+  const filesHtml = d.fileLinks.map((url, i) =>
+    `<a class="file-link" href="${escapeAttr(url)}" target="_blank" rel="noopener">Arquivo ${i + 1}</a>`
+  ).join('');
+
+  const rangeStr = (d.quinzenaStart && d.quinzenaEnd)
+    ? `(${d.quinzenaStart} → ${d.quinzenaEnd})` : '';
+
+  return `
+    <div class="div-card">
+      <div class="div-row">
+        <div>
+          <span class="div-quinzena">${escapeHtml(d.quinzenaLabel)}</span>
+          <span class="div-quinzena-range">${escapeHtml(rangeStr)}</span>
+        </div>
+        <div>
+          <span class="div-currency">${escapeHtml(d.currency)}</span>
+          <span class="div-amount">${fmtMoney(d.amount)}</span>
+        </div>
+      </div>
+      ${d.comment ? `<div class="div-comment">${escapeHtml(d.comment)}</div>` : ''}
+      ${filesHtml ? `<div class="div-files">${filesHtml}</div>` : '<div style="font-size:11px;color:var(--c-text-muted);margin-top:4px;font-style:italic;">Sem comprovantes anexados</div>'}
+    </div>
+  `;
+}
+
+// =================================================================
+// Helpers
+// =================================================================
+function fmtMoney(v) {
+  return Number(v || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+function escapeAttr(s) {
+  return escapeHtml(s);
+}
+
+</script>
+
+<script src="/sv-shell.js"></script>
+</body>
+</html>
