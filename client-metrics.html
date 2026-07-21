@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Street View LATAM — Operations Metrics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+/* ============================================================
+ * Client Metrics — portal público (cliente). Light only,
+ * sem sidebar, sem login. Tokens vêm do theme.css.
+ * ============================================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--c-bg);
+  color: var(--c-text);
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+}
+
+/* ---------- Header ---------- */
+.cm-header {
+  background: linear-gradient(135deg, var(--c-primary-dark) 0%, var(--c-primary) 55%, var(--c-accent) 140%);
+  color: #fff;
+  padding: 22px 32px 26px;
+}
+.cm-header-inner { max-width: 1440px; margin: 0 auto; }
+.cm-header-top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.cm-brand { display: flex; align-items: center; gap: 14px; }
+.cm-brand img { height: 30px; filter: brightness(0) invert(1); }
+.cm-brand-mark {
+  display: none; width: 34px; height: 34px; border-radius: 9px;
+  background: rgba(255,255,255,0.18); place-items: center;
+  font-weight: 800; font-size: 13px; letter-spacing: 0.5px;
+}
+.cm-brand-divider { width: 1px; height: 26px; background: rgba(255,255,255,0.32); }
+.cm-brand-text .cm-title { font-size: 17px; font-weight: 700; letter-spacing: -0.2px; }
+.cm-brand-text .cm-sub {
+  font-size: 11px; font-weight: 600; letter-spacing: 1.4px;
+  text-transform: uppercase; color: rgba(255,255,255,0.72); margin-top: 2px;
+}
+.cm-header-meta {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 12px; color: rgba(255,255,255,0.82);
+}
+.cm-period-select {
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.28);
+  color: #fff; font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 8px 12px; border-radius: 9px; cursor: pointer;
+}
+.cm-period-select option { color: var(--c-text); background: #fff; }
+.cm-ghost-btn {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.28);
+  color: #fff; font-family: inherit; font-size: 12px; font-weight: 600;
+  padding: 8px 13px; border-radius: 9px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: background 0.15s ease;
+}
+.cm-ghost-btn:hover { background: rgba(255,255,255,0.24); }
+.cm-ghost-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- Country picker ---------- */
+.cm-countries {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px;
+}
+.cm-country {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.88);
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  transition: all 0.15s ease; white-space: nowrap;
+}
+.cm-country:hover { background: rgba(255,255,255,0.2); color: #fff; }
+.cm-country.active {
+  background: #fff; color: var(--c-primary-dark);
+  border-color: #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.14);
+}
+
+/* ---------- Layout ---------- */
+.cm-main { max-width: 1440px; margin: 0 auto; padding: 26px 32px 60px; }
+.cm-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap; margin: 0 0 14px;
+}
+.cm-section-title {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.9px;
+  text-transform: uppercase; color: var(--c-text-muted);
+}
+.cm-section-note { font-size: 12px; color: var(--c-text-dim); }
+
+/* ---------- KPI cards ---------- */
+.cm-kpis {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  margin-bottom: 30px;
+}
+.cm-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 118px;
+}
+.cm-card.wide { grid-column: span 2; }
+@media (max-width: 780px) { .cm-card.wide { grid-column: span 1; } }
+.cm-card-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--c-text-muted);
+  display: flex; align-items: center; gap: 7px;
+}
+.cm-card-value {
+  font-size: 30px; font-weight: 800; letter-spacing: -1px;
+  color: var(--c-primary-dark); line-height: 1.05;
+}
+.cm-card-value .cm-unit {
+  font-size: 14px; font-weight: 700; color: var(--c-text-muted);
+  letter-spacing: 0; margin-left: 4px;
+}
+.cm-card-foot { font-size: 12px; color: var(--c-text-muted); margin-top: auto; }
+.cm-card-foot strong { color: var(--c-text); font-weight: 700; }
+
+.cm-bar { height: 7px; border-radius: 99px; background: var(--c-bg-tint); overflow: hidden; display: flex; }
+.cm-bar span { display: block; height: 100%; }
+.cm-bar .fill-primary { background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); }
+.cm-bar .fill-success { background: var(--c-success); }
+.cm-bar .fill-warn    { background: var(--c-warn); }
+.cm-bar .fill-danger  { background: var(--c-danger); }
+
+.cm-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11.5px; color: var(--c-text-muted); }
+.cm-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.cm-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot-success { background: var(--c-success); }
+.dot-warn    { background: var(--c-warn); }
+.dot-danger  { background: var(--c-danger); }
+.dot-primary { background: var(--c-primary); }
+.dot-accent  { background: var(--c-accent); }
+
+.cm-split { display: flex; gap: 22px; }
+.cm-split > div { flex: 1; }
+.cm-split-val { font-size: 22px; font-weight: 800; color: var(--c-primary-dark); letter-spacing: -0.6px; }
+.cm-split-lbl { font-size: 11px; font-weight: 600; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: 0.6px; }
+
+/* ---------- Table ---------- */
+.cm-table-wrap {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.cm-table-tools {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  padding: 14px 18px; border-bottom: 1px solid var(--c-border);
+}
+.cm-search {
+  border: 1px solid var(--c-border); border-radius: 9px;
+  padding: 8px 12px; font-family: inherit; font-size: 13px;
+  min-width: 230px; color: var(--c-text); background: var(--c-surface);
+}
+.cm-search:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
+.cm-btn {
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  color: var(--c-text-muted); font-family: inherit; font-size: 12px; font-weight: 600;
+  padding: 8px 13px; border-radius: 9px; cursor: pointer;
+}
+.cm-btn:hover { border-color: var(--c-primary); color: var(--c-primary); background: var(--c-bg-tint); }
+
+.cm-scroll { overflow-x: auto; }
+table.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 980px; }
+.cm-table thead th {
+  position: sticky; top: 0; z-index: 2;
+  background: var(--c-bg-tint);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+  color: var(--c-primary-dark);
+  text-align: right; padding: 11px 14px; white-space: nowrap;
+  cursor: pointer; user-select: none; border-bottom: 1px solid var(--c-border);
+}
+.cm-table thead th:first-child, .cm-table tbody td:first-child { text-align: left; }
+.cm-table thead th:nth-child(2), .cm-table tbody td:nth-child(2) { text-align: left; }
+.cm-table thead th:hover { color: var(--c-primary); }
+.cm-table thead th .cm-arrow { opacity: 0.35; margin-left: 4px; font-size: 9px; }
+.cm-table thead th.sorted .cm-arrow { opacity: 1; }
+.cm-table tbody td { padding: 11px 14px; text-align: right; border-bottom: 1px solid var(--c-border); white-space: nowrap; }
+.cm-table tbody tr:last-child td { border-bottom: none; }
+.cm-table tbody tr:hover td { background: var(--c-bg); }
+.cm-driver { display: flex; align-items: center; gap: 10px; }
+.cm-avatar {
+  width: 28px; height: 28px; border-radius: 50%; flex: none;
+  background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+  color: #fff; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.cm-driver-name { font-weight: 600; }
+.cm-num { font-variant-numeric: tabular-nums; }
+.cm-muted { color: var(--c-text-muted); }
+.cm-pill {
+  display: inline-block; padding: 3px 9px; border-radius: 99px;
+  font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.pill-success { background: rgba(22,163,74,0.12); color: var(--c-success); }
+.pill-warn    { background: rgba(202,138,4,0.14); color: var(--c-warn); }
+.pill-danger  { background: rgba(185,28,28,0.10); color: var(--c-danger); }
+.pill-neutral { background: var(--c-bg-tint); color: var(--c-primary-dark); }
+
+.cm-table tfoot td {
+  padding: 12px 14px; text-align: right; font-weight: 800;
+  background: var(--c-bg-tint); color: var(--c-primary-dark);
+  border-top: 1px solid var(--c-border-strong);
+}
+.cm-table tfoot td:first-child { text-align: left; }
+
+/* ---------- States ---------- */
+.cm-state { padding: 60px 20px; text-align: center; color: var(--c-text-muted); }
+.cm-state h3 { font-size: 15px; color: var(--c-text); margin-bottom: 6px; font-weight: 700; }
+.cm-state p { font-size: 13px; max-width: 460px; margin: 0 auto 16px; }
+.cm-spinner {
+  width: 26px; height: 26px; border-radius: 50%; margin: 0 auto 14px;
+  border: 3px solid var(--c-border); border-top-color: var(--c-primary);
+  animation: cm-spin 0.8s linear infinite;
+}
+@keyframes cm-spin { to { transform: rotate(360deg); } }
+.cm-skeleton {
+  background: linear-gradient(90deg, var(--c-bg-tint) 25%, var(--c-bg) 50%, var(--c-bg-tint) 75%);
+  background-size: 200% 100%; animation: cm-shimmer 1.3s infinite;
+  border-radius: 6px; height: 14px;
+}
+@keyframes cm-shimmer { to { background-position: -200% 0; } }
+.cm-notice {
+  display: flex; align-items: flex-start; gap: 9px;
+  background: rgba(202,138,4,0.10); border: 1px solid rgba(202,138,4,0.30);
+  color: #7a5200; border-radius: 11px; padding: 11px 14px;
+  font-size: 12.5px; margin-bottom: 18px;
+}
+.cm-notice.hidden { display: none; }
+
+/* ============================================================
+ * SPLASH — escolha do país (tela de entrada)
+ * O glow atrás do card é a PRÓPRIA bandeira em SVG, ampliada e
+ * borrada. No hover o card flutua de leve e o glow acende.
+ * ============================================================ */
+.cm-splash {
+  position: fixed; inset: 0; z-index: 9000;
+  background: linear-gradient(150deg, #12253F 0%, var(--c-primary-dark) 45%, var(--c-primary) 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 24px; overflow-y: auto;
+  transition: opacity 0.45s ease, visibility 0.45s ease;
+}
+.cm-splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+.cm-splash-head { text-align: center; margin-bottom: 40px; max-width: 620px; }
+.cm-splash-head img { height: 34px; filter: brightness(0) invert(1); margin-bottom: 22px; }
+.cm-splash-head h1 {
+  font-size: 30px; font-weight: 800; color: #fff;
+  letter-spacing: -0.7px; line-height: 1.2; margin-bottom: 10px;
+}
+.cm-splash-head p { font-size: 14px; color: rgba(255,255,255,0.66); line-height: 1.55; }
+.cm-splash-kicker {
+  font-size: 11px; font-weight: 700; letter-spacing: 2.2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.45); margin-bottom: 12px;
+}
+
+/* flex (e não grid) pra última linha ficar centralizada — são 7 cards */
+.cm-splash-grid {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 18px;
+  width: 100%; max-width: 840px;
+}
+.cm-splash-card { flex: 0 1 186px; }
+
+.cm-splash-card {
+  position: relative;
+  background: rgba(255,255,255,0.055);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 18px;
+  padding: 26px 18px 20px;
+  cursor: pointer; overflow: hidden;
+  font-family: inherit; text-align: center; color: #fff;
+  /* movimento bem sutil — 4px e uma curva macia */
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.35s ease, background 0.35s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
+.cm-splash-card:hover, .cm-splash-card:focus-visible {
+  transform: translateY(-4px);
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.30);
+  box-shadow: 0 16px 34px rgba(0,0,0,0.30);
+  outline: none;
+}
+.cm-splash-card:active { transform: translateY(-1px); transition-duration: 0.12s; }
+
+/* Glow: a bandeira ampliada + borrada, atrás de tudo */
+.cm-glow {
+  position: absolute; left: 50%; top: 44%;
+  width: 190px; height: 130px; transform: translate(-50%, -50%) scale(0.92);
+  filter: blur(26px) saturate(1.5);
+  opacity: 0.30; pointer-events: none;
+  transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cm-splash-card:hover .cm-glow,
+.cm-splash-card:focus-visible .cm-glow {
+  opacity: 0.62; transform: translate(-50%, -50%) scale(1.12);
+}
+
+/* Bandeira nítida dentro do card */
+.cm-flag {
+  position: relative; width: 62px; height: 42px; margin: 0 auto 14px;
+  border-radius: 6px; overflow: hidden; display: block;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.32), 0 0 0 1px rgba(255,255,255,0.16) inset;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cm-splash-card:hover .cm-flag { transform: scale(1.05); }
+.cm-flag svg, .cm-glow svg { display: block; width: 100%; height: 100%; }
+
+.cm-splash-name { position: relative; font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
+.cm-splash-tag {
+  position: relative; font-size: 10.5px; font-weight: 600; letter-spacing: 1.2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.50); margin-top: 4px;
+}
+
+/* Card "All LATAM" — sem bandeira, usa o globo/marca */
+.cm-splash-card.all .cm-flag {
+  background: linear-gradient(135deg, var(--c-accent), var(--c-primary));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.6px;
+}
+.cm-splash-foot { margin-top: 34px; font-size: 11.5px; color: rgba(255,255,255,0.38); text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cm-splash-card, .cm-glow, .cm-flag { transition: none !important; }
+  .cm-splash-card:hover { transform: none; }
+}
+@media (max-width: 560px) {
+  .cm-splash-head h1 { font-size: 23px; }
+  .cm-splash-grid { gap: 12px; }
+  .cm-splash-card { flex: 0 1 calc(50% - 6px); padding: 20px 12px 16px; }
+}
+
+/* ---------- Footer ---------- */
+.cm-footer {
+  border-top: 1px solid var(--c-border);
+  padding: 20px 32px 34px; text-align: center;
+  color: var(--c-text-dim); font-size: 11.5px;
+}
+.cm-footer strong { color: var(--c-text-muted); font-weight: 700; }
+
+@media (max-width: 640px) {
+  .cm-header { padding: 18px 18px 20px; }
+  .cm-main { padding: 20px 16px 44px; }
+  .cm-card-value { font-size: 25px; }
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH: escolha do país (some depois do clique) -->
+<div class="cm-splash" id="splash">
+  <div class="cm-splash-head">
+    <img src="https://aceolution.com/img/logo2.png" alt="Aceolution"
+         onerror="this.style.display='none';">
+    <div class="cm-splash-kicker">Street View LATAM</div>
+    <h1>Operations Metrics</h1>
+    <p>Select a country to see daily mapping performance, fleet status and driver-level results.</p>
+  </div>
+  <div class="cm-splash-grid" id="splash-grid"></div>
+  <div class="cm-splash-foot">Data sourced from CTS daily mapping records · Updated every business day</div>
+</div>
+
+<header class="cm-header">
+  <div class="cm-header-inner">
+    <div class="cm-header-top">
+      <div class="cm-brand">
+        <img src="https://aceolution.com/img/logo2.png" alt="Aceolution"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
+        <div class="cm-brand-mark">ACE</div>
+        <div class="cm-brand-divider"></div>
+        <div class="cm-brand-text">
+          <div class="cm-title">Street View LATAM</div>
+          <div class="cm-sub">Operations Metrics</div>
+        </div>
+      </div>
+      <div class="cm-header-meta">
+        <select id="period" class="cm-period-select" aria-label="Period"></select>
+        <button id="change-country" class="cm-ghost-btn" type="button">⌖ Change country</button>
+        <button id="refresh" class="cm-ghost-btn" type="button">↻ Refresh</button>
+        <span id="updated"></span>
+      </div>
+    </div>
+    <div class="cm-countries" id="countries"></div>
+  </div>
+</header>
+
+<main class="cm-main">
+  <div class="cm-notice hidden" id="notice"></div>
+
+  <div class="cm-section-head">
+    <div class="cm-section-title">Monthly overview</div>
+    <div class="cm-section-note" id="overview-note"></div>
+  </div>
+  <section class="cm-kpis" id="kpis"></section>
+
+  <div class="cm-section-head">
+    <div class="cm-section-title">Driver performance</div>
+    <div class="cm-section-note" id="table-note"></div>
+  </div>
+  <section class="cm-table-wrap">
+    <div class="cm-table-tools">
+      <input type="search" id="search" class="cm-search" placeholder="Search driver or country…">
+      <button id="csv" class="cm-btn" type="button">Export CSV</button>
+    </div>
+    <div id="table-area">
+      <div class="cm-state"><div class="cm-spinner"></div>Loading operational data…</div>
+    </div>
+  </section>
+</main>
+
+<footer class="cm-footer">
+  <strong>Aceolution</strong> · Street View LATAM operations · Data sourced from CTS daily mapping records.<br>
+  Figures are operational and may be revised after CTS validation.
+</footer>
+
+<script>
+/* ============================================================
+ * Client Metrics — portal do cliente (standalone, sem login).
+ * Consome UM endpoint: ?action=getClientMetrics&month&year&country
+ * Logs: [Client Metrics]
+ * ============================================================ */
+const CM = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  cachePrefix: 'CM_CACHE_',
+  ttlSec: 900,          // 15 min — a RAW CTS é atualizada 1x/dia
+  timeoutMs: 90000,     // Apps Script frio é lento
+};
+
+const MONTH_NAMES = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December'];
+
+const state = {
+  country: 'ALL',
+  month: null,
+  year: null,
+  data: null,
+  sortKey: 'tkm',
+  sortDir: -1,
+  search: '',
+  periodsLoaded: false,
+};
+
+/* ---------- helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const num = (v, d = 0) => (Number(v) || 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (v, d = 1) => ((Number(v) || 0) * 100).toFixed(d) + '%';
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+
+function periodLabel(m, y) { return MONTH_NAMES[(m || 1) - 1] + ' ' + y; }
+
+/* Cache leve em localStorage (mesma ideia do common.js, sem a dependência). */
+async function fetchMetrics(month, year, country, force) {
+  const url = CM.scriptUrl + '?action=getClientMetrics&month=' + month +
+              '&year=' + year + '&country=' + encodeURIComponent(country);
+  const key = CM.cachePrefix + url;
+
+  if (!force) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const c = JSON.parse(raw);
+        if (c && c.expiresAt > Date.now() && c.data) { c.data._fromCache = true; return c.data; }
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), CM.timeoutMs) : null;
+  let res;
+  try {
+    res = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined).then(r => r.json());
+  } catch (err) {
+    // Fallback: devolve o último cache (mesmo vencido) em vez de tela vazia
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const old = JSON.parse(raw);
+        if (old && old.data) { old.data._fromCache = true; old.data._stale = true; return old.data; }
+      }
+    } catch (e) { /* segue pro throw */ }
+    throw err;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+
+  if (res && res.success !== false) {
+    try {
+      localStorage.setItem(key, JSON.stringify({ expiresAt: Date.now() + CM.ttlSec * 1000, data: res }));
+    } catch (e) { /* quota — ignora */ }
+  }
+  return res;
+}
+
+/* ---------- render: KPIs ---------- */
+function renderKpis(d) {
+  const k = d.kpis || {};
+  const f = k.fleet || {};
+  const ach = k.achievementPct || 0;
+  const achClass = ach >= 1 ? 'fill-success' : (ach >= 0.8 ? 'fill-primary' : 'fill-warn');
+  const achWidth = Math.min(100, ach * 100);
+
+  const fleetTotal = f.statusTotal || 0;
+  const seg = (v) => fleetTotal > 0 ? (v / fleetTotal) * 100 : 0;
+
+  const cards = [];
+
+  cards.push(`
+    <div class="cm-card wide">
+      <div class="cm-card-label">Monthly goal · TKM</div>
+      <div class="cm-card-value">${num(k.goalTkm)}<span class="cm-unit">TKM</span></div>
+      <div class="cm-bar"><span class="${achClass}" style="width:${achWidth}%"></span></div>
+      <div class="cm-card-foot"><strong>${num(k.tkmDone)} TKM</strong> delivered · ${pct(ach)} of goal</div>
+    </div>`);
+
+  cards.push(`
+    <div class="cm-card">
+      <div class="cm-card-label">TKM delivered</div>
+      <div class="cm-card-value">${num(k.tkmDone)}</div>
+      <div class="cm-card-foot">${num(k.kmDriven)} km driven · efficiency <strong>${pct(k.efficiency)}</strong></div>
+    </div>`);
+
+  cards.push(`
+    <div class="cm-card">
+      <div class="cm-card-label">Total drivers</div>
+      <div class="cm-card-value">${num(k.totalDrivers)}</div>
+      <div class="cm-card-foot"><strong>${num(k.mappingDays)}</strong> mapping days in the period</div>
+    </div>`);
+
+  cards.push(`
+    <div class="cm-card">
+      <div class="cm-card-label">Total VIDs</div>
+      <div class="cm-card-value">${num(k.totalVids)}</div>
+      <div class="cm-card-foot">Vehicles that collected imagery this month</div>
+    </div>`);
+
+  cards.push(`
+    <div class="cm-card">
+      <div class="cm-card-label">Avg system on hours</div>
+      <div class="cm-card-value">${num(k.avgSystemOnHours, 1)}<span class="cm-unit">h/day</span></div>
+      <div class="cm-card-foot"><strong>${num(k.systemOnHours)} h</strong> total system on</div>
+    </div>`);
+
+  cards.push(`
+    <div class="cm-card wide">
+      <div class="cm-card-label">Fleet status per Google</div>
+      <div class="cm-split">
+        <div><div class="cm-split-val">${pct(f.activePct, 0)}</div><div class="cm-split-lbl">Active</div></div>
+        <div><div class="cm-split-val">${pct(f.halfActivePct, 0)}</div><div class="cm-split-lbl">Half active</div></div>
+        <div><div class="cm-split-val">${pct(f.notActivePct, 0)}</div><div class="cm-split-lbl">Inactive</div></div>
+      </div>
+      <div class="cm-bar">
+        <span class="fill-success" style="width:${seg(f.active)}%"></span>
+        <span class="fill-warn" style="width:${seg(f.halfActive)}%"></span>
+        <span class="fill-danger" style="width:${seg(f.notActive)}%"></span>
+      </div>
+      <div class="cm-legend">
+        <span><i class="cm-dot dot-success"></i>${num(f.active)} active</span>
+        <span><i class="cm-dot dot-warn"></i>${num(f.halfActive)} half</span>
+        <span><i class="cm-dot dot-danger"></i>${num(f.notActive)} inactive</span>
+        <span class="cm-muted">fleet ${num(f.fleet)}</span>
+      </div>
+    </div>`);
+
+  cards.push(`
+    <div class="cm-card">
+      <div class="cm-card-label">Swarm share</div>
+      <div class="cm-card-value">${pct(k.swarmPct)}</div>
+      <div class="cm-bar"><span class="fill-primary" style="width:${Math.min(100, (k.swarmPct || 0) * 100)}%"></span></div>
+      <div class="cm-card-foot"><strong>${num(k.swarmTkm)} TKM</strong> from swarm maps</div>
+    </div>`);
+
+  cards.push(`
+    <div class="cm-card">
+      <div class="cm-card-label">Churn share</div>
+      <div class="cm-card-value">${pct(k.churnPct)}</div>
+      <div class="cm-bar"><span class="fill-primary" style="width:${Math.min(100, (k.churnPct || 0) * 100)}%"></span></div>
+      <div class="cm-card-foot"><strong>${num(k.churnTkm)} TKM</strong> from churn maps</div>
+    </div>`);
+
+  $('kpis').innerHTML = cards.join('');
+
+  // Aviso quando a foto da frota é de outro mês (a aba VID Monthly CALENDAR é
+  // sempre do mês corrente dela — não tem histórico por mês).
+  const notice = $('notice');
+  if (f.sourceMonth && !f.isCurrentPeriod) {
+    notice.innerHTML = '⚠️ Fleet status per Google reflects <strong>' +
+      periodLabel(f.sourceMonth, f.sourceYear) + '</strong> (latest available snapshot). ' +
+      'All other figures are for ' + periodLabel(d.month, d.year) + '.';
+    notice.classList.remove('hidden');
+  } else if (d._stale) {
+    notice.innerHTML = '⚠️ Showing the last cached data — the live connection timed out. Try refreshing in a moment.';
+    notice.classList.remove('hidden');
+  } else {
+    notice.classList.add('hidden');
+  }
+}
+
+/* ---------- render: tabela ---------- */
+const COLUMNS = [
+  { key: 'name',             label: 'Driver',        type: 'text' },
+  { key: 'country',          label: 'Country',       type: 'text' },
+  { key: 'tkm',              label: 'TKM',           type: 'num', dec: 0 },
+  { key: 'kmDriven',         label: 'KM driven',     type: 'num', dec: 0 },
+  { key: 'efficiency',       label: 'Efficiency',    type: 'pctPill' },
+  { key: 'swarmPct',         label: 'Swarm %',       type: 'pct' },
+  { key: 'churnPct',         label: 'Churn %',       type: 'pct' },
+  { key: 'systemOnHours',    label: 'System on (h)', type: 'num', dec: 1 },
+  { key: 'avgSystemOnHours', label: 'Avg h/day',     type: 'num', dec: 1 },
+  { key: 'mappingDays',      label: 'Mapping days',  type: 'num', dec: 0 },
+  { key: 'vidCount',         label: 'VIDs',          type: 'num', dec: 0 },
+];
+
+function visibleDrivers() {
+  const all = (state.data && state.data.drivers) || [];
+  const q = state.search.trim().toLowerCase();
+  const rows = q
+    ? all.filter(d => (d.name || '').toLowerCase().includes(q) || (d.country || '').toLowerCase().includes(q))
+    : all.slice();
+
+  const key = state.sortKey, dir = state.sortDir;
+  rows.sort((a, b) => {
+    const va = a[key], vb = b[key];
+    if (typeof va === 'string' || typeof vb === 'string') {
+      return String(va || '').localeCompare(String(vb || '')) * dir;
+    }
+    return ((Number(va) || 0) - (Number(vb) || 0)) * dir;
+  });
+  return rows;
+}
+
+function effPill(v) {
+  const p = Number(v) || 0;
+  const cls = p >= 0.8 ? 'pill-success' : (p >= 0.6 ? 'pill-warn' : 'pill-danger');
+  return '<span class="cm-pill ' + cls + '">' + pct(p) + '</span>';
+}
+
+function renderTable() {
+  const rows = visibleDrivers();
+  const area = $('table-area');
+
+  if (!rows.length) {
+    area.innerHTML = '<div class="cm-state"><h3>No driver data</h3>' +
+      '<p>There are no mapping records for this country and period yet.</p></div>';
+    $('table-note').textContent = '';
+    return;
+  }
+
+  const head = COLUMNS.map(c => {
+    const sorted = state.sortKey === c.key;
+    const arrow = sorted ? (state.sortDir === -1 ? '▼' : '▲') : '▾';
+    return '<th data-key="' + c.key + '" class="' + (sorted ? 'sorted' : '') + '">' +
+           esc(c.label) + '<span class="cm-arrow">' + arrow + '</span></th>';
+  }).join('');
+
+  const body = rows.map(d => {
+    const cells = COLUMNS.map(c => {
+      const v = d[c.key];
+      if (c.key === 'name') {
+        return '<td><div class="cm-driver"><div class="cm-avatar">' + esc(initials(v)) +
+               '</div><span class="cm-driver-name">' + esc(v) + '</span></div></td>';
+      }
+      if (c.key === 'country') return '<td class="cm-muted">' + esc(v) + '</td>';
+      if (c.type === 'pctPill') return '<td>' + effPill(v) + '</td>';
+      if (c.type === 'pct') return '<td class="cm-num">' + pct(v, 0) + '</td>';
+      return '<td class="cm-num">' + num(v, c.dec || 0) + '</td>';
+    }).join('');
+    return '<tr>' + cells + '</tr>';
+  }).join('');
+
+  // Rodapé com os totais do que está visível
+  const sum = (k) => rows.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+  const totTkm = sum('tkm'), totKm = sum('kmDriven'), totH = sum('systemOnHours');
+  const totDays = sum('mappingDays');
+  const vidSet = new Set();
+  rows.forEach(r => (r.vids || []).forEach(v => vidSet.add(v)));
+
+  const foot = '<tr>' +
+    '<td>' + rows.length + ' drivers</td>' +
+    '<td></td>' +
+    '<td class="cm-num">' + num(totTkm) + '</td>' +
+    '<td class="cm-num">' + num(totKm) + '</td>' +
+    '<td class="cm-num">' + pct(totKm > 0 ? totTkm / totKm : 0) + '</td>' +
+    '<td></td><td></td>' +
+    '<td class="cm-num">' + num(totH, 1) + '</td>' +
+    '<td class="cm-num">' + num(totDays > 0 ? totH / totDays : 0, 1) + '</td>' +
+    '<td class="cm-num">' + num(totDays) + '</td>' +
+    '<td class="cm-num">' + num(vidSet.size) + '</td>' +
+    '</tr>';
+
+  area.innerHTML = '<div class="cm-scroll"><table class="cm-table">' +
+    '<thead><tr>' + head + '</tr></thead>' +
+    '<tbody>' + body + '</tbody>' +
+    '<tfoot>' + foot + '</tfoot></table></div>';
+
+  area.querySelectorAll('th[data-key]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.key;
+      if (state.sortKey === key) state.sortDir *= -1;
+      else { state.sortKey = key; state.sortDir = (key === 'name' || key === 'country') ? 1 : -1; }
+      renderTable();
+    });
+  });
+
+  $('table-note').textContent = rows.length + ' driver' + (rows.length === 1 ? '' : 's') +
+    (state.search ? ' matching “' + state.search + '”' : '');
+}
+
+/* ============================================================
+ * SPLASH — cards de país
+ * Bandeiras em SVG inline (nada externo): a mesma SVG é usada
+ * nítida dentro do card e ampliada+borrada como glow atrás.
+ * ============================================================ */
+const FLAGS = {
+  Argentina:
+    '<svg viewBox="0 0 90 60" xmlns="http://www.w3.org/2000/svg">' +
+    '<rect width="90" height="60" fill="#74ACDF"/>' +
+    '<rect y="20" width="90" height="20" fill="#fff"/>' +
+    '<circle cx="45" cy="30" r="6.5" fill="#F6B40E"/></svg>',
+  Brazil:
+    '<svg viewBox="0 0 90 60" xmlns="http://www.w3.org/2000/svg">' +
+    '<rect width="90" height="60" fill="#009B3A"/>' +
+    '<polygon points="45,7 83,30 45,53 7,30" fill="#FEDF00"/>' +
+    '<circle cx="45" cy="30" r="11" fill="#002776"/></svg>',
+  Chile:
+    '<svg viewBox="0 0 90 60" xmlns="http://www.w3.org/2000/svg">' +
+    '<rect width="90" height="30" fill="#fff"/>' +
+    '<rect y="30" width="90" height="30" fill="#D52B1E"/>' +
+    '<rect width="30" height="30" fill="#0039A6"/>' +
+    '<polygon fill="#fff" points="15,8 17.6,15.6 25.6,15.6 19.2,20.4 21.6,28 15,23.2 8.4,28 10.8,20.4 4.4,15.6 12.4,15.6"/></svg>',
+  Colombia:
+    '<svg viewBox="0 0 90 60" xmlns="http://www.w3.org/2000/svg">' +
+    '<rect width="90" height="30" fill="#FCD116"/>' +
+    '<rect y="30" width="90" height="15" fill="#003893"/>' +
+    '<rect y="45" width="90" height="15" fill="#CE1126"/></svg>',
+  Mexico:
+    '<svg viewBox="0 0 90 60" xmlns="http://www.w3.org/2000/svg">' +
+    '<rect width="30" height="60" fill="#006847"/>' +
+    '<rect x="30" width="30" height="60" fill="#fff"/>' +
+    '<rect x="60" width="30" height="60" fill="#CE1126"/>' +
+    '<circle cx="45" cy="30" r="7" fill="none" stroke="#9C6114" stroke-width="2"/></svg>',
+  Peru:
+    '<svg viewBox="0 0 90 60" xmlns="http://www.w3.org/2000/svg">' +
+    '<rect width="30" height="60" fill="#D91023"/>' +
+    '<rect x="30" width="30" height="60" fill="#fff"/>' +
+    '<rect x="60" width="30" height="60" fill="#D91023"/></svg>',
+};
+
+/* Ordem fixa dos países da operação (o splash aparece antes do fetch,
+   então não dá pra esperar a lista do backend). */
+const SPLASH_COUNTRIES = ['Argentina', 'Brazil', 'Chile', 'Colombia', 'Mexico', 'Peru'];
+
+function renderSplash() {
+  const cards = [];
+
+  cards.push(
+    '<button class="cm-splash-card all" data-country="ALL" type="button">' +
+    '<span class="cm-glow"><svg viewBox="0 0 90 60" xmlns="http://www.w3.org/2000/svg">' +
+    '<rect width="90" height="60" fill="#4A9FE0"/></svg></span>' +
+    '<span class="cm-flag">LATAM</span>' +
+    '<div class="cm-splash-name">All LATAM</div>' +
+    '<div class="cm-splash-tag">Regional</div></button>');
+
+  SPLASH_COUNTRIES.forEach(function (c) {
+    const svg = FLAGS[c] || '';
+    cards.push(
+      '<button class="cm-splash-card" data-country="' + esc(c) + '" type="button">' +
+      '<span class="cm-glow">' + svg + '</span>' +
+      '<span class="cm-flag">' + svg + '</span>' +
+      '<div class="cm-splash-name">' + esc(c) + '</div>' +
+      '<div class="cm-splash-tag">Country</div></button>');
+  });
+
+  const grid = $('splash-grid');
+  grid.innerHTML = cards.join('');
+  grid.querySelectorAll('.cm-splash-card').forEach(function (b) {
+    b.addEventListener('click', function () { chooseCountry(b.dataset.country); });
+  });
+}
+
+function chooseCountry(c) {
+  const changed = state.country !== c;
+  state.country = c;
+  hideSplash();
+  if (changed || !state.data) load();
+  else renderCountries((state.data && state.data.countries) || []);
+}
+
+function hideSplash() {
+  $('splash').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function showSplash() {
+  $('splash').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+/* ---------- render: chrome (país / período) ---------- */
+function renderCountries(list) {
+  const opts = ['ALL'].concat(list || []);
+  $('countries').innerHTML = opts.map(c =>
+    '<button class="cm-country' + (state.country === c ? ' active' : '') + '" data-country="' + esc(c) + '">' +
+    (c === 'ALL' ? 'All LATAM' : esc(c)) + '</button>').join('');
+
+  $('countries').querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      if (state.country === b.dataset.country) return;
+      state.country = b.dataset.country;
+      renderCountries(list);
+      load();
+    });
+  });
+}
+
+function renderPeriods(months) {
+  if (state.periodsLoaded || !months || !months.length) return;
+  $('period').innerHTML = months.slice(0, 24).map(m =>
+    '<option value="' + m.month + '.' + m.year + '"' +
+    (m.month === state.month && m.year === state.year ? ' selected' : '') + '>' +
+    periodLabel(m.month, m.year) + '</option>').join('');
+  state.periodsLoaded = true;
+}
+
+/* ---------- carregar ---------- */
+async function load(force) {
+  $('table-area').innerHTML = '<div class="cm-state"><div class="cm-spinner"></div>Loading operational data…</div>';
+  $('kpis').innerHTML = Array.from({ length: 8 }, () =>
+    '<div class="cm-card"><div class="cm-skeleton" style="width:55%"></div>' +
+    '<div class="cm-skeleton" style="width:75%;height:28px"></div>' +
+    '<div class="cm-skeleton" style="width:65%"></div></div>').join('');
+  $('refresh').disabled = true;
+  $('updated').textContent = '';
+
+  try {
+    console.log('[Client Metrics] fetching', state.country, state.month + '.' + state.year);
+    const d = await fetchMetrics(state.month, state.year, state.country, force);
+    if (!d || d.success === false) throw new Error((d && d.error) || 'unknown error');
+
+    state.data = d;
+    console.log('[Client Metrics] drivers:', (d.drivers || []).length, '| map types found:', d.mapTypesFound);
+
+    renderPeriods(d.months);
+    renderCountries(d.countries);
+    renderKpis(d);
+    renderTable();
+
+    $('overview-note').textContent =
+      (state.country === 'ALL' ? 'All LATAM' : state.country) + ' · ' + periodLabel(d.month, d.year);
+    $('updated').textContent = d._fromCache ? 'cached' : 'updated just now';
+  } catch (err) {
+    console.error('[Client Metrics] load failed', err);
+    $('kpis').innerHTML = '';
+    $('table-area').innerHTML =
+      '<div class="cm-state"><h3>Could not load the data</h3>' +
+      '<p>The reporting service did not respond in time. This usually resolves in a few seconds.</p>' +
+      '<button class="cm-btn" id="retry">Try again</button></div>';
+    const r = $('retry');
+    if (r) r.addEventListener('click', () => load(true));
+  } finally {
+    $('refresh').disabled = false;
+  }
+}
+
+/* ---------- CSV ---------- */
+function exportCsv() {
+  const rows = visibleDrivers();
+  if (!rows.length) return;
+  const header = COLUMNS.map(c => c.label).concat(['VID numbers']);
+  const lines = [header.join(',')];
+  rows.forEach(d => {
+    const cells = COLUMNS.map(c => {
+      const v = d[c.key];
+      if (typeof v === 'number') return c.type === 'pct' || c.type === 'pctPill' ? (v * 100).toFixed(2) : v;
+      return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    });
+    cells.push('"' + (d.vids || []).join(' ') + '"');
+    lines.push(cells.join(','));
+  });
+  const name = 'street-view-latam-' + (state.country === 'ALL' ? 'all' : state.country.toLowerCase()) +
+               '-' + state.month + '-' + state.year + '.csv';
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ---------- init ---------- */
+(function init() {
+  const now = new Date();
+  state.month = now.getMonth() + 1;
+  state.year = now.getFullYear();
+
+  // permite abrir direto num país/período: ?country=Argentina&month=6&year=2026
+  const q = new URLSearchParams(location.search);
+  const deepLinked = !!q.get('country');
+  if (deepLinked) state.country = q.get('country');
+  if (parseInt(q.get('month'), 10)) state.month = parseInt(q.get('month'), 10);
+  if (parseInt(q.get('year'), 10)) state.year = parseInt(q.get('year'), 10);
+
+  $('period').innerHTML = '<option>' + periodLabel(state.month, state.year) + '</option>';
+  renderCountries([]);
+  renderSplash();
+
+  $('period').addEventListener('change', (e) => {
+    const parts = e.target.value.split('.');
+    state.month = parseInt(parts[0], 10);
+    state.year = parseInt(parts[1], 10);
+    load();
+  });
+  $('refresh').addEventListener('click', () => load(true));
+  $('change-country').addEventListener('click', showSplash);
+  $('csv').addEventListener('click', exportCsv);
+  $('search').addEventListener('input', (e) => { state.search = e.target.value; renderTable(); });
+
+  // Link direto (?country=Argentina) pula o splash; senão o cliente escolhe.
+  if (deepLinked) { hideSplash(); load(); }
+  else { showSplash(); }
+})();
+</script>
+</body>
+</html>

@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.57',
+        version: 'v5.58',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -300,7 +300,8 @@ function doGet(e) {
                     'getArLaunchSchedule', 'POST saveArLaunchSchedule',
                     'listMyMaps', 'getMyMap', 'POST saveMyMap',
                     'getTkmReportOptions', 'getTkmReport', 'getFleetVids',
-                    'getVidStatus', 'POST saveVidStatus'],
+                    'getVidStatus', 'POST saveVidStatus',
+                    'getClientMetrics'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -384,6 +385,16 @@ function doGet(e) {
       const country = e.parameter.country || 'ALL';
       if (!month || !year) return jsonResponse({ success: false, error: 'month/year obrigatórios' });
       return jsonResponse(getTkmReport_(month, year, country));
+    }
+
+    // v5.58: portal do CLIENTE (client-metrics.html) — KPIs + lista de motoristas
+    // por país/mês, derivado direto da RAW CTS DATA (inclui Map Type: swarm/churn).
+    // Público (sem login) — só dados operacionais agregados, nada financeiro.
+    if (action === 'getClientMetrics') {
+      const month = parseInt(e.parameter.month, 10) || null;
+      const year = parseInt(e.parameter.year, 10) || null;
+      const country = e.parameter.country || 'ALL';
+      return jsonResponse(getClientMetrics_(month, year, country));
     }
 
     // v5.44: frota inteira por VID — última posição conhecida de cada VID (pro ops-map)
@@ -5718,6 +5729,330 @@ function getTkmReport_(month, year, country) {
     lock.releaseLock();
   }
 }
+
+// ================================================================
+// v5.58 — CLIENT METRICS (portal público do cliente)
+// ================================================================
+// Alimenta o client-metrics.html: escolhe país + mês e vê KPIs no topo
+// e a lista de motoristas embaixo. Fonte = RAW CTS DATA (1 linha por
+// VID-dia, com Map Type = Swarm/Churn), CTS Goal Management (meta),
+// VID Monthly CALENDAR (status per Google) e HR (nome do motorista).
+//
+// NADA financeiro entra aqui — a página é pública.
+
+/** Códigos de país da RAW CTS → nome cheio (o export às vezes manda ISO2). */
+const CLIENT_COUNTRY_NAMES_ = {
+  ar: 'Argentina', arg: 'Argentina',
+  br: 'Brazil', bra: 'Brazil',
+  cl: 'Chile', chl: 'Chile',
+  co: 'Colombia', col: 'Colombia',
+  mx: 'Mexico', mex: 'Mexico',
+  pe: 'Peru', per: 'Peru',
+};
+
+/** Normaliza país vindo da RAW CTS: aceita 'AR', 'Argentina', 'argentina'. */
+function clientCountryName_(raw) {
+  const s = String(raw == null ? '' : raw).trim();
+  if (!s) return '';
+  const k = normCountry_(s);
+  if (CLIENT_COUNTRY_NAMES_[k]) return CLIENT_COUNTRY_NAMES_[k];
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** Bucket do Map Type: 'swarm' | 'churn' | 'other' (tolerante a variações). */
+function clientMapTypeBucket_(raw) {
+  const s = normCountry_(raw);   // reaproveita: lowercase + sem acento
+  if (!s) return 'other';
+  if (s.indexOf('swarm') >= 0) return 'swarm';
+  if (s.indexOf('churn') >= 0) return 'churn';
+  return 'other';
+}
+
+/** email (lowercase) → { name, country } da HR Database. */
+function getDriverNamesByEmail_() {
+  const map = {};
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = ss.getSheetByName(CONFIG.hrSheet);
+    if (!sheet || sheet.getLastRow() < 2) return map;
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const iEmail = findHeader_(headers, ['Corporate E-mail', 'Corporate Email', 'Email', 'Driver Email']);
+    const iName = findHeader_(headers, ['Driver Name', 'Full Name', 'Name', 'Worker']);
+    const iCountry = findHeader_(headers, ['Country']);
+    if (iEmail < 0) return map;
+    const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+    for (let i = 0; i < data.length; i++) {
+      const email = String(data[i][iEmail] || '').trim().toLowerCase();
+      if (!email) continue;
+      map[email] = {
+        name: iName >= 0 ? String(data[i][iName] || '').trim() : '',
+        country: iCountry >= 0 ? String(data[i][iCountry] || '').trim() : '',
+      };
+    }
+  } catch (e) {
+    Logger.log('getDriverNamesByEmail_ erro: ' + e);
+  }
+  return map;
+}
+
+/**
+ * Status da frota per Google por país, da aba VID Monthly CALENDAR
+ * (bloco de país, linhas 4-9): Active VIDs | Half Active | Not Active | Fleet.
+ * ⚠ A aba é do MÊS CORRENTE dela — devolve também qual mês ela representa
+ * pro frontend avisar quando o usuário pedir um mês diferente.
+ */
+function getClientFleetStatus_() {
+  const out = { byCountry: {}, month: null, year: null };
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = getSheetWithFallback_(ss, CONFIG.vidCalendarSheet, ['VID CALENDAR', 'VID Calendar']);
+    if (!sheet || sheet.getLastRow() < 4) return out;
+    out.month = safeNumber(sheet.getRange(2, 2).getValue()) || null;
+    out.year = safeNumber(sheet.getRange(2, 3).getValue()) || null;
+    const lastRow = Math.min(sheet.getLastRow(), 11);
+    const data = sheet.getRange(4, 1, lastRow - 3, 7).getValues();
+    for (let i = 0; i < data.length; i++) {
+      const name = String(data[i][0] || '').trim();
+      if (!name) continue;
+      if (name.toUpperCase() === 'SUM' || name.toUpperCase() === 'TOTAL') continue;
+      out.byCountry[normCountry_(clientCountryName_(name))] = {
+        fleet: safeNumber(data[i][1]),
+        active: safeNumber(data[i][3]),
+        halfActive: safeNumber(data[i][4]),
+        notActive: safeNumber(data[i][5]),
+        floating: safeNumber(data[i][6]),
+      };
+    }
+  } catch (e) {
+    Logger.log('getClientFleetStatus_ erro: ' + e);
+  }
+  return out;
+}
+
+/** Soma os buckets de frota de vários países num objeto só. */
+function sumFleet_(list) {
+  const t = { fleet: 0, active: 0, halfActive: 0, notActive: 0, floating: 0 };
+  list.forEach(function (f) {
+    t.fleet += f.fleet || 0;
+    t.active += f.active || 0;
+    t.halfActive += f.halfActive || 0;
+    t.notActive += f.notActive || 0;
+    t.floating += f.floating || 0;
+  });
+  return t;
+}
+
+/** Adiciona activePct/halfPct/notActivePct (0-1) ao objeto de frota. */
+function withFleetPcts_(f) {
+  const base = (f.active || 0) + (f.halfActive || 0) + (f.notActive || 0);
+  const denom = base > 0 ? base : (f.fleet || 0);
+  f.statusTotal = denom;
+  f.activePct = denom > 0 ? f.active / denom : 0;
+  f.halfActivePct = denom > 0 ? f.halfActive / denom : 0;
+  f.notActivePct = denom > 0 ? f.notActive / denom : 0;
+  return f;
+}
+
+/**
+ * KPIs + lista de motoristas pro portal do cliente.
+ * @param {number} month  1-12 (default: mês corrente)
+ * @param {number} year   ex 2026
+ * @param {string} country nome do país, ou 'ALL'
+ */
+function getClientMetrics_(month, year, country) {
+  try {
+    const now = new Date();
+    if (!month) month = now.getMonth() + 1;
+    if (!year) year = now.getFullYear();
+    const monthKey = String(month) + '.' + String(year);
+    const wantAll = !country || String(country).toUpperCase() === 'ALL' || String(country).trim() === '';
+
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = ss.getSheetByName(CONFIG.rawCtsSheet);
+    if (!sheet || sheet.getLastRow() < 2) {
+      return { success: false, error: 'aba "' + CONFIG.rawCtsSheet + '" vazia ou não encontrada' };
+    }
+
+    const data = sheet.getDataRange().getValues();
+    const h = data[0];
+    const iMonth = findHeader_(h, ['Month']);
+    const iMapType = findHeader_(h, ['Map Type', 'map_type', 'maptype', 'Map type']);
+    const iCountry = findHeader_(h, ['country', 'country_code']);
+    const iVid = findHeader_(h, ['VID', 'vehicle_id']);
+    const iDate = findHeader_(h, ['drive_date']);
+    const iEmail = findHeader_(h, ['email']);
+    const iStatus = findHeader_(h, ['Status', 'status']);
+    const iTkm = findHeader_(h, ['TKM']);
+    const iKm = findHeader_(h, ['total_km', 'total_kms']);
+    const iHours = findHeader_(h, ['Ace System On Hours', 'System On Hours', 'ace_system_on_hours']);
+
+    if (iMonth < 0 || iEmail < 0) {
+      return { success: false, error: 'RAW CTS DATA sem colunas Month/email' };
+    }
+
+    const byDriver = {};        // email → agregado
+    const monthsSeen = {};      // 'M.YYYY' → true (pros seletores)
+    const countriesSeen = {};   // normCountry → nome
+    const mapTypesSeen = {};    // rótulo cru → true (diagnóstico)
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const rowMonth = String(row[iMonth] || '').trim();
+      if (rowMonth) monthsSeen[rowMonth] = true;
+
+      const cName = iCountry >= 0 ? clientCountryName_(row[iCountry]) : '';
+      if (cName) countriesSeen[normCountry_(cName)] = cName;
+
+      if (rowMonth !== monthKey) continue;
+      if (!wantAll && !matchCountry_(cName, country)) continue;
+
+      const email = String(row[iEmail] || '').trim().toLowerCase();
+      if (!email) continue;
+
+      const mapRaw = iMapType >= 0 ? String(row[iMapType] || '').trim() : '';
+      if (mapRaw) mapTypesSeen[mapRaw] = true;
+      const bucket = clientMapTypeBucket_(mapRaw);
+
+      const tkm = safeNumber(row[iTkm]);
+      const km = safeNumber(row[iKm]);
+      const hours = iHours >= 0 ? safeNumber(row[iHours]) : 0;
+      const status = iStatus >= 0 ? String(row[iStatus] || '').trim() : '';
+      const isMapping = PRODUCTIVE_STATUSES.indexOf(status) >= 0;
+
+      if (!byDriver[email]) {
+        byDriver[email] = {
+          email: email, country: cName,
+          tkm: 0, km: 0, hours: 0, mappingDays: 0, days: 0,
+          swarmTkm: 0, churnTkm: 0, otherTkm: 0,
+          swarmDays: 0, churnDays: 0,
+          vids: [],
+        };
+      }
+      const d = byDriver[email];
+      if (!d.country && cName) d.country = cName;
+      d.tkm += tkm;
+      d.km += km;
+      d.hours += hours;
+      d.days++;
+      if (isMapping) d.mappingDays++;
+      if (bucket === 'swarm') { d.swarmTkm += tkm; if (isMapping) d.swarmDays++; }
+      else if (bucket === 'churn') { d.churnTkm += tkm; if (isMapping) d.churnDays++; }
+      else { d.otherTkm += tkm; }
+
+      if (iVid >= 0) {
+        const vid = String(row[iVid] == null ? '' : row[iVid]).trim();
+        if (vid && d.vids.indexOf(vid) < 0) d.vids.push(vid);
+      }
+    }
+
+    // ---- nomes (HR) + monta a lista final ----
+    const hr = getDriverNamesByEmail_();
+    const drivers = [];
+    const vidSetAll = {};
+    let totTkm = 0, totKm = 0, totHours = 0, totMappingDays = 0;
+    let totSwarm = 0, totChurn = 0;
+
+    for (const email in byDriver) {
+      const d = byDriver[email];
+      const info = hr[email] || {};
+      const totalTypeTkm = d.swarmTkm + d.churnTkm + d.otherTkm;
+      drivers.push({
+        name: info.name || email.split('@')[0],
+        country: d.country || clientCountryName_(info.country),
+        tkm: Math.round(d.tkm * 100) / 100,
+        kmDriven: Math.round(d.km * 100) / 100,
+        efficiency: d.km > 0 ? d.tkm / d.km : 0,
+        systemOnHours: Math.round(d.hours * 100) / 100,
+        avgSystemOnHours: d.mappingDays > 0 ? d.hours / d.mappingDays : 0,
+        mappingDays: d.mappingDays,
+        swarmTkm: Math.round(d.swarmTkm * 100) / 100,
+        churnTkm: Math.round(d.churnTkm * 100) / 100,
+        swarmPct: totalTypeTkm > 0 ? d.swarmTkm / totalTypeTkm : 0,
+        churnPct: totalTypeTkm > 0 ? d.churnTkm / totalTypeTkm : 0,
+        vids: d.vids,
+        vidCount: d.vids.length,
+      });
+      d.vids.forEach(function (v) { vidSetAll[v] = true; });
+      totTkm += d.tkm; totKm += d.km; totHours += d.hours;
+      totMappingDays += d.mappingDays;
+      totSwarm += d.swarmTkm; totChurn += d.churnTkm;
+    }
+    drivers.sort(function (a, b) { return b.tkm - a.tkm; });
+
+    // ---- meta do mês (CTS Goal Management) ----
+    let goalTkm = 0;
+    try {
+      const goals = getCtsGoals();
+      for (let i = 0; i < goals.length; i++) {
+        const g = goals[i];
+        if (!periodMatches_(g.period, month, year)) continue;
+        if (wantAll || matchCountry_(clientCountryName_(g.country), country)) goalTkm += g.ctsGoal || 0;
+      }
+    } catch (e) { Logger.log('getClientMetrics_: getCtsGoals falhou: ' + e); }
+
+    // ---- frota per Google ----
+    const fleetSrc = getClientFleetStatus_();
+    let fleet;
+    if (wantAll) {
+      const list = [];
+      for (const k in fleetSrc.byCountry) list.push(fleetSrc.byCountry[k]);
+      fleet = sumFleet_(list);
+    } else {
+      fleet = fleetSrc.byCountry[normCountry_(clientCountryName_(country))] ||
+              { fleet: 0, active: 0, halfActive: 0, notActive: 0, floating: 0 };
+    }
+    withFleetPcts_(fleet);
+    fleet.sourceMonth = fleetSrc.month;
+    fleet.sourceYear = fleetSrc.year;
+    fleet.isCurrentPeriod = (fleetSrc.month === month && fleetSrc.year === year);
+
+    const typeTkmTotal = totSwarm + totChurn;
+
+    // ---- meses disponíveis (desc) ----
+    const months = Object.keys(monthsSeen).map(function (k) {
+      const p = k.split('.');
+      return { key: k, month: parseInt(p[0], 10), year: parseInt(p[1], 10) };
+    }).filter(function (m) { return m.month && m.year; });
+    months.sort(function (a, b) { return (b.year - a.year) || (b.month - a.month); });
+
+    const countries = [];
+    for (const k in countriesSeen) countries.push(countriesSeen[k]);
+    countries.sort();
+
+    return {
+      success: true,
+      month: month,
+      year: year,
+      country: wantAll ? 'ALL' : country,
+      months: months,
+      countries: countries,
+      mapTypesFound: Object.keys(mapTypesSeen),
+      kpis: {
+        goalTkm: goalTkm,
+        tkmDone: Math.round(totTkm * 100) / 100,
+        achievementPct: goalTkm > 0 ? totTkm / goalTkm : 0,
+        kmDriven: Math.round(totKm * 100) / 100,
+        efficiency: totKm > 0 ? totTkm / totKm : 0,
+        totalDrivers: drivers.length,
+        totalVids: Object.keys(vidSetAll).length,
+        systemOnHours: Math.round(totHours * 100) / 100,
+        avgSystemOnHours: totMappingDays > 0 ? totHours / totMappingDays : 0,
+        mappingDays: totMappingDays,
+        swarmTkm: Math.round(totSwarm * 100) / 100,
+        churnTkm: Math.round(totChurn * 100) / 100,
+        swarmPct: typeTkmTotal > 0 ? totSwarm / typeTkmTotal : 0,
+        churnPct: typeTkmTotal > 0 ? totChurn / typeTkmTotal : 0,
+        fleet: fleet,
+      },
+      drivers: drivers,
+      generatedAt: new Date().toISOString(),
+    };
+  } catch (err) {
+    Logger.log('getClientMetrics_ erro: ' + err);
+    return { success: false, error: String(err) };
+  }
+}
+
 
 /**
  * Acha o índice (0-based) da 1ª coluna cujo cabeçalho casa com um dos candidatos
