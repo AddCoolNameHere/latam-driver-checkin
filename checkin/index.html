@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Daily Check-in · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="../aceolution-globe.png">
+<!-- Aquece as conexões dos hosts críticos: o fetch dos drivers e o mapa
+     começam com o handshake TLS já pago (ajuda em 4G ruim). -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
 <script>
   // Dispara o fetch dos drivers o quanto antes (antes do Leaflet/CSS),
   // pra ida-e-volta ao Apps Script rodar em paralelo com o resto do load.
@@ -15,7 +20,13 @@
       .catch(function () { return null; });
   } catch (e) { window.__driversFetch = null; }
 </script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- Leaflet CSS carregado SEM bloquear o primeiro paint: o mapa só aparece
+     num passo posterior (seleção de área), então não faz sentido travar a
+     tela de identificação esperando um CSS de CDN. media=print engana o
+     browser pra baixar sem bloquear; o onload volta pra 'all' quando pronto. -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></noscript>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -441,7 +452,7 @@
 
 <header>
   <div class="brand-wrap">
-    <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
+    <img src="aceolution-logo.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
     <div class="brand-divider"></div>
     <div class="brand-sub">
       STREET VIEW
@@ -787,7 +798,7 @@
 </div>
 
 <footer>
-  <img src="https://www.aceolution.com/img/logo2.png" alt="Aceolution" class="footer-logo" onerror="this.style.display='none'"><br>
+  <img src="aceolution-logo.png" alt="Aceolution" class="footer-logo" onerror="this.style.display='none'"><br>
   <span data-i18n="footerText">Plataforma interna — Aceolution do Brasil Ltda.</span><br>
   <a href="https://www.aceolution.com" target="_blank">aceolution.com</a>
 </footer>
