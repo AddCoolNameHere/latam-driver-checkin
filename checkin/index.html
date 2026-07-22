@@ -144,6 +144,12 @@
     font-weight: 400;
     margin-left: 4px;
   }
+  /* Tempo de deslocamento: 2 selects lado a lado (horas / minutos).
+     Pré-selecionados — o motorista só escolhe, nunca digita. */
+  .travel-selects { display: flex; gap: 10px; margin-top: 8px; }
+  .travel-field { flex: 1; display: flex; align-items: center; gap: 6px; }
+  .travel-field select { flex: 1; }
+  .travel-unit { font-size: 13px; color: #666; white-space: nowrap; }
 
   select, input, textarea {
     width: 100%;
@@ -602,9 +608,27 @@
     </div>
   </div>
 
-  <div id="origin-card" class="card hidden">
+  <div id="travel-card" class="card hidden">
     <div class="step-header">
       <div class="step-num">3</div>
+      <div class="step-title" data-i18n="travelTitle">Tempo de deslocamento</div>
+    </div>
+    <label data-i18n="travelQuestion">Quanto tempo de onde você está até a área de mapeio de hoje?</label>
+    <div class="travel-selects">
+      <div class="travel-field">
+        <select id="travel-hours"></select>
+        <span class="travel-unit" data-i18n="travelHours">horas</span>
+      </div>
+      <div class="travel-field">
+        <select id="travel-minutes"></select>
+        <span class="travel-unit" data-i18n="travelMinutes">minutos</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="origin-card" class="card hidden">
+    <div class="step-header">
+      <div class="step-num">4</div>
       <div class="step-title" data-i18n="step3">Onde você está agora</div>
     </div>
 
@@ -628,7 +652,7 @@
 
   <div id="dest-card" class="card hidden">
     <div class="step-header">
-      <div class="step-num">4</div>
+      <div class="step-num">5</div>
       <div class="step-title" data-i18n="step4">Área de mapeamento de hoje</div>
     </div>
 
@@ -668,7 +692,7 @@
   <!-- v5.14: Hodômetro inicial + SSD em uso (obrigatórios no check-in) -->
   <div id="vehicle-card" class="card hidden">
     <div class="step-header">
-      <div class="step-num">5</div>
+      <div class="step-num">6</div>
       <div class="step-title" data-i18n="vehicleStepTitle">Veículo e SSD</div>
     </div>
 
@@ -688,7 +712,7 @@
 
   <div id="extras-card" class="card hidden">
     <div class="step-header">
-      <div class="step-num">6</div>
+      <div class="step-num">7</div>
       <div class="step-title" data-i18n="step5">Status e observações</div>
     </div>
 
@@ -819,6 +843,10 @@ const I18N = {
     loading: 'Carregando drivers...',
     step1: 'Identificação',
     step2: 'Base atual',
+    travelTitle: 'Tempo de deslocamento',
+    travelQuestion: 'Quanto tempo de onde você está até a área de mapeio de hoje?',
+    travelHours: 'horas',
+    travelMinutes: 'minutos',
     step3: 'Onde você está agora',
     step4: 'Área de mapeamento de hoje',
     step5: 'Status e observações',
@@ -941,6 +969,10 @@ const I18N = {
     loading: 'Cargando conductores...',
     step1: 'Identificación',
     step2: 'Base actual',
+    travelTitle: 'Tiempo de desplazamiento',
+    travelQuestion: '¿Cuánto tiempo desde donde está hasta el área de mapeo de hoy?',
+    travelHours: 'horas',
+    travelMinutes: 'minutos',
     step3: 'Dónde está ahora',
     step4: 'Área de mapeo de hoy',
     step5: 'Estado y observaciones',
@@ -1063,6 +1095,10 @@ const I18N = {
     loading: 'Loading drivers...',
     step1: 'Identification',
     step2: 'Current base',
+    travelTitle: 'Travel time',
+    travelQuestion: 'How long from where you are to today’s mapping area?',
+    travelHours: 'hours',
+    travelMinutes: 'minutes',
     step3: 'Where you are now',
     step4: 'Today’s mapping area',
     step5: 'Status and notes',
@@ -1184,6 +1220,9 @@ let state = {
   baseNew: null,
   origin: null,
   originMethod: null,
+  // tempo de deslocamento até a área de hoje (dropdowns pré-selecionados)
+  travelHours: 0,
+  travelMinutes: 30,
   dest: null,
   destRadius: 10,
   lastArea: null,
@@ -1359,6 +1398,7 @@ function selectMode(mode) {
   } else {
     // Modo checkout: esconde tudo do checkin, mostra só card de checkout
     document.getElementById('base-card').classList.add('hidden');
+    document.getElementById('travel-card')?.classList.add('hidden');
     document.getElementById('origin-card')?.classList.add('hidden');
     document.getElementById('dest-card')?.classList.add('hidden');
     document.getElementById('vehicle-card')?.classList.add('hidden');  // v5.14
@@ -1657,6 +1697,7 @@ function onWillMapChange() {
   } else if (state.willMap === 'no') {
     // Pula tudo do fluxo de mapping. Mostra só motivo.
     document.getElementById('base-card').classList.add('hidden');
+    document.getElementById('travel-card')?.classList.add('hidden');
     document.getElementById('origin-card')?.classList.add('hidden');
     document.getElementById('dest-card')?.classList.add('hidden');
     document.getElementById('vehicle-card')?.classList.add('hidden');
@@ -2213,7 +2254,39 @@ function showMap(containerId, lat, lng) {
   setTimeout(() => map.invalidateSize(), 100);
 }
 
+// Preenche os dropdowns de tempo de deslocamento uma única vez. Pré-selecionados
+// (state.travelHours / travelMinutes) — o motorista só escolhe, nunca digita,
+// então não há como cair em erro de formatação.
+let _travelReady = false;
+function setupTravelCard() {
+  if (_travelReady) return;
+  _travelReady = true;
+  const hSel = document.getElementById('travel-hours');
+  const mSel = document.getElementById('travel-minutes');
+  if (!hSel || !mSel) return;
+  for (let h = 0; h <= 8; h++) {
+    const o = document.createElement('option');
+    o.value = String(h); o.textContent = String(h);
+    if (h === state.travelHours) o.selected = true;
+    hSel.appendChild(o);
+  }
+  for (let m = 0; m < 60; m += 5) {
+    const o = document.createElement('option');
+    o.value = String(m); o.textContent = String(m).padStart(2, '0');
+    if (m === state.travelMinutes) o.selected = true;
+    mSel.appendChild(o);
+  }
+  hSel.addEventListener('change', e => { state.travelHours = parseInt(e.target.value, 10) || 0; });
+  mSel.addEventListener('change', e => { state.travelMinutes = parseInt(e.target.value, 10) || 0; });
+}
+
+function showTravelCard() {
+  setupTravelCard();
+  document.getElementById('travel-card').classList.remove('hidden');
+}
+
 function showOriginCard() {
+  showTravelCard();   // passo de deslocamento vem logo depois da base
   document.getElementById('origin-card').classList.remove('hidden');
 }
 function showDestCard() {
@@ -2313,6 +2386,9 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
         originLng: state.origin.lng,
         originAddress: state.origin.address,
         originMethod: state.originMethod,
+        // tempo estimado de deslocamento até a área de hoje
+        travelTimeMin: (state.travelHours * 60) + state.travelMinutes,
+        travelTime: state.travelHours + ':' + String(state.travelMinutes).padStart(2, '0'),
         destLat: state.dest.lat,
         destLng: state.dest.lng,
         destAddress: state.dest.address,

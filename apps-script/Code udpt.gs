@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.61',
+        version: 'v5.62',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -3419,6 +3419,7 @@ function saveCheckin(data) {
   const sheet = ss.getSheetByName(CONFIG.checkinSheet);
   ensureCheckinExtraColumns_(sheet);  // v5.14: garante AB-AD (odômetro inicial + SSD)
   ensureDnmColumns_(sheet);           // v5.17: garante AG-AH (Did Map flag + DNM Reason)
+  ensureTravelColumn_(sheet);         // v5.62: garante AI (Travel Time em min)
 
   const today = new Date();
   const dateStr = Utilities.formatDate(today, 'America/Sao_Paulo', 'yyyy-MM-dd');
@@ -3441,9 +3442,10 @@ function saveCheckin(data) {
     }
   }
 
-  // Linha: 27 cols originais (A-AA) + 3 v5.14 (AB-AD) + 2 v5.14 checkout (AE-AF) + 2 v5.17 DNM (AG-AH) = 34
-  // AG(33)=Did Map flag, AH(34)=DNM Reason
-  const row = new Array(34).fill('');
+  // Linha: 27 cols originais (A-AA) + 3 v5.14 (AB-AD) + 2 v5.14 checkout (AE-AF)
+  //        + 2 v5.17 DNM (AG-AH) + 1 v5.62 (AI) = 35
+  // AG(33)=Did Map flag, AH(34)=DNM Reason, AI(35)=Travel Time (min)
+  const row = new Array(35).fill('');
   row[0] = today;
   row[1] = dateStr;
   row[2] = data.driverName;
@@ -3475,6 +3477,8 @@ function saveCheckin(data) {
   // v5.17: DNM flags
   row[32] = data.didMap || 'yes';   // AG: 'yes' | 'no'
   row[33] = data.dnmReason || '';   // AH: 'weather' | 'mech' | 'tech' | 'disks' | ''
+  // AI(35): tempo estimado de deslocamento até a área (minutos). v5.62
+  row[34] = (data.travelTimeMin != null && data.travelTimeMin !== '') ? safeNumber(data.travelTimeMin) : '';
 
   // v5.37: insere no topo (logo abaixo do header) em vez de no fim — mais recente em cima
   insertRowAt_(sheet, 2, row);
@@ -3780,6 +3784,18 @@ function ensureDnmColumns_(sheet) {
   sheet.getRange(1, startCol + (2 - numToAdd), 1, numToAdd).setValues([headersToAdd]);
   sheet.getRange(1, startCol + (2 - numToAdd), 1, numToAdd)
     .setFontWeight('bold').setBackground('#FFE4E6');  // rosa claro pra destacar dia parado
+}
+
+/**
+ * v5.62: garante a coluna AI (35) "Travel Time (min)" — tempo estimado de
+ * deslocamento do motorista até a área de mapeamento, capturado no check-in.
+ */
+function ensureTravelColumn_(sheet) {
+  if (!sheet) return;
+  if (sheet.getLastColumn() >= 35) return;
+  ensureDnmColumns_(sheet);   // garante que as anteriores (até 34) existem
+  sheet.getRange(1, 35).setValue('Travel Time (min)')
+    .setFontWeight('bold').setBackground('#E0E7FF');  // lilás claro
 }
 
 /**
