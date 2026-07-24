@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.63',
+        version: 'v5.64',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -301,7 +301,7 @@ function doGet(e) {
                     'listMyMaps', 'getMyMap', 'POST saveMyMap',
                     'getTkmReportOptions', 'getTkmReport', 'getFleetVids',
                     'getVidStatus', 'POST saveVidStatus',
-                    'getClientMetrics'],
+                    'getClientMetrics', 'getClientMetricsBatch'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -414,6 +414,26 @@ function doGet(e) {
         } catch (e2) { Logger.log('getClientMetrics cache falhou: ' + e2); }
       }
       return jsonResponse(payload);
+    }
+
+    // v5.64: batch pro snapshot do portal — ALL + cada país numa requisição só.
+    // Como tudo roda no MESMO doGet, o _rawCtsCache (e o _activeCarsCache) são
+    // reaproveitados: a RAW CTS é lida 1x em vez de 1x por país. Corta o tempo
+    // de geração do snapshot de ~5min pra ~1-2min. Uso interno (GitHub Action).
+    if (action === 'getClientMetricsBatch') {
+      const month = parseInt(e.parameter.month, 10) || null;
+      const year = parseInt(e.parameter.year, 10) || null;
+      const all = getClientMetrics_(month, year, 'ALL');
+      const out = { success: true, all: all, byCountry: {} };
+      if (all && all.success && Array.isArray(all.countries)) {
+        all.countries.forEach(function (c) {
+          out.byCountry[c] = getClientMetrics_(all.month, all.year, c);
+        });
+      } else {
+        out.success = false;
+        out.error = (all && all.error) || 'falha no ALL';
+      }
+      return jsonResponse(out);
     }
 
     // v5.44: frota inteira por VID — última posição conhecida de cada VID (pro ops-map)
@@ -5337,7 +5357,11 @@ var ACTIVE_CAR_MIN_MAPPING_DAYS_ = 10;
  * por VID-dia; agrupa por vehicle_id, soma os dias de Mapping, e conta os que
  * passam do limite. Retorna { normCountry: count }. Fail-safe: {} se não ler.
  */
+// v5.64: cache por-requisição (mesma ideia do _rawCtsCache). Sem isso, o
+// endpoint batch releria a RAW CTS inteira uma vez por país.
+let _activeCarsCache = {};
 function getActiveCarCountByCountry_(monthKey) {
+  if (_activeCarsCache[monthKey]) return _activeCarsCache[monthKey];
   const out = {};
   try {
     const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
@@ -5365,6 +5389,7 @@ function getActiveCarCountByCountry_(monthKey) {
       }
     }
   } catch (e) { Logger.log('getActiveCarCountByCountry_ erro: ' + e); }
+  _activeCarsCache[monthKey] = out;
   return out;
 }
 
