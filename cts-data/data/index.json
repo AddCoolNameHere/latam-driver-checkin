@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-24T11:23:26.797Z",
+  "generatedAt": "2026-07-24T13:54:13.798Z",
   "month": 7,
   "year": 2026,
   "countries": [
@@ -21,22 +21,22 @@
     {
       "country": "Chile",
       "slug": "chile",
-      "error": "This operation was aborted"
+      "drivers": 4
     },
     {
       "country": "Colombia",
       "slug": "colombia",
-      "error": "HTTP 404"
+      "drivers": 4
     },
     {
       "country": "México",
       "slug": "mexico",
-      "error": "This operation was aborted"
+      "drivers": 18
     },
     {
       "country": "Peru",
       "slug": "peru",
-      "error": "sistema ocupado gerando outro relatório, tenta de novo em instantes"
+      "drivers": 5
     }
   ]
 }
