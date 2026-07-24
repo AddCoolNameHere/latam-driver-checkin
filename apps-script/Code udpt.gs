@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.62',
+        version: 'v5.63',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -5894,6 +5894,58 @@ function withFleetPcts_(f) {
  * @param {number} year   ex 2026
  * @param {string} country nome do país, ou 'ALL'
  */
+/**
+ * v5.63: lê o bloco de RITMO/PROJEÇÃO da aba CTS Goal Management (colunas
+ * J–Q) por país, do período pedido. Leitura POR NOME de cabeçalho — o schema
+ * dessa aba já mudou uma vez, então posição fixa não é confiável.
+ * Retorna { normCountry: { daysLeft, avgRequired, monthAvgMappingDays,
+ *   avgSystemOnHoursCts, tkmPerHour, projection, lastDayAvg, lastDayDrivers } }
+ */
+function getCtsPaceByCountry_(month, year) {
+  const out = {};
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = ss.getSheetByName(CONFIG.ctsGoalSheet);
+    if (!sheet || sheet.getLastRow() < 2) return out;
+    const data = sheet.getDataRange().getValues();
+    const h = data[0];
+    const ix = {
+      period: findHeader_(h, ['Period']),
+      country: findHeader_(h, ['Country']),
+      daysLeft: findHeader_(h, ['Days Left']),
+      avgRequired: findHeader_(h, ['Average Required']),
+      monthAvgMappingDays: findHeader_(h, ['MONTH AVERAGE MAPPING DAY', 'Month Average Mapping Day']),
+      avgSystemOnHoursCts: findHeader_(h, ['AVG SYSTEM ON HOURS (CTS)', 'Avg System on Hours (CTS)']),
+      tkmPerHour: findHeader_(h, ['TKM Per Hour']),
+      projection: findHeader_(h, ['Projection']),
+      lastDayAvg: findHeader_(h, ['Last Mapping Day Average']),
+      lastDayDrivers: findHeader_(h, ['Last Mapping Day Active Drivers', 'Last Mapping Day Drivers Active']),
+    };
+    if (ix.period < 0 || ix.country < 0) return out;
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (!periodMatches_(row[ix.period], month, year)) continue;
+      const cname = clientCountryName_(row[ix.country]);
+      if (!cname) continue;
+      const g = function (idx) { return idx >= 0 ? safeNumber(row[idx]) : null; };
+      out[normCountry_(cname)] = {
+        country: cname,
+        daysLeft: g(ix.daysLeft),
+        avgRequired: g(ix.avgRequired),
+        monthAvgMappingDays: g(ix.monthAvgMappingDays),
+        avgSystemOnHoursCts: g(ix.avgSystemOnHoursCts),
+        tkmPerHour: g(ix.tkmPerHour),
+        projection: g(ix.projection),   // fração (0.87 = 87%)
+        lastDayAvg: g(ix.lastDayAvg),
+        lastDayDrivers: g(ix.lastDayDrivers),
+      };
+    }
+  } catch (e) {
+    Logger.log('getCtsPaceByCountry_ erro: ' + e);
+  }
+  return out;
+}
+
 function getClientMetrics_(month, year, country) {
   try {
     // Sem mês/ano explícito: usa o período que a aba já está mostrando
@@ -6005,6 +6057,20 @@ function getClientMetrics_(month, year, country) {
 
     const countries = (rep.perCountry || []).map(function (c) { return clientCountryName_(c.country); });
 
+    // v5.63: bloco de ritmo/projeção (CTS Goal Management J–Q). No LATAM
+    // manda todos os países (a página discrimina); num país só, manda ele.
+    const paceMap = getCtsPaceByCountry_(month, year);
+    let pace;
+    if (wantAll) {
+      // segue a ordem dos países do relatório (mesma da tabela)
+      pace = (rep.perCountry || []).map(function (c) {
+        return paceMap[normCountry_(c.country)] || { country: clientCountryName_(c.country) };
+      });
+    } else {
+      const one = paceMap[normCountry_(clientCountryName_(country))];
+      pace = one ? [one] : [];
+    }
+
     return {
       success: true,
       month: month,
@@ -6012,6 +6078,7 @@ function getClientMetrics_(month, year, country) {
       country: wantAll ? 'ALL' : country,
       months: months,
       countries: countries,
+      pace: pace,
       kpis: {
         goalTkm: safeNumber(big.ctsGoal),
         tkmDone: safeNumber(big.tkmDone),

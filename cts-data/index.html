@@ -388,6 +388,45 @@ table.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; min-wi
 }
 .cm-footer strong { color: var(--c-text-muted); font-weight: 700; }
 
+/* ---------- Pace & projection ---------- */
+/* País único: tiles compactos. LATAM: tabela com uma linha por país. */
+.cm-pace-tiles {
+  display: grid; gap: 12px; margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.cm-tile {
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow-sm);
+}
+.cm-tile-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px;
+  text-transform: uppercase; color: var(--c-text-muted); margin-bottom: 6px;
+}
+.cm-tile-value {
+  font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+  color: var(--c-primary-dark); line-height: 1.1;
+}
+.cm-tile-value .cm-unit { font-size: 12px; font-weight: 700; color: var(--c-text-muted); margin-left: 3px; }
+
+.cm-pace-table-wrap {
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-radius: 14px; box-shadow: var(--shadow-sm);
+  overflow: hidden; margin-bottom: 30px;
+}
+.cm-pace-scroll { overflow-x: auto; }
+table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 820px; }
+.cm-pace-table thead th {
+  background: var(--c-bg-tint);
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--c-primary-dark); text-align: right; padding: 11px 14px; white-space: nowrap;
+  border-bottom: 1px solid var(--c-border);
+}
+.cm-pace-table thead th:first-child { text-align: left; }
+.cm-pace-table tbody td { padding: 11px 14px; text-align: right; border-bottom: 1px solid var(--c-border); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cm-pace-table tbody td:first-child { text-align: left; font-weight: 600; }
+.cm-pace-table tbody tr:last-child td { border-bottom: none; }
+.cm-pace-table tbody tr:hover td { background: var(--c-bg); }
+
 @media (max-width: 640px) {
   .cm-header { padding: 18px 18px 20px; }
   .cm-main { padding: 20px 16px 44px; }
@@ -443,6 +482,12 @@ table.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; min-wi
     <div class="cm-section-note" id="overview-note"></div>
   </div>
   <section class="cm-kpis" id="kpis"></section>
+
+  <div class="cm-section-head" id="pace-head" style="display:none">
+    <div class="cm-section-title">Pace &amp; projection</div>
+    <div class="cm-section-note" id="pace-note"></div>
+  </div>
+  <section id="pace"></section>
 
   <div class="cm-section-head">
     <div class="cm-section-title">Driver performance</div>
@@ -717,6 +762,73 @@ function renderKpis(d) {
   }
 }
 
+/* ---------- render: ritmo & projeção (CTS Goal Management J–Q) ---------- */
+// Métricas de ritmo. Cada uma sabe se formata como número, %, horas ou pill.
+const PACE_METRICS = [
+  { key: 'projection',           label: 'Projection',   fmt: 'projPill' },
+  { key: 'daysLeft',             label: 'Days left',    fmt: 'int' },
+  { key: 'avgRequired',          label: 'Req./day',     fmt: 'num0', unit: 'TKM' },
+  { key: 'tkmPerHour',           label: 'TKM / hour',   fmt: 'num1' },
+  { key: 'avgSystemOnHoursCts',  label: 'Sys-on (CTS)', fmt: 'num1', unit: 'h' },
+  { key: 'monthAvgMappingDays',  label: 'Mapping days', fmt: 'num0' },
+  { key: 'lastDayAvg',           label: 'Last day avg', fmt: 'num0', unit: 'TKM' },
+  { key: 'lastDayDrivers',       label: 'Last day drivers', fmt: 'int' },
+];
+
+function projPill(v) {
+  const p = Number(v) || 0;
+  const cls = p >= 1 ? 'pill-success' : (p >= 0.8 ? 'pill-neutral' : 'pill-warn');
+  return '<span class="cm-pill ' + cls + '">' + pct(p, 0) + '</span>';
+}
+function paceCell(m, v) {
+  if (v == null || v === '') return '—';
+  switch (m.fmt) {
+    case 'projPill': return projPill(v);
+    case 'int':      return num(v, 0);
+    case 'num0':     return num(v, 0);
+    case 'num1':     return num(v, 1);
+    default:         return esc(String(v));
+  }
+}
+
+function renderPace(d) {
+  const rows = (d.pace || []).filter(r => r && (r.projection != null || r.daysLeft != null || r.avgRequired != null));
+  const head = $('pace-head'), note = $('pace-note'), body = $('pace');
+  if (!rows.length) { head.style.display = 'none'; body.innerHTML = ''; return; }
+  head.style.display = '';
+
+  if (d.country === 'ALL') {
+    // LATAM → tabela, uma linha por país
+    note.textContent = 'By country · ' + periodLabel(d.month, d.year);
+    const ths = '<th>Country</th>' + PACE_METRICS.map(m => '<th>' + esc(m.label) + '</th>').join('');
+    const trs = rows.map(r => {
+      const tds = PACE_METRICS.map(m => {
+        const cell = paceCell(m, r[m.key]);
+        const unit = (m.unit && r[m.key] != null && r[m.key] !== '') ? ' <span class="cm-muted" style="font-size:11px">' + m.unit + '</span>' : '';
+        return '<td>' + cell + unit + '</td>';
+      }).join('');
+      return '<tr><td>' + esc(r.country || '—') + '</td>' + tds + '</tr>';
+    }).join('');
+    body.innerHTML = '<div class="cm-pace-table-wrap"><div class="cm-pace-scroll">' +
+      '<table class="cm-pace-table"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table></div></div>';
+  } else {
+    // País único → tiles compactos
+    note.textContent = (rows[0].country || d.country) + ' · ' + periodLabel(d.month, d.year);
+    const r = rows[0];
+    const tiles = PACE_METRICS.map(m => {
+      const v = r[m.key];
+      if (m.fmt === 'projPill') {
+        return '<div class="cm-tile"><div class="cm-tile-label">' + esc(m.label) + '</div>' +
+               '<div class="cm-tile-value">' + (v == null ? '—' : pct(v, 0)) + '</div></div>';
+      }
+      const unit = (m.unit && v != null && v !== '') ? '<span class="cm-unit">' + m.unit + '</span>' : '';
+      return '<div class="cm-tile"><div class="cm-tile-label">' + esc(m.label) + '</div>' +
+             '<div class="cm-tile-value">' + paceCell(m, v) + unit + '</div></div>';
+    }).join('');
+    body.innerHTML = '<div class="cm-pace-tiles">' + tiles + '</div>';
+  }
+}
+
 /* ---------- render: tabela ---------- */
 const COLUMNS = [
   { key: 'name',             label: 'Driver',         type: 'text' },
@@ -983,6 +1095,7 @@ async function load(force) {
     renderPeriods(d.months);
     renderCountries(d.countries);
     renderKpis(d);
+    renderPace(d);
     renderTable();
 
     $('overview-note').textContent =
