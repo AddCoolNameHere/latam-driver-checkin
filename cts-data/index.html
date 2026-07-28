@@ -536,8 +536,6 @@ const state = {
   sortDir: -1,
   search: '',
   periodsLoaded: false,
-  // cards de swarm/churn: 'mix' (share do mix) ou 'goal' (atingimento da meta)
-  cardView: { swarm: 'mix', churn: 'mix' },
 };
 
 /* ---------- helpers ---------- */
@@ -710,41 +708,24 @@ function renderKpis(d) {
       </div>
     </div>`);
 
-  // Swarm e churn são tipos de mapa com META PRÓPRIA — duas leituras que
-  // importam: o share do mix e o atingimento da meta. O card é clicável e
-  // troca qual das duas é o número grande (a outra vai pro rodapé).
-  const mapTypeCard = (key, label, share, done, goal, achieved) => {
-    const goalView = state.cardView[key] === 'goal';
-    const value = goalView ? pct(achieved) : pct(share);
-    const unit = goalView ? 'of goal' : 'of mix';
-    const barPct = Math.min(100, (goalView ? achieved : share) * 100);
-    const barClass = goalView && achieved >= 1 ? 'fill-success' : 'fill-primary';
-    const foot = goalView
-      ? `<strong>${pct(share, 1)}</strong> of the ${state.country === 'ALL' ? 'LATAM' : 'country'} map mix`
-      : `<strong>${num(done)}</strong> of ${num(goal)} TKM goal · ${pct(achieved, 0)}`;
+  // Swarm e churn são tipos de mapa com meta própria. O card mostra o
+  // atingimento da meta: número grande = %, rodapé = "X de Y TKM".
+  const mapTypeCard = (label, done, goal, achieved) => {
+    const barPct = Math.min(100, (achieved || 0) * 100);
+    const barClass = achieved >= 1 ? 'fill-success' : 'fill-primary';
     return `
-      <button class="cm-card cm-card-toggle" data-toggle="${key}" type="button"
-              aria-pressed="${goalView}" title="Click to switch between mix share and goal attainment">
-        <div class="cm-card-label">${label}<span class="cm-toggle-hint">⇄</span></div>
-        <div class="cm-card-value">${value}<span class="cm-unit">${unit}</span></div>
+      <div class="cm-card">
+        <div class="cm-card-label">${label}</div>
+        <div class="cm-card-value">${pct(achieved, 0)}</div>
         <div class="cm-bar"><span class="${barClass}" style="width:${barPct}%"></span></div>
-        <div class="cm-card-foot">${foot}</div>
-      </button>`;
+        <div class="cm-card-foot"><strong>${num(done)}</strong> of ${num(goal)} TKM</div>
+      </div>`;
   };
 
-  cards.push(mapTypeCard('swarm', 'Swarm maps', k.swarmPct, k.swarmTkm, k.swarmGoal, k.swarmAchievementPct));
-  cards.push(mapTypeCard('churn', 'Churn maps', k.churnPct, k.churnTkm, k.churnGoal, k.churnAchievementPct));
+  cards.push(mapTypeCard('Swarm maps', k.swarmTkm, k.swarmGoal, k.swarmAchievementPct));
+  cards.push(mapTypeCard('Churn maps', k.churnTkm, k.churnGoal, k.churnAchievementPct));
 
   $('kpis').innerHTML = cards.join('');
-
-  // Clique nos cards de swarm/churn alterna mix ⇄ meta (só re-renderiza os KPIs)
-  $('kpis').querySelectorAll('[data-toggle]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      const key = btn.dataset.toggle;
-      state.cardView[key] = state.cardView[key] === 'goal' ? 'mix' : 'goal';
-      renderKpis(state.data);
-    });
-  });
 
   // Aviso quando a foto da frota é de outro mês (a aba VID Monthly CALENDAR é
   // sempre do mês corrente dela — não tem histórico por mês).

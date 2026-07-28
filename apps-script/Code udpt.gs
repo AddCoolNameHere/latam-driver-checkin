@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.64',
+        version: 'v5.65',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -5937,6 +5937,7 @@ function getCtsPaceByCountry_(month, year) {
     const ix = {
       period: findHeader_(h, ['Period']),
       country: findHeader_(h, ['Country']),
+      activeDrivers: findHeader_(h, ['Active Drivers']),
       daysLeft: findHeader_(h, ['Days Left']),
       avgRequired: findHeader_(h, ['Average Required']),
       monthAvgMappingDays: findHeader_(h, ['MONTH AVERAGE MAPPING DAY', 'Month Average Mapping Day']),
@@ -5955,6 +5956,7 @@ function getCtsPaceByCountry_(month, year) {
       const g = function (idx) { return idx >= 0 ? safeNumber(row[idx]) : null; };
       out[normCountry_(cname)] = {
         country: cname,
+        activeDrivers: g(ix.activeDrivers),   // "Active Drivers" (col G)
         daysLeft: g(ix.daysLeft),
         avgRequired: g(ix.avgRequired),
         monthAvgMappingDays: g(ix.monthAvgMappingDays),
@@ -6096,6 +6098,19 @@ function getClientMetrics_(month, year, country) {
       pace = one ? [one] : [];
     }
 
+    // v5.65 (#1): "Total drivers" = Σ Active Drivers da CTS Goal Management
+    // (col G), não a contagem da lista. Fallback pra lista se a aba não trouxer.
+    let activeDriversTotal = 0, hasActive = false;
+    pace.forEach(function (p) {
+      if (p && p.activeDrivers != null) { activeDriversTotal += safeNumber(p.activeDrivers); hasActive = true; }
+    });
+    const totalDrivers = hasActive ? activeDriversTotal : drivers.length;
+
+    // v5.65 (#3): meta do mês = Swarm Goal + Churn Goal (a coluna "CTS Goal"
+    // da aba virou só o swarm; o churn tem meta própria). Achievement recalcula.
+    const goalTotal = safeNumber(big.swarmGoal) + safeNumber(big.churnGoal);
+    const doneTotal = safeNumber(big.tkmDone);
+
     return {
       success: true,
       month: month,
@@ -6105,9 +6120,9 @@ function getClientMetrics_(month, year, country) {
       countries: countries,
       pace: pace,
       kpis: {
-        goalTkm: safeNumber(big.ctsGoal),
-        tkmDone: safeNumber(big.tkmDone),
-        achievementPct: safeNumber(big.achievementPct),
+        goalTkm: goalTotal > 0 ? goalTotal : safeNumber(big.ctsGoal),
+        tkmDone: doneTotal,
+        achievementPct: goalTotal > 0 ? doneTotal / goalTotal : safeNumber(big.achievementPct),
         baselinePct: safeNumber(big.baselinePct),
         kmDriven: (function () { let k = 0; drivers.forEach(function (d) { k += d.kmDriven; }); return k; })(),
         efficiency: (function () {
@@ -6115,7 +6130,7 @@ function getClientMetrics_(month, year, country) {
           drivers.forEach(function (d) { t += d.tkm; k += d.kmDriven; });
           return k > 0 ? t / k : 0;
         })(),
-        totalDrivers: drivers.length,
+        totalDrivers: totalDrivers,
         totalVids: Object.keys(vidSetAll).length || safeNumber(big.vidsActive),
         avgSystemOnHours: avgHours,
         mappingDays: totalMappingDays,
@@ -6131,16 +6146,21 @@ function getClientMetrics_(month, year, country) {
         fleet: fleet,
       },
       perCountry: (rep.perCountry || []).map(function (c) {
+        // v5.65: meta total (swarm+churn) e active drivers da CTS Goal Mgmt
+        const cGoalTotal = safeNumber(c.swarmGoal) + safeNumber(c.churnGoal);
+        const cDone = safeNumber(c.tkmDone);
+        const cPace = paceMap[normCountry_(c.country)] || {};
         return {
           country: clientCountryName_(c.country),
-          goalTkm: safeNumber(c.ctsGoal),
-          tkmDone: safeNumber(c.tkmDone),
-          achievementPct: safeNumber(c.achievementPct),
+          goalTkm: cGoalTotal > 0 ? cGoalTotal : safeNumber(c.ctsGoal),
+          tkmDone: cDone,
+          achievementPct: cGoalTotal > 0 ? cDone / cGoalTotal : safeNumber(c.achievementPct),
           avgSystemOnHours: safeNumber(c.avgHours),
           swarmTkm: safeNumber(c.swarmAchieved),
           swarmGoal: safeNumber(c.swarmGoal),
           churnTkm: safeNumber(c.churnAchieved),
           churnGoal: safeNumber(c.churnGoal),
+          activeDrivers: cPace.activeDrivers != null ? safeNumber(cPace.activeDrivers) : safeNumber(c.driversActive),
           driversActive: safeNumber(c.driversActive),
         };
       }),
