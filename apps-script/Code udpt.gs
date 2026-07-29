@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.69',
+        version: 'v5.70',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -6383,7 +6383,15 @@ function getActiveDriverEmailSet_() {
       const email = String(data[i][idxEmail] || '').trim().toLowerCase();
       if (!email) continue;
       const status = idxStatus >= 0 ? String(data[i][idxStatus] || '').trim().toLowerCase() : 'active';
-      const isActive = status === 'active' || status === 'ativo' || status === 'activo' || status === '';
+      // v5.70: OFFBOARDING entra. Quem está saindo mas ainda não saiu segue
+      // rodando e produzindo TKM — e o bloco de país da aba (Swarm/Churn
+      // Achieved) já conta essa produção. Enquanto o filtro aqui os excluía, a
+      // tabela de motoristas do portal somava menos que o próprio país: no
+      // Brasil, 18.758 na tabela contra 24.793 entregues, ~6.000 TKM de 11
+      // pessoas que mapearam até 27/jul sem aparecer em lugar nenhum.
+      // Mesmo critério que a v5.66 usou pra contagem de motoristas.
+      const isActive = status === 'active' || status === 'ativo' || status === 'activo' ||
+                       status === 'offboarding' || status === '';
       if (isActive) set[email] = true;
     }
   } catch (e) {
