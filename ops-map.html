@@ -213,6 +213,17 @@
   }
   .admin-save:disabled { opacity: 0.6; cursor: default; }
   .admin-hint { font-size: 10.5px; color: var(--c-text-muted); line-height: 1.3; }
+  /* v5.67: contador ao vivo da curadoria (= número do dashboard e do portal) */
+  .admin-count {
+    padding: 8px 14px; font-size: 11.5px; line-height: 1.5;
+    background: var(--c-surface-2, rgba(74,159,224,0.08));
+    border-bottom: 1px solid var(--c-border); color: var(--c-text-muted);
+  }
+  .admin-count b { color: var(--c-text); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .admin-count-gap { color: #B7791F; font-weight: 700; }
+  .admin-count-ref b { color: var(--c-text-muted); font-size: 11.5px; font-weight: 600; }
+  .admin-count-unc { color: #B7791F; }
+  .admin-new { color: var(--c-accent, #4A9FE0); font-size: 15px; line-height: 0; }
   .admin-row {
     display: flex; align-items: center; gap: 10px; padding: 9px 14px;
     border-bottom: 1px solid var(--c-border);
@@ -577,6 +588,8 @@ const I18N = {
     recCancelled: 'Cancelado', selActive: 'Ativo',
     layerCancelled: 'Cancelados', countCancelled: 'cancelados',
     adminVidHint: 'Estado de cada VID: Ativo (frota), Inativo (parado, mas é nosso) ou Cancelado (não temos mais).',
+    adminCountActive: 'Ativos (é este número que sai no dashboard e no portal do cliente)',
+    adminCalRef: 'frota no calendário', adminUncurated: 'sem curadoria (não contam)',
     savedOk: 'Curadoria salva', saveFail: 'Falha ao salvar',
   },
   es: {
@@ -614,6 +627,8 @@ const I18N = {
     recCancelled: 'Cancelado', selActive: 'Activo',
     layerCancelled: 'Cancelados', countCancelled: 'cancelados',
     adminVidHint: 'Estado de cada VID: Activo (flota), Inactivo (parado, pero es nuestro) o Cancelado (ya no lo tenemos).',
+    adminCountActive: 'Activos (este es el número que sale en el dashboard y en el portal del cliente)',
+    adminCalRef: 'flota en el calendario', adminUncurated: 'sin curaduría (no cuentan)',
     savedOk: 'Curaduría guardada', saveFail: 'Error al guardar',
   },
   en: {
@@ -651,6 +666,8 @@ const I18N = {
     recCancelled: 'Cancelled', selActive: 'Active',
     layerCancelled: 'Cancelled', countCancelled: 'cancelled',
     adminVidHint: 'Set each VID state: Active (fleet), Inactive (idle, still ours) or Cancelled (no longer ours).',
+    adminCountActive: 'Active (this is the number shown on the dashboard and the client portal)',
+    adminCalRef: 'fleet in calendar', adminUncurated: 'not curated (excluded)',
     savedOk: 'Saved', saveFail: 'Save failed',
   },
 };
@@ -735,12 +752,13 @@ async function bootData() {
       ? cachedFetch(url, ttl, { timeoutMs: 60000, staleOnError: true })
       : fetch(url).then(r => r.json());
 
-    const [listRes, dashRes, fleetRes, statusRes, modeP] = await Promise.all([
+    const [listRes, dashRes, fleetRes, statusRes, modeP, vidCountsRes] = await Promise.all([
       cf(`${CONFIG.scriptUrl}?action=getDriversList`, 300).catch(() => ({ drivers: [] })),
       cf(`${CONFIG.scriptUrl}?action=getDashboardData&days=30`, 300).catch(() => ({ data: null })),
       cf(`${CONFIG.scriptUrl}?action=getFleetVids`, 300).catch(() => ({ vids: [] })),
       cf(`${CONFIG.scriptUrl}?action=getVidStatus`, 120).catch(() => ({ status: [] })),
       MapStore.detectMode(),
+      cf(`${CONFIG.scriptUrl}?action=getVidCounts`, 120).catch(() => ({ byCountry: {} })),
     ]);
 
     const driversList = listRes.drivers || [];        // {name,email,country,vid,...}
@@ -759,6 +777,17 @@ async function bootData() {
       vidStatus[String(s.vid).trim()] = st;
     });
     state.vidStatus = vidStatus;
+
+    // v5.67: frota do VID Monthly CALENDAR por país, só como referência visual
+    // na aba Admin (o número que vale é o da curadoria). Backend devolve com a
+    // chave normalizada (minúscula, sem acento) — remapeia pro código do mapa.
+    const fleetCal = {};
+    const byC = (vidCountsRes && vidCountsRes.byCountry) || {};
+    Object.keys(COUNTRY_META).forEach(code => {
+      const key = COUNTRY_META[code].name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      if (byC[key] && byC[key].fleetCalendar) fleetCal[code] = byC[key].fleetCalendar;
+    });
+    state.fleetCalendar = fleetCal;
 
     const homeByEmail = {};
     fullDrivers.forEach(d => { if (d.email) homeByEmail[d.email.toLowerCase()] = d; });
@@ -893,6 +922,7 @@ function renderTabs() {
 async function switchCountry(code) {
   if (code === state.country) return;
   state.country = code;
+  state.vidAdminPending = {};   // v5.67: edições não salvas não vazam pro país novo
   document.querySelectorAll('.country-tab').forEach((b, i) => {
     b.classList.toggle('active', state.tabs[i] && state.tabs[i].code === code);
   });
@@ -1329,22 +1359,55 @@ function renderVidSide(wrap, q) {
   });
 }
 
+// Estado atual de um VID na aba Admin: edição pendente > curadoria salva > ativo.
+function adminStatusOf(v) {
+  const k = String(v.vid).trim();
+  if (state.vidAdminPending && k in state.vidAdminPending) return state.vidAdminPending[k];
+  return v.manualStatus || 'active';
+}
+
+// v5.67: contador ao vivo da curadoria. Este número é exatamente o que sai no
+// dashboard e no /cts-data — mostra a frota do VID Monthly CALENDAR ao lado
+// como referência, e quantos VIDs ainda não foram curados.
+function adminCountHtml() {
+  const vids = state.vidsByCountry[state.country] || [];
+  const curActive = vids.filter(v => adminStatusOf(v) === 'active').length;
+  const uncurated = vids.filter(v => !v.manualStatus).length;
+  const ref = (state.fleetCalendar || {})[state.country];
+  const gap = ref ? curActive - ref : 0;
+  const gapTxt = gap ? ` <span class="admin-count-gap">(${gap > 0 ? '+' : ''}${gap})</span>` : '';
+  const refTxt = ref
+    ? ` · <span class="admin-count-ref">${escapeHtml(t('adminCalRef'))}: <b>${ref}</b></span>`
+    : '';
+  const uncTxt = uncurated
+    ? ` · <span class="admin-count-unc">${uncurated} ${escapeHtml(t('adminUncurated'))}</span>`
+    : '';
+  return `${escapeHtml(t('adminCountActive'))}: <b>${curActive}</b>${gapTxt}${refTxt}${uncTxt}`;
+}
+
+function renderAdminCount() {
+  const el = document.getElementById('admin-count');
+  if (el) el.innerHTML = adminCountHtml();
+}
+
 // Aba Admin: marcar quais VIDs fazem parte da frota ativa do país (persiste no backend)
 function renderAdminSide(wrap, q) {
   const vids = (state.vidsByCountry[state.country] || []).slice()
     .sort((a, b) => String(a.vid).localeCompare(String(b.vid)));
   const list = q ? vids.filter(v => matchesQuery(v, q)) : vids;
+
   const head = `<div class="admin-bar">
       <button class="admin-save" id="vid-admin-save">${escapeHtml(t('saveActive'))}</button>
       <span class="admin-hint">${escapeHtml(t('adminVidHint'))}</span>
-    </div>`;
+    </div><div class="admin-count" id="admin-count">${adminCountHtml()}</div>`;
   if (!list.length) { wrap.innerHTML = head + `<div class="side-empty">${t('noVidsCountry')}</div>`; return; }
   const opt = (cur, val, label) => `<option value="${val}" ${cur === val ? 'selected' : ''}>${escapeHtml(label)}</option>`;
   wrap.innerHTML = head + list.map(v => {
-    const cur = v.manualStatus || 'active';   // default = ativo até curar
+    const cur = adminStatusOf(v);   // default = ativo até curar
+    const isNew = !v.manualStatus ? ' <span class="admin-new">•</span>' : '';
     return `<div class="admin-row">
       <div class="driver-row-main">
-        <div class="driver-row-name">VID ${escapeHtml(String(v.vid))}</div>
+        <div class="driver-row-name">VID ${escapeHtml(String(v.vid))}${isNew}</div>
         <div class="driver-row-sub">${escapeHtml(v.driverName || t('noDriverVid'))}</div>
       </div>
       <select class="admin-sel st-${cur}" data-vid="${escapeHtml(String(v.vid))}">
@@ -1355,7 +1418,14 @@ function renderAdminSide(wrap, q) {
     </div>`;
   }).join('');
   wrap.querySelectorAll('.admin-sel').forEach(sel => {
-    sel.addEventListener('change', () => { sel.className = 'admin-sel st-' + sel.value; });
+    sel.addEventListener('change', () => {
+      sel.className = 'admin-sel st-' + sel.value;
+      // v5.67: guarda a escolha fora do DOM — a lista pode estar filtrada pela
+      // busca, e o save precisa mandar o país INTEIRO (ver saveVidAdmin).
+      state.vidAdminPending = state.vidAdminPending || {};
+      state.vidAdminPending[String(sel.getAttribute('data-vid')).trim()] = sel.value;
+      renderAdminCount();
+    });
   });
   const btn = document.getElementById('vid-admin-save');
   if (btn) btn.addEventListener('click', saveVidAdmin);
@@ -1365,9 +1435,16 @@ async function saveVidAdmin() {
   const code = state.country;
   if (!code) return;
   const btn = document.getElementById('vid-admin-save');
-  const sels = document.querySelectorAll('#side-list .admin-sel');
+  // v5.67: manda o país INTEIRO, não só o que está renderizado. saveVidStatus_
+  // sobrescreve toda a curadoria do país — com a busca ativa, mandar só as
+  // linhas visíveis apagava a curadoria de todo o resto.
+  const all = state.vidsByCountry[state.country] || [];
   // manda status (v5.46) + active (compat backend v5.45 antigo, que só entende booleano)
-  const items = Array.from(sels).map(s => ({ vid: s.getAttribute('data-vid'), status: s.value, active: s.value === 'active' }));
+  const items = all.map(v => {
+    const st = adminStatusOf(v);
+    return { vid: String(v.vid).trim(), status: st, active: st === 'active' };
+  });
+  if (!items.length) return;
   if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
   try {
     const payload = {
@@ -1382,8 +1459,12 @@ async function saveVidAdmin() {
     } catch (e) { /* opaque/erro de rede (não-abort): assume aceito, o reload confirma */ }
     // atualiza estado local + reaplica nas camadas
     items.forEach(it => { state.vidStatus[String(it.vid).trim()] = it.status; });
+    state.vidAdminPending = {};   // v5.67: edições viraram curadoria salva
     applyVidStatus();
-    if (typeof clearDataCache === 'function') clearDataCache('action=getVidStatus');
+    if (typeof clearDataCache === 'function') {
+      clearDataCache('action=getVidStatus');
+      clearDataCache('action=getVidCounts');   // v5.67: dashboard lê daqui
+    }
     renderDriverLayers(code);
     renderSideList();
     renderTabs();      // atualiza o nº de ativos na bolinha do país

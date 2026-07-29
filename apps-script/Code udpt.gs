@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.65',
+        version: 'v5.67',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -301,7 +301,7 @@ function doGet(e) {
                     'listMyMaps', 'getMyMap', 'POST saveMyMap',
                     'getTkmReportOptions', 'getTkmReport', 'getFleetVids',
                     'getVidStatus', 'POST saveVidStatus',
-                    'getClientMetrics', 'getClientMetricsBatch'],
+                    'getClientMetrics', 'getClientMetricsBatch', 'getVidCounts'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -444,6 +444,30 @@ function doGet(e) {
     // v5.45: curadoria manual de VIDs ativos por país (ops-map admin)
     if (action === 'getVidStatus') {
       return jsonResponse({ success: true, status: getVidStatus_() });
+    }
+
+    // v5.67: contagem de VIDs por país a partir da curadoria (aba VID Status).
+    // Endpoint leve — o dashboard usa isso em vez de recalcular tudo, e é a
+    // MESMA fonte que o portal do cliente (/cts-data). Curou no ops-map →
+    // muda nos dois.
+    if (action === 'getVidCounts') {
+      const counts = getVidStatusCountsByCountry_();
+      let fleetSrc = { byCountry: {} };
+      try { fleetSrc = getClientFleetStatus_(); } catch (e) { Logger.log('getVidCounts: frota falhou: ' + e); }
+      const out = {};
+      let totalActive = 0;
+      for (const k in counts) {
+        const ref = fleetSrc.byCountry[k] || {};
+        out[k] = {
+          active: counts[k].active,
+          inactive: counts[k].inactive,
+          cancelled: counts[k].cancelled,
+          curated: counts[k].curated,
+          fleetCalendar: safeNumber(ref.fleet),
+        };
+        totalActive += counts[k].active;
+      }
+      return jsonResponse({ success: true, byCountry: out, totalActive: totalActive });
     }
 
     // v5.16: drivers ativos agrupados por país (pra dropdown na cash.html)
@@ -5973,6 +5997,57 @@ function getCtsPaceByCountry_(month, year) {
   return out;
 }
 
+/**
+ * v5.67: contagem de VIDs por país a partir da CURADORIA MANUAL (aba "VID
+ * Status", editada na aba Admin do ops-map).
+ *
+ * A curadoria passou a ser a fonte de verdade do número de VIDs no portal do
+ * cliente e no dashboard: inativou um VID no mapa de operações → o número cai
+ * nos dois lugares no próximo carregamento.
+ *
+ * Conta só quem está explicitamente marcado 'active'. VID que aparece no RAW
+ * CTS mas nunca foi curado NÃO entra (fail-closed) — é proposital: a lista do
+ * ops-map inclui todo VID que já rodou algum dia, e contar tudo por padrão
+ * inflaria o número. O ops-map mostra quantos estão sem curadoria pra esses
+ * não sumirem em silêncio.
+ *
+ * @return {Object} normCountry → { active, inactive, cancelled, curated }
+ */
+function getVidStatusCountsByCountry_() {
+  const out = {};
+  getVidStatus_().forEach(function (v) {
+    const k = normCountry_(clientCountryName_(v.country));
+    if (!k) return;
+    if (!out[k]) out[k] = { active: 0, inactive: 0, cancelled: 0, curated: 0 };
+    out[k].curated++;
+    if (v.status === 'active') out[k].active++;
+    else if (v.status === 'cancelled') out[k].cancelled++;
+    else out[k].inactive++;
+  });
+  return out;
+}
+
+/**
+ * v5.66: contagem de motoristas por país direto da HR and Vendors Database.
+ *
+ * includeOffboarding=true conta também quem está com Situation='Offboarding'
+ * — pessoa que já pediu pra sair mas ainda está rodando. É esse o número que
+ * o portal do cliente mostra; a coluna "Active Drivers" da CTS Goal Management
+ * ignora esse pessoal.
+ *
+ * @param {boolean} includeOffboarding
+ * @return {Object} normCountry → contagem
+ */
+function getHrDriverCountsByCountry_(includeOffboarding) {
+  const out = {};
+  getActiveDrivers(!!includeOffboarding).forEach(function (d) {
+    const k = normCountry_(clientCountryName_(d.country));
+    if (!k) return;
+    out[k] = (out[k] || 0) + 1;
+  });
+  return out;
+}
+
 function getClientMetrics_(month, year, country) {
   try {
     // Sem mês/ano explícito: usa o período que a aba já está mostrando
@@ -6098,13 +6173,47 @@ function getClientMetrics_(month, year, country) {
       pace = one ? [one] : [];
     }
 
-    // v5.65 (#1): "Total drivers" = Σ Active Drivers da CTS Goal Management
-    // (col G), não a contagem da lista. Fallback pra lista se a aba não trouxer.
-    let activeDriversTotal = 0, hasActive = false;
-    pace.forEach(function (p) {
-      if (p && p.activeDrivers != null) { activeDriversTotal += safeNumber(p.activeDrivers); hasActive = true; }
-    });
-    const totalDrivers = hasActive ? activeDriversTotal : drivers.length;
+    // v5.66 (#1): "Total drivers" = Active + Offboarding da HR and Vendors
+    // Database. A coluna "Active Drivers" da CTS Goal Management (usada até a
+    // v5.65) só conta Situation='Active' e deixa de fora quem está em
+    // offboarding mas ainda não saiu — no Brasil isso escondia 11 pessoas
+    // (24 → 35). Os outros países não têm ninguém em offboarding, por isso só
+    // o BR estava errado. Fallback: CTS Goal Management, depois a lista do mês.
+    let totalDrivers = 0;
+    try {
+      const hrCounts = getHrDriverCountsByCountry_(true);
+      if (wantAll) {
+        for (const k in hrCounts) totalDrivers += hrCounts[k];
+      } else {
+        totalDrivers = hrCounts[normCountry_(clientCountryName_(country))] || 0;
+      }
+    } catch (e) {
+      Logger.log('getClientMetrics_: contagem HR falhou, caindo pro pace: ' + e);
+    }
+    if (!totalDrivers) {
+      let activeDriversTotal = 0, hasActive = false;
+      pace.forEach(function (p) {
+        if (p && p.activeDrivers != null) { activeDriversTotal += safeNumber(p.activeDrivers); hasActive = true; }
+      });
+      totalDrivers = hasActive ? activeDriversTotal : drivers.length;
+    }
+
+    // v5.67 (#2): VIDs vêm da curadoria manual (aba VID Status / ops-map).
+    const vidsCurated = { active: 0, inactive: 0, cancelled: 0 };
+    try {
+      const vidCounts = getVidStatusCountsByCountry_();
+      const pick = function (c) {
+        const v = vidCounts[c];
+        if (!v) return;
+        vidsCurated.active += v.active;
+        vidsCurated.inactive += v.inactive;
+        vidsCurated.cancelled += v.cancelled;
+      };
+      if (wantAll) { for (const k in vidCounts) pick(k); }
+      else pick(normCountry_(clientCountryName_(country)));
+    } catch (e) {
+      Logger.log('getClientMetrics_: curadoria de VID falhou, caindo pro calendário: ' + e);
+    }
 
     // v5.65 (#3): meta do mês = Swarm Goal + Churn Goal (a coluna "CTS Goal"
     // da aba virou só o swarm; o churn tem meta própria). Achievement recalcula.
@@ -6131,7 +6240,21 @@ function getClientMetrics_(month, year, country) {
           return k > 0 ? t / k : 0;
         })(),
         totalDrivers: totalDrivers,
-        totalVids: Object.keys(vidSetAll).length || safeNumber(big.vidsActive),
+        // v5.67 (#2): "Total VIDs" = curadoria manual (aba VID Status, editada
+        // no ops-map). Inativou lá → cai aqui e no dashboard.
+        // Cascata de fallback, do mais confiável pro mais velho:
+        //   curadoria → Fleet do VID Monthly CALENDAR → VIDs únicos do rollup
+        //   "TKM Monthly Drivers Report" (desatualizado; era o da v5.65).
+        totalVids: vidsCurated.active || safeNumber(fleet.fleet) ||
+                   Object.keys(vidSetAll).length || safeNumber(big.vidsActive),
+        // proveniência, pro front mostrar de onde veio e o que falta curar
+        vidsBreakdown: {
+          curatedActive: vidsCurated.active,
+          curatedInactive: vidsCurated.inactive,
+          curatedCancelled: vidsCurated.cancelled,
+          fleetCalendar: safeNumber(fleet.fleet),
+          source: vidsCurated.active ? 'curation' : (safeNumber(fleet.fleet) ? 'calendar' : 'rollup'),
+        },
         avgSystemOnHours: avgHours,
         mappingDays: totalMappingDays,
         // swarm/churn: TKM entregue vs meta de cada tipo de mapa

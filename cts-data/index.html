@@ -600,6 +600,10 @@ async function fetchMetrics(month, year, country, force) {
   const url = CM.scriptUrl + '?action=getClientMetrics&month=' + month +
               '&year=' + year + '&country=' + encodeURIComponent(country);
   const key = CM.cachePrefix + url;
+  // v5.67: no Refresh, fura também o cache de 30min do SERVIDOR. Sem isso o
+  // botão só limpava o cache do browser e continuava recebendo a foto antiga —
+  // uma curadoria de VID feita no ops-map levava até 30min pra aparecer aqui.
+  const reqUrl = force ? url + '&nocache=1' : url;
 
   if (!force) {
     try {
@@ -615,7 +619,7 @@ async function fetchMetrics(month, year, country, force) {
   const timer = ctrl ? setTimeout(() => ctrl.abort(), CM.timeoutMs) : null;
   let res;
   try {
-    res = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined).then(r => r.json());
+    res = await fetch(reqUrl, ctrl ? { signal: ctrl.signal } : undefined).then(r => r.json());
   } catch (err) {
     // Fallback: devolve o último cache (mesmo vencido) em vez de tela vazia
     try {
