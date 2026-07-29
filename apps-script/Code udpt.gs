@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.68',
+        version: 'v5.69',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -6715,7 +6715,17 @@ function getVidStatus_() {
     else if (['inactive', 'inativo', 'inactivo', 'no', 'false', '0'].indexOf(raw) >= 0) status = 'inactive';
     out.push({ country: country, vid: vid, status: status, active: status === 'active' });
   }
-  return out;
+
+  // v5.69: DEDUPE por (país normalizado + VID), última linha vence.
+  // O saveVidStatus_ até a v5.68 comparava país com toLowerCase() puro, então
+  // "México" (na planilha) nunca casava com "Mexico" (enviado pelo ops-map):
+  // em vez de substituir, ele acumulava — o México chegou a 75 linhas pra 37
+  // VIDs e a contagem de ativos apareceu como 37 onde a frota é 19.
+  // O save já foi corrigido, mas as linhas duplicadas seguem na aba até o
+  // próximo save de cada país; dedupar na leitura conserta a contagem já.
+  const byKey = {};
+  out.forEach(function (v) { byKey[normCountry_(v.country) + '|' + v.vid] = v; });
+  return Object.keys(byKey).map(function (k) { return byKey[k]; });
 }
 
 /**
@@ -6736,9 +6746,17 @@ function saveVidStatus_(data) {
     const sheet = ensureVidStatusSheet_(ss);
     const now = new Date();
 
+    // v5.69: compara país SEM acento (normCountry_), não com toLowerCase() puro.
+    // O ops-map manda "Mexico" e a planilha guarda "México" — "méxico" nunca
+    // batia com "mexico", então o filtro não removia as linhas antigas e o save
+    // só ACRESCENTAVA. Cada save do México duplicava a curadoria inteira: a aba
+    // chegou a 75 linhas pra 37 VIDs e a contagem de ativos foi pra 37 num país
+    // cuja frota é 19. Com normCountry_ os dois casam e o save volta a
+    // substituir de verdade — inclusive limpando as duplicatas já existentes.
+    const countryKey = normCountry_(country);
     const all = sheet.getLastRow() >= 2 ? sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues() : [];
     const kept = all.filter(function (r) {
-      return String(r[0] || '').trim().toLowerCase() !== country.toLowerCase();
+      return normCountry_(String(r[0] || '').trim()) !== countryKey;
     });
 
     const fresh = [];
