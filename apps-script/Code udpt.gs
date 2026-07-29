@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.67',
+        version: 'v5.68',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -6218,7 +6218,24 @@ function getClientMetrics_(month, year, country) {
     // v5.65 (#3): meta do mês = Swarm Goal + Churn Goal (a coluna "CTS Goal"
     // da aba virou só o swarm; o churn tem meta própria). Achievement recalcula.
     const goalTotal = safeNumber(big.swarmGoal) + safeNumber(big.churnGoal);
-    const doneTotal = safeNumber(big.tkmDone);
+
+    // v5.68: "TKM entregue" = Swarm Achieved + Churn Achieved, NÃO o "TKM SUM"
+    // do bloco de país.
+    //
+    // As duas colunas vivem no MESMO bloco e discordam quando um motorista roda
+    // em dois países: o "TKM SUM" traz o total MENSAL dele (todos os países)
+    // somado no país onde está cadastrado, enquanto Swarm/Churn Achieved somam
+    // só as linhas daquele país. É o mesmo defeito que a v5.61 já tinha
+    // corrigido na lista de motoristas — o KPI tinha ficado de fora.
+    //
+    // Caso real (jul/2026): Antony Colquis rodou Chile (357,6) + Peru (1.027,7).
+    // O "TKM SUM" jogou os 1.385,3 inteiros no Chile e zerou o Peru — Chile
+    // aparecia com 105% da meta (real: 71%) e o Peru com 71% (real: 106%).
+    // Como um erro cancelava o outro, o total LATAM fechava e ninguém via.
+    //
+    // Fallback pro "TKM SUM" se a aba não tiver as colunas de tipo de mapa
+    // (nunca fica pior que antes).
+    const doneTotal = typedTotal > 0 ? typedTotal : safeNumber(big.tkmDone);
 
     return {
       success: true,
