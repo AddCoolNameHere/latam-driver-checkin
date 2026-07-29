@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-28T21:26:26.488Z",
+  "generatedAt": "2026-07-29T11:38:38.308Z",
   "month": 7,
   "year": 2026,
   "countries": [
@@ -26,7 +26,7 @@
     {
       "country": "Colombia",
       "slug": "colombia",
-      "drivers": 4
+      "error": "HTTP 404"
     },
     {
       "country": "México",
