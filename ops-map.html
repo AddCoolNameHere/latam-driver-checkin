@@ -752,13 +752,12 @@ async function bootData() {
       ? cachedFetch(url, ttl, { timeoutMs: 60000, staleOnError: true })
       : fetch(url).then(r => r.json());
 
-    const [listRes, dashRes, fleetRes, statusRes, modeP, vidCountsRes] = await Promise.all([
+    const [listRes, dashRes, fleetRes, statusRes, modeP] = await Promise.all([
       cf(`${CONFIG.scriptUrl}?action=getDriversList`, 300).catch(() => ({ drivers: [] })),
       cf(`${CONFIG.scriptUrl}?action=getDashboardData&days=30`, 300).catch(() => ({ data: null })),
       cf(`${CONFIG.scriptUrl}?action=getFleetVids`, 300).catch(() => ({ vids: [] })),
       cf(`${CONFIG.scriptUrl}?action=getVidStatus`, 120).catch(() => ({ status: [] })),
       MapStore.detectMode(),
-      cf(`${CONFIG.scriptUrl}?action=getVidCounts`, 120).catch(() => ({ byCountry: {} })),
     ]);
 
     const driversList = listRes.drivers || [];        // {name,email,country,vid,...}
@@ -778,16 +777,22 @@ async function bootData() {
     });
     state.vidStatus = vidStatus;
 
-    // v5.67: frota do VID Monthly CALENDAR por país, só como referência visual
-    // na aba Admin (o número que vale é o da curadoria). Backend devolve com a
-    // chave normalizada (minúscula, sem acento) — remapeia pro código do mapa.
-    const fleetCal = {};
-    const byC = (vidCountsRes && vidCountsRes.byCountry) || {};
-    Object.keys(COUNTRY_META).forEach(code => {
-      const key = COUNTRY_META[code].name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-      if (byC[key] && byC[key].fleetCalendar) fleetCal[code] = byC[key].fleetCalendar;
-    });
-    state.fleetCalendar = fleetCal;
+    // v5.67: frota do VID Monthly CALENDAR por país, só referência visual na
+    // aba Admin (o número que VALE é o da curadoria). Carrega FORA do
+    // Promise.all de propósito: é ~9s de Apps Script por um número decorativo,
+    // e travar o mapa inteiro nisso deixava a página em branco por ~1min.
+    // Quando chega, só repinta o contador se a aba Admin estiver aberta.
+    state.fleetCalendar = state.fleetCalendar || {};
+    cf(`${CONFIG.scriptUrl}?action=getVidCounts`, 120)
+      .then(vidCountsRes => {
+        const byC = (vidCountsRes && vidCountsRes.byCountry) || {};
+        Object.keys(COUNTRY_META).forEach(code => {
+          const key = COUNTRY_META[code].name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+          if (byC[key] && byC[key].fleetCalendar) state.fleetCalendar[code] = byC[key].fleetCalendar;
+        });
+        renderAdminCount();
+      })
+      .catch(() => { /* sem referência de frota — o contador só omite a comparação */ });
 
     const homeByEmail = {};
     fullDrivers.forEach(d => { if (d.email) homeByEmail[d.email.toLowerCase()] = d; });
