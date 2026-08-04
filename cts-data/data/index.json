@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-04T11:35:44.001Z",
+  "generatedAt": "2026-08-04T16:27:10.786Z",
   "month": 7,
   "year": 2026,
   "countries": [
@@ -11,12 +11,12 @@
     {
       "country": "Argentina",
       "slug": "argentina",
-      "drivers": 7
+      "error": "This operation was aborted"
     },
     {
       "country": "Brazil",
       "slug": "brazil",
-      "drivers": 34
+      "error": "HTTP 404"
     },
     {
       "country": "Chile",
