@@ -6614,6 +6614,31 @@ function getClientWeeks_(weeksBack) {
       }
     }
 
+    // ---- 1b) canoniza o nome do país ----
+    // O CLIENT_COUNTRY_NAMES_ só mapeia SIGLA (mx, mex) → nome; 'México' e
+    // 'Mexico' escritos por extenso caem os dois no fallback de capitalizar e
+    // saem como strings diferentes. No rollup mensal isso nunca aparecia (cada
+    // país é um bloco com grafia única), mas aqui a gente lê linha a linha da
+    // RAW CTS, e uma linha sem acento virava um país a mais na lista.
+    // Regra: dentro de cada país normalizado, ganha a grafia mais frequente.
+    const spellings = {};   // 'mexico' → { 'México': 168, 'Mexico': 1 }
+    for (const wk in byWeek) {
+      const ds = byWeek[wk].drivers;
+      for (const em in ds) {
+        const name = ds[em].country;
+        if (!name) continue;
+        const k = normCountry_(name);
+        if (!spellings[k]) spellings[k] = {};
+        spellings[k][name] = (spellings[k][name] || 0) + 1;
+      }
+    }
+    const canonical = {};
+    for (const k in spellings) {
+      canonical[k] = Object.keys(spellings[k]).sort(function (a, b) {
+        return (spellings[k][b] - spellings[k][a]) || a.localeCompare(b);
+      })[0];
+    }
+
     // ---- 2) fecha as médias e ordena ----
     const countrySet = {};
     const weeks = Object.keys(byWeek).sort().reverse().slice(0, weeksBack).map(function (key) {
@@ -6624,6 +6649,7 @@ function getClientWeeks_(weeksBack) {
       const drivers = Object.keys(W.drivers).map(function (e) {
         const D = W.drivers[e];
         delete D._days; delete D._onDays;
+        if (D.country) D.country = canonical[normCountry_(D.country)] || D.country;
         // AVG System on Hours = horas por dia com sistema ligado.
         D.avgSystemOnHours = D.systemOnDays > 0 ? D.systemOnHours / D.systemOnDays : 0;
         D.efficiency = D.kmDriven > 0 ? D.tkm / D.kmDriven : 0;
