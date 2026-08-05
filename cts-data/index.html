@@ -883,7 +883,19 @@ function renderKpis(d) {
   // Aviso quando a foto da frota é de outro mês (a aba VID Monthly CALENDAR é
   // sempre do mês corrente dela — não tem histórico por mês).
   const notice = $('notice');
-  if (f.sourceMonth && !f.isCurrentPeriod) {
+  // Período com meta lançada e ZERO entregue = a CTS ainda não reportou nada
+  // pra esse mês (típico na virada: as metas entram no dia 1, os registros de
+  // mapeamento vêm depois). Sem esse aviso a página parecia quebrada.
+  if (!(k.tkmDone > 0) && k.goalTkm > 0) {
+    notice.innerHTML = '⚠️ No mapping records reported for <strong>' +
+      periodLabel(d.month, d.year) + '</strong> yet. Goals are published, but the CTS ' +
+      'feed has not delivered data for this period — the figures below fill in once it does. ' +
+      'See the <a href="#" id="notice-weekly" style="color:inherit;font-weight:700">Weekly</a> tab ' +
+      'for the most recent reported week.';
+    notice.classList.remove('hidden');
+    const lnk = $('notice-weekly');
+    if (lnk) lnk.addEventListener('click', (ev) => { ev.preventDefault(); setView('weekly'); });
+  } else if (f.sourceMonth && !f.isCurrentPeriod) {
     notice.innerHTML = '⚠️ Fleet status per Google reflects <strong>' +
       periodLabel(f.sourceMonth, f.sourceYear) + '</strong> (latest available snapshot). ' +
       'All other figures are for ' + periodLabel(d.month, d.year) + '.';
