@@ -23,7 +23,7 @@
 /** Vai no header X-Worker-Build de toda resposta. Serve pra saber, olhando o
  *  curl, qual versão está realmente no ar — a API de deploy já disse "ok" pra
  *  uma versão que não era a que estava respondendo. */
-const BUILD = '4';
+const BUILD = '5';
 
 const UPSTREAM = 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec';
 
@@ -184,18 +184,28 @@ export default {
   },
 
   /**
-   * Cron: reaquece as chaves caras. Em paralelo de propósito — o relógio de
-   * parede fica sendo o da chamada mais lenta (~60s) em vez da soma (~7min),
-   * que não caberia na janela.
+   * Cron: reaquece as chaves caras, UMA POR VEZ.
+   *
+   * Sequencial não é preguiça — em paralelo não funciona. O getTkmReport_ usa
+   * LockService, então as chamadas se serializam do lado do Apps Script de
+   * qualquer jeito, e o excesso de execuções simultâneas faz o Apps Script
+   * devolver erro/HTML em vez de JSON. Medido: as 8 em paralelo deram PASSTHRU
+   * nas 8 (nenhuma cacheou). É a mesma conclusão que o
+   * .github/scripts/fetch-cts-data.mjs já tinha documentado.
+   *
+   * Custo: ~5-7 min de relógio por execução, dentro do teto de 15 min do cron,
+   * e sem ninguém esperando por isso.
    */
   async scheduled(event, env, ctx) {
-    const results = await Promise.allSettled(
-      WARM.map((search) => refresh(env, cacheKey(new URL('https://x/?' + search)), search))
-    );
-    const ok = results.filter((r) => r.status === 'fulfilled').length;
-    console.log(`[warm] ${ok}/${WARM.length} chaves atualizadas`);
-    results.forEach((r, i) => {
-      if (r.status === 'rejected') console.log(`[warm] FALHOU ${WARM[i]}: ${r.reason}`);
-    });
+    let ok = 0;
+    for (const search of WARM) {
+      try {
+        await refresh(env, cacheKey(new URL('https://x/?' + search)), search);
+        ok++;
+      } catch (e) {
+        console.log('[warm] FALHOU ' + search + ': ' + e);
+      }
+    }
+    console.log('[warm] ' + ok + '/' + WARM.length + ' chaves atualizadas');
   },
 };
