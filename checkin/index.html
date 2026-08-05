@@ -916,6 +916,9 @@ const I18N = {
     noResults: 'Nenhum resultado encontrado',
     success: 'Check-in enviado com sucesso!',
     errorSend: 'Erro ao enviar. Tente novamente.',
+    sendingRetry: 'Enviando... (tentativa {n} de {total})',
+    errorQueued: 'Servidor lento agora. Seu check-in foi salvo e será enviado sozinho — pode fechar a página.',
+    pendingSent: '✓ Check-in que ficou pendente foi enviado!',
     fillAll: 'Preencha todos os campos obrigatórios',
     gpsLabel: 'GPS',
     searchLabel: 'Endereço',
@@ -1042,6 +1045,9 @@ const I18N = {
     noResults: 'Ningún resultado encontrado',
     success: '¡Check-in enviado con éxito!',
     errorSend: 'Error al enviar. Intente de nuevo.',
+    sendingRetry: 'Enviando... (intento {n} de {total})',
+    errorQueued: 'Servidor lento ahora. Su check-in fue guardado y se enviará solo — puede cerrar la página.',
+    pendingSent: '✓ ¡El check-in pendiente fue enviado!',
     fillAll: 'Complete todos los campos obligatorios',
     gpsLabel: 'GPS',
     searchLabel: 'Dirección',
@@ -1165,6 +1171,9 @@ const I18N = {
     noResults: 'No results found',
     success: 'Check-in submitted successfully!',
     errorSend: 'Error sending. Please try again.',
+    sendingRetry: 'Sending... (attempt {n} of {total})',
+    errorQueued: 'Server is slow right now. Your check-in was saved and will be sent automatically — you can close the page.',
+    pendingSent: '✓ Pending check-in was sent!',
     fillAll: 'Fill in all required fields',
     gpsLabel: 'GPS',
     searchLabel: 'Address',
@@ -1282,12 +1291,148 @@ document.querySelectorAll('.lang-switch button').forEach(btn => {
   });
 });
 
-function toast(msg, type) {
+let toastTimer = null;
+function toast(msg, type, ms) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.className = 'toast ' + (type || '');
   el.classList.remove('hidden');
-  setTimeout(() => el.classList.add('hidden'), 3500);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('hidden'), ms || 3500);
+}
+
+/* ============================================================
+ * ENVIO ROBUSTO — fix do "fica enviando e dá erro" (jul/2026)
+ *
+ * Sintoma relatado: botão preso em "Enviando..." por ~3 min e
+ * terminando em "Erro ao enviar", com 5G cheio, às 8h da manhã.
+ * O motorista levava 20 min pra conseguir bater o ponto.
+ *
+ * Três causas no envio antigo:
+ *   1. fetch sem timeout — em pico o request pendurava até a rede
+ *      móvel desistir, e o motorista ficava olhando pro spinner.
+ *   2. zero retry — cada falha era ele refazendo tudo na mão.
+ *   3. a resposta nunca era lida — o Apps Script devolve
+ *      {success:false, error} com HTTP 200, então erro do backend
+ *      passava como "Check-in enviado com sucesso!".
+ *
+ * Agora: timeout curto por tentativa, 3 tentativas com backoff,
+ * submissionId pro backend descartar reenvio repetido, e fila no
+ * localStorage — se nada funcionar, o check-in fica salvo e sobe
+ * sozinho depois, em vez de virar trabalho perdido.
+ * ============================================================ */
+// 30s por tentativa: o POST normal leva ~5-10s, então isso dá 3-6x de folga
+// pro pico da manhã sem deixar o motorista preso. Pior caso das 3 tentativas
+// ≈ 1min40 — e no fim ele não perde o formulário, o envio vai pra fila.
+const SEND_TIMEOUT_MS = 30000;
+const SEND_ATTEMPTS = 3;
+const PENDING_KEY = 'checkin_pending_v1';
+const PENDING_MAX_AGE_MS = 20 * 60 * 60 * 1000;  // check-in velho não serve mais
+
+function newSubmissionId() {
+  try {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  } catch (e) { /* contexto sem crypto — cai no fallback */ }
+  return 'sub-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/**
+ * POST no Apps Script com timeout, retry e leitura real da resposta.
+ *
+ * O submissionId é gerado UMA vez por payload e reusado em todas as
+ * tentativas: é ele que deixa o backend (v5.71+) reconhecer o reenvio
+ * e devolver o check-in que já gravou, em vez de criar linha duplicada.
+ *
+ * onAttempt(n, total) roda antes de cada tentativa, pro botão poder
+ * mostrar "tentativa 2 de 3" e o motorista não achar que travou.
+ * Lança se todas falharem.
+ */
+async function postWithRetry(payload, onAttempt) {
+  if (!payload.submissionId) payload.submissionId = newSubmissionId();
+  const body = JSON.stringify(payload);
+  let lastErr = null;
+
+  for (let attempt = 1; attempt <= SEND_ATTEMPTS; attempt++) {
+    if (onAttempt) onAttempt(attempt, SEND_ATTEMPTS);
+
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), SEND_TIMEOUT_MS);
+    try {
+      const res = await fetch(CONFIG.scriptUrl, {
+        method: 'POST',
+        body: body,
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      const data = await res.json();
+      if (!data || data.success !== true) {
+        throw new Error((data && data.error) || 'resposta inválida do servidor');
+      }
+      return data;
+    } catch (err) {
+      clearTimeout(timer);
+      lastErr = err;
+      console.warn('[Check-in] tentativa ' + attempt + '/' + SEND_ATTEMPTS + ' falhou:', err);
+      if (attempt < SEND_ATTEMPTS) await sleep(attempt * 3000);  // 3s, depois 6s
+    }
+  }
+  throw lastErr || new Error('falha no envio');
+}
+
+/** Guarda o payload pra subir depois. Retorna false se nem localStorage rolou. */
+function savePending(payload) {
+  try {
+    const q = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
+    q.push({ payload: payload, savedAt: Date.now() });
+    localStorage.setItem(PENDING_KEY, JSON.stringify(q));
+    return true;
+  } catch (e) {
+    console.warn('[Check-in] não deu pra salvar pendente:', e);
+    return false;
+  }
+}
+
+/** Tenta subir o que ficou na fila. Roda no load e quando a conexão volta. */
+async function flushPending() {
+  let q;
+  try { q = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); } catch (e) { return; }
+  if (!Array.isArray(q) || !q.length) return;
+
+  console.log('[Check-in] ' + q.length + ' envio(s) pendente(s) na fila');
+  const left = [];
+  for (const item of q) {
+    if (Date.now() - (item.savedAt || 0) > PENDING_MAX_AGE_MS) continue;  // expirou
+    try {
+      await postWithRetry(item.payload);
+      toast(t('pendingSent'), 'success');
+    } catch (e) {
+      left.push(item);  // continua na fila pra próxima chance
+    }
+  }
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify(left)); } catch (e) {}
+}
+
+/** Texto do botão durante o envio ("Enviando..." → "tentativa 2 de 3"). */
+function sendingLabel(attempt, total) {
+  if (attempt <= 1) return t('sending');
+  return t('sendingRetry').replace('{n}', attempt).replace('{total}', total);
+}
+
+/**
+ * Caminho comum de falha dos três formulários: guarda na fila e conta a
+ * verdade pro motorista — nada de "tente novamente" quando o que ele
+ * precisa é poder ir trabalhar.
+ */
+function handleSendFailure(payload, err) {
+  console.error('[Check-in] envio falhou nas ' + SEND_ATTEMPTS + ' tentativas:', err);
+  if (savePending(payload)) {
+    toast(t('errorQueued'), 'error', 9000);
+    return true;
+  }
+  toast(t('errorSend'), 'error', 6000);
+  return false;
 }
 
 const DRIVERS_CACHE_KEY = 'checkin_drivers_v1';
@@ -1809,15 +1954,11 @@ async function submitDidNotMap() {
   };
 
   try {
-    await fetch(CONFIG.scriptUrl, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    await postWithRetry(payload, (n, total) => { btn.innerHTML = '<span class="loading-spinner"></span> ' + sendingLabel(n, total); });
     toast(t('dnmSuccess'), 'success');
     setTimeout(() => location.reload(), 2000);
   } catch (err) {
-    console.error('[DNM] Erro:', err);
-    toast(t('errorSend'), 'error');
+    handleSendFailure(payload, err);
     btn.disabled = false;
     btn.innerHTML = t('dnmSubmit');
   }
@@ -1939,17 +2080,16 @@ document.getElementById('submit-checkout-btn').addEventListener('click', async (
       ssdFillLevel: state.ssdFillLevel,
     };
 
-    // Fire-and-forget como o checkin normal — não tenta ler JSON da resposta,
-    // porque CORS do Apps Script bloqueia o read mesmo com a requisição funcionando.
-    await fetch(CONFIG.scriptUrl, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    // O comentário antigo dizia que o CORS do Apps Script impedia ler a
+    // resposta. Não impede: os dois hops (/exec e o googleusercontent do
+    // redirect) devolvem Access-Control-Allow-Origin: *. Ler a resposta é
+    // justamente o que revela {success:false} em vez de dar falso sucesso.
+    await postWithRetry(payload, (n, total) => { btn.innerHTML = '<span class="loading-spinner"></span> ' + sendingLabel(n, total); });
 
     toast(t('checkoutSent'), 'success');
     setTimeout(() => location.reload(), 2000);
   } catch (err) {
-    toast(t('errorSend'), 'error');
+    handleSendFailure(payload, err);
     btn.disabled = false;
     btn.textContent = t('submitCheckout');
   }
@@ -2358,56 +2498,59 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
   state.vehicleIssue = document.getElementById('vehicle-issue').value;
   state.notes = document.getElementById('notes').value;
 
-  try {
-    if (state.baseNew) {
-      await fetch(CONFIG.scriptUrl, {
-        method: 'POST',
-        body: JSON.stringify({
-          type: 'base',
-          driverEmail: state.driver.email,
-          driverName: state.driver.name,
-          country: state.driver.country,
-          baseType: state.baseNew.type,
-          baseAddress: state.baseNew.address,
-          baseLat: state.baseNew.lat,
-          baseLng: state.baseNew.lng,
-        }),
-      });
+  // Base nova é secundária: se falhar, vai pra fila e o check-in segue —
+  // o que não pode faltar é o ponto do motorista.
+  if (state.baseNew) {
+    const basePayload = {
+      type: 'base',
+      driverEmail: state.driver.email,
+      driverName: state.driver.name,
+      country: state.driver.country,
+      baseType: state.baseNew.type,
+      baseAddress: state.baseNew.address,
+      baseLat: state.baseNew.lat,
+      baseLng: state.baseNew.lng,
+    };
+    try {
+      await postWithRetry(basePayload, (n, total) => { btn.innerHTML = '<span class="loading-spinner"></span> ' + sendingLabel(n, total); });
+    } catch (err) {
+      console.warn('[Check-in] base nova falhou, foi pra fila:', err);
+      savePending(basePayload);
     }
+  }
 
-    await fetch(CONFIG.scriptUrl, {
-      method: 'POST',
-      body: JSON.stringify({
-        type: 'checkin',
-        driverName: state.driver.name,
-        driverEmail: state.driver.email,
-        country: state.driver.country,
-        originLat: state.origin.lat,
-        originLng: state.origin.lng,
-        originAddress: state.origin.address,
-        originMethod: state.originMethod,
-        // tempo estimado de deslocamento até a área de hoje
-        travelTimeMin: (state.travelHours * 60) + state.travelMinutes,
-        travelTime: state.travelHours + ':' + String(state.travelMinutes).padStart(2, '0'),
-        destLat: state.dest.lat,
-        destLng: state.dest.lng,
-        destAddress: state.dest.address,
-        destRadius: state.dest.radius,
-        vehicleStatus: state.vehicleStatus,
-        vehicleIssue: state.vehicleIssue,
-        notes: state.notes,
-        // v5.14: novos campos
-        odometerStart: state.odometerStart,
-        ssdInUse: state.ssdInUse,
-        ssdSource: state.ssdSource,
-        vehicleIssueDetails: issueDetails,  // null se driver não preencheu
-      }),
-    });
+  const payload = {
+    type: 'checkin',
+    driverName: state.driver.name,
+    driverEmail: state.driver.email,
+    country: state.driver.country,
+    originLat: state.origin.lat,
+    originLng: state.origin.lng,
+    originAddress: state.origin.address,
+    originMethod: state.originMethod,
+    // tempo estimado de deslocamento até a área de hoje
+    travelTimeMin: (state.travelHours * 60) + state.travelMinutes,
+    travelTime: state.travelHours + ':' + String(state.travelMinutes).padStart(2, '0'),
+    destLat: state.dest.lat,
+    destLng: state.dest.lng,
+    destAddress: state.dest.address,
+    destRadius: state.dest.radius,
+    vehicleStatus: state.vehicleStatus,
+    vehicleIssue: state.vehicleIssue,
+    notes: state.notes,
+    // v5.14: novos campos
+    odometerStart: state.odometerStart,
+    ssdInUse: state.ssdInUse,
+    ssdSource: state.ssdSource,
+    vehicleIssueDetails: issueDetails,  // null se driver não preencheu
+  };
 
+  try {
+    await postWithRetry(payload, (n, total) => { btn.innerHTML = '<span class="loading-spinner"></span> ' + sendingLabel(n, total); });
     toast(t('success'), 'success');
     setTimeout(() => location.reload(), 2000);
   } catch (err) {
-    toast(t('errorSend'), 'error');
+    handleSendFailure(payload, err);
     btn.disabled = false;
     btn.textContent = t('submit');
   }
@@ -2417,6 +2560,12 @@ applyI18n();
 loadDrivers();
 setupV514Listeners();  // v5.14: registra handlers dos campos novos
 setupDnmListeners();   // v5.17: handlers do "Did Not Map" flow
+
+// Envio que não subiu na hora sobe agora: ao abrir a página e assim que a
+// conexão voltar. É o que garante que o motorista possa fechar o celular e
+// ir trabalhar sem ficar refazendo o formulário.
+flushPending();
+window.addEventListener('online', flushPending);
 
 </script>
 
