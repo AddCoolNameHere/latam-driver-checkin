@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-08-04T16:27:10.786Z",
+  "generatedAt": "2026-08-05T11:30:51.973Z",
   "month": 7,
   "year": 2026,
   "countries": [
     {
       "country": "ALL",
       "slug": "all",
-      "drivers": 70
+      "drivers": 69
     },
     {
       "country": "Argentina",
       "slug": "argentina",
-      "error": "This operation was aborted"
+      "drivers": 7
     },
     {
       "country": "Brazil",
       "slug": "brazil",
-      "error": "HTTP 404"
+      "drivers": 33
     },
     {
       "country": "Chile",
