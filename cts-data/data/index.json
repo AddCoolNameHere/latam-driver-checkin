@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T11:30:51.973Z",
+  "generatedAt": "2026-08-05T20:31:14.341Z",
   "month": 7,
   "year": 2026,
   "countries": [
@@ -38,5 +38,10 @@
       "slug": "peru",
       "drivers": 5
     }
-  ]
+  ],
+  "weeks": {
+    "count": 10,
+    "latest": "2026-W31",
+    "oldest": "2026-W22"
+  }
 }
