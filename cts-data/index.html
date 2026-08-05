@@ -616,7 +616,14 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
  * Logs: [Client Metrics]
  * ============================================================ */
 const CM = {
-  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  // Em produção passa pelo Worker (latamace.com/api*), que serve do KV com
+  // stale-while-revalidate: os 45-60s do Apps Script viram ~100ms e ninguém
+  // espera nem quando o cache vence. Fora de latamace.com (preview local)
+  // vai direto no Apps Script, senão /api não existiria.
+  // O Worker cai no Apps Script sozinho se o KV falhar — nunca fica pior.
+  scriptUrl: location.hostname.endsWith('latamace.com')
+    ? '/api'
+    : 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
   cachePrefix: 'CM_CACHE_',
   ttlSec: 900,          // 15 min — a RAW CTS é atualizada 1x/dia
   // O backend cacheia 30min do lado dele; só o 1º acesso paga a montagem
