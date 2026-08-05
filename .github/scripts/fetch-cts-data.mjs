@@ -43,6 +43,26 @@ async function fetchCountry(country) {
   }
 }
 
+/**
+ * Aba Weekly (/cts-data): uma chamada só traz as últimas N semanas de TODOS
+ * os países — o custo lá atrás é ler a RAW CTS, e ela é lida uma vez. Por isso
+ * não tem laço por país aqui: a página filtra client-side.
+ */
+async function fetchWeeks(weeks = 10) {
+  const url = `${SCRIPT_URL}?action=getClientWeeks&weeks=${weeks}&nocache=1`;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!json || json.success === false) throw new Error(json?.error || 'resposta sem success');
+    return json;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
 
@@ -72,11 +92,30 @@ async function main() {
     }
   }
 
+  // Semanas (aba Weekly). Se falhar, o weeks.json anterior fica no lugar e a
+  // página cai no Apps Script — não é motivo pra derrubar o job.
+  let weeksInfo = null;
+  try {
+    console.log('→ semanas');
+    const weeks = await fetchWeeks(10);
+    await writeFile(join(OUT_DIR, 'weeks.json'), JSON.stringify(weeks));
+    weeksInfo = {
+      count: weeks.weeks?.length ?? 0,
+      latest: weeks.weeks?.[0]?.key ?? null,
+      oldest: weeks.weeks?.[weeks.weeks.length - 1]?.key ?? null,
+    };
+    console.log(`  ok — ${weeksInfo.count} semanas (${weeksInfo.oldest} … ${weeksInfo.latest})`);
+  } catch (err) {
+    console.error(`  FALHOU (semanas): ${err.message}`);
+    weeksInfo = { error: String(err.message) };
+  }
+
   const index = {
     generatedAt: new Date().toISOString(),
     month: all.month,
     year: all.year,
     countries: results,
+    weeks: weeksInfo,
   };
   await writeFile(join(OUT_DIR, 'index.json'), JSON.stringify(index, null, 2));
 

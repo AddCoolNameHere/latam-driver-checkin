@@ -18,6 +18,11 @@
  * ============================================================ */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* O atributo `hidden` do UA perde de qualquer regra que declare `display`
+   (ex.: .cm-week-controls { display:flex }). Sem isso, esconder pelo JS
+   não funciona nesses elementos. */
+[hidden] { display: none !important; }
+
 body {
   font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--c-bg);
@@ -380,6 +385,53 @@ table.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; min-wi
   .cm-splash-card { flex: 0 1 calc(50% - 6px); padding: 20px 12px 16px; }
 }
 
+/* ============================================================
+ * ABAS Monthly / Weekly + controles de semana
+ * ============================================================ */
+.cm-tabs { display: flex; gap: 6px; margin-top: 18px; }
+.cm-tab {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.88);
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  padding: 9px 22px; border-radius: 10px; cursor: pointer;
+  transition: all 0.15s ease;
+}
+.cm-tab:hover { background: rgba(255,255,255,0.2); color: #fff; }
+.cm-tab.active {
+  background: #fff; color: var(--c-primary-dark);
+  border-color: #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.14);
+}
+
+.cm-week-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cm-vs {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(255,255,255,0.62);
+}
+.cm-ghost-btn.on { background: #fff; color: var(--c-primary-dark); border-color: #fff; }
+
+/* Legenda do color coding de system on hours */
+.cm-soh-legend {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  font-size: 11.5px; color: var(--c-text-muted);
+}
+.cm-soh-legend b { font-weight: 700; color: var(--c-text-muted); }
+.cm-soh-legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+/* ---------- Tabela de comparação (semana A × semana B) ---------- */
+.cm-delta { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cm-delta.up   { color: var(--c-success); }
+.cm-delta.down { color: var(--c-danger); }
+.cm-delta.flat { color: var(--c-text-dim); }
+.cm-table th.cm-sep, .cm-table td.cm-sep { border-left: 1px solid var(--c-border); }
+.cm-table thead tr.cm-group th {
+  text-align: center; background: var(--c-surface);
+  color: var(--c-text-muted); font-size: 10.5px; letter-spacing: 0.9px;
+  cursor: default; border-bottom: none; padding-bottom: 4px;
+}
+.cm-table thead tr.cm-group th:first-child { background: var(--c-surface); }
+.cm-table thead tr.cm-sub th { top: 26px; font-size: 10.5px; }
+
 /* ---------- Footer ---------- */
 .cm-footer {
   border-top: 1px solid var(--c-border);
@@ -465,18 +517,30 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
       </div>
       <div class="cm-header-meta">
         <select id="period" class="cm-period-select" aria-label="Period"></select>
+        <div class="cm-week-controls" id="week-controls" hidden>
+          <select id="week-a" class="cm-period-select" aria-label="Week"></select>
+          <span class="cm-vs" id="week-vs" hidden>vs</span>
+          <select id="week-b" class="cm-period-select" aria-label="Week to compare against" hidden></select>
+          <button id="compare" class="cm-ghost-btn" type="button">⇄ Compare</button>
+        </div>
         <button id="change-country" class="cm-ghost-btn" type="button">⌖ Change country</button>
         <button id="refresh" class="cm-ghost-btn" type="button">↻ Refresh</button>
         <span id="updated"></span>
       </div>
     </div>
     <div class="cm-countries" id="countries"></div>
+    <div class="cm-tabs" role="tablist">
+      <button class="cm-tab active" id="tab-monthly" type="button" role="tab" aria-selected="true">Monthly</button>
+      <button class="cm-tab" id="tab-weekly" type="button" role="tab" aria-selected="false">Weekly</button>
+    </div>
   </div>
 </header>
 
 <main class="cm-main">
   <div class="cm-notice hidden" id="notice"></div>
 
+  <!-- ============ ABA MONTHLY ============ -->
+  <div id="monthly-view">
   <div class="cm-section-head">
     <div class="cm-section-title">Monthly overview</div>
     <div class="cm-section-note" id="overview-note"></div>
@@ -496,12 +560,48 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
   <section class="cm-table-wrap">
     <div class="cm-table-tools">
       <input type="search" id="search" class="cm-search" placeholder="Search driver or country…">
+      <div class="cm-soh-legend">
+        <b>System on hours</b>
+        <span><i class="cm-dot dot-danger"></i>&lt; 5h</span>
+        <span><i class="cm-dot dot-warn"></i>5–5.4h</span>
+        <span><i class="cm-dot dot-success"></i>5.5h +</span>
+      </div>
       <button id="csv" class="cm-btn" type="button">Export CSV</button>
     </div>
     <div id="table-area">
       <div class="cm-state"><div class="cm-spinner"></div>Loading operational data…</div>
     </div>
   </section>
+  </div><!-- /#monthly-view -->
+
+  <!-- ============ ABA WEEKLY ============ -->
+  <div id="weekly-view" hidden>
+    <div class="cm-section-head">
+      <div class="cm-section-title" id="week-section-title">Week overview</div>
+      <div class="cm-section-note" id="week-note"></div>
+    </div>
+    <section class="cm-pace-tiles" id="week-tiles"></section>
+
+    <div class="cm-section-head">
+      <div class="cm-section-title">Driver performance</div>
+      <div class="cm-section-note" id="week-table-note"></div>
+    </div>
+    <section class="cm-table-wrap">
+      <div class="cm-table-tools">
+        <input type="search" id="week-search" class="cm-search" placeholder="Search driver or country…">
+        <div class="cm-soh-legend">
+          <b>System on hours</b>
+          <span><i class="cm-dot dot-danger"></i>&lt; 5h</span>
+          <span><i class="cm-dot dot-warn"></i>5–5.4h</span>
+          <span><i class="cm-dot dot-success"></i>5.5h +</span>
+        </div>
+        <button id="week-csv" class="cm-btn" type="button">Export CSV</button>
+      </div>
+      <div id="week-table-area">
+        <div class="cm-state"><div class="cm-spinner"></div>Loading weekly data…</div>
+      </div>
+    </section>
+  </div>
 </main>
 
 <footer class="cm-footer">
@@ -536,6 +636,18 @@ const state = {
   sortDir: -1,
   search: '',
   periodsLoaded: false,
+
+  // aba Weekly
+  view: 'monthly',        // 'monthly' | 'weekly'
+  weeks: null,            // payload do getClientWeeks
+  weekA: null,            // chave 'YYYY-Wnn'
+  weekB: null,
+  compare: false,
+  weekSearch: '',
+  weekSortKey: 'tkm',
+  weekSortDir: -1,
+  weekSortSide: 'a',      // no compare: ordenar por 'a', 'b' ou 'd' (delta)
+  countryList: [],
 };
 
 /* ---------- helpers ---------- */
@@ -547,6 +659,43 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
 const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
 function periodLabel(m, y) { return MONTH_NAMES[(m || 1) - 1] + ' ' + y; }
+
+/* ------------------------------------------------------------------
+ * COLOR CODING — System on hours (vale pras duas abas)
+ *   < 5      → vermelho
+ *   5 a 5.4  → amarelo
+ *   5.5 +    → verde
+ * Zero/vazio fica neutro: significa "não tem registro de system on"
+ * (motorista sem dia de mapeamento no período), não desempenho ruim.
+ * ------------------------------------------------------------------ */
+function sohClass(v) {
+  const n = Number(v) || 0;
+  if (n < 5) return 'pill-danger';
+  if (n < 5.5) return 'pill-warn';
+  return 'pill-success';
+}
+function sohPill(v) {
+  const n = Number(v) || 0;
+  if (!(n > 0)) return '<span class="cm-pill pill-neutral">—</span>';
+  return '<span class="cm-pill ' + sohClass(n) + '">' + num(n, 2) + '</span>';
+}
+
+/** Rótulo curto de uma semana: "W32 · Aug 3–9". */
+function weekLabel(w) {
+  if (!w) return '—';
+  const a = new Date(w.start + 'T12:00:00'), b = new Date(w.end + 'T12:00:00');
+  const mA = a.toLocaleDateString('en-US', { month: 'short' });
+  const mB = b.toLocaleDateString('en-US', { month: 'short' });
+  const range = mA === mB
+    ? mA + ' ' + a.getDate() + '–' + b.getDate()
+    : mA + ' ' + a.getDate() + ' – ' + mB + ' ' + b.getDate();
+  return 'W' + w.week + ' · ' + range;
+}
+function weekLabelLong(w) {
+  return w ? weekLabel(w) + ', ' + w.year : '—';
+}
+/** Só "W32" — pros cabeçalhos da tabela de comparação, que já são apertados. */
+function weekShort(w) { return w ? 'W' + w.week : '—'; }
 
 /* Rótulo de frescor mostrado no header. O cliente precisa saber de quando
    é o número que está olhando. */
@@ -823,7 +972,7 @@ const COLUMNS = [
   { key: 'tkmSwarm',         label: 'Swarm TKM',      type: 'num', dec: 0, total: 'sum' },
   { key: 'tkmChurn',         label: 'Churn TKM',      type: 'num', dec: 0, total: 'sum' },
   { key: 'swarmPct',         label: 'Swarm %',        type: 'pct', total: 'swarmMix' },
-  { key: 'avgSystemOnHours', label: 'Avg system on h', type: 'num', dec: 2, total: 'avg' },
+  { key: 'avgSystemOnHours', label: 'Avg system on h', type: 'sohPill', dec: 2, total: 'avg' },
   { key: 'mappingDays',      label: 'Mapping days',   type: 'num', dec: 0, total: 'sum' },
   { key: 'vidCount',         label: 'VIDs',           type: 'num', dec: 0, total: 'vids' },
 ];
@@ -879,6 +1028,7 @@ function renderTable() {
       }
       if (c.key === 'country') return '<td class="cm-muted">' + esc(v) + '</td>';
       if (c.type === 'pctPill') return '<td>' + effPill(v) + '</td>';
+      if (c.type === 'sohPill') return '<td>' + sohPill(v) + '</td>';
       if (c.type === 'pct') return '<td class="cm-num">' + pct(v, 0) + '</td>';
       return '<td class="cm-num">' + num(v, c.dec || 0) + '</td>';
     }).join('');
@@ -906,6 +1056,7 @@ function renderTable() {
       case 'avg': {
         const vals = rows.map(r => Number(r[c.key]) || 0).filter(v => v > 0);
         const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+        if (c.type === 'sohPill') return '<td>' + sohPill(avg) + '</td>';
         return '<td class="cm-num">' + num(avg, c.dec || 0) + '</td>';
       }
       case 'vids': return '<td class="cm-num">' + num(vidSet.size) + '</td>';
@@ -930,6 +1081,553 @@ function renderTable() {
   $('table-note').textContent = rows.length + ' driver' + (rows.length === 1 ? '' : 's') +
     (state.search ? ' matching “' + state.search + '”' : '');
 }
+
+/* ============================================================
+ * ABA WEEKLY
+ * ------------------------------------------------------------
+ * Um endpoint só (?action=getClientWeeks) traz as últimas N semanas
+ * inteiras, todos os países. Trocar de semana e comparar duas semanas
+ * é client-side — o custo lá atrás é ler a RAW CTS, e ela é lida uma
+ * vez só. Semana = coluna `drive_week` da própria CTS (semana ISO).
+ * ============================================================ */
+const WEEKS_BACK = 10;
+const weeksUrl = (force) => CM.scriptUrl + '?action=getClientWeeks&weeks=' + WEEKS_BACK +
+                            (force ? '&nocache=1' : '');
+
+const WEEK_COLUMNS = [
+  { key: 'name',             label: 'Driver',          type: 'text' },
+  { key: 'country',          label: 'Country',         type: 'text' },
+  { key: 'tkm',              label: 'TKM',             type: 'num', dec: 0, total: 'sum' },
+  { key: 'kmDriven',         label: 'KM driven',       type: 'num', dec: 0, total: 'sum' },
+  { key: 'efficiency',       label: 'Efficiency',      type: 'pctPill', total: 'eff' },
+  { key: 'avgSystemOnHours', label: 'Avg system on h', type: 'sohPill', dec: 2, total: 'avg' },
+  { key: 'systemOnHours',    label: 'Total on h',      type: 'num', dec: 1, total: 'sum' },
+  { key: 'mappingDays',      label: 'Mapping days',    type: 'num', dec: 0, total: 'sum' },
+  { key: 'idleDays',         label: 'Idle days',       type: 'num', dec: 0, total: 'sum' },
+  { key: 'vidCount',         label: 'VIDs',            type: 'num', dec: 0, total: 'vids' },
+];
+
+/* No compare cada métrica vira 3 colunas: semana A | semana B | Δ */
+const COMPARE_METRICS = [
+  { key: 'tkm',              label: 'TKM',             fmt: 'num0' },
+  { key: 'kmDriven',         label: 'KM driven',       fmt: 'num0' },
+  { key: 'efficiency',       label: 'Efficiency',      fmt: 'pct' },
+  { key: 'avgSystemOnHours', label: 'Avg system on h', fmt: 'soh' },
+  { key: 'mappingDays',      label: 'Mapping days',    fmt: 'num0' },
+];
+
+/* ---------- fetch ---------- */
+async function fetchWeeks(force) {
+  // 1) snapshot estático gerado pelo GitHub Action (instantâneo)
+  if (!force) {
+    try {
+      const res = await fetch('data/weeks.json', { cache: 'no-cache' });
+      if (res.ok) {
+        const d = await res.json();
+        if (d && d.success !== false && Array.isArray(d.weeks) && d.weeks.length) {
+          d._snapshot = true;
+          return d;
+        }
+      }
+    } catch (e) { /* segue pro Apps Script */ }
+  }
+
+  const key = CM.cachePrefix + weeksUrl(false);
+  if (!force) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const c = JSON.parse(raw);
+        if (c && c.expiresAt > Date.now() && c.data) { c.data._fromCache = true; return c.data; }
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  // 2) Apps Script (lento na 1ª vez do meio período — o servidor cacheia 30min)
+  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), CM.timeoutMs) : null;
+  let res;
+  try {
+    res = await fetch(weeksUrl(force), ctrl ? { signal: ctrl.signal } : undefined).then(r => r.json());
+  } catch (err) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const old = JSON.parse(raw);
+        if (old && old.data) { old.data._fromCache = true; old.data._stale = true; return old.data; }
+      }
+    } catch (e) { /* segue pro throw */ }
+    throw err;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+
+  if (res && res.success !== false) {
+    try {
+      localStorage.setItem(key, JSON.stringify({ expiresAt: Date.now() + CM.ttlSec * 1000, data: res }));
+    } catch (e) { /* quota — ignora */ }
+  }
+  return res;
+}
+
+/* ---------- acesso aos dados ---------- */
+function weekByKey(k) {
+  return (state.weeks && state.weeks.weeks || []).find(w => w.key === k) || null;
+}
+
+/** Motoristas de uma semana, já filtrados por país e busca. */
+function weekDrivers(k) {
+  const w = weekByKey(k);
+  if (!w) return [];
+  const q = state.weekSearch.trim().toLowerCase();
+  return (w.drivers || []).filter(d => {
+    if (state.country !== 'ALL' && d.country !== state.country) return false;
+    if (!q) return true;
+    return (d.name || '').toLowerCase().includes(q) || (d.country || '').toLowerCase().includes(q);
+  });
+}
+
+/* ---------- seletores de semana ---------- */
+function renderWeekSelects() {
+  const all = (state.weeks && state.weeks.weeks) || [];
+  const opts = (sel) => all.map(w =>
+    '<option value="' + esc(w.key) + '"' + (w.key === sel ? ' selected' : '') + '>' +
+    esc(weekLabelLong(w)) + '</option>').join('');
+  $('week-a').innerHTML = opts(state.weekA);
+  $('week-b').innerHTML = opts(state.weekB);
+}
+
+/* ---------- tiles de resumo ---------- */
+function weekTotals(k) {
+  const rows = weekDrivers(k);
+  const sum = (key) => rows.reduce((a, r) => a + (Number(r[key]) || 0), 0);
+  const sohVals = rows.map(r => Number(r.avgSystemOnHours) || 0).filter(v => v > 0);
+  const tkm = sum('tkm'), km = sum('kmDriven');
+  return {
+    drivers: rows.length,
+    tkm: tkm,
+    kmDriven: km,
+    efficiency: km > 0 ? tkm / km : 0,
+    avgSystemOnHours: sohVals.length ? sohVals.reduce((a, b) => a + b, 0) / sohVals.length : 0,
+    mappingDays: sum('mappingDays'),
+  };
+}
+
+function renderWeekTiles() {
+  const mk = (label, value, sub) =>
+    '<div class="cm-tile"><div class="cm-tile-label">' + esc(label) + '</div>' +
+    '<div class="cm-tile-value">' + value + '</div>' +
+    (sub ? '<div class="cm-card-foot" style="margin-top:6px">' + sub + '</div>' : '') + '</div>';
+
+  const a = weekTotals(state.weekA);
+  const tiles = [];
+
+  if (!state.compare) {
+    tiles.push(mk('Drivers', num(a.drivers)));
+    tiles.push(mk('TKM', num(a.tkm)));
+    tiles.push(mk('KM driven', num(a.kmDriven)));
+    tiles.push(mk('Efficiency', pct(a.efficiency)));
+    tiles.push(mk('Avg system on h', sohPill(a.avgSystemOnHours)));
+    tiles.push(mk('Mapping days', num(a.mappingDays)));
+  } else {
+    const b = weekTotals(state.weekB);
+    const wa = weekByKey(state.weekA), wb = weekByKey(state.weekB);
+    // Número grande = Δ (A vs B); embaixo, os dois valores que o geraram.
+    const cmp = (label, va, vb, fmt) =>
+      mk(label, deltaHtml(va, vb, fmt),
+         '<span class="cm-muted">' + esc(weekShort(wa)) + '</span> ' + fmtVal(va, fmt) +
+         ' <span class="cm-muted">vs</span> ' +
+         '<span class="cm-muted">' + esc(weekShort(wb)) + '</span> ' + fmtVal(vb, fmt));
+    tiles.push(cmp('Drivers', a.drivers, b.drivers, 'num0'));
+    tiles.push(cmp('TKM', a.tkm, b.tkm, 'num0'));
+    tiles.push(cmp('KM driven', a.kmDriven, b.kmDriven, 'num0'));
+    tiles.push(cmp('Efficiency', a.efficiency, b.efficiency, 'pct'));
+    tiles.push(cmp('Avg system on h', a.avgSystemOnHours, b.avgSystemOnHours, 'soh'));
+    tiles.push(cmp('Mapping days', a.mappingDays, b.mappingDays, 'num0'));
+  }
+  $('week-tiles').innerHTML = tiles.join('');
+}
+
+/* ---------- formatação de valor / delta ---------- */
+function fmtVal(v, fmt) {
+  if (v == null || v === '') return '—';
+  switch (fmt) {
+    case 'pct':  return pct(v);
+    case 'soh':  return num(v, 2);
+    case 'num1': return num(v, 1);
+    default:     return num(v, 0);
+  }
+}
+function fmtCell(v, fmt, cls) {
+  const c = cls ? ' ' + cls : '';
+  if (v == null) return '<td class="cm-num cm-muted' + c + '">—</td>';
+  switch (fmt) {
+    case 'pct':  return '<td class="' + (cls || '') + '">' + effPill(v) + '</td>';
+    case 'soh':  return '<td class="' + (cls || '') + '">' + sohPill(v) + '</td>';
+    default:     return '<td class="cm-num' + c + '">' + fmtVal(v, fmt) + '</td>';
+  }
+}
+/**
+ * Δ = A − B: "a semana que estou olhando (A) está X acima/abaixo da semana
+ * de referência (B)". Em todas as métricas comparadas, subir é bom.
+ */
+function deltaHtml(a, b, fmt) {
+  if (a == null || b == null) return '<span class="cm-delta flat">—</span>';
+  const d = (Number(a) || 0) - (Number(b) || 0);
+  const eps = fmt === 'pct' ? 0.0005 : (fmt === 'soh' ? 0.005 : 0.5);
+  if (Math.abs(d) < eps) return '<span class="cm-delta flat">=</span>';
+  const cls = d > 0 ? 'up' : 'down';
+  const sign = d > 0 ? '+' : '−';
+  const abs = Math.abs(d);
+  const txt = fmt === 'pct' ? (abs * 100).toFixed(1) + ' pp'
+            : fmt === 'soh' ? abs.toFixed(2)
+            : num(abs, 0);
+  return '<span class="cm-delta ' + cls + '">' + sign + txt + '</span>';
+}
+
+/* ---------- tabela: semana única ---------- */
+function renderWeekSingle() {
+  const rows = weekDrivers(state.weekA).slice();
+  const area = $('week-table-area');
+
+  if (!rows.length) {
+    area.innerHTML = '<div class="cm-state"><h3>No driver data</h3>' +
+      '<p>There are no mapping records for this country in the selected week.</p></div>';
+    $('week-table-note').textContent = '';
+    return;
+  }
+
+  const key = state.weekSortKey, dir = state.weekSortDir;
+  rows.sort((a, b) => {
+    const va = a[key], vb = b[key];
+    if (typeof va === 'string' || typeof vb === 'string') {
+      return String(va || '').localeCompare(String(vb || '')) * dir;
+    }
+    return ((Number(va) || 0) - (Number(vb) || 0)) * dir;
+  });
+
+  const head = WEEK_COLUMNS.map(c => {
+    const sorted = key === c.key;
+    const arrow = sorted ? (dir === -1 ? '▼' : '▲') : '▾';
+    return '<th data-key="' + c.key + '" class="' + (sorted ? 'sorted' : '') + '">' +
+           esc(c.label) + '<span class="cm-arrow">' + arrow + '</span></th>';
+  }).join('');
+
+  const body = rows.map(d => '<tr>' + WEEK_COLUMNS.map(c => {
+    const v = d[c.key];
+    if (c.key === 'name') {
+      return '<td><div class="cm-driver"><div class="cm-avatar">' + esc(initials(v)) +
+             '</div><span class="cm-driver-name">' + esc(v) + '</span></div></td>';
+    }
+    if (c.key === 'country') return '<td class="cm-muted">' + esc(v) + '</td>';
+    if (c.type === 'pctPill') return '<td>' + effPill(v) + '</td>';
+    if (c.type === 'sohPill') return '<td>' + sohPill(v) + '</td>';
+    return '<td class="cm-num">' + num(v, c.dec || 0) + '</td>';
+  }).join('') + '</tr>').join('');
+
+  const sum = (k) => rows.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+  const vidSet = new Set();
+  rows.forEach(r => (r.vids || []).forEach(v => vidSet.add(v)));
+
+  const foot = '<tr>' + WEEK_COLUMNS.map((c, i) => {
+    if (i === 0) return '<td>' + rows.length + ' driver' + (rows.length === 1 ? '' : 's') + '</td>';
+    switch (c.total) {
+      case 'sum': return '<td class="cm-num">' + num(sum(c.key), c.dec || 0) + '</td>';
+      case 'eff': {
+        const t = sum('tkm'), k2 = sum('kmDriven');
+        return '<td class="cm-num">' + pct(k2 > 0 ? t / k2 : 0) + '</td>';
+      }
+      case 'avg': {
+        const vals = rows.map(r => Number(r[c.key]) || 0).filter(v => v > 0);
+        const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+        return '<td>' + sohPill(avg) + '</td>';
+      }
+      case 'vids': return '<td class="cm-num">' + num(vidSet.size) + '</td>';
+      default: return '<td></td>';
+    }
+  }).join('') + '</tr>';
+
+  area.innerHTML = '<div class="cm-scroll"><table class="cm-table">' +
+    '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody>' +
+    '<tfoot>' + foot + '</tfoot></table></div>';
+
+  area.querySelectorAll('th[data-key]').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.key;
+      if (state.weekSortKey === k) state.weekSortDir *= -1;
+      else { state.weekSortKey = k; state.weekSortDir = (k === 'name' || k === 'country') ? 1 : -1; }
+      renderWeekSingle();
+    });
+  });
+
+  $('week-table-note').textContent = rows.length + ' driver' + (rows.length === 1 ? '' : 's') +
+    (state.weekSearch ? ' matching “' + state.weekSearch + '”' : '');
+}
+
+/* ---------- tabela: comparação A × B ---------- */
+function renderWeekCompare() {
+  const wa = weekByKey(state.weekA), wb = weekByKey(state.weekB);
+  const area = $('week-table-area');
+
+  // União dos motoristas das duas semanas, casados por email
+  const byEmail = new Map();
+  weekDrivers(state.weekA).forEach(d => byEmail.set(d.email, { d: d, a: d, b: null }));
+  weekDrivers(state.weekB).forEach(d => {
+    const cur = byEmail.get(d.email);
+    if (cur) cur.b = d;
+    else byEmail.set(d.email, { d: d, a: null, b: d });
+  });
+  let rows = Array.from(byEmail.values());
+
+  if (!rows.length) {
+    area.innerHTML = '<div class="cm-state"><h3>No driver data</h3>' +
+      '<p>Neither week has mapping records for this country.</p></div>';
+    $('week-table-note').textContent = '';
+    return;
+  }
+
+  // Ordenação: pelo lado escolhido (A, B ou Δ) da métrica escolhida
+  const val = (r, side) => {
+    const m = state.weekSortKey;
+    if (m === 'name' || m === 'country') return (r.a || r.b || {})[m] || '';
+    const a = r.a ? Number(r.a[m]) || 0 : null;
+    const b = r.b ? Number(r.b[m]) || 0 : null;
+    if (side === 'a') return a == null ? -Infinity : a;
+    if (side === 'b') return b == null ? -Infinity : b;
+    if (a == null || b == null) return -Infinity;
+    return a - b;   // mesmo sentido do deltaHtml
+  };
+  rows.sort((x, y) => {
+    const vx = val(x, state.weekSortSide), vy = val(y, state.weekSortSide);
+    if (typeof vx === 'string' || typeof vy === 'string') {
+      return String(vx).localeCompare(String(vy)) * state.weekSortDir;
+    }
+    return (vx - vy) * state.weekSortDir;
+  });
+
+  const labA = weekShort(wa), labB = weekShort(wb);
+
+  const groupHead = '<tr class="cm-group"><th colspan="2"></th>' +
+    COMPARE_METRICS.map(m => '<th colspan="3" class="cm-sep">' + esc(m.label) + '</th>').join('') + '</tr>';
+
+  const subHead = '<tr class="cm-sub">' +
+    ['name', 'country'].map(k => {
+      const sorted = state.weekSortKey === k;
+      const arrow = sorted ? (state.weekSortDir === -1 ? '▼' : '▲') : '▾';
+      return '<th data-metric="' + k + '" data-side="a" class="' + (sorted ? 'sorted' : '') + '">' +
+             (k === 'name' ? 'Driver' : 'Country') + '<span class="cm-arrow">' + arrow + '</span></th>';
+    }).join('') +
+    COMPARE_METRICS.map(m => ['a', 'b', 'd'].map((side, i) => {
+      const sorted = state.weekSortKey === m.key && state.weekSortSide === side;
+      const arrow = sorted ? (state.weekSortDir === -1 ? '▼' : '▲') : '';
+      const txt = side === 'a' ? labA : (side === 'b' ? labB : 'Δ');
+      return '<th data-metric="' + m.key + '" data-side="' + side + '" class="' +
+             (i === 0 ? 'cm-sep ' : '') + (sorted ? 'sorted' : '') + '">' +
+             esc(txt) + '<span class="cm-arrow">' + arrow + '</span></th>';
+    }).join('')).join('') + '</tr>';
+
+  const body = rows.map(r => {
+    const who = r.a || r.b;
+    let tds = '<td><div class="cm-driver"><div class="cm-avatar">' + esc(initials(who.name)) +
+              '</div><span class="cm-driver-name">' + esc(who.name) + '</span></div></td>' +
+              '<td class="cm-muted">' + esc(who.country) + '</td>';
+    COMPARE_METRICS.forEach(m => {
+      const va = r.a ? r.a[m.key] : null;
+      const vb = r.b ? r.b[m.key] : null;
+      tds += fmtCell(va, m.fmt).replace('<td', '<td class="cm-sep"').replace('class="cm-sep" class=', 'class="cm-sep ');
+      tds += fmtCell(vb, m.fmt);
+      tds += '<td class="cm-num">' + deltaHtml(va, vb, m.fmt) + '</td>';
+    });
+    return '<tr>' + tds + '</tr>';
+  }).join('');
+
+  // Rodapé: totais das duas semanas + delta
+  const ta = weekTotals(state.weekA), tb = weekTotals(state.weekB);
+  const foot = '<tr><td colspan="2">' + rows.length + ' driver' + (rows.length === 1 ? '' : 's') + '</td>' +
+    COMPARE_METRICS.map(m => {
+      const key = m.key === 'kmDriven' ? 'kmDriven' : m.key;
+      const va = ta[key], vb = tb[key];
+      return '<td class="cm-num cm-sep">' + fmtVal(va, m.fmt) + '</td>' +
+             '<td class="cm-num">' + fmtVal(vb, m.fmt) + '</td>' +
+             '<td class="cm-num">' + deltaHtml(va, vb, m.fmt) + '</td>';
+    }).join('') + '</tr>';
+
+  area.innerHTML = '<div class="cm-scroll"><table class="cm-table">' +
+    '<thead>' + groupHead + subHead + '</thead><tbody>' + body + '</tbody>' +
+    '<tfoot>' + foot + '</tfoot></table></div>';
+
+  area.querySelectorAll('th[data-metric]').forEach(th => {
+    th.addEventListener('click', () => {
+      const m = th.dataset.metric, side = th.dataset.side;
+      if (state.weekSortKey === m && state.weekSortSide === side) state.weekSortDir *= -1;
+      else {
+        state.weekSortKey = m; state.weekSortSide = side;
+        state.weekSortDir = (m === 'name' || m === 'country') ? 1 : -1;
+      }
+      renderWeekCompare();
+    });
+  });
+
+  const onlyA = rows.filter(r => r.a && !r.b).length;
+  const onlyB = rows.filter(r => !r.a && r.b).length;
+  $('week-table-note').textContent = rows.length + ' driver' + (rows.length === 1 ? '' : 's') +
+    (onlyA ? ' · ' + onlyA + ' only in ' + labA : '') +
+    (onlyB ? ' · ' + onlyB + ' only in ' + labB : '');
+}
+
+/* ---------- render da aba ---------- */
+function renderWeekly() {
+  if (!state.weeks || !(state.weeks.weeks || []).length) return;
+  const wa = weekByKey(state.weekA), wb = weekByKey(state.weekB);
+
+  $('week-section-title').textContent = state.compare ? 'Week comparison' : 'Week overview';
+  $('week-note').textContent = (state.country === 'ALL' ? 'All LATAM' : state.country) + ' · ' +
+    (state.compare ? weekLabelLong(wa) + ' vs ' + weekLabelLong(wb) : weekLabelLong(wa));
+
+  renderWeekTiles();
+  if (state.compare) renderWeekCompare(); else renderWeekSingle();
+}
+
+async function loadWeeks(force) {
+  $('week-table-area').innerHTML =
+    '<div class="cm-state"><div class="cm-spinner"></div>Loading weekly data…' +
+    '<p id="week-slow-hint" style="margin-top:12px;opacity:0;transition:opacity .4s ease">' +
+    'Still working — the first load after a while can take up to a minute.</p></div>';
+  setTimeout(() => { const h = $('week-slow-hint'); if (h) h.style.opacity = '1'; }, 8000);
+  $('week-tiles').innerHTML = '';
+  $('refresh').disabled = true;
+
+  try {
+    console.log('[Client Metrics] fetching weeks');
+    const d = await fetchWeeks(force);
+    if (!d || d.success === false || !Array.isArray(d.weeks) || !d.weeks.length) {
+      throw new Error((d && d.error) || 'no weekly data');
+    }
+    state.weeks = d;
+    console.log('[Client Metrics] weeks:', d.weeks.map(w => w.key).join(', '));
+
+    // padrão: semana mais recente; compare contra a anterior
+    if (!weekByKey(state.weekA)) state.weekA = d.weeks[0].key;
+    if (!weekByKey(state.weekB)) state.weekB = (d.weeks[1] || d.weeks[0]).key;
+
+    if (!state.countryList.length && Array.isArray(d.countries) && d.countries.length) {
+      state.countryList = d.countries;
+      renderCountries(d.countries);
+    }
+    renderWeekSelects();
+    renderWeekly();
+    $('updated').textContent = stamp(d);
+  } catch (err) {
+    console.error('[Client Metrics] weekly load failed', err);
+    $('week-tiles').innerHTML = '';
+    $('week-table-area').innerHTML =
+      '<div class="cm-state"><h3>Could not load the weekly data</h3>' +
+      '<p>The reporting service did not respond in time. This usually resolves in a few seconds.</p>' +
+      '<button class="cm-btn" id="week-retry">Try again</button></div>';
+    const r = $('week-retry');
+    if (r) r.addEventListener('click', () => loadWeeks(true));
+  } finally {
+    $('refresh').disabled = false;
+  }
+}
+
+/* ---------- troca de aba ---------- */
+function setView(v) {
+  state.view = v;
+  const weekly = v === 'weekly';
+
+  $('tab-monthly').classList.toggle('active', !weekly);
+  $('tab-weekly').classList.toggle('active', weekly);
+  $('tab-monthly').setAttribute('aria-selected', String(!weekly));
+  $('tab-weekly').setAttribute('aria-selected', String(weekly));
+
+  $('monthly-view').hidden = weekly;
+  $('weekly-view').hidden = !weekly;
+  $('period').hidden = weekly;
+  $('week-controls').hidden = !weekly;
+  $('notice').classList.toggle('hidden', weekly || !$('notice').innerHTML);
+
+  if (weekly) {
+    if (!state.weeks) loadWeeks();
+    else { renderWeekly(); $('updated').textContent = stamp(state.weeks); }
+  } else if (!state.data) {
+    // entrou direto no Weekly (?view=weekly): o mensal ainda não foi buscado
+    load();
+  } else {
+    $('updated').textContent = stamp(state.data);
+  }
+}
+
+function setCompare(on) {
+  state.compare = on;
+  $('compare').classList.toggle('on', on);
+  $('compare').textContent = on ? '✕ Exit compare' : '⇄ Compare';
+  $('week-b').hidden = !on;
+  $('week-vs').hidden = !on;
+  // sair do compare deixa a ordenação num estado válido pra tabela simples
+  if (!on && !WEEK_COLUMNS.some(c => c.key === state.weekSortKey)) state.weekSortKey = 'tkm';
+  renderWeekly();
+}
+
+/* ---------- CSV da aba semanal ---------- */
+function exportWeekCsv() {
+  const wa = weekByKey(state.weekA), wb = weekByKey(state.weekB);
+  let header, lines;
+
+  if (!state.compare) {
+    const rows = weekDrivers(state.weekA);
+    if (!rows.length) return;
+    header = WEEK_COLUMNS.map(c => c.label).concat(['VID numbers']);
+    lines = [header.join(',')];
+    rows.forEach(d => {
+      const cells = WEEK_COLUMNS.map(c => {
+        const v = d[c.key];
+        if (typeof v === 'number') return c.type === 'pctPill' ? (v * 100).toFixed(2) : v;
+        return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      });
+      cells.push('"' + (d.vids || []).join(' ') + '"');
+      lines.push(cells.join(','));
+    });
+  } else {
+    const byEmail = new Map();
+    weekDrivers(state.weekA).forEach(d => byEmail.set(d.email, { a: d, b: null }));
+    weekDrivers(state.weekB).forEach(d => {
+      const cur = byEmail.get(d.email);
+      if (cur) cur.b = d; else byEmail.set(d.email, { a: null, b: d });
+    });
+    if (!byEmail.size) return;
+    header = ['Driver', 'Country'];
+    COMPARE_METRICS.forEach(m => {
+      header.push(m.label + ' (' + wa.key + ')', m.label + ' (' + wb.key + ')', m.label + ' (delta)');
+    });
+    lines = [header.join(',')];
+    byEmail.forEach(r => {
+      const who = r.a || r.b;
+      const cells = ['"' + String(who.name).replace(/"/g, '""') + '"',
+                     '"' + String(who.country || '').replace(/"/g, '""') + '"'];
+      COMPARE_METRICS.forEach(m => {
+        const va = r.a ? Number(r.a[m.key]) || 0 : '';
+        const vb = r.b ? Number(r.b[m.key]) || 0 : '';
+        const mul = m.fmt === 'pct' ? 100 : 1;
+        cells.push(va === '' ? '' : (va * mul).toFixed(2));
+        cells.push(vb === '' ? '' : (vb * mul).toFixed(2));
+        cells.push(va === '' || vb === '' ? '' : ((va - vb) * mul).toFixed(2));
+      });
+      lines.push(cells.join(','));
+    });
+  }
+
+  const scope = state.country === 'ALL' ? 'all' : state.country.toLowerCase();
+  const name = 'street-view-latam-' + scope + '-' +
+               (state.compare ? state.weekA + '-vs-' + state.weekB : state.weekA) + '.csv';
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 
 /* ============================================================
  * SPLASH — cards de país
@@ -1007,6 +1705,13 @@ function chooseCountry(c) {
   const changed = state.country !== c;
   state.country = c;
   hideSplash();
+  // Na aba Weekly o payload já traz todos os países — filtra client-side,
+  // não refaz a requisição.
+  if (state.view === 'weekly') {
+    renderCountries(state.countryList);
+    if (!state.weeks) loadWeeks(); else renderWeekly();
+    return;
+  }
   if (changed || !state.data) load();
   else renderCountries((state.data && state.data.countries) || []);
 }
@@ -1033,7 +1738,8 @@ function renderCountries(list) {
       if (state.country === b.dataset.country) return;
       state.country = b.dataset.country;
       renderCountries(list);
-      load();
+      if (state.view === 'weekly') renderWeekly();   // filtro client-side
+      else load();
     });
   });
 }
@@ -1130,12 +1836,17 @@ function exportCsv() {
   state.month = now.getMonth() + 1;
   state.year = now.getFullYear();
 
-  // permite abrir direto num país/período: ?country=Argentina&month=6&year=2026
+  // permite abrir direto num país/período/aba:
+  //   ?country=Argentina&month=6&year=2026        → aba Monthly
+  //   ?country=Brazil&view=weekly&week=2026-W31   → aba Weekly já na semana
   const q = new URLSearchParams(location.search);
   const deepLinked = !!q.get('country');
   if (deepLinked) state.country = q.get('country');
   if (parseInt(q.get('month'), 10)) state.month = parseInt(q.get('month'), 10);
   if (parseInt(q.get('year'), 10)) state.year = parseInt(q.get('year'), 10);
+  const wantWeekly = (q.get('view') || '').toLowerCase() === 'weekly';
+  if (q.get('week')) state.weekA = q.get('week');
+  if (q.get('week2')) { state.weekB = q.get('week2'); state.compare = true; }
 
   $('period').innerHTML = '<option>' + periodLabel(state.month, state.year) + '</option>';
   renderCountries([]);
@@ -1147,14 +1858,35 @@ function exportCsv() {
     state.year = parseInt(parts[1], 10);
     load();
   });
-  $('refresh').addEventListener('click', () => load(true));
+  // Refresh atua na aba que está aberta
+  $('refresh').addEventListener('click', () => {
+    if (state.view === 'weekly') loadWeeks(true); else load(true);
+  });
   $('change-country').addEventListener('click', showSplash);
   $('csv').addEventListener('click', exportCsv);
   $('search').addEventListener('input', (e) => { state.search = e.target.value; renderTable(); });
 
+  // ---- aba Weekly ----
+  $('tab-monthly').addEventListener('click', () => setView('monthly'));
+  $('tab-weekly').addEventListener('click', () => setView('weekly'));
+  $('week-a').addEventListener('change', (e) => { state.weekA = e.target.value; renderWeekly(); });
+  $('week-b').addEventListener('change', (e) => { state.weekB = e.target.value; renderWeekly(); });
+  $('compare').addEventListener('click', () => setCompare(!state.compare));
+  $('week-csv').addEventListener('click', exportWeekCsv);
+  $('week-search').addEventListener('input', (e) => {
+    state.weekSearch = e.target.value;
+    if (state.compare) renderWeekCompare(); else renderWeekSingle();
+  });
+  if (state.compare) setCompare(true);   // deep link com ?week2= já entra comparando
+
   // Link direto (?country=Argentina) pula o splash; senão o cliente escolhe.
-  if (deepLinked) { hideSplash(); load(); }
-  else { showSplash(); }
+  if (deepLinked) {
+    hideSplash();
+    if (wantWeekly) setView('weekly'); else load();
+  } else {
+    showSplash();
+    if (wantWeekly) setView('weekly');
+  }
 })();
 </script>
 </body>

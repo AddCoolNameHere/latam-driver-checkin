@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.70',
+        version: 'v5.72',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -301,7 +301,7 @@ function doGet(e) {
                     'listMyMaps', 'getMyMap', 'POST saveMyMap',
                     'getTkmReportOptions', 'getTkmReport', 'getFleetVids',
                     'getVidStatus', 'POST saveVidStatus',
-                    'getClientMetrics', 'getClientMetricsBatch', 'getVidCounts'],
+                    'getClientMetrics', 'getClientMetricsBatch', 'getClientWeeks', 'getVidCounts'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -412,6 +412,29 @@ function doGet(e) {
           if (str.length < 95000) cache.put(cacheKey, str, 1800);
           else Logger.log('getClientMetrics: payload ' + str.length + 'B — grande demais pro cache');
         } catch (e2) { Logger.log('getClientMetrics cache falhou: ' + e2); }
+      }
+      return jsonResponse(payload);
+    }
+
+    // v5.72: visão SEMANAL do portal do cliente (/cts-data, aba "Weekly").
+    // Devolve as últimas N semanas de uma vez — ler a RAW CTS é o custo, e ela
+    // é lida uma vez só. A página troca de semana e compara duas sem refetch.
+    // Público (sem login), mesmo escopo do getClientMetrics.
+    if (action === 'getClientWeeks') {
+      const weeksBack = parseInt(e.parameter.weeks, 10) || 8;
+      const cacheKey = 'clientWeeks_' + weeksBack;
+      const cache = CacheService.getScriptCache();
+      if (e.parameter.nocache !== '1') {
+        const hit = cache.get(cacheKey);
+        if (hit) return ContentService.createTextOutput(hit).setMimeType(ContentService.MimeType.JSON);
+      }
+      const payload = getClientWeeks_(weeksBack);
+      if (payload && payload.success) {
+        try {
+          const str = JSON.stringify(payload);
+          if (str.length < 95000) cache.put(cacheKey, str, 1800);
+          else Logger.log('getClientWeeks: payload ' + str.length + 'B — grande demais pro cache');
+        } catch (e2) { Logger.log('getClientWeeks cache falhou: ' + e2); }
       }
       return jsonResponse(payload);
     }
@@ -765,24 +788,52 @@ function getActiveDrivers(includeOffboarding) {
   return drivers;
 }
 
+/**
+ * v5.71: invalida o cache de base de um motorista. Chamar sempre que
+ * escrever em Driver Base Location, senão o check-in calcula a distância
+ * contra a base antiga.
+ */
+function invalidateDriverBaseCache_(email) {
+  if (!email) return;
+  try { CacheService.getScriptCache().remove('drvbase_' + email); } catch (e) {}
+}
+
 function getDriverBase(email) {
+  if (!email) return null;
+
+  // v5.71: essa leitura varre a aba inteira e custa ~5s — e roda DUAS vezes
+  // no envio do motorista (no getBase da tela e de novo dentro do saveCheckin),
+  // o que sozinho já dobrava o tempo do POST no pico da manhã.
+  const cache = CacheService.getScriptCache();
+  const key = 'drvbase_' + email;
+  const hit = cache.get(key);
+  if (hit !== null) {
+    try { return JSON.parse(hit); } catch (e) { /* cache podre — relê */ }
+  }
+
   const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
   const sheet = ss.getSheetByName(CONFIG.baseSheet);
   if (!sheet) return null;
 
+  let found = null;
   const data = sheet.getDataRange().getValues();
   for (let i = data.length - 1; i >= 1; i--) {
     if (data[i][1] === email) {
-      return {
+      found = {
         type: data[i][3],
         address: data[i][4],
         lat: data[i][5],
         lng: data[i][6],
         updatedAt: data[i][0],
       };
+      break;
     }
   }
-  return null;
+
+  // Guarda inclusive o null: motorista sem base cadastrada não precisa
+  // pagar a varredura de novo a cada request.
+  try { cache.put(key, JSON.stringify(found), 1800); } catch (e) {}
+  return found;
 }
 
 function getDriverLastArea(email) {
@@ -3458,12 +3509,47 @@ function safeNumber(v) {
 // FUNÇÕES DE ESCRITA (gravação de check-ins)
 // ================================================================
 
-function saveCheckin(data) {
-  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
-  const sheet = ss.getSheetByName(CONFIG.checkinSheet);
+/**
+ * v5.71: as três checagens de schema (AB-AD, AG-AH, AI) rodavam em TODO
+ * check-in — trabalho de migração no caminho quente, cada uma custando uma
+ * ida à API do Sheets. As colunas já existem há versões; agora confere uma
+ * vez a cada 6h e sai na frente no resto.
+ */
+function ensureCheckinSchemaOnce_(sheet) {
+  const cache = CacheService.getScriptCache();
+  if (cache.get('ckin_schema_ok_v571')) return;
   ensureCheckinExtraColumns_(sheet);  // v5.14: garante AB-AD (odômetro inicial + SSD)
   ensureDnmColumns_(sheet);           // v5.17: garante AG-AH (Did Map flag + DNM Reason)
   ensureTravelColumn_(sheet);         // v5.62: garante AI (Travel Time em min)
+  try { cache.put('ckin_schema_ok_v571', '1', 21600); } catch (e) {}
+}
+
+/**
+ * v5.71: grava o check-in do motorista.
+ *
+ * Reestruturada por causa do bug do "leva 20 min pra enviar": no pico da
+ * manhã (7h-9h concentram a maioria dos check-ins) o POST estourava o
+ * limite da rede móvel e o motorista via "Erro ao enviar". Três mudanças:
+ *
+ *   1. submissionId — o frontend reusa o mesmo id em todas as tentativas,
+ *      então reenvio devolve o check-in que já entrou em vez de duplicar.
+ *   2. LockService só em volta da ESCRITA. Antes, insertRowBefore(2) e
+ *      setValues(2) rodavam sem lock: dois check-ins no mesmo instante
+ *      inseriam duas linhas na 2 e um sobrescrevia o outro — o check-in
+ *      simplesmente sumia da planilha.
+ *   3. As leituras caras (getDriverBase, ~5s) ficam FORA do lock, senão
+ *      cada motorista seguraria a fila da manhã inteira por 5s.
+ */
+function saveCheckin(data) {
+  const cache = CacheService.getScriptCache();
+  const subKey = data.submissionId ? 'ckin_sub_' + data.submissionId : null;
+  if (subKey && cache.get(subKey)) {
+    return;  // mesmo formulário reenviado — já está gravado
+  }
+
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(CONFIG.checkinSheet);
+  ensureCheckinSchemaOnce_(sheet);
 
   const today = new Date();
   const dateStr = Utilities.formatDate(today, 'America/Sao_Paulo', 'yyyy-MM-dd');
@@ -3525,7 +3611,26 @@ function saveCheckin(data) {
   row[34] = (data.travelTimeMin != null && data.travelTimeMin !== '') ? safeNumber(data.travelTimeMin) : '';
 
   // v5.37: insere no topo (logo abaixo do header) em vez de no fim — mais recente em cima
-  insertRowAt_(sheet, 2, row);
+  // v5.71: sob lock — insertRowBefore + setValues não são atômicos juntos, e dois
+  // check-ins simultâneos faziam um sobrescrever o outro.
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(30000);
+  } catch (e) {
+    throw new Error('Sistema ocupado gravando outro check-in. Tente de novo em instantes.');
+  }
+  try {
+    insertRowAt_(sheet, 2, row);
+    SpreadsheetApp.flush();  // garante a escrita antes de soltar o lock
+  } finally {
+    lock.releaseLock();
+  }
+
+  // Só marca como gravado depois que a linha entrou de verdade: se algo acima
+  // falhar, o reenvio do motorista ainda precisa funcionar.
+  if (subKey) {
+    try { cache.put(subKey, '1', 21600); } catch (e) {}
+  }
 
   // Se foi reportado vehicle issue com detalhes, também grava em Vehicle Issues Tracking
   // v5.17: pra DNM com motivo mech/tech/disks também cria issue (clima não cria)
@@ -3556,6 +3661,8 @@ function saveBase(data) {
     new Date(), data.driverEmail, data.driverName, data.baseType,
     data.baseAddress, data.baseLat, data.baseLng, data.country, data.notes || '',
   ]);
+
+  invalidateDriverBaseCache_(data.driverEmail);  // v5.71
 }
 
 /**
@@ -3597,6 +3704,9 @@ function updateDriverInfo(data) {
       'Admin edit by ' + (data.editorName || data.editorUsername || 'unknown') +
         (data.notes ? ' — ' + data.notes : ''),
     ]);
+    // v5.71: o admin pode ter trocado o email junto — limpa os dois
+    invalidateDriverBaseCache_(data.driverEmail);
+    invalidateDriverBaseCache_(data.newEmail || data.driverEmail);
     baseUpdateMsg = 'Base atualizada. ';
   }
 
@@ -4085,6 +4195,12 @@ function saveVehicleIssue_(data) {
 // ================================================================
 
 function ensureSheetsExist() {
+  // v5.71: roda em TODO doPost, mas as abas existem há dezenas de versões.
+  // Confere uma vez a cada 6h em vez de cobrar o custo de cada motorista
+  // que bate o ponto de manhã.
+  const cache = CacheService.getScriptCache();
+  if (cache.get('sheets_exist_ok_v571')) return;
+
   const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
 
   if (!ss.getSheetByName(CONFIG.checkinSheet)) {
@@ -4116,6 +4232,8 @@ function ensureSheetsExist() {
     sheet.getRange(1, 1, 1, 9).setFontWeight('bold').setBackground('#f0f0f0');
     sheet.setFrozenRows(1);
   }
+
+  try { cache.put('sheets_exist_ok_v571', '1', 21600); } catch (e) {}
 }
 
 function calcDistanceKm(lat1, lng1, lat2, lng2) {
@@ -6313,6 +6431,231 @@ function getClientMetrics_(month, year, country) {
   }
 }
 
+
+// ================================================================
+// v5.72 — VISÃO SEMANAL (/cts-data, aba "Weekly")
+// ================================================================
+//
+// Fonte: RAW CTS DATA, que tem UMA LINHA POR DIA/motorista e já traz a
+// coluna `drive_week` (número da semana ISO que a própria CTS usa). Não
+// inventamos semana aqui — usamos a que o cliente enxerga.
+//
+// Por que um endpoint só pra várias semanas: o custo é ler a RAW CTS
+// inteira (~6k linhas, 45s+). Agrupar 1 semana ou 10 custa o mesmo. Então
+// devolvemos as últimas N de uma vez — a página troca de semana e compara
+// duas semanas sem nova requisição.
+//
+// ⚠ Swarm/Churn NÃO existem por linha na RAW CTS (só no rollup mensal),
+// então a tabela semanal não tem essas colunas. Ver comentário na v5.58.
+
+/**
+ * A RAW CTS marca o dia com uma SETA, e é ela que diz se o dia contou:
+ *   '⬆Mapping'                 → mapeou limpo
+ *   '⬆*weather', '⬆*mech.'     → mapeou COM contratempo (ainda é dia mapeado)
+ *   '⬇Weather', '⬇At Google WH', '⬇Mech.', '⬇No Drive Day' → não mapeou
+ * São as mesmas categorias das colunas ⬆/⬇ do TKM Monthly Report.
+ * Sem seta (linha antiga/vazia), decide pelo que a linha registrou.
+ */
+function isCtsMappingDay_(status, hours, tkm) {
+  const s = String(status == null ? '' : status);
+  if (s.indexOf('⬆') >= 0) return true;
+  if (s.indexOf('⬇') >= 0) return false;
+  if (/mapping/i.test(s)) return true;
+  return safeNumber(hours) > 0 || safeNumber(tkm) > 0;
+}
+
+/** Segunda-feira da semana ISO `week` do ano `year`. (4/jan cai sempre na semana 1.) */
+function isoWeekStart_(year, week) {
+  const jan4 = new Date(year, 0, 4);
+  const dowMon0 = (jan4.getDay() + 6) % 7;          // 0=segunda
+  const week1Mon = new Date(year, 0, 4 - dowMon0);
+  return new Date(week1Mon.getFullYear(), week1Mon.getMonth(),
+                  week1Mon.getDate() + (week - 1) * 7);
+}
+
+function ymd_(d) { return Utilities.formatDate(d, 'America/Sao_Paulo', 'yyyy-MM-dd'); }
+
+/**
+ * Nome de exibição a partir do email corporativo, quando a pessoa não está
+ * (mais) na HR Database: 'antonio.segadilha1@...' → 'Antonio Segadilha'.
+ */
+function nameFromEmail_(email) {
+  const local = String(email || '').split('@')[0];
+  if (!local) return '(unknown)';
+  return local.split(/[._-]+/)
+    .filter(function (p) { return p; })
+    .map(function (p) {
+      const clean = p.replace(/\d+$/, '');           // 'segadilha1' → 'segadilha'
+      if (!clean) return '';
+      return clean.charAt(0).toUpperCase() + clean.slice(1);
+    })
+    .filter(function (p) { return p; })
+    .join(' ');
+}
+
+/**
+ * Últimas `weeksBack` semanas da RAW CTS DATA, com a lista de motoristas de cada.
+ *
+ * Retorno:
+ *   { success, generatedAt, countries: [...],
+ *     weeks: [{ week, year, key, label, start, end, firstDay, lastDay,
+ *               drivers: [{ name, email, country, tkm, kmDriven, efficiency,
+ *                           avgSystemOnHours, systemOnHours, mappingDays,
+ *                           idleDays, vids, vidCount }] }] }   // mais recente primeiro
+ */
+function getClientWeeks_(weeksBack) {
+  try {
+    weeksBack = weeksBack || 8;
+
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = ss.getSheetByName(CONFIG.rawCtsSheet);
+    if (!sheet || sheet.getLastRow() < 2) {
+      return { success: false, error: 'aba "' + CONFIG.rawCtsSheet + '" não encontrada ou vazia' };
+    }
+
+    const data = sheet.getDataRange().getValues();
+    const h = data[0];
+    const ix = {
+      month:   findHeader_(h, ['Month']),
+      country: findHeader_(h, ['country', 'country_code']),
+      vid:     findHeader_(h, ['VID', 'vehicle_id']),
+      date:    findHeader_(h, ['drive_date']),
+      week:    findHeader_(h, ['drive_week']),
+      email:   findHeader_(h, ['email']),
+      tkm:     findHeader_(h, ['TKM']),
+      km:      findHeader_(h, ['total_km', 'total_kms']),
+      hours:   findHeader_(h, ['mapping_hours', 'system on hours', 'mapping hours']),
+      status:  findHeader_(h, ['Status']),
+    };
+    if (ix.week < 0 || ix.date < 0 || ix.email < 0) {
+      return { success: false, error: 'RAW CTS DATA sem as colunas drive_week/drive_date/email' };
+    }
+
+    // email → nome oficial (HR). Quem já saiu cai no nameFromEmail_.
+    const nameByEmail = {};
+    try {
+      getActiveDrivers(true).forEach(function (d) {
+        if (d.email) nameByEmail[String(d.email).toLowerCase()] = d.name;
+      });
+    } catch (e) {
+      Logger.log('getClientWeeks_: HR Database falhou, usando nome do email: ' + e);
+    }
+
+    // ---- 1) agrupa linhas por semana e, dentro dela, por motorista ----
+    const byWeek = {};   // 'YYYY-Wnn' → { week, year, firstDay, lastDay, drivers: {email: acc} }
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const email = row[ix.email];
+      if (!email || typeof email !== 'string') continue;
+
+      const week = safeNumber(row[ix.week]);
+      if (!week) continue;
+
+      const dateObj = parseRawCtsDate_(row[ix.date]);
+      if (!dateObj) continue;
+      const dateStr = ymd_(dateObj);
+
+      // O ano da semana vem do drive_date. Na virada do ano a semana ISO 1
+      // pode cair em dezembro — o `Month` ('M.YYYY') resolveria errado.
+      let year = dateObj.getFullYear();
+      if (week >= 52 && dateObj.getMonth() === 0) year -= 1;       // jan em semana 52/53 → ano anterior
+      if (week === 1 && dateObj.getMonth() === 11) year += 1;      // dez em semana 1 → ano seguinte
+
+      const key = year + '-W' + (week < 10 ? '0' + week : week);
+      if (!byWeek[key]) {
+        byWeek[key] = { week: week, year: year, key: key, firstDay: dateStr, lastDay: dateStr, drivers: {} };
+      }
+      const W = byWeek[key];
+      if (dateStr < W.firstDay) W.firstDay = dateStr;
+      if (dateStr > W.lastDay) W.lastDay = dateStr;
+
+      const emailKey = email.toLowerCase();
+      if (!W.drivers[emailKey]) {
+        W.drivers[emailKey] = {
+          email: emailKey,
+          name: nameByEmail[emailKey] || nameFromEmail_(emailKey),
+          country: clientCountryName_(row[ix.country]),
+          tkm: 0, kmDriven: 0,
+          systemOnHours: 0,
+          systemOnDays: 0,
+          mappingDays: 0,
+          idleDays: 0,
+          vids: [],
+          _days: {}, _onDays: {},
+        };
+      }
+      const D = W.drivers[emailKey];
+      if (!D.country) D.country = clientCountryName_(row[ix.country]);
+
+      const hours = ix.hours >= 0 ? safeNumber(row[ix.hours]) : 0;
+      const tkmVal = safeNumber(row[ix.tkm]);
+      const isMapping = isCtsMappingDay_(row[ix.status], hours, tkmVal);
+
+      D.tkm += tkmVal;
+      D.kmDriven += ix.km >= 0 ? safeNumber(row[ix.km]) : 0;
+      D.systemOnHours += hours;
+
+      // Um motorista pode ter mais de uma linha no mesmo dia (troca de VID).
+      // Conta o DIA uma vez só, senão "mapping days" passa dos 7.
+      if (!D._days[dateStr]) {
+        D._days[dateStr] = true;
+        if (isMapping) D.mappingDays++; else D.idleDays++;
+      }
+      // Denominador da média de system on hours: dias em que o sistema
+      // ficou ligado, que é de onde as horas vieram. Usar `mappingDays` aqui
+      // dava média inflada (horas de um dia ⬇ divididas por menos dias).
+      if (hours > 0 && !D._onDays[dateStr]) { D._onDays[dateStr] = true; D.systemOnDays++; }
+
+      const vid = row[ix.vid];
+      if (vid != null && vid !== '') {
+        const vidStr = String(vid).trim();
+        if (vidStr && D.vids.indexOf(vidStr) < 0) D.vids.push(vidStr);
+      }
+    }
+
+    // ---- 2) fecha as médias e ordena ----
+    const countrySet = {};
+    const weeks = Object.keys(byWeek).sort().reverse().slice(0, weeksBack).map(function (key) {
+      const W = byWeek[key];
+      const start = isoWeekStart_(W.year, W.week);
+      const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+
+      const drivers = Object.keys(W.drivers).map(function (e) {
+        const D = W.drivers[e];
+        delete D._days; delete D._onDays;
+        // AVG System on Hours = horas por dia com sistema ligado.
+        D.avgSystemOnHours = D.systemOnDays > 0 ? D.systemOnHours / D.systemOnDays : 0;
+        D.efficiency = D.kmDriven > 0 ? D.tkm / D.kmDriven : 0;
+        D.vidCount = D.vids.length;
+        if (D.country) countrySet[D.country] = true;
+        return D;
+      }).sort(function (a, b) { return b.tkm - a.tkm; });
+
+      return {
+        week: W.week,
+        year: W.year,
+        key: W.key,
+        label: 'Week ' + W.week + ' · ' + W.year,
+        start: ymd_(start),
+        end: ymd_(end),
+        firstDay: W.firstDay,
+        lastDay: W.lastDay,
+        drivers: drivers,
+      };
+    });
+
+    return {
+      success: true,
+      weeks: weeks,
+      countries: Object.keys(countrySet).sort(),
+      generatedAt: new Date().toISOString(),
+    };
+  } catch (err) {
+    Logger.log('getClientWeeks_ erro: ' + err);
+    return { success: false, error: String(err) };
+  }
+}
 
 
 /**
