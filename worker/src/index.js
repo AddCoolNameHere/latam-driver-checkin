@@ -23,7 +23,7 @@
 /** Vai no header X-Worker-Build de toda resposta. Serve pra saber, olhando o
  *  curl, qual versão está realmente no ar — a API de deploy já disse "ok" pra
  *  uma versão que não era a que estava respondendo. */
-const BUILD = '5';
+const BUILD = '6';
 
 const UPSTREAM = 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec';
 
@@ -38,9 +38,29 @@ const FRESH_SECONDS = 30 * 60;
  *  pé se o Apps Script estiver fora do ar. Melhor dado de 1h atrás que erro. */
 const KV_TTL_SECONDS = 24 * 60 * 60;
 
-/** O que o cron pré-aquece. São as chamadas caras que abrem as páginas. */
-const WARM = [
+/**
+ * ⚠ O QUE PODE SER REAQUECIDO E QUANDO — leia antes de mexer.
+ *
+ * O saveCheckin e o getTkmReport_ usam o MESMO LockService.getScriptLock(),
+ * que no Apps Script é um lock único pro script inteiro. Enquanto o relatório
+ * é montado (~45s), NENHUM motorista consegue bater ponto: o waitLock(30000)
+ * deles estoura e devolve "Sistema ocupado".
+ *
+ * Ou seja: toda chamada de getClientMetrics trava o check-in por ~45s.
+ *
+ * Por isso o warm é dividido:
+ *   LEVE  — getClientWeeks lê a RAW CTS direto, NÃO pega lock. Pode rodar
+ *           de hora em hora sem incomodar ninguém.
+ *   PESADO— getClientMetrics passa pelo getTkmReport_ e trava check-in.
+ *           Roda 1×/dia de madrugada (05:30 UTC = 02:30 BRT), fora do pico.
+ *           No resto do dia essas chaves se resolvem pelo stale-while-
+ *           revalidate, ou seja, só quando alguém abre o portal de verdade.
+ */
+const WARM_LEVE = [
   'action=getClientWeeks&weeks=10',
+];
+
+const WARM_PESADO = [
   'action=getClientMetrics&country=ALL',
   'action=getClientMetrics&country=Argentina',
   'action=getClientMetrics&country=Brazil',
@@ -49,6 +69,8 @@ const WARM = [
   'action=getClientMetrics&country=M%C3%A9xico',
   'action=getClientMetrics&country=Peru',
 ];
+
+const CRON_PESADO = '30 5 * * *';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -197,8 +219,13 @@ export default {
    * e sem ninguém esperando por isso.
    */
   async scheduled(event, env, ctx) {
+    // O cron da madrugada faz leve + pesado; os de hora em hora só o leve,
+    // pra não travar o check-in dos motoristas (ver comentário do WARM_*).
+    const pesado = event.cron === CRON_PESADO;
+    const lista = pesado ? WARM_LEVE.concat(WARM_PESADO) : WARM_LEVE;
+
     let ok = 0;
-    for (const search of WARM) {
+    for (const search of lista) {
       try {
         await refresh(env, cacheKey(new URL('https://x/?' + search)), search);
         ok++;
@@ -206,6 +233,6 @@ export default {
         console.log('[warm] FALHOU ' + search + ': ' + e);
       }
     }
-    console.log('[warm] ' + ok + '/' + WARM.length + ' chaves atualizadas');
+    console.log('[warm] ' + (pesado ? 'completo' : 'leve') + ' — ' + ok + '/' + lista.length + ' chaves');
   },
 };

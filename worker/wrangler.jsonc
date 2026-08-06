@@ -17,16 +17,13 @@
     { "binding": "CACHE", "id": "628377b6b2e64248b062a182a3330762" }
   ],
 
-  // Reaquece as chaves caras de hora em hora. Não precisa ser mais que isso:
-  //  - a RAW CTS é atualizada 1x/dia;
-  //  - o Apps Script cacheia 30 min do lado dele, então reaquecer mais rápido
-  //    devolveria os mesmos bytes gastando execução;
-  //  - e o stale-while-revalidate já cobre o intervalo: quem chega com a chave
-  //    vencida recebe a cópia velha na hora e dispara a atualização atrás.
-  // O cron existe pro caso "ninguém acessou desde ontem" — pra que o primeiro
-  // visitante do dia não pague os 60s.
+  // Dois crons, e a diferença entre eles importa (ver WARM_* no src/index.js):
+  //   "0 * * * *"  → de hora em hora, só getClientWeeks, que NÃO pega lock.
+  //   "30 5 * * *" → 02:30 BRT, inclui getClientMetrics, que compartilha o
+  //                  LockService com o saveCheckin e trava o check-in dos
+  //                  motoristas por ~45s a cada chamada. Só fora do pico.
   "triggers": {
-    "crons": ["0 * * * *"]
+    "crons": ["0 * * * *", "30 5 * * *"]
   },
 
   "observability": {
