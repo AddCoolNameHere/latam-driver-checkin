@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.72',
+        version: 'v5.73',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -3610,21 +3610,30 @@ function saveCheckin(data) {
   // AI(35): tempo estimado de deslocamento até a área (minutos). v5.62
   row[34] = (data.travelTimeMin != null && data.travelTimeMin !== '') ? safeNumber(data.travelTimeMin) : '';
 
-  // v5.37: insere no topo (logo abaixo do header) em vez de no fim — mais recente em cima
-  // v5.71: sob lock — insertRowBefore + setValues não são atômicos juntos, e dois
-  // check-ins simultâneos faziam um sobrescrever o outro.
-  const lock = LockService.getScriptLock();
-  try {
-    lock.waitLock(30000);
-  } catch (e) {
-    throw new Error('Sistema ocupado gravando outro check-in. Tente de novo em instantes.');
-  }
-  try {
-    insertRowAt_(sheet, 2, row);
-    SpreadsheetApp.flush();  // garante a escrita antes de soltar o lock
-  } finally {
-    lock.releaseLock();
-  }
+  // v5.73: appendRow no lugar de insertRowBefore(2) sob lock.
+  //
+  // POR QUE MUDOU — o desenho anterior era a causa de "não consigo bater ponto".
+  // O insertRowBefore(2) desloca a planilha INTEIRA a cada gravação (a aba só
+  // cresce: ~70 motoristas × 1 ano ≈ 18 mil linhas), e precisava de lock porque
+  // insertRowBefore + setValues não são atômicos juntos.
+  //
+  // Só que LockService.getScriptLock() é ÚNICO pro script todo — o MESMO lock que
+  // o getTkmReport_ segura por ~45s montando relatório. Consequências:
+  //   • qualquer acesso ao portal derrubava o check-in de todos os motoristas
+  //     com "Sistema ocupado" (o waitLock deles estoura em 30s);
+  //   • e mesmo sem relatório, os check-ins se serializavam entre si — 70
+  //     motoristas de manhã viravam uma fila de 70, um por vez;
+  //   • com todo mundo esperando, as execuções se acumulavam e estouravam o
+  //     teto de 30 execuções simultâneas do Apps Script.
+  //
+  // appendRow é atômico e O(1): sem lock, sem fila, sem disputar com o relatório.
+  //
+  // O que se perde: o mais recente passa a entrar EMBAIXO (a v5.37 tinha posto
+  // em cima). Ninguém depende dessa ordem — os leitores ordenam por timestamp
+  // (ver getDriverHistory) e o saveCheckout já varre de baixo pra cima, então
+  // agora acha a linha de hoje mais rápido e pega a mais recente se houver
+  // duplicata.
+  sheet.appendRow(row);
 
   // Só marca como gravado depois que a linha entrou de verdade: se algo acima
   // falhar, o reenvio do motorista ainda precisa funcionar.

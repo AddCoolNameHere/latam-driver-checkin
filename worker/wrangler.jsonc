@@ -17,13 +17,25 @@
     { "binding": "CACHE", "id": "628377b6b2e64248b062a182a3330762" }
   ],
 
+  // Fila de check-in. O POST do motorista é aceito aqui em ~50ms e um dreno
+  // empurra pra planilha em segundo plano, um de cada vez.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "latamace-checkins",
+      "database_id": "a17ab609-6b93-4c3b-b039-268ae661b62b"
+    }
+  ],
+
   // Dois crons, e a diferença entre eles importa (ver WARM_* no src/index.js):
   //   "0 * * * *"  → de hora em hora, só getClientWeeks, que NÃO pega lock.
   //   "30 5 * * *" → 02:30 BRT, inclui getClientMetrics, que compartilha o
   //                  LockService com o saveCheckin e trava o check-in dos
   //                  motoristas por ~45s a cada chamada. Só fora do pico.
+  // O de 2 em 2 min é a rede de segurança da fila de check-in: se o dreno
+  // disparado no próprio POST falhar (Apps Script fora), esse pega depois.
   "triggers": {
-    "crons": ["0 * * * *", "30 5 * * *"]
+    "crons": ["*/2 * * * *", "0 * * * *", "30 5 * * *"]
   },
 
   "observability": {

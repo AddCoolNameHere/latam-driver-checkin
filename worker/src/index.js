@@ -1,29 +1,30 @@
 /**
- * api.latamace.com — cache na frente do Apps Script.
+ * latamace.com/api* — camada de borda na frente do Apps Script.
  *
- * O PROBLEMA QUE ISSO RESOLVE
- * O backend é Apps Script lendo a mastersheet com getDataRange() (aba inteira
- * na memória a cada request). Medido: getClientMetrics ALL = 44-57s,
- * getClientWeeks = 56s. Some a isso o teto de 6 min, cold start e o
- * LockService serializando o relatório TKM. Quem pagava essa conta era o
- * visitante da página.
+ * Faz duas coisas independentes:
  *
- * COMO
- * Stale-while-revalidate. Se tem cópia no KV, ela é servida NA HORA — mesmo
- * vencida — e a atualização acontece depois da resposta, no waitUntil. O
- * usuário só espera na primeiríssima vez que uma chave é pedida, e nem isso
- * na prática, porque o cron pré-aquece as chaves quentes de 15 em 15 min.
+ * 1) LEITURA (GET) — cache em KV com stale-while-revalidate.
+ *    O Apps Script lê a mastersheet com getDataRange() (aba inteira na memória
+ *    a cada request): getClientMetrics ALL = 44-57s, getClientWeeks = 56s.
+ *    Com cópia no KV a resposta sai em ~100ms, e mesmo vencida ela é servida na
+ *    hora enquanto a atualização roda no waitUntil, depois da resposta.
  *
- * Nunca fica pior que hoje: qualquer erro (KV, upstream, timeout) cai no
- * proxy direto pro Apps Script, que é exatamente o que as páginas fazem hoje.
+ * 2) ESCRITA (POST de check-in) — fila em D1.
+ *    O motorista era quem esperava o Apps Script gravar na planilha, e no pico
+ *    da manhã simplesmente não conseguia. Agora o check-in é aceito aqui em
+ *    ~50ms, vai pro D1, e um dreno em segundo plano empurra pra planilha um de
+ *    cada vez. 70 motoristas simultâneos é irrelevante pro Worker, e o check-in
+ *    continua funcionando mesmo com o Apps Script fora do ar.
  *
- * NÃO cacheia POST — os check-ins dos motoristas passam direto.
+ * Princípio dos dois: nunca ficar pior que antes. Qualquer falha (KV, D1,
+ * upstream) cai no proxy direto pro Apps Script, que é o que as páginas
+ * faziam originalmente.
  */
 
 /** Vai no header X-Worker-Build de toda resposta. Serve pra saber, olhando o
  *  curl, qual versão está realmente no ar — a API de deploy já disse "ok" pra
  *  uma versão que não era a que estava respondendo. */
-const BUILD = '6';
+const BUILD = '7';
 
 const UPSTREAM = 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec';
 
@@ -39,22 +40,26 @@ const FRESH_SECONDS = 30 * 60;
 const KV_TTL_SECONDS = 24 * 60 * 60;
 
 /**
+ * Leituras que NÃO podem ser cacheadas: são por motorista e mudam quando ele
+ * mesmo salva algo. Cachear a base por 30min faria o motorista atualizar a
+ * base e continuar vendo a antiga na tela do check-in.
+ */
+const SEM_CACHE = ['getbase', 'getlastarea', 'getdriverssds', 'getdashboarddata'];
+
+/**
  * ⚠ O QUE PODE SER REAQUECIDO E QUANDO — leia antes de mexer.
  *
- * O saveCheckin e o getTkmReport_ usam o MESMO LockService.getScriptLock(),
- * que no Apps Script é um lock único pro script inteiro. Enquanto o relatório
- * é montado (~45s), NENHUM motorista consegue bater ponto: o waitLock(30000)
- * deles estoura e devolve "Sistema ocupado".
+ * Até a v5.72 o saveCheckin e o getTkmReport_ usavam o MESMO
+ * LockService.getScriptLock(), que no Apps Script é um lock único pro script
+ * inteiro — qualquer acesso ao portal travava o check-in de todos os motoristas
+ * por ~45s. A v5.73 tirou o lock do saveCheckin (virou appendRow), mas o
+ * getTkmReport_ continua segurando esse lock, então ainda vale não sair
+ * chamando getClientMetrics no pico.
  *
- * Ou seja: toda chamada de getClientMetrics trava o check-in por ~45s.
- *
- * Por isso o warm é dividido:
- *   LEVE  — getClientWeeks lê a RAW CTS direto, NÃO pega lock. Pode rodar
- *           de hora em hora sem incomodar ninguém.
- *   PESADO— getClientMetrics passa pelo getTkmReport_ e trava check-in.
- *           Roda 1×/dia de madrugada (05:30 UTC = 02:30 BRT), fora do pico.
- *           No resto do dia essas chaves se resolvem pelo stale-while-
- *           revalidate, ou seja, só quando alguém abre o portal de verdade.
+ *   LEVE   — getClientWeeks lê a RAW CTS direto, NÃO pega lock. De hora em hora.
+ *   PESADO — getClientMetrics passa pelo getTkmReport_. 1×/dia, 02:30 BRT.
+ *            No resto do dia essas chaves se resolvem pelo stale-while-
+ *            revalidate, ou seja, só quando alguém abre o portal de verdade.
  */
 const WARM_LEVE = [
   'action=getClientWeeks&weeks=10',
@@ -70,7 +75,15 @@ const WARM_PESADO = [
   'action=getClientMetrics&country=Peru',
 ];
 
+const CRON_DRENO  = '*/2 * * * *';
+const CRON_LEVE   = '0 * * * *';
 const CRON_PESADO = '30 5 * * *';
+
+/** Quantos check-ins o dreno tenta por rodada. Sequencial de propósito. */
+const DRENO_LOTE = 10;
+
+/** Depois disso a linha vira 'failed' e para de tentar sozinha. */
+const MAX_TENTATIVAS = 5;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -131,6 +144,87 @@ function json(body, extra) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// FILA DE CHECK-IN (D1)
+// ---------------------------------------------------------------------------
+
+/**
+ * Empurra check-ins pendentes pra planilha, UM DE CADA VEZ.
+ *
+ * Sequencial não é preguiça: o Apps Script tem teto de 30 execuções simultâneas
+ * e o getTkmReport_ ainda segura o lock global. Mandar em paralelo recria
+ * exatamente o congestionamento que essa fila existe pra evitar.
+ *
+ * O UPDATE ... WHERE status='pending' é o que impede dois drenos concorrentes
+ * (cron + waitUntil de um POST) de mandarem a mesma linha duas vezes.
+ */
+async function drenar(env, limite) {
+  let enviados = 0;
+  const pend = await env.DB.prepare(
+    `SELECT id, payload, attempts FROM checkin_queue
+      WHERE status = 'pending' ORDER BY id LIMIT ?1`
+  ).bind(limite).all();
+
+  for (const row of (pend.results || [])) {
+    const claim = await env.DB.prepare(
+      `UPDATE checkin_queue SET status='sending', attempts=attempts+1
+        WHERE id=?1 AND status='pending'`
+    ).bind(row.id).run();
+    if (!claim.meta || claim.meta.changes === 0) continue;   // outro dreno pegou
+
+    try {
+      const res = await fetch(UPSTREAM, {
+        method: 'POST',
+        body: row.payload,
+        redirect: 'follow',
+      });
+      const txt = await res.text();
+      let ok = res.ok;
+      try { ok = ok && JSON.parse(txt).success === true; } catch (e) { ok = false; }
+      if (!ok) throw new Error(txt.slice(0, 300));
+
+      await env.DB.prepare(
+        `UPDATE checkin_queue SET status='written', written_at=?1, last_error=NULL WHERE id=?2`
+      ).bind(Date.now(), row.id).run();
+      enviados++;
+    } catch (e) {
+      // Esgotou as tentativas: para de tentar sozinho e fica visível no
+      // ?action=filaCheckin pra alguém olhar. O dado NÃO se perde.
+      const desiste = (row.attempts + 1) >= MAX_TENTATIVAS;
+      await env.DB.prepare(
+        `UPDATE checkin_queue SET status=?1, last_error=?2 WHERE id=?3`
+      ).bind(desiste ? 'failed' : 'pending', String(e).slice(0, 500), row.id).run();
+    }
+  }
+  return enviados;
+}
+
+/** Diagnóstico da fila, pro time saber se algo ficou preso. */
+async function statusFila(env) {
+  const contagem = await env.DB.prepare(
+    `SELECT status, COUNT(*) AS n FROM checkin_queue GROUP BY status`
+  ).all();
+  const presos = await env.DB.prepare(
+    `SELECT id, driver_email, received_at, attempts, last_error
+       FROM checkin_queue WHERE status='failed' ORDER BY id DESC LIMIT 20`
+  ).all();
+  const antigo = await env.DB.prepare(
+    `SELECT MIN(received_at) AS t FROM checkin_queue WHERE status='pending'`
+  ).all();
+
+  const porStatus = {};
+  (contagem.results || []).forEach((r) => { porStatus[r.status] = r.n; });
+  const maisAntigo = antigo.results && antigo.results[0] && antigo.results[0].t;
+
+  return {
+    success: true,
+    build: BUILD,
+    porStatus: porStatus,
+    pendenteMaisAntigoSeg: maisAntigo ? Math.round((Date.now() - maisAntigo) / 1000) : null,
+    falhados: presos.results || [],
+  };
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -139,31 +233,85 @@ export default {
       return new Response(null, { status: 204, headers: CORS });
     }
 
-    // Não há endpoint /health de propósito: tentei um e ele nunca disparou
-    // atrás da rota latamace.com/api*, mesmo com o código comprovadamente
-    // deployado (conferido pelo X-Worker-Build). Em vez de deixar um health
-    // check que mente, o diagnóstico é o header X-Worker-Build, que vai em
-    // TODA resposta, mais o `build` no corpo do erro de chamada inválida.
+    // Não há endpoint /health: tentei um e ele nunca disparou atrás da rota
+    // latamace.com/api*, mesmo com o código comprovadamente deployado
+    // (conferido pelo X-Worker-Build). Em vez de um health check que mente, o
+    // diagnóstico é o X-Worker-Build (em toda resposta) e o ?action=filaCheckin.
 
-    // Escrita (check-in, saves) passa direto — nada de cache no caminho.
-    if (request.method !== 'GET') {
+    // ---- ESCRITA ----
+    if (request.method === 'POST') {
+      const raw = await request.text();
+      let data = null;
+      try { data = JSON.parse(raw); } catch (e) { /* segue pro passthrough */ }
+
+      if (data && data.type === 'checkin') {
+        try {
+          // INSERT OR IGNORE + submission_id UNIQUE = reenvio do mesmo
+          // formulário não duplica. O front já manda submissionId desde a v5.71.
+          await env.DB.prepare(
+            `INSERT OR IGNORE INTO checkin_queue
+               (submission_id, tipo, payload, driver_email, received_at)
+             VALUES (?1, ?2, ?3, ?4, ?5)`
+          ).bind(
+            data.submissionId || null,
+            'checkin',
+            raw,
+            data.driverEmail || null,
+            Date.now()
+          ).run();
+
+          // Tenta escoar já, mas DEPOIS de responder — o motorista não espera.
+          ctx.waitUntil(drenar(env, DRENO_LOTE).catch(() => {}));
+
+          return json(JSON.stringify({
+            success: true,
+            message: 'Check-in recebido',
+            queued: true,
+          }), { 'X-Checkin': 'QUEUED' });
+        } catch (e) {
+          // D1 fora do ar → manda direto pro Apps Script, como era antes.
+          console.log('[fila] D1 falhou, caindo pro upstream: ' + e);
+        }
+      }
+
+      // checkout, base e qualquer outro POST seguem direto.
       return fetch(upstreamUrl(url.search), {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
+        method: 'POST',
+        body: raw,
+        headers: { 'Content-Type': request.headers.get('Content-Type') || 'text/plain' },
         redirect: 'follow',
       });
     }
 
-    // Exige `action`. Sem isso qualquer query solta (?x=1) era proxiada pro
-    // Apps Script e o que voltasse ia parar no KV por 24h — lixo cacheado
-    // ocupando espaço e mascarando erro de chamada.
+    // ---- LEITURA ----
     const search = url.search.replace(/^\?/, '');
-    if (!url.searchParams.get('action')) {
+    const action = url.searchParams.get('action');
+    if (!action) {
       return json(
         JSON.stringify({ error: 'faltou o parâmetro action (ex: /api?action=getClientWeeks)', build: BUILD }),
         { 'X-Cache': 'NONE' }
       );
+    }
+
+    // Diagnóstico da fila — respondido aqui, não vai pro Apps Script.
+    if (action === 'filaCheckin') {
+      try {
+        return json(JSON.stringify(await statusFila(env)), { 'X-Cache': 'NONE' });
+      } catch (e) {
+        return json(JSON.stringify({ success: false, error: String(e) }), { 'X-Cache': 'NONE' });
+      }
+    }
+
+    // Leitura por motorista: sempre fresca (ver SEM_CACHE).
+    if (SEM_CACHE.indexOf(action.toLowerCase()) >= 0) {
+      const res = await fetch(upstreamUrl(search), { redirect: 'follow' });
+      return new Response(res.body, {
+        status: res.status,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'X-Worker-Build': BUILD, ...CORS, 'X-Cache': 'SEM-CACHE',
+        },
+      });
     }
 
     const key = cacheKey(url);
@@ -196,7 +344,7 @@ export default {
       const body = await refresh(env, key, search);
       return json(body, { 'X-Cache': bypass ? 'BYPASS' : 'MISS' });
     } catch (e) {
-      // Última tentativa: proxy cru, igual ao que as páginas fazem hoje.
+      // Última tentativa: proxy cru, igual ao que as páginas faziam antes.
       const res = await fetch(upstreamUrl(search), { redirect: 'follow' });
       return new Response(res.body, {
         status: res.status,
@@ -206,21 +354,25 @@ export default {
   },
 
   /**
-   * Cron: reaquece as chaves caras, UMA POR VEZ.
-   *
-   * Sequencial não é preguiça — em paralelo não funciona. O getTkmReport_ usa
-   * LockService, então as chamadas se serializam do lado do Apps Script de
-   * qualquer jeito, e o excesso de execuções simultâneas faz o Apps Script
-   * devolver erro/HTML em vez de JSON. Medido: as 8 em paralelo deram PASSTHRU
-   * nas 8 (nenhuma cacheou). É a mesma conclusão que o
-   * .github/scripts/fetch-cts-data.mjs já tinha documentado.
-   *
-   * Custo: ~5-7 min de relógio por execução, dentro do teto de 15 min do cron,
-   * e sem ninguém esperando por isso.
+   * Três crons, com pesos diferentes (ver comentário do WARM_*):
+   *   CRON_DRENO  (2 em 2 min) — só drena a fila de check-in. É a rede de
+   *                              segurança pro caso do waitUntil do POST ter
+   *                              falhado (Apps Script fora, por exemplo).
+   *   CRON_LEVE   (de hora em hora) — drena + reaquece o que não pega lock.
+   *   CRON_PESADO (02:30 BRT) — drena + reaquece tudo, longe do pico.
    */
   async scheduled(event, env, ctx) {
-    // O cron da madrugada faz leve + pesado; os de hora em hora só o leve,
-    // pra não travar o check-in dos motoristas (ver comentário do WARM_*).
+    // O dreno roda SEMPRE, em qualquer cron: é o que não pode atrasar.
+    let enviados = 0;
+    try {
+      enviados = await drenar(env, DRENO_LOTE * 3);
+    } catch (e) {
+      console.log('[fila] dreno falhou: ' + e);
+    }
+    if (enviados) console.log('[fila] ' + enviados + ' check-ins gravados na planilha');
+
+    if (event.cron === CRON_DRENO) return;
+
     const pesado = event.cron === CRON_PESADO;
     const lista = pesado ? WARM_LEVE.concat(WARM_PESADO) : WARM_LEVE;
 

@@ -13,7 +13,14 @@
 <script>
   // Dispara o fetch dos drivers o quanto antes (antes do Leaflet/CSS),
   // pra ida-e-volta ao Apps Script rodar em paralelo com o resto do load.
-  window.__SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec';
+  // Em produção passa pelo Worker (latamace.com/api*). O POST do check-in cai
+  // numa fila em D1 e volta em ~50ms — o motorista não espera mais o Apps
+  // Script gravar na planilha (era isso que travava no pico da manhã). Um dreno
+  // em segundo plano empurra pra planilha um de cada vez.
+  // Fora de latamace.com (preview local) vai direto, senão /api não existiria.
+  window.__SCRIPT_URL = location.hostname.endsWith('latamace.com')
+    ? '/api'
+    : 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec';
   try {
     window.__driversFetch = fetch(window.__SCRIPT_URL + '?action=getDrivers')
       .then(function (r) { return r.json(); })
