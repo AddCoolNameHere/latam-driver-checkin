@@ -24,7 +24,7 @@
 /** Vai no header X-Worker-Build de toda resposta. Serve pra saber, olhando o
  *  curl, qual versão está realmente no ar — a API de deploy já disse "ok" pra
  *  uma versão que não era a que estava respondendo. */
-const BUILD = '7';
+const BUILD = '9';
 
 const UPSTREAM = 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec';
 
@@ -84,6 +84,38 @@ const DRENO_LOTE = 10;
 
 /** Depois disso a linha vira 'failed' e para de tentar sozinha. */
 const MAX_TENTATIVAS = 5;
+
+/**
+ * Teto pra UMA tentativa de gravar na planilha. Sem isso o fetch fica pendurado
+ * esperando o Apps Script (que pode passar de 90s quando o getTkmReport_ está
+ * segurando o lock), o waitUntil do Worker é cortado no meio, e a linha fica
+ * marcada 'sending' PARA SEMPRE — o dreno só busca 'pending'.
+ * Aconteceu em produção: 2 check-ins reais ficaram 42 min presos assim.
+ */
+const ENVIO_TIMEOUT_MS = 45000;
+
+/**
+ * Linha em 'sending' há mais que isso é considerada abandonada (o Worker que a
+ * reivindicou morreu antes de terminar) e volta pra fila. É a rede de segurança
+ * do ENVIO_TIMEOUT_MS: mesmo que o Worker seja morto sem executar o catch,
+ * a próxima rodada do cron recupera.
+ */
+const SENDING_ABANDONADO_MS = 5 * 60 * 1000;
+
+/**
+ * Janela pra considerar dois envios do MESMO motorista como toque repetido.
+ *
+ * O submission_id UNIQUE só pega o retry do postWithRetry, que reusa o mesmo id.
+ * Não pega o motorista batendo no botão várias vezes: cada toque monta um
+ * payload novo, com submissionId novo. Visto em produção no primeiro dia:
+ * Maximiliano mandou 2 em 0,21s e Ronaldo mandou 4 dentro de 1 segundo — antes
+ * da fila isso já gerava linhas repetidas na planilha, só que ninguém via.
+ *
+ * 90s é curto de propósito: pega toque repetido (que acontece em segundos) sem
+ * bloquear um check-in refeito de propósito minutos depois, que é legítimo.
+ * O payload do repetido NÃO é descartado — fica no D1 com status 'duplicate'.
+ */
+const JANELA_TOQUE_REPETIDO_MS = 90 * 1000;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -160,6 +192,20 @@ function json(body, extra) {
  */
 async function drenar(env, limite) {
   let enviados = 0;
+
+  // Resgata linhas abandonadas ANTES de escolher o que enviar: se o Worker que
+  // reivindicou uma linha morreu no meio (Apps Script lento + waitUntil cortado),
+  // ela ficaria 'sending' pra sempre e o check-in do motorista nunca chegaria
+  // na planilha. Aconteceu de verdade — ver comentário do SENDING_ABANDONADO_MS.
+  try {
+    await env.DB.prepare(
+      `UPDATE checkin_queue SET status='pending'
+        WHERE status='sending' AND received_at < ?1`
+    ).bind(Date.now() - SENDING_ABANDONADO_MS).run();
+  } catch (e) {
+    console.log('[fila] resgate de abandonados falhou: ' + e);
+  }
+
   const pend = await env.DB.prepare(
     `SELECT id, payload, attempts FROM checkin_queue
       WHERE status = 'pending' ORDER BY id LIMIT ?1`
@@ -172,11 +218,14 @@ async function drenar(env, limite) {
     ).bind(row.id).run();
     if (!claim.meta || claim.meta.changes === 0) continue;   // outro dreno pegou
 
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), ENVIO_TIMEOUT_MS);
     try {
       const res = await fetch(UPSTREAM, {
         method: 'POST',
         body: row.payload,
         redirect: 'follow',
+        signal: ctrl.signal,
       });
       const txt = await res.text();
       let ok = res.ok;
@@ -194,6 +243,8 @@ async function drenar(env, limite) {
       await env.DB.prepare(
         `UPDATE checkin_queue SET status=?1, last_error=?2 WHERE id=?3`
       ).bind(desiste ? 'failed' : 'pending', String(e).slice(0, 500), row.id).run();
+    } finally {
+      clearTimeout(timer);
     }
   }
   return enviados;
@@ -246,18 +297,36 @@ export default {
 
       if (data && data.type === 'checkin') {
         try {
-          // INSERT OR IGNORE + submission_id UNIQUE = reenvio do mesmo
-          // formulário não duplica. O front já manda submissionId desde a v5.71.
+          const email = data.driverEmail || '';
+
+          // Duas proteções contra linha repetida na planilha:
+          //  1) submission_id UNIQUE + INSERT OR IGNORE → pega o retry do
+          //     postWithRetry, que reusa o mesmo id.
+          //  2) janela por motorista → pega o toque repetido no botão, que
+          //     gera submissionId novo a cada vez (ver JANELA_TOQUE_REPETIDO_MS).
+          let repetido = false;
+          if (email) {
+            const recente = await env.DB.prepare(
+              `SELECT id FROM checkin_queue
+                WHERE driver_email = ?1 AND received_at > ?2
+                  AND status IN ('pending','sending','written')
+                LIMIT 1`
+            ).bind(email, Date.now() - JANELA_TOQUE_REPETIDO_MS).all();
+            repetido = (recente.results || []).length > 0;
+          }
+
           await env.DB.prepare(
             `INSERT OR IGNORE INTO checkin_queue
-               (submission_id, tipo, payload, driver_email, received_at)
-             VALUES (?1, ?2, ?3, ?4, ?5)`
+               (submission_id, tipo, payload, driver_email, received_at, status, last_error)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`
           ).bind(
             data.submissionId || null,
             'checkin',
             raw,
-            data.driverEmail || null,
-            Date.now()
+            email || null,
+            Date.now(),
+            repetido ? 'duplicate' : 'pending',
+            repetido ? 'toque repetido: ja havia check-in desse motorista na janela' : null
           ).run();
 
           // Tenta escoar já, mas DEPOIS de responder — o motorista não espera.
