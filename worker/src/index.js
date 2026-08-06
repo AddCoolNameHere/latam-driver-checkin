@@ -232,8 +232,13 @@ async function drenar(env, limite) {
       try { ok = ok && JSON.parse(txt).success === true; } catch (e) { ok = false; }
       if (!ok) throw new Error(txt.slice(0, 300));
 
+      // AND status='sending' é essencial: sem isso, uma linha reclassificada à
+      // mão (ex.: marcada 'duplicate' pelo time enquanto o envio estava em voo)
+      // era silenciosamente revertida pra 'written' quando o fetch terminava.
+      // Aconteceu no primeiro dia — o registro do estado ficava mentindo.
       await env.DB.prepare(
-        `UPDATE checkin_queue SET status='written', written_at=?1, last_error=NULL WHERE id=?2`
+        `UPDATE checkin_queue SET status='written', written_at=?1, last_error=NULL
+          WHERE id=?2 AND status='sending'`
       ).bind(Date.now(), row.id).run();
       enviados++;
     } catch (e) {
@@ -241,7 +246,8 @@ async function drenar(env, limite) {
       // ?action=filaCheckin pra alguém olhar. O dado NÃO se perde.
       const desiste = (row.attempts + 1) >= MAX_TENTATIVAS;
       await env.DB.prepare(
-        `UPDATE checkin_queue SET status=?1, last_error=?2 WHERE id=?3`
+        `UPDATE checkin_queue SET status=?1, last_error=?2
+          WHERE id=?3 AND status='sending'`
       ).bind(desiste ? 'failed' : 'pending', String(e).slice(0, 500), row.id).run();
     } finally {
       clearTimeout(timer);
