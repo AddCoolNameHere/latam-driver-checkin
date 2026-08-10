@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-08-10T10:30:05.583Z",
+  "generatedAt": "2026-08-10T15:16:32.997Z",
   "month": 8,
   "year": 2026,
   "countries": [
     {
       "country": "ALL",
       "slug": "all",
-      "drivers": 69
+      "drivers": 68
     },
     {
       "country": "Argentina",
@@ -16,12 +16,12 @@
     {
       "country": "Brazil",
       "slug": "brazil",
-      "drivers": 33
+      "error": "This operation was aborted"
     },
     {
       "country": "Chile",
       "slug": "chile",
-      "drivers": 4
+      "error": "sistema ocupado gerando outro relatório, tenta de novo em instantes"
     },
     {
       "country": "Colombia",
@@ -41,7 +41,7 @@
   ],
   "weeks": {
     "count": 10,
-    "latest": "2026-W31",
-    "oldest": "2026-W22"
+    "latest": "2026-W32",
+    "oldest": "2026-W23"
   }
 }
