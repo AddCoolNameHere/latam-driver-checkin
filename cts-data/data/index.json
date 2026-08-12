@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-12T10:18:16.247Z",
-  "month": 8,
+  "generatedAt": "2026-08-12T15:11:37.996Z",
+  "month": 7,
   "year": 2026,
   "countries": [
     {
@@ -41,7 +41,7 @@
   ],
   "weeks": {
     "count": 10,
-    "latest": "2026-W32",
-    "oldest": "2026-W23"
+    "latest": "2026-W33",
+    "oldest": "2026-W24"
   }
 }
