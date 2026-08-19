@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.73',
+        version: 'v5.74',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -1275,10 +1275,20 @@ function getCurrentMonthKey_() {
 }
 
 /**
- * Status que contam como "trabalhando produtivo" (gera TKM).
- * Outros (Personal, Mech, Tech, Weather, Disks, Travelling, Holiday) são idle.
+ * v5.74: o export novo da RAW CTS marca o status com seta e às vezes
+ * asterisco/minúsculas ('⬆Mapping', '⬆*mech.', '⬇Tech.'). Se o dia mapeou,
+ * quem decide é isCtsMappingDay_ (a seta manda). Este helper só normaliza o
+ * texto pro bucket canônico de idle ('Mech.', 'Tech.', ...) das contagens.
  */
-const PRODUCTIVE_STATUSES = ['Mapping'];
+function normalizeRawCtsStatus_(raw) {
+  const s = String(raw || '').replace(/^[^A-Za-z]+/, '').replace(/[.\s]+$/, '').toLowerCase();
+  const MAP = {
+    mapping: 'Mapping', personal: 'Personal', mech: 'Mech.', tech: 'Tech.',
+    weather: 'Weather', disks: 'Disks', disk: 'Disks',
+    travelling: 'Travelling', traveling: 'Travelling', holiday: 'Holiday',
+  };
+  return MAP[s] || 'Other';
+}
 
 /**
  * Lê toda a aba RAW CTS DATA e retorna um índice agregado.
@@ -1355,6 +1365,7 @@ function buildRawCtsIndex_() {
         idleDays: { Personal: 0, 'Mech.': 0, 'Tech.': 0, Weather: 0, Disks: 0, Travelling: 0, Holiday: 0, Other: 0, total: 0 },
         billableHours: 0,
         days: [],
+        _dayAgg: {},   // v5.74: agregação por dia (fechada no fim do build)
       };
     }
 
@@ -1379,16 +1390,38 @@ function buildRawCtsIndex_() {
       if (vidStr && monthData.vids.indexOf(vidStr) < 0) monthData.vids.push(vidStr);
     }
 
-    if (PRODUCTIVE_STATUSES.indexOf(status) >= 0) {
-      monthData.mappingDays++;
-    } else {
-      // Categoriza idle pelos buckets conhecidos
-      const bucket = monthData.idleDays.hasOwnProperty(status) ? status : 'Other';
-      monthData.idleDays[bucket]++;
-      monthData.idleDays.total++;
+    // v5.74: o export novo tem mais de uma linha por dia (swarm e churn
+    // separados) e o status vem com seta — contar LINHA inflava mappingDays
+    // (Jailson: 22 "dias" no dia 19 do mês). Agrega por DIA e fecha no fim.
+    const dayKey = date || ('row-' + i);
+    if (!monthData._dayAgg[dayKey]) monthData._dayAgg[dayKey] = { mapped: false, idleBucket: null };
+    const dayAgg = monthData._dayAgg[dayKey];
+    if (isCtsMappingDay_(status, hours, tkm)) dayAgg.mapped = true;
+    if (!dayAgg.idleBucket) {
+      const bucket = normalizeRawCtsStatus_(status);
+      if (bucket !== 'Mapping' && bucket !== 'Other') dayAgg.idleBucket = bucket;
     }
 
     monthData.days.push({ date, tkm, km, status, billableHours: hours });
+  }
+
+  // v5.74: fecha a contagem por dia — mappingDays = dias distintos em que
+  // alguma linha contou como mapeada (isCtsMappingDay_); dia sem nada vira
+  // idle no bucket do status normalizado.
+  for (const em in index) {
+    for (const mo in index[em]) {
+      const md = index[em][mo];
+      for (const dk in md._dayAgg) {
+        const day = md._dayAgg[dk];
+        if (day.mapped) {
+          md.mappingDays++;
+        } else {
+          md.idleDays[day.idleBucket || 'Other']++;
+          md.idleDays.total++;
+        }
+      }
+      delete md._dayAgg;
+    }
   }
 
   _rawCtsCache = index;
@@ -5524,14 +5557,29 @@ function getActiveCarCountByCountry_(monthKey) {
     const vidIdx = findHeader_(h, ['VID', 'vehicle_id']);
     const countryIdx = findHeader_(h, ['country', 'country_code']);
     const statusIdx = findHeader_(h, ['Status', 'status']);
+    const dateIdx = findHeader_(h, ['drive_date']);
+    const tkmIdx = findHeader_(h, ['TKM']);
+    const hoursIdx = findHeader_(h, ['Billable Hours', 'Billable CTS Hours']);
     if (monthIdx < 0 || vidIdx < 0) return out;
-    const byVid = {}; // vid → { country, days }
+    const byVid = {}; // vid → { country, days, _dates }
     for (let i = 1; i < data.length; i++) {
       if (String(data[i][monthIdx] || '') !== monthKey) continue;
       const vid = String(data[i][vidIdx] || '').trim();
       if (!vid) continue;
-      if (!byVid[vid]) byVid[vid] = { country: countryIdx >= 0 ? String(data[i][countryIdx] || '').trim() : '', days: 0 };
-      if (PRODUCTIVE_STATUSES.indexOf(data[i][statusIdx]) >= 0) byVid[vid].days++;
+      if (!byVid[vid]) byVid[vid] = { country: countryIdx >= 0 ? String(data[i][countryIdx] || '').trim() : '', days: 0, _dates: {} };
+      // v5.74: status vem com seta ('⬆Mapping') e pode haver 2 linhas por dia
+      // (swarm + churn) — decide com isCtsMappingDay_ e conta o DIA uma vez só.
+      const dk = dateIdx >= 0 ? String(data[i][dateIdx] || ('row-' + i)) : ('row-' + i);
+      if (byVid[vid]._dates[dk]) continue;
+      const mapped = isCtsMappingDay_(
+        data[i][statusIdx],
+        hoursIdx >= 0 ? data[i][hoursIdx] : 0,
+        tkmIdx >= 0 ? data[i][tkmIdx] : 0
+      );
+      if (mapped) {
+        byVid[vid]._dates[dk] = true;
+        byVid[vid].days++;
+      }
     }
     for (const v in byVid) {
       if (byVid[v].days > ACTIVE_CAR_MIN_MAPPING_DAYS_) {
@@ -5865,6 +5913,8 @@ function getTkmReport_(month, year, country) {
           tkmChurn: dIx.tkmChurn >= 0 ? safeNumber(row[dIx.tkmChurn]) : 0,
           kmChurn: dIx.kmChurn >= 0 ? safeNumber(row[dIx.kmChurn]) : 0,
           churnDays: dIx.churnDays >= 0 ? safeNumber(row[dIx.churnDays]) : 0,
+          // v5.74: dias distintos mapeados no mês (RAW CTS); null sem linha viva
+          mappingDaysLive: liveMd ? safeNumber(liveMd.mappingDays) : null,
         });
       }
     }
@@ -6232,7 +6282,9 @@ function getClientMetrics_(month, year, country) {
         churnDays: safeNumber(d.churnDays),
         swarmPct: typed > 0 ? tkmSwarm / typed : 0,
         churnPct: typed > 0 ? tkmChurn / typed : 0,
-        mappingDays: safeNumber(d.swarmDays) + safeNumber(d.churnDays),
+        // v5.74: dias distintos do RAW CTS. A soma "Swarm Days"+"Churn Days"
+        // da aba conta dobrado o dia com os dois tipos (dava 22 no dia 19).
+        mappingDays: d.mappingDaysLive != null ? d.mappingDaysLive : safeNumber(d.swarmDays) + safeNumber(d.churnDays),
         vids: d.vids || [],
         vidCount: (d.vids || []).length,
       };
