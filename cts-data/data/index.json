@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-08-18T14:44:36.910Z",
+  "generatedAt": "2026-08-19T09:46:28.599Z",
   "month": 8,
   "year": 2026,
   "countries": [
     {
       "country": "ALL",
       "slug": "all",
-      "drivers": 66
+      "drivers": 65
     },
     {
       "country": "Argentina",
@@ -16,7 +16,7 @@
     {
       "country": "Brazil",
       "slug": "brazil",
-      "drivers": 32
+      "error": "HTTP 404"
     },
     {
       "country": "Chile",
@@ -31,7 +31,7 @@
     {
       "country": "México",
       "slug": "mexico",
-      "drivers": 16
+      "drivers": 15
     },
     {
       "country": "Peru",
@@ -40,8 +40,6 @@
     }
   ],
   "weeks": {
-    "count": 10,
-    "latest": "2026-W33",
-    "oldest": "2026-W24"
+    "error": "HTTP 404"
   }
 }
