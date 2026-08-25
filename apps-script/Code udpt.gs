@@ -284,7 +284,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.74',
+        version: 'v5.75',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -5898,6 +5898,7 @@ function getTkmReport_(month, year, country) {
         drivers.push({
           name: dName,
           country: dCountry,
+          email: dEmail,   // v5.75: uso interno (lookup de base) — NÃO expor no portal
           qcScore: safeNumber(row[dIx.qc]),              // QC Score — FICA da aba
           tkm: tkm,                                      // v5.52: TKM (RAW CTS, fallback aba)
           kmDriven: kmDriven,
@@ -6225,6 +6226,37 @@ function getHrDriverCountsByCountry_(includeOffboarding) {
   return out;
 }
 
+/**
+ * v5.75: tipo de base ATUAL por motorista (Driver Base Location, linha mais
+ * recente por email). "Em modo hotel" = type 'Hotel' — mesma definição do
+ * card EM HOTEL MODE do weekly email. Cache por request (aba cresce sempre).
+ * @return {Object} emailLower → 'Home' | 'Hotel' | 'Mixed' | ''
+ */
+let _baseTypeCache = null;
+function getBaseTypeByEmail_() {
+  if (_baseTypeCache) return _baseTypeCache;
+  const out = {};
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = ss.getSheetByName(CONFIG.baseSheet);
+    if (sheet && sheet.getLastRow() > 1) {
+      const data = sheet.getDataRange().getValues();
+      const latestTs = {};
+      for (let i = 1; i < data.length; i++) {
+        const email = String(data[i][1] || '').trim().toLowerCase();
+        if (!email) continue;
+        const ts = data[i][0];
+        if (!latestTs[email] || ts > latestTs[email]) {
+          latestTs[email] = ts;
+          out[email] = String(data[i][3] || '').trim();
+        }
+      }
+    }
+  } catch (e) { Logger.log('getBaseTypeByEmail_ erro: ' + e); }
+  _baseTypeCache = out;
+  return out;
+}
+
 function getClientMetrics_(month, year, country) {
   try {
     // Sem mês/ano explícito: usa o período que a aba já está mostrando
@@ -6245,6 +6277,7 @@ function getClientMetrics_(month, year, country) {
     const repDrivers = rep.drivers || [];
 
     // ---- motoristas ----
+    const baseTypes = getBaseTypeByEmail_();   // v5.75: coluna Hotel mode
     const vidSetAll = {};
     const drivers = repDrivers.map(function (d) {
       (d.vids || []).forEach(function (v) { if (v) vidSetAll[v] = true; });
@@ -6285,6 +6318,9 @@ function getClientMetrics_(month, year, country) {
         // v5.74: dias distintos do RAW CTS. A soma "Swarm Days"+"Churn Days"
         // da aba conta dobrado o dia com os dois tipos (dava 22 no dia 19).
         mappingDays: d.mappingDaysLive != null ? d.mappingDaysLive : safeNumber(d.swarmDays) + safeNumber(d.churnDays),
+        // v5.75: base atual do tipo Hotel (Driver Base Location). O email do
+        // motorista fica de fora do payload de propósito — o portal é público.
+        hotelMode: baseTypes[String(d.email || '').toLowerCase()] === 'Hotel',
         vids: d.vids || [],
         vidCount: (d.vids || []).length,
       };
@@ -6592,6 +6628,8 @@ function getClientWeeks_(weeksBack) {
       return { success: false, error: 'RAW CTS DATA sem as colunas drive_week/drive_date/email' };
     }
 
+    const baseTypes = getBaseTypeByEmail_();   // v5.75: coluna Hotel mode
+
     // email → nome oficial (HR). Quem já saiu cai no nameFromEmail_.
     const nameByEmail = {};
     try {
@@ -6715,6 +6753,7 @@ function getClientWeeks_(weeksBack) {
         D.avgSystemOnHours = D.systemOnDays > 0 ? D.systemOnHours / D.systemOnDays : 0;
         D.efficiency = D.kmDriven > 0 ? D.tkm / D.kmDriven : 0;
         D.vidCount = D.vids.length;
+        D.hotelMode = baseTypes[e] === 'Hotel';   // v5.75: base atual (não histórica)
         if (D.country) countrySet[D.country] = true;
         return D;
       }).sort(function (a, b) { return b.tkm - a.tkm; });

@@ -207,6 +207,14 @@ body {
   min-width: 230px; color: var(--c-text); background: var(--c-surface);
 }
 .cm-search:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
+.cm-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cm-filter {
+  border: 1px solid var(--c-border); border-radius: 9px;
+  padding: 8px 10px; font-family: inherit; font-size: 12.5px;
+  color: var(--c-text); background: var(--c-surface); cursor: pointer;
+}
+.cm-filter:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
+.cm-filter.on { border-color: var(--c-primary); color: var(--c-primary); font-weight: 600; }
 .cm-btn {
   background: var(--c-surface); border: 1px solid var(--c-border);
   color: var(--c-text-muted); font-family: inherit; font-size: 12px; font-weight: 600;
@@ -250,6 +258,7 @@ table.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; min-wi
 .pill-warn    { background: rgba(202,138,4,0.14); color: var(--c-warn); }
 .pill-danger  { background: rgba(185,28,28,0.10); color: var(--c-danger); }
 .pill-neutral { background: var(--c-bg-tint); color: var(--c-primary-dark); }
+.pill-hotel   { background: rgba(74,159,224,0.14); color: var(--c-primary); }
 
 .cm-table tfoot td {
   padding: 12px 14px; text-align: right; font-weight: 800;
@@ -560,6 +569,25 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
   <section class="cm-table-wrap">
     <div class="cm-table-tools">
       <input type="search" id="search" class="cm-search" placeholder="Search driver or country…">
+      <div class="cm-filters">
+        <select id="filter-hotel" class="cm-filter" aria-label="Filter by hotel mode">
+          <option value="all">Hotel mode: all</option>
+          <option value="hotel">Hotel only</option>
+          <option value="home">Home only</option>
+        </select>
+        <select id="filter-eff" class="cm-filter" aria-label="Filter by efficiency">
+          <option value="all">Efficiency: all</option>
+          <option value="high">&#8805; 80%</option>
+          <option value="mid">60&#8211;80%</option>
+          <option value="low">&lt; 60%</option>
+        </select>
+        <select id="filter-soh" class="cm-filter" aria-label="Filter by system on hours">
+          <option value="all">System on h: all</option>
+          <option value="good">&#8805; 5.5h</option>
+          <option value="warn">5&#8211;5.4h</option>
+          <option value="bad">&lt; 5h</option>
+        </select>
+      </div>
       <div class="cm-soh-legend">
         <b>System on hours</b>
         <span><i class="cm-dot dot-danger"></i>&lt; 5h</span>
@@ -589,6 +617,25 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
     <section class="cm-table-wrap">
       <div class="cm-table-tools">
         <input type="search" id="week-search" class="cm-search" placeholder="Search driver or country…">
+        <div class="cm-filters" id="week-filters">
+          <select id="week-filter-hotel" class="cm-filter" aria-label="Filter by hotel mode">
+            <option value="all">Hotel mode: all</option>
+            <option value="hotel">Hotel only</option>
+            <option value="home">Home only</option>
+          </select>
+          <select id="week-filter-eff" class="cm-filter" aria-label="Filter by efficiency">
+            <option value="all">Efficiency: all</option>
+            <option value="high">&#8805; 80%</option>
+            <option value="mid">60&#8211;80%</option>
+            <option value="low">&lt; 60%</option>
+          </select>
+          <select id="week-filter-soh" class="cm-filter" aria-label="Filter by system on hours">
+            <option value="all">System on h: all</option>
+            <option value="good">&#8805; 5.5h</option>
+            <option value="warn">5&#8211;5.4h</option>
+            <option value="bad">&lt; 5h</option>
+          </select>
+        </div>
         <div class="cm-soh-legend">
           <b>System on hours</b>
           <span><i class="cm-dot dot-danger"></i>&lt; 5h</span>
@@ -642,6 +689,9 @@ const state = {
   sortKey: 'tkm',
   sortDir: -1,
   search: '',
+  filterHotel: 'all',   // 'all' | 'hotel' | 'home'
+  filterEff: 'all',     // 'all' | 'high' | 'mid' | 'low'  (bandas do pill)
+  filterSoh: 'all',     // 'all' | 'good' | 'warn' | 'bad' (bandas do pill)
   periodsLoaded: false,
 
   // aba Weekly
@@ -654,6 +704,9 @@ const state = {
   weekSortKey: 'tkm',
   weekSortDir: -1,
   weekSortSide: 'a',      // no compare: ordenar por 'a', 'b' ou 'd' (delta)
+  weekFilterHotel: 'all',
+  weekFilterEff: 'all',
+  weekFilterSoh: 'all',
   countryList: [],
 };
 
@@ -685,6 +738,50 @@ function sohPill(v) {
   const n = Number(v) || 0;
   if (!(n > 0)) return '<span class="cm-pill pill-neutral">—</span>';
   return '<span class="cm-pill ' + sohClass(n) + '">' + num(n, 2) + '</span>';
+}
+
+/** Hotel mode: base ATUAL do motorista (Driver Base Location). */
+function hotelPill(v) {
+  if (v == null) return '<span class="cm-pill pill-neutral">—</span>';   // snapshot antigo, sem o campo
+  return v ? '<span class="cm-pill pill-hotel">Hotel</span>'
+           : '<span class="cm-pill pill-neutral">Home</span>';
+}
+
+/* ------------------------------------------------------------------
+ * FILTROS DE COLUNA (vale pras duas abas)
+ * As bandas de efficiency/system-on-h são as MESMAS dos pills coloridos,
+ * pro filtro bater com o que o olho já vê na tabela.
+ * Nota: no filtro de system-on-h, motorista sem registro (pill "—") só
+ * aparece em "all" — 0h significa "sem dado", não desempenho ruim.
+ * ------------------------------------------------------------------ */
+function passesFilters(d, hotel, eff, soh) {
+  if (hotel !== 'all') {
+    if (d.hotelMode == null) return false;                    // dado ainda não disponível
+    if (hotel === 'hotel' && !d.hotelMode) return false;
+    if (hotel === 'home' && d.hotelMode) return false;
+  }
+  if (eff !== 'all') {
+    const e = Number(d.efficiency) || 0;
+    if (eff === 'high' && e < 0.8) return false;
+    if (eff === 'mid' && (e < 0.6 || e >= 0.8)) return false;
+    if (eff === 'low' && e >= 0.6) return false;
+  }
+  if (soh !== 'all') {
+    const h = Number(d.avgSystemOnHours) || 0;
+    if (!(h > 0)) return false;
+    if (soh === 'good' && h < 5.5) return false;
+    if (soh === 'warn' && (h < 5 || h >= 5.5)) return false;
+    if (soh === 'bad' && h >= 5) return false;
+  }
+  return true;
+}
+
+/** Marca visualmente os selects que estão filtrando algo. */
+function syncFilterUi(ids) {
+  ids.forEach(id => {
+    const el = $(id);
+    if (el) el.classList.toggle('on', el.value !== 'all');
+  });
 }
 
 /** Rótulo curto de uma semana: "W32 · Aug 3–9". */
@@ -985,6 +1082,7 @@ function renderPace(d) {
 const COLUMNS = [
   { key: 'name',             label: 'Driver',         type: 'text' },
   { key: 'country',          label: 'Country',        type: 'text' },
+  { key: 'hotelMode',        label: 'Hotel mode',     type: 'hotel', total: 'hotel' },
   { key: 'tkm',              label: 'TKM',            type: 'num', dec: 0, total: 'sum' },
   { key: 'kmDriven',         label: 'KM driven',      type: 'num', dec: 0, total: 'sum' },
   { key: 'efficiency',       label: 'Efficiency',     type: 'pctPill', total: 'eff' },
@@ -999,9 +1097,10 @@ const COLUMNS = [
 function visibleDrivers() {
   const all = (state.data && state.data.drivers) || [];
   const q = state.search.trim().toLowerCase();
-  const rows = q
-    ? all.filter(d => (d.name || '').toLowerCase().includes(q) || (d.country || '').toLowerCase().includes(q))
-    : all.slice();
+  const rows = all.filter(d => {
+    if (q && !(d.name || '').toLowerCase().includes(q) && !(d.country || '').toLowerCase().includes(q)) return false;
+    return passesFilters(d, state.filterHotel, state.filterEff, state.filterSoh);
+  });
 
   const key = state.sortKey, dir = state.sortDir;
   rows.sort((a, b) => {
@@ -1046,6 +1145,7 @@ function renderTable() {
                '</div><span class="cm-driver-name">' + esc(v) + '</span></div></td>';
       }
       if (c.key === 'country') return '<td class="cm-muted">' + esc(v) + '</td>';
+      if (c.type === 'hotel') return '<td>' + hotelPill(v) + '</td>';
       if (c.type === 'pctPill') return '<td>' + effPill(v) + '</td>';
       if (c.type === 'sohPill') return '<td>' + sohPill(v) + '</td>';
       if (c.type === 'pct') return '<td class="cm-num">' + pct(v, 0) + '</td>';
@@ -1063,6 +1163,7 @@ function renderTable() {
   const foot = '<tr>' + COLUMNS.map((c, i) => {
     if (i === 0) return '<td>' + rows.length + ' driver' + (rows.length === 1 ? '' : 's') + '</td>';
     switch (c.total) {
+      case 'hotel': return '<td class="cm-num">' + rows.filter(r => r.hotelMode === true).length + ' hotel</td>';
       case 'sum': return '<td class="cm-num">' + num(sum(c.key), c.dec || 0) + '</td>';
       case 'eff': {
         const t = sum('tkm'), k = sum('kmDriven');
@@ -1097,8 +1198,10 @@ function renderTable() {
     });
   });
 
+  const filtered = state.filterHotel !== 'all' || state.filterEff !== 'all' || state.filterSoh !== 'all';
   $('table-note').textContent = rows.length + ' driver' + (rows.length === 1 ? '' : 's') +
-    (state.search ? ' matching “' + state.search + '”' : '');
+    (state.search ? ' matching “' + state.search + '”' : '') +
+    (filtered ? ' · filtered' : '');
 }
 
 /* ============================================================
@@ -1116,6 +1219,7 @@ const weeksUrl = (force) => CM.scriptUrl + '?action=getClientWeeks&weeks=' + WEE
 const WEEK_COLUMNS = [
   { key: 'name',             label: 'Driver',          type: 'text' },
   { key: 'country',          label: 'Country',         type: 'text' },
+  { key: 'hotelMode',        label: 'Hotel mode',      type: 'hotel', total: 'hotel' },
   { key: 'tkm',              label: 'TKM',             type: 'num', dec: 0, total: 'sum' },
   { key: 'kmDriven',         label: 'KM driven',       type: 'num', dec: 0, total: 'sum' },
   { key: 'efficiency',       label: 'Efficiency',      type: 'pctPill', total: 'eff' },
@@ -1194,13 +1298,16 @@ function weekByKey(k) {
   return (state.weeks && state.weeks.weeks || []).find(w => w.key === k) || null;
 }
 
-/** Motoristas de uma semana, já filtrados por país e busca. */
+/** Motoristas de uma semana, já filtrados por país, busca e filtros de coluna. */
 function weekDrivers(k) {
   const w = weekByKey(k);
   if (!w) return [];
   const q = state.weekSearch.trim().toLowerCase();
   return (w.drivers || []).filter(d => {
     if (state.country !== 'ALL' && d.country !== state.country) return false;
+    // No compare os filtros ficam escondidos e não se aplicam — filtrar cada
+    // semana pelo próprio valor bagunçaria o "only in Wxx".
+    if (!state.compare && !passesFilters(d, state.weekFilterHotel, state.weekFilterEff, state.weekFilterSoh)) return false;
     if (!q) return true;
     return (d.name || '').toLowerCase().includes(q) || (d.country || '').toLowerCase().includes(q);
   });
@@ -1339,6 +1446,7 @@ function renderWeekSingle() {
              '</div><span class="cm-driver-name">' + esc(v) + '</span></div></td>';
     }
     if (c.key === 'country') return '<td class="cm-muted">' + esc(v) + '</td>';
+    if (c.type === 'hotel') return '<td>' + hotelPill(v) + '</td>';
     if (c.type === 'pctPill') return '<td>' + effPill(v) + '</td>';
     if (c.type === 'sohPill') return '<td>' + sohPill(v) + '</td>';
     return '<td class="cm-num">' + num(v, c.dec || 0) + '</td>';
@@ -1351,6 +1459,7 @@ function renderWeekSingle() {
   const foot = '<tr>' + WEEK_COLUMNS.map((c, i) => {
     if (i === 0) return '<td>' + rows.length + ' driver' + (rows.length === 1 ? '' : 's') + '</td>';
     switch (c.total) {
+      case 'hotel': return '<td class="cm-num">' + rows.filter(r => r.hotelMode === true).length + ' hotel</td>';
       case 'sum': return '<td class="cm-num">' + num(sum(c.key), c.dec || 0) + '</td>';
       case 'eff': {
         const t = sum('tkm'), k2 = sum('kmDriven');
@@ -1379,8 +1488,10 @@ function renderWeekSingle() {
     });
   });
 
+  const filtered = state.weekFilterHotel !== 'all' || state.weekFilterEff !== 'all' || state.weekFilterSoh !== 'all';
   $('week-table-note').textContent = rows.length + ' driver' + (rows.length === 1 ? '' : 's') +
-    (state.weekSearch ? ' matching “' + state.weekSearch + '”' : '');
+    (state.weekSearch ? ' matching “' + state.weekSearch + '”' : '') +
+    (filtered ? ' · filtered' : '');
 }
 
 /* ---------- tabela: comparação A × B ---------- */
@@ -1583,6 +1694,7 @@ function setCompare(on) {
   $('compare').textContent = on ? '✕ Exit compare' : '⇄ Compare';
   $('week-b').hidden = !on;
   $('week-vs').hidden = !on;
+  $('week-filters').hidden = on;   // filtros de coluna só valem na semana única
   // sair do compare deixa a ordenação num estado válido pra tabela simples
   if (!on && !WEEK_COLUMNS.some(c => c.key === state.weekSortKey)) state.weekSortKey = 'tkm';
   renderWeekly();
@@ -1601,6 +1713,7 @@ function exportWeekCsv() {
     rows.forEach(d => {
       const cells = WEEK_COLUMNS.map(c => {
         const v = d[c.key];
+        if (c.type === 'hotel') return v == null ? '""' : (v ? 'Yes' : 'No');
         if (typeof v === 'number') return c.type === 'pctPill' ? (v * 100).toFixed(2) : v;
         return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
       });
@@ -1833,6 +1946,7 @@ function exportCsv() {
   rows.forEach(d => {
     const cells = COLUMNS.map(c => {
       const v = d[c.key];
+      if (c.type === 'hotel') return v == null ? '""' : (v ? 'Yes' : 'No');
       if (typeof v === 'number') return c.type === 'pct' || c.type === 'pctPill' ? (v * 100).toFixed(2) : v;
       return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
     });
@@ -1884,6 +1998,13 @@ function exportCsv() {
   $('change-country').addEventListener('click', showSplash);
   $('csv').addEventListener('click', exportCsv);
   $('search').addEventListener('input', (e) => { state.search = e.target.value; renderTable(); });
+  [['filter-hotel', 'filterHotel'], ['filter-eff', 'filterEff'], ['filter-soh', 'filterSoh']].forEach(([id, key]) => {
+    $(id).addEventListener('change', (e) => {
+      state[key] = e.target.value;
+      syncFilterUi(['filter-hotel', 'filter-eff', 'filter-soh']);
+      renderTable();
+    });
+  });
 
   // ---- aba Weekly ----
   $('tab-monthly').addEventListener('click', () => setView('monthly'));
@@ -1895,6 +2016,13 @@ function exportCsv() {
   $('week-search').addEventListener('input', (e) => {
     state.weekSearch = e.target.value;
     if (state.compare) renderWeekCompare(); else renderWeekSingle();
+  });
+  [['week-filter-hotel', 'weekFilterHotel'], ['week-filter-eff', 'weekFilterEff'], ['week-filter-soh', 'weekFilterSoh']].forEach(([id, key]) => {
+    $(id).addEventListener('change', (e) => {
+      state[key] = e.target.value;
+      syncFilterUi(['week-filter-hotel', 'week-filter-eff', 'week-filter-soh']);
+      renderWeekly();   // re-renderiza tiles + tabela, pros totais acompanharem o filtro
+    });
   });
   if (state.compare) setCompare(true);   // deep link com ?week2= já entra comparando
 
