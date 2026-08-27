@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-27T19:55:03.011Z",
+  "generatedAt": "2026-08-27T23:46:29.079Z",
   "month": 8,
   "year": 2026,
   "countries": [
@@ -21,12 +21,12 @@
     {
       "country": "Chile",
       "slug": "chile",
-      "error": "This operation was aborted"
+      "drivers": 4
     },
     {
       "country": "Colombia",
       "slug": "colombia",
-      "error": "sistema ocupado gerando outro relatório, tenta de novo em instantes"
+      "drivers": 4
     },
     {
       "country": "México",
