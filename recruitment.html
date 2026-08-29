@@ -637,9 +637,8 @@ function renderMap(summaryByCountry) {
     scrollWheelZoom: false,
   }).setView([-15, -70], 3);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap, © CARTO',
-    subdomains: 'abcd',
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
     maxZoom: 10,
   }).addTo(mapInstance);
 

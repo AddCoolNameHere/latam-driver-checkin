@@ -948,7 +948,7 @@ async function renderScenarioMap(elId, scenarioKey) {
   if (!el) return;
   const m = L.map(el, { preferCanvas: true, zoomControl: false, attributionControl: false })
     .setView([-37, -65], 3);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 10 }).addTo(m);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 10 }).addTo(m);
 
   const pending = await loadPending();
   pending.forEach(f => {

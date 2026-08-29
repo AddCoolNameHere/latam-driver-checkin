@@ -3878,9 +3878,8 @@ const COUNTRY_CENTERS = {
 function initMap() {
   if (map) return;
   map = L.map('map').setView([-15, -60], 4);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap contributors © CARTO',
-    subdomains: 'abcd',
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
     maxZoom: 19,
   }).addTo(map);
   markerLayer = L.layerGroup().addTo(map);
@@ -8910,9 +8909,8 @@ function renderPanelMap(d) {
   else initialCenter = [d.area.lat, d.area.lng];
 
   panelMap = L.map('panel-map').setView(initialCenter, 10);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap contributors © CARTO',
-    subdomains: 'abcd',
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
     maxZoom: 19,
   }).addTo(panelMap);
 

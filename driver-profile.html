@@ -3550,9 +3550,8 @@ async function renderProfileMap(p) {
   else initialCenter = [lastCheckin.destLat, lastCheckin.destLng];
 
   profileMap = L.map('profile-map').setView(initialCenter, 10);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap contributors © CARTO',
-    subdomains: 'abcd',
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
     maxZoom: 19,
   }).addTo(profileMap);
 

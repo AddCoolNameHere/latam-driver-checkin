@@ -1135,7 +1135,7 @@ function MapCard({ t, drivers, onSelect, height = 460, bare = false }) {
     if (!window.L || mapRef.current) return;
     const map = window.L.map(ref.current, { center: [-15, -60], zoom: 3, zoomControl: false, attributionControl: false, scrollWheelZoom: false });
     mapRef.current = map;
-    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(map);
+    window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
     window.L.control.zoom({ position: "bottomright" }).addTo(map);
     layerRef.current = window.L.layerGroup().addTo(map);
     setTimeout(() => map.invalidateSize(), 150);
@@ -1357,7 +1357,7 @@ function DriverDetail({ t, driver, onClose }) {
     if (!driver || !window.L) return;
     const map = window.L.map(ref.current, { center: [driver.lat, driver.lng], zoom: 11, zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false });
     mapRef.current = map;
-    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png").addTo(map);
+    window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
     const dot = STATUS_META[driver.status].dot;
     window.L.marker([driver.lat, driver.lng], { icon: window.L.divIcon({ className: "mk-wrap", html: `<span class="mk" style="--mk:${dot}"></span>`, iconSize: [18, 18], iconAnchor: [9, 9] }) }).addTo(map);
     window.L.circle([driver.lat, driver.lng], { radius: 9000, color: "#2563EB", weight: 1.2, fillColor: "#2563EB", fillOpacity: 0.08 }).addTo(map);

@@ -295,6 +295,13 @@
   filter: brightness(0) invert(1);
 }
 
+/* Basemap do Leaflet: OSM padrão é colorido demais pra servir de fundo dos
+   pins/heatmap. Dessatura pra ficar parecido com o CARTO Positron que usávamos
+   (o CARTO passou a exigir API key em ago/2026 — tiles vinham com marca
+   d'água "API KEY REQUIRED"). Aplica em qualquer página com mapa. */
+.leaflet-tile-pane {
+  filter: saturate(0.35) contrast(0.92) brightness(1.05);
+}
 /* Tiles do Leaflet (mapa): inverte luminosidade pra encaixar no tema escuro.
    Não muda muito a cor das ruas/labels, mas escurece o fundo claro do OSM. */
 [data-theme="dark"] .leaflet-tile-pane {
