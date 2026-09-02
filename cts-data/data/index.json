@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-01T17:52:40.786Z",
+  "generatedAt": "2026-09-02T13:39:59.143Z",
   "month": 8,
   "year": 2026,
   "countries": [
@@ -36,7 +36,7 @@
     {
       "country": "Peru",
       "slug": "peru",
-      "drivers": 3
+      "error": "This operation was aborted"
     }
   ],
   "weeks": {
