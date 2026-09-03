@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Documentos do Motorista · Aceolution LATAM</title>
+<link rel="icon" type="image/png" href="aceolution-globe.png">
+<link rel="stylesheet" href="theme.css?v=20260903">
+<script>
+  // Página de motorista = sempre light. Não carrega theme.js (senão herda o
+  // dark salvo por um admin no mesmo browser e fica presa).
+  document.documentElement.removeAttribute('data-theme');
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f6f8;
+    color: #1f2937;
+    padding: 16px;
+    padding-bottom: 80px;
+    max-width: 560px;
+    margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand-wrap { display: flex; align-items: center; gap: 10px; }
+  .brand-logo { height: 26px; width: auto; }
+  .brand-divider { width: 1px; height: 24px; background: #d5d7db; }
+  .brand-sub {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b7280;
+    letter-spacing: 1px;
+    line-height: 1.2;
+  }
+  .brand-sub span { display: block; color: var(--c-primary, #2C5282); font-size: 11px; }
+  .lang-switch { font-size: 13px; color: #666; }
+  .lang-switch button {
+    background: none; border: none; color: #666; cursor: pointer;
+    padding: 4px 6px; font-size: 13px; font-family: inherit;
+  }
+  .lang-switch button.active { color: var(--c-primary, #2C5282); font-weight: 600; }
+
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #666; margin-bottom: 8px; }
+  .privacy-note {
+    font-size: 11px;
+    color: #6b7280;
+    background: #eef2f7;
+    border-left: 3px solid var(--c-accent, #4A9FE0);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 18px;
+    line-height: 1.45;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card.hidden { display: none; }
+
+  .step-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .step-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--c-primary, #2C5282); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; flex-shrink: 0;
+  }
+  .step-title { font-size: 15px; font-weight: 600; }
+  .step-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+  label {
+    display: block; font-size: 13px; font-weight: 500;
+    color: #444; margin-bottom: 6px;
+  }
+  select, input {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid #d5d7db; border-radius: 8px;
+    font-size: 15px; background: #fff; font-family: inherit; color: #1f2937;
+  }
+  select:focus, input:focus {
+    outline: none; border-color: var(--c-primary, #2C5282);
+    box-shadow: 0 0 0 3px rgba(74,159,224,0.15);
+  }
+  .field { margin-bottom: 14px; }
+  .field:last-of-type { margin-bottom: 0; }
+  .field-hint { font-size: 11px; color: #6b7280; margin-top: 5px; }
+
+  /* Grid de países */
+  .country-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .country-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 12px;
+    border: 1.5px solid #e2e5ea; border-radius: 10px;
+    background: #fff; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    color: #1f2937; text-align: left;
+    transition: all 0.15s;
+  }
+  .country-btn:hover { border-color: var(--c-accent, #4A9FE0); background: #f7fafd; }
+  .country-btn:active { transform: scale(0.98); }
+  .country-btn.selected {
+    border-color: var(--c-primary, #2C5282);
+    background: #eef4fb;
+    box-shadow: 0 0 0 3px rgba(74,159,224,0.12);
+  }
+  .country-flag { font-size: 24px; line-height: 1; }
+  .country-name { flex: 1; min-width: 0; }
+  .country-count { font-size: 11px; color: #6b7280; font-weight: 400; display: block; }
+
+  /* Botões */
+  .btn {
+    width: 100%; padding: 13px; border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: all 0.15s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--c-primary, #2C5282) 0%, var(--c-accent, #4A9FE0) 100%);
+    color: #fff; box-shadow: 0 2px 6px rgba(44,82,130,0.2);
+    margin-top: 4px;
+  }
+  .btn-primary:disabled { background: #94B8D9; cursor: not-allowed; box-shadow: none; }
+  .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+  .btn-secondary {
+    background: #fff; color: var(--c-primary, #2C5282);
+    border: 1.5px solid var(--c-primary, #2C5282);
+  }
+  .btn-back {
+    background: none; border: none; color: var(--c-primary, #2C5282);
+    font-size: 13px; cursor: pointer; padding: 6px 0;
+    text-align: left; font-family: inherit; margin-bottom: 10px;
+  }
+
+  /* Slots de foto */
+  .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .photo-slot {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px; min-height: 132px; padding: 10px;
+    border: 2px dashed #cbd2da; border-radius: 10px;
+    background: #fafbfc; cursor: pointer;
+    text-align: center; overflow: hidden;
+    transition: all 0.15s;
+  }
+  .photo-slot:hover { border-color: var(--c-accent, #4A9FE0); background: #f4f9fe; }
+  .photo-slot.filled { border-style: solid; border-color: var(--c-success, #16A34A); padding: 0; }
+  .photo-slot input[type="file"] { display: none; }
+  .photo-slot-icon { font-size: 26px; }
+  .photo-slot-label { font-size: 12px; font-weight: 600; color: #374151; }
+  .photo-slot-hint { font-size: 10px; color: #9ca3af; }
+  .photo-slot img { width: 100%; height: 132px; object-fit: cover; display: block; }
+  .photo-slot-badge {
+    position: absolute; top: 6px; left: 6px;
+    background: rgba(0,0,0,0.6); color: #fff;
+    font-size: 10px; font-weight: 600;
+    padding: 3px 7px; border-radius: 20px;
+  }
+  .photo-slot-remove {
+    position: absolute; top: 6px; right: 6px;
+    background: rgba(0,0,0,0.6); color: #fff; border: none;
+    width: 24px; height: 24px; border-radius: 50%;
+    font-size: 15px; line-height: 1; cursor: pointer;
+  }
+  .photo-slot-size {
+    position: absolute; bottom: 6px; right: 6px;
+    background: rgba(0,0,0,0.55); color: #fff;
+    font-size: 10px; padding: 2px 6px; border-radius: 4px;
+  }
+  .photos-hint { font-size: 11px; color: #6b7280; margin-top: 8px; }
+
+  .alert {
+    background: #FEF3C7; border: 1px solid #FCD34D; color: #92400E;
+    border-radius: 8px; padding: 10px 12px; font-size: 12.5px;
+    line-height: 1.45; margin-bottom: 12px;
+  }
+  .field-error { color: var(--c-danger, #DC2626); font-size: 11.5px; margin-top: 5px; display: none; }
+  .field-error.show { display: block; }
+  input.invalid { border-color: var(--c-danger, #DC2626); }
+
+  .loader { text-align: center; color: #6b7280; padding: 24px; font-size: 13px; }
+  .loading-spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    margin-right: 8px; vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #222; color: #fff; padding: 12px 20px; border-radius: 10px;
+    font-size: 14px; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    animation: slideUp 0.3s; max-width: 90vw; text-align: center;
+  }
+  .toast.success { background: var(--c-success, #16A34A); }
+  .toast.error { background: var(--c-danger, #DC2626); }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+
+  .success-screen { text-align: center; padding: 32px 20px; }
+  .success-icon {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: #D1FAE5; color: var(--c-success, #16A34A);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; margin: 0 auto 16px;
+  }
+  .success-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+  .success-msg { color: #6b7280; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+
+  footer { text-align: center; color: #94a3b8; font-size: 11px; margin-top: 30px; }
+  .nav-back {
+    display: inline-block; margin-bottom: 12px;
+    color: var(--c-primary, #2C5282); font-size: 13px; text-decoration: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-wrap">
+    <img src="aceolution-logo.png" alt="Aceolution" class="brand-logo" onerror="this.style.display='none'">
+    <div class="brand-divider"></div>
+    <div class="brand-sub">LATAM<span data-i18n="brandSub">Documentos</span></div>
+  </div>
+  <div class="lang-switch">
+    <button data-lang="pt" class="active">PT</button>
+    <button data-lang="es">ES</button>
+    <button data-lang="en">EN</button>
+  </div>
+</header>
+
+<a href="checkin/" class="nav-back" data-i18n="navBack">← Voltar ao check-in</a>
+
+<h1 data-i18n="title">Documentos do motorista</h1>
+<div class="subtitle" data-i18n="subtitle">Cadastre seu documento e envie as fotos da sua habilitação.</div>
+<div class="privacy-note" data-i18n="privacy">Uso interno da Aceolution para gestão da frota. As fotos vão para uma pasta restrita no Drive da empresa — não ficam públicas.</div>
+
+<!-- ============================================================
+     STEP 1: País
+     ============================================================ -->
+<div id="step-1" class="card">
+  <div class="step-header">
+    <div class="step-num">1</div>
+    <div>
+      <div class="step-title" data-i18n="step1Title">País</div>
+      <div class="step-sub" data-i18n="step1Sub">Selecione o país onde você trabalha</div>
+    </div>
+  </div>
+  <div id="countries-loader" class="loader" data-i18n="loadingDrivers">Carregando lista...</div>
+  <div id="country-grid" class="country-grid"></div>
+</div>
+
+<!-- ============================================================
+     STEP 2: Nome
+     ============================================================ -->
+<div id="step-2" class="card hidden">
+  <button class="btn-back" id="step-2-back" data-i18n="back">← Voltar</button>
+  <div class="step-header">
+    <div class="step-num">2</div>
+    <div>
+      <div class="step-title" data-i18n="step2Title">Seu nome</div>
+      <div class="step-sub" data-i18n="step2Sub">Selecione seu nome na lista</div>
+    </div>
+  </div>
+  <div class="field">
+    <label data-i18n="driverLabel">Motorista</label>
+    <select id="driver-select">
+      <option value="" data-i18n="chooseOption">-- Selecione --</option>
+    </select>
+  </div>
+  <div id="already-sent" class="alert" style="display:none;"></div>
+  <button class="btn btn-primary" id="step-2-next" data-i18n="continue" disabled>Continuar</button>
+</div>
+
+<!-- ============================================================
+     STEP 3: Documentos + fotos
+     ============================================================ -->
+<div id="step-3" class="card hidden">
+  <button class="btn-back" id="step-3-back" data-i18n="back">← Voltar</button>
+  <div class="step-header">
+    <div class="step-num">3</div>
+    <div>
+      <div class="step-title" data-i18n="step3Title">Seus documentos</div>
+      <div class="step-sub" id="step-3-driver-info"></div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label id="doc-number-label">CPF</label>
+    <input type="text" id="doc-number-input" inputmode="numeric" autocomplete="off" placeholder="">
+    <div class="field-error" id="doc-number-error"></div>
+  </div>
+
+  <div class="field">
+    <label id="license-number-label">Número da CNH</label>
+    <input type="text" id="license-number-input" inputmode="numeric" autocomplete="off" placeholder="">
+    <div class="field-error" id="license-number-error"></div>
+  </div>
+
+  <div class="field">
+    <label id="license-expiry-label" data-i18n="expiryLabel">Validade (opcional)</label>
+    <input type="date" id="license-expiry-input">
+  </div>
+
+  <div class="field">
+    <label id="photos-label" data-i18n="photosLabel">Fotos da habilitação</label>
+    <div class="photo-grid">
+      <label class="photo-slot" data-slot="cnh-frente" id="slot-cnh-frente">
+        <span class="photo-slot-icon">📷</span>
+        <span class="photo-slot-label" data-i18n="frontLabel">Frente</span>
+        <span class="photo-slot-hint" data-i18n="tapToAdd">Toque para adicionar</span>
+        <input type="file" accept="image/*" data-slot-input="cnh-frente">
+      </label>
+      <label class="photo-slot" data-slot="cnh-verso" id="slot-cnh-verso">
+        <span class="photo-slot-icon">📷</span>
+        <span class="photo-slot-label" data-i18n="backLabel">Verso</span>
+        <span class="photo-slot-hint" data-i18n="tapToAdd">Toque para adicionar</span>
+        <input type="file" accept="image/*" data-slot-input="cnh-verso">
+      </label>
+      <label class="photo-slot" data-slot="extra-1" id="slot-extra-1">
+        <span class="photo-slot-icon">➕</span>
+        <span class="photo-slot-label" data-i18n="extraLabel">Outro documento</span>
+        <span class="photo-slot-hint" data-i18n="optionalLabel">Opcional</span>
+        <input type="file" accept="image/*" data-slot-input="extra-1">
+      </label>
+      <label class="photo-slot" data-slot="extra-2" id="slot-extra-2">
+        <span class="photo-slot-icon">➕</span>
+        <span class="photo-slot-label" data-i18n="extraLabel">Outro documento</span>
+        <span class="photo-slot-hint" data-i18n="optionalLabel">Opcional</span>
+        <input type="file" accept="image/*" data-slot-input="extra-2">
+      </label>
+    </div>
+    <div class="photos-hint" data-i18n="photosHint">Tire a foto com boa luz e confira se dá para ler todos os dados.</div>
+    <div class="field-error" id="photos-error"></div>
+  </div>
+
+  <button class="btn btn-primary" id="submit-btn">Enviar documentos</button>
+</div>
+
+<!-- ============================================================
+     STEP 4: Sucesso
+     ============================================================ -->
+<div id="step-4" class="card hidden">
+  <div class="success-screen">
+    <div class="success-icon">✓</div>
+    <div class="success-title" data-i18n="successTitle">Recebido!</div>
+    <div class="success-msg" data-i18n="successMsg">Seus documentos foram enviados. Se precisarmos de algo, o time entra em contato.</div>
+    <button class="btn btn-secondary" id="restart-btn" data-i18n="newSubmission">Enviar de outro motorista</button>
+  </div>
+</div>
+
+<footer data-i18n="footer">Plataforma interna — Aceolution do Brasil Ltda.</footer>
+
+<script>
+
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  imageMaxDim: 1600,
+  imageQuality: 0.82,
+  maxFileMb: 12,
+  submitRetries: 3,
+};
+
+// ================================================================
+// i18n
+// ================================================================
+const I18N = {
+  pt: {
+    brandSub: 'Documentos',
+    navBack: '← Voltar ao check-in',
+    title: 'Documentos do motorista',
+    subtitle: 'Cadastre seu documento e envie as fotos da sua habilitação.',
+    privacy: 'Uso interno da Aceolution para gestão da frota. As fotos vão para uma pasta restrita no Drive da empresa — não ficam públicas.',
+    step1Title: 'País',
+    step1Sub: 'Selecione o país onde você trabalha',
+    step2Title: 'Seu nome',
+    step2Sub: 'Selecione seu nome na lista',
+    step3Title: 'Seus documentos',
+    driverLabel: 'Motorista',
+    chooseOption: '-- Selecione --',
+    loadingDrivers: 'Carregando lista...',
+    errorLoadDrivers: 'Erro ao carregar a lista. Recarregue a página.',
+    back: '← Voltar',
+    continue: 'Continuar',
+    driversCount: '{n} motoristas',
+    alreadySent: 'Já recebemos seus documentos em {date}. Se algo mudou (habilitação renovada, por exemplo), pode enviar de novo.',
+    docNumberLabel: 'Número do documento',
+    licenseNumberLabel: 'Número da habilitação',
+    expiryLabel: 'Validade da habilitação (opcional)',
+    photosLabel: 'Fotos da habilitação',
+    frontLabel: 'Frente',
+    backLabel: 'Verso',
+    extraLabel: 'Outro documento',
+    optionalLabel: 'Opcional',
+    tapToAdd: 'Toque para adicionar',
+    photosHint: 'Tire a foto com boa luz e confira se dá para ler todos os dados.',
+    sendBtn: 'Enviar documentos',
+    sending: 'Enviando...',
+    successTitle: 'Recebido!',
+    successMsg: 'Seus documentos foram enviados. Se precisarmos de algo, o time entra em contato.',
+    newSubmission: 'Enviar de outro motorista',
+    footer: 'Plataforma interna — Aceolution do Brasil Ltda.',
+    errFillDoc: 'Preencha o número do documento',
+    errInvalidCpf: 'CPF inválido — confira os números',
+    errFillLicense: 'Preencha o número da habilitação',
+    errNeedPhotos: 'Envie a foto da frente e do verso da habilitação',
+    errSend: 'Erro ao enviar. Tente de novo.',
+    errFileTooBig: 'Arquivo muito grande (máx. {mb} MB)',
+    errFileRead: 'Não deu para ler essa foto. Tente outra.',
+    processing: 'Processando foto...',
+  },
+  es: {
+    brandSub: 'Documentos',
+    navBack: '← Volver al check-in',
+    title: 'Documentos del conductor',
+    subtitle: 'Registrá tu documento y subí las fotos de tu licencia de conducir.',
+    privacy: 'Uso interno de Aceolution para la gestión de la flota. Las fotos van a una carpeta restringida en el Drive de la empresa — no quedan públicas.',
+    step1Title: 'País',
+    step1Sub: 'Elegí el país donde trabajás',
+    step2Title: 'Tu nombre',
+    step2Sub: 'Elegí tu nombre de la lista',
+    step3Title: 'Tus documentos',
+    driverLabel: 'Conductor',
+    chooseOption: '-- Elegí --',
+    loadingDrivers: 'Cargando lista...',
+    errorLoadDrivers: 'Error al cargar la lista. Recargá la página.',
+    back: '← Volver',
+    continue: 'Continuar',
+    driversCount: '{n} conductores',
+    alreadySent: 'Ya recibimos tus documentos el {date}. Si algo cambió (licencia renovada, por ejemplo), podés enviarlos de nuevo.',
+    docNumberLabel: 'Número de documento',
+    licenseNumberLabel: 'Número de licencia',
+    expiryLabel: 'Vencimiento de la licencia (opcional)',
+    photosLabel: 'Fotos de la licencia',
+    frontLabel: 'Frente',
+    backLabel: 'Dorso',
+    extraLabel: 'Otro documento',
+    optionalLabel: 'Opcional',
+    tapToAdd: 'Tocá para agregar',
+    photosHint: 'Sacá la foto con buena luz y fijate que se lean todos los datos.',
+    sendBtn: 'Enviar documentos',
+    sending: 'Enviando...',
+    successTitle: '¡Recibido!',
+    successMsg: 'Tus documentos fueron enviados. Si necesitamos algo, el equipo te contacta.',
+    newSubmission: 'Enviar de otro conductor',
+    footer: 'Plataforma interna — Aceolution do Brasil Ltda.',
+    errFillDoc: 'Completá el número de documento',
+    errInvalidCpf: 'CPF inválido — revisá los números',
+    errFillLicense: 'Completá el número de licencia',
+    errNeedPhotos: 'Subí la foto del frente y del dorso de la licencia',
+    errSend: 'Error al enviar. Probá de nuevo.',
+    errFileTooBig: 'Archivo muy grande (máx. {mb} MB)',
+    errFileRead: 'No se pudo leer esa foto. Probá con otra.',
+    processing: 'Procesando foto...',
+  },
+  en: {
+    brandSub: 'Documents',
+    navBack: '← Back to check-in',
+    title: 'Driver documents',
+    subtitle: 'Register your ID document and upload photos of your driver’s license.',
+    privacy: 'Internal Aceolution use for fleet management. Photos go to a restricted folder in the company Drive — they are not public.',
+    step1Title: 'Country',
+    step1Sub: 'Select the country where you work',
+    step2Title: 'Your name',
+    step2Sub: 'Select your name from the list',
+    step3Title: 'Your documents',
+    driverLabel: 'Driver',
+    chooseOption: '-- Select --',
+    loadingDrivers: 'Loading list...',
+    errorLoadDrivers: 'Error loading the list. Reload the page.',
+    back: '← Back',
+    continue: 'Continue',
+    driversCount: '{n} drivers',
+    alreadySent: 'We already received your documents on {date}. If something changed (renewed license, for example), you can send them again.',
+    docNumberLabel: 'ID document number',
+    licenseNumberLabel: 'License number',
+    expiryLabel: 'License expiry date (optional)',
+    photosLabel: 'License photos',
+    frontLabel: 'Front',
+    backLabel: 'Back',
+    extraLabel: 'Other document',
+    optionalLabel: 'Optional',
+    tapToAdd: 'Tap to add',
+    photosHint: 'Take the photo in good light and make sure all data is readable.',
+    sendBtn: 'Send documents',
+    sending: 'Sending...',
+    successTitle: 'Received!',
+    successMsg: 'Your documents were sent. If we need anything, the team will contact you.',
+    newSubmission: 'Submit for another driver',
+    footer: 'Internal platform — Aceolution do Brasil Ltda.',
+    errFillDoc: 'Enter the ID document number',
+    errInvalidCpf: 'Invalid CPF — check the numbers',
+    errFillLicense: 'Enter the license number',
+    errNeedPhotos: 'Upload the front and back photos of the license',
+    errSend: 'Error sending. Try again.',
+    errFileTooBig: 'File too big (max {mb} MB)',
+    errFileRead: 'Could not read that photo. Try another one.',
+    processing: 'Processing photo...',
+  },
+};
+
+// Metadados por país: bandeira, nome traduzido, e como se chama o documento
+// de identidade e a habilitação em cada lugar.
+const COUNTRY_META = {
+  brazil:    { flag: '🇧🇷', name: { pt: 'Brasil', es: 'Brasil', en: 'Brazil' },       doc: 'CPF',                    license: { pt: 'CNH', es: 'CNH', en: 'CNH' } },
+  argentina: { flag: '🇦🇷', name: { pt: 'Argentina', es: 'Argentina', en: 'Argentina' }, doc: 'DNI',                 license: { pt: 'Licencia de conducir', es: 'Licencia de conducir', en: 'Licencia de conducir' } },
+  chile:     { flag: '🇨🇱', name: { pt: 'Chile', es: 'Chile', en: 'Chile' },          doc: 'RUT',                    license: { pt: 'Licencia de conducir', es: 'Licencia de conducir', en: 'Licencia de conducir' } },
+  colombia:  { flag: '🇨🇴', name: { pt: 'Colômbia', es: 'Colombia', en: 'Colombia' }, doc: 'Cédula de ciudadanía',   license: { pt: 'Licencia de conducción', es: 'Licencia de conducción', en: 'Licencia de conducción' } },
+  mexico:    { flag: '🇲🇽', name: { pt: 'México', es: 'México', en: 'Mexico' },       doc: 'CURP',                   license: { pt: 'Licencia de conducir', es: 'Licencia de conducir', en: 'Licencia de conducir' } },
+  peru:      { flag: '🇵🇪', name: { pt: 'Peru', es: 'Perú', en: 'Peru' },             doc: 'DNI',                    license: { pt: 'Licencia de conducir', es: 'Licencia de conducir', en: 'Licencia de conducir' } },
+  uruguay:   { flag: '🇺🇾', name: { pt: 'Uruguai', es: 'Uruguay', en: 'Uruguay' },    doc: 'Cédula de identidad',    license: { pt: 'Licencia de conducir', es: 'Licencia de conducir', en: 'Licencia de conducir' } },
+  paraguay:  { flag: '🇵🇾', name: { pt: 'Paraguai', es: 'Paraguay', en: 'Paraguay' }, doc: 'Cédula de identidad',    license: { pt: 'Licencia de conducir', es: 'Licencia de conducir', en: 'Licencia de conducir' } },
+  ecuador:   { flag: '🇪🇨', name: { pt: 'Equador', es: 'Ecuador', en: 'Ecuador' },    doc: 'Cédula de identidad',    license: { pt: 'Licencia de conducir', es: 'Licencia de conducir', en: 'Licencia de conducir' } },
+  bolivia:   { flag: '🇧🇴', name: { pt: 'Bolívia', es: 'Bolivia', en: 'Bolivia' },    doc: 'Cédula de identidad',    license: { pt: 'Licencia de conducir', es: 'Licencia de conducir', en: 'Licencia de conducir' } },
+};
+
+function normCountry(raw) {
+  return String(raw || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .trim().toLowerCase();
+}
+
+function countryMeta(raw) {
+  const key = normCountry(raw);
+  const meta = COUNTRY_META[key];
+  if (meta) return meta;
+  // País novo na HR que ainda não mapeamos — não quebra a página.
+  return {
+    flag: '🌎',
+    name: { pt: raw, es: raw, en: raw },
+    doc: null,   // usa o rótulo genérico do i18n
+    license: null,
+  };
+}
+
+let currentLang = 'pt';
+function t(key) {
+  const dict = I18N[currentLang] || I18N.pt;
+  return dict[key] !== undefined ? dict[key] : key;
+}
+
+function applyI18n() {
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es-419' : 'en');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const val = t(el.getAttribute('data-i18n'));
+    if (typeof val === 'string') el.textContent = val;
+  });
+  renderCountryGrid();
+  refreshDriverSelectLabels();
+  refreshDocLabels();
+  refreshAlreadySent();
+  updateSubmitBtnLabel();
+}
+
+document.querySelectorAll('.lang-switch button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentLang = btn.getAttribute('data-lang');
+    document.querySelectorAll('.lang-switch button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyI18n();
+  });
+});
+
+// ================================================================
+// ESTADO
+// ================================================================
+const state = {
+  drivers: [],            // [{ name, email, country, city }]
+  byCountry: {},          // { 'Brazil': [drivers...] }
+  countries: [],          // ['Argentina', 'Brazil', ...]
+  submitted: {},          // { 'nome em lowercase': 'ISO timestamp' }
+  selectedCountry: null,
+  selectedDriver: null,
+  photos: {},             // { 'cnh-frente': { name, base64, sizeKb }, ... }
+  sending: false,
+};
+
+// ================================================================
+// STEP 1 — Países (derivados da lista de motoristas)
+// ================================================================
+async function loadDrivers() {
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getDrivers');
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'unknown');
+
+    state.drivers = (data.drivers || []).filter(d => d && d.name);
+    state.byCountry = {};
+    state.drivers.forEach(d => {
+      const c = String(d.country || '').trim() || '—';
+      if (!state.byCountry[c]) state.byCountry[c] = [];
+      state.byCountry[c].push(d);
+    });
+    Object.keys(state.byCountry).forEach(c => {
+      state.byCountry[c].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    });
+    state.countries = Object.keys(state.byCountry).sort((a, b) => a.localeCompare(b));
+
+    document.getElementById('countries-loader').style.display = 'none';
+    renderCountryGrid();
+    console.log('[Driver Docs] ' + state.drivers.length + ' motoristas em ' + state.countries.length + ' países');
+  } catch (err) {
+    console.error('[Driver Docs] erro carregando drivers:', err);
+    document.getElementById('countries-loader').textContent = t('errorLoadDrivers');
+  }
+}
+
+// Quem já enviou (best-effort — se o backend ainda não tiver o endpoint, ignora)
+async function loadSubmittedStatus() {
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getDriverDocsStatus');
+    const data = await res.json();
+    if (!data.success || !Array.isArray(data.submissions)) {
+      console.warn('[Driver Docs] status de envios indisponível:', data && data.error);
+      return;
+    }
+    data.submissions.forEach(s => {
+      if (s && s.name) state.submitted[String(s.name).toLowerCase()] = s.timestamp || '';
+    });
+    refreshAlreadySent();
+  } catch (err) {
+    console.warn('[Driver Docs] status de envios indisponível:', err);
+  }
+}
+
+function renderCountryGrid() {
+  const grid = document.getElementById('country-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  state.countries.forEach(country => {
+    const meta = countryMeta(country);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'country-btn' + (state.selectedCountry === country ? ' selected' : '');
+    btn.innerHTML =
+      '<span class="country-flag"></span>' +
+      '<span class="country-name"><span class="country-label"></span>' +
+      '<span class="country-count"></span></span>';
+    btn.querySelector('.country-flag').textContent = meta.flag;
+    btn.querySelector('.country-label').textContent = meta.name[currentLang] || country;
+    btn.querySelector('.country-count').textContent =
+      t('driversCount').replace('{n}', state.byCountry[country].length);
+    btn.addEventListener('click', () => selectCountry(country));
+    grid.appendChild(btn);
+  });
+}
+
+function selectCountry(country) {
+  state.selectedCountry = country;
+  state.selectedDriver = null;
+  renderCountryGrid();
+  populateDriverSelect();
+  document.getElementById('step-2-next').disabled = true;
+  refreshAlreadySent();
+  goToStep(2);
+}
+
+// ================================================================
+// STEP 2 — Nome do motorista
+// ================================================================
+function populateDriverSelect() {
+  const sel = document.getElementById('driver-select');
+  sel.innerHTML = '<option value="">' + t('chooseOption') + '</option>';
+  if (!state.selectedCountry) return;
+
+  // Padrão do projeto: drivers agrupados por país com <optgroup>.
+  const meta = countryMeta(state.selectedCountry);
+  const group = document.createElement('optgroup');
+  group.label = (meta.name[currentLang] || state.selectedCountry);
+  (state.byCountry[state.selectedCountry] || []).forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.email || d.name;
+    opt.textContent = d.name + (d.city ? ' · ' + d.city : '');
+    group.appendChild(opt);
+  });
+  sel.appendChild(group);
+}
+
+function refreshDriverSelectLabels() {
+  const sel = document.getElementById('driver-select');
+  if (!sel || !state.selectedCountry) return;
+  const current = sel.value;
+  populateDriverSelect();
+  if (current) sel.value = current;
+}
+
+document.getElementById('driver-select').addEventListener('change', (e) => {
+  const value = e.target.value;
+  const list = state.byCountry[state.selectedCountry] || [];
+  state.selectedDriver = list.find(d => (d.email || d.name) === value) || null;
+  document.getElementById('step-2-next').disabled = !state.selectedDriver;
+  refreshAlreadySent();
+});
+
+function refreshAlreadySent() {
+  const box = document.getElementById('already-sent');
+  if (!box) return;
+  const d = state.selectedDriver;
+  if (!d) { box.style.display = 'none'; return; }
+  const ts = state.submitted[String(d.name).toLowerCase()];
+  if (!ts) { box.style.display = 'none'; return; }
+  let dateStr = ts;
+  try {
+    const dt = new Date(ts);
+    if (!isNaN(dt.getTime())) {
+      dateStr = dt.toLocaleDateString(
+        currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es-AR' : 'en-US')
+      );
+    }
+  } catch (e) { /* deixa o texto cru */ }
+  box.textContent = t('alreadySent').replace('{date}', dateStr);
+  box.style.display = '';
+}
+
+document.getElementById('step-2-back').addEventListener('click', () => goToStep(1));
+
+document.getElementById('step-2-next').addEventListener('click', () => {
+  if (!state.selectedDriver) return;
+  refreshDocLabels();
+  const info = document.getElementById('step-3-driver-info');
+  const meta = countryMeta(state.selectedCountry);
+  info.textContent = state.selectedDriver.name + ' · ' + (meta.name[currentLang] || state.selectedCountry);
+  goToStep(3);
+});
+
+// ================================================================
+// STEP 3 — Rótulos dependentes do país
+// ================================================================
+function refreshDocLabels() {
+  const meta = countryMeta(state.selectedCountry);
+  const docTerm = meta.doc;
+  const licTerm = meta.license ? meta.license[currentLang] : null;
+
+  const docLabel = document.getElementById('doc-number-label');
+  docLabel.textContent = docTerm ? (t('docNumberLabel') + ' (' + docTerm + ')') : t('docNumberLabel');
+
+  const licLabel = document.getElementById('license-number-label');
+  licLabel.textContent = licTerm ? (t('licenseNumberLabel') + ' (' + licTerm + ')') : t('licenseNumberLabel');
+
+  const photosLabel = document.getElementById('photos-label');
+  photosLabel.textContent = licTerm ? (t('photosLabel') + ' — ' + licTerm) : t('photosLabel');
+
+  const docInput = document.getElementById('doc-number-input');
+  docInput.placeholder = isBrazil() ? '000.000.000-00' : '';
+  docInput.setAttribute('inputmode', isBrazil() ? 'numeric' : 'text');
+}
+
+function isBrazil() { return normCountry(state.selectedCountry) === 'brazil'; }
+
+document.getElementById('step-3-back').addEventListener('click', () => goToStep(2));
+
+// Máscara leve de CPF só no Brasil (não atrapalha os outros países)
+document.getElementById('doc-number-input').addEventListener('input', (e) => {
+  if (!isBrazil()) return;
+  const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+  let out = digits;
+  if (digits.length > 9) out = digits.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+  else if (digits.length > 6) out = digits.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+  else if (digits.length > 3) out = digits.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+  e.target.value = out;
+  clearFieldError('doc-number');
+});
+document.getElementById('license-number-input').addEventListener('input', () => clearFieldError('license-number'));
+
+function isValidCpf(raw) {
+  const cpf = String(raw || '').replace(/\D/g, '');
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += parseInt(cpf.charAt(i), 10) * (10 - i);
+  let d1 = (sum * 10) % 11;
+  if (d1 === 10) d1 = 0;
+  if (d1 !== parseInt(cpf.charAt(9), 10)) return false;
+  sum = 0;
+  for (let i = 0; i < 10; i++) sum += parseInt(cpf.charAt(i), 10) * (11 - i);
+  let d2 = (sum * 10) % 11;
+  if (d2 === 10) d2 = 0;
+  return d2 === parseInt(cpf.charAt(10), 10);
+}
+
+function showFieldError(field, msg) {
+  const err = document.getElementById(field + '-error');
+  const input = document.getElementById(field + '-input');
+  if (err) { err.textContent = msg; err.classList.add('show'); }
+  if (input) input.classList.add('invalid');
+}
+function clearFieldError(field) {
+  const err = document.getElementById(field + '-error');
+  const input = document.getElementById(field + '-input');
+  if (err) err.classList.remove('show');
+  if (input) input.classList.remove('invalid');
+}
+
+// ================================================================
+// STEP 3 — Fotos
+// ================================================================
+document.querySelectorAll('[data-slot-input]').forEach(input => {
+  input.addEventListener('change', async (e) => {
+    const slot = input.getAttribute('data-slot-input');
+    const file = (e.target.files || [])[0];
+    e.target.value = '';   // permite reescolher a mesma foto
+    if (!file) return;
+
+    if (file.size > CONFIG.maxFileMb * 1024 * 1024) {
+      showToast(t('errFileTooBig').replace('{mb}', CONFIG.maxFileMb), 'error');
+      return;
+    }
+    showToast(t('processing'));
+    try {
+      state.photos[slot] = await compressImage(file);
+      renderPhotoSlot(slot);
+      clearPhotosError();
+    } catch (err) {
+      console.error('[Driver Docs] erro processando foto:', err);
+      showToast(t('errFileRead'), 'error');
+    }
+  });
+});
+
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        const maxDim = CONFIG.imageMaxDim;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', CONFIG.imageQuality);
+        resolve({
+          name: String(file.name || 'foto').replace(/\.[^.]+$/, '') + '.jpg',
+          sizeKb: Math.round(dataUrl.length * 0.75 / 1024),
+          base64: dataUrl,
+        });
+      };
+      img.onerror = reject;
+      img.src = ev.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPhotoSlot(slot) {
+  const el = document.getElementById('slot-' + slot);
+  if (!el) return;
+  const photo = state.photos[slot];
+  const input = el.querySelector('input[type="file"]');
+
+  if (!photo) {
+    el.classList.remove('filled');
+    el.innerHTML =
+      '<span class="photo-slot-icon">' + (slot.indexOf('extra') === 0 ? '➕' : '📷') + '</span>' +
+      '<span class="photo-slot-label"></span>' +
+      '<span class="photo-slot-hint"></span>';
+    el.querySelector('.photo-slot-label').textContent = slotLabel(slot);
+    el.querySelector('.photo-slot-hint').textContent =
+      slot.indexOf('extra') === 0 ? t('optionalLabel') : t('tapToAdd');
+    el.appendChild(input);
+    return;
+  }
+
+  el.classList.add('filled');
+  const img = document.createElement('img');
+  img.src = photo.base64;
+  img.alt = slotLabel(slot);
+
+  const badge = document.createElement('span');
+  badge.className = 'photo-slot-badge';
+  badge.textContent = slotLabel(slot);
+
+  const size = document.createElement('span');
+  size.className = 'photo-slot-size';
+  size.textContent = photo.sizeKb + ' KB';
+
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'photo-slot-remove';
+  remove.textContent = '×';
+  remove.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    delete state.photos[slot];
+    renderPhotoSlot(slot);
+  });
+
+  el.innerHTML = '';
+  el.appendChild(img);
+  el.appendChild(badge);
+  el.appendChild(size);
+  el.appendChild(remove);
+  el.appendChild(input);
+}
+
+function slotLabel(slot) {
+  if (slot === 'cnh-frente') return t('frontLabel');
+  if (slot === 'cnh-verso') return t('backLabel');
+  return t('extraLabel');
+}
+
+function renderAllPhotoSlots() {
+  ['cnh-frente', 'cnh-verso', 'extra-1', 'extra-2'].forEach(renderPhotoSlot);
+}
+
+function clearPhotosError() {
+  const err = document.getElementById('photos-error');
+  if (err) err.classList.remove('show');
+}
+
+function updateSubmitBtnLabel() {
+  const btn = document.getElementById('submit-btn');
+  if (btn && !state.sending) btn.textContent = t('sendBtn');
+  renderAllPhotoSlots();
+}
+
+// ================================================================
+// SUBMIT
+// ================================================================
+document.getElementById('submit-btn').addEventListener('click', submitDocs);
+
+async function submitDocs() {
+  if (state.sending || !state.selectedDriver) return;
+
+  const docNumber = document.getElementById('doc-number-input').value.trim();
+  const licenseNumber = document.getElementById('license-number-input').value.trim();
+  const licenseExpiry = document.getElementById('license-expiry-input').value;
+
+  clearFieldError('doc-number');
+  clearFieldError('license-number');
+
+  if (!docNumber) { showFieldError('doc-number', t('errFillDoc')); return; }
+  if (isBrazil() && !isValidCpf(docNumber)) { showFieldError('doc-number', t('errInvalidCpf')); return; }
+  if (!licenseNumber) { showFieldError('license-number', t('errFillLicense')); return; }
+  if (!state.photos['cnh-frente'] || !state.photos['cnh-verso']) {
+    const err = document.getElementById('photos-error');
+    err.textContent = t('errNeedPhotos');
+    err.classList.add('show');
+    showToast(t('errNeedPhotos'), 'error');
+    return;
+  }
+
+  const meta = countryMeta(state.selectedCountry);
+  const files = [];
+  ['cnh-frente', 'cnh-verso', 'extra-1', 'extra-2'].forEach(slot => {
+    const p = state.photos[slot];
+    if (p) files.push({ name: p.name, base64: p.base64, slot: slot.indexOf('extra') === 0 ? 'extra' : slot });
+  });
+
+  const payload = {
+    type: 'submitDriverDocs',
+    country: state.selectedCountry,
+    driverName: state.selectedDriver.name,
+    driverEmail: state.selectedDriver.email || '',
+    docType: meta.doc || t('docNumberLabel'),
+    docNumber: docNumber,
+    licenseNumber: licenseNumber,
+    licenseExpiry: licenseExpiry || '',
+    files: files,
+  };
+
+  const btn = document.getElementById('submit-btn');
+  state.sending = true;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span>' + t('sending');
+
+  let lastError = null;
+  for (let attempt = 1; attempt <= CONFIG.submitRetries; attempt++) {
+    try {
+      const res = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload) });
+      const data = await res.json();
+      // CORS não impede LER a resposta do Apps Script — sempre checar success.
+      if (data && data.success) {
+        console.log('[Driver Docs] enviado. Pasta:', data.folderUrl, '| arquivos:', data.uploaded);
+        state.submitted[String(state.selectedDriver.name).toLowerCase()] = new Date().toISOString();
+        state.sending = false;
+        // Reabilita o botão: senão o "enviar de outro motorista" cai num form travado.
+        btn.disabled = false;
+        btn.textContent = t('sendBtn');
+        goToStep(4);
+        return;
+      }
+      lastError = (data && data.error) || 'backend';
+      console.error('[Driver Docs] backend retornou erro:', lastError);
+      break;   // erro de validação do backend não melhora com retry
+    } catch (err) {
+      lastError = err;
+      console.warn('[Driver Docs] tentativa ' + attempt + ' falhou:', err);
+      if (attempt < CONFIG.submitRetries) {
+        await new Promise(r => setTimeout(r, 1500 * attempt));
+      }
+    }
+  }
+
+  console.error('[Driver Docs] envio falhou:', lastError);
+  showToast(t('errSend'), 'error');
+  state.sending = false;
+  btn.disabled = false;
+  btn.textContent = t('sendBtn');
+}
+
+// ================================================================
+// STEP 4 — Recomeçar
+// ================================================================
+document.getElementById('restart-btn').addEventListener('click', () => {
+  state.selectedDriver = null;
+  state.photos = {};
+  document.getElementById('doc-number-input').value = '';
+  document.getElementById('license-number-input').value = '';
+  document.getElementById('license-expiry-input').value = '';
+  document.getElementById('driver-select').value = '';
+  document.getElementById('step-2-next').disabled = true;
+  clearFieldError('doc-number');
+  clearFieldError('license-number');
+  clearPhotosError();
+  renderAllPhotoSlots();
+  refreshAlreadySent();
+  goToStep(1);
+});
+
+// ================================================================
+// Navegação
+// ================================================================
+function goToStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('step-' + i);
+    if (el) el.classList.toggle('hidden', i !== n);
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ================================================================
+// Toast
+// ================================================================
+function showToast(msg, type) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (type ? ' ' + type : '');
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+}
+
+// Evita sair no meio do envio sem querer
+window.addEventListener('beforeunload', (e) => {
+  if (state.sending) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ================================================================
+// BOOT
+// ================================================================
+applyI18n();
+loadDrivers();
+loadSubmittedStatus();
+
+</script>
+</body>
+</html>

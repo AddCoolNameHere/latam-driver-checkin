@@ -111,6 +111,9 @@ const CONFIG = {
   myMapsFolderName: 'LATAM MyMaps Uploads', // pasta no Drive (auto-criada), subpasta por país
   // v5.46: curadoria de VIDs vira tri-estado (Active | Inactive | Cancelled) na coluna Status
   vidStatusSheet: 'VID Status',            // curadoria manual de VIDs ativos por país (auto-criada)
+  // v5.76: documentos dos motoristas (driver-docs.html) — CPF/DNI + CNH + fotos
+  driverDocsSheet: 'Driver Documents',            // metadados dos envios (auto-criada)
+  driverDocsFolderName: 'LATAM Driver Documents', // pasta raiz no Drive (auto-criada): país > motorista
 };
 
 // ================================================================
@@ -284,16 +287,16 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.75',
+        version: 'v5.76',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
                     'getDriverSsds', 'getDriverVehicleIssues',
                     'getLastAssetsForm', 'getPMONotes', 'getArgentinaDrivers',
-                    'getCountryScope',
+                    'getCountryScope', 'getDriverDocsStatus',
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
                     'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
-                    'POST submitArgentinaCash', 'POST updateAuthUsers',
+                    'POST submitArgentinaCash', 'POST submitDriverDocs', 'POST updateAuthUsers',
                     'getRecruitmentData', 'getTimesheetTab', 'getPayrollCheckin', 'writeAceHours', 'POST writeAceHoursManual',
                     'getPayrollAdjustments', 'POST savePayrollAdjustment', 'POST deletePayrollAdjustment',
                     'getCrimeOverlay',
@@ -580,6 +583,12 @@ function doGet(e) {
       return jsonResponse(getMyMap_(e.parameter.fileId));
     }
 
+    // v5.76: quem já mandou os documentos (driver-docs.html avisa "você já enviou em ...").
+    // Só nome/país/data — nunca número de documento (endpoint é público).
+    if (action === 'getDriverDocsStatus') {
+      return jsonResponse({ success: true, submissions: getDriverDocsStatus_() });
+    }
+
     return jsonResponse({ success: false, error: 'Unknown action: ' + action });
   } catch (err) {
     return jsonResponse({ success: false, error: err.toString() });
@@ -629,6 +638,11 @@ function doPost(e) {
     if (data.type === 'assetWeekly') {
       const result = saveAssetWeekly_(data);
       return jsonResponse({ success: true, message: result.message, photoUrls: result.photoUrls });
+    }
+
+    // v5.76: documentos do motorista (driver-docs.html) — CPF/DNI + CNH + fotos pro Drive
+    if (data.type === 'submitDriverDocs') {
+      return jsonResponse(submitDriverDocs_(data));
     }
 
     // v5.25: divergências de pagamento Argentina (ar-divergencias.html)
@@ -9664,4 +9678,229 @@ function fogoCruzadoToken_(forceRefresh) {
   if (!token) throw new Error('Login Fogo Cruzado: accessToken não veio na resposta');
   cache.put(FC_TOKEN_CACHE_KEY, token, FC_TOKEN_CACHE_SEC);
   return token;
+}
+
+
+// ================================================================
+// DOCUMENTOS DOS MOTORISTAS (v5.76) — driver-docs.html
+//
+// O motorista escolhe país -> nome -> preenche documento (CPF/DNI/...)
+// + habilitação (CNH) e sobe as fotos. As fotos vão pro Drive em:
+//
+//   Drive / LATAM Driver Documents / <País> / <Nome do motorista> /
+//
+// (as pastas são criadas sob demanda conforme os motoristas respondem)
+// e uma linha de metadados vai pra aba 'Driver Documents' da MASTERSHEET.
+//
+// PRIVACIDADE: são documentos de identidade. Ao contrário dos outros
+// uploads do projeto, estes arquivos NAO recebem "anyone with link" —
+// ficam restritos a quem tem acesso ao Drive da conta do script.
+// ================================================================
+
+/** Sanitiza um nome pra virar nome de pasta no Drive (mantém acentos). */
+function safeDocsFolderName_(name) {
+  const clean = String(name || '')
+    .replace(/[\/\\\r\n\t]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120);
+  return clean || 'Sem nome';
+}
+
+/**
+ * Pasta do motorista no Drive: raiz > país > nome do motorista.
+ * Cria o que estiver faltando. Retorna o Folder do motorista.
+ */
+function getDriverDocsFolder_(country, driverName) {
+  const rootName = CONFIG.driverDocsFolderName;
+  const rootIt = DriveApp.getFoldersByName(rootName);
+  const root = rootIt.hasNext() ? rootIt.next() : DriveApp.createFolder(rootName);
+
+  const countryName = safeDocsFolderName_(country);
+  const cIt = root.getFoldersByName(countryName);
+  const countryFolder = cIt.hasNext() ? cIt.next() : root.createFolder(countryName);
+
+  const driverFolderName = safeDocsFolderName_(driverName);
+  const dIt = countryFolder.getFoldersByName(driverFolderName);
+  return dIt.hasNext() ? dIt.next() : countryFolder.createFolder(driverFolderName);
+}
+
+/** Garante a aba 'Driver Documents' com cabeçalho. */
+function ensureDriverDocsSheet_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  let sheet = ss.getSheetByName(CONFIG.driverDocsSheet);
+  if (sheet) return sheet;
+
+  sheet = ss.insertSheet(CONFIG.driverDocsSheet);
+  const headers = [
+    'Timestamp', 'Session ID', 'Country', 'Driver Name', 'Driver Email',
+    'Doc Type', 'Doc Number', 'License Number', 'License Expiry',
+    'Folder URL', 'Front URL', 'Back URL', 'Extra URLs'
+  ];
+  sheet.appendRow(headers);
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#f0f0f0');
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
+/**
+ * Sobe uma foto (base64) pra pasta do motorista.
+ * fileObj: { name, base64, slot }  slot: 'cnh-frente' | 'cnh-verso' | 'extra'
+ * Retorna a URL do arquivo no Drive (privada — sem sharing público).
+ */
+function uploadDriverDocFile_(folder, fileObj, driverName) {
+  if (!fileObj || !fileObj.base64) return '';
+
+  const cleanBase64 = String(fileObj.base64).replace(/^data:[^;]+;base64,/, '');
+  const mimeMatch = String(fileObj.base64).match(/^data:([^;]+);base64,/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+  let ext = String(mime.split('/')[1] || 'jpg').toLowerCase();
+  if (ext === 'jpeg') ext = 'jpg';
+
+  const ts = Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyyy-MM-dd_HH-mm');
+  const safeDriver = String(driverName || 'motorista')
+    .replace(/[^a-z0-9]/gi, '_').toLowerCase().slice(0, 40);
+  const safeSlot = String(fileObj.slot || 'doc')
+    .replace(/[^a-z0-9-]/gi, '_').toLowerCase();
+  const filename = safeSlot + '_' + safeDriver + '_' + ts + '.' + ext;
+
+  const blob = Utilities.newBlob(Utilities.base64Decode(cleanBase64), mime, filename);
+  const file = folder.createFile(blob);
+  // Sem setSharing de propósito: documento de identidade não vira link público.
+  return file.getUrl();
+}
+
+/**
+ * Salva o envio de documentos de um motorista.
+ *
+ * Payload:
+ * {
+ *   type: 'submitDriverDocs',
+ *   country: 'Brazil',
+ *   driverName: 'Fulano de Tal',
+ *   driverEmail: 'fulano@...',
+ *   docType: 'CPF',                 // rótulo do documento no país (CPF/DNI/RUT/...)
+ *   docNumber: '123.456.789-00',
+ *   licenseNumber: '01234567890',
+ *   licenseExpiry: '2028-04-30',    // opcional, YYYY-MM-DD
+ *   files: [ { name, base64, slot }, ... ]   // slot: cnh-frente | cnh-verso | extra
+ * }
+ */
+function submitDriverDocs_(data) {
+  if (!data || !String(data.driverName || '').trim()) {
+    return { success: false, error: 'driverName obrigatório' };
+  }
+  if (!String(data.country || '').trim()) {
+    return { success: false, error: 'country obrigatório' };
+  }
+  if (!String(data.docNumber || '').trim()) {
+    return { success: false, error: 'número do documento obrigatório' };
+  }
+  if (!String(data.licenseNumber || '').trim()) {
+    return { success: false, error: 'número da habilitação obrigatório' };
+  }
+  const files = Array.isArray(data.files) ? data.files.slice(0, 6) : [];
+  if (files.length === 0) {
+    return { success: false, error: 'nenhuma foto enviada' };
+  }
+
+  const driverName = String(data.driverName).trim();
+  const country = String(data.country).trim();
+
+  let folder;
+  try {
+    folder = getDriverDocsFolder_(country, driverName);
+  } catch (err) {
+    Logger.log('[Driver Docs] erro criando pasta: ' + err);
+    return { success: false, error: 'não foi possível criar a pasta no Drive: ' + err };
+  }
+
+  let frontUrl = '', backUrl = '';
+  const extras = [];
+  let failed = 0;
+  for (let i = 0; i < files.length; i++) {
+    try {
+      const url = uploadDriverDocFile_(folder, files[i], driverName);
+      if (!url) { failed++; continue; }
+      const slot = String(files[i].slot || '');
+      if (slot === 'cnh-frente' && !frontUrl) frontUrl = url;
+      else if (slot === 'cnh-verso' && !backUrl) backUrl = url;
+      else extras.push(url);
+    } catch (err) {
+      failed++;
+      Logger.log('[Driver Docs] erro upload arquivo #' + (i + 1) + ': ' + err);
+    }
+  }
+
+  const uploaded = (frontUrl ? 1 : 0) + (backUrl ? 1 : 0) + extras.length;
+  if (uploaded === 0) {
+    return { success: false, error: 'falha ao subir as fotos pro Drive' };
+  }
+
+  const sheet = ensureDriverDocsSheet_();
+  const sessionId = Utilities.getUuid();
+  const row = [
+    new Date(),
+    sessionId,
+    country,
+    driverName,
+    String(data.driverEmail || '').trim(),
+    String(data.docType || '').trim(),
+    String(data.docNumber || '').trim(),
+    String(data.licenseNumber || '').trim(),
+    String(data.licenseExpiry || '').trim(),
+    folder.getUrl(),
+    frontUrl,
+    backUrl,
+    extras.join('\n')
+  ];
+
+  const lock = LockService.getScriptLock();
+  let gotLock = false;
+  try { gotLock = lock.tryLock(20000); } catch (e) { gotLock = false; }
+  try {
+    sheet.appendRow(row);
+  } finally {
+    if (gotLock) { try { lock.releaseLock(); } catch (e) {} }
+  }
+
+  Logger.log('[Driver Docs] ' + country + ' / ' + driverName + ' — ' + uploaded +
+             ' arquivo(s), ' + failed + ' falha(s), pasta ' + folder.getUrl());
+
+  return {
+    success: true,
+    sessionId: sessionId,
+    folderUrl: folder.getUrl(),
+    uploaded: uploaded,
+    failed: failed,
+    message: 'Documentos recebidos'
+  };
+}
+
+/**
+ * Lista quem já enviou documentos (só nome/país/data — NUNCA número de
+ * documento, porque este endpoint é público como todos os GET do Web App).
+ * Usado pelo driver-docs.html pra avisar "você já enviou em ...".
+ */
+function getDriverDocsStatus_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(CONFIG.driverDocsSheet);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+
+  const data = sheet.getDataRange().getValues();
+  // Headers: Timestamp | Session ID | Country | Driver Name | ...
+  const byName = {};
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[0]) continue;
+    const name = String(row[3] || '').trim();
+    if (!name) continue;
+    const tsRaw = row[0];
+    const ts = (tsRaw instanceof Date) ? tsRaw.toISOString() : String(tsRaw || '');
+    const key = name.toLowerCase();
+    if (!byName[key] || ts > byName[key].timestamp) {
+      byName[key] = { name: name, country: String(row[2] || '').trim(), timestamp: ts };
+    }
+  }
+  return Object.keys(byName).map(function (k) { return byName[k]; });
 }
