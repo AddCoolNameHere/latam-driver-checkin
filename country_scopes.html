@@ -1775,7 +1775,7 @@ function populateDriverSelect(selectedEmail) {
     }
     const opt = document.createElement('option');
     opt.value = String(d.email).toLowerCase();
-    opt.textContent = d.name;
+    opt.textContent = d.name || d.email;   // fallback: nunca deixa a opção em branco
     group.appendChild(opt);
   });
   sel.value = prev || '';

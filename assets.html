@@ -1012,7 +1012,7 @@ function populateDriverSelect() {
     }
     const opt = document.createElement('option');
     opt.value = d.email;
-    opt.textContent = d.name;
+    opt.textContent = d.name || d.email;   // fallback: nunca deixa a opção em branco
     opt.dataset.name = d.name;
     opt.dataset.country = d.country || '';
     select.lastElementChild.appendChild(opt);
@@ -1400,25 +1400,22 @@ async function submitForm() {
   });
 
   try {
-    // Fire-and-forget pattern (CORS workaround do Apps Script)
-    // Como precisamos enviar fotos pesadas, esperamos a resposta com no-cors:
-    // o response será opaque mas tudo bem — sucesso significa request foi aceito.
+    // O Apps Script responde com CORS liberado — dá pra LER a resposta. Só é sucesso
+    // se o backend disser {success:true}; antes qualquer erro virava "enviado com sucesso".
     const res = await fetch(CONFIG.scriptUrl, {
       method: 'POST',
       body: JSON.stringify(payload),
       // sem content-type → preflight simples
     });
 
-    // Tenta ler resposta. Se for opaque (no-cors) ou erro, considera ok mesmo assim
-    // porque o request foi enviado.
-    let ok = true;
+    let ok = false;
     try {
       const data = await res.json();
-      if (data && data.success === false) {
-        ok = false;
-        console.error('[Assets] backend retornou erro:', data.error);
-      }
-    } catch (e) { /* opaque response — assume ok */ }
+      ok = !!(data && data.success === true);
+      if (!ok) console.error('[Assets] backend retornou erro:', data && data.error);
+    } catch (e) {
+      console.error('[Assets] resposta do backend ilegível (HTTP ' + res.status + '):', e);
+    }
 
     if (ok) {
       showToast(t('success'), 'success');
