@@ -384,6 +384,69 @@
     .ops-body.panel-collapsed .side-panel { width: 100%; max-height: 0; }
     .counts { display: none; }
   }
+
+  /* ---- Atribuição de áreas do plano (MyMaps) → motoristas ---- */
+  .tb-btn.active { background: #6D28D9; border-color: #6D28D9; color: #fff; }
+  .tb-btn.active:hover { background: #5B21B6; border-color: #5B21B6; color: #fff; }
+  .tb-btn:disabled { opacity: 0.55; cursor: default; }
+  .tb-warn { font-size: 12px; color: #B45309; background: #FEF3C7; border-radius: 8px; padding: 6px 10px; }
+  [data-theme="dark"] .tb-warn { background: #422006; color: #FDE68A; }
+  body.om-select-mode #map { cursor: crosshair; }
+  .scope-form {
+    padding: 12px 14px; border-bottom: 1px solid var(--c-border);
+    background: var(--c-surface); max-height: 58%; overflow-y: auto; flex-shrink: 0;
+  }
+  .sp-hint { font-size: 11px; color: var(--c-text-muted); line-height: 1.45; margin-bottom: 10px; }
+  .sp-section-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--c-text-muted); margin: 0 0 6px;
+  }
+  .sp-field { margin-bottom: 10px; }
+  .sp-field label { display: block; font-size: 11px; color: var(--c-text-muted); margin-bottom: 4px; }
+  .sp-field select, .sp-field input, .sp-field textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--c-border); border-radius: 8px;
+    background: var(--c-bg); color: var(--c-text); font: inherit; font-size: 13px;
+  }
+  .sp-field textarea { resize: vertical; }
+  .sp-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sp-inline { display: flex; gap: 6px; }
+  .sp-inline input { flex: 1; min-width: 0; }
+  .sp-selected-list {
+    max-height: 120px; overflow-y: auto; border: 1px solid var(--c-border); border-radius: 8px;
+    padding: 6px 8px; font-size: 12px; background: var(--c-bg);
+  }
+  .sp-selected-item { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 2px 0; }
+  .sp-selected-item span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sp-selected-item button { background: none; border: none; color: var(--c-text-muted); cursor: pointer; font-size: 12px; padding: 0 2px; }
+  .sp-selected-item button:hover { color: var(--c-danger); }
+  .sp-actions { display: flex; gap: 8px; margin-top: 4px; }
+  .sp-actions .tb-btn { flex: 1; justify-content: center; }
+  .asg-list { padding: 10px 14px; }
+  .asg-driver { margin-bottom: 10px; border: 1px solid var(--c-border); border-radius: 10px; overflow: hidden; }
+  .asg-driver-head {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    background: var(--c-bg); font-size: 13px; font-weight: 600;
+  }
+  .asg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .asg-driver-head .asg-meta { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--c-text-muted); white-space: nowrap; }
+  .asg-item { display: flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 12px; border-top: 1px solid var(--c-border); }
+  .asg-item .asg-name { flex: 1; cursor: pointer; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .asg-item .asg-name:hover { color: var(--c-primary); text-decoration: underline; }
+  .asg-item .asg-dates { color: var(--c-text-muted); font-size: 11px; white-space: nowrap; }
+  .asg-item button { background: none; border: none; cursor: pointer; font-size: 13px; padding: 0 2px; color: var(--c-text-muted); }
+  .asg-item button:hover { color: var(--c-primary); }
+  .asg-item button.confirm { color: var(--c-danger); font-weight: 600; font-size: 11px; }
+  /* Marcador com iniciais do motorista no centróide da área atribuída */
+  .asg-marker-icon { background: transparent; border: none; }
+  .asg-marker {
+    min-width: 28px; height: 20px; padding: 0 6px; border-radius: 10px;
+    background: #6D28D9; color: #fff; font-size: 10px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.3); white-space: nowrap;
+  }
+  .popup-assign-btn { width: 100%; justify-content: center; margin-top: 8px; padding: 6px 10px; font-size: 12px; }
+  .popup-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--c-border); }
+  .popup-section-title { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--c-text-muted); margin-bottom: 4px; }
 </style>
 </head>
 <body>
@@ -425,6 +488,13 @@
       </span>
     </div>
 
+    <div class="tb-sep"></div>
+
+    <div class="tb-group">
+      <button class="tb-btn" id="btn-select-mode" onclick="toggleSelectMode()">✏️ <span data-i18n="tbAssign">Atribuir áreas</span></button>
+      <span class="tb-warn" id="tb-warn" style="display:none;" data-i18n="backendWarn">Backend precisa de redeploy (v5.77) — atribuições indisponíveis</span>
+    </div>
+
     <div class="ops-spacer"></div>
 
     <div class="tb-group">
@@ -448,10 +518,37 @@
           <button class="side-tab active" id="tab-drivers" data-i18n="tabDrivers">Motoristas</button>
           <button class="side-tab" id="tab-vids" data-i18n="tabVids">VIDs</button>
           <button class="side-tab" id="tab-admin" data-i18n="tabAdmin">Admin</button>
+          <button class="side-tab" id="tab-scope" data-i18n="tabScope">Escopo</button>
         </div>
         <button class="side-toggle-btn" id="side-toggle" title="Recolher painel" aria-label="Recolher painel">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
         </button>
+      </div>
+      <div class="scope-form" id="scope-form" style="display:none;">
+        <div class="sp-section-title" id="scope-form-title">Nova atribuição</div>
+        <div class="sp-hint" data-i18n="selectHint">Clique nas áreas do plano pra selecionar (clique de novo pra tirar). Shift + arrastar seleciona um retângulo.</div>
+        <div class="sp-field">
+          <label data-i18n="fldFilter">Selecionar pelo nome</label>
+          <div class="sp-inline">
+            <input type="text" id="sel-filter" data-i18n-ph="fldFilterPh" placeholder="Ex: Zona Norte">
+            <button type="button" class="tb-btn" onclick="selectByFilter()" data-i18n="btnSelectAll">Selecionar</button>
+          </div>
+        </div>
+        <div class="sp-section-title"><span data-i18n="selectedAreas">Áreas selecionadas</span> (<span id="sel-count">0</span>)</div>
+        <div class="sp-selected-list" id="sel-list"></div>
+        <div class="sp-field" style="margin-top:10px;">
+          <label data-i18n="fldDriver">Motorista</label>
+          <select id="asg-driver"></select>
+        </div>
+        <div class="sp-row2">
+          <div class="sp-field"><label data-i18n="fldStart">Início (aprox.)</label><input type="date" id="asg-start"></div>
+          <div class="sp-field"><label data-i18n="fldEnd">Fim (aprox.)</label><input type="date" id="asg-end"></div>
+        </div>
+        <div class="sp-field"><label data-i18n="fldNotes">Observações</label><textarea id="asg-notes" rows="2"></textarea></div>
+        <div class="sp-actions">
+          <button type="button" class="tb-btn" onclick="clearSelection()" data-i18n="btnClear">Limpar</button>
+          <button type="button" class="tb-btn primary" id="asg-save" onclick="saveAssignment()" data-i18n="btnSave">Salvar</button>
+        </div>
       </div>
       <div class="side-list" id="side-list"></div>
     </aside>
@@ -467,6 +564,7 @@
     <div class="legend-item"><span class="legend-swatch" style="background:var(--c-surface);border-color:var(--c-text-muted);"></span> <span data-i18n="legHome">Casa do motorista</span></div>
     <div class="legend-item"><span class="legend-swatch" style="background:var(--c-surface);border-color:var(--c-accent);"></span> <span data-i18n="legHotel">Hotel (base atual)</span></div>
     <div class="legend-item"><span class="legend-swatch sq" style="background:var(--plan-color);"></span> <span data-i18n="legPlan">Plano do mês (MyMaps)</span></div>
+    <div class="legend-item"><span class="legend-swatch sq" style="background:transparent;border:2px dashed #6D28D9;"></span> <span data-i18n="legAssigned">Área atribuída (cor = motorista)</span></div>
   </div>
 
 </div><!-- /#app-content -->
@@ -591,6 +689,24 @@ const I18N = {
     adminCountActive: 'Ativos (é este número que sai no dashboard e no portal do cliente)',
     adminCalRef: 'frota no calendário', adminUncurated: 'sem curadoria (não contam)',
     savedOk: 'Curadoria salva', saveFail: 'Falha ao salvar',
+
+    // Atribuição de áreas do plano → motoristas (Scope Assignments, backend v5.77)
+    tbAssign: 'Atribuir áreas', tabScope: 'Escopo', legAssigned: 'Área atribuída (cor = motorista)',
+    backendWarn: 'Backend precisa de redeploy (v5.77) — atribuições indisponíveis',
+    selectHint: 'Clique nas áreas do plano pra selecionar (clique de novo pra tirar). Shift + arrastar seleciona um retângulo.',
+    fldFilter: 'Selecionar pelo nome', fldFilterPh: 'Ex: Zona Norte', btnSelectAll: 'Selecionar',
+    selectedAreas: 'Áreas selecionadas', noneSelected: 'Nenhuma área selecionada',
+    fldDriver: 'Motorista', selectDriver: '— selecionar —', fldStart: 'Início (aprox.)', fldEnd: 'Fim (aprox.)',
+    fldNotes: 'Observações', btnClear: 'Limpar', btnSave: 'Salvar', asgSaving: 'Salvando…',
+    asgSaved: 'Atribuição salva!', asgDeleted: 'Atribuição removida', confirmDelete: 'Confirmar?',
+    btnEdit: 'Editar', btnDelete: 'Remover', panelNew: 'Nova atribuição', panelEdit: 'Editar atribuição',
+    noAssignments: 'Nenhuma atribuição neste mês. Clique em "Atribuir áreas" pra começar.',
+    noPlanForAssign: 'Sobe o MyMaps do mês primeiro pra atribuir áreas.', noMatch: 'Nada encontrado.',
+    popupAssigned: 'Motoristas atribuídos', popupAssignBtn: '+ Atribuir esta área',
+    errNoAreas: 'Selecione pelo menos uma área', errNoDriver: 'Escolha o motorista', errDates: 'Fim antes do início',
+    filterAdded: '{n} área(s) adicionada(s)', filterNoMatch: 'Nenhuma área com esse nome',
+    areasWord: 'áreas', noDates: 'sem datas', countAssigned: 'atribuídas', badgeFmt: '{a} atribuições · {d} motoristas',
+    areaNotInPlan: 'Essa área não está no plano deste mês (veja em Áreas por país).',
   },
   es: {
     monthLabel: 'Mes (MyMaps)', noMaps: 'Ningún mapa', uploadBtn: 'Subir MyMaps',
@@ -630,6 +746,24 @@ const I18N = {
     adminCountActive: 'Activos (este es el número que sale en el dashboard y en el portal del cliente)',
     adminCalRef: 'flota en el calendario', adminUncurated: 'sin curaduría (no cuentan)',
     savedOk: 'Curaduría guardada', saveFail: 'Error al guardar',
+
+    // Asignación de áreas del plan → conductores (Scope Assignments, backend v5.77)
+    tbAssign: 'Asignar áreas', tabScope: 'Alcance', legAssigned: 'Área asignada (color = conductor)',
+    backendWarn: 'El backend necesita redeploy (v5.77) — asignaciones no disponibles',
+    selectHint: 'Haz clic en las áreas del plan para seleccionar (clic de nuevo para quitar). Shift + arrastrar selecciona un rectángulo.',
+    fldFilter: 'Seleccionar por nombre', fldFilterPh: 'Ej: Zona Norte', btnSelectAll: 'Seleccionar',
+    selectedAreas: 'Áreas seleccionadas', noneSelected: 'Ninguna área seleccionada',
+    fldDriver: 'Conductor', selectDriver: '— seleccionar —', fldStart: 'Inicio (aprox.)', fldEnd: 'Fin (aprox.)',
+    fldNotes: 'Observaciones', btnClear: 'Limpiar', btnSave: 'Guardar', asgSaving: 'Guardando…',
+    asgSaved: '¡Asignación guardada!', asgDeleted: 'Asignación eliminada', confirmDelete: '¿Confirmar?',
+    btnEdit: 'Editar', btnDelete: 'Eliminar', panelNew: 'Nueva asignación', panelEdit: 'Editar asignación',
+    noAssignments: 'Ninguna asignación en este mes. Haz clic en "Asignar áreas" para empezar.',
+    noPlanForAssign: 'Sube primero el MyMaps del mes para asignar áreas.', noMatch: 'Nada encontrado.',
+    popupAssigned: 'Conductores asignados', popupAssignBtn: '+ Asignar esta área',
+    errNoAreas: 'Selecciona al menos un área', errNoDriver: 'Elige el conductor', errDates: 'Fin antes del inicio',
+    filterAdded: '{n} área(s) agregada(s)', filterNoMatch: 'Ninguna área con ese nombre',
+    areasWord: 'áreas', noDates: 'sin fechas', countAssigned: 'asignadas', badgeFmt: '{a} asignaciones · {d} conductores',
+    areaNotInPlan: 'Esa área no está en el plan de este mes (mírala en Áreas por país).',
   },
   en: {
     monthLabel: 'Month (MyMaps)', noMaps: 'No map', uploadBtn: 'Upload MyMaps',
@@ -669,6 +803,24 @@ const I18N = {
     adminCountActive: 'Active (this is the number shown on the dashboard and the client portal)',
     adminCalRef: 'fleet in calendar', adminUncurated: 'not curated (excluded)',
     savedOk: 'Saved', saveFail: 'Save failed',
+
+    // Plan area assignment → drivers (Scope Assignments, backend v5.77)
+    tbAssign: 'Assign areas', tabScope: 'Scope', legAssigned: 'Assigned area (color = driver)',
+    backendWarn: 'Backend needs redeploy (v5.77) — assignments unavailable',
+    selectHint: 'Click plan areas to select (click again to remove). Shift + drag selects a rectangle.',
+    fldFilter: 'Select by name', fldFilterPh: 'e.g. North zone', btnSelectAll: 'Select',
+    selectedAreas: 'Selected areas', noneSelected: 'No area selected',
+    fldDriver: 'Driver', selectDriver: '— select —', fldStart: 'Start (approx.)', fldEnd: 'End (approx.)',
+    fldNotes: 'Notes', btnClear: 'Clear', btnSave: 'Save', asgSaving: 'Saving…',
+    asgSaved: 'Assignment saved!', asgDeleted: 'Assignment removed', confirmDelete: 'Confirm?',
+    btnEdit: 'Edit', btnDelete: 'Remove', panelNew: 'New assignment', panelEdit: 'Edit assignment',
+    noAssignments: 'No assignments this month. Click "Assign areas" to start.',
+    noPlanForAssign: 'Upload the month MyMaps first to assign areas.', noMatch: 'Nothing found.',
+    popupAssigned: 'Assigned drivers', popupAssignBtn: '+ Assign this area',
+    errNoAreas: 'Select at least one area', errNoDriver: 'Pick the driver', errDates: 'End before start',
+    filterAdded: '{n} area(s) added', filterNoMatch: 'No area with that name',
+    areasWord: 'areas', noDates: 'no dates', countAssigned: 'assigned', badgeFmt: '{a} assignments · {d} drivers',
+    areaNotInPlan: 'That area is not in this month plan (see Country Scopes).',
   },
 };
 function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || (I18N.pt[key]) || key; }
@@ -696,6 +848,13 @@ const state = {
   overlayGeo: {},           // cacheKey -> geojson
   layers: { cars: true, homes: false, plan: true, cancelled: false },
   storeMode: null,          // 'drive' | 'local'
+  // Atribuição de áreas do plano → motoristas (Scope Assignments, backend v5.77)
+  assignments: {},          // code -> [ {id, areaId:'mm:<mês>:<slug>', driverEmail, startDate, endDate, ...} ]
+  assignBackendOk: true,
+  selectMode: false,
+  selected: {},             // areaId -> true
+  editingId: null,          // id da atribuição em edição (se houver)
+  editingAreaId: null,
   loaded: false,
 };
 
@@ -715,7 +874,8 @@ function startApp(user) {
       localStorage.setItem('preferredLang', newLang);
       applyI18n();
       renderTabs();
-      if (state.country) { renderSideList(); updateCounts(); }
+      updateScopeForm();
+      if (state.country) { renderSideList(); updateCounts(); renderSelectedList(); }
     },
     onRefresh: () => {
       clearDataCache();
@@ -723,6 +883,7 @@ function startApp(user) {
       state.vidsByCountry = {};
       state.maps = {};
       state.overlayGeo = {};
+      state.assignments = {};
       bootData();
     },
     extras: [{
@@ -941,12 +1102,15 @@ async function loadCountry(code) {
   showLoader(true);
   try {
     initMap();
+    if (state.selectMode) toggleSelectMode(false);
     renderDriverLayers(code);
 
-    // Lista de MyMaps do país (storage)
-    if (!state.maps[code]) {
-      state.maps[code] = await MapStore.list(code).catch(() => []);
-    }
+    // Lista de MyMaps do país (storage) + atribuições de áreas (Scope Assignments), em paralelo
+    const [mapsList] = await Promise.all([
+      state.maps[code] ? Promise.resolve(state.maps[code]) : MapStore.list(code).catch(() => []),
+      loadAssignments(code),
+    ]);
+    state.maps[code] = mapsList;
     buildMonthSelect(code);
 
     const monthKey = state.selectedMonth[code];
@@ -976,6 +1140,7 @@ function initMap() {
   homesLayer = L.layerGroup();
   tempLayer = L.layerGroup().addTo(map);
   if (state.layers.homes) homesLayer.addTo(map);
+  setupBoxSelect();
 }
 
 // =================================================================
@@ -1235,7 +1400,7 @@ function buildMonthSelect(code) {
 }
 
 async function renderPlanForMonth(code, monthKey) {
-  if (planLayer) { map.removeLayer(planLayer); planLayer = null; }
+  clearPlanLayers();
   if (!monthKey) { updateCounts(); return; }
   const entry = (state.maps[code] || []).find(m => m.month === monthKey);
   if (!entry) { updateCounts(); return; }
@@ -1247,38 +1412,33 @@ async function renderPlanForMonth(code, monthKey) {
     if (geo) state.overlayGeo[cacheKey] = geo;
   }
   state._planFeatureCount = geo ? (geo.features || []).length : 0;
-  if (geo && state.layers.plan) drawPlan(geo);
+  if (geo && state.layers.plan) drawPlan(geo, monthKey);
   updateCounts();
 }
 
-function drawPlan(geo) {
-  if (planLayer) { map.removeLayer(planLayer); planLayer = null; }
+// Desenha o plano do mês. Cada feature ganha uma chave estável (properties._asgKey) e
+// entra em layerById pra seleção/atribuição; o popup mostra os motoristas atribuídos.
+function drawPlan(geo, monthKey) {
+  clearPlanLayers();
   if (!geo) return;
+  tagPlanFeatures(geo, monthKey || state.selectedMonth[state.country] || '');
   planLayer = L.geoJSON(geo, {
-    style: (f) => {
-      const p = f.properties || {};
-      return {
-        color: p.stroke || '#7C3AED',
-        weight: p['stroke-width'] || 2,
-        opacity: p['stroke-opacity'] != null ? p['stroke-opacity'] : 0.85,
-        fillColor: p.fill || '#A78BFA',
-        fillOpacity: p['fill-opacity'] != null ? p['fill-opacity'] : 0.18,
-      };
-    },
+    style: planStyle,
     pointToLayer: (f, latlng) => L.circleMarker(latlng, {
       radius: 4, color: '#6D28D9', weight: 1.5, fillColor: '#A78BFA', fillOpacity: 0.9,
     }),
     onEachFeature: (f, layer) => {
-      const p = f.properties || {};
-      const name = p.name || '';
-      const desc = stripHtml(p.description || '');
-      if (name || desc) {
-        layer.bindPopup(`<div class="popup-title">${escapeHtml(name || t('planFeature'))}</div>`
-          + (desc ? `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:12px;">${escapeHtml(desc.slice(0, 300))}</div>` : ''));
-      }
+      const id = (f.properties || {})._asgKey;
+      if (id) layerById[id] = layer;
+      layer.on('click', (e) => {
+        if (Date.now() - lastBoxSelectAt < 400) return;   // clique fantasma logo após shift+arrastar
+        if (state.selectMode) { if (id) toggleSelect(id); return; }
+        if (id) openPlanPopup(id, e.latlng);
+      });
     },
   }).addTo(map);
   if (planLayer && planLayer.bringToBack) planLayer.bringToBack();
+  applyAssignmentStyles();
 }
 
 // =================================================================
@@ -1289,15 +1449,17 @@ function renderSideList() {
   const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
   if (state.sideTab === 'vids') renderVidSide(wrap, q);
   else if (state.sideTab === 'admin') renderAdminSide(wrap, q);
+  else if (state.sideTab === 'scope') renderScopeSide(wrap, q);
   else renderDriverSide(wrap, q);
 }
 
 function setSideTab(tab) {
   state.sideTab = tab;
-  ['drivers', 'vids', 'admin'].forEach(k => {
+  ['drivers', 'vids', 'admin', 'scope'].forEach(k => {
     const el = document.getElementById('tab-' + k);
     if (el) el.classList.toggle('active', tab === k);
   });
+  updateScopeForm();
   renderSideList();
 }
 
@@ -1523,12 +1685,14 @@ function updateCounts() {
   const active = visible.filter(v => recencyOf(v) === 'active').length;
   const parked = visible.filter(v => { const r = recencyOf(v); return r === 'parked' || r === 'inactive'; }).length;
   const plan = state._planFeatureCount || 0;
+  const assigned = plan ? planAssignments().length : 0;
   document.getElementById('counts').innerHTML =
     `<span><b>${visible.length}</b> ${t('countVids')}</span>`
     + `<span><b>${active}</b> ${t('countActiveVids')}</span>`
     + `<span><b>${parked}</b> ${t('countParked')}</span>`
     + (cancelled ? `<span><b>${cancelled}</b> ${t('countCancelled')}</span>` : '')
-    + (plan ? `<span><b>${plan}</b> ${t('countPlan')}</span>` : '');
+    + (plan ? `<span><b>${plan}</b> ${t('countPlan')}</span>` : '')
+    + (assigned ? `<span><b>${assigned}</b> ${t('countAssigned')}</span>` : '');
 }
 
 function fitToData() {
@@ -1567,7 +1731,7 @@ function wireUI() {
   // Mês
   document.getElementById('month-select').addEventListener('change', (e) => {
     state.selectedMonth[state.country] = e.target.value || null;
-    renderPlanForMonth(state.country, e.target.value || null);
+    renderPlanForMonth(state.country, e.target.value || null).then(onPlanMonthChanged);
   });
 
   // Upload
@@ -1590,6 +1754,7 @@ function wireUI() {
   document.getElementById('tab-drivers').addEventListener('click', () => setSideTab('drivers'));
   document.getElementById('tab-vids').addEventListener('click', () => setSideTab('vids'));
   document.getElementById('tab-admin').addEventListener('click', () => setSideTab('admin'));
+  document.getElementById('tab-scope').addEventListener('click', () => setSideTab('scope'));
 
   window.addEventListener('resize', () => { if (map) map.invalidateSize(); });
 }
@@ -1605,7 +1770,7 @@ function toggleLayer(key) {
     if (state.layers.cars) carsLayer.addTo(map); else map.removeLayer(carsLayer);
   } else if (key === 'plan') {
     if (state.layers.plan) renderPlanForMonth(state.country, state.selectedMonth[state.country]);
-    else if (planLayer) { map.removeLayer(planLayer); planLayer = null; }
+    else clearPlanLayers();
   } else if (key === 'cancelled') {
     // filtro de render — re-monta camada de VIDs + lista + contadores
     renderDriverLayers(state.country);
@@ -1750,7 +1915,7 @@ const MapStore = {
   async list(code) {
     if (state.storeMode === 'drive') {
       const res = await cachedFetch(`${CONFIG.scriptUrl}?action=listMyMaps&country=${encodeURIComponent(code)}`, 120).catch(() => ({ maps: [] }));
-      return res.maps || [];
+      return (res.maps || []).map(m => Object.assign({}, m, { month: normMonthKey(m.month) }));
     }
     return await idbList(code);
   },
@@ -1903,6 +2068,610 @@ function showToast(msg, kind) {
   el.className = 'ops-toast show' + (kind ? ' ' + kind : '');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.classList.remove('show'); }, 2600);
+}
+
+// =================================================================
+// ATRIBUIÇÃO DE ÁREAS DO PLANO (MyMaps) → MOTORISTAS
+// Mesma aba "Scope Assignments" e mesmos endpoints do country_scopes
+// (backend v5.77). O KML do MyMaps traz collection_area_id (ex: 9602562b-AR.5)
+// = o id dos polígonos do country_scopes, então areaId é o MESMO nas duas
+// páginas e a atribuição aparece em ambas. Feature sem esse id cai no
+// fallback 'mm:<AAAA-MM>:<nome>' (que o country_scopes ignora).
+// Filtro de mês = período da atribuição × mês do plano selecionado.
+// =================================================================
+const SCOPE_BACKEND_VERSION = 'v5.77';
+const SELECTED_STYLE = { color: '#6D28D9', weight: 3, dashArray: null, fillColor: '#A78BFA', fillOpacity: 0.6 };
+const DRIVER_PALETTE = ['#7C3AED', '#DB2777', '#0891B2', '#D97706', '#059669', '#DC2626', '#4F46E5',
+                        '#65A30D', '#9333EA', '#0284C7', '#C026D3', '#EA580C', '#0D9488', '#BE123C'];
+
+let layerById = {};        // areaId → layer do feature do plano (mês selecionado)
+let asgLayer = null;       // marcadores com iniciais nos centróides das áreas atribuídas
+let lastBoxSelectAt = 0;   // evita o "clique fantasma" no polígono logo após shift+arrastar
+
+// ---- Helpers ----
+function normStr(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+}
+function planKeyPrefix(month) { return 'mm:' + month + ':'; }
+// Chave estável por feature do KML: nome normalizado (+ ~2, ~3… se o nome repetir).
+// Grava em properties._asgKey pra não depender da ordem em que o Leaflet itera.
+function tagPlanFeatures(geo, month) {
+  const feats = (geo && geo.features) || [];
+  const seen = {};
+  feats.forEach((f, i) => {
+    const p = f.properties = f.properties || {};
+    const caId = String(p.collection_area_id || '').trim();
+    if (caId) { p._asgKey = caId; return; }
+    let slug = normStr(p.name).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ('area-' + (i + 1));
+    seen[slug] = (seen[slug] || 0) + 1;
+    if (seen[slug] > 1) slug += '~' + seen[slug];
+    p._asgKey = planKeyPrefix(month) + slug;
+  });
+}
+// Nome legível do feature: no MyMaps o "name" é o km e o nome real vem em collection_area_name
+function planFeatureName(p) {
+  p = p || {};
+  return String(p.collection_area_name || p.name || '').trim();
+}
+// Mês do storage pode vir como Date serializado ("Mon Aug 31 2026 23:00:00 GMT-0400")
+// em vez de "2026-09": normaliza pra AAAA-MM (meio-dia UTC evita virar o mês por fuso).
+function normMonthKey(v) {
+  const s = String(v || '').trim();
+  if (/^\d{4}-\d{2}$/.test(s)) return s;
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  const u = new Date(d.getTime() + 12 * 3600 * 1000);
+  return u.getUTCFullYear() + '-' + String(u.getUTCMonth() + 1).padStart(2, '0');
+}
+// Sem data = "aberto": aparece em qualquer mês. Só início = daquele dia em diante. Só fim = até aquele dia.
+function inMonth(a, ym) {
+  const mb = monthBounds(ym);
+  const s = a.startDate || '0000-01-01';
+  const e = a.endDate || '9999-12-31';
+  return s <= mb[1] && e >= mb[0];
+}
+function planStyle(f) {
+  const p = f.properties || {};
+  return {
+    color: p.stroke || '#7C3AED',
+    weight: p['stroke-width'] || 2,
+    opacity: p['stroke-opacity'] != null ? p['stroke-opacity'] : 0.85,
+    fillColor: p.fill || '#A78BFA',
+    fillOpacity: p['fill-opacity'] != null ? p['fill-opacity'] : 0.18,
+    dashArray: null,
+  };
+}
+function layerBounds(layer) {
+  if (layer.getBounds) { const b = layer.getBounds(); if (b && b.isValid()) return b; }
+  if (layer.getLatLng) return L.latLngBounds(layer.getLatLng(), layer.getLatLng());
+  return null;
+}
+function layerCenter(layer) {
+  const b = layerBounds(layer);
+  return b ? b.getCenter() : null;
+}
+function monthBounds(ym) {
+  const parts = ym.split('-').map(Number);
+  const last = new Date(parts[0], parts[1], 0).getDate();
+  return [ym + '-01', ym + '-' + String(last).padStart(2, '0')];
+}
+function countryAssignments(code) { return state.assignments[code] || []; }
+// Atribuições do país cujo período cruza o mês do plano selecionado
+function planAssignments() {
+  const month = state.selectedMonth[state.country];
+  if (!month || !/^\d{4}-\d{2}$/.test(month)) return [];
+  return countryAssignments(state.country).filter(a => inMonth(a, month));
+}
+function byStart(a, b) {
+  return (a.startDate || '').localeCompare(b.startDate || '') || (a.endDate || '').localeCompare(b.endDate || '');
+}
+function fmtShortDate(iso) {
+  if (!iso) return '';
+  const p = iso.split('-');
+  return p[2] + '/' + p[1];
+}
+function periodLabel(a) {
+  if (a.startDate && a.endDate) return fmtShortDate(a.startDate) + ' → ' + fmtShortDate(a.endDate);
+  if (a.startDate) return fmtShortDate(a.startDate) + ' →';
+  if (a.endDate) return '→ ' + fmtShortDate(a.endDate);
+  return t('noDates');
+}
+function fmtVars(key, vars) {
+  let s = t(key);
+  Object.keys(vars || {}).forEach(k => { s = s.replace('{' + k + '}', vars[k]); });
+  return s;
+}
+function uuid() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, ch => {
+    const r = Math.random() * 16 | 0;
+    return (ch === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+function driverColor(email) {
+  const s = String(email || '').toLowerCase();
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return DRIVER_PALETTE[h % DRIVER_PALETTE.length];
+}
+function allDrivers() {
+  return Object.keys(state.driversByCountry).reduce((arr, c) => arr.concat(state.driversByCountry[c] || []), []);
+}
+function findDriver(email) {
+  const e = String(email || '').toLowerCase();
+  return allDrivers().find(d => String(d.email || '').toLowerCase() === e) || null;
+}
+function driverNameOf(a) {
+  const d = findDriver(a.driverEmail);
+  return (d && d.name) || a.driverName || a.driverEmail || '?';
+}
+function initialsOf(name) {
+  return String(name || '?').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+}
+function areaNameById(id) {
+  const l = layerById[id];
+  return (l && planFeatureName(l.feature.properties)) || String(id).replace(/^mm:[^:]*:/, '');
+}
+function areaNameOf(a) {
+  const l = layerById[a.areaId];
+  return (l && planFeatureName(l.feature.properties)) || a.areaName || String(a.areaId).replace(/^mm:[^:]*:/, '');
+}
+
+// ---- Carrega atribuições do país (sempre fresco, sem cachedFetch) ----
+async function loadAssignments(code) {
+  try {
+    const res = await fetch(`${CONFIG.scriptUrl}?action=getScopeAssignments&country=${code}`).then(r => r.json());
+    if (!res || res.success !== true || !Array.isArray(res.assignments)) {
+      throw new Error((res && res.error) || 'resposta inválida');
+    }
+    state.assignments[code] = res.assignments;
+    state.assignBackendOk = true;
+    console.log('[OpsMap Scope] atribuições carregadas:', code, res.assignments.length);
+  } catch (err) {
+    console.warn('[OpsMap Scope] getScopeAssignments falhou (backend ' + SCOPE_BACKEND_VERSION + ' deployado?):', err);
+    state.assignments[code] = state.assignments[code] || [];
+    state.assignBackendOk = false;
+  }
+  const warn = document.getElementById('tb-warn');
+  if (warn) warn.style.display = state.assignBackendOk ? 'none' : '';
+}
+
+// =================================================================
+// Modo de seleção
+// =================================================================
+function toggleSelectMode(force) {
+  const on = (force === undefined) ? !state.selectMode : !!force;
+  if (on && !state.selectedMonth[state.country]) { showToast(t('noPlanForAssign'), 'error'); return; }
+  if (on && !state.assignBackendOk) { showToast(t('backendWarn'), 'error'); return; }
+  if (on === state.selectMode) {
+    if (on) { setSideTab('scope'); openSidePanel(); }
+    return;
+  }
+  state.selectMode = on;
+  document.body.classList.toggle('om-select-mode', on);
+  const btn = document.getElementById('btn-select-mode');
+  if (btn) btn.classList.toggle('active', on);
+  if (map) {
+    if (on) { map.boxZoom.disable(); map.closePopup(); }
+    else { map.boxZoom.enable(); }
+  }
+  if (on) {
+    if (!state.layers.plan) toggleLayer('plan');   // não dá pra selecionar plano escondido
+    setSideTab('scope');
+    openSidePanel();
+    populateDriverSelect();
+    prefillDates();
+  } else {
+    clearSelection();
+  }
+  updateScopeForm();
+}
+function openSidePanel() {
+  const body = document.getElementById('ops-body');
+  if (body && body.classList.contains('panel-collapsed')) {
+    body.classList.remove('panel-collapsed');
+    setTimeout(() => { if (map) map.invalidateSize(); }, 230);
+  }
+}
+function updateScopeForm() {
+  const form = document.getElementById('scope-form');
+  if (!form) return;
+  form.style.display = (state.sideTab === 'scope' && state.selectMode) ? '' : 'none';
+  const title = document.getElementById('scope-form-title');
+  if (title) title.textContent = state.editingId ? t('panelEdit') : t('panelNew');
+}
+// Plano é mensal: sugere o mês inteiro como período (o usuário ajusta se quiser)
+function prefillDates() {
+  const month = state.selectedMonth[state.country];
+  if (!month) return;
+  const mb = monthBounds(month);
+  const s = document.getElementById('asg-start'), e = document.getElementById('asg-end');
+  if (s && !s.value) s.value = mb[0];
+  if (e && !e.value) e.value = mb[1];
+}
+function toggleSelect(id) {
+  if (state.selected[id]) delete state.selected[id];
+  else state.selected[id] = true;
+  applyAssignmentStyles();
+  renderSelectedList();
+}
+function clearSelection() {
+  state.selected = {};
+  state.editingId = null;
+  state.editingAreaId = null;
+  const sel = document.getElementById('asg-driver');
+  if (sel) sel.value = '';
+  document.getElementById('asg-start').value = '';
+  document.getElementById('asg-end').value = '';
+  document.getElementById('asg-notes').value = '';
+  if (state.selectMode) prefillDates();
+  applyAssignmentStyles();
+  renderSelectedList();
+  updateScopeForm();
+}
+function renderSelectedList() {
+  const ids = Object.keys(state.selected);
+  const cnt = document.getElementById('sel-count');
+  const list = document.getElementById('sel-list');
+  if (!cnt || !list) return;
+  cnt.textContent = ids.length;
+  if (!ids.length) {
+    list.innerHTML = `<div class="side-empty" style="padding:8px 0;">${t('noneSelected')}</div>`;
+    return;
+  }
+  list.innerHTML = ids.map(id => `
+    <div class="sp-selected-item">
+      <span title="${escapeHtml(areaNameById(id))}">${escapeHtml(areaNameById(id))}</span>
+      <button type="button" onclick="toggleSelect('${escapeHtml(id)}')" title="✕">✕</button>
+    </div>`).join('');
+}
+function selectedBounds() {
+  let b = null;
+  Object.keys(state.selected).forEach(id => {
+    const lb = layerById[id] ? layerBounds(layerById[id]) : null;
+    if (!lb) return;
+    b = b ? b.extend(lb) : L.latLngBounds(lb.getSouthWest(), lb.getNorthEast());
+  });
+  return b;
+}
+function selectInBounds(bounds) {
+  let n = 0;
+  Object.keys(layerById).forEach(id => {
+    const c = layerCenter(layerById[id]);
+    if (c && bounds.contains(c) && !state.selected[id]) { state.selected[id] = true; n++; }
+  });
+  applyAssignmentStyles();
+  renderSelectedList();
+  if (n) showToast(fmtVars('filterAdded', { n: n }), 'success');
+}
+function selectByFilter() {
+  const q = normStr(document.getElementById('sel-filter').value);
+  if (!q) return;
+  let n = 0;
+  Object.keys(layerById).forEach(id => {
+    const p = layerById[id].feature.properties || {};
+    const hay = normStr(planFeatureName(p) + ' ' + p.name + ' ' + stripHtml(p.description || ''));
+    if (hay.indexOf(q) >= 0 && !state.selected[id]) { state.selected[id] = true; n++; }
+  });
+  applyAssignmentStyles();
+  renderSelectedList();
+  showToast(n ? fmtVars('filterAdded', { n: n }) : t('filterNoMatch'), n ? 'success' : 'error');
+  const b = selectedBounds();
+  if (n && b) map.fitBounds(b.pad(0.2));
+}
+// Shift + arrastar desenha um retângulo e seleciona tudo cujo centróide cai dentro.
+// (o Draggable do Leaflet já ignora mousedown com shift, então não precisa desligar o drag)
+function setupBoxSelect() {
+  let start = null;
+  let rect = null;
+  const finish = () => {
+    if (!rect) return;
+    const b = rect.getBounds();
+    map.removeLayer(rect);
+    rect = null;
+    start = null;
+    L.DomUtil.enableTextSelection();
+    lastBoxSelectAt = Date.now();
+    if (b.isValid() && (b.getNorth() !== b.getSouth() || b.getEast() !== b.getWest())) selectInBounds(b);
+  };
+  map.on('mousedown', (e) => {
+    if (!state.selectMode || rect || !e.originalEvent || !e.originalEvent.shiftKey) return;
+    L.DomEvent.preventDefault(e.originalEvent);
+    L.DomUtil.disableTextSelection();
+    start = e.latlng;
+    rect = L.rectangle(L.latLngBounds(start, start), {
+      color: '#6D28D9', weight: 1.5, dashArray: '4 4', fillColor: '#A78BFA', fillOpacity: 0.12, interactive: false,
+    }).addTo(map);
+  });
+  map.on('mousemove', (e) => { if (rect && start) rect.setBounds(L.latLngBounds(start, e.latlng)); });
+  map.on('mouseup', finish);
+  document.addEventListener('mouseup', finish);
+}
+
+// =================================================================
+// Estilos + marcadores das atribuições (plano do mês selecionado)
+// =================================================================
+function clearPlanLayers() {
+  if (planLayer && map) map.removeLayer(planLayer);
+  planLayer = null;
+  if (asgLayer && map) map.removeLayer(asgLayer);
+  asgLayer = null;
+  layerById = {};
+}
+function applyAssignmentStyles() {
+  if (!map) return;
+  if (asgLayer) { map.removeLayer(asgLayer); asgLayer = null; }
+  asgLayer = L.layerGroup();
+  const byArea = {};
+  planAssignments().forEach(a => { (byArea[a.areaId] = byArea[a.areaId] || []).push(a); });
+
+  Object.keys(layerById).forEach(id => {
+    const layer = layerById[id];
+    if (!layer.setStyle) return;
+    if (state.selected[id]) {
+      layer.setStyle(SELECTED_STYLE);
+      if (layer.bringToFront) layer.bringToFront();
+      return;
+    }
+    const base = planStyle(layer.feature);
+    const list = byArea[id];
+    if (!list || !list.length) { layer.setStyle(base); return; }
+    list.sort(byStart);
+    const color = driverColor(list[0].driverEmail);
+    layer.setStyle(Object.assign({}, base, { color: color, weight: 3, dashArray: '6 4', fillColor: color, fillOpacity: 0.22 }));
+
+    const center = layerCenter(layer);
+    if (!center) return;
+    const label = list.slice(0, 3).map(a => initialsOf(driverNameOf(a))).join('·') + (list.length > 3 ? '+' : '');
+    const tip = list.map(a => driverNameOf(a) + ' · ' + periodLabel(a)).join('\n');
+    const icon = L.divIcon({
+      className: 'asg-marker-icon',
+      html: `<div class="asg-marker" style="background:${color}" title="${escapeHtml(tip)}">${escapeHtml(label)}</div>`,
+      iconSize: null,
+      iconAnchor: [14, 10],
+    });
+    L.marker(center, { icon: icon })
+      .on('click', () => { if (state.selectMode) toggleSelect(id); else openPlanPopup(id); })
+      .addTo(asgLayer);
+  });
+  asgLayer.addTo(map);
+  updateCounts();
+}
+function buildPlanPopup(id) {
+  const layer = layerById[id];
+  const p = (layer && layer.feature && layer.feature.properties) || {};
+  const name = planFeatureName(p) || t('planFeature');
+  const desc = stripHtml(p.description || '');
+  let html = `<div class="popup-title">${escapeHtml(name)}</div>`
+    + (p.collection_area_name && p.name ? `<div class="popup-row"><span>km</span><strong>${escapeHtml(String(Number(p.name).toFixed ? Number(p.name).toFixed(1) : p.name))}</strong></div>` : '')
+    + (desc ? `<div class="popup-row" style="display:block;color:var(--c-text-muted);font-size:12px;">${escapeHtml(desc.slice(0, 300))}</div>` : '');
+  const asgs = countryAssignments(state.country).filter(a => a.areaId === id).sort(byStart);
+  html += `<div class="popup-section"><div class="popup-section-title">${t('popupAssigned')}</div>`;
+  if (asgs.length) {
+    html += asgs.map(a => `
+      <div class="popup-row">
+        <span><span class="asg-dot" style="display:inline-block;background:${driverColor(a.driverEmail)};margin-right:5px;vertical-align:middle;"></span>${escapeHtml(driverNameOf(a))}</span>
+        <strong>${escapeHtml(periodLabel(a))}</strong>
+      </div>`).join('');
+  } else {
+    html += `<div class="popup-row" style="color:var(--c-text-muted);"><em>—</em></div>`;
+  }
+  html += `<button type="button" class="tb-btn popup-assign-btn" onclick="assignFromPopup('${escapeHtml(id)}')">${t('popupAssignBtn')}</button></div>`;
+  return html;
+}
+function openPlanPopup(id, latlng) {
+  const layer = layerById[id];
+  if (!layer || !map) return;
+  const at = latlng || layerCenter(layer);
+  if (!at) return;
+  L.popup({ maxWidth: 320 }).setLatLng(at).setContent(buildPlanPopup(id)).openOn(map);
+}
+function focusArea(id) {
+  const layer = layerById[id];
+  if (!layer) { showToast(t('areaNotInPlan'), 'error'); return; }
+  if (!map) return;
+  const b = layerBounds(layer);
+  if (b) map.fitBounds(b, { maxZoom: 13, padding: [30, 30] });
+  openPlanPopup(id);
+}
+function assignFromPopup(id) {
+  map.closePopup();
+  toggleSelectMode(true);
+  if (!state.selectMode) return;   // sem plano / sem backend
+  if (!state.selected[id]) {
+    state.selected[id] = true;
+    applyAssignmentStyles();
+    renderSelectedList();
+  }
+}
+// Trocou o mês do MyMaps: o plano é redesenhado (renderPlanForMonth); aqui só a seleção/lista
+function onPlanMonthChanged() {
+  if (state.selectMode) clearSelection();
+  renderSideList();
+}
+
+// =================================================================
+// Formulário: dropdown de motoristas (optgroup por país, país da aba primeiro)
+// =================================================================
+function populateDriverSelect(selectedEmail) {
+  const sel = document.getElementById('asg-driver');
+  if (!sel) return;
+  const all = allDrivers().filter(d => d.email);
+  const rank = d => d.countryCode === state.country ? 0 : 1;
+  const sorted = all.slice().sort((a, b) =>
+    rank(a) - rank(b)
+    || String(a.country || '').localeCompare(String(b.country || ''))
+    || String(a.name || '').localeCompare(String(b.name || '')));
+  const prev = selectedEmail !== undefined ? selectedEmail : sel.value;
+  sel.innerHTML = '';
+  const ph = document.createElement('option');
+  ph.value = '';
+  ph.textContent = t('selectDriver');
+  sel.appendChild(ph);
+  let last = null, group = null;
+  sorted.forEach(d => {
+    if (d.country !== last) {
+      group = document.createElement('optgroup');
+      group.label = d.country;
+      sel.appendChild(group);
+      last = d.country;
+    }
+    const opt = document.createElement('option');
+    opt.value = String(d.email).toLowerCase();
+    opt.textContent = d.name;
+    group.appendChild(opt);
+  });
+  sel.value = prev || '';
+}
+
+// =================================================================
+// Salvar / editar / remover
+// =================================================================
+async function saveAssignment() {
+  const code = state.country;
+  const ids = Object.keys(state.selected);
+  const email = document.getElementById('asg-driver').value;
+  const start = document.getElementById('asg-start').value;
+  const end = document.getElementById('asg-end').value;
+  const notes = document.getElementById('asg-notes').value.trim();
+  if (!ids.length) { showToast(t('errNoAreas'), 'error'); return; }
+  if (!email) { showToast(t('errNoDriver'), 'error'); return; }
+  if (start && end && end < start) { showToast(t('errDates'), 'error'); return; }
+
+  const driver = findDriver(email) || {};
+  const user = (currentUser && currentUser.username) || '';
+  const items = ids.map(id => ({
+    id: (state.editingId && id === state.editingAreaId) ? state.editingId : uuid(),
+    areaId: id,
+    areaName: areaNameById(id),
+    driverEmail: email,
+    driverName: driver.name || email,
+    startDate: start,
+    endDate: end,
+    notes: notes,
+  }));
+
+  const btn = document.getElementById('asg-save');
+  const prevTxt = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = t('asgSaving');
+  try {
+    const payload = { type: 'saveScopeAssignments', country: code, updatedBy: user, items: items };
+    const res = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
+    if (!res || res.success !== true) throw new Error((res && res.error) || 'backend');
+    console.log('[OpsMap Scope] saveScopeAssignments:', res);
+
+    const list = state.assignments[code] = state.assignments[code] || [];
+    const nowIso = new Date().toISOString();
+    items.forEach(it => {
+      const rec = Object.assign({}, it, { country: code, updatedBy: user, updatedAt: nowIso });
+      const i = list.findIndex(a => a.id === it.id);
+      if (i >= 0) list[i] = Object.assign({}, list[i], rec);
+      else list.push(Object.assign({ createdBy: user, createdAt: nowIso }, rec));
+    });
+    showToast(t('asgSaved'), 'success');
+    clearSelection();
+    renderSideList();
+  } catch (err) {
+    console.error('[OpsMap Scope] saveScopeAssignments erro:', err);
+    showToast(t('saveFail') + ': ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prevTxt;
+  }
+}
+function editAssignment(id) {
+  const a = countryAssignments(state.country).find(x => x.id === id);
+  if (!a) return;
+  toggleSelectMode(true);
+  if (!state.selectMode) return;
+  state.selected = {};
+  state.selected[a.areaId] = true;
+  state.editingId = a.id;
+  state.editingAreaId = a.areaId;
+  populateDriverSelect(a.driverEmail);
+  document.getElementById('asg-start').value = a.startDate || '';
+  document.getElementById('asg-end').value = a.endDate || '';
+  document.getElementById('asg-notes').value = a.notes || '';
+  applyAssignmentStyles();
+  renderSelectedList();
+  updateScopeForm();
+  const b = layerById[a.areaId] ? layerBounds(layerById[a.areaId]) : null;
+  if (b) map.fitBounds(b, { maxZoom: 12, padding: [30, 30] });
+}
+// Remoção em dois cliques (o botão vira "Confirmar?" por 3,5s) — sem confirm() nativo
+let pendingDeleteId = null;
+let pendingDeleteTimer = null;
+async function deleteAssignment(id, btn) {
+  if (pendingDeleteId !== id) {
+    pendingDeleteId = id;
+    btn.textContent = t('confirmDelete');
+    btn.classList.add('confirm');
+    clearTimeout(pendingDeleteTimer);
+    pendingDeleteTimer = setTimeout(() => { pendingDeleteId = null; renderSideList(); }, 3500);
+    return;
+  }
+  clearTimeout(pendingDeleteTimer);
+  pendingDeleteId = null;
+  btn.disabled = true;
+  try {
+    const payload = { type: 'deleteScopeAssignments', ids: [id], updatedBy: (currentUser && currentUser.username) || '' };
+    const res = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
+    if (!res || res.success !== true) throw new Error((res && res.error) || 'backend');
+    const code = state.country;
+    state.assignments[code] = countryAssignments(code).filter(a => a.id !== id);
+    if (state.editingId === id) clearSelection();
+    showToast(t('asgDeleted'), 'success');
+    applyAssignmentStyles();
+    renderSideList();
+  } catch (err) {
+    console.error('[OpsMap Scope] deleteScopeAssignments erro:', err);
+    showToast(t('saveFail') + ': ' + err.message, 'error');
+    renderSideList();
+  }
+}
+
+// =================================================================
+// Aba "Escopo" do painel (mês do plano, agrupada por motorista)
+// =================================================================
+function renderScopeSide(wrap, q) {
+  const month = state.selectedMonth[state.country];
+  if (!month) { wrap.innerHTML = `<div class="side-empty">${t('noPlanForAssign')}</div>`; return; }
+  const all = planAssignments();
+  const driverSet = {};
+  all.forEach(a => { driverSet[a.driverEmail] = true; });
+  const head = `<div class="admin-count"><b>${escapeHtml(monthLabel(month))}</b> · ${escapeHtml(fmtVars('badgeFmt', { a: all.length, d: Object.keys(driverSet).length }))}</div>`;
+
+  let list = all.slice().sort(byStart);
+  if (q) { const nq = normStr(q); list = list.filter(a => normStr(driverNameOf(a) + ' ' + areaNameOf(a)).indexOf(nq) >= 0); }
+  if (!list.length) {
+    wrap.innerHTML = head + `<div class="side-empty">${t(q ? 'noMatch' : 'noAssignments')}</div>`;
+    return;
+  }
+  const groups = {};
+  list.forEach(a => {
+    const k = a.driverEmail;
+    (groups[k] = groups[k] || { email: k, name: driverNameOf(a), items: [] }).items.push(a);
+  });
+  const drivers = Object.keys(groups).map(k => groups[k]).sort((a, b) => a.name.localeCompare(b.name));
+  wrap.innerHTML = head + '<div class="asg-list">' + drivers.map(d => {
+    const color = driverColor(d.email);
+    return `
+      <div class="asg-driver">
+        <div class="asg-driver-head">
+          <span class="asg-dot" style="background:${color}"></span>
+          <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(d.name)}</span>
+          <span class="asg-meta">${d.items.length} ${t('areasWord')}</span>
+        </div>
+        ${d.items.map(a => `
+          <div class="asg-item">
+            <span class="asg-name" title="${escapeHtml(areaNameOf(a))}${a.notes ? ' — ' + escapeHtml(a.notes) : ''}" onclick="focusArea('${escapeHtml(a.areaId)}')">${escapeHtml(areaNameOf(a))}</span>
+            <span class="asg-dates">${escapeHtml(periodLabel(a))}</span>
+            <button type="button" title="${t('btnEdit')}" onclick="editAssignment('${escapeHtml(a.id)}')">✏️</button>
+            <button type="button" title="${t('btnDelete')}" onclick="deleteAssignment('${escapeHtml(a.id)}', this)">🗑</button>
+          </div>`).join('')}
+      </div>`;
+  }).join('') + '</div>';
 }
 </script>
 

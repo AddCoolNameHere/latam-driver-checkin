@@ -1396,7 +1396,8 @@ function inMonth(a, ym) {
   const e = a.endDate || '9999-12-31';
   return s <= mb[1] && e >= mb[0];
 }
-function countryAssignments(code) { return state.assignments[code] || []; }
+// ids 'mm:' são atribuições feitas em cima do MyMaps no ops-map.html — não têm polígono aqui
+function countryAssignments(code) { return (state.assignments[code] || []).filter(a => !/^mm:/.test(a.areaId)); }
 function monthAssignments(code) { return countryAssignments(code).filter(a => inMonth(a, state.month)); }
 function byStart(a, b) {
   return (a.startDate || '').localeCompare(b.startDate || '') || (a.endDate || '').localeCompare(b.endDate || '');
@@ -1874,7 +1875,7 @@ async function deleteAssignment(id, btn) {
     const res = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
     if (!res || res.success !== true) throw new Error((res && res.error) || 'backend');
     const code = state.country;
-    state.assignments[code] = countryAssignments(code).filter(a => a.id !== id);
+    state.assignments[code] = (state.assignments[code] || []).filter(a => a.id !== id);
     if (state.editingId === id) clearSelection();
     csToast(t('deleted'), 'success');
     applyAssignmentStyles();
