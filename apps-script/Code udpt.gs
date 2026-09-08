@@ -113,6 +113,7 @@ const CONFIG = {
   vidStatusSheet: 'VID Status',            // curadoria manual de VIDs ativos por país (auto-criada)
   // v5.76: documentos dos motoristas (driver-docs.html) — CPF/DNI + CNH + fotos
   driverDocsSheet: 'Driver Documents',            // metadados dos envios (auto-criada)
+  scopeAssignmentsSheet: 'Scope Assignments',     // v5.77: áreas do country_scopes atribuídas a motoristas (auto-criada)
   driverDocsFolderName: 'LATAM Driver Documents', // pasta raiz no Drive (auto-criada): país > motorista
 };
 
@@ -254,6 +255,12 @@ function doGet(e) {
       return jsonResponse({ success: true, areas: getCountryScope_(country) });
     }
 
+    // v5.77: atribuições de áreas → motoristas (country_scopes.html)
+    if (action === 'getScopeAssignments') {
+      const country = String(e.parameter.country || '').toUpperCase();
+      return jsonResponse({ success: true, assignments: getScopeAssignments_(country) });
+    }
+
     // v5.31: lista de divergencias da aba 'Argentina Cash' (pra ar-divergencias-admin.html)
     if (action === 'getArgentinaCashSubmissions') {
       return jsonResponse({ success: true, submissions: getArgentinaCashSubmissions_() });
@@ -287,13 +294,14 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.76',
+        version: 'v5.77',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
                     'getDriverSsds', 'getDriverVehicleIssues',
                     'getLastAssetsForm', 'getPMONotes', 'getArgentinaDrivers',
                     'getCountryScope', 'getDriverDocsStatus',
+                    'getScopeAssignments', 'POST saveScopeAssignments', 'POST deleteScopeAssignments',
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
                     'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
                     'POST submitArgentinaCash', 'POST submitDriverDocs', 'POST updateAuthUsers',
@@ -692,6 +700,14 @@ function doPost(e) {
       return jsonResponse(saveVidStatus_(data));
     }
 
+    // v5.77: atribuições de áreas do country_scopes.html (upsert por id / delete por ids)
+    if (data.type === 'saveScopeAssignments') {
+      return jsonResponse(saveScopeAssignments_(data));
+    }
+    if (data.type === 'deleteScopeAssignments') {
+      return jsonResponse(deleteScopeAssignments_(data));
+    }
+
     // v5.40: payroll adjustments (timesheet.html) — só super admin (fuss) lança/remove
     if (data.type === 'savePayrollAdjustment') {
       if (!isSuperAdminBackend_(data.actorUsername)) {
@@ -790,15 +806,16 @@ function getActiveDrivers(includeOffboarding) {
     const ok = sit === 'Active' || (includeOffboarding && sit === 'Offboarding');
     if (ok && data[i][emailIdx]) {
       drivers.push({
-        name: data[i][nameIdx],
-        email: data[i][emailIdx],
-        country: data[i][countryIdx],
+        name: String(data[i][nameIdx] || '').trim(),
+        email: String(data[i][emailIdx]).trim(),
+        country: String(data[i][countryIdx] || '').trim(),
         city: data[i][cityIdx] || '',
       });
     }
   }
 
-  drivers.sort((a, b) => a.country.localeCompare(b.country) || a.name.localeCompare(b.name));
+  // v5.77: null-safe — uma linha da HR com e-mail mas sem Country/Name derrubava getDrivers inteiro (TypeError localeCompare)
+  drivers.sort((a, b) => String(a.country || '').localeCompare(String(b.country || '')) || String(a.name || '').localeCompare(String(b.name || '')));
   return drivers;
 }
 
@@ -906,7 +923,8 @@ function getDriversWithAddress() {
     }
   }
 
-  drivers.sort((a, b) => a.country.localeCompare(b.country) || a.name.localeCompare(b.name));
+  // v5.77: null-safe — uma linha da HR com e-mail mas sem Country/Name derrubava getDrivers inteiro (TypeError localeCompare)
+  drivers.sort((a, b) => String(a.country || '').localeCompare(String(b.country || '')) || String(a.name || '').localeCompare(String(b.name || '')));
   return drivers;
 }
 
@@ -7008,7 +7026,7 @@ function getActiveDriversByCountry_() {
 
   // Ordena drivers dentro de cada país por nome
   Object.keys(grouped).forEach(c => {
-    grouped[c].sort((a, b) => a.name.localeCompare(b.name));
+    grouped[c].sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
   });
 
   return grouped;
@@ -8723,7 +8741,7 @@ function getArgentinaDrivers_() {
     }
   }
 
-  drivers.sort((a, b) => a.name.localeCompare(b.name));
+  drivers.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
   return drivers;
 }
 
@@ -8821,6 +8839,155 @@ function parseScopeNumeric_(v) {
   }
   const n = parseFloat(normalized);
   return isNaN(n) ? 0 : n;
+}
+
+
+// ================================================================
+// SCOPE ASSIGNMENTS (v5.77) — country_scopes.html
+// Atribuição de áreas de coleta (polígonos do GeoJSON) a motoristas, com
+// período aproximado (início/fim). A mesma área pode ter vários motoristas
+// em sequência (datas diferentes). Aba "Scope Assignments" (auto-criada).
+// ================================================================
+const SCOPE_ASSIGN_COLS = 13;
+
+function ensureScopeAssignmentsSheet_(ss) {
+  let sheet = ss.getSheetByName(CONFIG.scopeAssignmentsSheet);
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.scopeAssignmentsSheet);
+    sheet.appendRow(['ID', 'Country', 'Area ID', 'Area Name', 'Driver Email', 'Driver Name',
+                     'Start Date', 'End Date', 'Notes', 'Created By', 'Created At', 'Updated By', 'Updated At']);
+    sheet.setFrozenRows(1);
+    // Datas como texto puro (yyyy-MM-dd) — evita virar Date e escorregar um dia por fuso
+    sheet.getRange('G:H').setNumberFormat('@');
+  }
+  return sheet;
+}
+
+/** Normaliza data pra 'yyyy-MM-dd' (aceita Date ou string ISO). Vazio → ''. */
+function fmtScopeDate_(v, tz) {
+  if (!v) return '';
+  if (v instanceof Date) return Utilities.formatDate(v, tz || 'America/Sao_Paulo', 'yyyy-MM-dd');
+  const m = String(v).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? (m[1] + '-' + m[2] + '-' + m[3]) : '';
+}
+
+/** Lista as atribuições (de um país, ou todas se country vazio). */
+function getScopeAssignments_(country) {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(CONFIG.scopeAssignmentsSheet);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  const tz = ss.getSpreadsheetTimeZone();
+  const want = String(country || '').trim().toUpperCase();
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, SCOPE_ASSIGN_COLS).getValues();
+  const out = [];
+  for (let i = 0; i < data.length; i++) {
+    const r = data[i];
+    const id = String(r[0] || '').trim();
+    if (!id) continue;
+    const c = String(r[1] || '').trim().toUpperCase();
+    if (want && c !== want) continue;
+    out.push({
+      id: id,
+      country: c,
+      areaId: String(r[2] || '').trim(),
+      areaName: String(r[3] || ''),
+      driverEmail: String(r[4] || '').trim().toLowerCase(),
+      driverName: String(r[5] || ''),
+      startDate: fmtScopeDate_(r[6], tz),
+      endDate: fmtScopeDate_(r[7], tz),
+      notes: String(r[8] || ''),
+      createdBy: String(r[9] || ''),
+      createdAt: r[10] instanceof Date ? r[10].toISOString() : String(r[10] || ''),
+      updatedBy: String(r[11] || ''),
+      updatedAt: r[12] instanceof Date ? r[12].toISOString() : String(r[12] || ''),
+    });
+  }
+  return out;
+}
+
+/**
+ * Upsert por ID (cria se não existe, atualiza se existe).
+ * data: { country, updatedBy, items: [{ id?, areaId, areaName, driverEmail, driverName, startDate, endDate, notes }] }
+ */
+function saveScopeAssignments_(data) {
+  const country = String(data.country || '').trim().toUpperCase();
+  const items = Array.isArray(data.items) ? data.items : [];
+  if (!country) return { success: false, error: 'country obrigatório' };
+  if (!items.length) return { success: false, error: 'nenhuma atribuição enviada' };
+  const user = String(data.updatedBy || '');
+
+  const lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (e) { return { success: false, error: 'sistema ocupado, tenta de novo' }; }
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = ensureScopeAssignmentsSheet_(ss);
+    const now = new Date();
+    const last = sheet.getLastRow();
+    const existing = last >= 2 ? sheet.getRange(2, 1, last - 1, SCOPE_ASSIGN_COLS).getValues() : [];
+    const rowById = {};
+    existing.forEach(function (r, i) { const id = String(r[0] || '').trim(); if (id) rowById[id] = i; });
+
+    const appended = [];
+    let updated = 0;
+    items.forEach(function (it) {
+      const id = String(it.id || '').trim() || Utilities.getUuid();
+      const areaId = String(it.areaId || '').trim();
+      const email = String(it.driverEmail || '').trim().toLowerCase();
+      if (!areaId || !email) return;
+      const start = fmtScopeDate_(it.startDate);
+      const end = fmtScopeDate_(it.endDate);
+      const idx = rowById[id];
+      if (idx !== undefined) {
+        const old = existing[idx];
+        const row = [id, country, areaId, String(it.areaName || old[3] || ''), email, String(it.driverName || ''),
+                     start, end, String(it.notes || ''), old[9] || user, old[10] || now, user, now];
+        sheet.getRange(idx + 2, 1, 1, SCOPE_ASSIGN_COLS).setValues([row]);
+        updated++;
+      } else {
+        appended.push([id, country, areaId, String(it.areaName || ''), email, String(it.driverName || ''),
+                       start, end, String(it.notes || ''), user, now, user, now]);
+      }
+    });
+    if (appended.length) {
+      sheet.getRange(sheet.getLastRow() + 1, 1, appended.length, SCOPE_ASSIGN_COLS).setValues(appended);
+    }
+    return { success: true, created: appended.length, updated: updated };
+  } catch (err) {
+    Logger.log('saveScopeAssignments_ erro: ' + err);
+    return { success: false, error: String(err) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** Remove atribuições por ID. data: { ids: [...] } */
+function deleteScopeAssignments_(data) {
+  const ids = Array.isArray(data.ids) ? data.ids.map(function (x) { return String(x || '').trim(); }).filter(Boolean) : [];
+  if (!ids.length) return { success: false, error: 'ids obrigatório' };
+
+  const lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (e) { return { success: false, error: 'sistema ocupado, tenta de novo' }; }
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = ss.getSheetByName(CONFIG.scopeAssignmentsSheet);
+    if (!sheet || sheet.getLastRow() < 2) return { success: true, deleted: 0 };
+    const last = sheet.getLastRow();
+    const all = sheet.getRange(2, 1, last - 1, SCOPE_ASSIGN_COLS).getValues();
+    const drop = {};
+    ids.forEach(function (id) { drop[id] = true; });
+    const kept = all.filter(function (r) { return !drop[String(r[0] || '').trim()]; });
+    const deleted = all.length - kept.length;
+    if (deleted > 0) {
+      sheet.getRange(2, 1, last - 1, SCOPE_ASSIGN_COLS).clearContent();
+      if (kept.length) sheet.getRange(2, 1, kept.length, SCOPE_ASSIGN_COLS).setValues(kept);
+    }
+    return { success: true, deleted: deleted };
+  } catch (err) {
+    Logger.log('deleteScopeAssignments_ erro: ' + err);
+    return { success: false, error: String(err) };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 

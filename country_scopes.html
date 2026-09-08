@@ -91,10 +91,12 @@
   /* Map area */
   .map-wrapper {
     padding: 0 20px 16px;
-    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 12px;
   }
   #map {
-    height: calc(100vh - 280px);
+    height: calc(100vh - 330px);
     min-height: 500px;
     width: 100%;
     border-radius: 12px;
@@ -239,6 +241,189 @@
     opacity: 0.75;
   }
 
+  /* ---- Atribuição de áreas (toolbar + painel lateral) ---- */
+  .scope-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 0 20px 12px;
+  }
+  .scope-toolbar .tb-label { font-size: 12px; color: var(--c-text-muted); }
+  .scope-toolbar input[type="month"] {
+    padding: 7px 10px;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    background: var(--c-surface);
+    color: var(--c-text);
+    font: inherit;
+    font-size: 13px;
+  }
+  .tb-btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--c-border);
+    background: var(--c-surface);
+    color: var(--c-text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .tb-btn:hover { border-color: var(--c-accent); color: var(--c-primary); }
+  .tb-btn.primary { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+  .tb-btn.primary:hover { background: var(--c-primary-dark); color: #fff; }
+  .tb-btn.active { background: #6D28D9; border-color: #6D28D9; color: #fff; }
+  .tb-btn.active:hover { background: #5B21B6; color: #fff; }
+  .tb-btn:disabled { opacity: 0.55; cursor: default; }
+  .tb-badge { font-size: 12px; color: var(--c-text-muted); margin-left: auto; }
+  .tb-warn {
+    font-size: 12px;
+    color: #B45309;
+    background: #FEF3C7;
+    border-radius: 8px;
+    padding: 6px 10px;
+  }
+
+  .map-wrapper.panel-hidden { grid-template-columns: 1fr; }
+  .map-wrapper.panel-hidden .scope-panel { display: none; }
+  .map-col { position: relative; min-width: 0; }
+
+  .scope-panel {
+    background: var(--c-surface);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: calc(100vh - 330px);
+    min-height: 500px;
+  }
+  .scope-panel-head {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--c-border);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--c-primary-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .scope-panel-body { flex: 1; overflow-y: auto; padding: 12px 14px; }
+  .sp-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--c-text-muted);
+    margin: 10px 0 6px;
+  }
+  .sp-field { margin-bottom: 10px; }
+  .sp-field label { display: block; font-size: 11px; color: var(--c-text-muted); margin-bottom: 4px; }
+  .sp-field select, .sp-field input, .sp-field textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    background: var(--c-bg);
+    color: var(--c-text);
+    font: inherit;
+    font-size: 13px;
+  }
+  .sp-field textarea { resize: vertical; }
+  .sp-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sp-inline { display: flex; gap: 6px; }
+  .sp-inline input { flex: 1; min-width: 0; }
+  .sp-selected-list {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
+    background: var(--c-bg);
+  }
+  .sp-selected-item { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 2px 0; }
+  .sp-selected-item span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sp-selected-item button { background: none; border: none; color: var(--c-text-muted); cursor: pointer; font-size: 12px; padding: 0 2px; }
+  .sp-selected-item button:hover { color: #DC2626; }
+  .sp-hint { font-size: 11px; color: var(--c-text-muted); line-height: 1.45; margin-bottom: 10px; }
+  .sp-actions { display: flex; gap: 8px; margin: 8px 0 14px; }
+  .sp-actions .tb-btn { flex: 1; justify-content: center; }
+
+  .asg-driver { margin-bottom: 10px; border: 1px solid var(--c-border); border-radius: 10px; overflow: hidden; }
+  .asg-driver-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--c-bg);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .asg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .asg-driver-head .asg-meta { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--c-text-muted); white-space: nowrap; }
+  .asg-item { display: flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 12px; border-top: 1px solid var(--c-border); }
+  .asg-item .asg-name { flex: 1; cursor: pointer; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .asg-item .asg-name:hover { color: var(--c-primary); text-decoration: underline; }
+  .asg-item .asg-dates { color: var(--c-text-muted); font-size: 11px; white-space: nowrap; }
+  .asg-item button { background: none; border: none; cursor: pointer; font-size: 13px; padding: 0 2px; color: var(--c-text-muted); }
+  .asg-item button:hover { color: var(--c-primary); }
+  .asg-item button.confirm { color: #DC2626; font-weight: 600; font-size: 11px; }
+  .asg-empty { font-size: 12px; color: var(--c-text-muted); padding: 10px 0; line-height: 1.45; }
+
+  /* Marcador com iniciais do motorista no centróide da área atribuída */
+  .asg-marker-icon { background: transparent; border: none; }
+  .asg-marker {
+    min-width: 28px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #6D28D9;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    white-space: nowrap;
+  }
+  .popup-assign-btn { width: 100%; justify-content: center; margin-top: 8px; padding: 6px 10px; font-size: 12px; }
+  body.cs-select-mode #map { cursor: crosshair; }
+
+  .cs-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--c-primary-dark);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    z-index: 5000;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    max-width: 90vw;
+  }
+  .cs-toast.show { opacity: 1; }
+  .cs-toast.success { background: #15803D; }
+  .cs-toast.error { background: #B91C1C; }
+
+  @media (max-width: 900px) {
+    .map-wrapper { grid-template-columns: 1fr; }
+    .scope-panel { height: auto; min-height: 0; max-height: 55vh; }
+    .tb-badge { margin-left: 0; width: 100%; }
+  }
+
   @media (max-width: 768px) {
     .stats-row { grid-template-columns: 1fr 1fr; }
     #map { height: 60vh; }
@@ -276,12 +461,59 @@
   </div>
 </div>
 
-<div class="map-wrapper">
-  <div id="map"></div>
-  <div class="map-loader" id="map-loader">
-    <div class="spinner"></div>
-    <div data-i18n="loading">Carregando dados do país...</div>
+<div class="scope-toolbar">
+  <span class="tb-label" data-i18n="tbMonth">Mês</span>
+  <input type="month" id="scope-month">
+  <button type="button" class="tb-btn" id="btn-select-mode" onclick="toggleSelectMode()">✏️ <span data-i18n="tbAssign">Atribuir áreas</span></button>
+  <button type="button" class="tb-btn" id="btn-export-pdf" onclick="exportScopePdf()">📄 <span data-i18n="tbExport">Exportar PDF</span></button>
+  <button type="button" class="tb-btn" id="btn-toggle-panel" onclick="togglePanel()">📋 <span data-i18n="tbPanel">Painel</span></button>
+  <span class="tb-warn" id="tb-warn" style="display:none;" data-i18n="backendWarn">Backend precisa de redeploy (v5.77) — atribuições indisponíveis</span>
+  <span class="tb-badge" id="tb-badge"></span>
+</div>
+
+<div class="map-wrapper" id="map-wrapper">
+  <div class="map-col">
+    <div id="map"></div>
+    <div class="map-loader" id="map-loader">
+      <div class="spinner"></div>
+      <div id="map-loader-text" data-i18n="loading">Carregando dados do país...</div>
+    </div>
   </div>
+  <aside class="scope-panel" id="scope-panel">
+    <div class="scope-panel-head">
+      <span id="panel-title">Atribuições do mês</span>
+      <button type="button" class="tb-btn" style="padding:4px 8px;" onclick="togglePanel()" title="fechar">✕</button>
+    </div>
+    <div class="scope-panel-body">
+      <div id="assign-form" style="display:none;">
+        <div class="sp-hint" data-i18n="selectHint">Clique nas áreas do mapa pra selecionar (clique de novo pra tirar). Shift + arrastar seleciona um retângulo.</div>
+        <div class="sp-field">
+          <label data-i18n="fldFilter">Selecionar por província / cidade</label>
+          <div class="sp-inline">
+            <input type="text" id="sel-filter" placeholder="Ex: Salta">
+            <button type="button" class="tb-btn" onclick="selectByFilter()" data-i18n="btnSelectAll">Selecionar</button>
+          </div>
+        </div>
+        <div class="sp-section-title"><span data-i18n="selectedAreas">Áreas selecionadas</span> (<span id="sel-count">0</span>)</div>
+        <div class="sp-selected-list" id="sel-list"></div>
+        <div class="sp-field" style="margin-top:10px;">
+          <label data-i18n="fldDriver">Motorista</label>
+          <select id="asg-driver"></select>
+        </div>
+        <div class="sp-row2">
+          <div class="sp-field"><label data-i18n="fldStart">Início (aprox.)</label><input type="date" id="asg-start"></div>
+          <div class="sp-field"><label data-i18n="fldEnd">Fim (aprox.)</label><input type="date" id="asg-end"></div>
+        </div>
+        <div class="sp-field"><label data-i18n="fldNotes">Observações</label><textarea id="asg-notes" rows="2"></textarea></div>
+        <div class="sp-actions">
+          <button type="button" class="tb-btn" onclick="clearSelection()" data-i18n="btnClear">Limpar</button>
+          <button type="button" class="tb-btn primary" id="asg-save" onclick="saveAssignment()" data-i18n="btnSave">Salvar</button>
+        </div>
+        <div class="sp-section-title" data-i18n="panelAssignments">Atribuições do mês</div>
+      </div>
+      <div id="assign-list"></div>
+    </div>
+  </aside>
 </div>
 
 <div class="map-legend">
@@ -290,11 +522,13 @@
   <div class="legend-item"><span class="legend-swatch" style="background:#F59E0B;"></span> <span data-i18n="legendPending">Pendente</span></div>
   <div class="legend-item"><span class="legend-swatch" style="background:#2C5282;border-radius:50%;"></span> <span data-i18n="legendArea">Motorista (clique pra ver a casa)</span></div>
   <div class="legend-item"><span class="legend-swatch" style="background:#94A3B8;border-radius:50%;opacity:0.75;"></span> <span data-i18n="legendStale">Motorista sem check-in recente (na casa)</span></div>
+  <div class="legend-item"><span class="legend-swatch" style="background:transparent;border:2px dashed #6D28D9;"></span> <span data-i18n="legendAssigned">Área atribuída (cor = motorista)</span></div>
 </div>
 
 </div><!-- /#app-content -->
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 
 // =================================================================
@@ -327,6 +561,10 @@ function startApp(user) {
   document.getElementById('app-content').style.display = '';
   applyI18n();
   renderTabs();
+  const monthInput = document.getElementById('scope-month');
+  monthInput.value = state.month;
+  monthInput.addEventListener('change', () => onMonthChange(monthInput.value));
+  document.getElementById('sel-filter').addEventListener('keydown', (e) => { if (e.key === 'Enter') selectByFilter(); });
   loadCountry(state.country);
   if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
 }
@@ -390,6 +628,67 @@ const I18N = {
     dnmDisks: 'Problema com discos',
     dnmOther: 'Outro motivo',
     areaPolygon: 'área',
+    // Atribuição de áreas (v5.77)
+    tbMonth: 'Mês',
+    tbAssign: 'Atribuir áreas',
+    tbExport: 'Exportar PDF',
+    tbPanel: 'Painel',
+    backendWarn: 'Backend precisa de redeploy (v5.77) — atribuições indisponíveis',
+    badgeFmt: '{a} atribuições · {d} motoristas no mês',
+    otherMonths: '+{n} em outros meses',
+    panelAssignments: 'Atribuições do mês',
+    panelNew: 'Nova atribuição',
+    panelEdit: 'Editar atribuição',
+    selectHint: 'Clique nas áreas do mapa pra selecionar (clique de novo pra tirar). Shift + arrastar seleciona um retângulo.',
+    fldFilter: 'Selecionar por província / cidade',
+    btnSelectAll: 'Selecionar',
+    selectedAreas: 'Áreas selecionadas',
+    noneSelected: 'Nenhuma área selecionada',
+    fldDriver: 'Motorista',
+    selectDriver: '— selecionar —',
+    fldStart: 'Início (aprox.)',
+    fldEnd: 'Fim (aprox.)',
+    fldNotes: 'Observações',
+    btnClear: 'Limpar',
+    btnSave: 'Salvar',
+    btnEdit: 'Editar',
+    btnDelete: 'Remover',
+    saving: 'Salvando...',
+    savedOk: 'Atribuição salva!',
+    savedOtherMonth: 'Salvo — mas fora do mês selecionado no filtro',
+    saveFail: 'Erro ao salvar',
+    deleted: 'Atribuição removida',
+    confirmDelete: 'Confirmar?',
+    errNoAreas: 'Selecione pelo menos uma área',
+    errNoDriver: 'Selecione um motorista',
+    errDates: 'Data final antes da inicial',
+    noDates: 'sem data',
+    noAssignments: 'Nenhuma atribuição neste mês. Clique em "Atribuir áreas" pra começar.',
+    areasWord: 'áreas',
+    popupAssigned: 'Motoristas atribuídos',
+    popupAssignBtn: '+ Atribuir esta área',
+    legendAssigned: 'Área atribuída (cor = motorista)',
+    filterNoMatch: 'Nenhuma área encontrada',
+    filterAdded: '{n} áreas adicionadas',
+    exportGenerating: 'Gerando PDF...',
+    exportEmpty: 'Nenhuma atribuição no mês pra exportar',
+    exportError: 'Erro ao gerar PDF',
+    pdfTitle: 'Escopo por Motorista',
+    pdfGenerated: 'Gerado em',
+    pdfSummary: '{d} motoristas · {a} áreas atribuídas · {p} km plan · {c} km coletados',
+    pdfAreas: 'áreas',
+    pdfPlan: 'plan',
+    pdfCollected: 'coletados',
+    pdfColArea: 'Área',
+    pdfColPlace: 'Província / Cidade',
+    pdfColStatus: 'Status',
+    pdfColPlan: 'Plan km',
+    pdfColCollected: 'Coletado',
+    pdfColPeriod: 'Período',
+    pdfColNotes: 'Obs.',
+    pdfColDriver: 'Motorista',
+    pdfShared: 'Áreas com mais de um motorista (sequência)',
+    pdfMapCaption: 'Áreas atribuídas no mês — contorno na cor do motorista',
     fetchError: 'Erro ao carregar dados',
   },
   es: {
@@ -429,6 +728,67 @@ const I18N = {
     dnmDisks: 'Problema con discos',
     dnmOther: 'Otro motivo',
     areaPolygon: 'área',
+    // Asignación de áreas (v5.77)
+    tbMonth: 'Mes',
+    tbAssign: 'Asignar áreas',
+    tbExport: 'Exportar PDF',
+    tbPanel: 'Panel',
+    backendWarn: 'El backend necesita redeploy (v5.77) — asignaciones no disponibles',
+    badgeFmt: '{a} asignaciones · {d} conductores en el mes',
+    otherMonths: '+{n} en otros meses',
+    panelAssignments: 'Asignaciones del mes',
+    panelNew: 'Nueva asignación',
+    panelEdit: 'Editar asignación',
+    selectHint: 'Haz clic en las áreas del mapa para seleccionar (clic de nuevo para quitar). Shift + arrastrar selecciona un rectángulo.',
+    fldFilter: 'Seleccionar por provincia / ciudad',
+    btnSelectAll: 'Seleccionar',
+    selectedAreas: 'Áreas seleccionadas',
+    noneSelected: 'Ninguna área seleccionada',
+    fldDriver: 'Conductor',
+    selectDriver: '— seleccionar —',
+    fldStart: 'Inicio (aprox.)',
+    fldEnd: 'Fin (aprox.)',
+    fldNotes: 'Observaciones',
+    btnClear: 'Limpiar',
+    btnSave: 'Guardar',
+    btnEdit: 'Editar',
+    btnDelete: 'Eliminar',
+    saving: 'Guardando...',
+    savedOk: '¡Asignación guardada!',
+    savedOtherMonth: 'Guardado — pero fuera del mes seleccionado en el filtro',
+    saveFail: 'Error al guardar',
+    deleted: 'Asignación eliminada',
+    confirmDelete: '¿Confirmar?',
+    errNoAreas: 'Selecciona al menos un área',
+    errNoDriver: 'Selecciona un conductor',
+    errDates: 'Fecha final antes de la inicial',
+    noDates: 'sin fecha',
+    noAssignments: 'Ninguna asignación en este mes. Haz clic en "Asignar áreas" para empezar.',
+    areasWord: 'áreas',
+    popupAssigned: 'Conductores asignados',
+    popupAssignBtn: '+ Asignar esta área',
+    legendAssigned: 'Área asignada (color = conductor)',
+    filterNoMatch: 'Ninguna área encontrada',
+    filterAdded: '{n} áreas agregadas',
+    exportGenerating: 'Generando PDF...',
+    exportEmpty: 'No hay asignaciones en el mes para exportar',
+    exportError: 'Error al generar PDF',
+    pdfTitle: 'Alcance por Conductor',
+    pdfGenerated: 'Generado el',
+    pdfSummary: '{d} conductores · {a} áreas asignadas · {p} km plan · {c} km recolectados',
+    pdfAreas: 'áreas',
+    pdfPlan: 'plan',
+    pdfCollected: 'recolectados',
+    pdfColArea: 'Área',
+    pdfColPlace: 'Provincia / Ciudad',
+    pdfColStatus: 'Estado',
+    pdfColPlan: 'Plan km',
+    pdfColCollected: 'Recolectado',
+    pdfColPeriod: 'Período',
+    pdfColNotes: 'Obs.',
+    pdfColDriver: 'Conductor',
+    pdfShared: 'Áreas con más de un conductor (secuencia)',
+    pdfMapCaption: 'Áreas asignadas en el mes — contorno en el color del conductor',
     fetchError: 'Error al cargar datos',
   },
   en: {
@@ -468,6 +828,67 @@ const I18N = {
     dnmDisks: 'Disk issue',
     dnmOther: 'Other reason',
     areaPolygon: 'area',
+    // Area assignment (v5.77)
+    tbMonth: 'Month',
+    tbAssign: 'Assign areas',
+    tbExport: 'Export PDF',
+    tbPanel: 'Panel',
+    backendWarn: 'Backend needs redeploy (v5.77) — assignments unavailable',
+    badgeFmt: '{a} assignments · {d} drivers this month',
+    otherMonths: '+{n} in other months',
+    panelAssignments: 'Assignments this month',
+    panelNew: 'New assignment',
+    panelEdit: 'Edit assignment',
+    selectHint: 'Click areas on the map to select (click again to remove). Shift + drag selects a rectangle.',
+    fldFilter: 'Select by province / city',
+    btnSelectAll: 'Select',
+    selectedAreas: 'Selected areas',
+    noneSelected: 'No area selected',
+    fldDriver: 'Driver',
+    selectDriver: '— select —',
+    fldStart: 'Start (approx.)',
+    fldEnd: 'End (approx.)',
+    fldNotes: 'Notes',
+    btnClear: 'Clear',
+    btnSave: 'Save',
+    btnEdit: 'Edit',
+    btnDelete: 'Remove',
+    saving: 'Saving...',
+    savedOk: 'Assignment saved!',
+    savedOtherMonth: 'Saved — but outside the month selected in the filter',
+    saveFail: 'Error saving',
+    deleted: 'Assignment removed',
+    confirmDelete: 'Confirm?',
+    errNoAreas: 'Select at least one area',
+    errNoDriver: 'Select a driver',
+    errDates: 'End date before start date',
+    noDates: 'no dates',
+    noAssignments: 'No assignments this month. Click "Assign areas" to start.',
+    areasWord: 'areas',
+    popupAssigned: 'Assigned drivers',
+    popupAssignBtn: '+ Assign this area',
+    legendAssigned: 'Assigned area (color = driver)',
+    filterNoMatch: 'No area found',
+    filterAdded: '{n} areas added',
+    exportGenerating: 'Generating PDF...',
+    exportEmpty: 'No assignments this month to export',
+    exportError: 'Error generating PDF',
+    pdfTitle: 'Scope by Driver',
+    pdfGenerated: 'Generated on',
+    pdfSummary: '{d} drivers · {a} assigned areas · {p} km plan · {c} km collected',
+    pdfAreas: 'areas',
+    pdfPlan: 'plan',
+    pdfCollected: 'collected',
+    pdfColArea: 'Area',
+    pdfColPlace: 'Province / City',
+    pdfColStatus: 'Status',
+    pdfColPlan: 'Plan km',
+    pdfColCollected: 'Collected',
+    pdfColPeriod: 'Period',
+    pdfColNotes: 'Notes',
+    pdfColDriver: 'Driver',
+    pdfShared: 'Areas with more than one driver (sequence)',
+    pdfMapCaption: 'Areas assigned this month — outline in the driver color',
     fetchError: 'Error loading data',
   },
 };
@@ -482,8 +903,14 @@ function applyI18n() {
     const key = el.getAttribute('data-i18n');
     el.textContent = t(key);
   });
-  // Re-renderiza popups que possam estar abertos
-  if (state.country) renderStats();
+  // Re-renderiza stats + painel de atribuições
+  if (state.country) {
+    renderStats();
+    renderAssignList();
+    renderSelectedList();
+    renderPanelTitle();
+    updateBadge();
+  }
 }
 // (lang switch agora vem do common.js → injectTopbar com showLangSwitch=true)
 
@@ -493,6 +920,15 @@ function applyI18n() {
 const state = {
   country: 'AR',
   cache: {},  // { 'AR': { geojson, scopeData, drivers, dashboardData } }
+  // v5.77: atribuição de áreas → motoristas
+  assignments: {},        // { 'AR': [ {id, areaId, driverEmail, startDate, endDate, ...} ] }
+  assignBackendOk: true,
+  allDrivers: [],
+  month: currentMonthKey(),  // 'YYYY-MM' do filtro (default: mês atual)
+  selectMode: false,
+  selected: {},           // areaId → true
+  editingId: null,        // id da atribuição em edição (se houver)
+  editingAreaId: null,
 };
 
 let map = null;
@@ -503,10 +939,13 @@ let tempLayer = null;     // home marker + linha (mostrado/limpo no click do dri
 function initMap() {
   if (map) return;
   map = L.map('map', { preferCanvas: true }).setView([-15, -60], 4);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // crossOrigin: o OSM manda CORS nos tiles → dá pra desenhar os tiles num canvas pra foto do PDF
+  tileLayerRef = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
     maxZoom: 19,
+    crossOrigin: 'anonymous',
   }).addTo(map);
+  setupBoxSelect();
 }
 
 // =================================================================
@@ -526,6 +965,7 @@ function renderTabs() {
 
 async function switchCountry(code) {
   if (code === state.country && state.cache[code]) return;
+  if (state.selectMode) toggleSelectMode(false);
   state.country = code;
   document.querySelectorAll('.country-tab').forEach((b, i) => {
     b.classList.toggle('active', CONFIG.countries[i].code === code);
@@ -556,6 +996,7 @@ async function loadCountry(code) {
 
       const countryName = (CONFIG.countries.find(c => c.code === code) || {}).name || '';
       const allDrivers = driversRes.drivers || [];
+      state.allDrivers = allDrivers;
 
       // Merge GeoJSON com scope atualizado (overrides status/km/lastComputed)
       const scopeById = {};
@@ -614,6 +1055,7 @@ async function loadCountry(code) {
       };
     }
 
+    await loadAssignments(code);
     renderCountry(code);
   } catch (err) {
     console.error('[CountryScopes] erro:', err);
@@ -643,11 +1085,19 @@ function renderCountry(code) {
   if (driverLayer) { map.removeLayer(driverLayer); driverLayer = null; }
   if (tempLayer) { map.removeLayer(tempLayer); tempLayer = null; }
 
-  // Polígonos
+  // Polígonos (guarda layer por id pra seleção/atribuição)
+  layerById = {};
+  if (asgLayer) { map.removeLayer(asgLayer); asgLayer = null; }
   polygonLayer = L.geoJSON(cache.geojson, {
     style: featureStyle,
     onEachFeature: (feature, layer) => {
-      layer.on('click', () => layer.bindPopup(buildAreaPopup(feature, cache), { maxWidth: 320 }).openPopup());
+      const id = (feature.properties || {}).id;
+      if (id) layerById[id] = layer;
+      layer.on('click', (e) => {
+        if (Date.now() - lastBoxSelectAt < 400) return;   // clique fantasma logo após shift+arrastar
+        if (state.selectMode) { if (id) toggleSelect(id); return; }
+        L.popup({ maxWidth: 320 }).setLatLng(e.latlng).setContent(buildAreaPopup(feature, cache)).openOn(map);
+      });
     },
   }).addTo(map);
 
@@ -705,6 +1155,9 @@ function renderCountry(code) {
   map.setView(c.center, c.zoom);
 
   renderStats();
+  applyAssignmentStyles();
+  renderAssignList();
+  renderPanelTitle();
 }
 
 function featureStyle(feature) {
@@ -766,6 +1219,20 @@ function buildAreaPopup(feature, cache) {
     }
   }
 
+  // Atribuições desta área (todos os meses, em ordem de início)
+  const asgs = countryAssignments(state.country).filter(a => a.areaId === p.id).sort(byStart);
+  let asgHtml = `<div class="popup-drivers-section"><div class="popup-drivers-title">${t('popupAssigned')}</div>`;
+  if (asgs.length) {
+    asgHtml += asgs.map(a => `
+      <div class="popup-driver-item">
+        <span class="popup-driver-name"><span class="asg-dot" style="display:inline-block;background:${driverColor(a.driverEmail)};margin-right:5px;vertical-align:middle;"></span>${escapeHtml(driverNameOf(a))}</span>
+        <span class="popup-driver-km">${escapeHtml(periodLabel(a))}</span>
+      </div>`).join('');
+  } else {
+    asgHtml += `<div class="popup-driver-item" style="color:var(--c-text-muted);"><em>—</em></div>`;
+  }
+  asgHtml += `<button type="button" class="tb-btn popup-assign-btn" onclick="assignFromPopup('${escapeHtml(p.id)}')">${t('popupAssignBtn')}</button></div>`;
+
   return `
     <div class="popup-title">${escapeHtml(p.name || '')}</div>
     <span class="popup-status-tag ${statusClass}">${statusLabel}</span>
@@ -778,6 +1245,7 @@ function buildAreaPopup(feature, cache) {
     ${p.camera ? `<div class="popup-row"><span>${t('areaCamera')}</span><strong>${escapeHtml(p.camera)}</strong></div>` : ''}
     <div class="popup-progress"><div class="popup-progress-fill" style="width:${pct}%"></div></div>
     ${driversHtml}
+    ${asgHtml}
   `;
 }
 
@@ -892,6 +1360,925 @@ function renderStats() {
   document.getElementById('stat-progress-pct').textContent = pct(inProgress);
   document.getElementById('stat-pending').textContent = pending;
   document.getElementById('stat-pending-pct').textContent = pct(pending);
+}
+
+// =================================================================
+// ATRIBUIÇÃO DE ÁREAS → MOTORISTAS (Scope Assignments, backend v5.77)
+// Seleciona polígonos no mapa (clique / shift+retângulo / província),
+// atribui a um motorista com período aproximado, persiste na aba
+// "Scope Assignments" e exporta PDF por país/mês.
+// =================================================================
+const SCOPE_BACKEND_VERSION = 'v5.77';
+const SELECTED_STYLE = { color: '#6D28D9', weight: 3, dashArray: null, fillColor: '#A78BFA', fillOpacity: 0.6 };
+const DRIVER_PALETTE = ['#7C3AED', '#DB2777', '#0891B2', '#D97706', '#059669', '#DC2626', '#4F46E5',
+                        '#65A30D', '#9333EA', '#0284C7', '#C026D3', '#EA580C', '#0D9488', '#BE123C'];
+const STATUS_I18N = { completed: 'statusCompleted', progress: 'statusInProgress', pending: 'statusPending' };
+
+let layerById = {};        // areaId → layer do polígono (país atual)
+let asgLayer = null;       // marcadores com iniciais nos centróides das áreas atribuídas
+let tileLayerRef = null;   // pra esperar os tiles antes da foto do PDF
+let lastBoxSelectAt = 0;   // evita o "clique fantasma" no polígono logo após shift+arrastar
+
+// ---- Helpers de data / mês ----
+function currentMonthKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function monthBounds(ym) {
+  const parts = ym.split('-').map(Number);
+  const last = new Date(parts[0], parts[1], 0).getDate();
+  return [ym + '-01', ym + '-' + String(last).padStart(2, '0')];
+}
+// Sem data = "aberto": aparece em qualquer mês. Só início = daquele dia em diante. Só fim = até aquele dia.
+function inMonth(a, ym) {
+  const mb = monthBounds(ym);
+  const s = a.startDate || '0000-01-01';
+  const e = a.endDate || '9999-12-31';
+  return s <= mb[1] && e >= mb[0];
+}
+function countryAssignments(code) { return state.assignments[code] || []; }
+function monthAssignments(code) { return countryAssignments(code).filter(a => inMonth(a, state.month)); }
+function byStart(a, b) {
+  return (a.startDate || '').localeCompare(b.startDate || '') || (a.endDate || '').localeCompare(b.endDate || '');
+}
+function fmtShortDate(iso) {
+  if (!iso) return '';
+  const p = iso.split('-');
+  return p[2] + '/' + p[1];
+}
+// sep: '→' na tela; '-' no PDF (a Helvetica do jsPDF não tem a seta)
+function periodLabel(a, sep) {
+  const s = sep || '→';
+  if (a.startDate && a.endDate) return fmtShortDate(a.startDate) + ' ' + s + ' ' + fmtShortDate(a.endDate);
+  if (a.startDate) return fmtShortDate(a.startDate) + ' ' + s;
+  if (a.endDate) return s + ' ' + fmtShortDate(a.endDate);
+  return t('noDates');
+}
+function monthLabel(ym) {
+  const parts = ym.split('-').map(Number);
+  const locale = currentLang === 'pt' ? 'pt-BR' : (currentLang === 'es' ? 'es-ES' : 'en-US');
+  const s = new Date(parts[0], parts[1] - 1, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function fmt(key, vars) {
+  let s = t(key);
+  Object.keys(vars || {}).forEach(k => { s = s.replace('{' + k + '}', vars[k]); });
+  return s;
+}
+function uuid() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, ch => {
+    const r = Math.random() * 16 | 0;
+    return (ch === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+function normStr(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+}
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+// ---- Helpers de motorista / área ----
+function driverColor(email) {
+  const s = String(email || '').toLowerCase();
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return DRIVER_PALETTE[h % DRIVER_PALETTE.length];
+}
+function findDriver(email) {
+  const e = String(email || '').toLowerCase();
+  return (state.allDrivers || []).find(d => String(d.email || '').toLowerCase() === e) || null;
+}
+function driverNameOf(a) {
+  const d = findDriver(a.driverEmail);
+  return (d && d.name) || a.driverName || a.driverEmail || '?';
+}
+function initialsOf(name) {
+  return String(name || '?').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+}
+function areaFeature(id) {
+  const l = layerById[id];
+  return l ? l.feature : null;
+}
+function areaNameById(id) {
+  const f = areaFeature(id);
+  return (f && f.properties && f.properties.name) || id;
+}
+function areaNameOf(a) {
+  const f = areaFeature(a.areaId);
+  return (f && f.properties && f.properties.name) || a.areaName || a.areaId;
+}
+// "AR: Salta Province - San Antonio de los Cobres (002)" → "San Antonio de los Cobres (002)"
+function shortName(name) {
+  const m = String(name || '').match(/ - (.+)$/);
+  return m ? m[1] : String(name || '');
+}
+function areaStatusKey(p) {
+  const status = String(p.status || '').toUpperCase();
+  if (status === 'COMPLETED') return 'completed';
+  if (p.collected_km > 0 || status === 'IN_PROGRESS' || status === 'PARTIAL') return 'progress';
+  return 'pending';
+}
+
+// ---- Toast + loader ----
+let toastTimer = null;
+function csToast(msg, kind) {
+  let el = document.getElementById('cs-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'cs-toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.className = 'cs-toast show' + (kind ? ' ' + kind : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = 'cs-toast'; }, 3200);
+}
+function setLoader(show, text) {
+  const loader = document.getElementById('map-loader');
+  const txt = document.getElementById('map-loader-text');
+  if (txt) txt.textContent = text || t('loading');
+  loader.classList.toggle('hidden', !show);
+}
+
+// ---- Carrega atribuições do país (sempre fresco, sem cachedFetch) ----
+async function loadAssignments(code) {
+  try {
+    const res = await fetch(`${CONFIG.scriptUrl}?action=getScopeAssignments&country=${code}`).then(r => r.json());
+    if (!res || res.success !== true || !Array.isArray(res.assignments)) {
+      throw new Error((res && res.error) || 'resposta inválida');
+    }
+    state.assignments[code] = res.assignments;
+    state.assignBackendOk = true;
+    console.log('[CountryScopes] atribuições carregadas:', code, res.assignments.length);
+  } catch (err) {
+    console.warn('[CountryScopes] getScopeAssignments falhou (backend ' + SCOPE_BACKEND_VERSION + ' deployado?):', err);
+    state.assignments[code] = state.assignments[code] || [];
+    state.assignBackendOk = false;
+  }
+  const warn = document.getElementById('tb-warn');
+  if (warn) warn.style.display = state.assignBackendOk ? 'none' : '';
+}
+
+// =================================================================
+// Modo de seleção
+// =================================================================
+function toggleSelectMode(force) {
+  const on = (force === undefined) ? !state.selectMode : !!force;
+  if (on === state.selectMode) {
+    if (on) showPanel(true);
+    return;
+  }
+  state.selectMode = on;
+  document.body.classList.toggle('cs-select-mode', on);
+  document.getElementById('btn-select-mode').classList.toggle('active', on);
+  document.getElementById('assign-form').style.display = on ? '' : 'none';
+  if (map) {
+    if (on) { map.boxZoom.disable(); map.closePopup(); }
+    else { map.boxZoom.enable(); }
+  }
+  if (on) {
+    showPanel(true);
+    populateDriverSelect();
+  } else {
+    clearSelection();
+  }
+  renderPanelTitle();
+}
+function showPanel(show) {
+  document.getElementById('map-wrapper').classList.toggle('panel-hidden', !show);
+  if (map) setTimeout(() => map.invalidateSize(), 60);
+}
+function togglePanel() {
+  showPanel(document.getElementById('map-wrapper').classList.contains('panel-hidden'));
+}
+function renderPanelTitle() {
+  const el = document.getElementById('panel-title');
+  if (!el) return;
+  el.textContent = state.selectMode ? (state.editingId ? t('panelEdit') : t('panelNew')) : t('panelAssignments');
+}
+function toggleSelect(id) {
+  if (state.selected[id]) delete state.selected[id];
+  else state.selected[id] = true;
+  applyAssignmentStyles();
+  renderSelectedList();
+}
+function clearSelection() {
+  state.selected = {};
+  state.editingId = null;
+  state.editingAreaId = null;
+  const sel = document.getElementById('asg-driver');
+  if (sel) sel.value = '';
+  document.getElementById('asg-start').value = '';
+  document.getElementById('asg-end').value = '';
+  document.getElementById('asg-notes').value = '';
+  applyAssignmentStyles();
+  renderSelectedList();
+  renderPanelTitle();
+}
+function renderSelectedList() {
+  const ids = Object.keys(state.selected);
+  const cnt = document.getElementById('sel-count');
+  const list = document.getElementById('sel-list');
+  if (!cnt || !list) return;
+  cnt.textContent = ids.length;
+  if (!ids.length) {
+    list.innerHTML = `<div class="asg-empty">${t('noneSelected')}</div>`;
+    return;
+  }
+  list.innerHTML = ids.map(id => `
+    <div class="sp-selected-item">
+      <span title="${escapeHtml(areaNameById(id))}">${escapeHtml(shortName(areaNameById(id)))}</span>
+      <button type="button" onclick="toggleSelect('${escapeHtml(id)}')" title="✕">✕</button>
+    </div>`).join('');
+}
+function selectedBounds() {
+  let b = null;
+  Object.keys(state.selected).forEach(id => {
+    const l = layerById[id];
+    if (!l) return;
+    const lb = l.getBounds();
+    b = b ? b.extend(lb) : L.latLngBounds(lb.getSouthWest(), lb.getNorthEast());
+  });
+  return b;
+}
+function selectInBounds(bounds) {
+  let n = 0;
+  Object.keys(layerById).forEach(id => {
+    const layer = layerById[id];
+    const p = layer.feature.properties || {};
+    const c = (p.lat && p.lon) ? L.latLng(p.lat, p.lon) : layer.getBounds().getCenter();
+    if (bounds.contains(c) && !state.selected[id]) { state.selected[id] = true; n++; }
+  });
+  applyAssignmentStyles();
+  renderSelectedList();
+  if (n) csToast(fmt('filterAdded', { n: n }), 'success');
+}
+function selectByFilter() {
+  const q = normStr(document.getElementById('sel-filter').value);
+  if (!q) return;
+  let n = 0;
+  Object.keys(layerById).forEach(id => {
+    const p = layerById[id].feature.properties || {};
+    const hay = normStr([p.province, p.city, p.name].join(' '));
+    if (hay.indexOf(q) >= 0 && !state.selected[id]) { state.selected[id] = true; n++; }
+  });
+  applyAssignmentStyles();
+  renderSelectedList();
+  csToast(n ? fmt('filterAdded', { n: n }) : t('filterNoMatch'), n ? 'success' : 'error');
+  const b = selectedBounds();
+  if (n && b) map.fitBounds(b.pad(0.2));
+}
+// Shift + arrastar desenha um retângulo e seleciona tudo cujo centróide cai dentro.
+// (o Draggable do Leaflet já ignora mousedown com shift, então não precisa desligar o drag)
+function setupBoxSelect() {
+  let start = null;
+  let rect = null;
+  const finish = () => {
+    if (!rect) return;
+    const b = rect.getBounds();
+    map.removeLayer(rect);
+    rect = null;
+    start = null;
+    L.DomUtil.enableTextSelection();
+    lastBoxSelectAt = Date.now();
+    if (b.isValid() && (b.getNorth() !== b.getSouth() || b.getEast() !== b.getWest())) selectInBounds(b);
+  };
+  map.on('mousedown', (e) => {
+    if (!state.selectMode || rect || !e.originalEvent || !e.originalEvent.shiftKey) return;
+    L.DomEvent.preventDefault(e.originalEvent);
+    L.DomUtil.disableTextSelection();
+    start = e.latlng;
+    rect = L.rectangle(L.latLngBounds(start, start), {
+      color: '#6D28D9', weight: 1.5, dashArray: '4 4', fillColor: '#A78BFA', fillOpacity: 0.12, interactive: false,
+    }).addTo(map);
+  });
+  map.on('mousemove', (e) => { if (rect && start) rect.setBounds(L.latLngBounds(start, e.latlng)); });
+  map.on('mouseup', finish);
+  document.addEventListener('mouseup', finish);
+}
+
+// =================================================================
+// Estilos + marcadores das atribuições do mês
+// =================================================================
+function applyAssignmentStyles() {
+  if (!map || !polygonLayer) return;
+  const code = state.country;
+  if (asgLayer) { map.removeLayer(asgLayer); asgLayer = null; }
+  asgLayer = L.layerGroup();
+  const byArea = {};
+  monthAssignments(code).forEach(a => { (byArea[a.areaId] = byArea[a.areaId] || []).push(a); });
+
+  Object.keys(layerById).forEach(id => {
+    const layer = layerById[id];
+    const feature = layer.feature;
+    if (state.selected[id]) {
+      layer.setStyle(SELECTED_STYLE);
+      if (layer.bringToFront) layer.bringToFront();
+      return;
+    }
+    const base = featureStyle(feature);
+    const list = byArea[id];
+    if (!list || !list.length) {
+      layer.setStyle(Object.assign({}, base, { dashArray: null }));
+      return;
+    }
+    list.sort(byStart);
+    const color = driverColor(list[0].driverEmail);
+    layer.setStyle(Object.assign({}, base, { color: color, weight: 3, dashArray: '6 4' }));
+
+    const p = feature.properties || {};
+    const center = (p.lat && p.lon) ? [p.lat, p.lon] : layer.getBounds().getCenter();
+    const label = list.slice(0, 3).map(a => initialsOf(driverNameOf(a))).join('·') + (list.length > 3 ? '+' : '');
+    const tip = list.map(a => driverNameOf(a) + ' · ' + periodLabel(a)).join('\n');
+    const icon = L.divIcon({
+      className: 'asg-marker-icon',
+      html: `<div class="asg-marker" style="background:${color}" title="${escapeHtml(tip)}">${escapeHtml(label)}</div>`,
+      iconSize: null,
+      iconAnchor: [14, 10],
+    });
+    L.marker(center, { icon: icon })
+      .on('click', () => { if (state.selectMode) toggleSelect(id); else openAreaPopup(id); })
+      .addTo(asgLayer);
+  });
+  asgLayer.addTo(map);
+  updateBadge();
+}
+function updateBadge() {
+  const el = document.getElementById('tb-badge');
+  if (!el) return;
+  const code = state.country;
+  const list = monthAssignments(code);
+  const drivers = {};
+  list.forEach(a => { drivers[a.driverEmail] = true; });
+  const other = countryAssignments(code).length - list.length;
+  el.textContent = fmt('badgeFmt', { a: list.length, d: Object.keys(drivers).length })
+    + (other > 0 ? ' · ' + fmt('otherMonths', { n: other }) : '');
+}
+function openAreaPopup(id, latlng) {
+  const layer = layerById[id];
+  const cache = state.cache[state.country];
+  if (!layer || !cache) return;
+  const at = latlng || layer.getBounds().getCenter();
+  L.popup({ maxWidth: 320 }).setLatLng(at).setContent(buildAreaPopup(layer.feature, cache)).openOn(map);
+}
+function focusArea(id) {
+  const layer = layerById[id];
+  if (!layer) return;
+  map.fitBounds(layer.getBounds(), { maxZoom: 12, padding: [30, 30] });
+  openAreaPopup(id);
+}
+function assignFromPopup(id) {
+  map.closePopup();
+  toggleSelectMode(true);
+  if (!state.selected[id]) {
+    state.selected[id] = true;
+    applyAssignmentStyles();
+    renderSelectedList();
+  }
+}
+function onMonthChange(v) {
+  if (!v) return;
+  state.month = v;
+  applyAssignmentStyles();
+  renderAssignList();
+}
+
+// =================================================================
+// Formulário: dropdown de motoristas (optgroup por país, país da aba primeiro)
+// =================================================================
+function populateDriverSelect(selectedEmail) {
+  const sel = document.getElementById('asg-driver');
+  if (!sel) return;
+  const countryName = ((CONFIG.countries.find(c => c.code === state.country) || {}).name || '').toLowerCase();
+  const all = (state.allDrivers || []).filter(d => d.email);
+  const rank = d => String(d.country || '').toLowerCase() === countryName ? 0 : 1;
+  const sorted = all.slice().sort((a, b) =>
+    rank(a) - rank(b)
+    || String(a.country || '').localeCompare(String(b.country || ''))
+    || String(a.name || '').localeCompare(String(b.name || '')));
+  const prev = selectedEmail !== undefined ? selectedEmail : sel.value;
+  sel.innerHTML = '';
+  const ph = document.createElement('option');
+  ph.value = '';
+  ph.textContent = t('selectDriver');
+  sel.appendChild(ph);
+  let last = null, group = null;
+  sorted.forEach(d => {
+    if (d.country !== last) {
+      group = document.createElement('optgroup');
+      group.label = d.country;
+      sel.appendChild(group);
+      last = d.country;
+    }
+    const opt = document.createElement('option');
+    opt.value = String(d.email).toLowerCase();
+    opt.textContent = d.name;
+    group.appendChild(opt);
+  });
+  sel.value = prev || '';
+}
+
+// =================================================================
+// Salvar / editar / remover
+// =================================================================
+async function saveAssignment() {
+  const code = state.country;
+  const ids = Object.keys(state.selected);
+  const email = document.getElementById('asg-driver').value;
+  const start = document.getElementById('asg-start').value;
+  const end = document.getElementById('asg-end').value;
+  const notes = document.getElementById('asg-notes').value.trim();
+  if (!ids.length) { csToast(t('errNoAreas'), 'error'); return; }
+  if (!email) { csToast(t('errNoDriver'), 'error'); return; }
+  if (start && end && end < start) { csToast(t('errDates'), 'error'); return; }
+
+  const driver = findDriver(email) || {};
+  const user = (currentUser && currentUser.username) || '';
+  const items = ids.map(id => ({
+    id: (state.editingId && id === state.editingAreaId) ? state.editingId : uuid(),
+    areaId: id,
+    areaName: areaNameById(id),
+    driverEmail: email,
+    driverName: driver.name || email,
+    startDate: start,
+    endDate: end,
+    notes: notes,
+  }));
+
+  const btn = document.getElementById('asg-save');
+  const prevTxt = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = t('saving');
+  try {
+    const payload = { type: 'saveScopeAssignments', country: code, updatedBy: user, items: items };
+    const res = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
+    if (!res || res.success !== true) throw new Error((res && res.error) || 'backend');
+    console.log('[CountryScopes] saveScopeAssignments:', res);
+
+    const list = state.assignments[code] = state.assignments[code] || [];
+    const nowIso = new Date().toISOString();
+    items.forEach(it => {
+      const rec = Object.assign({}, it, { country: code, updatedBy: user, updatedAt: nowIso });
+      const i = list.findIndex(a => a.id === it.id);
+      if (i >= 0) list[i] = Object.assign({}, list[i], rec);
+      else list.push(Object.assign({ createdBy: user, createdAt: nowIso }, rec));
+    });
+    csToast(inMonth(items[0], state.month) ? t('savedOk') : t('savedOtherMonth'), 'success');
+    clearSelection();
+    renderAssignList();
+  } catch (err) {
+    console.error('[CountryScopes] saveScopeAssignments erro:', err);
+    csToast(t('saveFail') + ': ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prevTxt;
+  }
+}
+function editAssignment(id) {
+  const a = countryAssignments(state.country).find(x => x.id === id);
+  if (!a) return;
+  toggleSelectMode(true);
+  state.selected = {};
+  state.selected[a.areaId] = true;
+  state.editingId = a.id;
+  state.editingAreaId = a.areaId;
+  populateDriverSelect(a.driverEmail);
+  document.getElementById('asg-start').value = a.startDate || '';
+  document.getElementById('asg-end').value = a.endDate || '';
+  document.getElementById('asg-notes').value = a.notes || '';
+  applyAssignmentStyles();
+  renderSelectedList();
+  renderPanelTitle();
+  if (layerById[a.areaId]) map.fitBounds(layerById[a.areaId].getBounds(), { maxZoom: 11, padding: [30, 30] });
+}
+// Remoção em dois cliques (o botão vira "Confirmar?" por 3,5s) — sem confirm() nativo
+let pendingDeleteId = null;
+let pendingDeleteTimer = null;
+async function deleteAssignment(id, btn) {
+  if (pendingDeleteId !== id) {
+    pendingDeleteId = id;
+    btn.textContent = t('confirmDelete');
+    btn.classList.add('confirm');
+    clearTimeout(pendingDeleteTimer);
+    pendingDeleteTimer = setTimeout(() => { pendingDeleteId = null; renderAssignList(); }, 3500);
+    return;
+  }
+  clearTimeout(pendingDeleteTimer);
+  pendingDeleteId = null;
+  btn.disabled = true;
+  try {
+    const payload = { type: 'deleteScopeAssignments', ids: [id], updatedBy: (currentUser && currentUser.username) || '' };
+    const res = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
+    if (!res || res.success !== true) throw new Error((res && res.error) || 'backend');
+    const code = state.country;
+    state.assignments[code] = countryAssignments(code).filter(a => a.id !== id);
+    if (state.editingId === id) clearSelection();
+    csToast(t('deleted'), 'success');
+    applyAssignmentStyles();
+    renderAssignList();
+  } catch (err) {
+    console.error('[CountryScopes] deleteScopeAssignments erro:', err);
+    csToast(t('saveFail') + ': ' + err.message, 'error');
+    renderAssignList();
+  }
+}
+
+// =================================================================
+// Lista do painel (mês filtrado, agrupada por motorista)
+// =================================================================
+function renderAssignList() {
+  const el = document.getElementById('assign-list');
+  if (!el) return;
+  const code = state.country;
+  const list = monthAssignments(code).slice().sort(byStart);
+  if (!list.length) {
+    el.innerHTML = `<div class="asg-empty">${t('noAssignments')}</div>`;
+    return;
+  }
+  const groups = {};
+  list.forEach(a => {
+    const k = a.driverEmail;
+    (groups[k] = groups[k] || { email: k, name: driverNameOf(a), items: [] }).items.push(a);
+  });
+  const drivers = Object.keys(groups).map(k => groups[k]).sort((a, b) => a.name.localeCompare(b.name));
+  el.innerHTML = drivers.map(d => {
+    const km = d.items.reduce((s, a) => {
+      const f = areaFeature(a.areaId);
+      return s + ((f && f.properties && f.properties.target_km) || 0);
+    }, 0);
+    const color = driverColor(d.email);
+    return `
+      <div class="asg-driver">
+        <div class="asg-driver-head">
+          <span class="asg-dot" style="background:${color}"></span>
+          <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(d.name)}</span>
+          <span class="asg-meta">${d.items.length} ${t('areasWord')} · ${fmtKm(km)} km</span>
+        </div>
+        ${d.items.map(a => `
+          <div class="asg-item">
+            <span class="asg-name" title="${escapeHtml(areaNameOf(a))}${a.notes ? ' — ' + escapeHtml(a.notes) : ''}" onclick="focusArea('${escapeHtml(a.areaId)}')">${escapeHtml(shortName(areaNameOf(a)))}</span>
+            <span class="asg-dates">${escapeHtml(periodLabel(a))}</span>
+            <button type="button" title="${t('btnEdit')}" onclick="editAssignment('${escapeHtml(a.id)}')">✏️</button>
+            <button type="button" title="${t('btnDelete')}" onclick="deleteAssignment('${escapeHtml(a.id)}', this)">🗑</button>
+          </div>`).join('')}
+      </div>`;
+  }).join('');
+}
+
+// =================================================================
+// EXPORT PDF — escopo por motorista no mês (país atual)
+// =================================================================
+function waitTiles(maxMs) {
+  return new Promise(resolve => {
+    let done = false;
+    const fin = () => { if (!done) { done = true; setTimeout(resolve, 300); } };
+    if (!tileLayerRef || !tileLayerRef.isLoading()) { setTimeout(fin, 400); return; }
+    tileLayerRef.once('load', fin);
+    setTimeout(fin, maxMs);
+  });
+}
+// Foto do mapa (best effort): enquadra as áreas do mês, esconde pinos dos motoristas e desenha
+// tiles + polígonos + marcadores num canvas próprio (estilo leaflet-image). Sem html2canvas —
+// ele errava escala/posição por causa dos transforms do Leaflet. Se falhar, o PDF sai sem mapa.
+async function captureMapSnapshot(list) {
+  if (!map) return null;
+  const ids = Object.keys(list.reduce((o, a) => { o[a.areaId] = 1; return o; }, {})).filter(id => layerById[id]);
+  if (!ids.length) return null;
+  const prevCenter = map.getCenter();
+  const prevZoom = map.getZoom();
+  const hadDrivers = !!(driverLayer && map.hasLayer(driverLayer));
+  try {
+    map.closePopup();
+    if (hadDrivers) map.removeLayer(driverLayer);
+    if (tempLayer) tempLayer.clearLayers();
+    let b = null;
+    ids.forEach(id => {
+      const lb = layerById[id].getBounds();
+      b = b ? b.extend(lb) : L.latLngBounds(lb.getSouthWest(), lb.getNorthEast());
+    });
+    map.fitBounds(b.pad(0.25), { animate: false });
+    await waitTiles(4000);
+    return drawMapToImage(document.getElementById('map'));
+  } catch (err) {
+    console.warn('[CountryScopes PDF] foto do mapa falhou (segue sem mapa):', err);
+    return null;
+  } finally {
+    if (hadDrivers && driverLayer) driverLayer.addTo(map);
+    map.setView(prevCenter, prevZoom, { animate: false });
+  }
+}
+// Desenha o estado atual do mapa num canvas: tiles (imgs com crossorigin, sem o filtro do tema),
+// canvas de vetores do Leaflet, marcadores de iniciais e atribuição do OSM.
+function drawMapToImage(mapEl) {
+  const scale = 1.5;
+  const mr = mapEl.getBoundingClientRect();
+  const W = Math.round(mr.width), H = Math.round(mr.height);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(W * scale);
+  canvas.height = Math.round(H * scale);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#E5E7EB';
+  ctx.fillRect(0, 0, W, H);
+  const rel = el => { const r = el.getBoundingClientRect(); return { x: r.left - mr.left, y: r.top - mr.top, w: r.width, h: r.height }; };
+
+  // 1) tiles — containers em ordem de z-index (nível de zoom antigo embaixo, atual em cima)
+  const containers = Array.from(mapEl.querySelectorAll('.leaflet-tile-container'))
+    .sort((a, c) => (parseInt(a.style.zIndex, 10) || 0) - (parseInt(c.style.zIndex, 10) || 0));
+  let drawn = 0;
+  containers.forEach(cont => {
+    Array.from(cont.querySelectorAll('img.leaflet-tile-loaded')).forEach(img => {
+      if (!img.complete || !img.naturalWidth) return;
+      const r = rel(img);
+      if (r.x + r.w < 0 || r.y + r.h < 0 || r.x > W || r.y > H) return;
+      ctx.drawImage(img, r.x, r.y, r.w, r.h);
+      drawn++;
+    });
+  });
+  // 2) vetores (canvas do renderer do Leaflet)
+  mapEl.querySelectorAll('.leaflet-overlay-pane canvas').forEach(cv => {
+    const r = rel(cv);
+    ctx.drawImage(cv, r.x, r.y, r.w, r.h);
+  });
+  // 3) marcadores com iniciais
+  ctx.font = 'bold 10px -apple-system, "Segoe UI", Roboto, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  mapEl.querySelectorAll('.asg-marker').forEach(el => {
+    const r = rel(el);
+    canvasRoundRect(ctx, r.x, r.y, r.w, r.h, r.h / 2);
+    ctx.fillStyle = el.style.background || '#6D28D9';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.fillText(el.textContent.trim(), r.x + r.w / 2, r.y + r.h / 2 + 0.5);
+  });
+  // 4) atribuição OSM
+  const attr = '© OpenStreetMap contributors';
+  ctx.font = '9px -apple-system, "Segoe UI", Roboto, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'alphabetic';
+  const tw = ctx.measureText(attr).width;
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.fillRect(W - tw - 8, H - 14, tw + 8, 14);
+  ctx.fillStyle = '#333';
+  ctx.fillText(attr, W - 4, H - 4);
+
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);   // lança se algum tile "taintou" o canvas → cai no catch
+  console.log('[CountryScopes PDF] foto do mapa: ' + drawn + ' tiles, ' + W + 'x' + H);
+  return { dataUrl: dataUrl, w: canvas.width, h: canvas.height };
+}
+function canvasRoundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+// Tabela simples com quebra de linha e de página. cols: [{label, w, align}], rows: [[...]]
+function pdfTable(pdf, ctx, cols, rows) {
+  const pad = 1.5, lineH = 3.4, headH = 6;
+  const totalW = cols.reduce((s, c) => s + c.w, 0);
+  const tx = (c, x) => c.align === 'right' ? x + c.w - pad : x + pad;
+  const opt = c => c.align === 'right' ? { align: 'right' } : undefined;
+  const drawHead = () => {
+    pdf.setFillColor(226, 232, 240);
+    pdf.rect(ctx.mL, ctx.y, totalW, headH, 'F');
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(51, 65, 85);
+    let x = ctx.mL;
+    cols.forEach(c => { pdf.text(c.label, tx(c, x), ctx.y + 4.1, opt(c)); x += c.w; });
+    ctx.y += headH;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(30, 41, 59);
+  };
+  drawHead();
+  rows.forEach((r, ri) => {
+    const wrapped = r.map((cell, i) => pdf.splitTextToSize(String(cell == null ? '' : cell), cols[i].w - pad * 2));
+    const lines = Math.max(1, ...wrapped.map(w => w.length));
+    const h = lines * lineH + 2.2;
+    if (ctx.y + h > ctx.pageH - ctx.mB) { pdf.addPage(); ctx.y = ctx.mT; drawHead(); }
+    if (ri % 2 === 1) { pdf.setFillColor(248, 250, 252); pdf.rect(ctx.mL, ctx.y, totalW, h, 'F'); }
+    let x = ctx.mL;
+    wrapped.forEach((w, i) => {
+      const c = cols[i];
+      w.forEach((line, li) => pdf.text(line, tx(c, x), ctx.y + 3.2 + li * lineH, opt(c)));
+      x += c.w;
+    });
+    ctx.y += h;
+  });
+  pdf.setDrawColor(203, 213, 225);
+  pdf.line(ctx.mL, ctx.y, ctx.mL + totalW, ctx.y);
+  ctx.y += 4;
+}
+
+async function exportScopePdf() {
+  if (typeof window.jspdf === 'undefined') { csToast(t('exportError'), 'error'); return; }
+  const code = state.country;
+  const cache = state.cache[code];
+  const country = CONFIG.countries.find(c => c.code === code) || { name: code };
+  if (!cache) return;
+  const list = monthAssignments(code).slice().sort(byStart);
+  if (!list.length) { csToast(t('exportEmpty'), 'error'); return; }
+
+  const btn = document.getElementById('btn-export-pdf');
+  btn.disabled = true;
+  setLoader(true, t('exportGenerating'));
+  try {
+    const propsOf = a => { const f = areaFeature(a.areaId); return (f && f.properties) || {}; };
+    const sumKm = (items, key) => items.reduce((s, a) => s + (Number(propsOf(a)[key]) || 0), 0);
+    // Uma entrada por área (área com 2 motoristas conta 1x no resumo)
+    const uniqById = {};
+    list.forEach(a => { if (!uniqById[a.areaId]) uniqById[a.areaId] = a; });
+    const uniqList = Object.keys(uniqById).map(k => uniqById[k]);
+    // Agrupa por motorista
+    const groups = {};
+    list.forEach(a => {
+      (groups[a.driverEmail] = groups[a.driverEmail] || { email: a.driverEmail, name: driverNameOf(a), items: [] }).items.push(a);
+    });
+    const drivers = Object.keys(groups).map(k => groups[k]).sort((a, b) => a.name.localeCompare(b.name));
+    drivers.forEach(d => d.items.sort((a, b) => byStart(a, b) || areaNameOf(a).localeCompare(areaNameOf(b))));
+
+    const mapImg = await captureMapSnapshot(list);
+
+    const jsPDF = window.jspdf.jsPDF;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const ctx = {
+      mL: 14, mT: 16, mB: 16,
+      pageW: pdf.internal.pageSize.getWidth(),
+      pageH: pdf.internal.pageSize.getHeight(),
+      y: 16,
+    };
+    const contentW = ctx.pageW - ctx.mL * 2;
+    const ensure = h => { if (ctx.y + h > ctx.pageH - ctx.mB) { pdf.addPage(); ctx.y = ctx.mT; } };
+
+    // ===== Cabeçalho =====
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(18);
+    pdf.setTextColor(26, 54, 93);
+    pdf.text(t('pdfTitle'), ctx.mL, ctx.y + 4);
+    pdf.setFontSize(11);
+    pdf.setTextColor(44, 82, 130);
+    pdf.text(country.name + ' · ' + monthLabel(state.month), ctx.pageW - ctx.mL, ctx.y + 4, { align: 'right' });
+    ctx.y += 9;
+    const now = new Date();
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(100, 116, 139);
+    pdf.text(t('pdfGenerated') + ' ' + now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      + ' · ' + ((currentUser && currentUser.username) || ''), ctx.mL, ctx.y);
+    ctx.y += 5;
+
+    // ===== Resumo =====
+    pdf.setFillColor(241, 245, 249);
+    pdf.roundedRect(ctx.mL, ctx.y, contentW, 10, 2, 2, 'F');
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9.5);
+    pdf.setTextColor(26, 54, 93);
+    pdf.text(fmt('pdfSummary', {
+      d: drivers.length, a: uniqList.length,
+      p: fmtKm(sumKm(uniqList, 'target_km')), c: fmtKm(sumKm(uniqList, 'collected_km')),
+    }), ctx.mL + 4, ctx.y + 6.5);
+    ctx.y += 14;
+
+    // ===== Mapa + legenda de cores =====
+    if (mapImg) {
+      let w = contentW, h = w * mapImg.h / mapImg.w;
+      const maxH = 105;
+      if (h > maxH) { h = maxH; w = h * mapImg.w / mapImg.h; }
+      ensure(h + 14);
+      const x0 = ctx.mL + (contentW - w) / 2;
+      pdf.addImage(mapImg.dataUrl, 'JPEG', x0, ctx.y, w, h);
+      pdf.setDrawColor(203, 213, 225);
+      pdf.rect(x0, ctx.y, w, h);
+      ctx.y += h + 3.5;
+      pdf.setFont('helvetica', 'italic');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(t('pdfMapCaption'), ctx.mL, ctx.y);
+      ctx.y += 4.5;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(51, 65, 85);
+      let x = ctx.mL;
+      drivers.forEach(d => {
+        const w2 = pdf.getTextWidth(d.name) + 7;
+        if (x + w2 > ctx.pageW - ctx.mL) { x = ctx.mL; ctx.y += 4.5; }
+        const rgb = hexToRgb(driverColor(d.email));
+        pdf.setFillColor(rgb[0], rgb[1], rgb[2]);
+        pdf.rect(x, ctx.y - 2.4, 3, 3, 'F');
+        pdf.text(d.name, x + 4.2, ctx.y);
+        x += w2 + 2;
+      });
+      ctx.y += 8;
+    }
+
+    // ===== Por motorista =====
+    const fixedW = 46 + 32 + 18 + 14 + 19 + 24;
+    const cols = [
+      { label: t('pdfColArea'), w: 46 },
+      { label: t('pdfColPlace'), w: 32 },
+      { label: t('pdfColStatus'), w: 18 },
+      { label: t('pdfColPlan'), w: 14, align: 'right' },
+      { label: t('pdfColCollected'), w: 19, align: 'right' },
+      { label: t('pdfColPeriod'), w: 24 },
+      { label: t('pdfColNotes'), w: contentW - fixedW },
+    ];
+    drivers.forEach(d => {
+      ensure(32);
+      const rgb = hexToRgb(driverColor(d.email));
+      pdf.setFillColor(rgb[0], rgb[1], rgb[2]);
+      pdf.rect(ctx.mL, ctx.y, 2.5, 9.5, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.text(d.name, ctx.mL + 5, ctx.y + 4.5);
+      const drv = findDriver(d.email);
+      const starts = d.items.map(a => a.startDate).filter(Boolean).sort();
+      const ends = d.items.map(a => a.endDate).filter(Boolean).sort();
+      const period = (starts.length || ends.length)
+        ? periodLabel({ startDate: starts[0] || '', endDate: ends[ends.length - 1] || '' }, '-')
+        : t('noDates');
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(100, 116, 139);
+      pdf.text((drv && drv.city ? drv.city + ' · ' : '')
+        + d.items.length + ' ' + t('pdfAreas')
+        + ' · ' + fmtKm(sumKm(d.items, 'target_km')) + ' km ' + t('pdfPlan')
+        + ' · ' + fmtKm(sumKm(d.items, 'collected_km')) + ' km ' + t('pdfCollected')
+        + ' · ' + period, ctx.mL + 5, ctx.y + 8.7);
+      ctx.y += 12.5;
+      const rows = d.items.map(a => {
+        const p = propsOf(a);
+        const pct = p.target_km > 0 ? ' (' + Math.min(100, (p.collected_km || 0) / p.target_km * 100).toFixed(0) + '%)' : '';
+        return [
+          shortName(areaNameOf(a)),
+          [p.province, p.city].filter(Boolean).join(' / '),
+          t(STATUS_I18N[areaStatusKey(p)]),
+          fmtKm(p.target_km),
+          fmtKm(p.collected_km) + pct,
+          periodLabel(a, '-'),
+          a.notes || '',
+        ];
+      });
+      pdfTable(pdf, ctx, cols, rows);
+      ctx.y += 2;
+    });
+
+    // ===== Áreas com mais de um motorista (sequência) =====
+    const byArea = {};
+    list.forEach(a => { (byArea[a.areaId] = byArea[a.areaId] || []).push(a); });
+    const shared = Object.keys(byArea).filter(id => byArea[id].length > 1);
+    if (shared.length) {
+      ensure(26);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.setTextColor(26, 54, 93);
+      pdf.text(t('pdfShared'), ctx.mL, ctx.y + 4.5);
+      ctx.y += 9;
+      const cols2 = [
+        { label: t('pdfColArea'), w: 70 },
+        { label: t('pdfColDriver'), w: 50 },
+        { label: t('pdfColPeriod'), w: 30 },
+        { label: t('pdfColNotes'), w: contentW - 150 },
+      ];
+      const rows2 = [];
+      shared.sort((a, b) => areaNameById(a).localeCompare(areaNameById(b))).forEach(id => {
+        byArea[id].slice().sort(byStart).forEach((a, i) => {
+          rows2.push([i === 0 ? shortName(areaNameOf(a)) : '', driverNameOf(a), periodLabel(a, '-'), a.notes || '']);
+        });
+      });
+      pdfTable(pdf, ctx, cols2, rows2);
+    }
+
+    // ===== Rodapé =====
+    const n = pdf.getNumberOfPages();
+    for (let i = 1; i <= n; i++) {
+      pdf.setPage(i);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(148, 163, 184);
+      pdf.text('Aceolution · LATAM Street View · Country Scopes', ctx.mL, ctx.pageH - 8);
+      pdf.text(i + ' / ' + n, ctx.pageW - ctx.mL, ctx.pageH - 8, { align: 'right' });
+    }
+    pdf.save('Escopo_' + code + '_' + state.month + '.pdf');
+    console.log('[CountryScopes PDF] gerado:', { code: code, month: state.month, drivers: drivers.length, assignments: list.length, mapImg: !!mapImg });
+  } catch (err) {
+    console.error('[CountryScopes PDF] erro:', err);
+    csToast(t('exportError') + ': ' + err.message, 'error');
+  } finally {
+    setLoader(false);
+    btn.disabled = false;
+  }
 }
 
 // =================================================================
