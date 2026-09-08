@@ -163,10 +163,10 @@ function doGet(e) {
       // v5.32: inclui drivers em offboarding pro check-in não deixar ninguém de fora
       // v5.51: cache de 30min — a lista quase não muda e a leitura da HR inteira é cara
       const cache = CacheService.getScriptCache();
-      const cached = cache.get('checkin_drivers_v2');
+      const cached = cache.get('checkin_drivers_v1');
       if (cached) return jsonResponse({ success: true, drivers: JSON.parse(cached), cached: true });
       const drivers = getActiveDrivers(true);
-      try { cache.put('checkin_drivers_v2', JSON.stringify(drivers), 1800); } catch (e) {}
+      try { cache.put('checkin_drivers_v1', JSON.stringify(drivers), 1800); } catch (e) {}
       return jsonResponse({ success: true, drivers: drivers });
     }
 
@@ -294,7 +294,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.78',
+        version: 'v5.77',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -302,7 +302,6 @@ function doGet(e) {
                     'getLastAssetsForm', 'getPMONotes', 'getArgentinaDrivers',
                     'getCountryScope', 'getDriverDocsStatus',
                     'getScopeAssignments', 'POST saveScopeAssignments', 'POST deleteScopeAssignments',
-                    'repairBlankDriverNames',
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
                     'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
                     'POST submitArgentinaCash', 'POST submitDriverDocs', 'POST updateAuthUsers',
@@ -330,11 +329,6 @@ function doGet(e) {
     }
 
     // Debug: lista exatamente os headers da linha 11 com posição/tamanho
-    // v5.78: preenche nomes em branco (check-in / assets) pelo e-mail. Sem confirm=1 = dry-run
-    if (action === 'repairBlankDriverNames') {
-      return jsonResponse({ success: true, result: repairBlankDriverNames_(String(e.parameter.confirm || '') === '1') });
-    }
-
     if (action === 'debugHeaders') {
       const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
       const sheet = getSheetWithFallback_(ss, CONFIG.dashboardHmSheet, ['DASHBOARD', 'Dashboard', 'Dashboard (HM)']);
@@ -794,110 +788,14 @@ function doPost(e) {
 // FUNÇÕES DE LEITURA — ORIGINAIS (portal check-in)
 // ================================================================
 
-// ================================================================
-// v5.78: COLUNAS DA HR TOLERANTES A RENAME
-// A aba HR teve 'Beneficiary Full Name' renomeada e TODO motorista ficou com
-// name:'' em todas as páginas (check-in, assets, country_scopes...). Aqui o
-// lookup tenta os nomes conhecidos e, por último, um regex — e o nome pode ser
-// preenchido pelo e-mail quando o frontend manda vazio.
-// ================================================================
-const HR_NAME_COLS = ['Beneficiary Full Name', 'Driver Full Name', 'Full Name', 'Driver Name',
-                      'Beneficiary Name', 'Name', 'Nome', 'Nombre', 'Nome Completo', 'Nombre Completo'];
-const HR_NAME_FUZZY = [/full\s*name/, /beneficiar/, /driver.*name|name.*driver/, /^name$|^nome|^nombre/];
-const HR_EMAIL_COLS = ['Corporate E-mail', 'Corporate Email', 'E-mail', 'Email', 'Driver Email', 'Driver E-mail'];
-const HR_EMAIL_FUZZY = [/corporate.*mail/, /e-?mail/];
-
-/** Índice de coluna por lista de nomes (case/trim-insensitive) e, se nada bater, regexes em ordem. */
-function hrCol_(headers, candidates, fuzzy) {
-  const norm = (headers || []).map(function (h) { return String(h || '').trim().toLowerCase(); });
-  for (let j = 0; j < candidates.length; j++) {
-    const i = norm.indexOf(candidates[j].toLowerCase());
-    if (i >= 0) return i;
-  }
-  for (let k = 0; k < (fuzzy || []).length; k++) {
-    for (let i = 0; i < norm.length; i++) if (norm[i] && fuzzy[k].test(norm[i])) return i;
-  }
-  return -1;
-}
-function hrNameIdx_(headers) { return hrCol_(headers, HR_NAME_COLS, HR_NAME_FUZZY); }
-function hrEmailIdx_(headers) { return hrCol_(headers, HR_EMAIL_COLS, HR_EMAIL_FUZZY); }
-
-/** Mapa email(lower) → nome, lido da HR. Cacheado por execução (a Mastersheet é lenta). */
-let HR_NAME_MAP_ = null;
-function hrNameMap_() {
-  if (HR_NAME_MAP_) return HR_NAME_MAP_;
-  const map = {};
-  try {
-    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
-    const sheet = ss.getSheetByName(CONFIG.hrSheet);
-    if (sheet && sheet.getLastRow() > 1) {
-      const data = sheet.getDataRange().getValues();
-      const ni = hrNameIdx_(data[0]), ei = hrEmailIdx_(data[0]);
-      if (ni >= 0 && ei >= 0) {
-        for (let i = 1; i < data.length; i++) {
-          const email = String(data[i][ei] || '').trim().toLowerCase();
-          const name = String(data[i][ni] || '').trim();
-          if (email && name && !map[email]) map[email] = name;
-        }
-      }
-    }
-  } catch (err) {
-    Logger.log('hrNameMap_ erro: ' + err);
-  }
-  HR_NAME_MAP_ = map;
-  return map;
-}
-/** Nome do motorista pelo e-mail (ou '' se não achar). Só lê a HR se for chamado. */
-function hrNameByEmail_(email) {
-  const e = String(email || '').trim().toLowerCase();
-  if (!e) return '';
-  return hrNameMap_()[e] || '';
-}
-
-/**
- * Reparo: preenche o nome do motorista (pelo e-mail) nas linhas que ficaram em branco
- * em 'Driver Daily Check-in' (C=nome, D=email) e 'Assets Management' (B=email, C=nome).
- * GET ?action=repairBlankDriverNames → dry-run (só conta). &confirm=1 → grava.
- */
-function repairBlankDriverNames_(confirm) {
-  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
-  const names = hrNameMap_();
-  const targets = [
-    { key: 'checkin', sheet: ss.getSheetByName(CONFIG.checkinSheet), nameCol: 3, emailCol: 4 },
-    { key: 'assets', sheet: getSheetWithFallback_(ss, CONFIG.assetsSheet, ['Assets Management', 'Asset Management', 'Assets']), nameCol: 3, emailCol: 2 },
-  ];
-  const out = { dryRun: !confirm, hrNames: Object.keys(names).length };
-  targets.forEach(function (tg) {
-    const res = { blank: 0, fixable: 0, fixed: 0, sample: [] };
-    out[tg.key] = res;
-    if (!tg.sheet || tg.sheet.getLastRow() < 2) return;
-    const n = tg.sheet.getLastRow() - 1;
-    const nameVals = tg.sheet.getRange(2, tg.nameCol, n, 1).getValues();
-    const emailVals = tg.sheet.getRange(2, tg.emailCol, n, 1).getValues();
-    for (let i = 0; i < n; i++) {
-      const email = String(emailVals[i][0] || '').trim().toLowerCase();
-      if (!email || String(nameVals[i][0] || '').trim()) continue;
-      res.blank++;
-      const name = names[email];
-      if (!name) continue;
-      res.fixable++;
-      if (res.sample.length < 5) res.sample.push({ row: i + 2, email: email, name: name });
-      if (confirm) { nameVals[i][0] = name; res.fixed++; }
-    }
-    if (confirm && res.fixed) tg.sheet.getRange(2, tg.nameCol, n, 1).setValues(nameVals);
-  });
-  return out;
-}
-
-
 function getActiveDrivers(includeOffboarding) {
   const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
   const sheet = ss.getSheetByName(CONFIG.hrSheet);
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
 
-  const nameIdx = hrNameIdx_(headers);
-  const emailIdx = hrEmailIdx_(headers);
+  const nameIdx = headers.indexOf('Beneficiary Full Name');
+  const emailIdx = headers.indexOf('Corporate E-mail');
   const countryIdx = headers.indexOf('Country');
   const situationIdx = headers.indexOf('Situation');
   const cityIdx = headers.indexOf('City');
@@ -999,8 +897,8 @@ function getDriversWithAddress() {
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
 
-  const nameIdx = hrNameIdx_(headers);
-  const emailIdx = hrEmailIdx_(headers);
+  const nameIdx = headers.indexOf('Beneficiary Full Name');
+  const emailIdx = headers.indexOf('Corporate E-mail');
   const countryIdx = headers.indexOf('Country');
   const situationIdx = headers.indexOf('Situation');
   const cityIdx = headers.indexOf('City');
@@ -1719,7 +1617,7 @@ function getFleetVids_() {
       }
       return -1;
     };
-    const iName = findCol('Beneficiary Full Name', 'Driver Full Name', 'Full Name', 'Driver Name', 'Beneficiary Name', 'Name', 'Nome', 'Nombre');
+    const iName = findCol('Beneficiary Full Name', 'Full Name', 'Driver Name', 'Name');
     const iEmail = findCol('Corporate E-mail', 'Email', 'Driver Email');
     const iSit = findCol('Situation', 'Status', 'Driver Status');
     if (iEmail >= 0) {
@@ -1888,8 +1786,8 @@ function getDriverProfile_(email) {
   const hrSheet = ss.getSheetByName(CONFIG.hrSheet);
   const hrData = hrSheet.getDataRange().getValues();
   const hrHeaders = hrData[0];
-  const hrEmailIdx = hrEmailIdx_(hrHeaders);
-  const hrNameIdx = hrNameIdx_(hrHeaders);
+  const hrEmailIdx = hrHeaders.indexOf('Corporate E-mail');
+  const hrNameIdx = hrHeaders.indexOf('Beneficiary Full Name');
   const hrCountryIdx = hrHeaders.indexOf('Country');
   const hrSituationIdx = hrHeaders.indexOf('Situation');
   const hrHireDateIdx = hrHeaders.indexOf('Hire Date');
@@ -2155,10 +2053,10 @@ function buildHrIndex_() {
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
 
-  const nameIdx = hrNameIdx_(headers);
+  const nameIdx = headers.indexOf('Beneficiary Full Name');
   const cardPhysIdx = headers.indexOf('Ramp Card Last 4');
   const cardVirtIdx = headers.indexOf('Virtual Ramp Card Last 4');
-  const emailIdx = hrEmailIdx_(headers);
+  const emailIdx = headers.indexOf('Corporate E-mail');
   const countryIdx = headers.indexOf('Country');
   const situationIdx = headers.indexOf('Situation');
 
@@ -2718,8 +2616,8 @@ function getDriverCalendarByMonth_(monthYear) {
   if (hrSheet) {
     const hrData = hrSheet.getDataRange().getValues();
     const hrHeaders = hrData[0];
-    const emailIdx = hrEmailIdx_(hrHeaders);
-    const nameIdx = hrNameIdx_(hrHeaders);
+    const emailIdx = hrHeaders.indexOf('Corporate E-mail');
+    const nameIdx = hrHeaders.indexOf('Beneficiary Full Name');
     const nameByEmail = {};
     for (let i = 1; i < hrData.length; i++) {
       const em = hrData[i][emailIdx];
@@ -3050,7 +2948,7 @@ function getPayrollCheckin_(startParam, endParam) {
       }
       return -1;
     };
-    const iName = col('Beneficiary Full Name', 'Driver Full Name', 'Full Name', 'Driver Name', 'Beneficiary Name', 'Name', 'Nome', 'Nombre');
+    const iName = col('Beneficiary Full Name', 'Full Name', 'Driver Name', 'Name');
     const iEmail = col('Corporate E-mail', 'Email', 'Driver Email');
     const iCountry = col('Country');
     const iSit = col('Situation', 'Status', 'Driver Status');
@@ -3745,8 +3643,7 @@ function saveCheckin(data) {
   const row = new Array(35).fill('');
   row[0] = today;
   row[1] = dateStr;
-  // v5.78: se o dropdown veio sem nome (HR renomeada), resolve pelo e-mail em vez de gravar em branco
-  row[2] = data.driverName || hrNameByEmail_(data.driverEmail);
+  row[2] = data.driverName;
   row[3] = data.driverEmail;
   row[4] = data.country;
   row[5] = data.originLat;
@@ -5281,7 +5178,6 @@ function saveAssetWeekly_(data) {
 
   const photos = data.photos || {};
   const folder = getAssetsPhotoFolder_();
-  if (!data.driverName) data.driverName = hrNameByEmail_(data.driverEmail);   // v5.78
   const safeDriverName = String(data.driverName || 'unknown')
     .replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
   const timestamp = Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyyy-MM-dd_HH-mm-ss');
@@ -7098,7 +6994,7 @@ function getActiveDriversByCountry_() {
     return -1;
   };
 
-  const idxName = findCol('Beneficiary Full Name', 'Driver Full Name', 'Full Name', 'Driver Name', 'Beneficiary Name', 'Name', 'Nome', 'Nombre');
+  const idxName = findCol('Beneficiary Full Name', 'Full Name', 'Driver Name', 'Name');
   const idxEmail = findCol('Corporate E-mail', 'Email', 'Driver Email');
   const idxCountry = findCol('Country');
   const idxStatus = findCol('Situation', 'Status', 'Driver Status');
@@ -7935,7 +7831,7 @@ function getDriverInfo_(email, name) {
     return -1;
   };
 
-  const idxName = findCol('Beneficiary Full Name', 'Driver Full Name', 'Full Name', 'Driver Name', 'Beneficiary Name', 'Name', 'Nome', 'Nombre');
+  const idxName = findCol('Beneficiary Full Name', 'Full Name', 'Driver Name', 'Name');
   const idxEmail = findCol('Corporate E-mail', 'Email', 'Driver Email');
   const idxCountry = findCol('Country');
   const idxStatus = findCol('Situation', 'Status');
@@ -8827,8 +8723,8 @@ function getArgentinaDrivers_() {
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
 
-  const nameIdx     = hrNameIdx_(headers);
-  const emailIdx    = hrEmailIdx_(headers);
+  const nameIdx     = headers.indexOf('Beneficiary Full Name');
+  const emailIdx    = headers.indexOf('Corporate E-mail');
   const countryIdx  = headers.indexOf('Country');
   const situationIdx = headers.indexOf('Situation');
   const cityIdx     = headers.indexOf('City');
