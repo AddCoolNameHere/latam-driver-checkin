@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-09-09T13:46:49.198Z",
+  "generatedAt": "2026-09-09T17:52:03.585Z",
   "month": 9,
   "year": 2026,
   "countries": [
     {
       "country": "ALL",
       "slug": "all",
-      "drivers": 61
+      "drivers": 62
     },
     {
       "country": "Argentina",
       "slug": "argentina",
-      "drivers": 5
+      "drivers": 6
     },
     {
       "country": "Brazil",
@@ -21,7 +21,7 @@
     {
       "country": "Chile",
       "slug": "chile",
-      "error": "HTTP 404"
+      "drivers": 3
     },
     {
       "country": "Colombia",
