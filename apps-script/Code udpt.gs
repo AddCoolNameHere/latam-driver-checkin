@@ -294,7 +294,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.77',
+        version: 'v5.79',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -305,7 +305,7 @@ function doGet(e) {
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
                     'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
                     'POST submitArgentinaCash', 'POST submitDriverDocs', 'POST updateAuthUsers',
-                    'getRecruitmentData', 'getTimesheetTab', 'getPayrollCheckin', 'writeAceHours', 'POST writeAceHoursManual',
+                    'getRecruitmentData', 'getTimesheetTab', 'getPayrollCheckin', 'getCtsTimesheet', 'writeAceHours', 'POST writeAceHoursManual',
                     'getPayrollAdjustments', 'POST savePayrollAdjustment', 'POST deletePayrollAdjustment',
                     'getCrimeOverlay',
                     'getArLaunchSchedule', 'POST saveArLaunchSchedule',
@@ -561,6 +561,13 @@ function doGet(e) {
     // ?start=YYYY-MM-DD&end=YYYY-MM-DD (default: quinzena corrente 1-15 / 16-fim).
     if (action === 'getPayrollCheckin') {
       return jsonResponse(getPayrollCheckin_(e.parameter.start, e.parameter.end));
+    }
+
+    // v5.79: folha de ponto da RAW CTS — horas de sistema ligado por motorista/dia.
+    // ?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD (default: quinzena corrente). Dado CRU;
+    // a regra de crédito (≥3h = dia cheio etc.) é aplicada no dashboard.
+    if (action === 'getCtsTimesheet') {
+      return jsonResponse(getCtsTimesheet_(e.parameter.startDate, e.parameter.endDate));
     }
 
     // v5.55: escreve as horas calculadas na coluna "Hrs Worked" da aba REAL da quinzena na ACE.
@@ -2866,6 +2873,157 @@ function getTimesheet(startDate, endDate) {
   });
 
   return rows;
+}
+
+
+// ================================================================
+// v5.79: FOLHA DE PONTO da RAW CTS — horas por motorista/dia
+// ----------------------------------------------------------------
+// Devolve o dado CRU de cada dia (horas de sistema ligado = mapping_hours,
+// status com seta, TKM, km, VIDs). A regra de crédito (≥3h = dia cheio,
+// 9h na Argentina, sábado 4h...) fica no dashboard (CTS_TS_RULE), pra dar
+// pra ajustar sem reimplantar.
+// Várias linhas no mesmo dia (o export manda swarm/churn separados e às
+// vezes repete o VID): por VID fica o MAIOR mapping_hours do dia (não soma
+// duplicata) e soma entre VIDs diferentes (troca de carro no dia).
+// TKM/km somam como no buildRawCtsIndex_.
+// ================================================================
+const CTS_TIMESHEET_MAX_DAYS_ = 120;
+
+function getCtsTimesheet_(startParam, endParam) {
+  try {
+    const isYmd = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ''));
+    const q = currentQuinzena_();
+    let start = isYmd(startParam) ? String(startParam) : q.start;
+    let end = isYmd(endParam) ? String(endParam) : q.end;
+    if (start > end) { const tmp = start; start = end; end = tmp; }
+    const spanDays = Math.round((new Date(end + 'T12:00:00Z') - new Date(start + 'T12:00:00Z')) / 86400000) + 1;
+    if (spanDays > CTS_TIMESHEET_MAX_DAYS_) {
+      return { success: false, error: 'período grande demais (' + spanDays + ' dias, máx ' + CTS_TIMESHEET_MAX_DAYS_ + ')' };
+    }
+
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = ss.getSheetByName(CONFIG.rawCtsSheet);
+    if (!sheet || sheet.getLastRow() < 2) {
+      return { success: false, error: 'aba "' + CONFIG.rawCtsSheet + '" não encontrada ou vazia' };
+    }
+    const data = sheet.getDataRange().getValues();
+    const h = data[0];
+    const ix = {
+      country: findHeader_(h, ['country', 'country_code']),
+      vid:     findHeader_(h, ['VID', 'vehicle_id']),
+      date:    findHeader_(h, ['drive_date']),
+      email:   findHeader_(h, ['email']),
+      status:  findHeader_(h, ['Status']),
+      tkm:     findHeader_(h, ['TKM']),
+      km:      findHeader_(h, ['total_km', 'total_kms']),
+      hours:   findHeader_(h, ['mapping_hours', 'system on hours', 'mapping hours']),
+    };
+    if (ix.date < 0 || ix.email < 0) {
+      return { success: false, error: 'RAW CTS DATA sem as colunas drive_date/email' };
+    }
+
+    // email → nome/país da HR (qualquer situação: período passado pode ter quem já saiu)
+    const hrByEmail = {};
+    const hrSheet = ss.getSheetByName(CONFIG.hrSheet);
+    if (hrSheet && hrSheet.getLastRow() > 1) {
+      const hd = hrSheet.getDataRange().getValues();
+      const iName = findHeader_(hd[0], ['Beneficiary Full Name', 'Full Name', 'Driver Name']);
+      const iEmail = findHeader_(hd[0], ['Corporate E-mail', 'Corporate Email']);
+      const iCountry = findHeader_(hd[0], ['Country']);
+      if (iEmail >= 0) {
+        for (let i = 1; i < hd.length; i++) {
+          const em = String(hd[i][iEmail] || '').trim().toLowerCase();
+          if (!em) continue;
+          hrByEmail[em] = {
+            name: iName >= 0 ? String(hd[i][iName] || '').trim() : '',
+            country: iCountry >= 0 ? String(hd[i][iCountry] || '').trim() : '',
+          };
+        }
+      }
+    }
+
+    const round2 = n => Math.round(n * 100) / 100;
+    const byDriver = {};   // email → { email, country, vids[], days: { 'yyyy-MM-dd': acc } }
+    let lastDataDate = '';
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const email = String(row[ix.email] || '').trim().toLowerCase();
+      if (email.indexOf('@') < 0) continue;              // 'No driver' / vazio
+      const dObj = parseRawCtsDate_(row[ix.date]);
+      if (!dObj) continue;
+      const day = ymd_(dObj);
+      if (day > lastDataDate) lastDataDate = day;       // até onde a RAW CTS já veio (qualquer motorista)
+      if (day < start || day > end) continue;
+
+      const D = byDriver[email] || (byDriver[email] = { email: email, country: '', vids: [], days: {} });
+      if (!D.country && ix.country >= 0) D.country = clientCountryName_(row[ix.country]);
+
+      const vid = ix.vid >= 0 && row[ix.vid] != null ? String(row[ix.vid]).trim() : '';
+      if (vid && D.vids.indexOf(vid) < 0) D.vids.push(vid);
+
+      const hrs = ix.hours >= 0 ? safeNumber(row[ix.hours]) : 0;
+      const tkm = ix.tkm >= 0 ? safeNumber(row[ix.tkm]) : 0;
+      const km = ix.km >= 0 ? safeNumber(row[ix.km]) : 0;
+      const status = ix.status >= 0 && row[ix.status] != null ? String(row[ix.status]).trim() : '';
+
+      const x = D.days[day] || (D.days[day] = { tkm: 0, km: 0, mapped: false, statuses: [], _hByVid: {} });
+      x.tkm += tkm;
+      x.km += km;
+      const vk = vid || '_';
+      if (!(vk in x._hByVid) || hrs > x._hByVid[vk]) x._hByVid[vk] = hrs;
+      if (isCtsMappingDay_(status, hrs, tkm)) x.mapped = true;
+      if (status && x.statuses.indexOf(status) < 0) x.statuses.push(status);
+    }
+
+    // País canônico: 'México' e 'Mexico' na mesma RAW CTS viram um só (ganha a grafia mais frequente)
+    const spell = {};
+    Object.keys(byDriver).forEach(em => {
+      const D = byDriver[em];
+      if (!D.country && hrByEmail[em]) D.country = clientCountryName_(hrByEmail[em].country);
+      const k = normCountry_(D.country);
+      if (!k) return;
+      if (!spell[k]) spell[k] = {};
+      spell[k][D.country] = (spell[k][D.country] || 0) + 1;
+    });
+    const canon = {};
+    Object.keys(spell).forEach(k => {
+      canon[k] = Object.keys(spell[k]).sort((a, b) => (spell[k][b] - spell[k][a]) || a.localeCompare(b))[0];
+    });
+
+    const drivers = Object.keys(byDriver).map(em => {
+      const D = byDriver[em];
+      const hr = hrByEmail[em];
+      const days = {};
+      Object.keys(D.days).forEach(day => {
+        const x = D.days[day];
+        let hSum = 0;
+        for (const vk in x._hByVid) hSum += x._hByVid[vk];
+        days[day] = { h: round2(hSum), tkm: round2(x.tkm), km: round2(x.km), mapped: x.mapped, status: x.statuses.join(' / ') };
+      });
+      return {
+        name: (hr && hr.name) || nameFromEmail_(em),
+        email: em,
+        country: canon[normCountry_(D.country)] || D.country || '',
+        inHr: !!hr,
+        vids: D.vids,
+        days: days,
+      };
+    }).sort((a, b) => String(a.country).localeCompare(String(b.country)) || String(a.name).localeCompare(String(b.name)));
+
+    return {
+      success: true,
+      version: 'v5.79',
+      period: { start: start, end: end },
+      lastDataDate: lastDataDate || null,
+      hoursColumn: ix.hours >= 0 ? String(h[ix.hours]) : null,
+      drivers: drivers,
+    };
+  } catch (err) {
+    Logger.log('getCtsTimesheet_ erro: ' + err);
+    return { success: false, error: String(err) };
+  }
 }
 
 

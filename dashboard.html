@@ -1939,6 +1939,10 @@
           <div class="export-title" data-i18n="exportTimesheet">Folha de ponto</div>
           <div class="export-sub" data-i18n="exportTimesheetSub">Excel por driver/dia (com horas e km)</div>
         </button>
+        <button onclick="openCtsTimesheetModal()">
+          <div class="export-title" data-i18n="exportCtsTimesheet">🕒 Folha de ponto — RAW CTS</div>
+          <div class="export-sub" data-i18n="exportCtsTimesheetSub">Excel com as horas de cada motorista por dia</div>
+        </button>
         <button onclick="openMonthPickerForCalendar()">
           <div class="export-title" data-i18n="exportCalendar">Resumo Calendar</div>
           <div class="export-sub" data-i18n="exportCalendarSub">PDF visual do Driver/VID Calendar (mês)</div>
@@ -2079,6 +2083,46 @@
       <button class="primary" id="ts-generate-btn" onclick="generateTimesheet()" data-i18n="timesheetGenerate">Gerar Excel</button>
     </div>
     <div id="ts-status" style="margin-top:12px; font-size:13px; color:var(--c-text-muted); text-align:center;"></div>
+  </div>
+</div>
+
+<!-- v5.79: Folha de ponto da RAW CTS (horas por motorista/dia) -->
+<div id="cts-ts-modal" class="ts-modal" style="display:none;" onclick="closeCtsTimesheetModalIfBackdrop(event)">
+  <div class="ts-modal-content">
+    <div class="ts-modal-header">
+      <h2 data-i18n="ctsTsTitle">🕒 Folha de ponto — RAW CTS</h2>
+      <button class="ts-modal-close" onclick="closeCtsTimesheetModal()">×</button>
+    </div>
+    <p style="color:var(--c-text-muted); font-size:13px; margin-bottom:16px;" data-i18n="ctsTsSub">
+      Horas de cada motorista por dia, a partir da RAW CTS. Dia com 3h ou mais de sistema ligado conta como dia cheio (8h; Argentina 9h).
+    </p>
+    <div class="ts-form-row">
+      <label data-i18n="timesheetFrom">De:</label>
+      <input type="date" id="cts-ts-start">
+    </div>
+    <div class="ts-form-row">
+      <label data-i18n="timesheetTo">Até:</label>
+      <input type="date" id="cts-ts-end">
+    </div>
+    <div class="ts-form-row">
+      <label data-i18n="ctsTsCountry">País:</label>
+      <select id="cts-ts-country" style="flex:1;padding:8px;border:1px solid var(--c-border);border-radius:6px;font-family:inherit;">
+        <option value="ALL" data-i18n="ctsTsAllCountries">Todos os países</option>
+      </select>
+    </div>
+    <div class="ts-quick-ranges">
+      <button onclick="setCtsTimesheetRange('thisFortnight')" data-i18n="ctsTsThisFortnight">Quinzena atual</button>
+      <button onclick="setCtsTimesheetRange('lastFortnight')" data-i18n="ctsTsLastFortnight">Quinzena anterior</button>
+      <button onclick="setCtsTimesheetRange('thisMonth')" data-i18n="thisMonth">Este mês</button>
+      <button onclick="setCtsTimesheetRange('lastMonth')" data-i18n="lastMonth">Mês passado</button>
+      <button onclick="setCtsTimesheetRange('last7')" data-i18n="last7Days">Últimos 7 dias</button>
+      <button onclick="setCtsTimesheetRange('last30')" data-i18n="last30Days">Últimos 30 dias</button>
+    </div>
+    <div class="ts-modal-actions">
+      <button onclick="closeCtsTimesheetModal()" data-i18n="cancel">Cancelar</button>
+      <button class="primary" id="cts-ts-generate-btn" onclick="generateCtsTimesheet()" data-i18n="timesheetGenerate">Gerar Excel</button>
+    </div>
+    <div id="cts-ts-status" style="margin-top:12px; font-size:13px; color:var(--c-text-muted); text-align:center;"></div>
   </div>
 </div>
 
@@ -2910,6 +2954,44 @@ const I18N = {
     timesheetSuccess: 'Folha de ponto gerada!',
     timesheetInvalidRange: 'Selecione data inicial e final.',
     timesheetInvertedRange: 'Data inicial deve ser anterior à final.',
+    exportCtsTimesheet: '🕒 Folha de ponto — RAW CTS',
+    exportCtsTimesheetSub: 'Excel com as horas de cada motorista por dia',
+    ctsTsTitle: '🕒 Folha de ponto — RAW CTS',
+    ctsTsSub: 'Horas de cada motorista por dia, a partir da RAW CTS. Dia com 3h ou mais de sistema ligado conta como dia cheio (8h; Argentina 9h).',
+    ctsTsCountry: 'País:',
+    ctsTsAllCountries: 'Todos os países',
+    ctsTsThisFortnight: 'Quinzena atual',
+    ctsTsLastFortnight: 'Quinzena anterior',
+    ctsTsGenerating: 'Lendo a RAW CTS... (pode levar até 1 min)',
+    ctsTsEmpty: 'Nenhum motorista com dados na RAW CTS nesse período/país.',
+    ctsTsSuccess: 'Excel gerado',
+    ctsTsDriversLabel: 'motoristas',
+    ctsTsTooLong: 'Período máximo: 120 dias.',
+    ctsTsTimeout: 'A RAW CTS demorou demais pra responder. Tente de novo.',
+    ctsTsNeedsDeploy: 'O backend ainda não tem essa função — falta reimplantar o Apps Script (v5.79).',
+    ctsTsSheetGrid: 'Horas por dia',
+    ctsTsSheetDetail: 'Detalhe',
+    ctsTsPeriod: 'Período',
+    ctsTsDataUntil: 'RAW CTS com dados até',
+    ctsTsRuleText: 'Regra: {min}h ou mais de sistema ligado = dia cheio ({def}h; Argentina 9h) · sábado = {sat}h · menos de {min}h = horas reais · dia ⬆ sem horas registradas = dia cheio · em branco = sem linha na RAW CTS',
+    ctsTsColDriver: 'Motorista',
+    ctsTsColCountry: 'País',
+    ctsTsColVids: 'VID(s)',
+    ctsTsColTotal: 'Total horas',
+    ctsTsColDays: 'Dias trabalhados',
+    ctsTsColSysHours: 'Horas sistema (CTS)',
+    ctsTsColDate: 'Data',
+    ctsTsColWeekday: 'Dia',
+    ctsTsColStatus: 'Status CTS',
+    ctsTsColCredited: 'Horas creditadas',
+    ctsTsColRule: 'Regra aplicada',
+    ctsTsSubtotal: 'Total',
+    ctsTsGrandTotal: 'TOTAL GERAL',
+    ctsTsRuleFull: '≥{min}h → {h}h',
+    ctsTsRulePartial: '<{min}h → horas reais',
+    ctsTsRuleMappedNoHours: '⬆ sem horas registradas → {h}h',
+    ctsTsRuleOff: 'sem horas de sistema',
+    ctsTsWeekdays: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
     thStatus: 'Status',
     pillActive: '✓ Ativo',
     pillWarn24h: '> 24h',
@@ -3250,6 +3332,44 @@ const I18N = {
     timesheetSuccess: '¡Hoja de asistencia generada!',
     timesheetInvalidRange: 'Seleccione fecha inicial y final.',
     timesheetInvertedRange: 'La fecha inicial debe ser anterior a la final.',
+    exportCtsTimesheet: '🕒 Hoja de asistencia — RAW CTS',
+    exportCtsTimesheetSub: 'Excel con las horas de cada conductor por día',
+    ctsTsTitle: '🕒 Hoja de asistencia — RAW CTS',
+    ctsTsSub: 'Horas de cada conductor por día, a partir de la RAW CTS. Un día con 3h o más de sistema encendido cuenta como día completo (8h; Argentina 9h).',
+    ctsTsCountry: 'País:',
+    ctsTsAllCountries: 'Todos los países',
+    ctsTsThisFortnight: 'Quincena actual',
+    ctsTsLastFortnight: 'Quincena anterior',
+    ctsTsGenerating: 'Leyendo la RAW CTS... (puede tardar hasta 1 min)',
+    ctsTsEmpty: 'Ningún conductor con datos en la RAW CTS en ese período/país.',
+    ctsTsSuccess: 'Excel generado',
+    ctsTsDriversLabel: 'conductores',
+    ctsTsTooLong: 'Período máximo: 120 días.',
+    ctsTsTimeout: 'La RAW CTS tardó demasiado en responder. Intente de nuevo.',
+    ctsTsNeedsDeploy: 'El backend aún no tiene esta función — falta reimplementar el Apps Script (v5.79).',
+    ctsTsSheetGrid: 'Horas por día',
+    ctsTsSheetDetail: 'Detalle',
+    ctsTsPeriod: 'Período',
+    ctsTsDataUntil: 'RAW CTS con datos hasta',
+    ctsTsRuleText: 'Regla: {min}h o más de sistema encendido = día completo ({def}h; Argentina 9h) · sábado = {sat}h · menos de {min}h = horas reales · día ⬆ sin horas registradas = día completo · en blanco = sin fila en la RAW CTS',
+    ctsTsColDriver: 'Conductor',
+    ctsTsColCountry: 'País',
+    ctsTsColVids: 'VID(s)',
+    ctsTsColTotal: 'Total horas',
+    ctsTsColDays: 'Días trabajados',
+    ctsTsColSysHours: 'Horas sistema (CTS)',
+    ctsTsColDate: 'Fecha',
+    ctsTsColWeekday: 'Día',
+    ctsTsColStatus: 'Estado CTS',
+    ctsTsColCredited: 'Horas acreditadas',
+    ctsTsColRule: 'Regla aplicada',
+    ctsTsSubtotal: 'Total',
+    ctsTsGrandTotal: 'TOTAL GENERAL',
+    ctsTsRuleFull: '≥{min}h → {h}h',
+    ctsTsRulePartial: '<{min}h → horas reales',
+    ctsTsRuleMappedNoHours: '⬆ sin horas registradas → {h}h',
+    ctsTsRuleOff: 'sin horas de sistema',
+    ctsTsWeekdays: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
     thStatus: 'Estado',
     pillActive: '✓ Activo',
     pillWarn24h: '> 24h',
@@ -3590,6 +3710,44 @@ const I18N = {
     timesheetSuccess: 'Timesheet generated!',
     timesheetInvalidRange: 'Select start and end dates.',
     timesheetInvertedRange: 'Start date must be before end date.',
+    exportCtsTimesheet: '🕒 Timesheet — RAW CTS',
+    exportCtsTimesheetSub: 'Excel with the hours of each driver per day',
+    ctsTsTitle: '🕒 Timesheet — RAW CTS',
+    ctsTsSub: 'Hours of each driver per day, from the RAW CTS. A day with 3h or more of system on counts as a full day (8h; Argentina 9h).',
+    ctsTsCountry: 'Country:',
+    ctsTsAllCountries: 'All countries',
+    ctsTsThisFortnight: 'This fortnight',
+    ctsTsLastFortnight: 'Last fortnight',
+    ctsTsGenerating: 'Reading the RAW CTS... (may take up to 1 min)',
+    ctsTsEmpty: 'No driver with RAW CTS data in this period/country.',
+    ctsTsSuccess: 'Excel generated',
+    ctsTsDriversLabel: 'drivers',
+    ctsTsTooLong: 'Maximum period: 120 days.',
+    ctsTsTimeout: 'The RAW CTS took too long to respond. Try again.',
+    ctsTsNeedsDeploy: 'The backend does not have this function yet — the Apps Script needs a redeploy (v5.79).',
+    ctsTsSheetGrid: 'Hours per day',
+    ctsTsSheetDetail: 'Detail',
+    ctsTsPeriod: 'Period',
+    ctsTsDataUntil: 'RAW CTS has data up to',
+    ctsTsRuleText: 'Rule: {min}h or more of system on = full day ({def}h; Argentina 9h) · Saturday = {sat}h · under {min}h = actual hours · ⬆ day with no hours recorded = full day · blank = no RAW CTS row',
+    ctsTsColDriver: 'Driver',
+    ctsTsColCountry: 'Country',
+    ctsTsColVids: 'VID(s)',
+    ctsTsColTotal: 'Total hours',
+    ctsTsColDays: 'Days worked',
+    ctsTsColSysHours: 'System hours (CTS)',
+    ctsTsColDate: 'Date',
+    ctsTsColWeekday: 'Day',
+    ctsTsColStatus: 'CTS status',
+    ctsTsColCredited: 'Credited hours',
+    ctsTsColRule: 'Rule applied',
+    ctsTsSubtotal: 'Total',
+    ctsTsGrandTotal: 'GRAND TOTAL',
+    ctsTsRuleFull: '≥{min}h → {h}h',
+    ctsTsRulePartial: '<{min}h → actual hours',
+    ctsTsRuleMappedNoHours: '⬆ no hours recorded → {h}h',
+    ctsTsRuleOff: 'no system hours',
+    ctsTsWeekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     thStatus: 'Status',
     pillActive: '✓ Active',
     pillWarn24h: '> 24h',
@@ -8202,6 +8360,273 @@ function buildTimesheetExcel(rows, startDate, endDate) {
 
   // Filename
   const fname = 'folha-ponto-' + startDate + '_' + endDate + '.xlsx';
+  XLSX.writeFile(wb, fname);
+}
+
+// =================================================================
+// FOLHA DE PONTO — RAW CTS (v5.79)
+// Horas de cada motorista por dia a partir da RAW CTS (mapping_hours =
+// horas de sistema ligado). O backend (getCtsTimesheet) devolve o dado
+// cru; a regra de crédito fica aqui pra ajustar sem reimplantar.
+// =================================================================
+
+// Mesmos parâmetros do payroll do check-in (PAYROLL_* no Code udpt.gs),
+// com o corte de dia cheio em 3h de sistema ligado.
+const CTS_TS_RULE = {
+  minHoursFullDay: 3,             // ≥3h de sistema ligado = dia cheio
+  fullDayDefault: 8,              // dia cheio (maioria dos países)
+  fullDay9hCountries: ['argentina'],
+  saturdayHours: 4,               // sábado trabalhado
+  mappedNoHoursIsFullDay: true,   // ⬆ na CTS sem mapping_hours registrado = dia cheio (presença)
+  maxDays: 120,                   // espelha CTS_TIMESHEET_MAX_DAYS_ do backend
+};
+
+const CTS_TS_COUNTRIES = ['Argentina', 'Brazil', 'Chile', 'Colombia', 'México', 'Peru'];
+
+function ctsTsNorm(s) {
+  return String(s || '').toLowerCase().trim().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function ctsTsFullDay(country) {
+  return CTS_TS_RULE.fullDay9hCountries.indexOf(ctsTsNorm(country)) >= 0 ? 9 : CTS_TS_RULE.fullDayDefault;
+}
+
+/**
+ * Horas creditadas num dia. raw = {h, mapped, status, tkm, km} da RAW CTS
+ * (undefined = motorista sem linha nesse dia). dow: 0=Dom..6=Sáb.
+ * Domingo segue a regra de dia útil (igual ao payroll do check-in).
+ */
+function ctsTsCreditDay(raw, dow, country) {
+  if (!raw) return { hours: null, rule: 'none' };
+  const full = dow === 6 ? CTS_TS_RULE.saturdayHours : ctsTsFullDay(country);
+  const h = Number(raw.h) || 0;
+  if (h >= CTS_TS_RULE.minHoursFullDay) return { hours: full, rule: 'full' };
+  if (h > 0) return { hours: Math.round(h * 100) / 100, rule: 'partial' };
+  if (raw.mapped && CTS_TS_RULE.mappedNoHoursIsFullDay) return { hours: full, rule: 'mappedNoHours' };
+  return { hours: 0, rule: 'off' };
+}
+
+function ctsTsRuleLabel(rule, hours) {
+  const min = CTS_TS_RULE.minHoursFullDay;
+  if (rule === 'full') return t('ctsTsRuleFull').replace('{min}', min).replace('{h}', hours);
+  if (rule === 'partial') return t('ctsTsRulePartial').replace('{min}', min);
+  if (rule === 'mappedNoHours') return t('ctsTsRuleMappedNoHours').replace('{h}', hours);
+  return t('ctsTsRuleOff');
+}
+
+function ctsTsYmd(d) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+
+// 'YYYY-MM-DD' → 'DD/MM/YYYY'
+function ctsTsBr(ymd) {
+  const p = String(ymd || '').split('-');
+  return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : String(ymd || '');
+}
+
+function openCtsTimesheetModal() {
+  document.getElementById('export-menu').style.display = 'none';
+  const sel = document.getElementById('cts-ts-country');
+  if (sel.options.length <= 1) {
+    CTS_TS_COUNTRIES.forEach(c => {
+      const o = document.createElement('option');
+      o.value = ctsTsNorm(c);
+      o.textContent = c;
+      sel.appendChild(o);
+    });
+  }
+  // Abre no país que já está filtrado no dashboard
+  const curKey = ctsTsNorm(state.filter && state.filter.country);
+  sel.value = Array.from(sel.options).some(o => o.value === curKey) ? curKey : 'ALL';
+  setCtsTimesheetRange('thisFortnight');
+  document.getElementById('cts-ts-status').textContent = '';
+  document.getElementById('cts-ts-generate-btn').disabled = false;
+  document.getElementById('cts-ts-modal').style.display = 'flex';
+}
+
+function closeCtsTimesheetModal() {
+  document.getElementById('cts-ts-modal').style.display = 'none';
+}
+
+function closeCtsTimesheetModalIfBackdrop(evt) {
+  if (evt.target.id === 'cts-ts-modal') closeCtsTimesheetModal();
+}
+
+// Quinzena = 1–15 / 16–fim do mês (mesma do currentQuinzena_ do backend e do timesheet.html)
+function setCtsTimesheetRange(preset) {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  let start, end;
+  switch (preset) {
+    case 'thisFortnight':
+      start = new Date(y, m, d <= 15 ? 1 : 16);
+      end = d <= 15 ? new Date(y, m, 15) : new Date(y, m + 1, 0);
+      break;
+    case 'lastFortnight':
+      if (d <= 15) { start = new Date(y, m - 1, 16); end = new Date(y, m, 0); }
+      else { start = new Date(y, m, 1); end = new Date(y, m, 15); }
+      break;
+    case 'thisMonth':
+      start = new Date(y, m, 1); end = new Date(y, m + 1, 0);
+      break;
+    case 'lastMonth':
+      start = new Date(y, m - 1, 1); end = new Date(y, m, 0);
+      break;
+    case 'last7':
+      start = new Date(y, m, d - 6); end = now;
+      break;
+    case 'last30':
+      start = new Date(y, m, d - 29); end = now;
+      break;
+    default:
+      return;
+  }
+  document.getElementById('cts-ts-start').value = ctsTsYmd(start);
+  document.getElementById('cts-ts-end').value = ctsTsYmd(end);
+}
+
+async function generateCtsTimesheet() {
+  const start = document.getElementById('cts-ts-start').value;
+  const end = document.getElementById('cts-ts-end').value;
+  const countryKey = document.getElementById('cts-ts-country').value;
+  const statusEl = document.getElementById('cts-ts-status');
+  const btn = document.getElementById('cts-ts-generate-btn');
+  const setStatus = (msg, color) => { statusEl.style.color = color; statusEl.textContent = msg; };
+
+  if (!start || !end) return setStatus(t('timesheetInvalidRange'), '#EF4444');
+  if (start > end) return setStatus(t('timesheetInvertedRange'), '#EF4444');
+  const span = Math.round((new Date(end + 'T12:00:00') - new Date(start + 'T12:00:00')) / 86400000) + 1;
+  if (span > CTS_TS_RULE.maxDays) return setStatus(t('ctsTsTooLong'), '#EF4444');
+  if (typeof XLSX === 'undefined') return setStatus(t('timesheetError') + ': SheetJS não carregou', '#EF4444');
+
+  btn.disabled = true;
+  setStatus(t('ctsTsGenerating'), 'var(--c-text-muted)');
+
+  try {
+    const url = CONFIG.scriptUrl + '?action=getCtsTimesheet'
+      + '&startDate=' + encodeURIComponent(start)
+      + '&endDate=' + encodeURIComponent(end);
+    const res = await fetchWithTimeout(url, 120000);
+    if (!res || !res.success) {
+      const err = (res && res.error) || '';
+      if (/unknown action/i.test(err)) throw new Error(t('ctsTsNeedsDeploy'));
+      throw new Error(err || 'erro desconhecido');
+    }
+    if (!res.hoursColumn) console.warn('[CTS Timesheet] RAW CTS sem coluna mapping_hours — horas vão sair zeradas');
+
+    let drivers = res.drivers || [];
+    if (countryKey !== 'ALL') drivers = drivers.filter(d => ctsTsNorm(d.country) === countryKey);
+    console.log('[CTS Timesheet]', res.period, '· RAW CTS até', res.lastDataDate, '·', drivers.length, 'motoristas');
+    if (!drivers.length) {
+      setStatus(t('ctsTsEmpty'), '#F59E0B');
+      btn.disabled = false;
+      return;
+    }
+
+    const countryLabel = countryKey === 'ALL' ? '' : (CTS_TS_COUNTRIES.find(c => ctsTsNorm(c) === countryKey) || countryKey);
+    buildCtsTimesheetExcel(drivers, res, countryLabel);
+    setStatus('✓ ' + t('ctsTsSuccess') + ' (' + drivers.length + ' ' + t('ctsTsDriversLabel') + ')', '#16A34A');
+    setTimeout(() => { closeCtsTimesheetModal(); btn.disabled = false; }, 1500);
+  } catch (err) {
+    console.error('[CTS Timesheet] erro:', err);
+    setStatus(err && err.name === 'AbortError' ? t('ctsTsTimeout') : t('timesheetError') + ': ' + (err.message || err), '#EF4444');
+    btn.disabled = false;
+  }
+}
+
+/**
+ * Excel com 2 abas:
+ *  - "Horas por dia": 1 linha por motorista × 1 coluna por dia (horas creditadas),
+ *    total/dias trabalhados/horas de sistema, subtotal por país.
+ *  - "Detalhe": 1 linha por motorista/dia com status CTS, horas de sistema,
+ *    horas creditadas e qual regra foi aplicada (pra auditar).
+ */
+function buildCtsTimesheetExcel(drivers, res, countryLabel) {
+  const start = res.period.start, end = res.period.end;
+  const lastData = res.lastDataDate || '';
+  const wd = t('ctsTsWeekdays');
+  const pad = (n) => String(n).padStart(2, '0');
+  const round2 = (n) => Math.round(n * 100) / 100;
+
+  // Uma coluna por dia do período (dia sem linha na RAW CTS fica em branco)
+  const days = [];
+  for (let d = new Date(start + 'T12:00:00'), last = new Date(end + 'T12:00:00'); d <= last; d.setDate(d.getDate() + 1)) {
+    days.push({ ymd: ctsTsYmd(d), dow: d.getDay(), label: wd[d.getDay()] + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1) });
+  }
+
+  const head = [t('ctsTsColDriver'), t('ctsTsColCountry'), t('ctsTsColVids')]
+    .concat(days.map(d => d.label), [t('ctsTsColTotal'), t('ctsTsColDays'), t('ctsTsColSysHours')]);
+  const ruleText = t('ctsTsRuleText')
+    .replace(/\{min\}/g, CTS_TS_RULE.minHoursFullDay)
+    .replace('{def}', CTS_TS_RULE.fullDayDefault)
+    .replace('{sat}', CTS_TS_RULE.saturdayHours);
+
+  const grid = [
+    [t('ctsTsTitle').replace(/^🕒\s*/, '') + (countryLabel ? ' · ' + countryLabel : '')],
+    [t('ctsTsPeriod') + ': ' + ctsTsBr(start) + ' → ' + ctsTsBr(end)
+      + (lastData ? '   ·   ' + t('ctsTsDataUntil') + ' ' + ctsTsBr(lastData) : '')],
+    [ruleText],
+    [],
+    head,
+  ];
+  const detail = [[
+    t('ctsTsColDriver'), t('ctsTsColCountry'), t('ctsTsColDate'), t('ctsTsColWeekday'), t('ctsTsColStatus'),
+    t('ctsTsColSysHours'), t('ctsTsColCredited'), t('ctsTsColRule'), 'TKM', 'KM',
+  ]];
+
+  // Agrupa por país (o backend já manda ordenado por país → nome)
+  const groups = [];
+  drivers.forEach(d => {
+    const lastGroup = groups[groups.length - 1];
+    if (lastGroup && lastGroup.country === d.country) lastGroup.list.push(d);
+    else groups.push({ country: d.country, list: [d] });
+  });
+
+  const newTotals = () => ({ perDay: days.map(() => 0), total: 0, worked: 0, sys: 0 });
+  const totalsRow = (label, tot) => [label, '', ''].concat(tot.perDay.map(round2), [round2(tot.total), tot.worked, round2(tot.sys)]);
+  const grand = newTotals();
+
+  groups.forEach(g => {
+    const sub = newTotals();
+    g.list.forEach(d => {
+      const row = [d.name, d.country, (d.vids || []).join(', ')];
+      let total = 0, worked = 0, sys = 0;
+      days.forEach((day, i) => {
+        const raw = d.days ? d.days[day.ymd] : undefined;
+        const c = ctsTsCreditDay(raw, day.dow, d.country);
+        row.push(c.hours == null ? '' : c.hours);
+        if (c.hours) { total += c.hours; sub.perDay[i] += c.hours; grand.perDay[i] += c.hours; worked++; }
+        if (raw) {
+          sys += Number(raw.h) || 0;
+          detail.push([d.name, d.country, ctsTsBr(day.ymd), wd[day.dow], raw.status || '—',
+            Number(raw.h) || 0, c.hours, ctsTsRuleLabel(c.rule, c.hours), Number(raw.tkm) || 0, Number(raw.km) || 0]);
+        }
+      });
+      row.push(round2(total), worked, round2(sys));
+      grid.push(row);
+      sub.total += total; sub.worked += worked; sub.sys += sys;
+    });
+    grand.total += sub.total; grand.worked += sub.worked; grand.sys += sub.sys;
+    grid.push(totalsRow(t('ctsTsSubtotal') + ' ' + (g.country || '—'), sub));
+    grid.push([]);
+  });
+  if (groups.length > 1) grid.push(totalsRow(t('ctsTsGrandTotal'), grand));
+
+  const nCols = head.length;
+  const wsGrid = XLSX.utils.aoa_to_sheet(grid);
+  wsGrid['!cols'] = [{ wch: 30 }, { wch: 11 }, { wch: 12 }]
+    .concat(days.map(() => ({ wch: 9 })), [{ wch: 11 }, { wch: 10 }, { wch: 12 }]);
+  wsGrid['!merges'] = [0, 1, 2].map(r => ({ s: { r: r, c: 0 }, e: { r: r, c: nCols - 1 } }));
+
+  const wsDetail = XLSX.utils.aoa_to_sheet(detail);
+  wsDetail['!cols'] = [{ wch: 30 }, { wch: 11 }, { wch: 11 }, { wch: 6 }, { wch: 22 },
+    { wch: 12 }, { wch: 12 }, { wch: 30 }, { wch: 9 }, { wch: 9 }];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, wsGrid, t('ctsTsSheetGrid'));
+  XLSX.utils.book_append_sheet(wb, wsDetail, t('ctsTsSheetDetail'));
+  const fname = 'folha-ponto-cts-' + start + '_' + end + (countryLabel ? '-' + ctsTsNorm(countryLabel) : '') + '.xlsx';
   XLSX.writeFile(wb, fname);
 }
 
