@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-22T14:06:48.907Z",
+  "generatedAt": "2026-09-22T18:08:00.409Z",
   "month": 9,
   "year": 2026,
   "countries": [
     {
       "country": "ALL",
       "slug": "all",
-      "drivers": 63
+      "drivers": 62
     },
     {
       "country": "Argentina",
@@ -31,12 +31,12 @@
     {
       "country": "México",
       "slug": "mexico",
-      "drivers": 15
+      "drivers": 14
     },
     {
       "country": "Peru",
       "slug": "peru",
-      "error": "HTTP 404"
+      "drivers": 3
     }
   ],
   "weeks": {
