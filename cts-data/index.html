@@ -950,17 +950,14 @@ function renderKpis(d) {
       <div class="cm-split">
         <div><div class="cm-split-val">${pct(f.activePct, 0)}</div><div class="cm-split-lbl">Active</div></div>
         <div><div class="cm-split-val">${pct(f.halfActivePct, 0)}</div><div class="cm-split-lbl">Half active</div></div>
-        <div><div class="cm-split-val">${pct(f.notActivePct, 0)}</div><div class="cm-split-lbl">Inactive</div></div>
       </div>
       <div class="cm-bar">
         <span class="fill-success" style="width:${seg(f.active)}%"></span>
         <span class="fill-warn" style="width:${seg(f.halfActive)}%"></span>
-        <span class="fill-danger" style="width:${seg(f.notActive)}%"></span>
       </div>
       <div class="cm-legend">
         <span><i class="cm-dot dot-success"></i>${num(f.active)} active</span>
         <span><i class="cm-dot dot-warn"></i>${num(f.halfActive)} half</span>
-        <span><i class="cm-dot dot-danger"></i>${num(f.notActive)} inactive</span>
         <span class="cm-muted">fleet ${num(f.fleet)}</span>
       </div>
     </div>`);
