@@ -33,7 +33,7 @@
  * Logs: [CTS Backend]
  */
 
-const CTS_VERSION = 'cts-1.0';
+const CTS_VERSION = 'cts-1.1';
 
 const CTS_CONFIG = {
   // ID da planilha que tem as abas KMS/Targets/QC. A conta que publica este
@@ -245,6 +245,12 @@ function ctsIsoWeek_(ymd) {
   return { year: year, week: week, start: start, end: ctsAddDays_(start, 6) };
 }
 
+/** Coluna inteira como texto exibido (1 chamada). idx = índice 0-based. */
+function ctsDisplayCol_(sheet, idx, n) {
+  if (idx < 0 || !n) return [];
+  return sheet.getRange(1, idx + 1, n, 1).getDisplayValues().map(function (r) { return r[0]; });
+}
+
 function ctsIsEmail_(s) { return /@/.test(String(s || '')); }
 
 /** 'antonio.segadilha1@...' → 'Antonio Segadilha' (quem não está na HR). */
@@ -302,12 +308,16 @@ function ctsSource_() {
     if (ix[k] < 0) throw new Error('KMS sem a coluna ' + k + ' — o export mudou de schema?');
   });
 
+  // Datas pelo texto exibido: o espelho grava data como série + formato
+  // yyyy-mm-dd, e ler o Date cru (getValues) já devolveu o dia anterior.
+  const kDates = ctsDisplayCol_(kmsSheet, ix.date, kv.length);
+
   const rows = [];
   const skipped = {};
   let maxDate = '';
   for (let i = 1; i < kv.length; i++) {
     const r = kv[i];
-    const date = ctsYmd_(r[ix.date], tz);
+    const date = ctsYmd_(kDates[i], tz);
     if (!date || date < '2020-01-01') continue;   // o export tem linha-lixo com data de 1900
     const c = ctsCountry_(r[ix.country]);
     if (!c) { const k = String(r[ix.country]); skipped[k] = (skipped[k] || 0) + 1; continue; }
@@ -337,6 +347,7 @@ function ctsSource_() {
   const tSheet = ss.getSheetByName(CTS_CONFIG.targetsSheet);
   if (tSheet && tSheet.getLastRow() > 1) {
     const tv = tSheet.getRange(1, 1, tSheet.getLastRow(), 9).getValues();
+    const tvd = tSheet.getRange(1, 1, tSheet.getLastRow(), 9).getDisplayValues();
     const th = tv[0];
     const tx = {
       country: ctsCol_(th, ['Country']), month: ctsCol_(th, ['Month']), date: ctsCol_(th, ['Date']),
@@ -345,7 +356,7 @@ function ctsSource_() {
     for (let i = 1; i < tv.length; i++) {
       const r = tv[i];
       const c = ctsCountry_(r[tx.country]);
-      const month = ctsYmd_(r[tx.month], tz);
+      const month = ctsYmd_(tvd[i][tx.month], tz);
       if (!c || !month) continue;
       const key = month.slice(0, 7) + '|' + c.code;
       const t = targets[key] || (targets[key] = { overall: 0, swarm: 0, churn: 0, workdays: [], daily: false });
@@ -353,7 +364,7 @@ function ctsSource_() {
       t.overall += ov;
       t.swarm += ctsNum_(r[tx.swarm]);
       t.churn += ctsNum_(r[tx.churn]);
-      const day = tx.date >= 0 ? ctsYmd_(r[tx.date], tz) : null;
+      const day = tx.date >= 0 ? ctsYmd_(tvd[i][tx.date], tz) : null;
       if (day) { t.daily = true; if (ov > 0) t.workdays.push(day); }
     }
   } else {
@@ -371,8 +382,9 @@ function ctsSource_() {
         date: ctsCol_(qh, ['date']), email: ctsCol_(qh, ['user_email']),
         acc: ctsCol_(qh, ['Accepted_Count']), rej: ctsCol_(qh, ['Rejected_Count']),
       };
+      const qDates = ctsDisplayCol_(qSheet, qx.date, qv.length);
       for (let i = 1; i < qv.length; i++) {
-        const d = ctsYmd_(qv[i][qx.date], tz);
+        const d = ctsYmd_(qDates[i], tz);
         const em = String(qv[i][qx.email] || '').trim().toLowerCase();
         if (!d || !em) continue;
         const k = d.slice(0, 7) + '|' + em;
