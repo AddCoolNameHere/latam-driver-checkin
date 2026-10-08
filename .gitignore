@@ -20,3 +20,6 @@ true pgn globe.png
 
 # PDFs de relatório gerados localmente
 TKM_Report_*.pdf
+
+# wrangler (cache local do deploy do Worker)
+.wrangler/
