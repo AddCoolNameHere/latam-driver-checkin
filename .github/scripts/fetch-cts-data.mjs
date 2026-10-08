@@ -15,7 +15,7 @@
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8jEuAmpZdspmW4WgnFD1BnsuH9dbX0oD2qxncLAx81aUpCxT6_8kNo3Wt0NzNYLEYlQ/exec';
 const OUT_DIR = join('cts-data', 'data');
 const TIMEOUT_MS = 300000;
 

@@ -24,9 +24,23 @@
 /** Vai no header X-Worker-Build de toda resposta. Serve pra saber, olhando o
  *  curl, qual versão está realmente no ar — a API de deploy já disse "ok" pra
  *  uma versão que não era a que estava respondendo. */
-const BUILD = '9';
+const BUILD = '10';
 
 const UPSTREAM = 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec';
+
+/**
+ * Backend PRÓPRIO do /cts-data (apps-script/cts-data-backend.gs), que lê direto
+ * da planilha da CTS em vez da Mastersheet. Só as actions abaixo vão pra ele;
+ * check-in e o resto seguem no UPSTREAM. Vazio = tudo no UPSTREAM (rollback:
+ * é só esvaziar e redeployar o Worker).
+ */
+const CTS_UPSTREAM = 'https://script.google.com/macros/s/AKfycbz8jEuAmpZdspmW4WgnFD1BnsuH9dbX0oD2qxncLAx81aUpCxT6_8kNo3Wt0NzNYLEYlQ/exec';
+const CTS_ACTIONS = ['getclientmetrics', 'getclientweeks', 'getclientmetricsbatch'];
+
+function isCtsAction(search) {
+  const a = (new URLSearchParams(search).get('action') || '').toLowerCase();
+  return !!CTS_UPSTREAM && CTS_ACTIONS.includes(a);
+}
 
 /** Depois disso a cópia é servida mas revalidada em background.
  *  30 min de propósito: é exatamente o cache que o Apps Script mantém do lado
@@ -60,20 +74,23 @@ const SEM_CACHE = ['getbase', 'getlastarea', 'getdriverssds', 'getdashboarddata'
  *   PESADO — getClientMetrics passa pelo getTkmReport_. 1×/dia, 02:30 BRT.
  *            No resto do dia essas chaves se resolvem pelo stale-while-
  *            revalidate, ou seja, só quando alguém abre o portal de verdade.
+ *
+ * Com CTS_UPSTREAM preenchido, metrics/weeks vão pro backend próprio do
+ * /cts-data (sem lock, poucos segundos), então tudo virou LEVE. Se esvaziar o
+ * CTS_UPSTREAM pra voltar pro Code udpt.gs, devolve o metrics pro PESADO.
  */
 const WARM_LEVE = [
   'action=getClientWeeks&weeks=10',
-];
-
-const WARM_PESADO = [
   'action=getClientMetrics&country=ALL',
   'action=getClientMetrics&country=Argentina',
   'action=getClientMetrics&country=Brazil',
   'action=getClientMetrics&country=Chile',
   'action=getClientMetrics&country=Colombia',
-  'action=getClientMetrics&country=M%C3%A9xico',
+  'action=getClientMetrics&country=Mexico',
   'action=getClientMetrics&country=Peru',
 ];
+
+const WARM_PESADO = [];
 
 const CRON_DRENO  = '*/2 * * * *';
 const CRON_LEVE   = '0 * * * *';
@@ -130,11 +147,13 @@ function cacheKey(url) {
   p.delete('cb');
   p.delete('_');
   const pairs = [...p.entries()].sort(([a], [b]) => a.localeCompare(b));
-  return 'v1:' + pairs.map(([k, v]) => k + '=' + v).join('&');
+  const prefix = isCtsAction(url.search) ? 'cts1:' : 'v1:';
+  return prefix + pairs.map(([k, v]) => k + '=' + v).join('&');
 }
 
 function upstreamUrl(search) {
-  return UPSTREAM + (search.startsWith('?') ? search : '?' + search);
+  const base = isCtsAction(search) ? CTS_UPSTREAM : UPSTREAM;
+  return base + (search.startsWith('?') ? search : '?' + search);
 }
 
 /** Busca no Apps Script e grava no KV. Só grava resposta que parece boa. */
