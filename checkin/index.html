@@ -1987,12 +1987,16 @@ async function checkExistingCheckin() {
     if (!data.success) throw new Error(data.error);
 
     const checkin = data.data.lastCheckins[state.driver.email];
-    const today = new Date().toISOString().split('T')[0];
 
+    // Mesmo critério do saveCheckout no backend: mesmo dia em BRT, ou check-in
+    // das últimas 20h. Antes comparava a data em UTC — pra quem faz checkout
+    // depois das 21h BRT (18h no México) o "hoje" UTC já era amanhã e o banner
+    // dizia "não encontrei seu check-in" mesmo com o check-in gravado.
+    const brtDay = (d) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
     let hasToday = false;
     if (checkin && checkin.timestamp) {
-      const checkinDate = new Date(checkin.timestamp).toISOString().split('T')[0];
-      hasToday = checkinDate === today;
+      const gapH = (Date.now() - new Date(checkin.timestamp).getTime()) / 3600000;
+      hasToday = brtDay(checkin.timestamp) === brtDay(Date.now()) || (gapH >= 0 && gapH <= 20);
     }
 
     if (hasToday) {
@@ -2001,9 +2005,10 @@ async function checkExistingCheckin() {
       noBanner.classList.remove('hidden');
     }
   } catch (err) {
-    // Em caso de erro silencioso, mostra o banner de "sem check-in" como fallback seguro
-    console.warn('Erro verificando check-in existente:', err);
-    noBanner.classList.remove('hidden');
+    // Sem resposta não dá pra afirmar nada — melhor não mostrar banner nenhum
+    // do que dizer pro motorista que ele não fez check-in. O backend decide na
+    // hora de gravar o checkout de qualquer jeito.
+    console.warn('[Check-in] erro verificando check-in existente:', err);
   }
 }
 
@@ -2071,22 +2076,24 @@ document.getElementById('submit-checkout-btn').addEventListener('click', async (
   btn.disabled = true;
   btn.innerHTML = '<span class="loading-spinner"></span> ' + t('sending');
 
-  try {
-    const payload = {
-      type: 'checkout',
-      driverEmail: state.driver.email,
-      driverName: state.driver.name,
-      country: state.driver.country,
-      checkoutLat: state.checkoutGps ? state.checkoutGps.lat : '',
-      checkoutLng: state.checkoutGps ? state.checkoutGps.lng : '',
-      tkmMapped: parseFloat(tkm),
-      totalKmDriven: parseFloat(km),
-      notes: notes,
-      // v5.14: campos novos
-      odometerEnd: parseFloat(odoEnd),
-      ssdFillLevel: state.ssdFillLevel,
-    };
+  // Fora do try: o catch usa o payload pra mandar pra fila. Dentro do try ele
+  // dava ReferenceError no catch e o botão ficava preso em "Enviando...".
+  const payload = {
+    type: 'checkout',
+    driverEmail: state.driver.email,
+    driverName: state.driver.name,
+    country: state.driver.country,
+    checkoutLat: state.checkoutGps ? state.checkoutGps.lat : '',
+    checkoutLng: state.checkoutGps ? state.checkoutGps.lng : '',
+    tkmMapped: parseFloat(tkm),
+    totalKmDriven: parseFloat(km),
+    notes: notes,
+    // v5.14: campos novos
+    odometerEnd: parseFloat(odoEnd),
+    ssdFillLevel: state.ssdFillLevel,
+  };
 
+  try {
     // O comentário antigo dizia que o CORS do Apps Script impedia ler a
     // resposta. Não impede: os dois hops (/exec e o googleusercontent do
     // redirect) devolvem Access-Control-Allow-Origin: *. Ler a resposta é

@@ -294,7 +294,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.79',
+        version: 'v5.80',
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -4006,22 +4006,42 @@ function saveCheckout(data) {
   const lastRow = sheet.getLastRow();
   let foundRow = -1;
 
+  // v5.80: fallback pra checkout que vira o dia em BRT. Ex.: motorista do México
+  // faz check-in 11h BRT e checkout 23h04 hora local = 02h04 BRT do dia seguinte;
+  // o match por data BRT falhava e gravava "checkout sem check-in" (Roberto
+  // 19/09, Berenice 26/09). Se não achar pela data, aceita o check-in mais
+  // recente das últimas CHECKOUT_MAX_GAP_H horas que ainda não tem checkout.
+  const CHECKOUT_MAX_GAP_H = 20;
+  let openRow = -1;
+
   if (lastRow > 1) {
-    const range = sheet.getRange(2, 1, lastRow - 1, 4).getValues(); // só timestamp/date/name/email
+    const range = sheet.getRange(2, 1, lastRow - 1, 21).getValues(); // A-U (timestamp..checkout ts)
+    let openTs = 0;
     for (let i = range.length - 1; i >= 0; i--) {
+      const rowTs = range[i][0];
       const rowDate = range[i][1];
       const rowEmail = range[i][3];
+      if (rowEmail !== data.driverEmail) continue;
       // Date pode vir como Date object ou string yyyy-MM-dd
       const rowDateStr = (rowDate instanceof Date)
         ? Utilities.formatDate(rowDate, 'America/Sao_Paulo', 'yyyy-MM-dd')
         : String(rowDate);
 
-      if (rowEmail === data.driverEmail && rowDateStr === todayStr) {
+      if (rowDateStr === todayStr) {
         foundRow = i + 2; // +2 porque range começa em row 2 e i é 0-indexed
         break;
       }
+      const hasCheckout = range[i][20] !== '' && range[i][20] != null;
+      if (!hasCheckout && rowTs instanceof Date) {
+        const gapH = (now.getTime() - rowTs.getTime()) / 3600000;
+        if (gapH >= 0 && gapH <= CHECKOUT_MAX_GAP_H && rowTs.getTime() > openTs) {
+          openTs = rowTs.getTime();
+          openRow = i + 2;
+        }
+      }
     }
   }
+  if (foundRow < 0 && openRow > 0) foundRow = openRow;
 
   // Valores das colunas de checkout (U=21, V=22, W=23, X=24, Y=25, Z=26, AA=27)
   const checkoutValues = [[
