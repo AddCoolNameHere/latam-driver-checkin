@@ -33,7 +33,7 @@
  * Logs: [CTS Backend]
  */
 
-const CTS_VERSION = 'cts-1.1';
+const CTS_VERSION = 'cts-1.2';
 
 const CTS_CONFIG = {
   // ID da planilha que tem as abas KMS/Targets/QC. A conta que publica este
@@ -701,7 +701,9 @@ function getClientMetrics_(month, year, country) {
     });
     const vidsSeen = {};
     rows.forEach(function (r) { if (r.vid) vidsSeen[r.vid] = 1; });
-    const totalVids = vidsCur.active || Object.keys(vidsSeen).length;
+    // VIDs = SÓ a curadoria do ops-map (aba VID Status, editada à mão). Sem
+    // curadoria o card fica vazio — nunca cai pra contagem do KMS.
+    const totalVids = master.vidsByCC ? vidsCur.active : null;
 
     // Frota: active/half pela regra da CTS; o denominador é a NOSSA frota
     // (curadoria). notActive = o que sobra da frota sem atividade suficiente.
@@ -709,7 +711,7 @@ function getClientMetrics_(month, year, country) {
     scope.forEach(function (c) {
       const b = fleetByCC[c.code];
       fl.active += b.active; fl.halfActive += b.halfActive;
-      const own = master.vidsByCC && master.vidsByCC[c.code] ? master.vidsByCC[c.code].active : b.vidsSeen;
+      const own = master.vidsByCC && master.vidsByCC[c.code] ? master.vidsByCC[c.code].active : 0;
       fl.fleet += own;
       fl.notActive += Math.max(0, own - b.active - b.halfActive);
     });
@@ -759,7 +761,7 @@ function getClientMetrics_(month, year, country) {
           curatedInactive: vidsCur.inactive,
           curatedCancelled: vidsCur.cancelled,
           vidsInCts: Object.keys(vidsSeen).length,
-          source: vidsCur.active ? 'curation' : 'cts',
+          source: master.vidsByCC ? 'ops-map' : 'unavailable',
         },
         avgSystemOnHours: onN > 0 ? onH / onN : 0,
         mappingDays: mdays,

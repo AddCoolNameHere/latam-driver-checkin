@@ -933,8 +933,8 @@ function renderKpis(d) {
   cards.push(`
     <div class="cm-card">
       <div class="cm-card-label">Total VIDs</div>
-      <div class="cm-card-value">${num(k.totalVids)}</div>
-      <div class="cm-card-foot">Vehicles that collected imagery this month</div>
+      <div class="cm-card-value">${k.totalVids == null ? '—' : num(k.totalVids)}</div>
+      <div class="cm-card-foot">Active vehicles in our fleet</div>
     </div>`);
 
   cards.push(`
