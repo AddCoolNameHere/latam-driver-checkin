@@ -20,7 +20,8 @@
  *
  * Setup (logado na lucas.fuss@aceolution.com):
  *   1. mirrorCts            → copia as abas de dados
- *   2. setupDashboards      → recria os dashboards (uma vez; demora alguns minutos)
+ *   2. setupDashboards      → recria os dashboards (uma vez; se não couber nos 6 min,
+ *                              continua sozinho via continueDashboards a cada 1 min)
  *   3. installMirrorTrigger → gatilho de hora em hora (uma vez)
  * Logs: [CTS Mirror]
  */
@@ -59,78 +60,125 @@ function mirrorCts() {
   }
 }
 
-/** Recria os dashboards da CTS no espelho (fórmulas + formatação + gráficos). */
+/**
+ * Recria os dashboards da CTS no espelho (fórmulas + formatação + gráficos).
+ * Copiar 14 abas (uma com 51 mil fórmulas) pode passar dos 6 min ou tomar
+ * timeout do Google, então é em etapas: guarda a fila em ScriptProperties e,
+ * se não terminar, agenda continueDashboards pra 1 min depois, sozinho.
+ */
 function setupDashboards() {
+  PropertiesService.getScriptProperties().setProperty('dashTodo', JSON.stringify(MIRROR_CONFIG.dashboardTabs));
+  continueDashboards();
+}
+
+function continueDashboards() {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) { console.log('[CTS Mirror] outra execução em andamento, tenta de novo'); return; }
+  const props = PropertiesService.getScriptProperties();
   try {
+    // limpa o agendamento de continuação que disparou esta execução (se houver)
+    ScriptApp.getProjectTriggers()
+      .filter(t => t.getHandlerFunction() === 'continueDashboards')
+      .forEach(t => ScriptApp.deleteTrigger(t));
+
     const t0 = Date.now();
     const ctx = mirrorOpen_();
     const src = ctx.src, dst = ctx.dst;
+    let todo = JSON.parse(props.getProperty('dashTodo') || '[]');
 
     // dados primeiro: as fórmulas copiadas resolvem as referências pelo nome da aba
     MIRROR_CONFIG.rawTabs.forEach(name => { if (!dst.getSheetByName(name)) mirrorRawTab_(ctx, name); });
 
-    const done = [];
-    MIRROR_CONFIG.dashboardTabs.forEach(name => {
+    const copied = [];
+    while (todo.length && Date.now() - t0 < 200000) {
+      const name = todo[0];
       const s = src.getSheetByName(name);
-      if (!s) { console.log('[CTS Mirror] dashboard não encontrado na CTS: ' + name); return; }
-      const old = dst.getSheetByName(name);
-      if (old) dst.deleteSheet(old);
-      const c = s.copyTo(dst);
-      c.setName(name);
-      done.push(name);
-    });
-
-    // Fórmula que aponta pra outro dashboard copiado DEPOIS dela fica #REF!
-    // mesmo com o texto idêntico (o Sheets resolve a referência na hora da
-    // cópia e não revisita). Ex.: Active car count → QUERY(Calc_Data_VID!…).
-    // Regrava toda fórmula que cita outro dashboard ou que ficou diferente.
-    const otherDash = name => done.filter(n => n !== name);
-    const citesDash = (formula, names) => names.some(n => formula.indexOf(n + '!') >= 0 || formula.indexOf("'" + n + "'!") >= 0);
-    let fixed = 0, skipped = 0;
-    done.forEach(name => {
-      const s = src.getSheetByName(name), d = dst.getSheetByName(name);
-      const rows = s.getLastRow(), cols = s.getLastColumn();
-      if (!rows || !cols) return;
-      const sf = s.getRange(1, 1, rows, cols).getFormulas();
-      const df = d.getRange(1, 1, rows, cols).getFormulas();
-      const others = otherDash(name);
-      for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) {
-        if (sf[i][j] && (sf[i][j] !== df[i][j] || citesDash(sf[i][j], others))) {
-          if (fixed >= 3000) { skipped++; continue; }   // teto pra não estourar os 6 min
-          d.getRange(i + 1, j + 1).setFormula(sf[i][j]); fixed++;
-        }
+      if (s) {
+        const c = mirrorRetry_(() => s.copyTo(dst), name);
+        const old = dst.getSheetByName(name);
+        if (old) dst.deleteSheet(old);
+        c.setName(name);
+        copied.push(name);
+      } else {
+        console.log('[CTS Mirror] dashboard não encontrado na CTS: ' + name);
       }
-    });
+      todo.shift();
+      props.setProperty('dashTodo', JSON.stringify(todo));
+    }
 
-    // mesma ordem e visibilidade das abas da CTS
-    const order = src.getSheets().map(s => s.getName());
-    let pos = 1;
-    order.forEach(name => {
-      const d = dst.getSheetByName(name);
-      if (!d) return;
-      dst.setActiveSheet(d);
-      dst.moveActiveSheet(pos++);
-    });
-    order.forEach(name => {
-      const d = dst.getSheetByName(name);
-      if (d && src.getSheetByName(name).isSheetHidden()) d.hideSheet(); else if (d) d.showSheet();
-    });
-    dst.setActiveSheet(dst.getSheets().filter(sh => !sh.isSheetHidden())[0]);
-    // aba padrão vazia da planilha nova
-    dst.getSheets().forEach(sh => {
-      const n = sh.getName();
-      if (order.indexOf(n) < 0 && n !== MIRROR_CONFIG.metaTab && sh.getLastRow() === 0) dst.deleteSheet(sh);
-    });
+    if (todo.length) {
+      ScriptApp.newTrigger('continueDashboards').timeBased().after(60 * 1000).create();
+      console.log('[CTS Mirror] copiados agora: ' + copied.join(', ') + '. Faltam ' + todo.length +
+        ' (' + todo.join(', ') + ') — continua sozinho em 1 min.');
+      return;
+    }
 
-    mirrorMeta_(dst, 'dashboards', new Date() + ' — ' + done.length + ' abas, ' + fixed + ' fórmulas regravadas' + (skipped ? ', ' + skipped + ' NÃO regravadas (teto)' : ''));
+    const fixed = mirrorFixDashRefs_(src, dst);
+    mirrorOrderTabs_(src, dst);
+    mirrorMeta_(dst, 'dashboards', 'ok — ' + fixed + ' fórmulas regravadas');
     SpreadsheetApp.flush();
-    console.log('[CTS Mirror] dashboards ok em ' + Math.round((Date.now() - t0) / 1000) + 's — ' +
-      done.length + ' abas (' + done.join(', ') + '), ' + fixed + ' fórmulas regravadas' +
-      (skipped ? ', ' + skipped + ' NÃO regravadas (teto — roda de novo)' : ''));
+    console.log('[CTS Mirror] dashboards ok em ' + Math.round((Date.now() - t0) / 1000) + 's — copiados agora: ' +
+      (copied.join(', ') || 'nenhum') + '; ' + fixed + ' fórmulas regravadas. Pronto.');
   } finally {
     lock.releaseLock();
+  }
+}
+
+/**
+ * Fórmula que aponta pra outro dashboard copiado DEPOIS dela fica #REF!
+ * mesmo com o texto idêntico (o Sheets resolve a referência na hora da cópia
+ * e não revisita). Ex.: Active car count → QUERY(Calc_Data_VID!…).
+ * Regrava toda fórmula que cita outro dashboard ou que ficou diferente da CTS.
+ */
+function mirrorFixDashRefs_(src, dst) {
+  const dash = MIRROR_CONFIG.dashboardTabs;
+  const cites = (f, names) => names.some(n => f.indexOf(n + '!') >= 0 || f.indexOf("'" + n + "'!") >= 0);
+  let fixed = 0;
+  dash.forEach(name => {
+    const s = src.getSheetByName(name), d = dst.getSheetByName(name);
+    if (!s || !d) return;
+    const rows = s.getLastRow(), cols = s.getLastColumn();
+    if (!rows || !cols) return;
+    const sf = mirrorRetry_(() => s.getRange(1, 1, rows, cols).getFormulas(), name + ' (fórmulas)');
+    const df = d.getRange(1, 1, rows, cols).getFormulas();
+    const others = dash.filter(n => n !== name);
+    for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) {
+      const f = sf[i][j];
+      if (f && (f !== df[i][j] || cites(f, others))) { d.getRange(i + 1, j + 1).setFormula(f); fixed++; }
+    }
+  });
+  return fixed;
+}
+
+/** Mesma ordem e visibilidade das abas da CTS; apaga a aba padrão vazia. */
+function mirrorOrderTabs_(src, dst) {
+  const order = src.getSheets().map(s => s.getName());
+  let pos = 1;
+  order.forEach(name => {
+    const d = dst.getSheetByName(name);
+    if (!d) return;
+    dst.setActiveSheet(d);
+    dst.moveActiveSheet(pos++);
+  });
+  order.forEach(name => {
+    const d = dst.getSheetByName(name);
+    if (d && src.getSheetByName(name).isSheetHidden()) d.hideSheet(); else if (d) d.showSheet();
+  });
+  dst.setActiveSheet(dst.getSheets().filter(sh => !sh.isSheetHidden())[0]);
+  dst.getSheets().forEach(sh => {
+    const n = sh.getName();
+    if (order.indexOf(n) < 0 && n !== MIRROR_CONFIG.metaTab && sh.getLastRow() === 0) dst.deleteSheet(sh);
+  });
+}
+
+/** Timeout do Google ("Service Spreadsheets timed out") é transitório: tenta 3×. */
+function mirrorRetry_(fn, label) {
+  for (let i = 1; ; i++) {
+    try { return fn(); } catch (e) {
+      if (i >= 3 || !/timed out|tempo limite|Service error|erro de servi/i.test(String(e))) throw e;
+      console.log('[CTS Mirror] ' + label + ': ' + e + ' — tentativa ' + (i + 1) + ' em 10s');
+      Utilities.sleep(10000);
+    }
   }
 }
 
