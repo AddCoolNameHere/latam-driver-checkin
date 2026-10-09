@@ -47,7 +47,10 @@ function mirrorCts() {
   try {
     const t0 = Date.now();
     const ctx = mirrorOpen_();
-    const report = MIRROR_CONFIG.rawTabs.map(name => mirrorRawTab_(ctx, name));
+    // Teto de tempo: o Apps Script corta em 6 min. O que sobrar vai na próxima hora
+    // (KMS/Targets/QC vêm primeiro na lista, então o portal nunca fica pra trás).
+    const report = MIRROR_CONFIG.rawTabs.map(name =>
+      (Date.now() - t0 > 270000) ? name + ': adiada (tempo)' : mirrorRawTab_(ctx, name));
     mirrorMeta_(ctx.dst, 'lastSync', report.join(' | '));
     SpreadsheetApp.flush();
     console.log('[CTS Mirror] ok em ' + Math.round((Date.now() - t0) / 1000) + 's — ' + report.join(' | '));
@@ -155,16 +158,30 @@ function mirrorRawTab_(ctx, name) {
   const s = ctx.src.getSheetByName(name);
   if (!s) return name + ': NÃO ENCONTRADA na CTS';
   const rows = s.getLastRow(), cols = s.getLastColumn();
-  const d = ctx.dst.getSheetByName(name) || ctx.dst.insertSheet(name);
+  const t1 = Date.now();
+  let d = ctx.dst.getSheetByName(name);
   if (rows && cols) {
     const values = s.getRange(1, 1, rows, cols).getValues();
+    // Pula a escrita se nada mudou desde a última cópia: a CTS atualiza ~1×/dia,
+    // então a maioria das rodadas horárias só lê e compara.
+    const hash = Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, JSON.stringify(values)));
+    const props = PropertiesService.getScriptProperties();
+    if (d && d.getLastRow() === rows && props.getProperty('h:' + name) === hash) return name + ': =';
+    d = d || ctx.dst.insertSheet(name);
     const dateFmt = {};   // coluna → formato
+    const memo = {};      // getTime() → [série, tipo]; datas repetem muito (1 por dia no KMS/CB)
     values.forEach(r => r.forEach((v, j) => {
       if (Object.prototype.toString.call(v) !== '[object Date]') return;
-      if (isNaN(v.getTime())) { r[j] = ''; return; }
-      const p = Utilities.formatDate(v, ctx.tz, 'yyyy-MM-dd-HH-mm-ss').split('-').map(Number);
-      r[j] = (Date.UTC(p[0], p[1] - 1, p[2], p[3], p[4], p[5]) - Date.UTC(1899, 11, 30)) / 86400000;
-      const kind = p[0] < 1900 ? 'hh:mm:ss' : ((p[3] || p[4] || p[5]) ? 'yyyy-mm-dd hh:mm:ss' : 'yyyy-mm-dd');
+      const ms = v.getTime();
+      if (isNaN(ms)) { r[j] = ''; return; }
+      let m = memo[ms];
+      if (!m) {
+        const p = Utilities.formatDate(v, ctx.tz, 'yyyy-MM-dd-HH-mm-ss').split('-').map(Number);
+        m = memo[ms] = [(Date.UTC(p[0], p[1] - 1, p[2], p[3], p[4], p[5]) - Date.UTC(1899, 11, 30)) / 86400000,
+          p[0] < 1900 ? 'hh:mm:ss' : ((p[3] || p[4] || p[5]) ? 'yyyy-mm-dd hh:mm:ss' : 'yyyy-mm-dd')];
+      }
+      r[j] = m[0];
+      const kind = m[1];
       const prev = dateFmt[j];
       if (!prev || (prev === 'yyyy-mm-dd' && kind === 'yyyy-mm-dd hh:mm:ss') || (prev === 'hh:mm:ss' && kind !== 'hh:mm:ss')) dateFmt[j] = kind;
     }));
@@ -172,11 +189,13 @@ function mirrorRawTab_(ctx, name) {
     if (d.getMaxColumns() < cols) d.insertColumnsAfter(d.getMaxColumns(), cols - d.getMaxColumns());
     Object.keys(dateFmt).forEach(j => d.getRange(1, +j + 1, rows, 1).setNumberFormat(dateFmt[j]));
     d.getRange(1, 1, rows, cols).setValues(values);
+    props.setProperty('h:' + name, hash);
   }
+  d = d || ctx.dst.insertSheet(name);
   const lastRow = d.getLastRow(), lastCol = d.getLastColumn();
   if (lastRow > rows) d.getRange(rows + 1, 1, lastRow - rows, Math.max(lastCol, 1)).clearContent();
   if (lastCol > cols && rows) d.getRange(1, cols + 1, rows, lastCol - cols).clearContent();
-  return name + ': ' + rows + 'x' + cols;
+  return name + ': ' + rows + 'x' + cols + ' (' + Math.round((Date.now() - t1) / 1000) + 's)';
 }
 
 function mirrorMeta_(dst, key, text) {
