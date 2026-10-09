@@ -82,8 +82,12 @@ function setupDashboards() {
       done.push(name);
     });
 
-    // Referência entre dashboards copiados fora de ordem vira #REF! — regrava
-    // a fórmula de toda célula que ficou diferente da original.
+    // Fórmula que aponta pra outro dashboard copiado DEPOIS dela fica #REF!
+    // mesmo com o texto idêntico (o Sheets resolve a referência na hora da
+    // cópia e não revisita). Ex.: Active car count → QUERY(Calc_Data_VID!…).
+    // Regrava toda fórmula que cita outro dashboard ou que ficou diferente.
+    const otherDash = name => done.filter(n => n !== name);
+    const citesDash = (formula, names) => names.some(n => formula.indexOf(n + '!') >= 0 || formula.indexOf("'" + n + "'!") >= 0);
     let fixed = 0, skipped = 0;
     done.forEach(name => {
       const s = src.getSheetByName(name), d = dst.getSheetByName(name);
@@ -91,8 +95,9 @@ function setupDashboards() {
       if (!rows || !cols) return;
       const sf = s.getRange(1, 1, rows, cols).getFormulas();
       const df = d.getRange(1, 1, rows, cols).getFormulas();
+      const others = otherDash(name);
       for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) {
-        if (sf[i][j] && sf[i][j] !== df[i][j]) {
+        if (sf[i][j] && (sf[i][j] !== df[i][j] || citesDash(sf[i][j], others))) {
           if (fixed >= 3000) { skipped++; continue; }   // teto pra não estourar os 6 min
           d.getRange(i + 1, j + 1).setFormula(sf[i][j]); fixed++;
         }
