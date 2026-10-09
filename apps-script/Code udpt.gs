@@ -115,6 +115,14 @@ const CONFIG = {
   driverDocsSheet: 'Driver Documents',            // metadados dos envios (auto-criada)
   scopeAssignmentsSheet: 'Scope Assignments',     // v5.77: áreas do country_scopes atribuídas a motoristas (auto-criada)
   driverDocsFolderName: 'LATAM Driver Documents', // pasta raiz no Drive (auto-criada): país > motorista
+  // v5.81: dados da CTS vêm do "CTS Mirror" (cópia de hora em hora da planilha
+  // da CTS, feita pelo cts-mirror.gs na conta aceolution). Mais confiável que
+  // a RAW CTS DATA / CTS Goal Management da Mastersheet. Se o espelho falhar,
+  // cai na aba da Mastersheet. Ver bloco "CTS MIRROR" mais abaixo.
+  ctsMirrorId: '18lTqa5I0bNcPiLCXUpid9dGT19x4r7vTlKZ7b23C_NM',
+  ctsMirrorKmsSheet: 'KMS',
+  ctsMirrorTargetsSheet: 'Targets',
+  ctsMirrorQcSheet: 'QC',
 };
 
 // ================================================================
@@ -294,7 +302,8 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.80',
+        version: 'v5.81',
+        ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
@@ -1357,13 +1366,183 @@ function parseRawCtsDate_(v) {
   return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
 }
 
+// =====================================================================
+// v5.81: CTS MIRROR — fonte preferida de tudo que vem da CTS
+// =====================================================================
+//
+// O "CTS Mirror" é a cópia de hora em hora da planilha da CTS (abas KMS,
+// Targets, QC...). A aba KMS é o mesmo dado da RAW CTS DATA da Mastersheet
+// (1 linha por VID-dia), só que direto da fonte. Diferenças que o adaptador
+// abaixo resolve, pra todo leitor da RAW CTS continuar funcionando igual:
+//   • país vem como código (MX/BR) → vira nome (Mexico/Brazil)
+//   • não tem 'Month' ('M.YYYY') nem 'Billable CTS Hours' → calculados
+//   • data é lida pelo TEXTO exibido (yyyy-mm-dd): o Date cru do espelho
+//     já voltou com o dia anterior (fuso da planilha da CTS)
+// Regra do Lucas: na dúvida, vale o número da CTS.
+
+let _rawCtsValues = null;
+let _rawCtsSourceUsed = null;   // 'mirror' | 'mastersheet' (aparece no ping)
+
+/**
+ * Valores no formato da RAW CTS DATA ([cabeçalho, ...linhas]). Lê o KMS do
+ * CTS Mirror; se falhar, a aba RAW CTS DATA da Mastersheet. Memoizado por
+ * requisição. [] se nada der.
+ */
+function getRawCtsValues_() {
+  if (_rawCtsValues) return _rawCtsValues;
+  try {
+    _rawCtsValues = readMirrorKmsAsRawCts_();
+    _rawCtsSourceUsed = 'mirror';
+  } catch (e) {
+    Logger.log('[CTS Mirror] KMS falhou, usando RAW CTS DATA da Mastersheet: ' + e);
+    const sheet = SpreadsheetApp.openById(CONFIG.spreadsheetId).getSheetByName(CONFIG.rawCtsSheet);
+    _rawCtsValues = (sheet && sheet.getLastRow() >= 2) ? sheet.getDataRange().getValues() : [];
+    _rawCtsSourceUsed = 'mastersheet';
+  }
+  return _rawCtsValues;
+}
+
+/** Texto de data do espelho → 'yyyy-MM-dd' (aceita M/D/YYYY também). '' se não for data. */
+function mirrorYmd_(s) {
+  s = String(s == null ? '' : s).trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return m[3] + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2);
+  return '';
+}
+
+/** Coluna como texto exibido (1 chamada). idx 0-based. */
+function mirrorDisplayCol_(sheet, idx, n) {
+  return sheet.getRange(1, idx + 1, n, 1).getDisplayValues().map(function (r) { return r[0]; });
+}
+
+function readMirrorKmsAsRawCts_() {
+  const ss = SpreadsheetApp.openById(CONFIG.ctsMirrorId);
+  const sheet = ss.getSheetByName(CONFIG.ctsMirrorKmsSheet);
+  if (!sheet || sheet.getLastRow() < 2) throw new Error('aba KMS do espelho vazia');
+  const data = sheet.getDataRange().getValues();
+  const n = data.length;
+  const headers = data[0].map(function (h) { return String(h || '').trim(); });
+  const ix = {
+    country: findHeader_(headers, ['country_code', 'country']),
+    date: findHeader_(headers, ['drive_date']),
+    email: findHeader_(headers, ['email']),
+    status: findHeader_(headers, ['status']),
+    tkm: findHeader_(headers, ['TKM']),
+  };
+  if (ix.date < 0 || ix.email < 0 || ix.tkm < 0) throw new Error('KMS do espelho sem drive_date/email/TKM — schema mudou?');
+
+  // Todas as colunas de data (drive_date, drive_week, drive_month) pelo texto exibido
+  const dateCols = {};
+  headers.forEach(function (h, i) {
+    if (/^drive_(date|week|month)$/i.test(h)) dateCols[i] = mirrorDisplayCol_(sheet, i, n);
+  });
+
+  const out = [headers.concat(['Month', 'Billable CTS Hours'])];
+  for (let i = 1; i < n; i++) {
+    const row = data[i].slice();
+    for (const c in dateCols) row[c] = mirrorYmd_(dateCols[c][i]);
+    const ymd = row[ix.date];
+    if (!ymd || ymd < '2020-01-01') continue;   // linha-lixo do export (data 1900)
+    if (ix.country >= 0) row[ix.country] = clientCountryName_(row[ix.country]);
+    const monthKey = parseInt(ymd.slice(5, 7), 10) + '.' + ymd.slice(0, 4);
+    // Mesma regra da coluna da Mastersheet: 8h só em dia parado cobrável (⬇Mech./⬇Tech.)
+    const st = ix.status >= 0 ? String(row[ix.status] || '') : '';
+    const billable = /^⬇\s*(mech|tech)/i.test(st) ? 8 : 0;
+    out.push(row.concat([monthKey, billable]));
+  }
+  return out;
+}
+
+let _mirrorTargets = null;
+/**
+ * Metas mensais da aba Targets do espelho:
+ * { 'M.YYYY|normCountry': { overall, swarm, churn } }.
+ * Meses com detalhe diário têm 1 linha por dia; antigos, 1 linha com o total —
+ * somar dá certo nos dois. {} se não ler.
+ */
+function getMirrorCtsTargets_() {
+  if (_mirrorTargets) return _mirrorTargets;
+  const out = {};
+  try {
+    const sheet = SpreadsheetApp.openById(CONFIG.ctsMirrorId).getSheetByName(CONFIG.ctsMirrorTargetsSheet);
+    if (sheet && sheet.getLastRow() > 1) {
+      const rng = sheet.getRange(1, 1, sheet.getLastRow(), 9);
+      const v = rng.getValues(), vd = rng.getDisplayValues();
+      // Só as colunas A–I (a tabela à direita é um resumo que repete os nomes)
+      const ix = {
+        country: findHeader_(v[0], ['Country']),
+        month: findHeader_(v[0], ['Month']),
+        overall: findHeader_(v[0], ['Overall']),
+        swarm: findHeader_(v[0], ['Swarm']),
+        churn: findHeader_(v[0], ['Churn']),
+      };
+      if (ix.country >= 0 && ix.month >= 0 && ix.overall >= 0) {
+        for (let i = 1; i < v.length; i++) {
+          const ymd = mirrorYmd_(vd[i][ix.month]);
+          const cname = clientCountryName_(v[i][ix.country]);
+          if (!ymd || !cname) continue;
+          const k = parseInt(ymd.slice(5, 7), 10) + '.' + ymd.slice(0, 4) + '|' + normCountry_(cname);
+          const t = out[k] || (out[k] = { overall: 0, swarm: 0, churn: 0 });
+          t.overall += safeNumber(v[i][ix.overall]);
+          if (ix.swarm >= 0) t.swarm += safeNumber(v[i][ix.swarm]);
+          if (ix.churn >= 0) t.churn += safeNumber(v[i][ix.churn]);
+        }
+      }
+    }
+  } catch (e) { Logger.log('[CTS Mirror] Targets falhou: ' + e); }
+  _mirrorTargets = out;
+  return out;
+}
+
+let _mirrorQc = null;
+/**
+ * QC da CTS por motorista e mês: { 'M.YYYY|email': { acc, rej } }. {} se não ler.
+ */
+function getMirrorQc_() {
+  if (_mirrorQc) return _mirrorQc;
+  const out = {};
+  try {
+    const sheet = SpreadsheetApp.openById(CONFIG.ctsMirrorId).getSheetByName(CONFIG.ctsMirrorQcSheet);
+    if (sheet && sheet.getLastRow() > 1) {
+      const v = sheet.getDataRange().getValues();
+      const h = v[0];
+      const ix = {
+        date: findHeader_(h, ['date']), email: findHeader_(h, ['user_email']),
+        acc: findHeader_(h, ['Accepted_Count']), rej: findHeader_(h, ['Rejected_Count']),
+      };
+      if (ix.date >= 0 && ix.email >= 0 && ix.acc >= 0 && ix.rej >= 0) {
+        const dates = mirrorDisplayCol_(sheet, ix.date, v.length);
+        for (let i = 1; i < v.length; i++) {
+          const ymd = mirrorYmd_(dates[i]);
+          const em = String(v[i][ix.email] || '').trim().toLowerCase();
+          if (!ymd || !em) continue;
+          const k = parseInt(ymd.slice(5, 7), 10) + '.' + ymd.slice(0, 4) + '|' + em;
+          const q = out[k] || (out[k] = { acc: 0, rej: 0 });
+          q.acc += safeNumber(v[i][ix.acc]);
+          q.rej += safeNumber(v[i][ix.rej]);
+        }
+      }
+    }
+  } catch (e) { Logger.log('[CTS Mirror] QC falhou: ' + e); }
+  _mirrorQc = out;
+  return out;
+}
+
+/** QC score (0–1) do motorista no mês, da CTS. null se não houver fotos avaliadas. */
+function getMirrorQcScore_(email, monthKey) {
+  const q = getMirrorQc_()[monthKey + '|' + String(email || '').trim().toLowerCase()];
+  return q && (q.acc + q.rej) > 0 ? q.acc / (q.acc + q.rej) : null;
+}
+
 let _rawCtsCache = null;
 function buildRawCtsIndex_() {
   if (_rawCtsCache) return _rawCtsCache;
 
-  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
-  const sheet = ss.getSheetByName(CONFIG.rawCtsSheet);
-  if (!sheet || sheet.getLastRow() < 2) {
+  // v5.81: CTS Mirror (KMS) primeiro, RAW CTS DATA da Mastersheet de fallback
+  const data = getRawCtsValues_();
+  if (data.length < 2) {
     _rawCtsCache = {};
     return _rawCtsCache;
   }
@@ -1371,7 +1550,6 @@ function buildRawCtsIndex_() {
   // v5.47: o export trocou o schema (VID→vehicle_id, country→country_code,
   // total_km→total_kms, Status→status, Billable Hours→Billable CTS Hours).
   // findHeader_ aceita nome antigo E novo, case-insensitive.
-  const data = sheet.getDataRange().getValues();
   const headers = data[0];
   const monthIdx = findHeader_(headers, ['Month']);
   const countryIdx = findHeader_(headers, ['country', 'country_code']);
@@ -1382,6 +1560,7 @@ function buildRawCtsIndex_() {
   const kmIdx = findHeader_(headers, ['total_km', 'total_kms']);
   const statusIdx = findHeader_(headers, ['Status']);
   const hoursIdx = findHeader_(headers, ['Billable Hours', 'Billable CTS Hours']);
+  const seasonIdx = findHeader_(headers, ['season_name']);   // v5.81: '2026 Swarm' / '2026 Churn'
 
   const index = {};
 
@@ -1403,6 +1582,9 @@ function buildRawCtsIndex_() {
         mappingDays: 0,
         idleDays: { Personal: 0, 'Mech.': 0, 'Tech.': 0, Weather: 0, Disks: 0, Travelling: 0, Holiday: 0, Other: 0, total: 0 },
         billableHours: 0,
+        // v5.81: swarm e churn (tipos de mapa com meta própria) pelo season_name
+        tkmSwarm: 0, kmSwarm: 0, swarmDays: 0,
+        tkmChurn: 0, kmChurn: 0, churnDays: 0,
         days: [],
         _dayAgg: {},   // v5.74: agregação por dia (fechada no fim do build)
       };
@@ -1433,9 +1615,14 @@ function buildRawCtsIndex_() {
     // separados) e o status vem com seta — contar LINHA inflava mappingDays
     // (Jailson: 22 "dias" no dia 19 do mês). Agrega por DIA e fecha no fim.
     const dayKey = date || ('row-' + i);
-    if (!monthData._dayAgg[dayKey]) monthData._dayAgg[dayKey] = { mapped: false, idleBucket: null };
+    if (!monthData._dayAgg[dayKey]) monthData._dayAgg[dayKey] = { mapped: false, idleBucket: null, swarm: false, churn: false };
     const dayAgg = monthData._dayAgg[dayKey];
-    if (isCtsMappingDay_(status, hours, tkm)) dayAgg.mapped = true;
+    const isMapped = isCtsMappingDay_(status, hours, tkm);
+    if (isMapped) dayAgg.mapped = true;
+    const season = seasonIdx >= 0 ? String(row[seasonIdx] || '') : '';
+    const mapType = /churns*$/i.test(season) ? 'churn' : (/swarms*$/i.test(season) ? 'swarm' : '');
+    if (mapType === 'swarm') { monthData.tkmSwarm += tkm; monthData.kmSwarm += km; if (isMapped) dayAgg.swarm = true; }
+    if (mapType === 'churn') { monthData.tkmChurn += tkm; monthData.kmChurn += km; if (isMapped) dayAgg.churn = true; }
     if (!dayAgg.idleBucket) {
       const bucket = normalizeRawCtsStatus_(status);
       if (bucket !== 'Mapping' && bucket !== 'Other') dayAgg.idleBucket = bucket;
@@ -1452,6 +1639,8 @@ function buildRawCtsIndex_() {
       const md = index[em][mo];
       for (const dk in md._dayAgg) {
         const day = md._dayAgg[dk];
+        if (day.swarm) md.swarmDays++;
+        if (day.churn) md.churnDays++;
         if (day.mapped) {
           md.mappingDays++;
         } else {
@@ -1555,9 +1744,8 @@ function getFleetVids_() {
 
   // 1) RAW CTS → por VID, a linha mais recente {email, data, country}
   const vidLast = {};
-  const rawSheet = ss.getSheetByName(CONFIG.rawCtsSheet);
-  if (rawSheet && rawSheet.getLastRow() >= 2) {
-    const data = rawSheet.getDataRange().getValues();
+  const data = getRawCtsValues_();   // v5.81: CTS Mirror, fallback RAW CTS DATA
+  if (data.length >= 2) {
     const h = data[0];
     const vIdx = findHeader_(h, ['VID', 'vehicle_id']), eIdx = findHeader_(h, ['email']),
           dIdx = findHeader_(h, ['drive_date']), cIdx = findHeader_(h, ['country', 'country_code']);
@@ -1733,11 +1921,16 @@ function buildVidIndexByEmail_() {
 
   const safeGet = (row, i) => i >= 0 ? row[i] : null;
 
+  // v5.81: QC Score vem da aba QC da CTS (espelho), mês corrente; sem foto
+  // avaliada no mês, cai no QC da VID CALENDAR.
+  const qcMonth = getCurrentMonthKey_();
+
   const index = {};
   data.forEach(row => {
     const email = safeGet(row, idx.email);
     if (!email || typeof email !== 'string') return;
     if (email.toLowerCase() === 'no driver') return;
+    const ctsQc = getMirrorQcScore_(email, qcMonth);
 
     index[email.toLowerCase()] = {
       vid: safeGet(row, idx.vid),
@@ -1749,7 +1942,7 @@ function buildVidIndexByEmail_() {
       mappingDays: safeGet(row, idx.mappingDays),
       avgTkmPerDay: safeGet(row, idx.avgTkmPerDay),
       baselinePct: safeGet(row, idx.baselinePct),
-      qcScore: safeGet(row, idx.qcScore),
+      qcScore: ctsQc !== null ? ctsQc : safeGet(row, idx.qcScore),
       statusPerGoogle: safeGet(row, idx.status),
       personal: safeGet(row, idx.personal),
       disks: safeGet(row, idx.disks),
@@ -1880,7 +2073,8 @@ function getDriverProfile_(email) {
     const countryStats = [];
     for (const otherEmail in ctsIndex) {
       const monthData = ctsIndex[otherEmail][currentMonth];
-      if (monthData && monthData.km > 0 && monthData.country === driverInfo.country) {
+      // v5.81: matchCountry_ — o espelho manda 'Mexico' e a HR pode ter 'México'
+      if (monthData && monthData.km > 0 && matchCountry_(monthData.country, driverInfo.country)) {
         countryStats.push(monthData.tkm / monthData.km);
       }
     }
@@ -2429,6 +2623,22 @@ function getHotelModeByDriver() {
     });
   }
 
+  // v5.81: TKM/KM/eficiência/dias mapeados do mês corrente vêm da CTS
+  // (espelho), não das colunas da aba. Sem linha da CTS no mês → fica a aba.
+  try {
+    const idx = buildRawCtsIndex_();
+    const mk = getCurrentMonthKey_();
+    drivers.forEach(function (d) {
+      const m = idx[String(d.email).trim().toLowerCase()];
+      const cur = m && m[mk];
+      if (!cur) return;
+      d.tkm = cur.tkm;
+      d.kmDriven = cur.km;
+      d.efficiency = cur.km > 0 ? cur.tkm / cur.km : null;
+      d.mappingDays = cur.mappingDays;
+    });
+  } catch (e) { Logger.log('[CTS Mirror] getHotelModeByDriver: overlay falhou: ' + e); }
+
   return drivers;
 }
 
@@ -2483,6 +2693,70 @@ function getCtsGoals() {
     });
   }
 
+  return applyMirrorGoals_(goals);
+}
+
+/**
+ * v5.81: meta e realizado vêm da CTS (espelho), não da CTS Goal Management:
+ *   ctsGoal  ← aba Targets (Σ Overall do mês/país)
+ *   achieved ← Σ TKM do KMS no mês/país
+ * e o que deriva deles (pendente, %, média exigida) é recalculado. O resto
+ * (baseline, VIDs, motoristas ativos, dias restantes, médias) continua da
+ * aba. Mês/país que só existe na CTS entra como linha nova. Falhou → as
+ * linhas da aba como estavam.
+ */
+function applyMirrorGoals_(goals) {
+  try {
+    const targets = getMirrorCtsTargets_();
+    if (!Object.keys(targets).length) return goals;
+
+    const done = {};   // 'M.YYYY|normCountry' → Σ TKM
+    const idx = buildRawCtsIndex_();
+    for (const em in idx) {
+      for (const mo in idx[em]) {
+        const k = mo + '|' + normCountry_(clientCountryName_(idx[em][mo].country));
+        done[k] = (done[k] || 0) + safeNumber(idx[em][mo].tkm);
+      }
+    }
+
+    const seen = {};
+    const fill = function (g, key) {
+      if (key in targets) g.ctsGoal = targets[key].overall;
+      if (key in done) g.achieved = done[key];
+      g.tkmPending = g.ctsGoal - g.achieved;
+      g.achievedPct = g.ctsGoal > 0 ? g.achieved / g.ctsGoal : 0;
+      if (g.daysLeft > 0) g.averageRequired = Math.max(0, g.tkmPending) / g.daysLeft;
+      g.source = 'cts';
+    };
+    goals.forEach(function (g) {
+      const p = String(g.period).split('.');
+      if (p.length < 2) return;
+      const key = parseInt(p[0], 10) + '.' + parseInt(p[1], 10) + '|' + normCountry_(clientCountryName_(g.country));
+      seen[key] = true;
+      fill(g, key);
+    });
+    // Linha nova só até o mês corrente (a Targets pode já ter meta de mês futuro,
+    // que viraria o "período mais recente" com 0 feito no dashboard/email).
+    const now = new Date();
+    const nowNum = now.getFullYear() * 100 + now.getMonth() + 1;
+    Object.keys(targets).forEach(function (key) {
+      if (seen[key]) return;
+      const parts = key.split('|');
+      const mp = parts[0].split('.');
+      if (Number(mp[1]) * 100 + Number(mp[0]) > nowNum) return;
+      if (['argentina', 'brazil', 'chile', 'colombia', 'mexico', 'peru'].indexOf(parts[1]) < 0) return;
+      const g = {
+        period: parts[0], country: clientCountryName_(parts[1]),
+        ctsGoal: 0, achieved: 0, baseline: 0, vidRequired: 0, activeDrivers: 0,
+        tkmPending: 0, achievedPct: 0, daysLeft: 0, averageRequired: 0,
+        lastMappingDayAverage: 0, monthAverage: 0, lastMappingDayDriversActive: 0,
+      };
+      fill(g, key);
+      goals.push(g);
+    });
+  } catch (e) {
+    Logger.log('[CTS Mirror] metas da CTS falharam, ficando com a CTS Goal Management: ' + e);
+  }
   return goals;
 }
 
@@ -2513,6 +2787,15 @@ function getDriverCalendar() {
   // Mês e ano do contexto (linha 2 col B, C)
   const month = safeNumber(sheet.getRange(2, 2).getValue());
   const year = safeNumber(sheet.getRange(2, 3).getValue());
+
+  // v5.81: motoristas do mês vêm da CTS (espelho) — mesma montagem do
+  // getDriverCalendarByMonth_. A tabela da aba só fica de fallback.
+  try {
+    if (month && year) {
+      const fromCts = getDriverCalendarByMonth_(month + '.' + year);
+      if (fromCts.drivers.length) return fromCts;
+    }
+  } catch (e) { Logger.log('[CTS Mirror] getDriverCalendar: CTS falhou, usando a aba: ' + e); }
 
   // Resumo por país (linhas 4-9)
   const countryData = sheet.getRange(4, 1, 6, 7).getValues();
@@ -2769,7 +3052,64 @@ function getVidCalendar() {
     });
   }
 
+  // v5.81: TKM/KM/eficiência/dias por VID e QC do motorista vêm da CTS
+  // (espelho), no mês que a aba representa. Status per Google e Floating
+  // continuam da aba (não existem na CTS).
+  try {
+    if (month && year) {
+      const mk = month + '.' + year;
+      const byVid = getRawCtsByVid_(mk);
+      vids.forEach(function (v) {
+        const c = byVid[String(v.vid).trim()];
+        if (c) {
+          v.tkm = c.tkm;
+          v.kmDriven = c.km;
+          v.efficiency = c.km > 0 ? c.tkm / c.km : 0;
+          v.mappingDays = c.mappingDays;
+          v.avgTkmPerDay = c.mappingDays > 0 ? c.tkm / c.mappingDays : 0;
+        }
+        const qc = v.currentDriver ? getMirrorQcScore_(v.currentDriver, mk) : null;
+        if (qc !== null) v.qcScore = qc;
+      });
+    }
+  } catch (e) { Logger.log('[CTS Mirror] getVidCalendar: overlay falhou: ' + e); }
+
   return { countries, vids, month, year };
+}
+
+/**
+ * v5.81: agregado por VID no mês ('M.YYYY') a partir da RAW CTS (espelho):
+ * { vid: { tkm, km, mappingDays } }. Dia com várias linhas (swarm+churn) conta 1x.
+ */
+function getRawCtsByVid_(monthKey) {
+  const out = {};
+  const data = getRawCtsValues_();
+  if (data.length < 2) return out;
+  const h = data[0];
+  const ix = {
+    month: findHeader_(h, ['Month']), vid: findHeader_(h, ['VID', 'vehicle_id']),
+    date: findHeader_(h, ['drive_date']), status: findHeader_(h, ['Status']),
+    tkm: findHeader_(h, ['TKM']), km: findHeader_(h, ['total_km', 'total_kms']),
+    hours: findHeader_(h, ['Billable Hours', 'Billable CTS Hours']),
+  };
+  if (ix.month < 0 || ix.vid < 0) return out;
+  for (let i = 1; i < data.length; i++) {
+    const r = data[i];
+    if (String(r[ix.month] || '') !== monthKey) continue;
+    const vid = String(r[ix.vid] == null ? '' : r[ix.vid]).trim();
+    if (!vid) continue;
+    const o = out[vid] || (out[vid] = { tkm: 0, km: 0, mappingDays: 0, _d: {} });
+    const tkm = safeNumber(r[ix.tkm]);
+    o.tkm += tkm;
+    o.km += safeNumber(r[ix.km]);
+    const dk = ix.date >= 0 ? String(r[ix.date] || ('row-' + i)) : ('row-' + i);
+    if (!o._d[dk] && isCtsMappingDay_(r[ix.status], ix.hours >= 0 ? r[ix.hours] : 0, tkm)) {
+      o._d[dk] = true;
+      o.mappingDays++;
+    }
+  }
+  for (const v in out) delete out[v]._d;
+  return out;
 }
 
 
@@ -2903,11 +3243,10 @@ function getCtsTimesheet_(startParam, endParam) {
     }
 
     const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
-    const sheet = ss.getSheetByName(CONFIG.rawCtsSheet);
-    if (!sheet || sheet.getLastRow() < 2) {
-      return { success: false, error: 'aba "' + CONFIG.rawCtsSheet + '" não encontrada ou vazia' };
+    const data = getRawCtsValues_();   // v5.81: CTS Mirror, fallback RAW CTS DATA
+    if (data.length < 2) {
+      return { success: false, error: 'KMS do espelho e aba "' + CONFIG.rawCtsSheet + '" vazios' };
     }
-    const data = sheet.getDataRange().getValues();
     const h = data[0];
     const ix = {
       country: findHeader_(h, ['country', 'country_code']),
@@ -5635,6 +5974,13 @@ function getMonthlyReportData_(month, year) {
     Logger.log('Erro lendo Top Drivers: ' + e);
   }
 
+  // v5.81: números da CTS (espelho) no mês PEDIDO — a aba só reflete o mês
+  // que estiver selecionado nela. Meta da Targets, TKM/KM/dias do KMS, QC da
+  // aba QC. Baseline% (TKM / baseline do país) e o resto continuam da aba.
+  try {
+    applyMirrorToMbr_(month, year, tkmReport, tkmReportSum, allDrivers);
+  } catch (e) { Logger.log('[CTS Mirror] MBR: overlay falhou, ficando com a aba: ' + e); }
+
   // Ordena por baseline% desc e pega top 10
   allDrivers.sort((a, b) => (b.baseline || 0) - (a.baseline || 0));
   const topDrivers = allDrivers.slice(0, 10);
@@ -5710,10 +6056,16 @@ function getMonthlyReportData_(month, year) {
     Logger.log('Erro lendo VID Calendar: ' + e);
   }
 
+  // v5.81: dias parados por país do mês pedido, da CTS (espelho)
+  try {
+    applyMirrorIdlenessToMbr_(month, year, idleness, idlenessTotals);
+  } catch (e) { Logger.log('[CTS Mirror] MBR idleness: overlay falhou: ' + e); }
+
   return {
     month: month,
     year: year,
     monthName: monthName,
+    ctsSource: _rawCtsSourceUsed,   // v5.81
     tkmReport: tkmReport,
     tkmReportSum: tkmReportSum,
     topDrivers: topDrivers,
@@ -5724,6 +6076,97 @@ function getMonthlyReportData_(month, year) {
   };
 }
 
+
+/**
+ * v5.81: MBR com números da CTS no mês pedido. Mexe nos objetos no lugar.
+ * País sem linha na CTS no mês → fica como veio da aba.
+ */
+function applyMirrorToMbr_(month, year, tkmReport, tkmReportSum, allDrivers) {
+  const mk = month + '.' + year;
+  const idx = buildRawCtsIndex_();
+  const targets = getMirrorCtsTargets_();
+
+  // Σ por país + QC (aceitas/rejeitadas) por país
+  const byC = {};
+  for (const em in idx) {
+    const md = idx[em][mk];
+    if (!md) continue;
+    const k = normCountry_(clientCountryName_(md.country));
+    const c = byC[k] || (byC[k] = { tkm: 0, km: 0, acc: 0, rej: 0 });
+    c.tkm += md.tkm;
+    c.km += md.km;
+    const q = getMirrorQc_()[mk + '|' + em];
+    if (q) { c.acc += q.acc; c.rej += q.rej; }
+  }
+
+  const apply = function (o, live, goal) {
+    if (goal) o.ctsGoal = goal;
+    if (live) {
+      o.tkmDone = live.tkm;
+      o.kmDriven = live.km;
+      o.efficiency = live.km > 0 ? live.tkm / live.km : 0;
+      if (live.acc + live.rej > 0) o.qcScore = live.acc / (live.acc + live.rej);
+    }
+    if (goal || live) o.achievementPct = o.ctsGoal > 0 ? o.tkmDone / o.ctsGoal : 0;
+  };
+  const tot = { tkm: 0, km: 0, acc: 0, rej: 0 };
+  let goalTot = 0, any = false;
+  tkmReport.forEach(function (o) {
+    const k = normCountry_(clientCountryName_(o.country));
+    // CTS vence: país sem linha no KMS do mês = 0 feito (não o número velho da aba)
+    const live = byC[k] || (_rawCtsSourceUsed === 'mirror' ? { tkm: 0, km: 0, acc: 0, rej: 0 } : null);
+    const tg = targets[mk + '|' + k];
+    apply(o, live, tg ? tg.overall : 0);
+    if (live || tg) any = true;
+    goalTot += o.ctsGoal || 0;
+    tot.tkm += o.tkmDone || 0;
+    tot.km += o.kmDriven || 0;
+    if (live) { tot.acc += live.acc; tot.rej += live.rej; }
+  });
+  if (tkmReportSum && any) apply(tkmReportSum, tot, goalTot);
+
+  // Motoristas: TKM/KM/eficiência/dias/QC do mês; baseline% reescalado
+  // mantendo o baseline absoluto que a aba usou (tkm / baseline% antigo).
+  allDrivers.forEach(function (d) {
+    const md = idx[String(d.email).trim().toLowerCase()];
+    const cur = md && md[mk];
+    if (!cur) return;
+    const baseAbs = d.baseline > 0 && d.tkm > 0 ? d.tkm / d.baseline : 0;
+    d.tkm = cur.tkm;
+    d.km = cur.km;
+    d.efficiency = cur.km > 0 ? cur.tkm / cur.km : 0;
+    d.mappingDays = cur.mappingDays;
+    if (baseAbs > 0) d.baseline = cur.tkm / baseAbs;
+    const qc = getMirrorQcScore_(d.email, mk);
+    if (qc !== null) d.qcScore = qc;
+  });
+}
+
+/** v5.81: dias parados por país (Personal/Disks/Mech/Tech/Weather) do mês, da CTS. */
+function applyMirrorIdlenessToMbr_(month, year, idleness, idlenessTotals) {
+  const mk = month + '.' + year;
+  const idx = buildRawCtsIndex_();
+  const byC = {};
+  for (const em in idx) {
+    const md = idx[em][mk];
+    if (!md) continue;
+    const k = normCountry_(clientCountryName_(md.country));
+    const c = byC[k] || (byC[k] = { personal: 0, disks: 0, mech: 0, tech: 0, weather: 0 });
+    c.personal += md.idleDays.Personal || 0;
+    c.disks += md.idleDays.Disks || 0;
+    c.mech += md.idleDays['Mech.'] || 0;
+    c.tech += md.idleDays['Tech.'] || 0;
+    c.weather += md.idleDays.Weather || 0;
+  }
+  if (!Object.keys(byC).length) return;
+  const F = ['personal', 'disks', 'mech', 'tech', 'weather'];
+  const tot = { personal: 0, disks: 0, mech: 0, tech: 0, weather: 0 };
+  idleness.forEach(function (o) {
+    const c = byC[normCountry_(clientCountryName_(o.country))];
+    F.forEach(function (f) { if (c) o[f] = c[f]; tot[f] += o[f] || 0; });
+  });
+  if (idlenessTotals) F.forEach(function (f) { idlenessTotals[f] = tot[f]; });
+}
 
 // ================================================================
 // v5.43: TKM Monthly Report — export PDF (dashboard)
@@ -5758,10 +6201,8 @@ function getActiveCarCountByCountry_(monthKey) {
   if (_activeCarsCache[monthKey]) return _activeCarsCache[monthKey];
   const out = {};
   try {
-    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
-    const sheet = ss.getSheetByName(CONFIG.rawCtsSheet);
-    if (!sheet || sheet.getLastRow() < 2) return out;
-    const data = sheet.getDataRange().getValues();
+    const data = getRawCtsValues_();   // v5.81: CTS Mirror, fallback RAW CTS DATA
+    if (data.length < 2) return out;
     const h = data[0];
     const monthIdx = findHeader_(h, ['Month']);
     const vidIdx = findHeader_(h, ['VID', 'vehicle_id']);
@@ -5921,9 +6362,11 @@ function getTkmReport_(month, year, country) {
         if (!md) continue;
         const k = normCountry_(md.country);
         if (!k) continue;
-        if (!liveByCountry[k]) liveByCountry[k] = { tkm: 0, km: 0 };
+        if (!liveByCountry[k]) liveByCountry[k] = { tkm: 0, km: 0, tkmSwarm: 0, tkmChurn: 0 };
         liveByCountry[k].tkm += safeNumber(md.tkm);
         liveByCountry[k].km += safeNumber(md.km);
+        liveByCountry[k].tkmSwarm += safeNumber(md.tkmSwarm);   // v5.81
+        liveByCountry[k].tkmChurn += safeNumber(md.tkmChurn);
       }
     } catch (e) { Logger.log('getTkmReport_: buildRawCtsIndex_ falhou (fallback p/ aba): ' + e); }
 
@@ -5992,11 +6435,17 @@ function getTkmReport_(month, year, country) {
     const overrideCountry = function (obj) {
       const k = normCountry_(obj.country);
       const g = goalsByCountry[k];
-      const live = liveByCountry[k];
+      // v5.81: CTS vence — país sem linha no KMS do mês = 0 feito
+      const live = liveByCountry[k] ||
+        (_rawCtsSourceUsed === 'mirror' ? { tkm: 0, km: 0, tkmSwarm: 0, tkmChurn: 0 } : null);
       const sheetVals = { tkmDone: obj.tkmDone, ctsGoal: obj.ctsGoal, achievementPct: obj.achievementPct };
       let touched = false;
       if (g && g.ctsGoal) { obj.ctsGoal = g.ctsGoal; touched = true; }
       if (live) { obj.tkmDone = live.tkm; touched = true; }
+      // v5.81: swarm/churn — meta da Targets da CTS, feito pelo season_name do KMS
+      const tg = getMirrorCtsTargets_()[monthKey + '|' + k];
+      if (tg) { obj.swarmGoal = tg.swarm; obj.churnGoal = tg.churn; }
+      if (live && _rawCtsSourceUsed === 'mirror') { obj.swarmAchieved = live.tkmSwarm; obj.churnAchieved = live.tkmChurn; }
       if (touched) {
         anyCountryTouched = true;
         obj.achievementPct = obj.ctsGoal > 0 ? obj.tkmDone / obj.ctsGoal : sheetVals.achievementPct;
@@ -6016,6 +6465,12 @@ function getTkmReport_(month, year, country) {
       const sheetSum = { tkmDone: bigNumbers.tkmDone, ctsGoal: bigNumbers.ctsGoal, achievementPct: bigNumbers.achievementPct };
       if (sg) bigNumbers.ctsGoal = sg;
       if (st) bigNumbers.tkmDone = st;
+      // v5.81: swarm/churn do SUM = soma dos países (já vindos da CTS)
+      ['swarmGoal', 'churnGoal', 'swarmAchieved', 'churnAchieved'].forEach(function (f) {
+        let t = 0;
+        for (let i = 0; i < perCountry.length; i++) t += perCountry[i][f] || 0;
+        bigNumbers[f] = t;
+      });
       bigNumbers.achievementPct = bigNumbers.ctsGoal > 0 ? bigNumbers.tkmDone / bigNumbers.ctsGoal : sheetSum.achievementPct;
       cmpCountry.push({
         country: 'SUM',
@@ -6105,11 +6560,16 @@ function getTkmReport_(month, year, country) {
           vids = [String(row[dIx.currentVid]).trim()];
         }
 
+        // v5.81: QC e swarm/churn da CTS (espelho) quando há linha viva do motorista
+        const ctsQc = dEmail ? getMirrorQcScore_(dEmail, monthKey) : null;
+        const sc = (liveMd && _rawCtsSourceUsed === 'mirror') ? liveMd : null;
+        const col = function (ix) { return ix >= 0 ? safeNumber(row[ix]) : 0; };
+
         drivers.push({
           name: dName,
           country: dCountry,
           email: dEmail,   // v5.75: uso interno (lookup de base) — NÃO expor no portal
-          qcScore: safeNumber(row[dIx.qc]),              // QC Score — FICA da aba
+          qcScore: ctsQc !== null ? ctsQc : safeNumber(row[dIx.qc]),   // v5.81: QC da CTS, fallback aba
           tkm: tkm,                                      // v5.52: TKM (RAW CTS, fallback aba)
           kmDriven: kmDriven,
           efficiency: efficiency,
@@ -6118,12 +6578,13 @@ function getTkmReport_(month, year, country) {
           vids: vids,                                    // v5.52: VIDs distintos rodados (RAW CTS)
           baselinePct: baselinePct,
           // v5.58: swarm vs churn por motorista (só existem nesta aba)
-          tkmSwarm: dIx.tkmSwarm >= 0 ? safeNumber(row[dIx.tkmSwarm]) : 0,
-          kmSwarm: dIx.kmSwarm >= 0 ? safeNumber(row[dIx.kmSwarm]) : 0,
-          swarmDays: dIx.swarmDays >= 0 ? safeNumber(row[dIx.swarmDays]) : 0,
-          tkmChurn: dIx.tkmChurn >= 0 ? safeNumber(row[dIx.tkmChurn]) : 0,
-          kmChurn: dIx.kmChurn >= 0 ? safeNumber(row[dIx.kmChurn]) : 0,
-          churnDays: dIx.churnDays >= 0 ? safeNumber(row[dIx.churnDays]) : 0,
+          // v5.81: da CTS (season_name do KMS) quando houver; senão, da aba
+          tkmSwarm: sc ? sc.tkmSwarm : col(dIx.tkmSwarm),
+          kmSwarm: sc ? sc.kmSwarm : col(dIx.kmSwarm),
+          swarmDays: sc ? sc.swarmDays : col(dIx.swarmDays),
+          tkmChurn: sc ? sc.tkmChurn : col(dIx.tkmChurn),
+          kmChurn: sc ? sc.kmChurn : col(dIx.kmChurn),
+          churnDays: sc ? sc.churnDays : col(dIx.churnDays),
           // v5.74: dias distintos mapeados no mês (RAW CTS); null sem linha viva
           mappingDaysLive: liveMd ? safeNumber(liveMd.mappingDays) : null,
         });
@@ -6240,7 +6701,7 @@ function getTkmReport_(month, year, country) {
 /** Códigos de país da RAW CTS → nome cheio (o export às vezes manda ISO2). */
 const CLIENT_COUNTRY_NAMES_ = {
   ar: 'Argentina', arg: 'Argentina',
-  br: 'Brazil', bra: 'Brazil',
+  br: 'Brazil', bra: 'Brazil', brasil: 'Brazil',
   cl: 'Chile', chl: 'Chile',
   co: 'Colombia', col: 'Colombia',
   mx: 'Mexico', mex: 'Mexico',
@@ -6814,13 +7275,10 @@ function getClientWeeks_(weeksBack) {
   try {
     weeksBack = weeksBack || 8;
 
-    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
-    const sheet = ss.getSheetByName(CONFIG.rawCtsSheet);
-    if (!sheet || sheet.getLastRow() < 2) {
-      return { success: false, error: 'aba "' + CONFIG.rawCtsSheet + '" não encontrada ou vazia' };
+    const data = getRawCtsValues_();   // v5.81: CTS Mirror, fallback RAW CTS DATA
+    if (data.length < 2) {
+      return { success: false, error: 'KMS do espelho e aba "' + CONFIG.rawCtsSheet + '" vazios' };
     }
-
-    const data = sheet.getDataRange().getValues();
     const h = data[0];
     const ix = {
       month:   findHeader_(h, ['Month']),
@@ -6858,12 +7316,19 @@ function getClientWeeks_(weeksBack) {
       const email = row[ix.email];
       if (!email || typeof email !== 'string') continue;
 
-      const week = safeNumber(row[ix.week]);
-      if (!week) continue;
-
       const dateObj = parseRawCtsDate_(row[ix.date]);
       if (!dateObj) continue;
       const dateStr = ymd_(dateObj);
+
+      // v5.81: no KMS do espelho drive_week é a DATA de início da semana (não o
+      // número) → calcula a semana ISO pelo drive_date.
+      let week = /^\d{1,2}$/.test(String(row[ix.week]).trim()) ? Number(row[ix.week]) : 0;
+      if (!(week >= 1 && week <= 53)) {
+        const d = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+        const dow = (d.getUTCDay() + 6) % 7;
+        const thu = new Date(d.getTime() + (3 - dow) * 86400000);
+        week = 1 + Math.floor((thu - Date.UTC(thu.getUTCFullYear(), 0, 1)) / (7 * 86400000));
+      }
 
       // O ano da semana vem do drive_date. Na virada do ano a semana ISO 1
       // pode cair em dezembro — o `Month` ('M.YYYY') resolveria errado.
