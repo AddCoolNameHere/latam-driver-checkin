@@ -302,7 +302,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.81',
+        version: 'v5.82',
         ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
@@ -1474,6 +1474,7 @@ function getMirrorCtsTargets_() {
       const ix = {
         country: findHeader_(v[0], ['Country']),
         month: findHeader_(v[0], ['Month']),
+        date: findHeader_(v[0], ['Date']),
         overall: findHeader_(v[0], ['Overall']),
         swarm: findHeader_(v[0], ['Swarm']),
         churn: findHeader_(v[0], ['Churn']),
@@ -1484,8 +1485,12 @@ function getMirrorCtsTargets_() {
           const cname = clientCountryName_(v[i][ix.country]);
           if (!ymd || !cname) continue;
           const k = parseInt(ymd.slice(5, 7), 10) + '.' + ymd.slice(0, 4) + '|' + normCountry_(cname);
-          const t = out[k] || (out[k] = { overall: 0, swarm: 0, churn: 0 });
-          t.overall += safeNumber(v[i][ix.overall]);
+          const t = out[k] || (out[k] = { overall: 0, swarm: 0, churn: 0, workdays: [] });
+          const ov = safeNumber(v[i][ix.overall]);
+          t.overall += ov;
+          // v5.82: dia com meta = dia útil (mesma regra do /cts-data pros dias restantes)
+          const day = ix.date >= 0 ? mirrorYmd_(vd[i][ix.date]) : '';
+          if (day && ov > 0) t.workdays.push(day);
           if (ix.swarm >= 0) t.swarm += safeNumber(v[i][ix.swarm]);
           if (ix.churn >= 0) t.churn += safeNumber(v[i][ix.churn]);
         }
@@ -2719,13 +2724,25 @@ function applyMirrorGoals_(goals) {
       }
     }
 
+    // v5.82: ritmo também da CTS. As colunas Days Left/médias da CTS Goal
+    // Management vinham deslocadas (Days Left = % atingido → média exigida absurda).
+    const pace = mirrorGoalPace_();
+
     const seen = {};
     const fill = function (g, key) {
       if (key in targets) g.ctsGoal = targets[key].overall;
       if (key in done) g.achieved = done[key];
       g.tkmPending = g.ctsGoal - g.achieved;
       g.achievedPct = g.ctsGoal > 0 ? g.achieved / g.ctsGoal : 0;
-      if (g.daysLeft > 0) g.averageRequired = Math.max(0, g.tkmPending) / g.daysLeft;
+      if (pace) {
+        const work = (targets[key] && targets[key].workdays) || [];
+        g.daysLeft = work.filter(function (d) { return d > pace.lastDate; }).length;
+        const pk = pace.byKey[key];
+        g.monthAverage = pk && pk.driverDays > 0 ? pk.tkm / pk.driverDays : 0;
+        g.lastMappingDayDriversActive = pk ? pk.lastDayDrivers : 0;
+        g.lastMappingDayAverage = pk && pk.lastDayDrivers > 0 ? pk.lastDayTkm / pk.lastDayDrivers : 0;
+      }
+      g.averageRequired = g.daysLeft > 0 ? Math.max(0, g.tkmPending) / g.daysLeft : 0;
       g.source = 'cts';
     };
     goals.forEach(function (g) {
@@ -2760,6 +2777,43 @@ function applyMirrorGoals_(goals) {
   return goals;
 }
 
+
+/**
+ * v5.82: ritmo por mês/país direto do KMS do espelho (null se a fonte não for o
+ * espelho). lastDate = último dia da CTS inteira (país que não rodou aparece
+ * atrasado). driverDays = pares motorista×dia com TKM > 0.
+ */
+function mirrorGoalPace_() {
+  const v = getRawCtsValues_();
+  if (_rawCtsSourceUsed !== 'mirror' || v.length < 2) return null;
+  const h = v[0];
+  const iDate = findHeader_(h, ['drive_date']), iEmail = findHeader_(h, ['email']);
+  const iTkm = findHeader_(h, ['TKM']), iCountry = findHeader_(h, ['country_code', 'country']);
+  if (iDate < 0 || iEmail < 0 || iTkm < 0 || iCountry < 0) return null;
+  let lastDate = '';
+  const dd = {};   // key → { 'email|date': tkm }
+  for (let i = 1; i < v.length; i++) {
+    const ymd = String(v[i][iDate] || '');
+    if (ymd > lastDate) lastDate = ymd;
+    const tkm = safeNumber(v[i][iTkm]);
+    const em = String(v[i][iEmail] || '').trim().toLowerCase();
+    if (!em || tkm <= 0) continue;
+    const key = parseInt(ymd.slice(5, 7), 10) + '.' + ymd.slice(0, 4) + '|' + normCountry_(clientCountryName_(v[i][iCountry]));
+    const m = dd[key] || (dd[key] = {});
+    m[em + '|' + ymd] = (m[em + '|' + ymd] || 0) + tkm;
+  }
+  const byKey = {};
+  Object.keys(dd).forEach(function (key) {
+    const m = dd[key];
+    const ks = Object.keys(m);
+    let tkm = 0, last = '';
+    ks.forEach(function (k) { tkm += m[k]; const d = k.split('|')[1]; if (d > last) last = d; });
+    let lastDayTkm = 0, lastDayDrivers = 0;
+    ks.forEach(function (k) { if (k.split('|')[1] === last) { lastDayTkm += m[k]; lastDayDrivers++; } });
+    byKey[key] = { tkm: tkm, driverDays: ks.length, lastDayTkm: lastDayTkm, lastDayDrivers: lastDayDrivers };
+  });
+  return { lastDate: lastDate, byKey: byKey };
+}
 
 /**
  * Lê resumo da aba DRIVER CALENDAR.
