@@ -302,7 +302,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.82',
+        version: 'v5.83',
         ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
@@ -581,6 +581,11 @@ function doGet(e) {
 
     // v5.55: escreve as horas calculadas na coluna "Hrs Worked" da aba REAL da quinzena na ACE.
     // ?tab=<nome exato da aba>&start=&end=&confirm=1. Sem &tab = lista as abas; sem confirm=1 = DRY-RUN.
+    // v5.83: prévia das horas da Argentina na ACE (gravar = fillAceArgentinaNow / gatilho)
+    if (action === 'fillAceArgentina') {
+      return jsonResponse(fillAceArgentina_(e.parameter.tab || '', false));
+    }
+
     if (action === 'writeAceHours') {
       return jsonResponse(writeAceHours_(e.parameter.tab, e.parameter.start, e.parameter.end, e.parameter.confirm));
     }
@@ -3755,6 +3760,142 @@ function writeAceHours_(tabName, startParam, endParam, confirm) {
     computedNotInTab: computedNotInTab,
     preview: matches.slice(0, 12).map(p => ({ name: p.name, de: p.oldVal, para: p.newVal, timesheet: p.timesheetHours })),
   };
+}
+
+// ================================================================
+// v5.83: horas da ARGENTINA na ACE, sozinhas, a partir da CTS (espelho).
+// Mesma regra que o time aplica à mão nas abas da quinzena:
+//   seg–sex  = 9h (paga cheio, mesmo sem CTS — feriado inclusive)
+//   sábado   = 4h se a CTS tem >= 3h de mapping_hours no dia, senão 0
+//              (só depois que a CTS chegou naquele dia; antes fica vazio)
+//   domingo  = 0
+// Grava "Hrs Worked" e "Hrs Approved" de cada dia (as colunas diárias). Os
+// totais (D/E/J) são fórmula da própria aba e recalculam sozinhos.
+// SÓ PREENCHE CÉLULA VAZIA: qualquer número que o time já digitou (inclusive
+// 0 de falta) é respeitado. Pode rodar quantas vezes quiser.
+// Abas: as de quinzena (linha 1 = datas, linha 2 = "Hrs Worked" a partir de K)
+// que terminaram há no máximo ACE_AR_LOOKBACK_DAYS_ dias.
+//   GET ?action=fillAceArgentina[&tab=<aba>]  → prévia (NUNCA grava)
+//   fillAceArgentinaNow()                       → grava (Executar no editor)
+//   installAceArgentinaTrigger()                → grava todo dia às 8h
+// ================================================================
+const ACE_AR_COUNTRY_ = 'argentina';
+const ACE_AR_WEEKDAY_HOURS_ = 9;
+const ACE_AR_SATURDAY_HOURS_ = 4;
+const ACE_AR_SATURDAY_MIN_CTS_ = 3;
+const ACE_AR_LOOKBACK_DAYS_ = 7;
+
+function fillAceArgentina_(tabName, confirm) {
+  const doWrite = confirm === true;
+  let ace;
+  try { ace = SpreadsheetApp.openById(ACE_SPREADSHEET_ID_); }
+  catch (err) { return { success: false, error: 'Sem acesso à ACE: ' + err }; }
+  const tz = ace.getSpreadsheetTimeZone() || 'America/Sao_Paulo';
+  const fmt = d => Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+  const today = fmt(new Date());
+  const cutoff = fmt(new Date(Date.now() - ACE_AR_LOOKBACK_DAYS_ * 86400000));
+
+  // ---- abas de quinzena: linha 1 com datas, linha 2 com o trio diário ----
+  const tabs = [];
+  ace.getSheets().forEach(sh => {
+    const name = sh.getName();
+    if (tabName ? name !== tabName : /^(cts|ace |sheet|copy|hrs )/i.test(name)) return;
+    if (sh.getLastColumn() < 14) return;
+    const head = sh.getRange(1, 1, 2, sh.getLastColumn()).getValues();
+    const days = [];
+    for (let c = 0; c < head[0].length; c++) {
+      const v = head[0][c];
+      if (Object.prototype.toString.call(v) !== '[object Date]' || isNaN(v.getTime())) continue;
+      if (String(head[1][c]).trim().toLowerCase() !== 'hrs worked') continue;
+      if (String(head[1][c + 1]).trim().toLowerCase() !== 'hrs approved') continue;
+      days.push({ date: fmt(v), col: c });   // col = Hrs Worked (0-based); +1 = Approved
+    }
+    if (!days.length) return;
+    const first = days[0].date, last = days[days.length - 1].date;
+    if (!tabName && (last < cutoff || first > today)) return;
+    tabs.push({ sheet: sh, name: name, first: first, last: last, days: days, header: head[1] });
+  });
+  if (!tabs.length) {
+    return { success: false, error: tabName ? 'Aba "' + tabName + '" não tem o layout da quinzena (datas na linha 1 + Hrs Worked/Hrs Approved na linha 2)'
+                                            : 'Nenhuma aba de quinzena aberta (terminada há ≤ ' + ACE_AR_LOOKBACK_DAYS_ + ' dias)' };
+  }
+
+  const start = tabs.reduce((a, t) => t.first < a ? t.first : a, '9999');
+  const end = tabs.reduce((a, t) => t.last > a ? t.last : a, '0000');
+  const cts = getCtsTimesheet_(start, end);
+  if (!cts.success) return { success: false, error: 'CTS: ' + cts.error };
+  const lastData = cts.lastDataDate || '';
+  const ctsByEmail = {};
+  (cts.drivers || []).forEach(d => { if (d.email) ctsByEmail[String(d.email).toLowerCase()] = d; });
+
+  const report = tabs.map(t => {
+    const sh = t.sheet;
+    const hdr = t.header.map(h => String(h || '').trim().toLowerCase());
+    const iCountry = hdr.indexOf('country'), iEmail = hdr.indexOf('email'), iName = hdr.indexOf('name');
+    if (iCountry < 0 || iEmail < 0) return { tab: t.name, error: 'sem colunas Country/Email na linha 2' };
+    const values = sh.getRange(1, 1, sh.getLastRow(), sh.getLastColumn()).getValues();
+    const isBlank = v => v === '' || v === null;
+    const byValue = {};   // valor → ['K3', 'L3', ...]
+    const drivers = [];
+    for (let r = 2; r < values.length; r++) {
+      if (normCountry_(values[r][iCountry]) !== ACE_AR_COUNTRY_) continue;
+      const email = String(values[r][iEmail] || '').trim().toLowerCase();
+      if (email.indexOf('@') < 0) continue;   // tabela-resumo do rodapé ("6 | Argentina | total")
+      const c = ctsByEmail[email];
+      const fills = [];
+      t.days.forEach(d => {
+        const dow = new Date(d.date + 'T12:00:00Z').getUTCDay();
+        let h;
+        if (dow === 0) h = 0;
+        else if (dow === 6) {
+          if (!lastData || d.date > lastData) return;   // CTS ainda não chegou nesse sábado
+          const day = c && c.days && c.days[d.date];
+          h = day && day.h >= ACE_AR_SATURDAY_MIN_CTS_ ? ACE_AR_SATURDAY_HOURS_ : 0;
+        } else h = ACE_AR_WEEKDAY_HOURS_;
+        let any = false;
+        [d.col, d.col + 1].forEach(col => {
+          if (!isBlank(values[r][col])) return;   // já tem número: respeita
+          (byValue[h] = byValue[h] || []).push(sh.getRange(r + 1, col + 1).getA1Notation());
+          any = true;
+        });
+        if (any) fills.push(d.date.slice(5) + '=' + h);
+      });
+      drivers.push({
+        row: r + 1, name: String(values[r][iName >= 0 ? iName : 0] || ''), email: email,
+        inCts: !!c, ctsDays: c ? Object.keys(c.days || {}).length : 0,
+        toFill: fills.length, fills: fills,
+      });
+    }
+    let cells = 0, written = 0;
+    Object.keys(byValue).forEach(v => {
+      const list = byValue[v];
+      cells += list.length;
+      if (!doWrite) return;
+      for (let i = 0; i < list.length; i += 200) sh.getRangeList(list.slice(i, i + 200)).setValue(Number(v));
+      written += list.length;
+    });
+    return { tab: t.name, first: t.first, last: t.last, drivers: drivers, cellsToFill: cells, written: written };
+  });
+
+  Logger.log('[ACE AR] ' + (doWrite ? 'gravou' : 'prévia') + ': ' +
+    report.map(t => t.tab + ' ' + (t.error || ((doWrite ? t.written : t.cellsToFill) + ' células'))).join(' | '));
+  return { success: true, version: 'v5.83', dryRun: !doWrite, ctsDataThrough: lastData, tabs: report };
+}
+
+/** Executar no editor (ou pelo gatilho): grava de verdade. */
+function fillAceArgentinaNow() {
+  const res = fillAceArgentina_('', true);
+  Logger.log(JSON.stringify(res, null, 1));
+  return res;
+}
+
+/** Instala o gatilho diário (8h). Rodar UMA vez no editor. */
+function installAceArgentinaTrigger() {
+  ScriptApp.getProjectTriggers()
+    .filter(t => t.getHandlerFunction() === 'fillAceArgentinaNow')
+    .forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('fillAceArgentinaNow').timeBased().everyDays(1).atHour(8).create();
+  Logger.log('[ACE AR] gatilho diário (8h) instalado');
 }
 
 // v5.56: WRITER manual — grava horas JA DECIDIDAS na pagina payroll (apos revisao/edicao
