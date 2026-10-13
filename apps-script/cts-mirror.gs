@@ -50,8 +50,13 @@ function mirrorCts() {
     const ctx = mirrorOpen_();
     // Teto de tempo: o Apps Script corta em 6 min. O que sobrar vai na próxima hora
     // (KMS/Targets/QC vêm primeiro na lista, então o portal nunca fica pra trás).
-    const report = MIRROR_CONFIG.rawTabs.map(name =>
-      (Date.now() - t0 > 270000) ? name + ': adiada (tempo)' : mirrorRawTab_(ctx, name));
+    mirrorEnsureTrigger_();
+    // Uma aba com erro não derruba as outras (nem o registro em _mirror).
+    const report = MIRROR_CONFIG.rawTabs.map(name => {
+      if (Date.now() - t0 > 270000) return name + ': adiada (tempo)';
+      try { return mirrorRawTab_(ctx, name); }
+      catch (e) { console.log('[CTS Mirror] erro em ' + name + ': ' + e); return name + ': ERRO ' + e; }
+    });
     mirrorMeta_(ctx.dst, 'lastSync', report.join(' | '));
     SpreadsheetApp.flush();
     console.log('[CTS Mirror] ok em ' + Math.round((Date.now() - t0) / 1000) + 's — ' + report.join(' | '));
@@ -182,6 +187,15 @@ function mirrorRetry_(fn, label) {
   }
 }
 
+/** Recria o gatilho de hora em hora se ele tiver sumido (já sumiu uma vez, 09/10/2026). */
+function mirrorEnsureTrigger_() {
+  const ok = ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === 'mirrorCts');
+  if (!ok) {
+    ScriptApp.newTrigger('mirrorCts').timeBased().everyHours(1).create();
+    console.log('[CTS Mirror] gatilho de hora em hora não existia — recriado');
+  }
+}
+
 function installMirrorTrigger() {
   ScriptApp.getProjectTriggers()
     .filter(t => t.getHandlerFunction() === 'mirrorCts')
@@ -213,6 +227,14 @@ function mirrorRawTab_(ctx, name) {
   const rows = s.getLastRow(), cols = s.getLastColumn();
   const t1 = Date.now();
   let d = ctx.dst.getSheetByName(name);
+  // Trava: aba da CTS vazia ou encolhida pra menos da metade (eles reprocessando,
+  // filtro, falha de leitura) NÃO apaga o espelho. 13/10/2026 a KMS da CTS veio
+  // vazia por um momento e o espelho zerou junto: o portal inteiro caiu.
+  const have = d ? d.getLastRow() : 0;
+  if (have > 1 && (rows < 2 || rows < have * 0.5)) {
+    console.log('[CTS Mirror] ' + name + ': CTS com ' + rows + ' linhas vs ' + have + ' no espelho — mantido');
+    return name + ': CTS veio com ' + rows + ' linhas (espelho tem ' + have + ') — MANTIDO';
+  }
   if (rows && cols) {
     const values = s.getRange(1, 1, rows, cols).getValues();
     // Pula a escrita se nada mudou desde a última cópia: a CTS atualiza ~1×/dia,

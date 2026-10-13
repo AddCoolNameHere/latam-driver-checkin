@@ -33,7 +33,7 @@
  * Logs: [CTS Backend]
  */
 
-const CTS_VERSION = 'cts-1.2';
+const CTS_VERSION = 'cts-1.3';
 
 const CTS_CONFIG = {
   // ID da planilha que tem as abas KMS/Targets/QC. A conta que publica este
@@ -132,18 +132,32 @@ function ctsCached_(key, force, build) {
   const payload = build();
   const str = JSON.stringify(payload);
   if (payload && payload.success) {
-    try { ctsCachePut_(cache, key, str); } catch (e) { Logger.log('[CTS Backend] cache falhou: ' + e); }
+    try {
+      ctsCachePut_(cache, key, str);
+      ctsCachePut_(cache, 'stale_' + key, str, 21600);   // reserva de 6h (teto do CacheService)
+    } catch (e) { Logger.log('[CTS Backend] cache falhou: ' + e); }
+  } else {
+    // Espelho quebrado (ex.: KMS vazia em 13/10/2026): serve o último dado bom
+    // em vez de derrubar o portal. stale:true deixa rastro no payload.
+    const old = ctsCacheGet_(cache, 'stale_' + key);
+    if (old) {
+      Logger.log('[CTS Backend] ' + key + ' falhou (' + (payload && payload.error) + ') — servindo reserva');
+      const o = JSON.parse(old);
+      o.stale = true;
+      o.staleReason = payload && payload.error;
+      return ctsJson_(o);
+    }
   }
   return ContentService.createTextOutput(str).setMimeType(ContentService.MimeType.JSON);
 }
 
-function ctsCachePut_(cache, key, str) {
+function ctsCachePut_(cache, key, str, ttl) {
   const CHUNK = 90000;
   const n = Math.ceil(str.length / CHUNK);
   const map = {};
   for (let i = 0; i < n; i++) map[key + '_' + i] = str.slice(i * CHUNK, (i + 1) * CHUNK);
   map[key + '_n'] = String(n);
-  cache.putAll(map, CTS_CONFIG.cacheSeconds);
+  cache.putAll(map, ttl || CTS_CONFIG.cacheSeconds);
 }
 
 function ctsCacheGet_(cache, key) {
