@@ -1,3 +1,6 @@
+/* Geist + Geist Mono (mesma família do shadcn/ui). Fonte única do portal. */
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400..600&display=swap");
+
 /* ============================================================
  * Aceolution LATAM — Design Tokens
  * ============================================================
@@ -45,6 +48,24 @@
   --shadow-sm:        0 1px 2px rgba(15,23,42,0.06);
   --shadow-md:        0 4px 12px rgba(15,23,42,0.08);
   --shadow-lg:        0 12px 32px rgba(15,23,42,0.12);
+  --shadow-xs:        0 1px 2px rgba(15,23,42,0.05);
+
+  /* Tipografia (shadcn/ui usa Geist) */
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Raios — escala única (shadcn: radius .625rem) */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  /* Anel de foco (accent da marca com alpha) */
+  --ring: rgba(74,159,224,0.40);
+
+  /* Curvas de animação */
+  --ease-out: cubic-bezier(.22,1,.36,1);
+  --ease-spring: cubic-bezier(.34,1.56,.64,1);
 }
 
 /* ============================================================
@@ -81,26 +102,64 @@
   --shadow-sm:        0 1px 2px rgba(0,0,0,0.4);
   --shadow-md:        0 4px 12px rgba(0,0,0,0.5);
   --shadow-lg:        0 12px 32px rgba(0,0,0,0.6);
+  --shadow-xs:        0 1px 2px rgba(0,0,0,0.3);
+  --ring:             rgba(14,165,233,0.45);
 
   /* color-scheme avisa o browser pra estilizar scrollbar/inputs nativos no escuro */
   color-scheme: dark;
 }
 
 /* ============================================================
- * Floating theme toggle (injetado pelo theme.js, só pra admins)
+ * Base tipográfica + foco + scrollbar (padrão shadcn/ui)
+ * Vale pra toda página que carrega o theme.css. A fonte do body
+ * leva !important porque cada página tem um body{font-family}
+ * próprio no <style> inline, que vem depois deste arquivo.
+ * ============================================================ */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+body { font-family: var(--font-sans) !important; letter-spacing: -0.006em; }
+button, input, select, textarea { font-family: inherit; letter-spacing: inherit; }
+code, kbd, pre, samp { font-family: var(--font-mono); }
+/* Números alinhados em coluna (tabelas, KPIs) */
+table, [class*="value"], [class*="-num"], [class*="amount"], [class*="money"] { font-variant-numeric: tabular-nums; }
+
+::selection { background: rgba(74,159,224,0.28); }
+
+/* Anel de foco só no teclado (mouse não acende) — o "ring" do shadcn */
+:where(a, button, summary, [role="button"], [role="tab"], [tabindex]):focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: 0 0 0 3px var(--ring);
+  border-radius: var(--radius-md);
+}
+
+/* Transição suave entre páginas do portal (View Transitions, Chrome 126+; quem não
+   suporta ignora). A sidebar tem nome próprio no sv-skin → fica parada, só o conteúdo troca. */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .2s; }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
+
+/* Scrollbar fina e discreta (Chrome 121+/Firefox) */
+* { scrollbar-width: thin; scrollbar-color: var(--c-border-strong) transparent; }
+
+/* ============================================================
+ * Floating theme toggle (injetado pelo theme.js)
+ * Nas páginas com sidebar (body.sv-shell) ele some: o toggle vai
+ * pro rodapé da sidebar e pra paleta de comandos (Ctrl+K).
  * ============================================================ */
 .theme-toggle-btn {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   color: var(--c-text);
   cursor: pointer;
-  font-size: 18px;
   line-height: 1;
   z-index: 9998;
   box-shadow: var(--shadow-md);
@@ -108,14 +167,17 @@
   align-items: center;
   justify-content: center;
   font-family: inherit;
-  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  transition: transform 0.2s var(--ease-spring), border-color 0.15s ease, background 0.15s ease;
   padding: 0;
 }
+.theme-toggle-btn svg { display: block; }
 .theme-toggle-btn:hover {
-  border-color: var(--c-primary);
-  transform: translateY(-2px);
+  border-color: var(--c-border-strong);
+  background: var(--c-bg);
+  transform: rotate(-12deg) scale(1.04);
 }
-.theme-toggle-btn:active { transform: translateY(0); }
+.theme-toggle-btn:active { transform: scale(0.96); }
+body.sv-shell .theme-toggle-btn { display: none !important; }
 
 /* Em telas pequenas, recolhe pra não cobrir conteúdo */
 @media (max-width: 640px) {
@@ -132,135 +194,199 @@
  * (Login screen + Topbar)
  * ============================================================ */
 
-/* ---- LOGIN ---- */
+/* ---- LOGIN (split: painel da marca à esquerda + formulário à direita) ---- */
 .ac-login-screen {
   position: fixed; inset: 0;
-  background: linear-gradient(135deg, #2C5282 0%, #4A9FE0 100%);
-  display: flex; align-items: center; justify-content: center;
-  padding: 20px; z-index: 10000;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-.ac-login-card {
   background: var(--c-surface);
-  border-radius: 16px;
-  padding: 36px 32px 28px;
-  max-width: 380px;
-  width: 100%;
-  box-shadow: 0 20px 60px rgba(15,23,42,0.25);
-  text-align: center;
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  z-index: 10000;
+  font-family: var(--font-sans);
 }
-.ac-login-logo { height: 44px; display: block; margin: 0 auto 18px; }
+/* Painel da marca: navy da Aceolution + grade sutil + brilho do accent */
+.ac-login-aside {
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(900px 520px at 85% 110%, rgba(74,159,224,0.38), transparent 60%),
+    radial-gradient(700px 420px at -10% -10%, rgba(44,82,130,0.65), transparent 60%),
+    #1A365D;
+  color: #fff;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 40px 44px;
+}
+.ac-login-aside::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse at 70% 60%, #000 20%, transparent 75%);
+          mask-image: radial-gradient(ellipse at 70% 60%, #000 20%, transparent 75%);
+}
+.ac-login-globe {
+  position: absolute; right: -150px; bottom: -170px; width: 560px; height: 560px;
+  object-fit: contain; opacity: 0.09; filter: brightness(0) invert(1); pointer-events: none;
+  animation: ac-login-spin 140s linear infinite;
+}
+@keyframes ac-login-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ac-login-globe { animation: none; } }
+.ac-login-aside > * { position: relative; }
+.ac-login-aside > .ac-login-globe { position: absolute; }
+.ac-login-aside-logo { height: 30px; width: auto; filter: brightness(0) invert(1); align-self: flex-start; }
+.ac-login-quote { max-width: 440px; }
+.ac-login-kicker {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 500; letter-spacing: 0.02em;
+  color: rgba(255,255,255,0.78);
+  padding: 5px 11px; border-radius: 999px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
+  margin-bottom: 18px;
+}
+.ac-login-kicker i { width: 6px; height: 6px; border-radius: 50%; background: #34D399; box-shadow: 0 0 0 3px rgba(52,211,153,0.2); }
+.ac-login-headline { font-size: 40px; line-height: 1.12; font-weight: 600; letter-spacing: -0.03em; }
+.ac-login-headline span { color: #9CCBF2; }
+.ac-login-tagline { margin-top: 12px; font-size: 15px; line-height: 1.55; color: rgba(255,255,255,0.72); }
+.ac-login-aside-foot { font-size: 12px; color: rgba(255,255,255,0.55); }
+
+.ac-login-main { display: flex; align-items: center; justify-content: center; padding: 32px 24px; background: var(--c-surface); overflow-y: auto; }
+.ac-login-card {
+  background: transparent;
+  max-width: 360px; width: 100%;
+  text-align: left;
+}
+.ac-login-logo { height: 30px; display: block; margin: 0 0 28px; }
 .ac-login-title {
-  font-size: 20px; font-weight: 700;
-  color: var(--c-primary-dark); margin-bottom: 4px;
+  font-size: 24px; font-weight: 600; letter-spacing: -0.025em;
+  color: var(--c-text); margin-bottom: 6px;
 }
 .ac-login-sub {
-  font-size: 13px; color: var(--c-text-muted); margin-bottom: 24px;
+  font-size: 14px; color: var(--c-text-muted); margin-bottom: 26px; line-height: 1.5;
 }
+.ac-login-sub:empty { display: none; }
+.ac-login-title:has(+ .ac-login-sub:empty) { margin-bottom: 26px; }
 .ac-login-card form { text-align: left; }
 .ac-login-card label {
-  display: block; font-size: 11px; font-weight: 600;
-  color: var(--c-text-muted); text-transform: uppercase;
-  letter-spacing: 0.5px; margin-bottom: 6px;
+  display: block; font-size: 13.5px; font-weight: 500;
+  color: var(--c-text); margin-bottom: 7px;
 }
 .ac-login-card input {
-  width: 100%; padding: 11px 14px;
-  border: 1px solid var(--c-border); border-radius: 8px;
+  width: 100%; height: 40px; padding: 0 12px;
+  border: 1px solid var(--c-border-strong); border-radius: var(--radius-md);
   font-size: 14px; font-family: inherit;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   background: var(--c-surface); color: var(--c-text);
+  box-shadow: var(--shadow-xs);
+  transition: border-color .15s, box-shadow .15s;
 }
 .ac-login-card input:focus {
-  outline: none; border-color: var(--c-primary);
-  box-shadow: 0 0 0 3px rgba(74,159,224,0.15);
+  outline: none; border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 .ac-login-btn {
-  width: 100%; padding: 12px;
-  background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
-  color: white; border: none; border-radius: 8px;
-  font-size: 14px; font-weight: 600; cursor: pointer;
-  margin-top: 6px; font-family: inherit;
+  width: 100%; height: 40px;
+  background: var(--c-primary);
+  color: white; border: none; border-radius: var(--radius-md);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  margin-top: 4px; font-family: inherit;
+  box-shadow: var(--shadow-xs), inset 0 1px 0 rgba(255,255,255,0.12);
+  transition: background .15s, transform .1s;
 }
+.ac-login-btn:hover { background: var(--c-primary-dark); }
+.ac-login-btn:active { transform: translateY(1px); }
 .ac-login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .ac-login-error {
-  color: var(--c-danger); font-size: 12px; margin-top: 10px;
+  color: var(--c-danger); font-size: 13px; margin-top: 12px;
   min-height: 16px; display: none;
+  padding: 9px 12px; border-radius: var(--radius-md);
+  border: 1px solid rgba(185,28,28,0.25); background: rgba(185,28,28,0.06);
 }
 .ac-login-error.visible { display: block; }
+.ac-login-legal { margin-top: 26px; font-size: 12px; color: var(--c-text-dim); line-height: 1.5; }
+@media (max-width: 860px) {
+  .ac-login-screen { grid-template-columns: 1fr; }
+  .ac-login-aside { display: none; }
+}
 
-/* ---- TOPBAR ---- */
+/* ---- TOPBAR (header do shadcn: barra fina, borda embaixo, ações à direita) ---- */
 .ac-topbar {
   background: var(--c-surface);
   border-bottom: 1px solid var(--c-border);
-  padding: 12px 24px;
+  padding: 10px 24px; min-height: 56px;
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px; flex-wrap: wrap;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
 }
 .ac-brand { display: flex; align-items: center; gap: 12px; }
-.ac-brand-logo { height: 28px; }
-.ac-brand-divider { width: 1px; height: 22px; background: var(--c-border-strong); }
+.ac-brand-logo { height: 26px; }
+.ac-brand-divider { width: 1px; height: 20px; background: var(--c-border-strong); }
 .ac-brand-region {
-  font-size: 11px; font-weight: 700;
-  color: var(--c-text-muted); letter-spacing: 1.3px;
+  font-size: 12px; font-weight: 500;
+  color: var(--c-text-muted); letter-spacing: 0.04em;
 }
 .ac-topbar-right {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
+/* PT/ES/EN — segmented control (Tabs do shadcn) */
 .ac-lang-switch {
-  display: flex; gap: 2px;
-  background: var(--c-bg-tint); border-radius: 6px; padding: 2px;
+  display: inline-flex; gap: 0;
+  background: var(--c-bg); border: 1px solid var(--c-border);
+  border-radius: var(--radius-md); padding: 2px;
 }
 .ac-lang-switch button {
   background: none; border: none;
-  padding: 4px 9px; font-size: 11px; font-weight: 600;
+  height: 26px; padding: 0 9px; font-size: 12px; font-weight: 500;
   color: var(--c-text-muted); cursor: pointer;
-  border-radius: 4px; font-family: inherit;
+  border-radius: var(--radius-sm); font-family: inherit;
+  transition: color .15s, background .15s;
 }
+.ac-lang-switch button:hover { color: var(--c-text); }
 .ac-lang-switch button.active {
   background: var(--c-surface);
-  color: var(--c-primary-dark);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  color: var(--c-text);
+  box-shadow: var(--shadow-xs), 0 0 0 1px var(--c-border);
 }
+/* Botões "outline" do shadcn */
 .ac-back-link, .ac-topbar-btn {
-  background: none; border: 1px solid var(--c-border);
-  padding: 6px 12px; border-radius: 8px;
-  font-size: 12px; color: var(--c-text-muted);
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  height: 32px; padding: 0 12px; border-radius: var(--radius-md);
+  font-size: 13px; font-weight: 500; color: var(--c-text);
   cursor: pointer; font-family: inherit;
-  text-decoration: none;
-  display: inline-flex; align-items: center; gap: 4px;
+  text-decoration: none; box-shadow: var(--shadow-xs);
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: background .15s, border-color .15s, color .15s;
 }
 .ac-back-link:hover, .ac-topbar-btn:hover {
-  background: var(--c-bg-tint); color: var(--c-primary); border-color: var(--c-primary);
+  background: var(--c-bg); color: var(--c-text); border-color: var(--c-border-strong);
 }
 .ac-topbar-btn.primary {
   background: var(--c-primary); color: white;
-  border-color: var(--c-primary); font-weight: 600;
+  border-color: var(--c-primary);
 }
-.ac-topbar-btn.primary:hover { background: var(--c-primary-dark); border-color: var(--c-primary-dark); }
+.ac-topbar-btn.primary:hover { background: var(--c-primary-dark); border-color: var(--c-primary-dark); color: #fff; }
 .ac-extras-slot { display: contents; }
 .ac-user-pill {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 12px 6px 6px;
-  background: var(--c-bg-tint); border-radius: 20px;
-  font-size: 12px; font-weight: 600;
-  color: var(--c-primary-dark);
+  height: 32px; padding: 0 12px 0 4px;
+  background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 999px;
+  font-size: 13px; font-weight: 500;
+  color: var(--c-text);
 }
 .ac-user-avatar {
   width: 24px; height: 24px;
   background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
   color: white; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700;
+  font-size: 10.5px; font-weight: 600;
 }
+/* Botão "ghost" do shadcn */
 .ac-logout-btn {
-  background: none; border: 1px solid var(--c-border);
-  padding: 6px 12px; border-radius: 8px;
-  font-size: 12px; color: var(--c-text-muted);
+  background: transparent; border: 1px solid transparent;
+  height: 32px; padding: 0 10px; border-radius: var(--radius-md);
+  font-size: 13px; font-weight: 500; color: var(--c-text-muted);
   cursor: pointer; font-family: inherit;
+  transition: background .15s, color .15s;
 }
 .ac-logout-btn:hover {
-  background: var(--c-bg); color: var(--c-danger); border-color: var(--c-danger);
+  background: rgba(185,28,28,0.08); color: var(--c-danger);
 }
 
 @media print {
@@ -272,15 +398,13 @@
  * trocar pra var() nas páginas (background: white inline, etc).
  * Aplicados só quando data-theme="dark".
  * ============================================================ */
-[data-theme="dark"] input,
-[data-theme="dark"] textarea,
-[data-theme="dark"] select {
+/* :where() zera a especificidade: é só um fallback, a classe da página sempre ganha */
+:where([data-theme="dark"]) :where(input, textarea, select) {
   background-color: var(--c-surface);
   color: var(--c-text);
   border-color: var(--c-border);
 }
-[data-theme="dark"] input::placeholder,
-[data-theme="dark"] textarea::placeholder {
+:where([data-theme="dark"]) :where(input, textarea)::placeholder {
   color: var(--c-text-dim);
 }
 
@@ -294,6 +418,10 @@
 [data-theme="dark"] img[src*="logo2"] {
   filter: brightness(0) invert(1);
 }
+
+/* Mapas Leaflet ficam no próprio contexto de empilhamento: os panes (z-index 400+)
+   não passam por cima de headers fixos/menus da página. */
+.leaflet-container { isolation: isolate; }
 
 /* Basemap do Leaflet: OSM padrão é colorido demais pra servir de fundo dos
    pins/heatmap. Dessatura pra ficar parecido com o CARTO Positron que usávamos
@@ -313,6 +441,10 @@
   background: var(--c-surface);
   color: var(--c-text);
 }
+[data-theme="dark"] .leaflet-bar a {
+  background: var(--c-surface); color: var(--c-text); border-color: var(--c-border);
+}
+[data-theme="dark"] .leaflet-bar a:hover { background: var(--c-bg); }
 [data-theme="dark"] .leaflet-control-attribution {
   background: rgba(15,23,42,0.75) !important;
   color: var(--c-text-muted) !important;

@@ -125,13 +125,22 @@ function clearDataCache(extraPrefix) {
 const ACE_LOGIN_I18N = {
   pt: { user: 'Usuário', pass: 'Senha', submit: 'Entrar', checking: 'Verificando…',
         empty: 'Preencha usuário e senha', invalid: 'Usuário ou senha inválidos',
-        generic: 'Erro ao fazer login' },
+        generic: 'Erro ao fazer login',
+        kicker: 'Street View · LATAM', headline: 'A operação inteira, <span>num lugar só.</span>',
+        tagline: 'Frota, mapeamento, folha e finanças dos seis países — com os dados da Mastersheet e da CTS.',
+        legal: 'Acesso restrito ao time Aceolution. Sessão válida por 8 horas.' },
   es: { user: 'Usuario', pass: 'Contraseña', submit: 'Entrar', checking: 'Verificando…',
         empty: 'Complete usuario y contraseña', invalid: 'Usuario o contraseña inválidos',
-        generic: 'Error al iniciar sesión' },
+        generic: 'Error al iniciar sesión',
+        kicker: 'Street View · LATAM', headline: 'Toda la operación, <span>en un solo lugar.</span>',
+        tagline: 'Flota, mapeo, nómina y finanzas de los seis países — con los datos de la Mastersheet y de CTS.',
+        legal: 'Acceso restringido al equipo Aceolution. Sesión válida por 8 horas.' },
   en: { user: 'Username', pass: 'Password', submit: 'Sign in', checking: 'Verifying…',
         empty: 'Enter username and password', invalid: 'Invalid username or password',
-        generic: 'Login error' },
+        generic: 'Login error',
+        kicker: 'Street View · LATAM', headline: 'Your whole operation, <span>in one place.</span>',
+        tagline: 'Fleet, mapping, payroll and finance across six countries — powered by the Mastersheet and CTS data.',
+        legal: 'Restricted to the Aceolution team. Sessions last 8 hours.' },
 };
 
 /**
@@ -194,18 +203,31 @@ function injectLogin(opts) {
   const screen = document.createElement('div');
   screen.className = 'ac-login-screen';
   screen.innerHTML = `
-    <div class="ac-login-card">
-      <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="ac-login-logo">
-      <div class="ac-login-title">${escapeHtml(opts.title || 'Aceolution LATAM')}</div>
-      <div class="ac-login-sub">${escapeHtml(opts.sub || '')}</div>
-      <form>
-        <label>${i18n.user}</label>
-        <input type="text" id="ac-login-user" required autofocus autocomplete="username">
-        <label>${i18n.pass}</label>
-        <input type="password" id="ac-login-pass" required autocomplete="current-password">
-        <button type="submit" class="ac-login-btn">${i18n.submit}</button>
-        <div class="ac-login-error"></div>
-      </form>
+    <aside class="ac-login-aside" aria-hidden="true">
+      <img src="/aceolution-globe-hd.png" alt="" class="ac-login-globe">
+      <img src="https://aceolution.com/img/logo2.png" alt="" class="ac-login-aside-logo">
+      <div class="ac-login-quote">
+        <div class="ac-login-kicker"><i></i>${i18n.kicker}</div>
+        <div class="ac-login-headline">${i18n.headline}</div>
+        <div class="ac-login-tagline">${i18n.tagline}</div>
+      </div>
+      <div class="ac-login-aside-foot">© ${new Date().getFullYear()} Aceolution do Brasil</div>
+    </aside>
+    <div class="ac-login-main">
+      <div class="ac-login-card">
+        <img src="https://aceolution.com/img/logo2.png" alt="Aceolution" class="ac-login-logo">
+        <div class="ac-login-title">${escapeHtml(opts.title || 'Aceolution LATAM')}</div>
+        <div class="ac-login-sub">${escapeHtml(opts.sub || '')}</div>
+        <form>
+          <label for="ac-login-user">${i18n.user}</label>
+          <input type="text" id="ac-login-user" required autofocus autocomplete="username">
+          <label for="ac-login-pass">${i18n.pass}</label>
+          <input type="password" id="ac-login-pass" required autocomplete="current-password">
+          <button type="submit" class="ac-login-btn">${i18n.submit}</button>
+          <div class="ac-login-error"></div>
+        </form>
+        <div class="ac-login-legal">${i18n.legal}</div>
+      </div>
     </div>
   `;
   document.body.appendChild(screen);

@@ -57,10 +57,15 @@ function toggleTheme() {
   }
   const btn = document.getElementById('theme-toggle-btn');
   if (btn) btn.innerHTML = themeToggleIcon();
+  // Avisa quem mais mostra o tema (rodapé da sidebar, paleta Ctrl+K)
+  try { document.dispatchEvent(new CustomEvent('ac-theme-change')); } catch (e) {}
 }
 
 function themeToggleIcon() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  // Lua quando light (clica pra escurecer), sol quando dark (clica pra clarear)
-  return isDark ? '☀' : '☾';
+  // Lua quando light (clica pra escurecer), sol quando dark (clica pra clarear) — ícones lucide
+  const open = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+  return isDark
+    ? open + '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>'
+    : open + '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
 }

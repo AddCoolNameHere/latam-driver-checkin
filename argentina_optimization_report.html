@@ -6,247 +6,358 @@
 <title>Otimização Argentina — Relatório · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="/aceolution-globe.png">
 <script src="/auth.js?v=20260518b"></script>
-<script src="/theme.js?v=20260518c"></script>
-<script src="/common.js?v=20260519a"></script>
+<script src="/theme.js?v=20261015ui"></script>
+<script src="/common.js?v=20261015ui"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="/theme.css?v=20260519a">
+<link rel="stylesheet" href="/theme.css?v=20261015ui">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }  :root {
     --c-gold: #B45309;
   }
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #e5e7eb;
+    background: var(--c-bg);
     color: var(--c-text);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     padding: 0;
   }
-  .report-page {
-    max-width: 880px;
-    margin: 20px auto;
-    background: var(--c-surface);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    padding: 48px 56px;
-    border-radius: 4px;
+
+  /* Badge semântico (shadcn): aliases dos valores da spec, com versão dark */
+  :root {
+    --bdg-ok-fg: #15803D;   --bdg-ok-bg: rgba(22,163,74,0.08);  --bdg-ok-bd: rgba(22,163,74,0.22);
+    --bdg-warn-fg: #A16207; --bdg-warn-bg: rgba(202,138,4,0.09); --bdg-warn-bd: rgba(202,138,4,0.25);
+    --bdg-bad-fg: #B91C1C;  --bdg-bad-bg: rgba(185,28,28,0.07);  --bdg-bad-bd: rgba(185,28,28,0.22);
+    --bdg-info-fg: var(--c-primary-dark); --bdg-info-bg: var(--c-bg-tint); --bdg-info-bd: rgba(74,159,224,0.25);
+  }
+  [data-theme="dark"] {
+    --bdg-ok-fg: #4ADE80;   --bdg-ok-bg: rgba(34,197,94,0.12);  --bdg-ok-bd: rgba(34,197,94,0.30);
+    --bdg-warn-fg: #FBBF24; --bdg-warn-bg: rgba(245,158,11,0.12); --bdg-warn-bd: rgba(245,158,11,0.30);
+    --bdg-bad-fg: #F87171;  --bdg-bad-bg: rgba(239,68,68,0.12);  --bdg-bad-bd: rgba(239,68,68,0.30);
   }
 
-  /* Print toolbar */
+  /* Folha do relatório (A4 na impressão) */
+  .report-page {
+    max-width: 880px;
+    margin: 28px auto;
+    background: var(--c-surface);
+    border: 1px solid var(--sv-line, var(--c-border));
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    padding: 48px 56px;
+  }
+
+  /* Print toolbar (flutuante: status + botão primário) */
   .print-toolbar {
     position: fixed;
     top: 16px;
-    right: 16px;
+    right: 20px;
     background: var(--c-surface);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    border-radius: 8px;
-    padding: 10px 14px;
+    border: 1px solid var(--c-border);
+    box-shadow: var(--shadow-md);
+    border-radius: 12px;
+    padding: 6px 6px 6px 12px;
     display: flex;
-    gap: 10px;
+    gap: 12px;
     align-items: center;
     z-index: 9999;
     font-size: 13px;
   }
   .print-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 0 12px;
     background: var(--c-primary);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
+    color: #fff;
+    border: 0;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
+    font: 500 13px/1 var(--font-sans);
+    box-shadow: var(--shadow-xs);
+    transition: background .15s, opacity .15s, transform .1s;
   }
+  .print-btn svg { display: block; flex-shrink: 0; }
   .print-btn:hover { background: var(--c-primary-dark); }
-  .print-status { color: var(--c-text-muted); font-size: 12px; }
+  .print-btn:active { transform: translateY(1px); }
+  .print-btn:disabled { opacity: 0.55; cursor: wait; transform: none; }
+  .print-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--c-text-muted);
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+  /* bolinha de status: âmbar pulsando carregando → verde quando o botão libera */
+  .print-status::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--c-warn);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-warn) 20%, transparent);
+    animation: status-pulse 1.2s ease-in-out infinite;
+  }
+  .print-toolbar:has(.print-btn:not(:disabled)) .print-status::before {
+    background: var(--c-success);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-success) 20%, transparent);
+    animation: none;
+  }
+  @keyframes status-pulse { 50% { opacity: .35; } }
 
-  /* HEADER da capa */
+  /* CAPA (editorial) */
   .cover {
-    border-bottom: 4px solid var(--c-primary);
-    padding-bottom: 20px;
-    margin-bottom: 28px;
+    border-bottom: 1px solid var(--c-border);
+    padding-bottom: 28px;
+    margin-bottom: 32px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: flex-start;
+    gap: 24px;
   }
-  .cover-text { flex: 1; }
+  .cover-text { flex: 1; min-width: 0; }
   .cover-eyebrow {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--c-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--c-text-muted);
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 8px;
+    letter-spacing: .08em;
+    margin-bottom: 14px;
+  }
+  .cover-eyebrow::before {
+    content: '';
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--c-primary);
+    flex-shrink: 0;
   }
   .cover-title {
-    font-size: 30px;
-    font-weight: 800;
-    color: var(--c-primary-dark);
-    line-height: 1.15;
-    letter-spacing: -0.5px;
-    margin-bottom: 4px;
-  }
-  .cover-sub {
-    font-size: 15px;
-    color: var(--c-text-muted);
+    font-size: 40px;
+    font-weight: 600;
+    color: var(--c-text);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
     margin-bottom: 10px;
   }
+  .cover-sub {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--c-text-muted);
+    max-width: 560px;
+    margin-bottom: 16px;
+  }
   .cover-date {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--c-border);
+    background: var(--c-bg);
     font-size: 12px;
+    font-weight: 500;
     color: var(--c-text-muted);
     font-variant-numeric: tabular-nums;
   }
   .cover-logo {
-    height: 44px;
+    height: 36px;
     width: auto;
     margin-left: 24px;
+    flex-shrink: 0;
   }
 
   /* Headings */
   h2 {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--c-primary-dark);
-    margin: 32px 0 14px;
-    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--c-text);
+    margin: 36px 0 14px;
+    padding-bottom: 10px;
     border-bottom: 1px solid var(--c-border);
-    letter-spacing: -0.2px;
+    letter-spacing: -0.02em;
   }
   h2 .h-num {
-    display: inline-block;
-    background: var(--c-primary);
-    color: white;
-    padding: 2px 10px;
-    border-radius: 4px;
-    font-size: 13px;
-    margin-right: 10px;
-    vertical-align: middle;
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    color: var(--c-text-muted);
+    font: 600 12.5px/1 var(--font-mono);
   }
   h3 {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--c-primary-dark);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--c-text);
     margin: 18px 0 8px;
   }
-  p { margin-bottom: 10px; font-size: 13.5px; }
+  p { margin-bottom: 10px; font-size: 13.5px; line-height: 1.65; }
+  p strong, li strong { font-weight: 600; color: var(--c-text); }
 
-  /* Exec summary box */
+  /* Resumo executivo (cartão neutro) */
   .exec-summary {
-    background: var(--c-bg-tint);
-    border-left: 4px solid var(--c-primary);
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-xl);
     padding: 18px 22px;
-    border-radius: 0 8px 8px 0;
-    margin-bottom: 24px;
+    margin-bottom: 28px;
   }
   .exec-summary h3 {
-    margin-top: 0;
-    color: var(--c-primary-dark);
+    margin: 0 0 8px;
+    color: var(--c-text-muted);
     text-transform: uppercase;
-    font-size: 11px;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: .05em;
   }
   .exec-summary ul { list-style: none; padding: 0; }
   .exec-summary li {
-    padding: 4px 0;
+    position: relative;
+    padding: 4px 0 4px 18px;
     font-size: 13.5px;
+    line-height: 1.55;
     color: var(--c-text);
   }
   .exec-summary li::before {
-    content: '•';
-    color: var(--c-primary);
-    margin-right: 8px;
-    font-weight: 700;
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 12px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-primary);
   }
-  .exec-summary li strong { color: var(--c-primary-dark); }
+  .exec-summary li strong { color: var(--c-text); }
 
-  /* Tabelas */
+  /* Tabelas (Table do shadcn: cabeçalho discreto, sem fundo, cartão com borda) */
   table {
     width: 100%;
-    border-collapse: collapse;
-    margin: 12px 0 18px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 12px 0 20px;
     font-size: 12.5px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-xl);
   }
-  thead { background: var(--c-bg); }
+  thead { background: transparent; }
   th {
     text-align: left;
     padding: 10px 12px;
-    border-bottom: 2px solid var(--c-border);
+    border-bottom: 1px solid var(--c-border);
     color: var(--c-text-muted);
-    font-weight: 600;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    font-weight: 500;
+    font-size: 12.5px;
   }
   td {
-    padding: 10px 12px;
+    padding: 11px 12px;
     border-bottom: 1px solid var(--c-border);
     vertical-align: top;
+    color: var(--c-text);
   }
-  tr.keep { background: rgba(34,197,94,0.04); }
-  tr.drop { background: rgba(185,28,28,0.05); }
-  tr.warn { background: rgba(202,138,4,0.04); }
-  td.driver-name { font-weight: 600; color: var(--c-primary-dark); }
-  td.metric { font-variant-numeric: tabular-nums; text-align: right; }
-  .pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .pill-keep { background: #DCFCE7; color: #14532D; }
-  .pill-drop { background: #FEE2E2; color: #7F1D1D; }
-  .pill-warn { background: #FEF3C7; color: #78350F; }
-  .pill-hotel { background: #E0E7FF; color: #312E81; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:last-child td:first-child { border-bottom-left-radius: var(--radius-xl); }
+  tbody tr:last-child td:last-child { border-bottom-right-radius: var(--radius-xl); }
+  tbody td { transition: background .12s; }
+  tbody tr:hover td { background: var(--c-bg); }
+  td.driver-name { font-weight: 500; color: var(--c-text); }
+  th.metric, td.metric { font-variant-numeric: tabular-nums; text-align: right; }
 
-  /* Driver cards */
-  .driver-card {
+  /* Pills → Badge semântico (retangular, borda tingida, ponto) */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 22px;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--c-border);
-    border-radius: 8px;
-    padding: 14px 18px;
+    background: var(--c-bg);
+    color: var(--c-text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.25;
+    vertical-align: middle;
+  }
+  .pill-keep::before, .pill-drop::before, .pill-warn::before, .pill-hire::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  .pill-keep { background: var(--bdg-ok-bg); color: var(--bdg-ok-fg); border-color: var(--bdg-ok-bd); }
+  .pill-drop { background: var(--bdg-bad-bg); color: var(--bdg-bad-fg); border-color: var(--bdg-bad-bd); }
+  .pill-warn { background: var(--bdg-warn-bg); color: var(--bdg-warn-fg); border-color: var(--bdg-warn-bd); }
+  .pill-hire { background: var(--bdg-info-bg); color: var(--bdg-info-fg); border-color: var(--bdg-info-bd); }
+  .pill-hotel { background: var(--c-bg); color: var(--c-text-muted); border-color: var(--c-border); }
+
+  /* Driver cards (cartão da spec, sem faixa lateral — a decisão está no badge) */
+  .driver-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xs);
+    padding: 16px 20px;
     margin-bottom: 12px;
     page-break-inside: avoid;
   }
-  .driver-card.drop { border-left: 4px solid var(--c-danger); }
-  .driver-card.keep { border-left: 4px solid var(--c-success); }
   .driver-card-head {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 8px;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
   }
-  .driver-card-name { font-weight: 700; font-size: 15px; color: var(--c-primary-dark); }
-  .driver-card-sub { font-size: 12px; color: var(--c-text-muted); }
+  .driver-card-name { font-weight: 600; font-size: 15px; letter-spacing: -0.015em; color: var(--c-text); }
+  .driver-card-name .pill { font-size: 11.5px; letter-spacing: 0; vertical-align: 1px; }
+  .driver-card-sub { font-size: 12.5px; color: var(--c-text-muted); margin-top: 2px; }
   .driver-card-reasons {
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--c-text);
-    line-height: 1.55;
+    line-height: 1.6;
   }
-  .driver-card-reasons li { margin-left: 18px; margin-bottom: 4px; }
+  .driver-card-reasons li { margin-left: 18px; margin-bottom: 5px; padding-left: 2px; }
+  .driver-card-reasons li::marker { color: var(--c-text-dim); }
 
-  /* Mapa */
+  /* Mapa (figura em cartão; o sv-skin também estiliza .map-section) */
   .map-section {
-    margin: 24px 0;
+    margin: 28px 0;
     page-break-inside: avoid;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-xl);
+    padding: 16px 18px 14px;
   }
+  .map-section h3 { margin: 0 0 12px; }
   #map {
     height: 480px;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     border: 1px solid var(--c-border);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   }
   .map-legend {
     display: flex;
     gap: 18px;
-    margin-top: 10px;
+    margin-top: 12px;
     flex-wrap: wrap;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--c-text-muted);
   }
-  .legend-dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: -1px; box-shadow: 0 0 0 2px var(--c-surface), 0 0 0 3px var(--c-border); }
   .legend-x {
     display: inline-block;
     width: 11px;
@@ -260,38 +371,43 @@
     margin-right: 5px;
   }
 
-  /* Reservations block */
+  /* Ressalvas = Alert do shadcn (borda + ícone + título 600 + texto muted) */
   .caveat-box {
-    background: #FFFBEB;
-    border-left: 4px solid var(--c-warn);
-    padding: 14px 18px;
-    margin: 18px 0;
-    border-radius: 0 6px 6px 0;
-    font-size: 12.5px;
-    color: #78350F;
+    background: color-mix(in srgb, var(--c-warn) 4%, var(--c-surface));
+    border: 1px solid color-mix(in srgb, var(--c-warn) 30%, var(--c-border));
+    border-radius: var(--radius-xl);
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-size: 13px;
+    color: var(--c-text-muted);
   }
   .caveat-box h3 {
-    color: #92400E;
-    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--c-text);
+    font-size: 14px;
+    font-weight: 600;
     margin: 0 0 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    text-transform: none;
+    letter-spacing: -0.01em;
   }
-  .caveat-box ul { list-style: none; padding: 0; margin: 0; }
-  .caveat-box li { padding: 3px 0 3px 20px; position: relative; }
+  .caveat-box h3 svg { width: 16px; height: 16px; color: var(--c-warn); flex-shrink: 0; }
+  .caveat-box ul { list-style: none; padding: 0 0 0 24px; margin: 0; }
+  .caveat-box li { padding: 4px 0 4px 14px; position: relative; line-height: 1.6; }
   .caveat-box li::before {
     content: '';
     position: absolute;
-    left: 0;
-    top: 7px;
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-bottom: 9px solid var(--c-warn);
+    left: 1px;
+    top: 13px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--c-warn);
   }
+  .caveat-box li strong, .caveat-box li em { color: var(--c-text); }
 
-  /* Markers Leaflet customizados */
+  /* Markers Leaflet customizados (cores = dado; não mudar) */
   .marker-driver {
     width: 28px; height: 28px;
     border-radius: 50%;
@@ -308,22 +424,35 @@
     font-size: 14px;
   }
 
+  @media (max-width: 760px) {
+    .report-page { margin: 16px; padding: 28px 22px; }
+    .cover { flex-direction: column-reverse; }
+    .cover-logo { margin-left: 0; }
+    .cover-title { font-size: 32px; }
+    .print-toolbar { top: auto; bottom: 16px; right: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .print-status::before { animation: none; }
+  }
+
   /* PRINT */
   @media print {
-    body { background: var(--c-surface); }
+    html body { background: var(--c-surface) !important; }
     .print-toolbar, .ac-login-screen { display: none !important; }
     .report-page {
       box-shadow: none;
       margin: 0;
       padding: 24px 28px;
       max-width: 100%;
+      border: 0;
       border-radius: 0;
     }
     h2 { page-break-after: avoid; }
-    .driver-card { page-break-inside: avoid; }
+    .driver-card { page-break-inside: avoid; box-shadow: none; }
     .map-section { page-break-inside: avoid; }
     table { page-break-inside: auto; }
     tr { page-break-inside: avoid; page-break-after: auto; }
+    tbody tr:hover td { background: transparent; }
     .leaflet-control-container { display: none !important; }
   }
   @page { size: A4 portrait; margin: 12mm; }
@@ -334,7 +463,7 @@
 <!-- TOOLBAR (oculta no print) -->
 <div class="print-toolbar" id="print-toolbar" style="display:none;">
   <span class="print-status" id="print-status">Carregando mapa...</span>
-  <button class="print-btn" id="print-btn" disabled onclick="window.print()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir / Salvar PDF</button>
+  <button class="print-btn" id="print-btn" disabled onclick="window.print()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir / Salvar PDF</button>
 </div>
 
 <!-- RELATÓRIO -->
@@ -532,7 +661,7 @@
         <div class="driver-card-name">Mendoza (capital) — 1 motorista</div>
         <div class="driver-card-sub">Aliviar carga do Guillermo (Jáchal)</div>
       </div>
-      <span class="pill" style="background:#DBEAFE;color:#1E3A8A;">Contratar</span>
+      <span class="pill pill-hire">Contratar</span>
     </div>
     <ul class="driver-card-reasons">
       <li><strong>Scope coberto:</strong> Mendoza (22 áreas / 2.696 km) + San Luis (8 áreas / 1.578 km) = 30 áreas / 4.274 km.</li>
@@ -547,7 +676,7 @@
         <div class="driver-card-name">Posadas / Corrientes — 1 motorista</div>
         <div class="driver-card-sub">Substituir Mauro com posicionamento melhor</div>
       </div>
-      <span class="pill" style="background:#DBEAFE;color:#1E3A8A;">Contratar</span>
+      <span class="pill pill-hire">Contratar</span>
     </div>
     <ul class="driver-card-reasons">
       <li><strong>Scope coberto:</strong> Misiones (9 áreas / 591 km) + Corrientes (2 áreas / 78 km) + Entre Ríos (6 áreas / 235 km) + Chaco (3 áreas / 136 km) = 20 áreas / 1.040 km.</li>
@@ -573,7 +702,7 @@
 
   <!-- Ressalvas -->
   <div class="caveat-box">
-    <h3>Ressalvas importantes</h3>
+    <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></svg>Ressalvas importantes</h3>
     <ul>
       <li><strong>Snapshot único:</strong> eficiência é histórica acumulada. Verifique evolução nos últimos 3-6 meses no <em>driver-profile.html</em> antes de decidir — performance pode ter variado.</li>
       <li><strong>Status "Not Active"</strong> pode ser temporário (férias, mech down, problema pessoal). Tenha conversa antes de demitir.</li>
@@ -716,6 +845,6 @@ function onMapReady() {
 
 </script>
 
-<script src="/sv-shell.js"></script>
+<script src="/sv-shell.js?v=20261015ui"></script>
 </body>
 </html>

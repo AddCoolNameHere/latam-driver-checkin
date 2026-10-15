@@ -14,9 +14,11 @@
  *  6. i18n: a sidebar TRADUZ junto com a página — detecta a língua por clique em
  *     qualquer botão [data-lang] e por mutação do <html lang>. Sem editar as páginas.
  *  7. Colapsada mostra o globo da Aceolution (favicon): colorido no light, branco no dark.
+ *  8. Kit de UI (ui.css + ui.js): busca/paleta Ctrl+K, menu do usuário no rodapé
+ *     (tema, sair), tooltip no modo recolhido, indicador "mola" no hover (Rare UI).
  * ============================================================ */
 (function () {
-  // ---- garante skin + fonte ----
+  // ---- garante skin + kit de UI (a fonte Geist vem do theme.css) ----
   function ensureLink(href) {
     var base = href.split("?")[0];
     if (document.querySelector("link[href^='" + base + "']")) return;
@@ -25,8 +27,16 @@
     l.href = href;
     document.head.appendChild(l);
   }
-  ensureLink("/sv-skin.css?v=6");
-  ensureLink("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+  function ensureScript(src) {
+    var base = src.split("?")[0];
+    if (document.querySelector("script[src^='" + base + "']")) return;
+    var s = document.createElement("script");
+    s.src = src;
+    document.head.appendChild(s);
+  }
+  ensureLink("/ui.css?v=20261015ui");
+  ensureLink("/sv-skin.css?v=20261015ui");
+  ensureScript("/ui.js?v=20261015ui");
 
   // ---- ícones (line, 24x24) ----
   var ICON = {
@@ -44,10 +54,31 @@
     settings: '<circle cx="12" cy="12" r="3.1"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18 6l-2 2M8 16l-2 2M18 18l-2-2M8 8 6 6"/>',
     map: '<path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Z"/><path d="M9 4v14M15 6v14"/>',
     pin: '<path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/>',
+    search: '<circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4.2-4.2"/>',
+    logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>',
+    moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+    upDown: '<path d="m7 15 5 5 5-5M7 9l5-5 5 5"/>',
+    command: '<path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/>',
   };
-  function svg(name) {
-    return '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (ICON[name] || "") + "</svg>";
+  function svg(name, size) {
+    var s = size || 18;
+    return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">' + (ICON[name] || "") + "</svg>";
   }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // Textos do próprio shell (pt/es/en)
+  var STR = {
+    search: { pt: "Buscar…", es: "Buscar…", en: "Search…" },
+    theme:  { pt: "Tema escuro", es: "Tema oscuro", en: "Dark theme" },
+    themeL: { pt: "Tema claro", es: "Tema claro", en: "Light theme" },
+    logout: { pt: "Sair", es: "Salir", en: "Sign out" },
+    cmd:    { pt: "Buscar e atalhos", es: "Buscar y atajos", en: "Search & shortcuts" },
+    collapse: { pt: "Recolher menu", es: "Contraer menú", en: "Collapse sidebar" },
+    roleSuper: { pt: "Super admin", es: "Super admin", en: "Super admin" },
+    roleAdmin: { pt: "Administrador", es: "Administrador", en: "Admin" },
+    roleUser:  { pt: "Usuário", es: "Usuario", en: "User" },
+  };
 
   // ---- NAV: FONTE ÚNICA. label = {pt,es,en}. access = nível mínimo (all<admin<super). ----
   var NAV = [
@@ -161,42 +192,177 @@
         // apareceria o texto).
         var ext = it.external ? ' target="_blank" rel="noopener"' : "";
         var arrow = it.external ? ' <i class="sv-ext" aria-hidden="true">↗</i>' : "";
-        html += '<a class="sv-nav-item' + (isActive ? " active" : "") + '" href="' + it.href + '"' + ext + ' title="' + label + '">' +
+        // data-tip (ui.js) só aparece com a sidebar recolhida — substitui o title nativo
+        html += '<a class="sv-nav-item' + (isActive ? " active" : "") + '" href="' + it.href + '"' + ext +
+          ' data-tip="' + esc(label) + '" data-tip-side="right" data-tip-when="collapsed" aria-label="' + esc(label) + '">' +
           '<span class="sv-ico">' + svg(it.icon) + "</span><span>" + label + arrow + "</span></a>";
       });
     });
+    // Indicador de hover com mola (Rare UI · Bounce sidebar): um "pill" que
+    // escorrega até o item sob o mouse e volta pro ativo quando sai.
+    html += '<span class="sv-nav-glide" aria-hidden="true"></span>';
     navEl.innerHTML = html;
+    wireGlide(navEl);
+  }
+
+  function wireGlide(navEl) {
+    var glide = navEl.querySelector(".sv-nav-glide");
+    if (!glide) return;
+    function moveTo(item) {
+      if (!item) { glide.classList.remove("on"); return; }
+      glide.style.transform = "translateY(" + (item.offsetTop) + "px)";
+      glide.style.height = item.offsetHeight + "px";
+      glide.classList.add("on");
+    }
+    navEl.addEventListener("mouseover", function (e) {
+      var it = e.target.closest ? e.target.closest(".sv-nav-item") : null;
+      if (it && !it.classList.contains("active")) moveTo(it);
+    });
+    navEl.addEventListener("mouseleave", function () { glide.classList.remove("on"); });
+  }
+
+  // Nav visível pro usuário atual, já traduzida — consumida pela paleta Ctrl+K (ui.js).
+  window.svVisibleNav = function (lang) {
+    lang = lang || curLang();
+    var user = CURRENT_USER || getUser();
+    var userTier = tierOf(user);
+    var allow = restrictedPagesOf(user);
+    var cur = here();
+    var out = [];
+    NAV.forEach(function (g) {
+      var items = g.items.filter(function (it) {
+        if (allow) return allow.map(slug).indexOf(slug(it.href)) >= 0;
+        return canSee(it.access, userTier);
+      }).map(function (it) {
+        return { label: L(it.label, lang), href: it.href, external: !!it.external,
+                 active: slug(it.href) === cur, iconHtml: svg(it.icon, 16).replace("<svg ", '<svg class="ui-ico" ') };
+      });
+      if (items.length) out.push({ label: L(g.label, lang), items: items });
+    });
+    return out;
+  };
+
+  // Sair sem perguntar de novo (o usuário já escolheu "Sair" no menu).
+  window.svLogout = function () {
+    if (typeof aceLogout === "function") return aceLogout();
+    try { if (typeof clearSession === "function") clearSession(); } catch (e) {}
+    location.reload();
+  };
+
+  // Breadcrumb "Grupo › Página" no header da página (onde o logo antigo ficava escondido).
+  function injectCrumb(lang) {
+    var cur = here();
+    var found = null;
+    NAV.forEach(function (g) { g.items.forEach(function (it) { if (!found && slug(it.href) === cur) found = { g: g, it: it }; }); });
+    if (!found) return;
+    var host = document.querySelector("#app-content > .header") || document.querySelector(".ac-topbar") || document.querySelector(".header");
+    if (!host) return;
+    var crumb = host.querySelector(".sv-crumb");
+    if (!crumb) {
+      crumb = document.createElement("nav");
+      crumb.className = "sv-crumb";
+      crumb.setAttribute("aria-label", "breadcrumb");
+      crumb.setAttribute("data-no-icon", "");
+      host.insertBefore(crumb, host.firstChild);
+    }
+    crumb.innerHTML = '<span class="sv-crumb-group">' + esc(L(found.g.label, lang)) + '</span>' +
+      '<span class="sv-crumb-sep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>' +
+      '<b>' + esc(L(found.it.label, lang)) + '</b>';
+  }
+
+  function isDark() { return document.documentElement.getAttribute("data-theme") === "dark"; }
+  function initialsOf(user) {
+    var n = String((user && (user.fullName || user.username)) || "?").trim();
+    return n.split(/\s+/).map(function (w) { return w[0] || ""; }).slice(0, 2).join("").toUpperCase();
+  }
+  function roleOf(user, lang) {
+    var tier = tierOf(user);
+    return L(tier >= RANK.super ? STR.roleSuper : (tier >= RANK.admin ? STR.roleAdmin : STR.roleUser), lang);
+  }
+
+  // Monta o rodapé (usuário + tema + recolher) na língua dada.
+  function renderFoot(foot, user, lang) {
+    var mac = /Mac|iPhone|iPad/.test(navigator.platform || "");
+    foot.innerHTML =
+      '<button type="button" class="sv-user" data-menu-anchor aria-haspopup="menu" data-tip="' + esc(user.fullName || user.username) + '" data-tip-side="right" data-tip-when="collapsed">' +
+        '<span class="sv-user-av">' + esc(initialsOf(user)) + '<i class="sv-user-dot"></i></span>' +
+        '<span class="sv-user-txt"><b>' + esc(user.fullName || user.username) + '</b><small>' + esc(roleOf(user, lang)) + '</small></span>' +
+        '<span class="sv-user-caret">' + svg("upDown", 15) + '</span>' +
+      '</button>' +
+      '<button type="button" class="sv-collapse-btn" id="sv-collapse" data-tip="' + esc(L(STR.collapse, lang)) + '" data-tip-side="right" aria-label="' + esc(L(STR.collapse, lang)) + '">' +
+        '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>' +
+      '</button>';
+    foot.querySelector(".sv-user").addEventListener("click", function (e) {
+      if (!window.UI || !window.UI.menu) return;
+      var l = curLang();
+      var dark = isDark();
+      var html =
+        '<div class="ui-menu-head"><span class="ui-avatar">' + esc(initialsOf(user)) + '</span>' +
+          '<div style="min-width:0"><div style="font-weight:600;font-size:13.5px">' + esc(user.fullName || user.username) + '</div>' +
+          '<div style="font-size:12px;color:var(--c-text-muted)">@' + esc(user.username) + ' · ' + esc(roleOf(user, l)) + '</div></div></div>' +
+        '<div class="ui-menu-sep"></div>' +
+        '<button type="button" class="ui-menu-item" data-act="cmd">' + svg("search", 16).replace("<svg ", '<svg class="ui-ico" ') + L(STR.cmd, l) +
+          '<span class="ui-menu-trail"><span class="ui-kbd">' + (mac ? "⌘" : "Ctrl") + '</span><span class="ui-kbd">K</span></span></button>' +
+        (typeof toggleTheme === "function"
+          ? '<button type="button" class="ui-menu-item" data-act="theme">' + svg(dark ? "sun" : "moon", 16).replace("<svg ", '<svg class="ui-ico" ') + L(dark ? STR.themeL : STR.theme, l) + '</button>'
+          : "") +
+        '<div class="ui-menu-sep"></div>' +
+        '<button type="button" class="ui-menu-item ui-menu-item--danger" data-act="logout">' + svg("logout", 16).replace("<svg ", '<svg class="ui-ico" ') + L(STR.logout, l) + '</button>';
+      var anchor = e.currentTarget;
+      var m = window.UI.menu.open(anchor, html, { side: document.body.classList.contains("sv-collapsed") && innerWidth > 880 ? "right" : "top" });
+      m.setAttribute("data-no-icon", "");
+      m.addEventListener("click", function (ev) {
+        var b = ev.target.closest(".ui-menu-item");
+        if (!b) return;
+        var act = b.getAttribute("data-act");
+        if (act === "cmd" && window.UI.cmd) setTimeout(window.UI.cmd.open, 80);
+        if (act === "theme" && typeof toggleTheme === "function") toggleTheme();
+        if (act === "logout") window.svLogout();
+      });
+    });
   }
 
   // Re-traduz a sidebar (chamado no clique de [data-lang] e na mutação de <html lang>).
   function applyLang(lang) {
     var nav = document.querySelector(".sv-sidebar .sv-nav");
     if (nav && CURRENT_USER) renderNav(nav, CURRENT_USER, lang);
+    var foot = document.querySelector(".sv-sidebar .sv-foot");
+    if (foot && CURRENT_USER && foot.querySelector(".sv-user")) { renderFoot(foot, CURRENT_USER, lang); wireControls(document.querySelector(".sv-sidebar")); }
+    var sl = document.querySelector(".sv-sidebar .sv-search-label");
+    if (sl) sl.textContent = L(STR.search, lang);
+    if (CURRENT_USER) injectCrumb(lang);
   }
   window.svShellSetLang = applyLang; // pra páginas que quiserem chamar explicitamente
 
   function build(user) {
+    var mac = /Mac|iPhone|iPad/.test(navigator.platform || "");
+    var lang = curLang();
     var html = '<div class="sv-brand">' +
       '<img class="sv-brand-logo" src="https://aceolution.com/img/logo2.png" alt="Aceolution" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'logo-failed\')">' +
       '<img class="sv-brand-globe" src="/aceolution-globe.png?v=2" alt="Aceolution" aria-hidden="true">' +
       '<div class="sv-brand-mark">SV</div>' +
       '<div class="sv-brand-region">Street View · LATAM</div></div>' +
+      // Busca → paleta de comandos (Ctrl/⌘+K) do ui.js
+      '<button type="button" class="sv-search" data-tip="' + esc(L(STR.search, lang)) + '" data-tip-side="right" data-tip-when="collapsed">' +
+        '<span class="sv-ico">' + svg("search", 16) + '</span><span class="sv-search-label">' + esc(L(STR.search, lang)) + '</span>' +
+        '<span class="sv-search-kbd"><kbd>' + (mac ? "⌘" : "Ctrl") + '</kbd><kbd>K</kbd></span>' +
+      '</button>' +
       '<nav class="sv-nav"></nav>' +
-      '<div class="sv-foot">' +
-        '<div class="sv-foot-status"><div class="sv-foot-dot"></div>' +
-          '<div><div class="sv-foot-l1">Apps Script · live</div><div class="sv-foot-l2">v5.21 · build 2026.06</div></div></div>' +
-        '<button type="button" class="sv-collapse-btn" id="sv-collapse" title="Recolher menu" aria-label="Recolher menu">' +
-          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6"/></svg>' +
-        '</button>' +
-      '</div>';
+      '<div class="sv-foot"></div>';
 
     var aside = document.createElement("aside");
     aside.className = "sv-sidebar";
+    aside.setAttribute("data-no-icon", "");
     aside.innerHTML = html;
     document.body.appendChild(aside);
     document.body.classList.add("sv-shell");
 
-    renderNav(aside.querySelector(".sv-nav"), user, curLang());
+    renderNav(aside.querySelector(".sv-nav"), user, lang);
+    renderFoot(aside.querySelector(".sv-foot"), user, lang);
+    aside.querySelector(".sv-search").addEventListener("click", function () {
+      if (window.UI && window.UI.cmd) window.UI.cmd.open();
+    });
+    injectCrumb(lang);
 
     // restaura estado recolhido (desktop), salvo entre páginas/sessões
     try { if (localStorage.getItem("AC_SIDEBAR_COLLAPSED") === "1") document.body.classList.add("sv-collapsed"); } catch (e) {}

@@ -11,9 +11,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <!-- Config centralizada de usuários (USERS, ADMIN_USERNAMES, sha256, validateLogin) -->
 <script src="/auth.js?v=20260518b"></script>
-<script src="/theme.js?v=20260519a"></script>
-<script src="/common.js?v=20260607"></script>
-<link rel="stylesheet" href="/theme.css?v=20260519a">
+<script src="/theme.js?v=20261015ui"></script>
+<script src="/common.js?v=20261015ui"></script>
+<link rel="stylesheet" href="/theme.css?v=20261015ui">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -1889,8 +1889,61 @@
   }
   .user-pill .logout-link:hover { color: #EF4444; }
 
+
+  /* ---- Redesign shadcn: diálogos neutros (sem cabeçalho em gradiente), botões sólidos ---- */
+  .admin-modal-header { background: var(--c-surface); color: var(--c-text); padding: 18px 22px; align-items: center; }
+  .admin-modal-header h2 { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+  .admin-modal-sub { color: var(--c-text-muted); opacity: 1; font-size: 13px; }
+  .admin-modal-close, .ts-modal-close {
+    width: 32px; height: 32px; padding: 0; border-radius: var(--radius-md);
+    display: grid; place-items: center; font-size: 18px; line-height: 1;
+    color: var(--c-text-muted); opacity: 1; transition: background .15s, color .15s;
+  }
+  .admin-modal-close:hover, .ts-modal-close:hover { background: var(--c-bg); color: var(--c-text); }
+  .admin-sidebar { background: var(--c-bg); }
+  .admin-sidebar input[type="text"] {
+    height: 34px; padding: 0 11px; border-radius: var(--radius-md);
+    border-color: var(--c-border-strong); background: var(--c-surface); box-shadow: var(--shadow-xs);
+  }
+  .admin-sidebar input[type="text"]:focus { outline: none; border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--ring); }
+  .admin-driver-item { border-radius: var(--radius-md); transition: background .12s; }
+  .admin-driver-item:hover { background: var(--c-surface); }
+  .admin-driver-item.active { background: var(--c-surface); color: var(--c-text); box-shadow: var(--shadow-xs), 0 0 0 1px var(--c-border); }
+  .admin-driver-item.active .admin-driver-name { color: var(--c-primary-dark); font-weight: 600; }
+  .admin-driver-item.active .admin-driver-country { color: var(--c-text-muted); }
+  .admin-form-driver-name { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--c-text); }
+  .admin-form-section h3 { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; text-transform: none; color: var(--c-text); }
+  .admin-form-section label { font-size: 13px; }
+  .admin-form-section input[type="text"], .admin-form-section input[type="email"], .admin-form-section textarea {
+    border-color: var(--c-border-strong); border-radius: var(--radius-md); font-size: 14px; box-shadow: var(--shadow-xs);
+  }
+  .admin-form-section input[type="text"], .admin-form-section input[type="email"] { height: 36px; padding: 0 12px; }
+  .admin-form-section input:focus, .admin-form-section textarea:focus { border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--ring); }
+  .admin-help { font-style: normal; font-size: 12.5px; }
+  .admin-base-btn { border-radius: var(--radius-lg); }
+  .admin-base-btn.active { box-shadow: 0 0 0 3px var(--ring); }
+  .admin-save-btn, .ts-modal-actions button.primary, .month-picker-confirm, .panel-profile-btn {
+    background: var(--c-primary); box-shadow: var(--shadow-xs); transition: background .15s;
+  }
+  .admin-save-btn:hover, .ts-modal-actions button.primary:hover, .month-picker-confirm:hover, .panel-profile-btn:hover { background: var(--c-primary-dark); }
+  .ts-modal-header h2 { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+  .ts-form-row input[type="date"] { height: 36px; border-radius: var(--radius-md); border-color: var(--c-border-strong); }
+  .ts-quick-ranges button { border-radius: var(--radius-md); font-weight: 500; }
+
+  /* Ícones dos itens do menu Exportar que não têm emoji na string i18n (as strings NÃO podem
+     mudar: o código compara t('exportTimesheet') e usa t('exportSummary') no PDF). Máscara SVG lucide. */
+  .export-menu > button:nth-of-type(1) .export-title::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M6%2018H4a2%202%200%200%201-2-2v-5a2%202%200%200%201%202-2h16a2%202%200%200%201%202%202v5a2%202%200%200%201-2%202h-2'%2F%3E%3Cpath%20d%3D'M6%209V3a1%201%200%200%201%201-1h10a1%201%200%200%201%201%201v6'%2F%3E%3Crect%20x%3D'6'%20y%3D'14'%20width%3D'12'%20height%3D'8'%20rx%3D'1'%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M6%2018H4a2%202%200%200%201-2-2v-5a2%202%200%200%201%202-2h16a2%202%200%200%201%202%202v5a2%202%200%200%201-2%202h-2'%2F%3E%3Cpath%20d%3D'M6%209V3a1%201%200%200%201%201-1h10a1%201%200%200%201%201%201v6'%2F%3E%3Crect%20x%3D'6'%20y%3D'14'%20width%3D'12'%20height%3D'8'%20rx%3D'1'%2F%3E%3C%2Fsvg%3E"); }
+  .export-menu > button:nth-of-type(2) .export-title::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M15%202H6a2%202%200%200%200-2%202v16a2%202%200%200%200%202%202h12a2%202%200%200%200%202-2V7Z'%2F%3E%3Cpath%20d%3D'M14%202v4a2%202%200%200%200%202%202h4M10%209H8M16%2013H8M16%2017H8'%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M15%202H6a2%202%200%200%200-2%202v16a2%202%200%200%200%202%202h12a2%202%200%200%200%202-2V7Z'%2F%3E%3Cpath%20d%3D'M14%202v4a2%202%200%200%200%202%202h4M10%209H8M16%2013H8M16%2017H8'%2F%3E%3C%2Fsvg%3E"); }
+  .export-menu > button:nth-of-type(3) .export-title::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Crect%20width%3D'18'%20height%3D'18'%20x%3D'3'%20y%3D'3'%20rx%3D'2'%2F%3E%3Cpath%20d%3D'M3%209h18M3%2015h18M9%209v12M15%209v12'%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Crect%20width%3D'18'%20height%3D'18'%20x%3D'3'%20y%3D'3'%20rx%3D'2'%2F%3E%3Cpath%20d%3D'M3%209h18M3%2015h18M9%209v12M15%209v12'%2F%3E%3C%2Fsvg%3E"); }
+  .export-menu > button:nth-of-type(5) .export-title::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Crect%20width%3D'18'%20height%3D'18'%20x%3D'3'%20y%3D'4'%20rx%3D'2'%2F%3E%3Cpath%20d%3D'M16%202v4M8%202v4M3%2010h18'%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Crect%20width%3D'18'%20height%3D'18'%20x%3D'3'%20y%3D'4'%20rx%3D'2'%2F%3E%3Cpath%20d%3D'M16%202v4M8%202v4M3%2010h18'%2F%3E%3C%2Fsvg%3E"); }
+  .export-menu > button:nth-of-type(-n+3) .export-title::before,
+  .export-menu > button:nth-of-type(5) .export-title::before {
+    content: ''; width: 1.05em; height: 1.05em; margin-right: .4em; flex-shrink: 0;
+    background: var(--c-text-muted); -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-size: contain; mask-size: contain;
+  }
 </style>
-<link rel="stylesheet" href="/sv-skin.css?v=6">
+<link rel="stylesheet" href="/sv-skin.css?v=20261015ui">
 </head>
 <body>
 
@@ -9656,7 +9709,7 @@ setLanguage(currentLang);
   </div>
 </div>
 
-<script src="/sv-shell.js"></script>
+<script src="/sv-shell.js?v=20261015ui"></script>
 <script src="/sv-enhance.js"></script>
 </body>
 </html>

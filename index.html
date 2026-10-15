@@ -16,119 +16,179 @@
 <link rel="icon" type="image/png" href="aceolution-globe.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="theme.css">
+<!-- theme.css traz os tokens e a fonte Geist (fonte única do portal) -->
+<link rel="stylesheet" href="theme.css?v=20261015ui">
 <style>
 /* ============================================================
  * Página inicial de latamace.com
  * Porta de entrada pública: manda cada público pro seu lugar.
  * Light only (não carrega theme.js) — mesma regra das páginas
- * de motorista.
+ * de motorista. Visual de landing do shadcn: fundo claro com
+ * grade sutil + brilho da marca, cards com borda e spotlight
+ * que segue o mouse (Rare UI). Fonte Geist vem do theme.css.
  * ============================================================ */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: linear-gradient(155deg, #12253F 0%, var(--c-primary-dark) 48%, var(--c-primary) 100%);
-  color: #fff;
-  -webkit-font-smoothing: antialiased;
+  background: var(--c-surface);
+  color: var(--c-text);
   min-height: 100vh;
   display: flex; flex-direction: column;
-  padding: 48px 24px 32px;
+  padding: 56px 24px 32px;
+  position: relative; overflow-x: hidden;
 }
 
-.hm-head { text-align: center; max-width: 640px; margin: auto auto 44px; }
-.hm-head img { height: 38px; margin-bottom: 26px; }
+/* Fundo: grade fina que some nas bordas + brilho radial da marca no topo */
+.hm-bg {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(900px 480px at 50% -8%, rgba(74,159,224,0.16), transparent 65%),
+    radial-gradient(600px 360px at 85% 0%, rgba(44,82,130,0.08), transparent 60%),
+    var(--c-surface);
+}
+.hm-bg::before {
+  content: ""; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(15,23,42,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15,23,42,0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 30%, #000 20%, transparent 75%);
+          mask-image: radial-gradient(ellipse 65% 55% at 50% 30%, #000 20%, transparent 75%);
+}
+
+.hm-head {
+  text-align: center; max-width: 660px; margin: auto auto 44px;
+  animation: hm-rise 0.6s var(--ease-out) backwards;
+}
+.hm-head img { display: block; height: 34px; width: auto; margin: 0 auto 30px; }
 .hm-kicker {
-  font-size: 11px; font-weight: 700; letter-spacing: 2.4px;
-  text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 14px;
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 28px; padding: 0 12px; border-radius: 999px;
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-xs);
+  font-size: 12.5px; font-weight: 500; color: var(--c-text-muted);
+  margin-bottom: 20px;
+}
+.hm-kicker::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--c-success); box-shadow: 0 0 0 3px rgba(22,163,74,0.16);
 }
 .hm-head h1 {
-  font-size: 34px; font-weight: 800; letter-spacing: -0.9px;
-  line-height: 1.15; margin-bottom: 12px;
+  font-size: 40px; font-weight: 600; letter-spacing: -0.03em;
+  line-height: 1.1; margin-bottom: 14px; color: var(--c-text);
 }
-.hm-head p { font-size: 15px; color: rgba(255,255,255,0.62); line-height: 1.6; }
+.hm-head p {
+  font-size: 15.5px; color: var(--c-text-muted); line-height: 1.6;
+  max-width: 520px; margin: 0 auto;
+}
 
 .hm-grid {
-  display: flex; flex-wrap: wrap; justify-content: center; gap: 18px;
-  width: 100%; max-width: 940px; margin: 0 auto auto;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 16px;
+  width: 100%; max-width: 780px; margin: 0 auto auto;
 }
 
 .hm-card {
-  flex: 0 1 288px;
-  position: relative; overflow: hidden;
-  display: block; text-decoration: none; color: #fff;
-  background: rgba(255,255,255,0.055);
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 18px;
-  padding: 26px 24px 24px;
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-              border-color 0.3s ease, background 0.3s ease;
+  flex: 1 1 320px; max-width: 380px;
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; flex-direction: column;
+  text-decoration: none; color: var(--c-text);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  padding: 22px 22px 20px;
+  box-shadow: var(--shadow-xs);
+  transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out),
+              border-color 0.2s ease;
+  animation: hm-rise 0.6s var(--ease-out) backwards;
 }
+.hm-card:nth-child(1) { animation-delay: 0.08s; }
+.hm-card:nth-child(2) { animation-delay: 0.14s; }
+.hm-card:nth-child(3) { animation-delay: 0.20s; }
 .hm-card:hover, .hm-card:focus-visible {
-  transform: translateY(-4px);
-  background: rgba(255,255,255,0.10);
-  border-color: rgba(255,255,255,0.30);
-  box-shadow: 0 16px 34px rgba(0,0,0,0.30);
+  transform: translateY(-2px);
+  border-color: var(--c-border-strong);
+  box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 18px 40px -16px rgba(15,23,42,0.22);
   outline: none;
 }
-.hm-glow {
-  position: absolute; left: 50%; top: 30%;
-  width: 200px; height: 120px; transform: translate(-50%, -50%);
-  filter: blur(34px); opacity: 0.28; pointer-events: none;
-  transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+.hm-card:focus-visible {
+  border-radius: 14px;
+  box-shadow: 0 0 0 3px var(--ring), 0 18px 40px -16px rgba(15,23,42,0.22);
 }
-.hm-card:hover .hm-glow { opacity: 0.5; transform: translate(-50%, -50%) scale(1.15); }
-.glow-driver { background: radial-gradient(circle, #4A9FE0, transparent 70%); }
-.glow-client { background: radial-gradient(circle, #16A34A, transparent 70%); }
-.glow-team   { background: radial-gradient(circle, #9F7AEA, transparent 70%); }
+.hm-card:active { transform: translateY(0); transition-duration: 0.1s; }
+
+/* Brilho: cor de cada card, nasce onde está o mouse (--mx/--my via JS) */
+.hm-glow {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  opacity: 0; transition: opacity 0.35s ease;
+  background: radial-gradient(320px circle at var(--mx, 50%) var(--my, 0%), var(--glow), transparent 65%);
+}
+.hm-card:hover .hm-glow, .hm-card:focus-visible .hm-glow { opacity: 1; }
+.glow-driver { --glow: rgba(74,159,224,0.14); }
+.glow-client { --glow: rgba(22,163,74,0.11); }
+.glow-team   { --glow: rgba(159,122,234,0.13); }
 
 .hm-icon {
-  position: relative;
-  width: 42px; height: 42px; border-radius: 12px; margin-bottom: 16px;
-  background: rgba(255,255,255,0.14);
+  width: 40px; height: 40px; border-radius: 10px; margin-bottom: 18px;
+  background: var(--c-bg); border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-xs);
   display: flex; align-items: center; justify-content: center;
+  color: var(--c-primary);
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
-.hm-icon svg { width: 21px; height: 21px; stroke: #fff; fill: none; stroke-width: 1.9; }
+.hm-icon svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.9; }
+.hm-card:hover .hm-icon { background: var(--c-surface); border-color: var(--c-border-strong); }
 
-.hm-title { position: relative; font-size: 17px; font-weight: 700; letter-spacing: -0.2px; }
+.hm-title { font-size: 16px; font-weight: 600; letter-spacing: -0.015em; }
 .hm-sub {
-  position: relative; font-size: 12.5px; color: rgba(255,255,255,0.58);
-  margin-top: 6px; line-height: 1.5;
+  font-size: 14px; color: var(--c-text-muted);
+  margin-top: 6px; line-height: 1.55;
 }
 .hm-alt {
-  position: relative; display: block; font-size: 11.5px;
-  color: rgba(255,255,255,0.42); margin-top: 8px;
+  display: block; font-size: 12px;
+  color: var(--c-text-dim); margin-top: 8px;
 }
 .hm-go {
-  position: relative; display: inline-flex; align-items: center; gap: 6px;
-  margin-top: 16px; font-size: 12.5px; font-weight: 700;
-  color: rgba(255,255,255,0.85);
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: auto; padding-top: 18px;
+  font-size: 13.5px; font-weight: 500; color: var(--c-text);
 }
-.hm-card:hover .hm-go { color: #fff; }
+.hm-go svg {
+  width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+  color: var(--c-text-muted);
+  transition: transform 0.3s var(--ease-out), color 0.2s ease;
+}
+/* setinha que desliza no hover */
+.hm-card:hover .hm-go svg, .hm-card:focus-visible .hm-go svg { transform: translateX(4px); color: var(--c-text); }
 
 .hm-foot {
-  margin-top: 44px; text-align: center;
-  font-size: 11.5px; color: rgba(255,255,255,0.35); line-height: 1.7;
+  margin-top: 48px; text-align: center;
+  font-size: 12px; color: var(--c-text-dim); line-height: 1.7;
 }
+.hm-foot strong { color: var(--c-text-muted); font-weight: 600; }
+
+@keyframes hm-rise { from { opacity: 0; transform: translateY(10px); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .hm-card, .hm-glow { transition: none !important; }
+  .hm-card, .hm-glow, .hm-head, .hm-go svg { transition: none !important; animation: none !important; }
   .hm-card:hover { transform: none; }
 }
 @media (max-width: 620px) {
-  body { padding: 32px 18px 24px; }
-  .hm-head h1 { font-size: 26px; }
+  body { padding: 36px 16px 24px; }
   .hm-head { margin-bottom: 30px; }
-  .hm-card { flex: 0 1 100%; padding: 22px 20px; }
+  .hm-head img { height: 30px; margin-bottom: 24px; }
+  .hm-head h1 { font-size: 30px; }
+  .hm-head p { font-size: 14.5px; }
+  .hm-card { flex: 1 1 100%; max-width: none; padding: 20px; }
 }
 </style>
 </head>
 <body>
 
+<div class="hm-bg" aria-hidden="true"></div>
+
 <header class="hm-head">
-  <img src="aceolution-white.png" alt="Aceolution" onerror="this.style.display='none'">
+  <img src="aceolution-logo.png" alt="Aceolution" onerror="this.style.display='none'">
   <div class="hm-kicker">Street View LATAM</div>
   <h1>Operations Hub</h1>
   <p>Daily mapping operations across Argentina, Brazil, Chile, Colombia, Mexico and Peru.</p>
@@ -147,7 +207,7 @@ body {
     </span>
     <div class="hm-title">SV LATAM</div>
     <div class="hm-sub">Street View operations: dashboard, fleet, payroll and planning.</div>
-    <span class="hm-go">Open →</span>
+    <span class="hm-go">Open <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
   </a>
 
   <a class="hm-card" href="requests/">
@@ -160,7 +220,7 @@ body {
     </span>
     <div class="hm-title">REQUESTS LATAM</div>
     <div class="hm-sub">Submit and track requests to the LATAM team.</div>
-    <span class="hm-go">Open →</span>
+    <span class="hm-go">Open <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
   </a>
 
 </main>
@@ -172,6 +232,15 @@ body {
 
 <script>
   document.getElementById('yr').textContent = new Date().getFullYear();
+
+  /* Spotlight: o brilho do card nasce onde está o mouse (Rare UI). Só visual. */
+  document.querySelectorAll('.hm-card').forEach((card) => {
+    card.addEventListener('pointermove', (e) => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
 </script>
 </body>
 </html>

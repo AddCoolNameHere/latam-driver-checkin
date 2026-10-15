@@ -6,276 +6,384 @@
 <title>Divergências AR — Admin · Aceolution LATAM</title>
 <link rel="icon" type="image/png" href="/aceolution-globe.png">
 <script src="/auth.js?v=20260518b"></script>
-<script src="/theme.js?v=20260518c"></script>
-<script src="/common.js?v=20260519a"></script>
-<link rel="stylesheet" href="/theme.css?v=20260519a">
+<script src="/theme.js?v=20261015ui"></script>
+<script src="/common.js?v=20261015ui"></script>
+<link rel="stylesheet" href="/theme.css?v=20261015ui">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    /* Badge (shadcn): texto/fundo/borda por estado */
+    --b-err-fg: #B91C1C; --b-err-bg: rgba(185,28,28,.07); --b-err-bd: rgba(185,28,28,.22);
+  }
+  [data-theme="dark"] {
+    --b-err-fg: #F87171; --b-err-bg: rgba(239,68,68,.12); --b-err-bd: rgba(239,68,68,.3);
+  }
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--c-bg);
+    font-family: var(--font-sans);
+    background: var(--sv-bg, var(--c-bg));
     color: var(--c-text);
     line-height: 1.45;
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Ocupa a largura útil (alinhado com o breadcrumb da barra do topo) */
   main {
-    max-width: 1100px;
-    margin: 18px auto;
-    padding: 0 20px;
+    max-width: 1400px;
+    margin: 0;
+    padding: 24px 28px 56px;
   }
 
   /* Page title */
   .page-title {
     font-size: 24px;
-    font-weight: 700;
-    color: var(--c-primary-dark);
+    font-weight: 600;
+    color: var(--c-text);
     margin-bottom: 4px;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
   }
   .page-sub {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--c-text-muted);
-    margin-bottom: 18px;
+    margin-bottom: 20px;
   }
 
-  /* Stats row */
+  /* Stats row (SectionCards do shadcn) */
   .stats-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 18px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
   }
   .stat-card {
-    background: var(--c-surface);
-    border-radius: 10px;
-    padding: 14px 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    background: linear-gradient(to top, color-mix(in srgb, var(--c-primary) 4%, var(--c-surface)), var(--c-surface));
+    border: 1px solid var(--sv-line, var(--c-border));
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow-xs);
+    min-width: 0;
+    transition: border-color .15s;
   }
+  .stat-card:hover { border-color: var(--c-border-strong); }
+  .stat-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .stat-head svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--c-text-dim); }
   .stat-label {
-    font-size: 10px;
+    font-size: 12.5px;
     color: var(--c-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-    font-weight: 600;
+    font-weight: 500;
   }
   .stat-value {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--c-primary-dark);
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    color: var(--c-text);
     font-variant-numeric: tabular-nums;
   }
-  .stat-sub { font-size: 11px; color: var(--c-text-muted); margin-top: 2px; }
-
-  /* Filters */
-  .filters {
-    background: var(--c-surface);
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    align-items: end;
+  /* Total reportado pode ter várias moedas ("ARS … · USD …") → texto menor, quebra */
+  .stat-value.stat-value--text {
+    font-size: 17px;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+    padding-top: 6px;
+    overflow-wrap: anywhere;
   }
-  .filter-group { display: flex; flex-direction: column; gap: 4px; min-width: 160px; }
+  .stat-sub { font-size: 12px; color: var(--c-text-muted); margin-top: 4px; }
+
+  /* Filters (o sv-skin também estiliza .filters — aqui só ajusta respiro/gap) */
+  main .filters {
+    background: var(--c-surface);
+    border: 1px solid var(--sv-line, var(--c-border));
+    border-radius: 14px;
+    padding: 14px 16px !important;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    gap: 12px !important;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 6px; min-width: 170px; }
   .filter-group label {
-    font-size: 10px;
-    color: var(--c-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 600;
+    font-size: 13px;
+    color: var(--c-text);
+    font-weight: 500;
   }
   .filter-group select, .filter-group input {
-    padding: 8px 10px;
+    height: 36px;
+    padding: 0 12px;
     border: 1px solid var(--c-border-strong);
-    border-radius: 6px;
-    font-size: 13px;
+    border-radius: 8px;
+    font-size: 14px;
     font-family: inherit;
     background: var(--c-surface);
+    color: var(--c-text);
+    box-shadow: var(--shadow-xs);
+    transition: border-color .15s, box-shadow .15s;
   }
+  .filter-group select:focus, .filter-group input:focus {
+    outline: none;
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+  /* Botão "outline" do shadcn */
   .filter-clear {
-    background: none;
-    border: 1px solid var(--c-border-strong);
-    color: var(--c-text-muted);
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
     cursor: pointer;
     font-family: inherit;
+    box-shadow: var(--shadow-xs);
+    transition: background .15s, border-color .15s, transform .1s;
   }
+  .filter-clear svg { width: 15px; height: 15px; color: var(--c-text-muted); }
+  .filter-clear:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
+  .filter-clear:active { transform: translateY(1px); }
 
-  /* Driver sections */
+  /* Driver sections (cartão) */
   .driver-section {
     background: var(--c-surface);
-    border-radius: 12px;
-    margin-bottom: 14px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    border: 1px solid var(--sv-line, var(--c-border));
+    border-radius: 14px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-xs);
     overflow: hidden;
     page-break-inside: avoid;
   }
   .driver-header {
-    padding: 14px 18px;
-    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-accent) 100%);
-    color: white;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--sv-line, var(--c-border));
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .driver-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .driver-av {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: grid; place-items: center;
+    background: var(--c-bg-tint); color: var(--c-primary-dark);
+    border: 1px solid color-mix(in srgb, var(--c-accent) 22%, transparent);
+    font-size: 12.5px; font-weight: 600; letter-spacing: .02em;
   }
   .driver-name {
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: -0.2px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--c-text);
   }
-  .driver-email { font-size: 11px; opacity: 0.85; margin-top: 1px; }
+  .driver-email { font-size: 12.5px; color: var(--c-text-muted); margin-top: 1px; }
   .driver-totals {
     text-align: right;
-    font-size: 12px;
+    font-size: 12.5px;
+    color: var(--c-text-muted);
   }
-  .driver-totals strong { font-size: 15px; font-weight: 700; }
-  .driver-totals .total-line { line-height: 1.4; }
+  .driver-meta { font-size: 12px; color: var(--c-text-muted); margin-bottom: 2px; }
+  .driver-totals strong { font-size: 16px; font-weight: 600; color: var(--c-text); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .driver-totals .total-line { line-height: 1.45; }
 
-  /* Submission card */
+  /* Submission (envio) */
   .submission {
-    border-top: 1px solid var(--c-border);
-    padding: 14px 18px;
+    padding: 14px 20px 16px;
   }
-  .submission:first-of-type { border-top: none; }
+  .submission + .submission { border-top: 1px solid var(--sv-line-2, var(--c-border)); }
   .submission-head {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 8px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
   }
   .submission-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--c-primary-dark);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--c-text);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
   }
   .submission-meta {
-    font-size: 11px;
+    font-size: 12.5px;
     color: var(--c-text-muted);
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .submission-id {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
     color: var(--c-text-muted);
     background: var(--c-bg);
-    padding: 1px 6px;
-    border-radius: 4px;
-    margin-left: 6px;
+    border: 1px solid var(--c-border);
+    padding: 0 6px;
+    border-radius: 6px;
   }
 
-  /* Divergence cards */
-  .div-list { display: flex; flex-direction: column; gap: 8px; }
+  /* Divergence cards — grade que usa a largura */
+  .div-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
   .div-card {
-    background: var(--c-bg);
-    border-left: 3px solid var(--c-accent);
-    border-radius: 6px;
-    padding: 10px 14px;
+    background: var(--c-surface);
+    border: 1px solid var(--sv-line, var(--c-border));
+    border-radius: 10px;
+    padding: 12px 14px;
+    transition: border-color .15s, box-shadow .15s;
   }
+  .div-card:hover { border-color: var(--c-border-strong); box-shadow: var(--shadow-xs); }
   .div-row {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    align-items: baseline;
-    margin-bottom: 4px;
+    align-items: flex-start;
+    margin-bottom: 6px;
   }
   .div-quinzena {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 600;
-    color: var(--c-primary-dark);
+    color: var(--c-text);
   }
   .div-quinzena-range {
-    font-size: 10px;
+    display: block;
+    font-size: 12px;
     color: var(--c-text-muted);
     font-weight: 400;
-    margin-left: 6px;
-  }
-  .div-amount {
-    font-size: 17px;
-    font-weight: 700;
+    margin-top: 1px;
     font-variant-numeric: tabular-nums;
-    color: var(--c-danger);
   }
+  .div-money { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .div-amount {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--c-text);
+  }
+  /* moeda = Badge neutro */
   .div-currency {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 6px;
+    border: 1px solid var(--c-border);
+    background: var(--c-bg);
     font-size: 11px;
     color: var(--c-text-muted);
-    font-weight: 600;
-    margin-right: 4px;
+    font-weight: 500;
+    letter-spacing: .02em;
   }
+  /* Comentário do motorista como bolha de conversa (Rare UI · thread) */
   .div-comment {
-    font-size: 12px;
+    font-size: 13px;
+    line-height: 1.5;
     color: var(--c-text);
-    margin: 4px 0 6px;
-    padding: 6px 10px;
-    background: var(--c-surface);
-    border-radius: 4px;
-    font-style: italic;
+    margin: 6px 0 8px;
+    padding: 8px 12px;
+    background: var(--c-bg);
+    border: 1px solid var(--sv-line-2, var(--c-border));
+    border-radius: 12px 12px 12px 4px;
+    overflow-wrap: anywhere;
   }
-  .div-comment::before { content: '“'; color: var(--c-text-muted); }
-  .div-comment::after { content: '”'; color: var(--c-text-muted); }
+  .div-nofiles { font-size: 12.5px; color: var(--c-text-dim); margin-top: 6px; }
 
-  /* Files */
+  /* Files — botões "outline" pequenos */
   .div-files {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: 6px;
+    margin-top: 8px;
   }
   .file-link {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    height: 28px;
     background: var(--c-surface);
     border: 1px solid var(--c-border);
-    border-radius: 6px;
-    padding: 3px 10px;
-    font-size: 11px;
-    color: var(--c-primary);
+    border-radius: 8px;
+    padding: 0 10px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--c-text);
     text-decoration: none;
     font-family: inherit;
+    box-shadow: var(--shadow-xs);
+    transition: background .15s, border-color .15s, color .15s;
   }
-  .file-link:hover { background: var(--c-bg-tint); }
+  .file-link:hover { background: var(--c-bg); border-color: var(--c-border-strong); color: var(--c-primary); }
   .file-link::before {
     content: '';
-    width: 12px; height: 12px; flex-shrink: 0;
-    background-color: currentColor;
+    width: 13px; height: 13px; flex-shrink: 0;
+    background-color: var(--c-text-muted);
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48'/%3E%3C/svg%3E") center / contain no-repeat;
             mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48'/%3E%3C/svg%3E") center / contain no-repeat;
   }
+  .file-link:hover::before { background-color: currentColor; }
 
   /* Empty state */
   .empty {
     background: var(--c-surface);
-    padding: 48px 20px;
+    border: 1px solid var(--sv-line, var(--c-border));
+    padding: 56px 20px;
     text-align: center;
-    color: var(--c-text-muted);
-    border-radius: 10px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    color: var(--c-text);
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 14px;
+    box-shadow: var(--shadow-xs);
   }
-  .empty-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+  .empty-icon {
+    width: 40px; height: 40px;
+    margin: 0 auto 12px;
+    border-radius: 10px;
+    background: var(--c-bg);
+    border: 1px solid var(--sv-line, var(--c-border));
+    color: var(--c-text-muted);
+    display: grid; place-items: center;
+  }
+  .empty-icon svg { width: 20px; height: 20px; display: block; }
+  .empty.error { color: var(--c-danger); }
+  .empty.error .empty-icon { background: var(--b-err-bg); border-color: var(--b-err-bd); color: var(--c-danger); }
 
   /* Loading */
   .loading {
     text-align: center;
-    padding: 60px 20px;
+    padding: 64px 20px;
     color: var(--c-text-muted);
-    font-size: 13px;
+    font-size: 13.5px;
+    font-weight: 500;
   }
   .spinner {
     display: inline-block;
     width: 26px; height: 26px;
-    border: 3px solid var(--c-border);
-    border-top-color: var(--c-primary);
+    border: 2.5px solid color-mix(in srgb, var(--c-text) 12%, transparent);
+    border-top-color: var(--c-text);
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-bottom: 10px;
+    animation: spin 0.7s linear infinite;
+    margin-bottom: 12px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 880px) { main { padding: 16px 14px 40px; } }
+  @media (max-width: 560px) {
+    .stats-row { gap: 10px; }
+    .stat-value { font-size: 22px; }
+    .filter-group { flex: 1 1 100%; }
+    .div-list { grid-template-columns: 1fr; }
+    .driver-totals { text-align: left; }
+  }
 
   /* PRINT — layout PDF debulhado */
   @media print {
@@ -283,21 +391,24 @@
     .ac-login-screen, .ac-topbar { display: none !important; }
     main { padding: 0 14mm; max-width: 100%; margin: 8mm 0; }
     .filters { display: none !important; }
+    .stat-card { background: var(--c-surface); box-shadow: none; }
     .driver-section {
       page-break-inside: avoid;
       box-shadow: none;
-      border: 1px solid var(--c-border);
+      border: 1px solid var(--c-border-strong);
       margin-bottom: 8mm;
     }
     .driver-header {
-      background: var(--c-primary) !important;
+      background: var(--c-bg) !important;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
     .submission { page-break-inside: avoid; }
-    .div-card { page-break-inside: avoid; }
+    .div-list { display: flex; flex-direction: column; }
+    .div-card { page-break-inside: avoid; box-shadow: none; }
     .file-link {
       color: var(--c-primary) !important;
+      box-shadow: none;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
@@ -324,10 +435,22 @@
   <p class="page-sub">Reportadas pelos motoristas via formulário · agrupadas por driver e envio</p>
 
   <div class="stats-row" id="stats-row">
-    <div class="stat-card"><div class="stat-label">Motoristas</div><div class="stat-value" id="stat-drivers">—</div></div>
-    <div class="stat-card"><div class="stat-label">Envios</div><div class="stat-value" id="stat-sessions">—</div></div>
-    <div class="stat-card"><div class="stat-label">Divergências</div><div class="stat-value" id="stat-divergences">—</div></div>
-    <div class="stat-card"><div class="stat-label">Total reportado</div><div class="stat-value" id="stat-total" style="font-size:15px;">—</div></div>
+    <div class="stat-card">
+      <div class="stat-head"><div class="stat-label">Motoristas</div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div class="stat-value" id="stat-drivers">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-head"><div class="stat-label">Envios</div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
+      <div class="stat-value" id="stat-sessions">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-head"><div class="stat-label">Divergências</div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></svg></div>
+      <div class="stat-value" id="stat-divergences">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-head"><div class="stat-label">Total reportado</div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></div>
+      <div class="stat-value stat-value--text" id="stat-total">—</div>
+    </div>
   </div>
 
   <div class="filters">
@@ -351,7 +474,7 @@
       <label>Até (data)</label>
       <input type="date" id="filter-to">
     </div>
-    <button class="filter-clear" onclick="clearFilters()">Limpar</button>
+    <button class="filter-clear" onclick="clearFilters()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>Limpar</button>
   </div>
 
   <div id="content">
@@ -416,7 +539,7 @@ async function loadSubmissions() {
   } catch (err) {
     console.error('[Divergencias Admin]', err);
     document.getElementById('content').innerHTML = `
-      <div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <div class="empty error"><div class="empty-icon"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
       <div>Erro ao carregar: ${escapeHtml(err.message)}</div></div>`;
   }
 }
@@ -536,12 +659,15 @@ function renderDriverSection(name, info) {
   return `
     <section class="driver-section">
       <div class="driver-header">
-        <div>
-          <div class="driver-name">${escapeHtml(name)}</div>
-          <div class="driver-email">${escapeHtml(info.email || '—')}</div>
+        <div class="driver-id">
+          <div class="driver-av" aria-hidden="true">${escapeHtml(initialsOf(name))}</div>
+          <div style="min-width:0;">
+            <div class="driver-name">${escapeHtml(name)}</div>
+            <div class="driver-email">${escapeHtml(info.email || '—')}</div>
+          </div>
         </div>
         <div class="driver-totals">
-          <div style="font-size:10px;opacity:0.75;text-transform:uppercase;letter-spacing:0.5px;">
+          <div class="driver-meta">
             ${sessionsArr.length} envio${sessionsArr.length > 1 ? 's' : ''} · ${totalDivs} divergência${totalDivs > 1 ? 's' : ''}
           </div>
           ${totalsHtml}
@@ -589,13 +715,13 @@ function renderDivergence(d) {
           <span class="div-quinzena">${escapeHtml(d.quinzenaLabel)}</span>
           <span class="div-quinzena-range">${escapeHtml(rangeStr)}</span>
         </div>
-        <div>
+        <div class="div-money">
           <span class="div-currency">${escapeHtml(d.currency)}</span>
           <span class="div-amount">${fmtMoney(d.amount)}</span>
         </div>
       </div>
       ${d.comment ? `<div class="div-comment">${escapeHtml(d.comment)}</div>` : ''}
-      ${filesHtml ? `<div class="div-files">${filesHtml}</div>` : '<div style="font-size:11px;color:var(--c-text-muted);margin-top:4px;font-style:italic;">Sem comprovantes anexados</div>'}
+      ${filesHtml ? `<div class="div-files">${filesHtml}</div>` : '<div class="div-nofiles">Sem comprovantes anexados</div>'}
     </div>
   `;
 }
@@ -613,9 +739,15 @@ function escapeHtml(s) {
 function escapeAttr(s) {
   return escapeHtml(s);
 }
+// Iniciais pro avatar do motorista (só apresentação)
+function initialsOf(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  return ((parts[0][0] || '') + (parts.length > 1 ? (parts[parts.length - 1][0] || '') : '')).toUpperCase();
+}
 
 </script>
 
-<script src="/sv-shell.js"></script>
+<script src="/sv-shell.js?v=20261015ui"></script>
 </body>
 </html>
