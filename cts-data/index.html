@@ -8,20 +8,13 @@
 <link rel="icon" type="image/png" href="../aceolution-globe.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- mora em /cts-data/ — o theme.css é o da raiz do portal (tokens + fonte Geist).
-     ui.css/ui.js: kit visual (odômetro nos KPIs, ícones). Caminho relativo (../)
-     igual ao theme.css: resolve pra /ui.css no latamace.com e também no preview. -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- mora em /cts-data/ — o theme.css é o da raiz do portal (tokens compartilhados) -->
 <link rel="stylesheet" href="../theme.css?v=20261015ui">
-<link rel="stylesheet" href="../ui.css?v=20261015ui">
-<script src="../ui.js?v=20261015ui" defer></script>
 <style>
 /* ============================================================
  * Client Metrics — portal público (cliente). Light only,
- * sem sidebar, sem login. Tokens vêm do theme.css (Geist,
- * cores, sombras); ui.css/ui.js dão o odômetro dos KPIs e
- * os ícones. Visual: shadcn/ui (cartões com borda, Badge,
- * Tabs, Select) + micro-interações do Rare UI (spotlight no
- * splash, barras que crescem, contador).
+ * sem sidebar, sem login. Tokens vêm do theme.css.
  * ============================================================ */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -30,371 +23,275 @@
    não funciona nesses elementos. */
 [hidden] { display: none !important; }
 
+/* !important: o theme.css (redesign out/2026) força Geist no body de todo o portal;
+   o /cts-data fica na Plus Jakarta até ganhar o redesign próprio. Só o splash usa Geist. */
 body {
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  letter-spacing: normal;
   background: var(--c-bg);
   color: var(--c-text);
+  -webkit-font-smoothing: antialiased;
   font-size: 14px;
 }
 
-/* Ícone inline (lucide) dos botões e chips — não depende do ui.js */
-.cm-ico {
-  width: 15px; height: 15px; flex: none;
-  fill: none; stroke: currentColor; stroke-width: 2;
-  stroke-linecap: round; stroke-linejoin: round;
-}
-
-/* ---------- Header (barra clara do shadcn) ---------- */
+/* ---------- Header ---------- */
 .cm-header {
-  background: var(--c-surface);
-  border-bottom: 1px solid var(--c-border);
+  background: linear-gradient(135deg, var(--c-primary-dark) 0%, var(--c-primary) 55%, var(--c-accent) 140%);
+  color: #fff;
+  padding: 22px 32px 26px;
 }
-.cm-header-inner { max-width: 1440px; margin: 0 auto; padding: 0 32px; }
+.cm-header-inner { max-width: 1440px; margin: 0 auto; }
 .cm-header-top {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 12px 16px; flex-wrap: wrap;
-  min-height: 68px; padding: 14px 0 10px;
+  gap: 16px; flex-wrap: wrap;
 }
-.cm-brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
-.cm-brand img { height: 26px; width: auto; display: block; }
+.cm-brand { display: flex; align-items: center; gap: 14px; }
+.cm-brand img { height: 30px; filter: brightness(0) invert(1); }
 .cm-brand-mark {
-  display: none; width: 32px; height: 32px; border-radius: 8px;
-  background: var(--c-primary); color: #fff; place-items: center;
-  font-weight: 600; font-size: 11.5px; letter-spacing: 0.02em;
+  display: none; width: 34px; height: 34px; border-radius: 9px;
+  background: rgba(255,255,255,0.18); place-items: center;
+  font-weight: 800; font-size: 13px; letter-spacing: 0.5px;
 }
-.cm-brand-divider { width: 1px; height: 24px; background: var(--c-border-strong); }
-.cm-brand-text .cm-title {
-  font-size: 15px; font-weight: 600; letter-spacing: -0.02em;
-  color: var(--c-text); line-height: 1.25;
-}
+.cm-brand-divider { width: 1px; height: 26px; background: rgba(255,255,255,0.32); }
+.cm-brand-text .cm-title { font-size: 17px; font-weight: 700; letter-spacing: -0.2px; }
 .cm-brand-text .cm-sub {
-  font-size: 12.5px; font-weight: 400; color: var(--c-text-muted);
-  margin-top: 1px; line-height: 1.3;
+  font-size: 11px; font-weight: 600; letter-spacing: 1.4px;
+  text-transform: uppercase; color: rgba(255,255,255,0.72); margin-top: 2px;
 }
 .cm-header-meta {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  font-size: 12.5px; color: var(--c-text-muted);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 12px; color: rgba(255,255,255,0.82);
 }
-/* Frescor do dado ("updated 3h ago") — bolinha verde discreta */
-.cm-updated {
-  display: inline-flex; align-items: center; gap: 7px;
-  margin-right: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;
-}
-.cm-updated:empty { display: none; }
-.cm-updated::before {
-  content: ""; width: 6px; height: 6px; border-radius: 50%;
-  background: var(--c-success);
-  box-shadow: 0 0 0 3px rgba(22,163,74,0.16);
-}
-
-/* Select do shadcn (período / semanas) */
 .cm-period-select {
-  -webkit-appearance: none; appearance: none;
-  height: 36px; padding: 0 34px 0 12px;
-  border: 1px solid var(--c-border-strong); border-radius: 8px;
-  background: var(--c-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 11px center / 14px;
-  color: var(--c-text); font-family: inherit; font-size: 13.5px; font-weight: 500;
-  box-shadow: var(--shadow-xs); cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.28);
+  color: #fff; font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 8px 12px; border-radius: 9px; cursor: pointer;
 }
-.cm-period-select:hover { border-color: var(--c-text-dim); }
-.cm-period-select:focus { outline: none; border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--ring); }
-.cm-period-select option { color: var(--c-text); background: var(--c-surface); }
-
-/* Botão outline do shadcn */
+.cm-period-select option { color: var(--c-text); background: #fff; }
 .cm-ghost-btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  height: 36px; padding: 0 13px; border-radius: 8px;
-  background: var(--c-surface); border: 1px solid var(--c-border);
-  color: var(--c-text); font-family: inherit; font-size: 13px; font-weight: 500;
-  white-space: nowrap; cursor: pointer; box-shadow: var(--shadow-xs);
-  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.28);
+  color: #fff; font-family: inherit; font-size: 12px; font-weight: 600;
+  padding: 8px 13px; border-radius: 9px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: background 0.15s ease;
 }
-.cm-ghost-btn .cm-ico { color: var(--c-text-muted); transition: color 0.15s; }
-.cm-ghost-btn:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
-.cm-ghost-btn:hover .cm-ico { color: var(--c-text); }
-.cm-ghost-btn:active { transform: translateY(1px); }
-.cm-ghost-btn:disabled { opacity: 0.6; cursor: progress; }
-/* Refresh carregando: o ícone gira enquanto o botão está desabilitado */
-.cm-ghost-btn:disabled .cm-ico-refresh { animation: cm-spin 0.9s linear infinite; }
-.cm-ghost-btn.on {
-  background: var(--c-bg-tint); border-color: rgba(74,159,224,0.35);
-  color: var(--c-primary-dark);
-}
-.cm-ghost-btn.on .cm-ico { color: var(--c-primary); }
+.cm-ghost-btn:hover { background: rgba(255,255,255,0.24); }
+.cm-ghost-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ---------- Linha de navegação: países (chips) + abas ---------- */
-.cm-header-nav {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 10px 16px; flex-wrap: wrap; padding: 4px 0 14px;
+/* ---------- Country picker ---------- */
+.cm-countries {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px;
 }
-.cm-countries { display: flex; gap: 4px; flex-wrap: wrap; }
 .cm-country {
-  display: inline-flex; align-items: center; gap: 7px;
-  height: 32px; padding: 0 12px; border-radius: 8px;
-  background: transparent; border: 1px solid transparent;
-  color: var(--c-text-muted); font-family: inherit; font-size: 13px; font-weight: 500;
-  white-space: nowrap; cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.88);
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  transition: all 0.15s ease; white-space: nowrap;
 }
-.cm-country:hover { background: var(--c-bg); color: var(--c-text); }
-.cm-country.active { background: var(--c-text); color: var(--c-surface); }
-.cm-country .cm-ico { width: 14px; height: 14px; }
-.cm-chip-flag {
-  width: 18px; height: 12px; flex: none; border-radius: 2.5px; overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(15,23,42,0.12);
+.cm-country:hover { background: rgba(255,255,255,0.2); color: #fff; }
+.cm-country.active {
+  background: #fff; color: var(--c-primary-dark);
+  border-color: #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.14);
 }
-.cm-chip-flag svg { display: block; width: 100%; height: 100%; }
-.cm-country.active .cm-chip-flag { box-shadow: 0 0 0 1px rgba(255,255,255,0.28); }
 
 /* ---------- Layout ---------- */
-.cm-main { max-width: 1440px; margin: 0 auto; padding: 28px 32px 64px; }
+.cm-main { max-width: 1440px; margin: 0 auto; padding: 26px 32px 60px; }
 .cm-section-head {
   display: flex; align-items: baseline; justify-content: space-between;
-  gap: 4px 14px; flex-wrap: wrap; margin: 0 0 12px;
+  gap: 14px; flex-wrap: wrap; margin: 0 0 14px;
 }
 .cm-section-title {
-  font-size: 15px; font-weight: 600; letter-spacing: -0.02em;
-  color: var(--c-text);
+  font-size: 13px; font-weight: 700; letter-spacing: 0.9px;
+  text-transform: uppercase; color: var(--c-text-muted);
 }
-.cm-section-note { font-size: 12.5px; color: var(--c-text-muted); }
+.cm-section-note { font-size: 12px; color: var(--c-text-dim); }
 
-/* ---------- KPI cards (SectionCards do shadcn) ---------- */
+/* ---------- KPI cards ---------- */
 .cm-kpis {
-  display: grid; gap: 16px;
+  display: grid; gap: 14px;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  margin-bottom: 32px;
+  margin-bottom: 30px;
 }
 .cm-card {
-  background: linear-gradient(to top, color-mix(in srgb, var(--c-primary) 4%, var(--c-surface)), var(--c-surface));
+  background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: 14px;
-  padding: 16px 18px;
-  box-shadow: var(--shadow-xs);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
   display: flex; flex-direction: column; gap: 8px;
-  min-height: 122px;
+  min-height: 118px;
 }
 .cm-card.wide { grid-column: span 2; }
 @media (max-width: 780px) { .cm-card.wide { grid-column: span 1; } }
 .cm-card-label {
-  font-size: 12.5px; font-weight: 500; color: var(--c-text-muted);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--c-text-muted);
   display: flex; align-items: center; gap: 7px;
 }
 .cm-card-value {
-  font-size: 28px; font-weight: 600; letter-spacing: -0.035em;
-  color: var(--c-text); line-height: 1.15;
-  font-variant-numeric: tabular-nums;
+  font-size: 30px; font-weight: 800; letter-spacing: -1px;
+  color: var(--c-primary-dark); line-height: 1.05;
 }
 .cm-card-value .cm-unit {
-  font-size: 13px; font-weight: 500; color: var(--c-text-muted);
-  letter-spacing: -0.01em; margin-left: 5px;
+  font-size: 14px; font-weight: 700; color: var(--c-text-muted);
+  letter-spacing: 0; margin-left: 4px;
 }
-.cm-card-foot { font-size: 12px; color: var(--c-text-muted); margin-top: auto; line-height: 1.45; }
-.cm-card-foot strong { color: var(--c-text); font-weight: 600; }
+.cm-card-foot { font-size: 12px; color: var(--c-text-muted); margin-top: auto; }
 
 /* Card clicável (swarm/churn): alterna mix ⇄ atingimento da meta */
 .cm-card-toggle {
   font-family: inherit; text-align: left; cursor: pointer;
-  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out), border-color 0.15s ease;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s ease, border-color 0.2s ease;
 }
 .cm-card-toggle:hover {
   transform: translateY(-2px);
-  border-color: var(--c-border-strong);
+  border-color: var(--c-primary);
   box-shadow: var(--shadow-md);
 }
 .cm-card-toggle:focus-visible {
-  outline: none; border-color: var(--c-accent);
-  box-shadow: 0 0 0 3px var(--ring);
+  outline: none; border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px rgba(74,159,224,0.25);
 }
 .cm-card-toggle:active { transform: translateY(0); transition-duration: 0.1s; }
 .cm-toggle-hint {
   margin-left: auto; font-size: 12px; color: var(--c-text-dim);
-  transition: color 0.15s ease;
+  transition: color 0.2s ease;
 }
-.cm-card-toggle:hover .cm-toggle-hint { color: var(--c-text); }
+.cm-card-toggle:hover .cm-toggle-hint { color: var(--c-primary); }
 .cm-card-toggle .cm-card-label { width: 100%; }
+@media (prefers-reduced-motion: reduce) {
+  .cm-card-toggle { transition: none; }
+  .cm-card-toggle:hover { transform: none; }
+}
+.cm-card-foot strong { color: var(--c-text); font-weight: 700; }
 
-/* Barra de progresso (Progress do shadcn) — cresce ao renderizar */
-.cm-bar {
-  height: 6px; border-radius: 99px; overflow: hidden; display: flex;
-  background: color-mix(in srgb, var(--c-primary) 10%, var(--c-bg));
-}
-.cm-bar span {
-  display: block; height: 100%;
-  transform-origin: left center;
-  animation: cm-bar-in 0.9s var(--ease-out) backwards;
-}
-.cm-bar span + span { animation-delay: 0.12s; }
-@keyframes cm-bar-in { from { transform: scaleX(0); } }
-.cm-bar .fill-primary { background: var(--c-primary); }
+.cm-bar { height: 7px; border-radius: 99px; background: var(--c-bg-tint); overflow: hidden; display: flex; }
+.cm-bar span { display: block; height: 100%; }
+.cm-bar .fill-primary { background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); }
 .cm-bar .fill-success { background: var(--c-success); }
 .cm-bar .fill-warn    { background: var(--c-warn); }
 .cm-bar .fill-danger  { background: var(--c-danger); }
 
-.cm-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--c-text-muted); }
-.cm-legend span { display: inline-flex; align-items: center; gap: 6px; }
-.cm-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
+.cm-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11.5px; color: var(--c-text-muted); }
+.cm-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.cm-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .dot-success { background: var(--c-success); }
 .dot-warn    { background: var(--c-warn); }
 .dot-danger  { background: var(--c-danger); }
 .dot-primary { background: var(--c-primary); }
 .dot-accent  { background: var(--c-accent); }
 
-.cm-split { display: flex; gap: 24px; }
+.cm-split { display: flex; gap: 22px; }
 .cm-split > div { flex: 1; }
-.cm-split-val {
-  font-size: 22px; font-weight: 600; color: var(--c-text);
-  letter-spacing: -0.03em; line-height: 1.2; font-variant-numeric: tabular-nums;
-}
-.cm-split-lbl { font-size: 12px; font-weight: 500; color: var(--c-text-muted); margin-top: 1px; }
+.cm-split-val { font-size: 22px; font-weight: 800; color: var(--c-primary-dark); letter-spacing: -0.6px; }
+.cm-split-lbl { font-size: 11px; font-weight: 600; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: 0.6px; }
 
-/* ---------- Tabela (Table do shadcn) ---------- */
+/* ---------- Table ---------- */
 .cm-table-wrap {
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: 14px;
-  box-shadow: var(--shadow-xs);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 .cm-table-tools {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 10px 12px; flex-wrap: wrap;
-  padding: 12px 16px; border-bottom: 1px solid var(--c-border);
+  gap: 12px; flex-wrap: wrap;
+  padding: 14px 18px; border-bottom: 1px solid var(--c-border);
 }
 .cm-search {
-  height: 36px; min-width: 250px; padding: 0 12px 0 34px;
-  border: 1px solid var(--c-border-strong); border-radius: 8px;
-  background: var(--c-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") no-repeat 11px center / 15px;
-  color: var(--c-text); font-family: inherit; font-size: 13.5px;
-  box-shadow: var(--shadow-xs);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  border: 1px solid var(--c-border); border-radius: 9px;
+  padding: 8px 12px; font-family: inherit; font-size: 13px;
+  min-width: 230px; color: var(--c-text); background: var(--c-surface);
 }
-.cm-search::placeholder { color: var(--c-text-dim); }
-.cm-search:focus { outline: none; border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--ring); }
+.cm-search:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
 .cm-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .cm-filter {
-  -webkit-appearance: none; appearance: none;
-  height: 36px; padding: 0 32px 0 11px;
-  border: 1px solid var(--c-border-strong); border-radius: 8px;
-  background: var(--c-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center / 13px;
-  color: var(--c-text); font-family: inherit; font-size: 13px; font-weight: 500;
-  box-shadow: var(--shadow-xs); cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+  border: 1px solid var(--c-border); border-radius: 9px;
+  padding: 8px 10px; font-family: inherit; font-size: 12.5px;
+  color: var(--c-text); background: var(--c-surface); cursor: pointer;
 }
-.cm-filter:hover { border-color: var(--c-text-dim); }
-.cm-filter:focus { outline: none; border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--ring); }
-/* Filtro ativo: fica "aceso" (tinta da marca) pra ninguém esquecer que está filtrando */
-.cm-filter.on {
-  background-color: var(--c-bg-tint);
-  border-color: rgba(74,159,224,0.45);
-  color: var(--c-primary-dark);
-}
+.cm-filter:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(74,159,224,0.15); }
+.cm-filter.on { border-color: var(--c-primary); color: var(--c-primary); font-weight: 600; }
 .cm-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  height: 36px; padding: 0 13px; border-radius: 8px;
   background: var(--c-surface); border: 1px solid var(--c-border);
-  color: var(--c-text); font-family: inherit; font-size: 13px; font-weight: 500;
-  white-space: nowrap; cursor: pointer; box-shadow: var(--shadow-xs);
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  color: var(--c-text-muted); font-family: inherit; font-size: 12px; font-weight: 600;
+  padding: 8px 13px; border-radius: 9px; cursor: pointer;
 }
-.cm-btn .cm-ico { color: var(--c-text-muted); }
-.cm-btn:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
-.cm-btn:active { transform: translateY(1px); }
+.cm-btn:hover { border-color: var(--c-primary); color: var(--c-primary); background: var(--c-bg-tint); }
 
 .cm-scroll { overflow-x: auto; }
 table.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 980px; }
 .cm-table thead th {
   position: sticky; top: 0; z-index: 2;
-  background: var(--c-surface);
-  font-size: 12.5px; font-weight: 500; color: var(--c-text-muted);
-  text-align: right; padding: 10px 14px; white-space: nowrap;
+  background: var(--c-bg-tint);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+  color: var(--c-primary-dark);
+  text-align: right; padding: 11px 14px; white-space: nowrap;
   cursor: pointer; user-select: none; border-bottom: 1px solid var(--c-border);
-  transition: color 0.15s;
 }
 .cm-table thead th:first-child, .cm-table tbody td:first-child { text-align: left; }
 .cm-table thead th:nth-child(2), .cm-table tbody td:nth-child(2) { text-align: left; }
-.cm-table thead th:hover, .cm-table thead th.sorted { color: var(--c-text); }
-.cm-table thead th .cm-arrow { opacity: 0.35; margin-left: 5px; font-size: 8.5px; vertical-align: 1px; }
-.cm-table thead th.sorted .cm-arrow { opacity: 0.9; }
-.cm-table tbody td {
-  padding: 10px 14px; text-align: right; white-space: nowrap;
-  border-bottom: 1px solid var(--c-border);
-  transition: background-color 0.12s;
-}
+.cm-table thead th:hover { color: var(--c-primary); }
+.cm-table thead th .cm-arrow { opacity: 0.35; margin-left: 4px; font-size: 9px; }
+.cm-table thead th.sorted .cm-arrow { opacity: 1; }
+.cm-table tbody td { padding: 11px 14px; text-align: right; border-bottom: 1px solid var(--c-border); white-space: nowrap; }
 .cm-table tbody tr:last-child td { border-bottom: none; }
 .cm-table tbody tr:hover td { background: var(--c-bg); }
 .cm-driver { display: flex; align-items: center; gap: 10px; }
 .cm-avatar {
   width: 28px; height: 28px; border-radius: 50%; flex: none;
-  background: var(--c-bg-tint); color: var(--c-primary-dark);
-  box-shadow: inset 0 0 0 1px rgba(74,159,224,0.22);
-  font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em;
+  background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+  color: #fff; font-size: 11px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
-.cm-driver-name { font-weight: 500; color: var(--c-text); }
+.cm-driver-name { font-weight: 600; }
 .cm-num { font-variant-numeric: tabular-nums; }
 .cm-muted { color: var(--c-text-muted); }
-
-/* Badge do shadcn: retangular, borda tingida, cor semântica */
 .cm-pill {
-  display: inline-flex; align-items: center; gap: 5px;
-  height: 22px; padding: 0 8px; border-radius: 6px;
-  border: 1px solid transparent;
-  font-size: 12px; font-weight: 500; line-height: 1;
-  font-variant-numeric: tabular-nums; white-space: nowrap;
+  display: inline-block; padding: 3px 9px; border-radius: 99px;
+  font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums;
 }
-.pill-success { background: rgba(22,163,74,0.08);  color: #15803D; border-color: rgba(22,163,74,0.22); }
-.pill-warn    { background: rgba(202,138,4,0.09);  color: #A16207; border-color: rgba(202,138,4,0.25); }
-.pill-danger  { background: rgba(185,28,28,0.07);  color: #B91C1C; border-color: rgba(185,28,28,0.22); }
-.pill-neutral { background: var(--c-bg);           color: var(--c-text-muted); border-color: var(--c-border); }
-.pill-hotel   { background: var(--c-bg-tint);      color: var(--c-primary-dark); border-color: rgba(74,159,224,0.25); }
+.pill-success { background: rgba(22,163,74,0.12); color: var(--c-success); }
+.pill-warn    { background: rgba(202,138,4,0.14); color: var(--c-warn); }
+.pill-danger  { background: rgba(185,28,28,0.10); color: var(--c-danger); }
+.pill-neutral { background: var(--c-bg-tint); color: var(--c-primary-dark); }
+.pill-hotel   { background: rgba(74,159,224,0.14); color: var(--c-primary); }
 
 .cm-table tfoot td {
-  padding: 12px 14px; text-align: right; white-space: nowrap;
-  font-weight: 600; color: var(--c-text);
-  background: var(--c-bg);
-  border-top: 1px solid var(--c-border);
+  padding: 12px 14px; text-align: right; font-weight: 800;
+  background: var(--c-bg-tint); color: var(--c-primary-dark);
+  border-top: 1px solid var(--c-border-strong);
 }
 .cm-table tfoot td:first-child { text-align: left; }
 
-/* ---------- Estados (loading / vazio / erro) ---------- */
-.cm-state { padding: 56px 20px; text-align: center; color: var(--c-text-muted); font-size: 13.5px; }
-.cm-state h3 { font-size: 14px; color: var(--c-text); margin-bottom: 6px; font-weight: 600; letter-spacing: -0.01em; }
-/* Empty state do shadcn: ícone num quadradinho com borda acima do título */
-.cm-state h3::before {
-  content: ""; display: block; width: 40px; height: 40px; margin: 0 auto 14px;
-  border-radius: 10px; border: 1px solid var(--c-border);
-  background: var(--c-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M18 17V9M13 17V5M8 17v-3'/%3E%3C/svg%3E") no-repeat center / 18px;
-  box-shadow: var(--shadow-xs);
-}
-.cm-state p { font-size: 13px; line-height: 1.55; max-width: 460px; margin: 0 auto 16px; }
+/* ---------- States ---------- */
+.cm-state { padding: 60px 20px; text-align: center; color: var(--c-text-muted); }
+.cm-state h3 { font-size: 15px; color: var(--c-text); margin-bottom: 6px; font-weight: 700; }
+.cm-state p { font-size: 13px; max-width: 460px; margin: 0 auto 16px; }
 .cm-spinner {
-  width: 22px; height: 22px; border-radius: 50%; margin: 0 auto 14px;
-  border: 2.5px solid color-mix(in srgb, var(--c-text) 12%, transparent);
-  border-top-color: var(--c-text);
-  animation: cm-spin 0.7s linear infinite;
+  width: 26px; height: 26px; border-radius: 50%; margin: 0 auto 14px;
+  border: 3px solid var(--c-border); border-top-color: var(--c-primary);
+  animation: cm-spin 0.8s linear infinite;
 }
 @keyframes cm-spin { to { transform: rotate(360deg); } }
 .cm-skeleton {
-  height: 14px; border-radius: 6px;
-  background: linear-gradient(90deg,
-    color-mix(in srgb, var(--c-border) 55%, var(--c-surface)) 0%,
-    var(--c-border) 40%,
-    color-mix(in srgb, var(--c-border) 55%, var(--c-surface)) 80%);
-  background-size: 300% 100%;
-  animation: cm-shimmer 1.4s ease-in-out infinite;
+  background: linear-gradient(90deg, var(--c-bg-tint) 25%, var(--c-bg) 50%, var(--c-bg-tint) 75%);
+  background-size: 200% 100%; animation: cm-shimmer 1.3s infinite;
+  border-radius: 6px; height: 14px;
 }
-@keyframes cm-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
-
-/* Aviso (Alert do shadcn, variante âmbar). Bloco, não flex: o texto tem
-   <strong>/<a> no meio e em flex cada pedaço virava uma coluna. */
+@keyframes cm-shimmer { to { background-position: -200% 0; } }
 .cm-notice {
-  display: block;
-  background: rgba(202,138,4,0.06); border: 1px solid rgba(202,138,4,0.25);
-  color: #854D0E; border-radius: 10px; padding: 11px 14px;
-  font-size: 13px; line-height: 1.55; margin-bottom: 20px;
+  display: flex; align-items: flex-start; gap: 9px;
+  background: rgba(202,138,4,0.10); border: 1px solid rgba(202,138,4,0.30);
+  color: #7a5200; border-radius: 11px; padding: 11px 14px;
+  font-size: 12.5px; margin-bottom: 18px;
 }
-.cm-notice strong { font-weight: 600; color: #713F12; }
-.cm-notice .ui-ico { color: var(--c-warn); }
 .cm-notice.hidden { display: none; }
 
 /* ============================================================
@@ -425,6 +322,13 @@ table.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; min-wi
   background-size: 44px 44px;
   -webkit-mask-image: radial-gradient(ellipse 70% 62% at 50% 42%, #000 25%, transparent 78%);
           mask-image: radial-gradient(ellipse 70% 62% at 50% 42%, #000 25%, transparent 78%);
+}
+/* Só o splash usa o visual novo do portal (Geist); o resto do /cts-data
+   ainda segue na Plus Jakarta até o redesign próprio dele. */
+.cm-splash { font-family: var(--font-sans); letter-spacing: -0.006em; }
+.cm-splash .cm-ico {
+  fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
 }
 .cm-splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
@@ -549,7 +453,6 @@ table.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; min-wi
 @media (prefers-reduced-motion: reduce) {
   .cm-splash-card, .cm-glow, .cm-flag, .cm-splash-head { transition: none !important; animation: none !important; }
   .cm-splash-card:hover { transform: none; }
-  .cm-bar span { animation: none; }
 }
 @media (max-width: 560px) {
   .cm-splash { padding: 36px 16px; }
@@ -561,127 +464,103 @@ table.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; min-wi
 }
 
 /* ============================================================
- * ABAS Monthly / Weekly (Tabs do shadcn) + controles de semana
+ * ABAS Monthly / Weekly + controles de semana
  * ============================================================ */
-.cm-tabs {
-  display: inline-flex; gap: 2px; padding: 3px;
-  background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 10px;
-}
+.cm-tabs { display: flex; gap: 6px; margin-top: 18px; }
 .cm-tab {
-  height: 30px; padding: 0 16px; border-radius: 7px;
-  background: transparent; border: 0;
-  color: var(--c-text-muted); font-family: inherit; font-size: 13px; font-weight: 500;
-  cursor: pointer;
-  transition: color 0.15s, background 0.15s, box-shadow 0.15s;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.88);
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  padding: 9px 22px; border-radius: 10px; cursor: pointer;
+  transition: all 0.15s ease;
 }
-.cm-tab:hover { color: var(--c-text); }
+.cm-tab:hover { background: rgba(255,255,255,0.2); color: #fff; }
 .cm-tab.active {
-  background: var(--c-surface); color: var(--c-text);
-  box-shadow: var(--shadow-xs), 0 0 0 1px var(--c-border);
+  background: #fff; color: var(--c-primary-dark);
+  border-color: #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.14);
 }
 
 .cm-week-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.cm-vs { font-size: 12.5px; font-weight: 500; color: var(--c-text-dim); }
+.cm-vs {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(255,255,255,0.62);
+}
+.cm-ghost-btn.on { background: #fff; color: var(--c-primary-dark); border-color: #fff; }
 
 /* Legenda do color coding de system on hours */
 .cm-soh-legend {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  font-size: 12px; color: var(--c-text-muted);
+  font-size: 11.5px; color: var(--c-text-muted);
 }
-.cm-soh-legend b { font-weight: 500; color: var(--c-text); }
-.cm-soh-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cm-soh-legend b { font-weight: 700; color: var(--c-text-muted); }
+.cm-soh-legend span { display: inline-flex; align-items: center; gap: 5px; }
 
 /* ---------- Tabela de comparação (semana A × semana B) ---------- */
-.cm-delta { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.cm-delta.up   { color: #15803D; }
+.cm-delta { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cm-delta.up   { color: var(--c-success); }
 .cm-delta.down { color: var(--c-danger); }
 .cm-delta.flat { color: var(--c-text-dim); }
 .cm-table th.cm-sep, .cm-table td.cm-sep { border-left: 1px solid var(--c-border); }
 .cm-table thead tr.cm-group th {
   text-align: center; background: var(--c-surface);
-  color: var(--c-text); font-size: 12.5px; font-weight: 500;
-  cursor: default; border-bottom: none; padding-bottom: 2px;
+  color: var(--c-text-muted); font-size: 10.5px; letter-spacing: 0.9px;
+  cursor: default; border-bottom: none; padding-bottom: 4px;
 }
 .cm-table thead tr.cm-group th:first-child { background: var(--c-surface); }
-.cm-table thead tr.cm-sub th { top: 26px; font-size: 12px; }
+.cm-table thead tr.cm-sub th { top: 26px; font-size: 10.5px; }
 
 /* ---------- Footer ---------- */
 .cm-footer {
   border-top: 1px solid var(--c-border);
-  padding: 22px 32px 36px; text-align: center;
-  color: var(--c-text-dim); font-size: 12px; line-height: 1.6;
+  padding: 20px 32px 34px; text-align: center;
+  color: var(--c-text-dim); font-size: 11.5px;
 }
-.cm-footer strong { color: var(--c-text-muted); font-weight: 600; }
+.cm-footer strong { color: var(--c-text-muted); font-weight: 700; }
 
 /* ---------- Pace & projection ---------- */
 /* País único: tiles compactos. LATAM: tabela com uma linha por país. */
 .cm-pace-tiles {
-  display: grid; gap: 12px; margin-bottom: 32px;
+  display: grid; gap: 12px; margin-bottom: 30px;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 .cm-tile {
-  background: linear-gradient(to top, color-mix(in srgb, var(--c-primary) 4%, var(--c-surface)), var(--c-surface));
-  border: 1px solid var(--c-border);
-  border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow-xs);
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow-sm);
 }
 .cm-tile-label {
-  font-size: 12.5px; font-weight: 500; color: var(--c-text-muted); margin-bottom: 6px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px;
+  text-transform: uppercase; color: var(--c-text-muted); margin-bottom: 6px;
 }
 .cm-tile-value {
-  font-size: 22px; font-weight: 600; letter-spacing: -0.03em;
-  color: var(--c-text); line-height: 1.15; font-variant-numeric: tabular-nums;
+  font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+  color: var(--c-primary-dark); line-height: 1.1;
 }
-.cm-tile-value .cm-unit { font-size: 12px; font-weight: 500; color: var(--c-text-muted); letter-spacing: -0.01em; margin-left: 4px; }
-/* No compare o número grande do tile é o Δ; o badge de system-on cresce junto */
-.cm-tile-value .cm-delta { font-size: inherit; font-weight: inherit; }
-.cm-tile-value .cm-pill {
-  height: 30px; padding: 0 10px; border-radius: 8px;
-  font-size: 18px; font-weight: 600; letter-spacing: -0.02em;
-}
+.cm-tile-value .cm-unit { font-size: 12px; font-weight: 700; color: var(--c-text-muted); margin-left: 3px; }
 
 .cm-pace-table-wrap {
   background: var(--c-surface); border: 1px solid var(--c-border);
-  border-radius: 14px; box-shadow: var(--shadow-xs);
-  overflow: hidden; margin-bottom: 32px;
+  border-radius: 14px; box-shadow: var(--shadow-sm);
+  overflow: hidden; margin-bottom: 30px;
 }
 .cm-pace-scroll { overflow-x: auto; }
 table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 820px; }
 .cm-pace-table thead th {
-  background: var(--c-surface);
-  font-size: 12.5px; font-weight: 500; color: var(--c-text-muted);
-  text-align: right; padding: 10px 14px; white-space: nowrap;
+  background: var(--c-bg-tint);
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--c-primary-dark); text-align: right; padding: 11px 14px; white-space: nowrap;
   border-bottom: 1px solid var(--c-border);
 }
 .cm-pace-table thead th:first-child { text-align: left; }
-.cm-pace-table tbody td { padding: 10px 14px; text-align: right; border-bottom: 1px solid var(--c-border); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.cm-pace-table tbody td:first-child { text-align: left; font-weight: 500; color: var(--c-text); }
+.cm-pace-table tbody td { padding: 11px 14px; text-align: right; border-bottom: 1px solid var(--c-border); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cm-pace-table tbody td:first-child { text-align: left; font-weight: 600; }
 .cm-pace-table tbody tr:last-child td { border-bottom: none; }
 .cm-pace-table tbody tr:hover td { background: var(--c-bg); }
 
-@media (max-width: 900px) {
-  .cm-header-nav { flex-direction: column; align-items: stretch; }
-  .cm-tabs { align-self: flex-start; }
-}
 @media (max-width: 640px) {
-  .cm-header-inner { padding: 0 16px; }
-  .cm-header-top { padding: 12px 0 8px; }
-  /* países viram uma faixa com rolagem horizontal */
-  .cm-countries {
-    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
-    margin: 0 -16px; padding: 0 16px;
-  }
-  .cm-countries::-webkit-scrollbar { display: none; }
-  .cm-tabs { align-self: stretch; }
-  .cm-tab { flex: 1; }
+  .cm-header { padding: 18px 18px 20px; }
   .cm-main { padding: 20px 16px 44px; }
   .cm-card-value { font-size: 25px; }
-  .cm-search { min-width: 0; width: 100%; }
-  .cm-footer { padding: 20px 16px 30px; }
-}
-@media (max-width: 560px) {
-  /* botões do header só com ícone (o aria-label mantém o nome) */
-  .cm-btn-label { display: none; }
-  .cm-header-meta .cm-ghost-btn:has(.cm-btn-label) { width: 36px; padding: 0; justify-content: center; }
 }
 </style>
 </head>
@@ -704,8 +583,8 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
   <div class="cm-header-inner">
     <div class="cm-header-top">
       <div class="cm-brand">
-        <!-- logo local (não hotlink do site da empresa): versão colorida, o header é claro -->
-        <img src="../aceolution-logo.png" alt="Aceolution"
+        <!-- logo local (não hotlink do site da empresa): já é branco/transparente -->
+        <img src="aceolution-white.png" alt="Aceolution"
              onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
         <div class="cm-brand-mark">ACE</div>
         <div class="cm-brand-divider"></div>
@@ -715,24 +594,22 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
         </div>
       </div>
       <div class="cm-header-meta">
-        <span id="updated" class="cm-updated"></span>
         <select id="period" class="cm-period-select" aria-label="Period"></select>
         <div class="cm-week-controls" id="week-controls" hidden>
           <select id="week-a" class="cm-period-select" aria-label="Week"></select>
           <span class="cm-vs" id="week-vs" hidden>vs</span>
           <select id="week-b" class="cm-period-select" aria-label="Week to compare against" hidden></select>
-          <button id="compare" class="cm-ghost-btn" type="button"><svg class="cm-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>Compare</button>
+          <button id="compare" class="cm-ghost-btn" type="button">⇄ Compare</button>
         </div>
-        <button id="change-country" class="cm-ghost-btn" type="button" aria-label="Change country"><svg class="cm-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-5.54 10.19-7.4 11.8a1 1 0 0 1-1.2 0C9.54 20.19 4 15 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg><span class="cm-btn-label">Change country</span></button>
-        <button id="refresh" class="cm-ghost-btn" type="button" aria-label="Refresh"><svg class="cm-ico cm-ico-refresh" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg><span class="cm-btn-label">Refresh</span></button>
+        <button id="change-country" class="cm-ghost-btn" type="button">⌖ Change country</button>
+        <button id="refresh" class="cm-ghost-btn" type="button">↻ Refresh</button>
+        <span id="updated"></span>
       </div>
     </div>
-    <div class="cm-header-nav">
-      <div class="cm-countries" id="countries"></div>
-      <div class="cm-tabs" role="tablist">
-        <button class="cm-tab active" id="tab-monthly" type="button" role="tab" aria-selected="true">Monthly</button>
-        <button class="cm-tab" id="tab-weekly" type="button" role="tab" aria-selected="false">Weekly</button>
-      </div>
+    <div class="cm-countries" id="countries"></div>
+    <div class="cm-tabs" role="tablist">
+      <button class="cm-tab active" id="tab-monthly" type="button" role="tab" aria-selected="true">Monthly</button>
+      <button class="cm-tab" id="tab-weekly" type="button" role="tab" aria-selected="false">Weekly</button>
     </div>
   </div>
 </header>
@@ -786,7 +663,7 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
         <span><i class="cm-dot dot-warn"></i>5–5.4h</span>
         <span><i class="cm-dot dot-success"></i>5.5h +</span>
       </div>
-      <button id="csv" class="cm-btn" type="button"><svg class="cm-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Export CSV</button>
+      <button id="csv" class="cm-btn" type="button">Export CSV</button>
     </div>
     <div id="table-area">
       <div class="cm-state"><div class="cm-spinner"></div>Loading operational data…</div>
@@ -834,7 +711,7 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
           <span><i class="cm-dot dot-warn"></i>5–5.4h</span>
           <span><i class="cm-dot dot-success"></i>5.5h +</span>
         </div>
-        <button id="week-csv" class="cm-btn" type="button"><svg class="cm-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Export CSV</button>
+        <button id="week-csv" class="cm-btn" type="button">Export CSV</button>
       </div>
       <div id="week-table-area">
         <div class="cm-state"><div class="cm-spinner"></div>Loading weekly data…</div>
@@ -910,10 +787,8 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
-/* Ícones (lucide) usados pelo JS — SVG inline, não dependem do ui.js. */
+/* Globo (lucide) do card "All LATAM" no splash — SVG inline. */
 const CM_ICON = {
-  compare: '<svg class="cm-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>',
-  x: '<svg class="cm-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>',
   globe: '<svg class="cm-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></svg>',
 };
 
@@ -1887,7 +1762,7 @@ function setView(v) {
 function setCompare(on) {
   state.compare = on;
   $('compare').classList.toggle('on', on);
-  $('compare').innerHTML = on ? CM_ICON.x + 'Exit compare' : CM_ICON.compare + 'Compare';
+  $('compare').textContent = on ? '✕ Exit compare' : '⇄ Compare';
   $('week-b').hidden = !on;
   $('week-vs').hidden = !on;
   $('week-filters').hidden = on;   // filtros de coluna só valem na semana única
@@ -2057,12 +1932,9 @@ function showSplash() {
 /* ---------- render: chrome (país / período) ---------- */
 function renderCountries(list) {
   const opts = ['ALL'].concat(list || []);
-  // Chip com bandeira (SVG do FLAGS, o mesmo do splash) ou globo no "All LATAM"
-  const chipMark = (c) => c === 'ALL' ? CM_ICON.globe
-    : (FLAGS[c] ? '<span class="cm-chip-flag">' + FLAGS[c] + '</span>' : '');
   $('countries').innerHTML = opts.map(c =>
-    '<button class="cm-country' + (state.country === c ? ' active' : '') + '" data-country="' + esc(c) + '" type="button">' +
-    chipMark(c) + (c === 'ALL' ? 'All LATAM' : esc(c)) + '</button>').join('');
+    '<button class="cm-country' + (state.country === c ? ' active' : '') + '" data-country="' + esc(c) + '">' +
+    (c === 'ALL' ? 'All LATAM' : esc(c)) + '</button>').join('');
 
   $('countries').querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
@@ -2234,7 +2106,6 @@ function exportCsv() {
     if (wantWeekly) setView('weekly');
   }
 })();
-
 /* Splash — spotlight que segue o mouse dentro do card (Rare UI). Só visual:
    escreve --mx/--my no card e o CSS desenha o brilho radial nesse ponto. */
 (function splashSpotlight() {
