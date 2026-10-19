@@ -42,7 +42,7 @@ const MIRROR_CONFIG = {
   metaTab: '_mirror',
 };
 
-function mirrorCts() {
+function mirrorCts(e) {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) { console.log('[CTS Mirror] outra execução em andamento, pulando'); return; }
   try {
@@ -50,7 +50,7 @@ function mirrorCts() {
     const ctx = mirrorOpen_();
     // Teto de tempo: o Apps Script corta em 6 min. O que sobrar vai na próxima hora
     // (KMS/Targets/QC vêm primeiro na lista, então o portal nunca fica pra trás).
-    mirrorEnsureTrigger_();
+    mirrorEnsureTrigger_(e);
     // Uma aba com erro não derruba as outras (nem o registro em _mirror).
     const report = MIRROR_CONFIG.rawTabs.map(name => {
       if (Date.now() - t0 > 270000) return name + ': adiada (tempo)';
@@ -187,12 +187,28 @@ function mirrorRetry_(fn, label) {
   }
 }
 
-/** Recria o gatilho de hora em hora se ele tiver sumido (já sumiu uma vez, 09/10/2026). */
-function mirrorEnsureTrigger_() {
-  const ok = ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === 'mirrorCts');
-  if (!ok) {
-    ScriptApp.newTrigger('mirrorCts').timeBased().everyHours(1).create();
+/**
+ * Garante que o gatilho de hora em hora está VIVO, não só que existe.
+ * Já sumiu (09/10/2026) e já ficou "Desativado" sem nunca rodar (13→19/10/2026) —
+ * e o ScriptApp não expõe se um gatilho está desativado. Então:
+ *   - rodada pelo gatilho (e.triggerUid) → anota a hora em ScriptProperties;
+ *   - rodada manual → se o gatilho não rodou nas últimas 2h (e não foi criado agora há pouco),
+ *     apaga e recria.
+ */
+function mirrorEnsureTrigger_(e) {
+  const props = PropertiesService.getScriptProperties();
+  const now = Date.now();
+  if (e && e.triggerUid) { props.setProperty('lastTriggerRun', String(now)); return; }
+  const lastRun = Number(props.getProperty('lastTriggerRun') || 0);
+  const created = Number(props.getProperty('triggerCreated') || 0);
+  const exists = ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === 'mirrorCts');
+  const twoH = 2 * 3600 * 1000;
+  if (!exists) {
+    installMirrorTrigger();
     console.log('[CTS Mirror] gatilho de hora em hora não existia — recriado');
+  } else if (now - lastRun > twoH && now - created > twoH) {
+    installMirrorTrigger();
+    console.log('[CTS Mirror] gatilho existia mas não roda há mais de 2h (desativado?) — recriado');
   }
 }
 
@@ -201,6 +217,7 @@ function installMirrorTrigger() {
     .filter(t => t.getHandlerFunction() === 'mirrorCts')
     .forEach(t => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('mirrorCts').timeBased().everyHours(1).create();
+  PropertiesService.getScriptProperties().setProperty('triggerCreated', String(Date.now()));
   console.log('[CTS Mirror] gatilho de hora em hora instalado');
 }
 
