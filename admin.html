@@ -162,6 +162,12 @@
 
   <div class="section-label" id="section-finance">Financeiro</div>
   <div class="card-grid">
+    <a class="card" id="financial-report-card" href="financial-report.html" style="display:none;">
+      <span class="card-tag">Admin</span>
+      <div class="card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16M8 15v-4M12 15V7M16 15v-6"/></svg></div>
+      <div class="card-title" id="card-financial-title">Relatório financeiro</div>
+      <div class="card-desc" id="card-financial-desc">Resultados por país, evolução mensal, custos e cenários para a revisão executiva</div>
+    </a>
     <a class="card" href="/cash.html">
       <span class="card-tag">Driver + Admin</span>
       <div class="card-icon">💰</div>
@@ -277,6 +283,7 @@ const APP_I18N = {
       cash: { title: 'Cash Flow', desc: 'Pedidos de cash dos drivers + gestão de transferências' },
       div: { title: 'Divergências AR', desc: 'Pagamentos contestados pelos drivers da Argentina (exporta PDF)' },
       ts: { title: 'Timesheet & Payroll', desc: 'Horas trabalhadas e valor hora por motorista (aba Timesheet)' },
+      financial: { title: 'Relatório financeiro', desc: 'Resultados por país, evolução mensal, custos e cenários para a revisão executiva' },
       checkin: { title: 'Check-in diário', desc: 'Form que os drivers preenchem todo dia (base, área, status)' },
       assets: { title: 'Equipamentos', desc: 'Relatório semanal de equipamentos (câmera, lidar, discos)' },
       ramp: { title: 'Ramp Expenses', desc: 'Despesas operacionais (combustível, manutenção, pedágios)' },
@@ -303,6 +310,7 @@ const APP_I18N = {
       cash: { title: 'Cash Flow', desc: 'Pedidos de cash + gestión de transferencias' },
       div: { title: 'Divergencias AR', desc: 'Pagos disputados por los conductores de Argentina (exporta PDF)' },
       ts: { title: 'Timesheet y Payroll', desc: 'Horas trabajadas y valor hora por conductor (pestaña Timesheet)' },
+      financial: { title: 'Informe financiero', desc: 'Resultados por país, evolución mensual, costos y escenarios para la revisión ejecutiva' },
       checkin: { title: 'Check-in diario', desc: 'Form que los conductores completan todos los días' },
       assets: { title: 'Equipamiento', desc: 'Reporte semanal de equipamiento (cámara, lidar, discos)' },
       ramp: { title: 'Ramp Expenses', desc: 'Gastos operativos (combustible, mantenimiento, peajes)' },
@@ -329,6 +337,7 @@ const APP_I18N = {
       cash: { title: 'Cash Flow', desc: 'Driver cash requests + transfer management' },
       div: { title: 'AR Divergences', desc: 'Payments disputed by Argentine drivers (PDF export)' },
       ts: { title: 'Timesheet & Payroll', desc: 'Worked hours and hourly rate per driver (Timesheet tab)' },
+      financial: { title: 'Financial Report', desc: 'Country results, monthly trends, costs and scenarios for the executive review' },
       checkin: { title: 'Daily check-in', desc: 'The form drivers fill out every day (base, area, status)' },
       assets: { title: 'Equipment', desc: 'Weekly equipment report (camera, lidar, disks)' },
       ramp: { title: 'Ramp Expenses', desc: 'Operational expenses (fuel, maintenance, tolls)' },
@@ -361,6 +370,7 @@ function applyAppI18n() {
   set('card-cash-title', c.cash.title);           set('card-cash-desc', c.cash.desc);
   set('card-div-title', c.div.title);             set('card-div-desc', c.div.desc);
   set('card-ts-title', c.ts.title);               set('card-ts-desc', c.ts.desc);
+  set('card-financial-title', c.financial.title); set('card-financial-desc', c.financial.desc);
   set('card-checkin-title', c.checkin.title);     set('card-checkin-desc', c.checkin.desc);
   set('card-assets-title', c.assets.title);       set('card-assets-desc', c.assets.desc);
   set('card-ramp-title', c.ramp.title);           set('card-ramp-desc', c.ramp.desc);
@@ -384,6 +394,7 @@ function startApp(user) {
   // Seção "Relatórios pontuais" só pra admin (em ADMIN_USERNAMES)
   if (typeof isAdmin === 'function' && isAdmin(user.username)) {
     document.getElementById('admin-only-section').style.display = '';
+    document.getElementById('financial-report-card').style.display = '';
   }
   // Seção "Sistema" (gestão de usuários) só pro super admin — hardcoded 'fuss'
   if (String(user.username).toLowerCase() === 'fuss') {

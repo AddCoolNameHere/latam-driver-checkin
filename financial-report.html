@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Financial Report · LATAM · Aceolution</title>
+  <link rel="icon" type="image/png" href="aceolution-globe.png">
+  <link rel="stylesheet" href="theme.css?v=20261015ui">
+  <link rel="stylesheet" href="ui.css?v=20261015ui">
+  <link rel="stylesheet" href="sv-skin.css?v=20261015ui">
+  <link rel="stylesheet" href="financial-report.css?v=20261020review">
+  <script src="auth.js?v=20260518b"></script>
+  <script src="theme.js?v=20261015ui"></script>
+  <script src="common.js?v=20261015ui"></script>
+  <script src="financial-operations.js?v=20261020review" defer></script>
+  <script src="financial-idle.js?v=20261020review" defer></script>
+  <script src="financial-i18n.js?v=20261020review" defer></script>
+  <script src="financial-mbr.js?v=20261020review" defer></script>
+  <script src="financial-report.js?v=20261020review" defer></script>
+  <script src="sv-shell.js?v=20261020finance" defer></script>
+</head>
+<body class="financial-page">
+  <div id="app-content" hidden>
+    <header class="header fr-header">
+      <div class="fr-header-brand">LATAM / FINANCE</div>
+      <div class="fr-header-actions">
+        <div class="ac-lang-switch" aria-label="Language">
+          <button type="button" data-lang="pt">PT</button><button type="button" data-lang="es">ES</button><button type="button" data-lang="en">EN</button>
+        </div>
+        <span class="fr-internal" data-i18n="internal"></span>
+      </div>
+    </header>
+    <main class="fr-main" id="report-main">
+      <section class="fr-heading">
+        <div>
+          <div class="fr-eyebrow">ACEOLUTION <span>/</span> STREET VIEW LATAM</div>
+          <h1 id="report-title"></h1>
+          <p class="fr-subtitle" data-i18n="subtitle"></p>
+        </div>
+        <div class="fr-actions no-print">
+          <button class="fr-btn" id="customize-btn" type="button" data-icon="sliders" data-i18n="customize"></button>
+          <button class="fr-btn" id="present-btn" type="button" data-icon="screen" data-i18n="present"></button>
+          <button class="fr-btn fr-btn-primary" id="print-btn" type="button" data-icon="download" data-i18n="exportPdf"></button>
+        </div>
+        <div class="fr-report-brand">
+          <img class="fr-report-logo-light" src="aceolution-logo.png" width="207" height="48" alt="Aceolution">
+          <img class="fr-report-logo-dark" src="aceolution-white.png" width="207" height="48" alt="Aceolution">
+        </div>
+      </section>
+
+      <div id="load-state" class="fr-empty" role="status" data-i18n="loading"></div>
+      <div id="report-content" hidden>
+        <div class="fr-filterbar no-print" id="report-filters">
+          <label class="fr-field"><span data-i18n="country"></span><select id="country-filter"></select></label>
+          <label class="fr-field"><span data-i18n="from"></span><select id="start-filter"></select></label>
+          <label class="fr-field"><span data-i18n="to"></span><select id="end-filter"></select></label>
+          <div class="fr-period-shortcuts"><button class="fr-chip" id="mbr-btn" type="button" data-i18n="mbrReset"></button><button class="fr-chip" id="ytd-btn" type="button">YTD</button><button class="fr-chip" id="latest-btn" type="button" data-i18n="latestMonth"></button></div>
+          <div class="fr-filter-meta"><span class="fr-source-dot"></span><span id="financial-source"></span></div>
+        </div>
+        <div class="fr-report-context"><span id="report-period"></span><span id="unit-label"></span></div>
+        <nav class="fr-tabs no-print" aria-label="Report sections">
+          <button type="button" data-tab="opening" data-i18n="opening" class="active"></button>
+          <button type="button" data-tab="revenue" data-i18n="revenueTab"></button>
+          <button type="button" data-tab="costs" data-i18n="costs"></button>
+          <button type="button" data-tab="overview" data-i18n="overview"></button>
+          <button type="button" data-tab="countries" data-i18n="countries"></button>
+          <button type="button" data-tab="idle" data-i18n="idleTab"></button>
+          <button type="button" data-tab="scenarios" data-i18n="scenarios"></button>
+          <button type="button" data-tab="sources" data-i18n="sources"></button>
+        </nav>
+
+        <section class="fr-panel" data-panel="opening"><div id="mbr-opening"></div></section>
+        <section class="fr-panel" data-panel="revenue" hidden><div id="revenue-content"></div></section>
+
+        <section class="fr-panel" data-panel="costs" hidden>
+          <article class="fr-card fr-expense-summary"><h2 data-i18n="expenseMatrix"></h2><p class="fr-muted" data-i18n="expenseMatrixHint"></p><div id="expense-matrix" class="fr-table-scroll"></div></article>
+          <div class="fr-grid-main"><article class="fr-card"><div class="fr-card-head"><div><p class="fr-section-number" data-i18n="costStructure"></p><h2 data-i18n="whereMoneyGoes"></h2></div></div><div id="cost-breakdown"></div></article><article class="fr-card"><p class="fr-section-number" data-i18n="profitBridge"></p><h2 data-i18n="revenueToProfit"></h2><div id="profit-bridge"></div></article></div>
+          <article class="fr-card fr-spaced"><h2 data-i18n="expenseMovement"></h2><div id="expense-variance"></div></article>
+          <details class="fr-card fr-spaced fr-detail"><summary data-i18n="expandCategories"></summary><p class="fr-muted" data-i18n="cardCategoriesHint"></p><div id="card-categories"></div></details>
+        </section>
+
+        <section class="fr-panel" data-panel="overview" hidden>
+          <div class="fr-kpis" id="kpis"></div>
+          <div class="fr-grid-main">
+            <article class="fr-card fr-trend-card">
+              <div class="fr-card-head"><div><p class="fr-section-number">01 / <span data-i18n="performance"></span></p><h2 data-i18n="trendTitle"></h2></div><span class="fr-tag" id="trend-period"></span></div>
+              <div class="fr-chart-legend"><span><i class="legend-revenue"></i><b data-i18n="revenue"></b></span><span><i class="legend-expenses"></i><b data-i18n="expenses"></b></span><span><i class="legend-profit"></i><b data-i18n="profit"></b></span></div>
+              <div id="trend-chart" class="fr-chart"></div>
+              <p class="fr-footnote" data-i18n="chartHint"></p>
+            </article>
+            <article class="fr-card fr-reading-card">
+              <p class="fr-section-number">02 / <span data-i18n="executiveReading"></span></p><h2 data-i18n="whatMatters"></h2>
+              <div id="insights"></div>
+              <div class="fr-target-note" id="target-note"></div>
+            </article>
+          </div>
+          <div class="fr-grid-bottom">
+            <article class="fr-card"><div class="fr-card-head"><div><p class="fr-section-number">03 / <span data-i18n="portfolio"></span></p><h2 data-i18n="countryContribution"></h2></div><button type="button" class="fr-text-btn no-print" data-go="countries" data-i18n="viewDetail"></button></div><div id="country-bars"></div></article>
+            <article class="fr-card"><div class="fr-card-head"><div><p class="fr-section-number">04 / <span data-i18n="operations"></span></p><h2 data-i18n="operatingContext"></h2></div><button type="button" class="fr-icon-btn no-print" id="refresh-ops" data-icon="refresh" data-label="refresh"></button></div><div id="operations"></div></article>
+          </div>
+          <article class="fr-card fr-editorial" id="editorial-card" hidden><div><p class="fr-section-number" data-i18n="managementCommentary"></p><h2 id="editorial-title"></h2></div><p id="editorial-text"></p></article>
+          <article class="fr-card fr-spaced"><div class="fr-card-head"><div><h2 data-i18n="monthlyMatrix"></h2><p class="fr-muted" data-i18n="monthlyMatrixHint"></p></div><label class="fr-field"><span data-i18n="metric"></span><select id="monthly-metric"><option value="profit" data-i18n="profit"></option><option value="revenue" data-i18n="revenue"></option><option value="expenses" data-i18n="expenses"></option><option value="margin" data-i18n="margin"></option></select></label></div><div class="fr-table-scroll" id="monthly-matrix"></div></article>
+          <article class="fr-card fr-spaced"><div class="fr-card-head"><div><h2 data-i18n="monthlyDetail"></h2><p class="fr-muted" data-i18n="monthlyDetailHint"></p></div></div><div class="fr-table-scroll" id="monthly-table"></div></article>
+        </section>
+
+        <section class="fr-panel" data-panel="countries" hidden>
+          <article class="fr-card"><div class="fr-card-head"><div><p class="fr-section-number" data-i18n="portfolio"></p><h2 data-i18n="countryPerformance"></h2><p class="fr-muted" data-i18n="countryHint"></p></div><button type="button" id="csv-btn" class="fr-btn no-print" data-icon="download" data-i18n="exportCsv"></button></div><div class="fr-table-scroll" id="country-table"></div></article>
+          <article class="fr-card fr-spaced"><h2 data-i18n="countryDrivers"></h2><div id="country-variance"></div></article>
+        </section>
+
+        <section class="fr-panel" data-panel="idle" hidden>
+          <article class="fr-card"><div class="fr-card-head"><div><p class="fr-section-number" data-i18n="operations"></p><h2 data-i18n="idleTitle"></h2><p class="fr-muted" data-i18n="idleIntro"></p></div><button type="button" class="fr-icon-btn" id="refresh-idle" data-icon="refresh" data-label="refresh"></button></div><div class="fr-idle-controls no-print"><div class="fr-segment" id="idle-range"><button type="button" data-idle-range="ytd" class="active">YTD</button><button type="button" data-idle-range="selected" data-i18n="selectedClose"></button></div><div class="fr-segment" id="idle-metric"><button type="button" data-idle-metric="idleDays" class="active" data-i18n="total"></button><button type="button" data-idle-metric="technical" data-i18n="idleTechnical"></button><button type="button" data-idle-metric="mechanical" data-i18n="idleMechanical"></button><button type="button" data-idle-metric="weather" data-i18n="idleWeather"></button></div></div><div id="idle-content"></div></article>
+        </section>
+
+        <section class="fr-panel" data-panel="scenarios" hidden>
+          <div class="fr-scenario-banner"><div><p class="fr-section-number" data-i18n="planning"></p><h2 data-i18n="scenarioTitle"></h2><p data-i18n="scenarioHint"></p></div><span class="fr-tag" data-i18n="simulation"></span></div>
+          <div class="fr-grid-scenario"><article class="fr-card"><h2 data-i18n="assumptions"></h2><p class="fr-muted" data-i18n="scenarioBase"></p>
+            <label class="fr-slider-field"><span data-i18n="revenueChange"></span><output id="revenue-change-value"></output><input id="revenue-change" type="range" min="-50" max="50" step="1" value="0"></label>
+            <label class="fr-slider-field"><span data-i18n="costChange"></span><output id="cost-change-value"></output><input id="cost-change" type="range" min="-50" max="50" step="1" value="0"></label>
+            <label class="fr-field fr-horizon"><span data-i18n="horizon"></span><select id="horizon"><option value="1">1</option><option value="3" selected>3</option><option value="6">6</option><option value="12">12</option></select></label>
+            <button type="button" class="fr-text-btn" id="scenario-reset" data-i18n="resetAssumptions"></button>
+          </article><article class="fr-card"><div class="fr-card-head"><h2 data-i18n="scenarioResult"></h2><span class="fr-tag" id="scenario-horizon"></span></div><div id="scenario-result"></div></article></div>
+          <article class="fr-card fr-spaced"><h2 data-i18n="sensitivityTitle"></h2><p class="fr-muted" data-i18n="sensitivityHint"></p><div class="fr-table-scroll" id="sensitivity"></div></article>
+        </section>
+
+        <section class="fr-panel" data-panel="sources" hidden>
+          <article class="fr-card"><div class="fr-card-head"><div><p class="fr-section-number" data-i18n="methodology"></p><h2 data-i18n="sourcesTitle"></h2></div></div><div id="source-details"></div></article>
+          <article class="fr-card fr-spaced"><h2 data-i18n="reconciliation"></h2><p class="fr-muted" data-i18n="reconciliationHint"></p><div id="reconciliation"></div></article>
+          <article class="fr-card fr-spaced"><h2 data-i18n="updateFinancials"></h2><p class="fr-muted" data-i18n="updateHint"></p><div class="fr-actions"><button class="fr-btn" type="button" id="download-data" data-i18n="downloadData"></button><label class="fr-btn fr-file-label"><span data-i18n="importData"></span><input type="file" id="import-data" accept="application/json,.json"></label><button class="fr-text-btn" type="button" id="restore-data" data-i18n="restoreData"></button></div><p class="fr-footnote" data-i18n="importPrivacy"></p></article>
+        </section>
+        <footer class="fr-footer"><span>ACEOLUTION <span class="fr-footer-divider">/</span> STREET VIEW LATAM</span><span id="footer-context"></span></footer>
+      </div>
+    </main>
+  </div>
+  <dialog id="customize-dialog" class="fr-dialog">
+    <form id="customize-form">
+      <div class="fr-card-head"><div><p class="fr-section-number" data-i18n="yourReport"></p><h2 data-i18n="customize"></h2></div><button type="button" class="fr-icon-btn" id="close-customize" data-icon="close" data-label="close"></button></div>
+      <p class="fr-muted" data-i18n="localSettings"></p>
+      <label class="fr-field"><span data-i18n="reportTitleLabel"></span><input id="custom-title" type="text" maxlength="90"></label>
+      <div class="fr-form-grid"><label class="fr-field"><span data-i18n="marginTarget"></span><input id="margin-target" type="number" min="-100" max="99" step="0.5" value="15" required></label><label class="fr-field"><span data-i18n="displayUnit"></span><select id="display-unit"><option value="full" data-i18n="fullValues"></option><option value="thousands" data-i18n="thousands"></option></select></label></div>
+      <p class="fr-muted" data-i18n="fixedUsd"></p>
+      <label class="fr-field"><span data-i18n="commentTitle"></span><input id="comment-title" type="text" maxlength="100"></label>
+      <label class="fr-field"><span data-i18n="managementCommentary"></span><textarea id="comment-text" rows="5" maxlength="4000"></textarea></label>
+      <div class="fr-actions"><button class="fr-btn fr-btn-primary" type="submit" data-i18n="saveSettings"></button><button class="fr-btn" id="export-settings" type="button" data-i18n="exportSettings"></button><label class="fr-btn fr-file-label"><span data-i18n="importSettings"></span><input type="file" id="import-settings" accept="application/json,.json"></label></div>
+    </form>
+  </dialog>
+  <div class="fr-toast" id="toast" role="status" hidden></div>
+  <button type="button" id="exit-present" class="fr-btn no-print" hidden data-i18n="exitPresent"></button>
+  <div id="presentation-nav" class="fr-presentation-nav no-print" hidden><button type="button" class="fr-btn" id="presentation-prev" data-i18n="presentationBack"></button><span id="presentation-position"></span><button type="button" class="fr-btn" id="presentation-filters" aria-expanded="false" aria-controls="report-filters" data-i18n="filters"></button><button type="button" class="fr-btn" id="presentation-next" data-i18n="presentationNext"></button></div>
+</body>
+</html>

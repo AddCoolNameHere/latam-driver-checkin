@@ -1,0 +1,8177 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "title": "LATAM Financial Report",
+    "year": 2026,
+    "firstMonth": 1,
+    "lastMonth": 9,
+    "currency": "USD",
+    "currencySymbol": "$",
+    "currencyStatus": "confirmed_by_user",
+    "unit": "currency_units",
+    "currencyConfirmation": {
+      "pt": "Lucas confirmou que todos os valores financeiros são sempre em USD. Nenhuma conversão cambial foi aplicada.",
+      "es": "Lucas confirmó que todos los importes financieros están siempre en USD. No se aplicó ninguna conversión de divisas.",
+      "en": "Lucas confirmed that all financial amounts are always in USD. No currency conversion was applied."
+    },
+    "sourceFile": "LATAM (Jan-Sep).xlsx",
+    "sourceType": "workbook_snapshot",
+    "sourceModifiedAt": "2026-10-19T16:27:51",
+    "extractedAt": "2026-10-20T03:46:25.875280+00:00",
+    "sourceSha256": "e098db97743238cf6257213201563847e022329b9f1fc3e4c35ae684857d9c3d",
+    "dateRange": {
+      "from": "2026-01-01",
+      "to": "2026-09-30"
+    },
+    "recordCount": 54,
+    "countryCount": 6,
+    "transactionCount": 31807,
+    "includedTransactionCount": 31800,
+    "managementFeeRate": 0.078,
+    "financialsLive": false,
+    "basis": {
+      "pt": "Valores salvos na planilha fornecida. Datas dos lançamentos confirmam 2026.",
+      "es": "Valores guardados en la hoja proporcionada. Las fechas de los movimientos confirman 2026.",
+      "en": "Cached values from the supplied workbook. Transaction dates confirm 2026."
+    }
+  },
+  "countries": [
+    {
+      "code": "AR",
+      "name": "Argentina"
+    },
+    {
+      "code": "BR",
+      "name": "Brazil"
+    },
+    {
+      "code": "CL",
+      "name": "Chile"
+    },
+    {
+      "code": "CO",
+      "name": "Colombia"
+    },
+    {
+      "code": "MX",
+      "name": "Mexico"
+    },
+    {
+      "code": "PE",
+      "name": "Peru"
+    }
+  ],
+  "months": [
+    {
+      "month": 1,
+      "period": "2026-01",
+      "label": "January"
+    },
+    {
+      "month": 2,
+      "period": "2026-02",
+      "label": "February"
+    },
+    {
+      "month": 3,
+      "period": "2026-03",
+      "label": "March"
+    },
+    {
+      "month": 4,
+      "period": "2026-04",
+      "label": "April"
+    },
+    {
+      "month": 5,
+      "period": "2026-05",
+      "label": "May"
+    },
+    {
+      "month": 6,
+      "period": "2026-06",
+      "label": "June"
+    },
+    {
+      "month": 7,
+      "period": "2026-07",
+      "label": "July"
+    },
+    {
+      "month": 8,
+      "period": "2026-08",
+      "label": "August"
+    },
+    {
+      "month": 9,
+      "period": "2026-09",
+      "label": "September"
+    }
+  ],
+  "records": [
+    {
+      "country": "Argentina",
+      "countryCode": "AR",
+      "month": 1,
+      "period": "2026-01",
+      "income": 17186.02,
+      "billables": 2776.01,
+      "managementFees": 216.52878,
+      "revenue": 20178.55878,
+      "expenses": 28532.76,
+      "profit": -8354.20122,
+      "margin": -0.41401377,
+      "returnOnCost": -0.29279331,
+      "costs": {
+        "card": 13180.87,
+        "payroll": 5886.75,
+        "pmSalary": 1348,
+        "seatCharges": 324.12666667,
+        "procurement": 4590.15333333,
+        "cashTransfers": 2046.06666667,
+        "otherIndirect": 1156.79333333
+      },
+      "allocatedOverhead": 7419.07333333,
+      "localExpenses": 21113.68666667,
+      "contributionProfit": -935.12788667,
+      "contributionMargin": -0.04634265,
+      "source": {
+        "sheet": "P&L",
+        "range": "B5:H5",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "B5",
+          "payroll": "B19",
+          "pmSalary": "B29",
+          "seatCharges": "B30",
+          "procurement": "AG3",
+          "cashTransfers": "S4",
+          "otherIndirect": "AF3"
+        }
+      }
+    },
+    {
+      "country": "Argentina",
+      "countryCode": "AR",
+      "month": 2,
+      "period": "2026-02",
+      "income": 22347.69,
+      "billables": 6891.31,
+      "managementFees": 537.52218,
+      "revenue": 29776.52218,
+      "expenses": 32588.63,
+      "profit": -2812.10782,
+      "margin": -0.09444044,
+      "returnOnCost": -0.08629107,
+      "costs": {
+        "card": 19847.37,
+        "payroll": 5135.55,
+        "pmSalary": 1476.23833333,
+        "seatCharges": 324.12666667,
+        "procurement": 3370.00333333,
+        "cashTransfers": 746,
+        "otherIndirect": 1689.34166667
+      },
+      "allocatedOverhead": 6859.71,
+      "localExpenses": 25728.92,
+      "contributionProfit": 4047.60218,
+      "contributionMargin": 0.13593267,
+      "source": {
+        "sheet": "P&L",
+        "range": "B6:H6",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "C5",
+          "payroll": "C19",
+          "pmSalary": "C29",
+          "seatCharges": "C30",
+          "procurement": "AG4",
+          "cashTransfers": "T4",
+          "otherIndirect": "AF4"
+        }
+      }
+    },
+    {
+      "country": "Argentina",
+      "countryCode": "AR",
+      "month": 3,
+      "period": "2026-03",
+      "income": 29035.53,
+      "billables": 3415.17,
+      "managementFees": 266.38326,
+      "revenue": 32717.08326,
+      "expenses": 37197.34,
+      "profit": -4480.25674,
+      "margin": -0.13693937,
+      "returnOnCost": -0.12044562,
+      "costs": {
+        "card": 24569.53,
+        "payroll": 5792.4,
+        "pmSalary": 1519.715,
+        "seatCharges": 324.12666667,
+        "procurement": 219.385,
+        "cashTransfers": 4313.85,
+        "otherIndirect": 458.33333333
+      },
+      "allocatedOverhead": 2521.56,
+      "localExpenses": 34675.78,
+      "contributionProfit": -1958.69674,
+      "contributionMargin": -0.05986771,
+      "source": {
+        "sheet": "P&L",
+        "range": "B7:H7",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "D5",
+          "payroll": "D19",
+          "pmSalary": "D29",
+          "seatCharges": "D30",
+          "procurement": "AG5",
+          "cashTransfers": "U4",
+          "otherIndirect": "AF5"
+        }
+      }
+    },
+    {
+      "country": "Argentina",
+      "countryCode": "AR",
+      "month": 4,
+      "period": "2026-04",
+      "income": 20004.61,
+      "billables": 618.6,
+      "managementFees": 48.2508,
+      "revenue": 20671.4608,
+      "expenses": 24842.52,
+      "profit": -4171.0592,
+      "margin": -0.20177864,
+      "returnOnCost": -0.1679,
+      "costs": {
+        "card": 17137.68,
+        "payroll": 4973.55,
+        "pmSalary": 1436.43166667,
+        "seatCharges": 324.12666667,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 970.73166667
+      },
+      "allocatedOverhead": 2731.29,
+      "localExpenses": 22111.23,
+      "contributionProfit": -1439.7692,
+      "contributionMargin": -0.06965009,
+      "source": {
+        "sheet": "P&L",
+        "range": "B8:H8",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "E5",
+          "payroll": "E19",
+          "pmSalary": "E29",
+          "seatCharges": "E30",
+          "procurement": "AG6",
+          "cashTransfers": "V4",
+          "otherIndirect": "AF6"
+        }
+      }
+    },
+    {
+      "country": "Argentina",
+      "countryCode": "AR",
+      "month": 5,
+      "period": "2026-05",
+      "income": 19871.07,
+      "billables": 164.13,
+      "managementFees": 12.80214,
+      "revenue": 20048.00214,
+      "expenses": 25813.82233333,
+      "profit": -5765.82019333,
+      "margin": -0.28760074,
+      "returnOnCost": -0.22336174,
+      "costs": {
+        "card": 18352.35,
+        "payroll": 5239.3,
+        "pmSalary": 1545.87666667,
+        "seatCharges": 324.12666667,
+        "procurement": 320.03833333,
+        "cashTransfers": 0,
+        "otherIndirect": 32.13066667
+      },
+      "allocatedOverhead": 2222.17233333,
+      "localExpenses": 23591.65,
+      "contributionProfit": -3543.64786,
+      "contributionMargin": -0.17675815,
+      "source": {
+        "sheet": "P&L",
+        "range": "B9:H9",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "F5",
+          "payroll": "F19",
+          "pmSalary": "F29",
+          "seatCharges": "F30",
+          "procurement": "AG7",
+          "cashTransfers": "W4",
+          "otherIndirect": "AF7"
+        }
+      }
+    },
+    {
+      "country": "Argentina",
+      "countryCode": "AR",
+      "month": 6,
+      "period": "2026-06",
+      "income": 23760.31,
+      "billables": 8.34,
+      "managementFees": 0.65052,
+      "revenue": 23769.30052,
+      "expenses": 26818.861,
+      "profit": -3049.56048,
+      "margin": -0.12829828,
+      "returnOnCost": -0.11370954,
+      "costs": {
+        "card": 17866.51,
+        "payroll": 7077.06,
+        "pmSalary": 1540.50166667,
+        "seatCharges": 324.12666667,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 10.66266667
+      },
+      "allocatedOverhead": 1875.291,
+      "localExpenses": 24943.57,
+      "contributionProfit": -1174.26948,
+      "contributionMargin": -0.04940278,
+      "source": {
+        "sheet": "P&L",
+        "range": "B10:H10",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "G5",
+          "payroll": "G19",
+          "pmSalary": "G29",
+          "seatCharges": "G30",
+          "procurement": "AG8",
+          "cashTransfers": "X4",
+          "otherIndirect": "AF8"
+        }
+      }
+    },
+    {
+      "country": "Argentina",
+      "countryCode": "AR",
+      "month": 7,
+      "period": "2026-07",
+      "income": 26108.91,
+      "billables": 49.77,
+      "managementFees": 3.88206,
+      "revenue": 26162.56206,
+      "expenses": 30319.411,
+      "profit": -4156.84894,
+      "margin": -0.15888539,
+      "returnOnCost": -0.1371019,
+      "costs": {
+        "card": 21722.58,
+        "payroll": 6120.96,
+        "pmSalary": 1548.57,
+        "seatCharges": 324.12666667,
+        "procurement": 47.18333333,
+        "cashTransfers": 500,
+        "otherIndirect": 55.991
+      },
+      "allocatedOverhead": 1975.871,
+      "localExpenses": 28343.54,
+      "contributionProfit": -2180.97794,
+      "contributionMargin": -0.08336255,
+      "source": {
+        "sheet": "P&L",
+        "range": "B11:H11",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "H5",
+          "payroll": "H19",
+          "pmSalary": "H29",
+          "seatCharges": "H30",
+          "procurement": "AG9",
+          "cashTransfers": "Y4",
+          "otherIndirect": "AF9"
+        }
+      }
+    },
+    {
+      "country": "Argentina",
+      "countryCode": "AR",
+      "month": 8,
+      "period": "2026-08",
+      "income": 17878.5,
+      "billables": 83.38,
+      "managementFees": 6.50364,
+      "revenue": 17968.38364,
+      "expenses": 18452.844,
+      "profit": -484.46036,
+      "margin": -0.02696182,
+      "returnOnCost": -0.02625397,
+      "costs": {
+        "card": 10908.7,
+        "payroll": 5622.81,
+        "pmSalary": 1464,
+        "seatCharges": 324.12666667,
+        "procurement": 128.90333333,
+        "cashTransfers": 0,
+        "otherIndirect": 4.304
+      },
+      "allocatedOverhead": 1921.334,
+      "localExpenses": 16531.51,
+      "contributionProfit": 1436.87364,
+      "contributionMargin": 0.07996677,
+      "source": {
+        "sheet": "P&L",
+        "range": "B12:H12",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "I5",
+          "payroll": "I19",
+          "pmSalary": "I29",
+          "seatCharges": "I30",
+          "procurement": "AG10",
+          "cashTransfers": "Z4",
+          "otherIndirect": "AF10"
+        }
+      }
+    },
+    {
+      "country": "Argentina",
+      "countryCode": "AR",
+      "month": 9,
+      "period": "2026-09",
+      "income": 16525.16,
+      "billables": 91.71,
+      "managementFees": 7.15338,
+      "revenue": 16624.02338,
+      "expenses": 22160.63683333,
+      "profit": -5536.61345333,
+      "margin": -0.33304895,
+      "returnOnCost": -0.24984,
+      "costs": {
+        "card": 15512.28,
+        "payroll": 4297.08,
+        "pmSalary": 1547.66666667,
+        "seatCharges": 324.12666667,
+        "procurement": 456.69833333,
+        "cashTransfers": 0,
+        "otherIndirect": 22.78516667
+      },
+      "allocatedOverhead": 2351.27683333,
+      "localExpenses": 19809.36,
+      "contributionProfit": -3185.33662,
+      "contributionMargin": -0.19161045,
+      "source": {
+        "sheet": "P&L",
+        "range": "B13:H13",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "J5",
+          "payroll": "J19",
+          "pmSalary": "J29",
+          "seatCharges": "J30",
+          "procurement": "AG11",
+          "cashTransfers": "AA4",
+          "otherIndirect": "AF11"
+        }
+      }
+    },
+    {
+      "country": "Brazil",
+      "countryCode": "BR",
+      "month": 1,
+      "period": "2026-01",
+      "income": 81823.83,
+      "billables": 8593.22,
+      "managementFees": 670.27116,
+      "revenue": 91087.32116,
+      "expenses": 76225.27,
+      "profit": 14862.05116,
+      "margin": 0.16316268,
+      "returnOnCost": 0.19497538,
+      "costs": {
+        "card": 44591.16,
+        "payroll": 22548.37,
+        "pmSalary": 1348,
+        "seatCharges": 324.12666667,
+        "procurement": 4590.15333333,
+        "cashTransfers": 1666.66666667,
+        "otherIndirect": 1156.79333333
+      },
+      "allocatedOverhead": 7419.07333333,
+      "localExpenses": 68806.19666667,
+      "contributionProfit": 22281.12449333,
+      "contributionMargin": 0.2446128,
+      "source": {
+        "sheet": "P&L",
+        "range": "B18:H18",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "B6",
+          "payroll": "B20",
+          "pmSalary": "B29",
+          "seatCharges": "B30",
+          "procurement": "AG3",
+          "cashTransfers": "S5",
+          "otherIndirect": "AF3"
+        }
+      }
+    },
+    {
+      "country": "Brazil",
+      "countryCode": "BR",
+      "month": 2,
+      "period": "2026-02",
+      "income": 96086.79,
+      "billables": 7163.13,
+      "managementFees": 558.72414,
+      "revenue": 103808.64414,
+      "expenses": 78353.77,
+      "profit": 25454.87414,
+      "margin": 0.24520958,
+      "returnOnCost": 0.32487108,
+      "costs": {
+        "card": 45353.26,
+        "payroll": 26140.8,
+        "pmSalary": 1476.23833333,
+        "seatCharges": 324.12666667,
+        "procurement": 3370.00333333,
+        "cashTransfers": 0,
+        "otherIndirect": 1689.34166667
+      },
+      "allocatedOverhead": 6859.71,
+      "localExpenses": 71494.06,
+      "contributionProfit": 32314.58414,
+      "contributionMargin": 0.31128992,
+      "source": {
+        "sheet": "P&L",
+        "range": "B19:H19",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "C6",
+          "payroll": "C20",
+          "pmSalary": "C29",
+          "seatCharges": "C30",
+          "procurement": "AG4",
+          "cashTransfers": "T5",
+          "otherIndirect": "AF4"
+        }
+      }
+    },
+    {
+      "country": "Brazil",
+      "countryCode": "BR",
+      "month": 3,
+      "period": "2026-03",
+      "income": 121998.52,
+      "billables": 3400.9,
+      "managementFees": 265.2702,
+      "revenue": 125664.6902,
+      "expenses": 92340.42,
+      "profit": 33324.2702,
+      "margin": 0.26518404,
+      "returnOnCost": 0.36088498,
+      "costs": {
+        "card": 56020.04,
+        "payroll": 33785.09,
+        "pmSalary": 1519.715,
+        "seatCharges": 324.12666667,
+        "procurement": 219.385,
+        "cashTransfers": 13.73,
+        "otherIndirect": 458.33333333
+      },
+      "allocatedOverhead": 2521.56,
+      "localExpenses": 89818.86,
+      "contributionProfit": 35845.8302,
+      "contributionMargin": 0.28524982,
+      "source": {
+        "sheet": "P&L",
+        "range": "B20:H20",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "D6",
+          "payroll": "D20",
+          "pmSalary": "D29",
+          "seatCharges": "D30",
+          "procurement": "AG5",
+          "cashTransfers": "U5",
+          "otherIndirect": "AF5"
+        }
+      }
+    },
+    {
+      "country": "Brazil",
+      "countryCode": "BR",
+      "month": 4,
+      "period": "2026-04",
+      "income": 108898.98,
+      "billables": 1574.59,
+      "managementFees": 122.81802,
+      "revenue": 110596.38802,
+      "expenses": 90291.15,
+      "profit": 20305.23802,
+      "margin": 0.18359766,
+      "returnOnCost": 0.22488625,
+      "costs": {
+        "card": 58722.43,
+        "payroll": 28781.32,
+        "pmSalary": 1436.43166667,
+        "seatCharges": 324.12666667,
+        "procurement": 0,
+        "cashTransfers": 56.11,
+        "otherIndirect": 970.73166667
+      },
+      "allocatedOverhead": 2731.29,
+      "localExpenses": 87559.86,
+      "contributionProfit": 23036.52802,
+      "contributionMargin": 0.20829367,
+      "source": {
+        "sheet": "P&L",
+        "range": "B21:H21",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "E6",
+          "payroll": "E20",
+          "pmSalary": "E29",
+          "seatCharges": "E30",
+          "procurement": "AG6",
+          "cashTransfers": "V5",
+          "otherIndirect": "AF6"
+        }
+      }
+    },
+    {
+      "country": "Brazil",
+      "countryCode": "BR",
+      "month": 5,
+      "period": "2026-05",
+      "income": 110880.48,
+      "billables": 173.13,
+      "managementFees": 13.50414,
+      "revenue": 111067.11414,
+      "expenses": 91345.43233333,
+      "profit": 19721.68180667,
+      "margin": 0.17756545,
+      "returnOnCost": 0.21590222,
+      "costs": {
+        "card": 57757.98,
+        "payroll": 31365.28,
+        "pmSalary": 1545.87666667,
+        "seatCharges": 324.12666667,
+        "procurement": 320.03833333,
+        "cashTransfers": 0,
+        "otherIndirect": 32.13066667
+      },
+      "allocatedOverhead": 2222.17233333,
+      "localExpenses": 89123.26,
+      "contributionProfit": 21943.85414,
+      "contributionMargin": 0.19757292,
+      "source": {
+        "sheet": "P&L",
+        "range": "B22:H22",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "F6",
+          "payroll": "F20",
+          "pmSalary": "F29",
+          "seatCharges": "F30",
+          "procurement": "AG7",
+          "cashTransfers": "W5",
+          "otherIndirect": "AF7"
+        }
+      }
+    },
+    {
+      "country": "Brazil",
+      "countryCode": "BR",
+      "month": 6,
+      "period": "2026-06",
+      "income": 102664.61,
+      "billables": 22.56,
+      "managementFees": 1.75968,
+      "revenue": 102688.92968,
+      "expenses": 87613.651,
+      "profit": 15075.27868,
+      "margin": 0.1468053,
+      "returnOnCost": 0.17206541,
+      "costs": {
+        "card": 56708.71,
+        "payroll": 29029.65,
+        "pmSalary": 1540.50166667,
+        "seatCharges": 324.12666667,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 10.66266667
+      },
+      "allocatedOverhead": 1875.291,
+      "localExpenses": 85738.36,
+      "contributionProfit": 16950.56968,
+      "contributionMargin": 0.16506716,
+      "source": {
+        "sheet": "P&L",
+        "range": "B23:H23",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "G6",
+          "payroll": "G20",
+          "pmSalary": "G29",
+          "seatCharges": "G30",
+          "procurement": "AG8",
+          "cashTransfers": "X5",
+          "otherIndirect": "AF8"
+        }
+      }
+    },
+    {
+      "country": "Brazil",
+      "countryCode": "BR",
+      "month": 7,
+      "period": "2026-07",
+      "income": 115690.59,
+      "billables": 2605.94,
+      "managementFees": 203.26332,
+      "revenue": 118499.79332,
+      "expenses": 105510.631,
+      "profit": 12989.16232,
+      "margin": 0.10961338,
+      "returnOnCost": 0.12310762,
+      "costs": {
+        "card": 69630.19,
+        "payroll": 33404.57,
+        "pmSalary": 1548.57,
+        "seatCharges": 324.12666667,
+        "procurement": 47.18333333,
+        "cashTransfers": 500,
+        "otherIndirect": 55.991
+      },
+      "allocatedOverhead": 1975.871,
+      "localExpenses": 103534.76,
+      "contributionProfit": 14965.03332,
+      "contributionMargin": 0.12628742,
+      "source": {
+        "sheet": "P&L",
+        "range": "B24:H24",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "H6",
+          "payroll": "H20",
+          "pmSalary": "H29",
+          "seatCharges": "H30",
+          "procurement": "AG9",
+          "cashTransfers": "Y5",
+          "otherIndirect": "AF9"
+        }
+      }
+    },
+    {
+      "country": "Brazil",
+      "countryCode": "BR",
+      "month": 8,
+      "period": "2026-08",
+      "income": 82802.46,
+      "billables": 197.63,
+      "managementFees": 15.41514,
+      "revenue": 83015.50514,
+      "expenses": 70614.714,
+      "profit": 12400.79114,
+      "margin": 0.14937922,
+      "returnOnCost": 0.175612,
+      "costs": {
+        "card": 40658.57,
+        "payroll": 28034.81,
+        "pmSalary": 1464,
+        "seatCharges": 324.12666667,
+        "procurement": 128.90333333,
+        "cashTransfers": 0,
+        "otherIndirect": 4.304
+      },
+      "allocatedOverhead": 1921.334,
+      "localExpenses": 68693.38,
+      "contributionProfit": 14322.12514,
+      "contributionMargin": 0.1725235,
+      "source": {
+        "sheet": "P&L",
+        "range": "B25:H25",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "I6",
+          "payroll": "I20",
+          "pmSalary": "I29",
+          "seatCharges": "I30",
+          "procurement": "AG10",
+          "cashTransfers": "Z5",
+          "otherIndirect": "AF10"
+        }
+      }
+    },
+    {
+      "country": "Brazil",
+      "countryCode": "BR",
+      "month": 9,
+      "period": "2026-09",
+      "income": 78375.32,
+      "billables": 479.59,
+      "managementFees": 37.40802,
+      "revenue": 78892.31802,
+      "expenses": 84977.00683333,
+      "profit": -6084.68881333,
+      "margin": -0.07712651,
+      "returnOnCost": -0.07160394,
+      "costs": {
+        "card": 58097.42,
+        "payroll": 24528.31,
+        "pmSalary": 1547.66666667,
+        "seatCharges": 324.12666667,
+        "procurement": 456.69833333,
+        "cashTransfers": 0,
+        "otherIndirect": 22.78516667
+      },
+      "allocatedOverhead": 2351.27683333,
+      "localExpenses": 82625.73,
+      "contributionProfit": -3733.41198,
+      "contributionMargin": -0.04732288,
+      "source": {
+        "sheet": "P&L",
+        "range": "B26:H26",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "J6",
+          "payroll": "J20",
+          "pmSalary": "J29",
+          "seatCharges": "J30",
+          "procurement": "AG11",
+          "cashTransfers": "AA5",
+          "otherIndirect": "AF11"
+        }
+      }
+    },
+    {
+      "country": "Chile",
+      "countryCode": "CL",
+      "month": 1,
+      "period": "2026-01",
+      "income": 8287.5,
+      "billables": 825.91,
+      "managementFees": 64.42098,
+      "revenue": 9177.83098,
+      "expenses": 17363.68,
+      "profit": -8185.84902,
+      "margin": -0.89191543,
+      "returnOnCost": -0.47143515,
+      "costs": {
+        "card": 3345.94,
+        "payroll": 2983,
+        "pmSalary": 1348,
+        "seatCharges": 324.12666667,
+        "procurement": 4590.15333333,
+        "cashTransfers": 3615.66666667,
+        "otherIndirect": 1156.79333333
+      },
+      "allocatedOverhead": 7419.07333333,
+      "localExpenses": 9944.60666667,
+      "contributionProfit": -766.77568667,
+      "contributionMargin": -0.0835465,
+      "source": {
+        "sheet": "P&L",
+        "range": "B31:H31",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "B7",
+          "payroll": "B21",
+          "pmSalary": "B29",
+          "seatCharges": "B30",
+          "procurement": "AG3",
+          "cashTransfers": "S6",
+          "otherIndirect": "AF3"
+        }
+      }
+    },
+    {
+      "country": "Chile",
+      "countryCode": "CL",
+      "month": 2,
+      "period": "2026-02",
+      "income": 10912.08,
+      "billables": 239.21,
+      "managementFees": 18.65838,
+      "revenue": 11169.94838,
+      "expenses": 12971.91,
+      "profit": -1801.96162,
+      "margin": -0.16132229,
+      "returnOnCost": -0.13891259,
+      "costs": {
+        "card": 2666.75,
+        "payroll": 3320,
+        "pmSalary": 1476.23833333,
+        "seatCharges": 324.12666667,
+        "procurement": 3370.00333333,
+        "cashTransfers": 125.45,
+        "otherIndirect": 1689.34166667
+      },
+      "allocatedOverhead": 6859.71,
+      "localExpenses": 6112.2,
+      "contributionProfit": 5057.74838,
+      "contributionMargin": 0.45279962,
+      "source": {
+        "sheet": "P&L",
+        "range": "B32:H32",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "C7",
+          "payroll": "C21",
+          "pmSalary": "C29",
+          "seatCharges": "C30",
+          "procurement": "AG4",
+          "cashTransfers": "T6",
+          "otherIndirect": "AF4"
+        }
+      }
+    },
+    {
+      "country": "Chile",
+      "countryCode": "CL",
+      "month": 3,
+      "period": "2026-03",
+      "income": 10334.22,
+      "billables": 870.1,
+      "managementFees": 67.8678,
+      "revenue": 11272.1878,
+      "expenses": 11178.14,
+      "profit": 94.0478,
+      "margin": 0.00834335,
+      "returnOnCost": 0.00841355,
+      "costs": {
+        "card": 3666.58,
+        "payroll": 3640,
+        "pmSalary": 1519.715,
+        "seatCharges": 324.12666667,
+        "procurement": 219.385,
+        "cashTransfers": 1350,
+        "otherIndirect": 458.33333333
+      },
+      "allocatedOverhead": 2521.56,
+      "localExpenses": 8656.58,
+      "contributionProfit": 2615.6078,
+      "contributionMargin": 0.23204083,
+      "source": {
+        "sheet": "P&L",
+        "range": "B33:H33",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "D7",
+          "payroll": "D21",
+          "pmSalary": "D29",
+          "seatCharges": "D30",
+          "procurement": "AG5",
+          "cashTransfers": "U6",
+          "otherIndirect": "AF5"
+        }
+      }
+    },
+    {
+      "country": "Chile",
+      "countryCode": "CL",
+      "month": 4,
+      "period": "2026-04",
+      "income": 9446.59,
+      "billables": 122.72,
+      "managementFees": 9.57216,
+      "revenue": 9578.88216,
+      "expenses": 11457.59,
+      "profit": -1878.70784,
+      "margin": -0.19613018,
+      "returnOnCost": -0.16397059,
+      "costs": {
+        "card": 5280.39,
+        "payroll": 3323.65,
+        "pmSalary": 1436.43166667,
+        "seatCharges": 324.12666667,
+        "procurement": 0,
+        "cashTransfers": 122.26,
+        "otherIndirect": 970.73166667
+      },
+      "allocatedOverhead": 2731.29,
+      "localExpenses": 8726.3,
+      "contributionProfit": 852.58216,
+      "contributionMargin": 0.08900644,
+      "source": {
+        "sheet": "P&L",
+        "range": "B34:H34",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "E7",
+          "payroll": "E21",
+          "pmSalary": "E29",
+          "seatCharges": "E30",
+          "procurement": "AG6",
+          "cashTransfers": "V6",
+          "otherIndirect": "AF6"
+        }
+      }
+    },
+    {
+      "country": "Chile",
+      "countryCode": "CL",
+      "month": 5,
+      "period": "2026-05",
+      "income": 8697.81,
+      "billables": 10.4,
+      "managementFees": 0.8112,
+      "revenue": 8709.0212,
+      "expenses": 10033.50233333,
+      "profit": -1324.48113333,
+      "margin": -0.15208151,
+      "returnOnCost": -0.13200586,
+      "costs": {
+        "card": 5034.62,
+        "payroll": 2680,
+        "pmSalary": 1545.87666667,
+        "seatCharges": 324.12666667,
+        "procurement": 320.03833333,
+        "cashTransfers": 96.71,
+        "otherIndirect": 32.13066667
+      },
+      "allocatedOverhead": 2222.17233333,
+      "localExpenses": 7811.33,
+      "contributionProfit": 897.6912,
+      "contributionMargin": 0.10307602,
+      "source": {
+        "sheet": "P&L",
+        "range": "B35:H35",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "F7",
+          "payroll": "F21",
+          "pmSalary": "F29",
+          "seatCharges": "F30",
+          "procurement": "AG7",
+          "cashTransfers": "W6",
+          "otherIndirect": "AF7"
+        }
+      }
+    },
+    {
+      "country": "Chile",
+      "countryCode": "CL",
+      "month": 6,
+      "period": "2026-06",
+      "income": 8949.81,
+      "billables": 261.05,
+      "managementFees": 20.3619,
+      "revenue": 9231.2219,
+      "expenses": 8561.901,
+      "profit": 669.3209,
+      "margin": 0.07250621,
+      "returnOnCost": 0.07817433,
+      "costs": {
+        "card": 4334.96,
+        "payroll": 2320,
+        "pmSalary": 1540.50166667,
+        "seatCharges": 324.12666667,
+        "procurement": 0,
+        "cashTransfers": 31.65,
+        "otherIndirect": 10.66266667
+      },
+      "allocatedOverhead": 1875.291,
+      "localExpenses": 6686.61,
+      "contributionProfit": 2544.6119,
+      "contributionMargin": 0.27565277,
+      "source": {
+        "sheet": "P&L",
+        "range": "B36:H36",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "G7",
+          "payroll": "G21",
+          "pmSalary": "G29",
+          "seatCharges": "G30",
+          "procurement": "AG8",
+          "cashTransfers": "X6",
+          "otherIndirect": "AF8"
+        }
+      }
+    },
+    {
+      "country": "Chile",
+      "countryCode": "CL",
+      "month": 7,
+      "period": "2026-07",
+      "income": 6589.8,
+      "billables": 371.03,
+      "managementFees": 28.94034,
+      "revenue": 6989.77034,
+      "expenses": 7602.431,
+      "profit": -612.66066,
+      "margin": -0.08765104,
+      "returnOnCost": -0.08058747,
+      "costs": {
+        "card": 2883.59,
+        "payroll": 2695,
+        "pmSalary": 1548.57,
+        "seatCharges": 324.12666667,
+        "procurement": 47.18333333,
+        "cashTransfers": 47.97,
+        "otherIndirect": 55.991
+      },
+      "allocatedOverhead": 1975.871,
+      "localExpenses": 5626.56,
+      "contributionProfit": 1363.21034,
+      "contributionMargin": 0.19502935,
+      "source": {
+        "sheet": "P&L",
+        "range": "B37:H37",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "H7",
+          "payroll": "H21",
+          "pmSalary": "H29",
+          "seatCharges": "H30",
+          "procurement": "AG9",
+          "cashTransfers": "Y6",
+          "otherIndirect": "AF9"
+        }
+      }
+    },
+    {
+      "country": "Chile",
+      "countryCode": "CL",
+      "month": 8,
+      "period": "2026-08",
+      "income": 7135.58,
+      "billables": 0,
+      "managementFees": 0,
+      "revenue": 7135.58,
+      "expenses": 8030.604,
+      "profit": -895.024,
+      "margin": -0.12543115,
+      "returnOnCost": -0.11145164,
+      "costs": {
+        "card": 3273.69,
+        "payroll": 2595,
+        "pmSalary": 1464,
+        "seatCharges": 324.12666667,
+        "procurement": 128.90333333,
+        "cashTransfers": 240.58,
+        "otherIndirect": 4.304
+      },
+      "allocatedOverhead": 1921.334,
+      "localExpenses": 6109.27,
+      "contributionProfit": 1026.31,
+      "contributionMargin": 0.14382993,
+      "source": {
+        "sheet": "P&L",
+        "range": "B38:H38",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "I7",
+          "payroll": "I21",
+          "pmSalary": "I29",
+          "seatCharges": "I30",
+          "procurement": "AG10",
+          "cashTransfers": "Z6",
+          "otherIndirect": "AF10"
+        }
+      }
+    },
+    {
+      "country": "Chile",
+      "countryCode": "CL",
+      "month": 9,
+      "period": "2026-09",
+      "income": 6344.15,
+      "billables": 994.79,
+      "managementFees": 77.59362,
+      "revenue": 7416.53362,
+      "expenses": 10138.09683333,
+      "profit": -2721.56321333,
+      "margin": -0.36695893,
+      "returnOnCost": -0.26844912,
+      "costs": {
+        "card": 5415.41,
+        "payroll": 2174.8,
+        "pmSalary": 1547.66666667,
+        "seatCharges": 324.12666667,
+        "procurement": 456.69833333,
+        "cashTransfers": 196.61,
+        "otherIndirect": 22.78516667
+      },
+      "allocatedOverhead": 2351.27683333,
+      "localExpenses": 7786.82,
+      "contributionProfit": -370.28638,
+      "contributionMargin": -0.04992715,
+      "source": {
+        "sheet": "P&L",
+        "range": "B39:H39",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "J7",
+          "payroll": "J21",
+          "pmSalary": "J29",
+          "seatCharges": "J30",
+          "procurement": "AG11",
+          "cashTransfers": "AA6",
+          "otherIndirect": "AF11"
+        }
+      }
+    },
+    {
+      "country": "Colombia",
+      "countryCode": "CO",
+      "month": 1,
+      "period": "2026-01",
+      "income": 8674.45,
+      "billables": 5587.28,
+      "managementFees": 435.80784,
+      "revenue": 14697.53784,
+      "expenses": 22582.23,
+      "profit": -7884.69216,
+      "margin": -0.53646347,
+      "returnOnCost": -0.34915472,
+      "costs": {
+        "card": 7792.65,
+        "payroll": 3405.75,
+        "pmSalary": 1348,
+        "seatCharges": 324.12666667,
+        "procurement": 4590.15333333,
+        "cashTransfers": 3964.75666667,
+        "otherIndirect": 1156.79333333
+      },
+      "allocatedOverhead": 7419.07333333,
+      "localExpenses": 15163.15666667,
+      "contributionProfit": -465.61882667,
+      "contributionMargin": -0.03168006,
+      "source": {
+        "sheet": "P&L",
+        "range": "B44:H44",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "B8",
+          "payroll": "B22",
+          "pmSalary": "B29",
+          "seatCharges": "B30",
+          "procurement": "AG3",
+          "cashTransfers": "S7",
+          "otherIndirect": "AF3"
+        }
+      }
+    },
+    {
+      "country": "Colombia",
+      "countryCode": "CO",
+      "month": 2,
+      "period": "2026-02",
+      "income": 8054.08,
+      "billables": 1626.85,
+      "managementFees": 126.8943,
+      "revenue": 9807.8243,
+      "expenses": 15904.93,
+      "profit": -6097.1057,
+      "margin": -0.62165731,
+      "returnOnCost": -0.38334691,
+      "costs": {
+        "card": 3374.32,
+        "payroll": 3483.73,
+        "pmSalary": 1476.23833333,
+        "seatCharges": 324.12666667,
+        "procurement": 3370.00333333,
+        "cashTransfers": 2187.17,
+        "otherIndirect": 1689.34166667
+      },
+      "allocatedOverhead": 6859.71,
+      "localExpenses": 9045.22,
+      "contributionProfit": 762.6043,
+      "contributionMargin": 0.07775469,
+      "source": {
+        "sheet": "P&L",
+        "range": "B45:H45",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "C8",
+          "payroll": "C22",
+          "pmSalary": "C29",
+          "seatCharges": "C30",
+          "procurement": "AG4",
+          "cashTransfers": "T7",
+          "otherIndirect": "AF4"
+        }
+      }
+    },
+    {
+      "country": "Colombia",
+      "countryCode": "CO",
+      "month": 3,
+      "period": "2026-03",
+      "income": 9698.5,
+      "billables": 3558.53,
+      "managementFees": 277.56534,
+      "revenue": 13534.59534,
+      "expenses": 14420.41,
+      "profit": -885.81466,
+      "margin": -0.06544818,
+      "returnOnCost": -0.06142784,
+      "costs": {
+        "card": 6323.61,
+        "payroll": 2493.77,
+        "pmSalary": 1519.715,
+        "seatCharges": 324.12666667,
+        "procurement": 219.385,
+        "cashTransfers": 3081.47,
+        "otherIndirect": 458.33333333
+      },
+      "allocatedOverhead": 2521.56,
+      "localExpenses": 11898.85,
+      "contributionProfit": 1635.74534,
+      "contributionMargin": 0.12085661,
+      "source": {
+        "sheet": "P&L",
+        "range": "B46:H46",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "D8",
+          "payroll": "D22",
+          "pmSalary": "D29",
+          "seatCharges": "D30",
+          "procurement": "AG5",
+          "cashTransfers": "U7",
+          "otherIndirect": "AF5"
+        }
+      }
+    },
+    {
+      "country": "Colombia",
+      "countryCode": "CO",
+      "month": 4,
+      "period": "2026-04",
+      "income": 8791.51,
+      "billables": 351.02,
+      "managementFees": 27.37956,
+      "revenue": 9169.90956,
+      "expenses": 13010.82,
+      "profit": -3840.91044,
+      "margin": -0.41886023,
+      "returnOnCost": -0.29520894,
+      "costs": {
+        "card": 2906.82,
+        "payroll": 3195.34,
+        "pmSalary": 1436.43166667,
+        "seatCharges": 324.12666667,
+        "procurement": 0,
+        "cashTransfers": 4177.37,
+        "otherIndirect": 970.73166667
+      },
+      "allocatedOverhead": 2731.29,
+      "localExpenses": 10279.53,
+      "contributionProfit": -1109.62044,
+      "contributionMargin": -0.12100669,
+      "source": {
+        "sheet": "P&L",
+        "range": "B47:H47",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "E8",
+          "payroll": "E22",
+          "pmSalary": "E29",
+          "seatCharges": "E30",
+          "procurement": "AG6",
+          "cashTransfers": "V7",
+          "otherIndirect": "AF6"
+        }
+      }
+    },
+    {
+      "country": "Colombia",
+      "countryCode": "CO",
+      "month": 5,
+      "period": "2026-05",
+      "income": 10299.01,
+      "billables": 626.48,
+      "managementFees": 48.86544,
+      "revenue": 10974.35544,
+      "expenses": 13021.00233333,
+      "profit": -2046.64689333,
+      "margin": -0.18649359,
+      "returnOnCost": -0.15718044,
+      "costs": {
+        "card": 4882.67,
+        "payroll": 3315.15,
+        "pmSalary": 1545.87666667,
+        "seatCharges": 324.12666667,
+        "procurement": 320.03833333,
+        "cashTransfers": 2601.01,
+        "otherIndirect": 32.13066667
+      },
+      "allocatedOverhead": 2222.17233333,
+      "localExpenses": 10798.83,
+      "contributionProfit": 175.52544,
+      "contributionMargin": 0.01599415,
+      "source": {
+        "sheet": "P&L",
+        "range": "B48:H48",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "F8",
+          "payroll": "F22",
+          "pmSalary": "F29",
+          "seatCharges": "F30",
+          "procurement": "AG7",
+          "cashTransfers": "W7",
+          "otherIndirect": "AF7"
+        }
+      }
+    },
+    {
+      "country": "Colombia",
+      "countryCode": "CO",
+      "month": 6,
+      "period": "2026-06",
+      "income": 10187.39,
+      "billables": 154.73,
+      "managementFees": 12.06894,
+      "revenue": 10354.18894,
+      "expenses": 12344.821,
+      "profit": -1990.63206,
+      "margin": -0.19225379,
+      "returnOnCost": -0.1612524,
+      "costs": {
+        "card": 4095.06,
+        "payroll": 3326.74,
+        "pmSalary": 1540.50166667,
+        "seatCharges": 324.12666667,
+        "procurement": 0,
+        "cashTransfers": 3047.73,
+        "otherIndirect": 10.66266667
+      },
+      "allocatedOverhead": 1875.291,
+      "localExpenses": 10469.53,
+      "contributionProfit": -115.34106,
+      "contributionMargin": -0.01113956,
+      "source": {
+        "sheet": "P&L",
+        "range": "B49:H49",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "G8",
+          "payroll": "G22",
+          "pmSalary": "G29",
+          "seatCharges": "G30",
+          "procurement": "AG8",
+          "cashTransfers": "X7",
+          "otherIndirect": "AF8"
+        }
+      }
+    },
+    {
+      "country": "Colombia",
+      "countryCode": "CO",
+      "month": 7,
+      "period": "2026-07",
+      "income": 9590.32,
+      "billables": 17.11,
+      "managementFees": 1.33458,
+      "revenue": 9608.76458,
+      "expenses": 12111.581,
+      "profit": -2502.81642,
+      "margin": -0.26047224,
+      "returnOnCost": -0.20664655,
+      "costs": {
+        "card": 4256.32,
+        "payroll": 3173.32,
+        "pmSalary": 1548.57,
+        "seatCharges": 324.12666667,
+        "procurement": 47.18333333,
+        "cashTransfers": 2706.07,
+        "otherIndirect": 55.991
+      },
+      "allocatedOverhead": 1975.871,
+      "localExpenses": 10135.71,
+      "contributionProfit": -526.94542,
+      "contributionMargin": -0.05484008,
+      "source": {
+        "sheet": "P&L",
+        "range": "B50:H50",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "H8",
+          "payroll": "H22",
+          "pmSalary": "H29",
+          "seatCharges": "H30",
+          "procurement": "AG9",
+          "cashTransfers": "Y7",
+          "otherIndirect": "AF9"
+        }
+      }
+    },
+    {
+      "country": "Colombia",
+      "countryCode": "CO",
+      "month": 8,
+      "period": "2026-08",
+      "income": 1852.02,
+      "billables": 54.47,
+      "managementFees": 4.24866,
+      "revenue": 1910.73866,
+      "expenses": 10655.504,
+      "profit": -8744.76534,
+      "margin": -4.57664123,
+      "returnOnCost": -0.82068059,
+      "costs": {
+        "card": 1562.2,
+        "payroll": 4166.4,
+        "pmSalary": 1464,
+        "seatCharges": 324.12666667,
+        "procurement": 128.90333333,
+        "cashTransfers": 3005.57,
+        "otherIndirect": 4.304
+      },
+      "allocatedOverhead": 1921.334,
+      "localExpenses": 8734.17,
+      "contributionProfit": -6823.43134,
+      "contributionMargin": -3.57109608,
+      "source": {
+        "sheet": "P&L",
+        "range": "B51:H51",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "I8",
+          "payroll": "I22",
+          "pmSalary": "I29",
+          "seatCharges": "I30",
+          "procurement": "AG10",
+          "cashTransfers": "Z7",
+          "otherIndirect": "AF10"
+        }
+      }
+    },
+    {
+      "country": "Colombia",
+      "countryCode": "CO",
+      "month": 9,
+      "period": "2026-09",
+      "income": 3.68,
+      "billables": 0,
+      "managementFees": 0,
+      "revenue": 3.68,
+      "expenses": 5981.18683333,
+      "profit": -5977.50683333,
+      "margin": -1624.32250906,
+      "returnOnCost": -0.99938474,
+      "costs": {
+        "card": 493.25,
+        "payroll": 2523.2,
+        "pmSalary": 1547.66666667,
+        "seatCharges": 324.12666667,
+        "procurement": 456.69833333,
+        "cashTransfers": 613.46,
+        "otherIndirect": 22.78516667
+      },
+      "allocatedOverhead": 2351.27683333,
+      "localExpenses": 3629.91,
+      "contributionProfit": -3626.23,
+      "contributionMargin": -985.38858696,
+      "source": {
+        "sheet": "P&L",
+        "range": "B52:H52",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "J8",
+          "payroll": "J22",
+          "pmSalary": "J29",
+          "seatCharges": "J30",
+          "procurement": "AG11",
+          "cashTransfers": "AA7",
+          "otherIndirect": "AF11"
+        }
+      }
+    },
+    {
+      "country": "Mexico",
+      "countryCode": "MX",
+      "month": 1,
+      "period": "2026-01",
+      "income": 33316.98,
+      "billables": 111.18,
+      "managementFees": 8.67204,
+      "revenue": 33436.83204,
+      "expenses": 35874.14,
+      "profit": -2437.30796,
+      "margin": -0.07289291,
+      "returnOnCost": -0.06794053,
+      "costs": {
+        "card": 14711.81,
+        "payroll": 10605.11,
+        "pmSalary": 1348,
+        "seatCharges": 324.12666667,
+        "procurement": 4590.15333333,
+        "cashTransfers": 3138.14666667,
+        "otherIndirect": 1156.79333333
+      },
+      "allocatedOverhead": 7419.07333333,
+      "localExpenses": 28455.06666667,
+      "contributionProfit": 4981.76537333,
+      "contributionMargin": 0.14899035,
+      "source": {
+        "sheet": "P&L",
+        "range": "B57:H57",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "B9",
+          "payroll": "B23",
+          "pmSalary": "B29",
+          "seatCharges": "B30",
+          "procurement": "AG3",
+          "cashTransfers": "S8",
+          "otherIndirect": "AF3"
+        }
+      }
+    },
+    {
+      "country": "Mexico",
+      "countryCode": "MX",
+      "month": 2,
+      "period": "2026-02",
+      "income": 43427.11,
+      "billables": 748.08,
+      "managementFees": 58.35024,
+      "revenue": 44233.54024,
+      "expenses": 32173.03,
+      "profit": 12060.51024,
+      "margin": 0.27265532,
+      "returnOnCost": 0.37486399,
+      "costs": {
+        "card": 13999.87,
+        "payroll": 10817.48,
+        "pmSalary": 1476.23833333,
+        "seatCharges": 324.12666667,
+        "procurement": 3370.00333333,
+        "cashTransfers": 495.97,
+        "otherIndirect": 1689.34166667
+      },
+      "allocatedOverhead": 6859.71,
+      "localExpenses": 25313.32,
+      "contributionProfit": 18920.22024,
+      "contributionMargin": 0.4277347,
+      "source": {
+        "sheet": "P&L",
+        "range": "B58:H58",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "C9",
+          "payroll": "C23",
+          "pmSalary": "C29",
+          "seatCharges": "C30",
+          "procurement": "AG4",
+          "cashTransfers": "T8",
+          "otherIndirect": "AF4"
+        }
+      }
+    },
+    {
+      "country": "Mexico",
+      "countryCode": "MX",
+      "month": 3,
+      "period": "2026-03",
+      "income": 256.41,
+      "billables": 1213.74,
+      "managementFees": 94.67172,
+      "revenue": 1564.82172,
+      "expenses": 15052.9,
+      "profit": -13488.07828,
+      "margin": -8.61956228,
+      "returnOnCost": -0.89604517,
+      "costs": {
+        "card": 1331.29,
+        "payroll": 11141,
+        "pmSalary": 1519.715,
+        "seatCharges": 324.12666667,
+        "procurement": 219.385,
+        "cashTransfers": 59.05,
+        "otherIndirect": 458.33333333
+      },
+      "allocatedOverhead": 2521.56,
+      "localExpenses": 12531.34,
+      "contributionProfit": -10966.51828,
+      "contributionMargin": -7.00815827,
+      "source": {
+        "sheet": "P&L",
+        "range": "B59:H59",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "D9",
+          "payroll": "D23",
+          "pmSalary": "D29",
+          "seatCharges": "D30",
+          "procurement": "AG5",
+          "cashTransfers": "U8",
+          "otherIndirect": "AF5"
+        }
+      }
+    },
+    {
+      "country": "Mexico",
+      "countryCode": "MX",
+      "month": 4,
+      "period": "2026-04",
+      "income": 18979.66,
+      "billables": 117.1,
+      "managementFees": 9.1338,
+      "revenue": 19105.8938,
+      "expenses": 19052.83,
+      "profit": 53.0638,
+      "margin": 0.00277735,
+      "returnOnCost": 0.00278509,
+      "costs": {
+        "card": 5586.4,
+        "payroll": 10655.19,
+        "pmSalary": 1436.43166667,
+        "seatCharges": 324.12666667,
+        "procurement": 0,
+        "cashTransfers": 79.95,
+        "otherIndirect": 970.73166667
+      },
+      "allocatedOverhead": 2731.29,
+      "localExpenses": 16321.54,
+      "contributionProfit": 2784.3538,
+      "contributionMargin": 0.14573272,
+      "source": {
+        "sheet": "P&L",
+        "range": "B60:H60",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "E9",
+          "payroll": "E23",
+          "pmSalary": "E29",
+          "seatCharges": "E30",
+          "procurement": "AG6",
+          "cashTransfers": "V8",
+          "otherIndirect": "AF6"
+        }
+      }
+    },
+    {
+      "country": "Mexico",
+      "countryCode": "MX",
+      "month": 5,
+      "period": "2026-05",
+      "income": 37144.96,
+      "billables": 255.3,
+      "managementFees": 19.9134,
+      "revenue": 37420.1734,
+      "expenses": 31934.10233333,
+      "profit": 5486.07106667,
+      "margin": 0.14660731,
+      "returnOnCost": 0.1717935,
+      "costs": {
+        "card": 18680.67,
+        "payroll": 10570.67,
+        "pmSalary": 1545.87666667,
+        "seatCharges": 324.12666667,
+        "procurement": 320.03833333,
+        "cashTransfers": 460.59,
+        "otherIndirect": 32.13066667
+      },
+      "allocatedOverhead": 2222.17233333,
+      "localExpenses": 29711.93,
+      "contributionProfit": 7708.2434,
+      "contributionMargin": 0.20599165,
+      "source": {
+        "sheet": "P&L",
+        "range": "B61:H61",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "F9",
+          "payroll": "F23",
+          "pmSalary": "F29",
+          "seatCharges": "F30",
+          "procurement": "AG7",
+          "cashTransfers": "W8",
+          "otherIndirect": "AF7"
+        }
+      }
+    },
+    {
+      "country": "Mexico",
+      "countryCode": "MX",
+      "month": 6,
+      "period": "2026-06",
+      "income": 49839.02,
+      "billables": 56.85,
+      "managementFees": 4.4343,
+      "revenue": 49900.3043,
+      "expenses": 33380.901,
+      "profit": 16519.4033,
+      "margin": 0.33104815,
+      "returnOnCost": 0.4948759,
+      "costs": {
+        "card": 17857.41,
+        "payroll": 12884.82,
+        "pmSalary": 1540.50166667,
+        "seatCharges": 324.12666667,
+        "procurement": 0,
+        "cashTransfers": 763.38,
+        "otherIndirect": 10.66266667
+      },
+      "allocatedOverhead": 1875.291,
+      "localExpenses": 31505.61,
+      "contributionProfit": 18394.6943,
+      "contributionMargin": 0.3686289,
+      "source": {
+        "sheet": "P&L",
+        "range": "B62:H62",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "G9",
+          "payroll": "G23",
+          "pmSalary": "G29",
+          "seatCharges": "G30",
+          "procurement": "AG8",
+          "cashTransfers": "X8",
+          "otherIndirect": "AF8"
+        }
+      }
+    },
+    {
+      "country": "Mexico",
+      "countryCode": "MX",
+      "month": 7,
+      "period": "2026-07",
+      "income": 55871.83,
+      "billables": 589.52,
+      "managementFees": 45.98256,
+      "revenue": 56507.33256,
+      "expenses": 39569.421,
+      "profit": 16937.91156,
+      "margin": 0.29974714,
+      "returnOnCost": 0.42805558,
+      "costs": {
+        "card": 21834.19,
+        "payroll": 14450.98,
+        "pmSalary": 1548.57,
+        "seatCharges": 324.12666667,
+        "procurement": 47.18333333,
+        "cashTransfers": 1308.38,
+        "otherIndirect": 55.991
+      },
+      "allocatedOverhead": 1975.871,
+      "localExpenses": 37593.55,
+      "contributionProfit": 18913.78256,
+      "contributionMargin": 0.33471377,
+      "source": {
+        "sheet": "P&L",
+        "range": "B63:H63",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "H9",
+          "payroll": "H23",
+          "pmSalary": "H29",
+          "seatCharges": "H30",
+          "procurement": "AG9",
+          "cashTransfers": "Y8",
+          "otherIndirect": "AF9"
+        }
+      }
+    },
+    {
+      "country": "Mexico",
+      "countryCode": "MX",
+      "month": 8,
+      "period": "2026-08",
+      "income": 43021.06,
+      "billables": 1122.58,
+      "managementFees": 87.56124,
+      "revenue": 44231.20124,
+      "expenses": 32036.374,
+      "profit": 12194.82724,
+      "margin": 0.27570644,
+      "returnOnCost": 0.38065566,
+      "costs": {
+        "card": 16396.8,
+        "payroll": 11857.37,
+        "pmSalary": 1464,
+        "seatCharges": 324.12666667,
+        "procurement": 128.90333333,
+        "cashTransfers": 1860.87,
+        "otherIndirect": 4.304
+      },
+      "allocatedOverhead": 1921.334,
+      "localExpenses": 30115.04,
+      "contributionProfit": 14116.16124,
+      "contributionMargin": 0.31914488,
+      "source": {
+        "sheet": "P&L",
+        "range": "B64:H64",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "I9",
+          "payroll": "I23",
+          "pmSalary": "I29",
+          "seatCharges": "I30",
+          "procurement": "AG10",
+          "cashTransfers": "Z8",
+          "otherIndirect": "AF10"
+        }
+      }
+    },
+    {
+      "country": "Mexico",
+      "countryCode": "MX",
+      "month": 9,
+      "period": "2026-09",
+      "income": 41774.15,
+      "billables": 738.91,
+      "managementFees": 57.63498,
+      "revenue": 42570.69498,
+      "expenses": 38467.93683333,
+      "profit": 4102.75814667,
+      "margin": 0.09637517,
+      "returnOnCost": 0.10665397,
+      "costs": {
+        "card": 26173.95,
+        "payroll": 8974.83,
+        "pmSalary": 1547.66666667,
+        "seatCharges": 324.12666667,
+        "procurement": 456.69833333,
+        "cashTransfers": 967.88,
+        "otherIndirect": 22.78516667
+      },
+      "allocatedOverhead": 2351.27683333,
+      "localExpenses": 36116.66,
+      "contributionProfit": 6454.03498,
+      "contributionMargin": 0.15160746,
+      "source": {
+        "sheet": "P&L",
+        "range": "B65:H65",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "J9",
+          "payroll": "J23",
+          "pmSalary": "J29",
+          "seatCharges": "J30",
+          "procurement": "AG11",
+          "cashTransfers": "AA8",
+          "otherIndirect": "AF11"
+        }
+      }
+    },
+    {
+      "country": "Peru",
+      "countryCode": "PE",
+      "month": 1,
+      "period": "2026-01",
+      "income": 14294.7,
+      "billables": 2475.66,
+      "managementFees": 193.10148,
+      "revenue": 16963.46148,
+      "expenses": 20704.41,
+      "profit": -3740.94852,
+      "margin": -0.22052979,
+      "returnOnCost": -0.18068366,
+      "costs": {
+        "card": 6867.76,
+        "payroll": 4750.91,
+        "pmSalary": 1348,
+        "seatCharges": 324.12666667,
+        "procurement": 4590.15333333,
+        "cashTransfers": 1666.66666667,
+        "otherIndirect": 1156.79333333
+      },
+      "allocatedOverhead": 7419.07333333,
+      "localExpenses": 13285.33666667,
+      "contributionProfit": 3678.12481333,
+      "contributionMargin": 0.21682631,
+      "source": {
+        "sheet": "P&L",
+        "range": "B70:H70",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "B10",
+          "payroll": "B24",
+          "pmSalary": "B29",
+          "seatCharges": "B30",
+          "procurement": "AG3",
+          "cashTransfers": "S9",
+          "otherIndirect": "AF3"
+        }
+      }
+    },
+    {
+      "country": "Peru",
+      "countryCode": "PE",
+      "month": 2,
+      "period": "2026-02",
+      "income": 11754.04,
+      "billables": 1773.36,
+      "managementFees": 138.32208,
+      "revenue": 13665.72208,
+      "expenses": 21392.99,
+      "profit": -7727.26792,
+      "margin": -0.56544893,
+      "returnOnCost": -0.36120561,
+      "costs": {
+        "card": 8166.98,
+        "payroll": 5183.29,
+        "pmSalary": 1476.23833333,
+        "seatCharges": 324.12666667,
+        "procurement": 3370.00333333,
+        "cashTransfers": 1183.01,
+        "otherIndirect": 1689.34166667
+      },
+      "allocatedOverhead": 6859.71,
+      "localExpenses": 14533.28,
+      "contributionProfit": -867.55792,
+      "contributionMargin": -0.06348424,
+      "source": {
+        "sheet": "P&L",
+        "range": "B71:H71",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "C10",
+          "payroll": "C24",
+          "pmSalary": "C29",
+          "seatCharges": "C30",
+          "procurement": "AG4",
+          "cashTransfers": "T9",
+          "otherIndirect": "AF4"
+        }
+      }
+    },
+    {
+      "country": "Peru",
+      "countryCode": "PE",
+      "month": 3,
+      "period": "2026-03",
+      "income": 16662.85,
+      "billables": 2379.95,
+      "managementFees": 185.6361,
+      "revenue": 19228.4361,
+      "expenses": 25604.6,
+      "profit": -6376.1639,
+      "margin": -0.33160075,
+      "returnOnCost": -0.24902416,
+      "costs": {
+        "card": 13801.39,
+        "payroll": 5458.82,
+        "pmSalary": 1519.715,
+        "seatCharges": 324.12666667,
+        "procurement": 219.385,
+        "cashTransfers": 3822.83,
+        "otherIndirect": 458.33333333
+      },
+      "allocatedOverhead": 2521.56,
+      "localExpenses": 23083.04,
+      "contributionProfit": -3854.6039,
+      "contributionMargin": -0.20046372,
+      "source": {
+        "sheet": "P&L",
+        "range": "B72:H72",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "D10",
+          "payroll": "D24",
+          "pmSalary": "D29",
+          "seatCharges": "D30",
+          "procurement": "AG5",
+          "cashTransfers": "U9",
+          "otherIndirect": "AF5"
+        }
+      }
+    },
+    {
+      "country": "Peru",
+      "countryCode": "PE",
+      "month": 4,
+      "period": "2026-04",
+      "income": 15291.12,
+      "billables": 341.02,
+      "managementFees": 26.59956,
+      "revenue": 15658.73956,
+      "expenses": 26235.84,
+      "profit": -10577.10044,
+      "margin": -0.67547585,
+      "returnOnCost": -0.40315463,
+      "costs": {
+        "card": 15544.99,
+        "payroll": 5050,
+        "pmSalary": 1436.43166667,
+        "seatCharges": 324.12666667,
+        "procurement": 0,
+        "cashTransfers": 2909.56,
+        "otherIndirect": 970.73166667
+      },
+      "allocatedOverhead": 2731.29,
+      "localExpenses": 23504.55,
+      "contributionProfit": -7845.81044,
+      "contributionMargin": -0.50104994,
+      "source": {
+        "sheet": "P&L",
+        "range": "B73:H73",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "E10",
+          "payroll": "E24",
+          "pmSalary": "E29",
+          "seatCharges": "E30",
+          "procurement": "AG6",
+          "cashTransfers": "V9",
+          "otherIndirect": "AF6"
+        }
+      }
+    },
+    {
+      "country": "Peru",
+      "countryCode": "PE",
+      "month": 5,
+      "period": "2026-05",
+      "income": 13829.61,
+      "billables": 83.89,
+      "managementFees": 6.54342,
+      "revenue": 13920.04342,
+      "expenses": 23282.17233333,
+      "profit": -9362.12891333,
+      "margin": -0.67256463,
+      "returnOnCost": -0.40211578,
+      "costs": {
+        "card": 14477.03,
+        "payroll": 5240,
+        "pmSalary": 1545.87666667,
+        "seatCharges": 324.12666667,
+        "procurement": 320.03833333,
+        "cashTransfers": 1342.97,
+        "otherIndirect": 32.13066667
+      },
+      "allocatedOverhead": 2222.17233333,
+      "localExpenses": 21060.0,
+      "contributionProfit": -7139.95658,
+      "contributionMargin": -0.51292632,
+      "source": {
+        "sheet": "P&L",
+        "range": "B74:H74",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "F10",
+          "payroll": "F24",
+          "pmSalary": "F29",
+          "seatCharges": "F30",
+          "procurement": "AG7",
+          "cashTransfers": "W9",
+          "otherIndirect": "AF7"
+        }
+      }
+    },
+    {
+      "country": "Peru",
+      "countryCode": "PE",
+      "month": 6,
+      "period": "2026-06",
+      "income": 10562.22,
+      "billables": 254.65,
+      "managementFees": 19.8627,
+      "revenue": 10836.7327,
+      "expenses": 16418.551,
+      "profit": -5581.8183,
+      "margin": -0.51508314,
+      "returnOnCost": -0.33997021,
+      "costs": {
+        "card": 7409.79,
+        "payroll": 4251.19,
+        "pmSalary": 1540.50166667,
+        "seatCharges": 324.12666667,
+        "procurement": 0,
+        "cashTransfers": 2882.28,
+        "otherIndirect": 10.66266667
+      },
+      "allocatedOverhead": 1875.291,
+      "localExpenses": 14543.26,
+      "contributionProfit": -3706.5273,
+      "contributionMargin": -0.34203366,
+      "source": {
+        "sheet": "P&L",
+        "range": "B75:H75",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "G10",
+          "payroll": "G24",
+          "pmSalary": "G29",
+          "seatCharges": "G30",
+          "procurement": "AG8",
+          "cashTransfers": "X9",
+          "otherIndirect": "AF8"
+        }
+      }
+    },
+    {
+      "country": "Peru",
+      "countryCode": "PE",
+      "month": 7,
+      "period": "2026-07",
+      "income": 12384.24,
+      "billables": 392.37,
+      "managementFees": 30.60486,
+      "revenue": 12807.21486,
+      "expenses": 19877.161,
+      "profit": -7069.94614,
+      "margin": -0.55202839,
+      "returnOnCost": -0.35568189,
+      "costs": {
+        "card": 11075.28,
+        "payroll": 4432.55,
+        "pmSalary": 1548.57,
+        "seatCharges": 324.12666667,
+        "procurement": 47.18333333,
+        "cashTransfers": 2393.46,
+        "otherIndirect": 55.991
+      },
+      "allocatedOverhead": 1975.871,
+      "localExpenses": 17901.29,
+      "contributionProfit": -5094.07514,
+      "contributionMargin": -0.39775042,
+      "source": {
+        "sheet": "P&L",
+        "range": "B76:H76",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "H10",
+          "payroll": "H24",
+          "pmSalary": "H29",
+          "seatCharges": "H30",
+          "procurement": "AG9",
+          "cashTransfers": "Y9",
+          "otherIndirect": "AF9"
+        }
+      }
+    },
+    {
+      "country": "Peru",
+      "countryCode": "PE",
+      "month": 8,
+      "period": "2026-08",
+      "income": 10223.6,
+      "billables": 75.41,
+      "managementFees": 5.88198,
+      "revenue": 10304.89198,
+      "expenses": 12840.934,
+      "profit": -2536.04202,
+      "margin": -0.24610079,
+      "returnOnCost": -0.19749669,
+      "costs": {
+        "card": 6157.43,
+        "payroll": 2907.03,
+        "pmSalary": 1464,
+        "seatCharges": 324.12666667,
+        "procurement": 128.90333333,
+        "cashTransfers": 1855.14,
+        "otherIndirect": 4.304
+      },
+      "allocatedOverhead": 1921.334,
+      "localExpenses": 10919.6,
+      "contributionProfit": -614.70802,
+      "contributionMargin": -0.05965206,
+      "source": {
+        "sheet": "P&L",
+        "range": "B77:H77",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "I10",
+          "payroll": "I24",
+          "pmSalary": "I29",
+          "seatCharges": "I30",
+          "procurement": "AG10",
+          "cashTransfers": "Z9",
+          "otherIndirect": "AF10"
+        }
+      }
+    },
+    {
+      "country": "Peru",
+      "countryCode": "PE",
+      "month": 9,
+      "period": "2026-09",
+      "income": 11344.81,
+      "billables": 682.19,
+      "managementFees": 53.21082,
+      "revenue": 12080.21082,
+      "expenses": 13016.78683333,
+      "profit": -936.57601333,
+      "margin": -0.07752977,
+      "returnOnCost": -0.0719514,
+      "costs": {
+        "card": 6336.54,
+        "payroll": 2320,
+        "pmSalary": 1547.66666667,
+        "seatCharges": 324.12666667,
+        "procurement": 456.69833333,
+        "cashTransfers": 2008.97,
+        "otherIndirect": 22.78516667
+      },
+      "allocatedOverhead": 2351.27683333,
+      "localExpenses": 10665.51,
+      "contributionProfit": 1414.70082,
+      "contributionMargin": 0.11710895,
+      "source": {
+        "sheet": "P&L",
+        "range": "B78:H78",
+        "costSheet": "Expenses",
+        "costCells": {
+          "card": "J10",
+          "payroll": "J24",
+          "pmSalary": "J29",
+          "seatCharges": "J30",
+          "procurement": "AG11",
+          "cashTransfers": "AA9",
+          "otherIndirect": "AF11"
+        }
+      }
+    }
+  ],
+  "totals": {
+    "income": 1675766.25,
+    "billables": 67392.55,
+    "managementFees": 5256.6189,
+    "revenue": 1748415.4189,
+    "expenses": 1698284.291,
+    "profit": 50131.1279,
+    "margin": 0.02867232,
+    "returnOnCost": 0.02951869,
+    "costs": {
+      "card": 944636.04,
+      "payroll": 504129.75,
+      "pmSalary": 80562.0,
+      "seatCharges": 17502.84,
+      "procurement": 54794.19,
+      "cashTransfers": 70253.03,
+      "otherIndirect": 26406.441
+    },
+    "allocatedOverhead": 179265.471,
+    "localExpenses": 1519018.82,
+    "contributionProfit": 229396.5989,
+    "contributionMargin": 0.13120257
+  },
+  "monthly": [
+    {
+      "month": 1,
+      "period": "2026-01",
+      "income": 163583.48,
+      "billables": 20369.26,
+      "managementFees": 1588.80228,
+      "revenue": 185541.54228,
+      "expenses": 201282.49,
+      "profit": -15740.94772,
+      "margin": -0.08483786,
+      "returnOnCost": -0.07820326,
+      "costs": {
+        "card": 90490.19,
+        "payroll": 50179.89,
+        "pmSalary": 8088,
+        "seatCharges": 1944.76,
+        "procurement": 27540.92,
+        "cashTransfers": 16097.97,
+        "otherIndirect": 6940.76
+      },
+      "allocatedOverhead": 44514.44,
+      "localExpenses": 156768.05,
+      "contributionProfit": 28773.49228,
+      "contributionMargin": 0.15507844
+    },
+    {
+      "month": 2,
+      "period": "2026-02",
+      "income": 192581.79,
+      "billables": 18441.94,
+      "managementFees": 1438.47132,
+      "revenue": 212462.20132,
+      "expenses": 193385.26,
+      "profit": 19076.94132,
+      "margin": 0.08978981,
+      "returnOnCost": 0.09864734,
+      "costs": {
+        "card": 93408.55,
+        "payroll": 54080.85,
+        "pmSalary": 8857.43,
+        "seatCharges": 1944.76,
+        "procurement": 20220.02,
+        "cashTransfers": 4737.6,
+        "otherIndirect": 10136.05
+      },
+      "allocatedOverhead": 41158.26,
+      "localExpenses": 152227.0,
+      "contributionProfit": 60235.20132,
+      "contributionMargin": 0.2835102
+    },
+    {
+      "month": 3,
+      "period": "2026-03",
+      "income": 187986.03,
+      "billables": 14838.39,
+      "managementFees": 1157.39442,
+      "revenue": 203981.81442,
+      "expenses": 195793.81,
+      "profit": 8188.00442,
+      "margin": 0.04014085,
+      "returnOnCost": 0.04181953,
+      "costs": {
+        "card": 105712.44,
+        "payroll": 62311.08,
+        "pmSalary": 9118.29,
+        "seatCharges": 1944.76,
+        "procurement": 1316.31,
+        "cashTransfers": 12640.93,
+        "otherIndirect": 2750.0
+      },
+      "allocatedOverhead": 15129.36,
+      "localExpenses": 180664.45,
+      "contributionProfit": 23317.36442,
+      "contributionMargin": 0.114311
+    },
+    {
+      "month": 4,
+      "period": "2026-04",
+      "income": 181412.47,
+      "billables": 3125.05,
+      "managementFees": 243.7539,
+      "revenue": 184781.2739,
+      "expenses": 184890.75,
+      "profit": -109.4761,
+      "margin": -0.00059246,
+      "returnOnCost": -0.00059211,
+      "costs": {
+        "card": 105178.71,
+        "payroll": 55979.05,
+        "pmSalary": 8618.59,
+        "seatCharges": 1944.76,
+        "procurement": 0,
+        "cashTransfers": 7345.25,
+        "otherIndirect": 5824.39
+      },
+      "allocatedOverhead": 16387.74,
+      "localExpenses": 168503.01,
+      "contributionProfit": 16278.2639,
+      "contributionMargin": 0.08809477
+    },
+    {
+      "month": 5,
+      "period": "2026-05",
+      "income": 200722.94,
+      "billables": 1313.33,
+      "managementFees": 102.43974,
+      "revenue": 202138.70974,
+      "expenses": 195430.034,
+      "profit": 6708.67574,
+      "margin": 0.03318848,
+      "returnOnCost": 0.03432776,
+      "costs": {
+        "card": 119185.32,
+        "payroll": 58410.4,
+        "pmSalary": 9275.26,
+        "seatCharges": 1944.76,
+        "procurement": 1920.23,
+        "cashTransfers": 4501.28,
+        "otherIndirect": 192.784
+      },
+      "allocatedOverhead": 13333.034,
+      "localExpenses": 182097.0,
+      "contributionProfit": 20041.70974,
+      "contributionMargin": 0.0991483
+    },
+    {
+      "month": 6,
+      "period": "2026-06",
+      "income": 205963.36,
+      "billables": 758.18,
+      "managementFees": 59.13804,
+      "revenue": 206780.67804,
+      "expenses": 185138.686,
+      "profit": 21641.99204,
+      "margin": 0.10466158,
+      "returnOnCost": 0.11689611,
+      "costs": {
+        "card": 108272.44,
+        "payroll": 58889.46,
+        "pmSalary": 9243.01,
+        "seatCharges": 1944.76,
+        "procurement": 0,
+        "cashTransfers": 6725.04,
+        "otherIndirect": 63.976
+      },
+      "allocatedOverhead": 11251.746,
+      "localExpenses": 173886.94,
+      "contributionProfit": 32893.73804,
+      "contributionMargin": 0.15907549
+    },
+    {
+      "month": 7,
+      "period": "2026-07",
+      "income": 226235.69,
+      "billables": 4025.74,
+      "managementFees": 314.00772,
+      "revenue": 230575.43772,
+      "expenses": 214990.636,
+      "profit": 15584.80172,
+      "margin": 0.0675909,
+      "returnOnCost": 0.07249061,
+      "costs": {
+        "card": 131402.15,
+        "payroll": 64277.38,
+        "pmSalary": 9291.42,
+        "seatCharges": 1944.76,
+        "procurement": 283.1,
+        "cashTransfers": 7455.88,
+        "otherIndirect": 335.946
+      },
+      "allocatedOverhead": 11855.226,
+      "localExpenses": 203135.41,
+      "contributionProfit": 27440.02772,
+      "contributionMargin": 0.11900673
+    },
+    {
+      "month": 8,
+      "period": "2026-08",
+      "income": 162913.22,
+      "billables": 1533.47,
+      "managementFees": 119.61066,
+      "revenue": 164566.30066,
+      "expenses": 152630.974,
+      "profit": 11935.32666,
+      "margin": 0.07252595,
+      "returnOnCost": 0.07819728,
+      "costs": {
+        "card": 78957.39,
+        "payroll": 55183.42,
+        "pmSalary": 8784,
+        "seatCharges": 1944.76,
+        "procurement": 773.42,
+        "cashTransfers": 6962.16,
+        "otherIndirect": 25.824
+      },
+      "allocatedOverhead": 11528.004,
+      "localExpenses": 141102.97,
+      "contributionProfit": 23463.33066,
+      "contributionMargin": 0.14257676
+    },
+    {
+      "month": 9,
+      "period": "2026-09",
+      "income": 154367.27,
+      "billables": 2987.19,
+      "managementFees": 233.00082,
+      "revenue": 157587.46082,
+      "expenses": 174741.651,
+      "profit": -17154.19018,
+      "margin": -0.10885505,
+      "returnOnCost": -0.09816887,
+      "costs": {
+        "card": 112028.85,
+        "payroll": 44818.22,
+        "pmSalary": 9286.0,
+        "seatCharges": 1944.76,
+        "procurement": 2740.19,
+        "cashTransfers": 3786.92,
+        "otherIndirect": 136.711
+      },
+      "allocatedOverhead": 14107.661,
+      "localExpenses": 160633.99,
+      "contributionProfit": -3046.52918,
+      "contributionMargin": -0.01933231
+    }
+  ],
+  "countryTotals": [
+    {
+      "countryCode": "AR",
+      "country": "Argentina",
+      "income": 192717.8,
+      "billables": 14098.42,
+      "managementFees": 1099.67676,
+      "revenue": 207915.89676,
+      "expenses": 246726.82516667,
+      "profit": -38810.92840667,
+      "margin": -0.18666648,
+      "returnOnCost": -0.15730324,
+      "costs": {
+        "card": 159097.87,
+        "payroll": 50145.46,
+        "pmSalary": 13427.0,
+        "seatCharges": 2917.14,
+        "procurement": 9132.365,
+        "cashTransfers": 7605.91666667,
+        "otherIndirect": 4401.0735
+      },
+      "allocatedOverhead": 29877.5785,
+      "localExpenses": 216849.24666667,
+      "contributionProfit": -8933.34990667,
+      "contributionMargin": -0.04296617
+    },
+    {
+      "countryCode": "BR",
+      "country": "Brazil",
+      "income": 899221.58,
+      "billables": 24210.69,
+      "managementFees": 1888.43382,
+      "revenue": 925320.70382,
+      "expenses": 777272.04516667,
+      "profit": 148048.65865333,
+      "margin": 0.15999713,
+      "returnOnCost": 0.19047213,
+      "costs": {
+        "card": 487539.76,
+        "payroll": 257618.2,
+        "pmSalary": 13427.0,
+        "seatCharges": 2917.14,
+        "procurement": 9132.365,
+        "cashTransfers": 2236.50666667,
+        "otherIndirect": 4401.0735
+      },
+      "allocatedOverhead": 29877.5785,
+      "localExpenses": 747394.46666667,
+      "contributionProfit": 177926.23715333,
+      "contributionMargin": 0.19228602
+    },
+    {
+      "countryCode": "CL",
+      "country": "Chile",
+      "income": 76697.54,
+      "billables": 3695.21,
+      "managementFees": 288.22638,
+      "revenue": 80680.97638,
+      "expenses": 97337.85516667,
+      "profit": -16656.87878667,
+      "margin": -0.20645361,
+      "returnOnCost": -0.17112437,
+      "costs": {
+        "card": 35901.93,
+        "payroll": 25731.45,
+        "pmSalary": 13427.0,
+        "seatCharges": 2917.14,
+        "procurement": 9132.365,
+        "cashTransfers": 5826.89666667,
+        "otherIndirect": 4401.0735
+      },
+      "allocatedOverhead": 29877.5785,
+      "localExpenses": 67460.27666667,
+      "contributionProfit": 13220.69971333,
+      "contributionMargin": 0.1638639
+    },
+    {
+      "countryCode": "CO",
+      "country": "Colombia",
+      "income": 67150.96,
+      "billables": 11976.47,
+      "managementFees": 934.16466,
+      "revenue": 80061.59466,
+      "expenses": 120032.48516667,
+      "profit": -39970.89050667,
+      "margin": -0.49925174,
+      "returnOnCost": -0.33300061,
+      "costs": {
+        "card": 35686.9,
+        "payroll": 29083.4,
+        "pmSalary": 13427.0,
+        "seatCharges": 2917.14,
+        "procurement": 9132.365,
+        "cashTransfers": 25384.60666667,
+        "otherIndirect": 4401.0735
+      },
+      "allocatedOverhead": 29877.5785,
+      "localExpenses": 90154.90666667,
+      "contributionProfit": -10093.31200667,
+      "contributionMargin": -0.12606934
+    },
+    {
+      "countryCode": "MX",
+      "country": "Mexico",
+      "income": 323631.18,
+      "billables": 4953.26,
+      "managementFees": 386.35428,
+      "revenue": 328970.79428,
+      "expenses": 277541.63516667,
+      "profit": 51429.15911333,
+      "margin": 0.15633351,
+      "returnOnCost": 0.1853025,
+      "costs": {
+        "card": 136572.39,
+        "payroll": 101957.45,
+        "pmSalary": 13427.0,
+        "seatCharges": 2917.14,
+        "procurement": 9132.365,
+        "cashTransfers": 9134.21666667,
+        "otherIndirect": 4401.0735
+      },
+      "allocatedOverhead": 29877.5785,
+      "localExpenses": 247664.05666667,
+      "contributionProfit": 81306.73761333,
+      "contributionMargin": 0.24715488
+    },
+    {
+      "countryCode": "PE",
+      "country": "Peru",
+      "income": 116347.19,
+      "billables": 8458.5,
+      "managementFees": 659.763,
+      "revenue": 125465.453,
+      "expenses": 179373.44516667,
+      "profit": -53907.99216667,
+      "margin": -0.42966403,
+      "returnOnCost": -0.30053497,
+      "costs": {
+        "card": 89837.19,
+        "payroll": 39593.79,
+        "pmSalary": 13427.0,
+        "seatCharges": 2917.14,
+        "procurement": 9132.365,
+        "cashTransfers": 20064.88666667,
+        "otherIndirect": 4401.0735
+      },
+      "allocatedOverhead": 29877.5785,
+      "localExpenses": 149495.86666667,
+      "contributionProfit": -24030.41366667,
+      "contributionMargin": -0.19153012
+    }
+  ],
+  "costCategories": [
+    {
+      "id": "card",
+      "label": {
+        "pt": "Cartão corporativo",
+        "es": "Tarjeta corporativa",
+        "en": "Corporate card"
+      }
+    },
+    {
+      "id": "payroll",
+      "label": {
+        "pt": "Folha operacional",
+        "es": "Nómina operativa",
+        "en": "Operating payroll"
+      }
+    },
+    {
+      "id": "pmSalary",
+      "label": {
+        "pt": "Gestão de projeto",
+        "es": "Gestión del proyecto",
+        "en": "Project management"
+      }
+    },
+    {
+      "id": "seatCharges",
+      "label": {
+        "pt": "Postos de trabalho",
+        "es": "Puestos de trabajo",
+        "en": "Seat charges"
+      }
+    },
+    {
+      "id": "procurement",
+      "label": {
+        "pt": "Compras",
+        "es": "Compras",
+        "en": "Procurement"
+      }
+    },
+    {
+      "id": "cashTransfers",
+      "label": {
+        "pt": "Transferências",
+        "es": "Transferencias",
+        "en": "Cash transfers"
+      }
+    },
+    {
+      "id": "otherIndirect",
+      "label": {
+        "pt": "Outros indiretos",
+        "es": "Otros indirectos",
+        "en": "Other indirect costs"
+      }
+    }
+  ],
+  "cardCategoryRecords": [
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Airlines",
+      "amount": -16.97,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Car Services",
+      "amount": 60.91,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Fees and Financial institutions",
+      "amount": 362.38,
+      "transactions": 14
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Fuel and Gas",
+      "amount": 3854.61,
+      "transactions": 118
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "General Merchandise",
+      "amount": 2304.32,
+      "transactions": 26
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Lodging",
+      "amount": 818.02,
+      "transactions": 11
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Office",
+      "amount": 18.71,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Other",
+      "amount": 830.06,
+      "transactions": 9
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Professional Services",
+      "amount": 3042.09,
+      "transactions": 65
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Restaurants",
+      "amount": 493.07,
+      "transactions": 29
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "SaaS / Software",
+      "amount": 9.28,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Shipping",
+      "amount": 14.06,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Streaming Services",
+      "amount": 14.89,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 504.84,
+      "transactions": 29
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Taxi and Rideshare",
+      "amount": 152.26,
+      "transactions": 19
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Travel Misc",
+      "amount": 676.71,
+      "transactions": 12
+    },
+    {
+      "countryCode": "AR",
+      "month": 1,
+      "category": "Utilities",
+      "amount": 41.63,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Airlines",
+      "amount": 216.62,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Alcohol and Bars",
+      "amount": 7.46,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Car Services",
+      "amount": 308.83,
+      "transactions": 10
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Education",
+      "amount": 14.31,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Electronics",
+      "amount": 326.04,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Fees and Financial institutions",
+      "amount": 735.35,
+      "transactions": 12
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Fuel and Gas",
+      "amount": 6262.04,
+      "transactions": 211
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "General Merchandise",
+      "amount": 5602.35,
+      "transactions": 26
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Lodging",
+      "amount": 1364.65,
+      "transactions": 22
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Office",
+      "amount": 291.04,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Other",
+      "amount": 547.67,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Parking",
+      "amount": 153.43,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Professional Services",
+      "amount": 498.16,
+      "transactions": 7
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Restaurants",
+      "amount": 908.04,
+      "transactions": 47
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Shipping",
+      "amount": 13.29,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 2060.21,
+      "transactions": 66
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Taxi and Rideshare",
+      "amount": 191.86,
+      "transactions": 19
+    },
+    {
+      "countryCode": "AR",
+      "month": 2,
+      "category": "Travel Misc",
+      "amount": 346.02,
+      "transactions": 22
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Airlines",
+      "amount": 97.28,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Alcohol and Bars",
+      "amount": 16.4,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Car Services",
+      "amount": 1434.37,
+      "transactions": 7
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Education",
+      "amount": 4.78,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Fees and Financial institutions",
+      "amount": 2204.59,
+      "transactions": 25
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Fuel and Gas",
+      "amount": 6768.76,
+      "transactions": 229
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "General Merchandise",
+      "amount": 3212.93,
+      "transactions": 50
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Lodging",
+      "amount": 3911.13,
+      "transactions": 56
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Office",
+      "amount": 22.99,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Other",
+      "amount": 943.87,
+      "transactions": 10
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Parking",
+      "amount": 15.81,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Professional Services",
+      "amount": 2174.98,
+      "transactions": 28
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Restaurants",
+      "amount": 1334.4,
+      "transactions": 69
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "SaaS / Software",
+      "amount": 15.46,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 1598.81,
+      "transactions": 80
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Taxes and tax preparation",
+      "amount": 58.4,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Taxi and Rideshare",
+      "amount": 244.79,
+      "transactions": 19
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Travel Misc",
+      "amount": 467.03,
+      "transactions": 24
+    },
+    {
+      "countryCode": "AR",
+      "month": 3,
+      "category": "Utilities",
+      "amount": 42.75,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Alcohol and Bars",
+      "amount": 165.21,
+      "transactions": 7
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Car Services",
+      "amount": 60.17,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Education",
+      "amount": 82.12,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Fees and Financial institutions",
+      "amount": 2921.29,
+      "transactions": 36
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Fuel and Gas",
+      "amount": 5438.57,
+      "transactions": 164
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "General Merchandise",
+      "amount": 998.95,
+      "transactions": 32
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Internet and Phone",
+      "amount": 15.65,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Lodging",
+      "amount": 2349.87,
+      "transactions": 30
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Office",
+      "amount": 34.65,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Other",
+      "amount": 686.95,
+      "transactions": 7
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Parking",
+      "amount": 231.26,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Professional Services",
+      "amount": 1603.53,
+      "transactions": 21
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Restaurants",
+      "amount": 562.36,
+      "transactions": 33
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Streaming Services",
+      "amount": 26.16,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 1238.36,
+      "transactions": 57
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Taxi and Rideshare",
+      "amount": 440.28,
+      "transactions": 30
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Travel Misc",
+      "amount": 254.89,
+      "transactions": 17
+    },
+    {
+      "countryCode": "AR",
+      "month": 4,
+      "category": "Utilities",
+      "amount": 27.41,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Alcohol and Bars",
+      "amount": 96.79,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Car Services",
+      "amount": 324.19,
+      "transactions": 9
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Education",
+      "amount": 4.56,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Fees and Financial institutions",
+      "amount": 4079.26,
+      "transactions": 59
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Fuel and Gas",
+      "amount": 5578.55,
+      "transactions": 146
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "General Merchandise",
+      "amount": 1567.17,
+      "transactions": 44
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Government Services",
+      "amount": 81.97,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Internet and Phone",
+      "amount": 8.44,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Lodging",
+      "amount": 2663.25,
+      "transactions": 38
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Medical",
+      "amount": 44.66,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Office",
+      "amount": 46.01,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Other",
+      "amount": 179.34,
+      "transactions": 5
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Parking",
+      "amount": 128.57,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Professional Services",
+      "amount": 282.9,
+      "transactions": 8
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Restaurants",
+      "amount": 1307.5,
+      "transactions": 68
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 1604.6,
+      "transactions": 76
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Taxi and Rideshare",
+      "amount": 155.52,
+      "transactions": 13
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Travel Misc",
+      "amount": 197.21,
+      "transactions": 16
+    },
+    {
+      "countryCode": "AR",
+      "month": 5,
+      "category": "Utilities",
+      "amount": 1.86,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Airlines",
+      "amount": 36.86,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Car Services",
+      "amount": 163.39,
+      "transactions": 10
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Fees and Financial institutions",
+      "amount": 277.47,
+      "transactions": 5
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Fuel and Gas",
+      "amount": 6508.88,
+      "transactions": 198
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Internet and Phone",
+      "amount": 182.5,
+      "transactions": 11
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Laundry",
+      "amount": 22.47,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Lodging",
+      "amount": 6374.72,
+      "transactions": 89
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Office supplies and cleaning",
+      "amount": 19.14,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Parking",
+      "amount": 189.56,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Restaurants",
+      "amount": 3532.99,
+      "transactions": 263
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 185.55,
+      "transactions": 5
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Taxi and Rideshare",
+      "amount": 87.36,
+      "transactions": 8
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Toll",
+      "amount": 4.47,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AR",
+      "month": 6,
+      "category": "Travel Misc",
+      "amount": 281.15,
+      "transactions": 53
+    },
+    {
+      "countryCode": "AR",
+      "month": 7,
+      "category": "Car Services",
+      "amount": 4733.8,
+      "transactions": 38
+    },
+    {
+      "countryCode": "AR",
+      "month": 7,
+      "category": "Fuel and Gas",
+      "amount": 4720.93,
+      "transactions": 144
+    },
+    {
+      "countryCode": "AR",
+      "month": 7,
+      "category": "Internet and Phone",
+      "amount": 400.09,
+      "transactions": 16
+    },
+    {
+      "countryCode": "AR",
+      "month": 7,
+      "category": "Lodging",
+      "amount": 7143.85,
+      "transactions": 87
+    },
+    {
+      "countryCode": "AR",
+      "month": 7,
+      "category": "Parking",
+      "amount": 260.57,
+      "transactions": 5
+    },
+    {
+      "countryCode": "AR",
+      "month": 7,
+      "category": "Restaurants",
+      "amount": 3718.17,
+      "transactions": 270
+    },
+    {
+      "countryCode": "AR",
+      "month": 7,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 101.21,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 7,
+      "category": "Taxi and Rideshare",
+      "amount": 184.01,
+      "transactions": 22
+    },
+    {
+      "countryCode": "AR",
+      "month": 7,
+      "category": "Toll",
+      "amount": 316.53,
+      "transactions": 23
+    },
+    {
+      "countryCode": "AR",
+      "month": 7,
+      "category": "Travel Misc",
+      "amount": 143.42,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Car Services",
+      "amount": 417.7,
+      "transactions": 14
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Clothing",
+      "amount": 1.07,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Fuel and Gas",
+      "amount": 3054.62,
+      "transactions": 112
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "General Merchandise",
+      "amount": 28.55,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Internet and Phone",
+      "amount": 255.93,
+      "transactions": 6
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Lodging",
+      "amount": 4124.99,
+      "transactions": 57
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Parking",
+      "amount": 218.02,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Professional Services",
+      "amount": 2.43,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Restaurants",
+      "amount": 1719.9,
+      "transactions": 114
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 224.19,
+      "transactions": 16
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Taxi and Rideshare",
+      "amount": 47.32,
+      "transactions": 11
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Toll",
+      "amount": 2.14,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Travel Misc",
+      "amount": 646.81,
+      "transactions": 13
+    },
+    {
+      "countryCode": "AR",
+      "month": 8,
+      "category": "Uncategorized",
+      "amount": 165.03,
+      "transactions": 5
+    },
+    {
+      "countryCode": "AR",
+      "month": 9,
+      "category": "Car Services",
+      "amount": 486.22,
+      "transactions": 20
+    },
+    {
+      "countryCode": "AR",
+      "month": 9,
+      "category": "Fuel and Gas",
+      "amount": 3240.87,
+      "transactions": 127
+    },
+    {
+      "countryCode": "AR",
+      "month": 9,
+      "category": "Internet and Phone",
+      "amount": 561.8,
+      "transactions": 15
+    },
+    {
+      "countryCode": "AR",
+      "month": 9,
+      "category": "Lodging",
+      "amount": 7255.58,
+      "transactions": 92
+    },
+    {
+      "countryCode": "AR",
+      "month": 9,
+      "category": "Office Supplies",
+      "amount": 6.24,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AR",
+      "month": 9,
+      "category": "Parking",
+      "amount": 1004.12,
+      "transactions": 11
+    },
+    {
+      "countryCode": "AR",
+      "month": 9,
+      "category": "Restaurants",
+      "amount": 2611.5,
+      "transactions": 209
+    },
+    {
+      "countryCode": "AR",
+      "month": 9,
+      "category": "Taxi and Rideshare",
+      "amount": 91.56,
+      "transactions": 12
+    },
+    {
+      "countryCode": "AR",
+      "month": 9,
+      "category": "Toll",
+      "amount": 79.12,
+      "transactions": 13
+    },
+    {
+      "countryCode": "AR",
+      "month": 9,
+      "category": "Travel Misc",
+      "amount": 175.27,
+      "transactions": 3
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Advertising",
+      "amount": 10.98,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Airlines",
+      "amount": 2107.0,
+      "transactions": 7
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Alcohol and Bars",
+      "amount": 57.0,
+      "transactions": 7
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Books and Newspapers",
+      "amount": 15.93,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Car Services",
+      "amount": 702.44,
+      "transactions": 17
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Charitable donations",
+      "amount": 61.46,
+      "transactions": 3
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Clothing",
+      "amount": 37.13,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Electronics",
+      "amount": 4.81,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Freight, Moving and Delivery Services",
+      "amount": 29.7,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Fuel and Gas",
+      "amount": 18861.01,
+      "transactions": 378
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "General Merchandise",
+      "amount": 9081.99,
+      "transactions": 62
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Government Services",
+      "amount": 65.44,
+      "transactions": 5
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Internet and Phone",
+      "amount": 108.32,
+      "transactions": 9
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Lodging",
+      "amount": 2171.01,
+      "transactions": 70
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Office",
+      "amount": 37.96,
+      "transactions": 4
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Office supplies and cleaning",
+      "amount": 1390.23,
+      "transactions": 3
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Other",
+      "amount": 454.58,
+      "transactions": 19
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Parking",
+      "amount": 706.49,
+      "transactions": 9
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Professional Services",
+      "amount": 1885.08,
+      "transactions": 30
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Restaurants",
+      "amount": 4201.63,
+      "transactions": 303
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "SaaS / Software",
+      "amount": 42.3,
+      "transactions": 3
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 1511.55,
+      "transactions": 187
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Taxi and Rideshare",
+      "amount": 591.48,
+      "transactions": 57
+    },
+    {
+      "countryCode": "BR",
+      "month": 1,
+      "category": "Travel Misc",
+      "amount": 455.64,
+      "transactions": 64
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Advertising",
+      "amount": 8.58,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Airlines",
+      "amount": 629.69,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Alcohol and Bars",
+      "amount": 131.06,
+      "transactions": 13
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Books and Newspapers",
+      "amount": 1.03,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Car Services",
+      "amount": 1175.4,
+      "transactions": 19
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Clothing",
+      "amount": 80.94,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Clubs and memberships",
+      "amount": 79.67,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Electronics",
+      "amount": 27.34,
+      "transactions": 3
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Entertainment",
+      "amount": 6.88,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Fees and Financial institutions",
+      "amount": 33.9,
+      "transactions": 3
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Freight, Moving and Delivery Services",
+      "amount": 34.97,
+      "transactions": 3
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Fuel and Gas",
+      "amount": 20385.2,
+      "transactions": 411
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "General Merchandise",
+      "amount": 8436.86,
+      "transactions": 71
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Government Services",
+      "amount": 59.76,
+      "transactions": 8
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Internet and Phone",
+      "amount": 195.66,
+      "transactions": 20
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Lodging",
+      "amount": 4660.14,
+      "transactions": 133
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Office",
+      "amount": 277.22,
+      "transactions": 7
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Office supplies and cleaning",
+      "amount": 1.8,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Other",
+      "amount": 335.39,
+      "transactions": 19
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Parking",
+      "amount": 646.98,
+      "transactions": 14
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Professional Services",
+      "amount": 1499.32,
+      "transactions": 62
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Restaurants",
+      "amount": 2703.14,
+      "transactions": 223
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 2850.44,
+      "transactions": 262
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Taxi and Rideshare",
+      "amount": 558.08,
+      "transactions": 53
+    },
+    {
+      "countryCode": "BR",
+      "month": 2,
+      "category": "Travel Misc",
+      "amount": 533.81,
+      "transactions": 50
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Airlines",
+      "amount": 3.6,
+      "transactions": 3
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Alcohol and Bars",
+      "amount": 90.59,
+      "transactions": 8
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Books and Newspapers",
+      "amount": 10.88,
+      "transactions": 4
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Car Services",
+      "amount": 780.13,
+      "transactions": 23
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Charitable donations",
+      "amount": 63.22,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Clothing",
+      "amount": 107.44,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Clubs and memberships",
+      "amount": 2.51,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Entertainment",
+      "amount": 11.85,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Freight, Moving and Delivery Services",
+      "amount": 23.69,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Fuel and Gas",
+      "amount": 31742.25,
+      "transactions": 600
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "General Merchandise",
+      "amount": 3358.17,
+      "transactions": 57
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Government Services",
+      "amount": 12.16,
+      "transactions": 3
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Internet and Phone",
+      "amount": 99.88,
+      "transactions": 11
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Lodging",
+      "amount": 7073.24,
+      "transactions": 224
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Medical",
+      "amount": 52.35,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Office",
+      "amount": 28.1,
+      "transactions": 3
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Office supplies and cleaning",
+      "amount": 6.49,
+      "transactions": 10
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Other",
+      "amount": 1429.41,
+      "transactions": 56
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Parking",
+      "amount": 616.33,
+      "transactions": 22
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Pet",
+      "amount": 25.96,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Professional Services",
+      "amount": 846.69,
+      "transactions": 23
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Restaurants",
+      "amount": 3956.56,
+      "transactions": 263
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "SaaS / Software",
+      "amount": 40.59,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Shipping",
+      "amount": 13.86,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 3562.17,
+      "transactions": 291
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Taxi and Rideshare",
+      "amount": 585.33,
+      "transactions": 81
+    },
+    {
+      "countryCode": "BR",
+      "month": 3,
+      "category": "Travel Misc",
+      "amount": 1476.59,
+      "transactions": 142
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Airlines",
+      "amount": 287.75,
+      "transactions": 6
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Alcohol and Bars",
+      "amount": 94.1,
+      "transactions": 8
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Books and Newspapers",
+      "amount": 10.82,
+      "transactions": 5
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Car Services",
+      "amount": 630.25,
+      "transactions": 22
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Clothing",
+      "amount": 254.62,
+      "transactions": 9
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Electronics",
+      "amount": 7.26,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Fees and Financial institutions",
+      "amount": 111.42,
+      "transactions": 4
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Freight, Moving and Delivery Services",
+      "amount": 62.17,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Fuel and Gas",
+      "amount": 32514.8,
+      "transactions": 578
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "General Merchandise",
+      "amount": 3949.46,
+      "transactions": 101
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Government Services",
+      "amount": 101.51,
+      "transactions": 4
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Internet and Phone",
+      "amount": 174.87,
+      "transactions": 14
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Lodging",
+      "amount": 8225.67,
+      "transactions": 219
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Medical",
+      "amount": 49.98,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Office",
+      "amount": 16.88,
+      "transactions": 3
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Office supplies and cleaning",
+      "amount": 42.22,
+      "transactions": 6
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Other",
+      "amount": 352.21,
+      "transactions": 21
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Parking",
+      "amount": 545.83,
+      "transactions": 17
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Professional Services",
+      "amount": 533.76,
+      "transactions": 37
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Restaurants",
+      "amount": 5548.6,
+      "transactions": 340
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "SaaS / Software",
+      "amount": 94.6,
+      "transactions": 4
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 3592.93,
+      "transactions": 250
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Taxi and Rideshare",
+      "amount": 321.63,
+      "transactions": 39
+    },
+    {
+      "countryCode": "BR",
+      "month": 4,
+      "category": "Travel Misc",
+      "amount": 1199.09,
+      "transactions": 371
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Airlines",
+      "amount": 5.09,
+      "transactions": 4
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Alcohol and Bars",
+      "amount": 235.56,
+      "transactions": 20
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Books and Newspapers",
+      "amount": 10.66,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Car Services",
+      "amount": 893.26,
+      "transactions": 20
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Clothing",
+      "amount": 337.16,
+      "transactions": 6
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Fees and Financial institutions",
+      "amount": 6.15,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Freight, Moving and Delivery Services",
+      "amount": 13.01,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Fuel and Gas",
+      "amount": 32420.22,
+      "transactions": 583
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "General Merchandise",
+      "amount": 1835.03,
+      "transactions": 88
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Government Services",
+      "amount": 66.08,
+      "transactions": 8
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Internet and Phone",
+      "amount": 163.04,
+      "transactions": 11
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Lodging",
+      "amount": 9416.16,
+      "transactions": 260
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Medical",
+      "amount": 67.46,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Office",
+      "amount": 22.65,
+      "transactions": 6
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Office supplies and cleaning",
+      "amount": 74.57,
+      "transactions": 10
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Other",
+      "amount": 300.86,
+      "transactions": 21
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Parking",
+      "amount": 606.12,
+      "transactions": 19
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Professional Services",
+      "amount": 785.73,
+      "transactions": 40
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Restaurants",
+      "amount": 5151.15,
+      "transactions": 339
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "SaaS / Software",
+      "amount": 82.69,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 3471.76,
+      "transactions": 275
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Taxi and Rideshare",
+      "amount": 375.11,
+      "transactions": 68
+    },
+    {
+      "countryCode": "BR",
+      "month": 5,
+      "category": "Travel Misc",
+      "amount": 1418.46,
+      "transactions": 545
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Airlines",
+      "amount": 407.26,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Car Services",
+      "amount": 1881.05,
+      "transactions": 57
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Fuel and Gas",
+      "amount": 29769.35,
+      "transactions": 548
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Government Services",
+      "amount": 101.87,
+      "transactions": 5
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Internet and Phone",
+      "amount": 266.78,
+      "transactions": 23
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Laundry",
+      "amount": 6.58,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Lodging",
+      "amount": 14052.63,
+      "transactions": 362
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Office supplies and cleaning",
+      "amount": 107.23,
+      "transactions": 16
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Parking",
+      "amount": 571.81,
+      "transactions": 17
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Professional Services",
+      "amount": 1.23,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Restaurants",
+      "amount": 7044.27,
+      "transactions": 739
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Shipping",
+      "amount": 14.23,
+      "transactions": 5
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 227.42,
+      "transactions": 16
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Taxi and Rideshare",
+      "amount": 153.93,
+      "transactions": 50
+    },
+    {
+      "countryCode": "BR",
+      "month": 6,
+      "category": "Travel Misc",
+      "amount": 2103.07,
+      "transactions": 573
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Airlines",
+      "amount": 218.38,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Car Services",
+      "amount": 5080.67,
+      "transactions": 91
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Fuel and Gas",
+      "amount": 34140.26,
+      "transactions": 647
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "General Merchandise",
+      "amount": 3.28,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Internet and Phone",
+      "amount": 281.68,
+      "transactions": 29
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Laundry",
+      "amount": 3.13,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Lodging",
+      "amount": 18895.77,
+      "transactions": 535
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Office Supplies",
+      "amount": 1.95,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Parking",
+      "amount": 882.25,
+      "transactions": 22
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Restaurants",
+      "amount": 7739.97,
+      "transactions": 808
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Shipping",
+      "amount": 84.57,
+      "transactions": 19
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 364.76,
+      "transactions": 7
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Taxi and Rideshare",
+      "amount": 522.4,
+      "transactions": 87
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Toll",
+      "amount": 1074.2,
+      "transactions": 506
+    },
+    {
+      "countryCode": "BR",
+      "month": 7,
+      "category": "Travel Misc",
+      "amount": 336.92,
+      "transactions": 22
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Airlines",
+      "amount": 1266.93,
+      "transactions": 6
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Car Services",
+      "amount": 810.71,
+      "transactions": 36
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Clothing",
+      "amount": 81.46,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Electronics",
+      "amount": 99.87,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Fuel and Gas",
+      "amount": 19317.19,
+      "transactions": 376
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "General Merchandise",
+      "amount": 117.81,
+      "transactions": 4
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Internet and Phone",
+      "amount": 225.14,
+      "transactions": 20
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Laundry",
+      "amount": 13.84,
+      "transactions": 4
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Lodging",
+      "amount": 10546.58,
+      "transactions": 267
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Office Supplies",
+      "amount": 18.32,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Office supplies and cleaning",
+      "amount": 1.19,
+      "transactions": 1
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Parking",
+      "amount": 153.77,
+      "transactions": 8
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Professional Services",
+      "amount": 12.33,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Restaurants",
+      "amount": 3979.18,
+      "transactions": 412
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Shipping",
+      "amount": 36.84,
+      "transactions": 3
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 1605.81,
+      "transactions": 110
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Taxi and Rideshare",
+      "amount": 681.1,
+      "transactions": 95
+    },
+    {
+      "countryCode": "BR",
+      "month": 8,
+      "category": "Travel Misc",
+      "amount": 1690.5,
+      "transactions": 353
+    },
+    {
+      "countryCode": "BR",
+      "month": 9,
+      "category": "Car Services",
+      "amount": 1773.63,
+      "transactions": 59
+    },
+    {
+      "countryCode": "BR",
+      "month": 9,
+      "category": "Fuel and Gas",
+      "amount": 29013.96,
+      "transactions": 542
+    },
+    {
+      "countryCode": "BR",
+      "month": 9,
+      "category": "Internet and Phone",
+      "amount": 297.0,
+      "transactions": 30
+    },
+    {
+      "countryCode": "BR",
+      "month": 9,
+      "category": "Laundry",
+      "amount": 5.86,
+      "transactions": 2
+    },
+    {
+      "countryCode": "BR",
+      "month": 9,
+      "category": "Lodging",
+      "amount": 17350.46,
+      "transactions": 446
+    },
+    {
+      "countryCode": "BR",
+      "month": 9,
+      "category": "Office Supplies",
+      "amount": 33.49,
+      "transactions": 21
+    },
+    {
+      "countryCode": "BR",
+      "month": 9,
+      "category": "Parking",
+      "amount": 927.78,
+      "transactions": 21
+    },
+    {
+      "countryCode": "BR",
+      "month": 9,
+      "category": "Restaurants",
+      "amount": 7103.2,
+      "transactions": 775
+    },
+    {
+      "countryCode": "BR",
+      "month": 9,
+      "category": "Taxi and Rideshare",
+      "amount": 466.77,
+      "transactions": 117
+    },
+    {
+      "countryCode": "BR",
+      "month": 9,
+      "category": "Toll",
+      "amount": 932.87,
+      "transactions": 395
+    },
+    {
+      "countryCode": "BR",
+      "month": 9,
+      "category": "Travel Misc",
+      "amount": 192.4,
+      "transactions": 17
+    },
+    {
+      "countryCode": "CL",
+      "month": 1,
+      "category": "Fuel and Gas",
+      "amount": 2207.45,
+      "transactions": 44
+    },
+    {
+      "countryCode": "CL",
+      "month": 1,
+      "category": "General Merchandise",
+      "amount": 937.59,
+      "transactions": 6
+    },
+    {
+      "countryCode": "CL",
+      "month": 1,
+      "category": "Restaurants",
+      "amount": 73.28,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CL",
+      "month": 1,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 23.98,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CL",
+      "month": 1,
+      "category": "Taxi and Rideshare",
+      "amount": 86.71,
+      "transactions": 5
+    },
+    {
+      "countryCode": "CL",
+      "month": 1,
+      "category": "Travel Misc",
+      "amount": 16.93,
+      "transactions": 2
+    },
+    {
+      "countryCode": "CL",
+      "month": 2,
+      "category": "Electronics",
+      "amount": 11.99,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CL",
+      "month": 2,
+      "category": "Fuel and Gas",
+      "amount": 2315.27,
+      "transactions": 46
+    },
+    {
+      "countryCode": "CL",
+      "month": 2,
+      "category": "General Merchandise",
+      "amount": 280.91,
+      "transactions": 2
+    },
+    {
+      "countryCode": "CL",
+      "month": 2,
+      "category": "Restaurants",
+      "amount": 14.62,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CL",
+      "month": 2,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 37.6,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CL",
+      "month": 2,
+      "category": "Travel Misc",
+      "amount": 6.36,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CL",
+      "month": 3,
+      "category": "Car Services",
+      "amount": 42.44,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CL",
+      "month": 3,
+      "category": "Fuel and Gas",
+      "amount": 2161.69,
+      "transactions": 46
+    },
+    {
+      "countryCode": "CL",
+      "month": 3,
+      "category": "General Merchandise",
+      "amount": 903.96,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CL",
+      "month": 3,
+      "category": "Lodging",
+      "amount": 254.54,
+      "transactions": 13
+    },
+    {
+      "countryCode": "CL",
+      "month": 3,
+      "category": "Restaurants",
+      "amount": 63.79,
+      "transactions": 5
+    },
+    {
+      "countryCode": "CL",
+      "month": 3,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 118.84,
+      "transactions": 7
+    },
+    {
+      "countryCode": "CL",
+      "month": 3,
+      "category": "Taxi and Rideshare",
+      "amount": 48.17,
+      "transactions": 6
+    },
+    {
+      "countryCode": "CL",
+      "month": 3,
+      "category": "Travel Misc",
+      "amount": 73.15,
+      "transactions": 10
+    },
+    {
+      "countryCode": "CL",
+      "month": 4,
+      "category": "Car Services",
+      "amount": 135.51,
+      "transactions": 2
+    },
+    {
+      "countryCode": "CL",
+      "month": 4,
+      "category": "Fees and Financial institutions",
+      "amount": 43.39,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CL",
+      "month": 4,
+      "category": "Fuel and Gas",
+      "amount": 3532.68,
+      "transactions": 62
+    },
+    {
+      "countryCode": "CL",
+      "month": 4,
+      "category": "Lodging",
+      "amount": 690.07,
+      "transactions": 26
+    },
+    {
+      "countryCode": "CL",
+      "month": 4,
+      "category": "Restaurants",
+      "amount": 577.27,
+      "transactions": 18
+    },
+    {
+      "countryCode": "CL",
+      "month": 4,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 149.82,
+      "transactions": 21
+    },
+    {
+      "countryCode": "CL",
+      "month": 4,
+      "category": "Taxi and Rideshare",
+      "amount": 27.96,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CL",
+      "month": 4,
+      "category": "Travel Misc",
+      "amount": 123.69,
+      "transactions": 9
+    },
+    {
+      "countryCode": "CL",
+      "month": 5,
+      "category": "Car Services",
+      "amount": 40.25,
+      "transactions": 2
+    },
+    {
+      "countryCode": "CL",
+      "month": 5,
+      "category": "Fees and Financial institutions",
+      "amount": 79.73,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CL",
+      "month": 5,
+      "category": "Fuel and Gas",
+      "amount": 2467.02,
+      "transactions": 43
+    },
+    {
+      "countryCode": "CL",
+      "month": 5,
+      "category": "General Merchandise",
+      "amount": 136.55,
+      "transactions": 17
+    },
+    {
+      "countryCode": "CL",
+      "month": 5,
+      "category": "Lodging",
+      "amount": 1652.38,
+      "transactions": 41
+    },
+    {
+      "countryCode": "CL",
+      "month": 5,
+      "category": "Office",
+      "amount": 31.54,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CL",
+      "month": 5,
+      "category": "Other",
+      "amount": 18.59,
+      "transactions": 2
+    },
+    {
+      "countryCode": "CL",
+      "month": 5,
+      "category": "Restaurants",
+      "amount": 104.01,
+      "transactions": 11
+    },
+    {
+      "countryCode": "CL",
+      "month": 5,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 393.05,
+      "transactions": 39
+    },
+    {
+      "countryCode": "CL",
+      "month": 5,
+      "category": "Travel Misc",
+      "amount": 111.5,
+      "transactions": 6
+    },
+    {
+      "countryCode": "CL",
+      "month": 6,
+      "category": "Car Services",
+      "amount": 157.19,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CL",
+      "month": 6,
+      "category": "Fuel and Gas",
+      "amount": 2401.51,
+      "transactions": 39
+    },
+    {
+      "countryCode": "CL",
+      "month": 6,
+      "category": "Lodging",
+      "amount": 1015.89,
+      "transactions": 23
+    },
+    {
+      "countryCode": "CL",
+      "month": 6,
+      "category": "Parking",
+      "amount": 68.02,
+      "transactions": 2
+    },
+    {
+      "countryCode": "CL",
+      "month": 6,
+      "category": "Restaurants",
+      "amount": 435.97,
+      "transactions": 47
+    },
+    {
+      "countryCode": "CL",
+      "month": 6,
+      "category": "Taxi and Rideshare",
+      "amount": 12.21,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CL",
+      "month": 6,
+      "category": "Travel Misc",
+      "amount": 244.17,
+      "transactions": 26
+    },
+    {
+      "countryCode": "CL",
+      "month": 7,
+      "category": "Car Services",
+      "amount": 338.52,
+      "transactions": 6
+    },
+    {
+      "countryCode": "CL",
+      "month": 7,
+      "category": "Fuel and Gas",
+      "amount": 1421.25,
+      "transactions": 26
+    },
+    {
+      "countryCode": "CL",
+      "month": 7,
+      "category": "Lodging",
+      "amount": 764.27,
+      "transactions": 21
+    },
+    {
+      "countryCode": "CL",
+      "month": 7,
+      "category": "Parking",
+      "amount": 1.62,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CL",
+      "month": 7,
+      "category": "Restaurants",
+      "amount": 249.07,
+      "transactions": 32
+    },
+    {
+      "countryCode": "CL",
+      "month": 7,
+      "category": "Shipping",
+      "amount": 34.08,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CL",
+      "month": 7,
+      "category": "Taxi and Rideshare",
+      "amount": 22.11,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CL",
+      "month": 7,
+      "category": "Toll",
+      "amount": 52.67,
+      "transactions": 14
+    },
+    {
+      "countryCode": "CL",
+      "month": 8,
+      "category": "Car Services",
+      "amount": 3.59,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CL",
+      "month": 8,
+      "category": "Fuel and Gas",
+      "amount": 1580.18,
+      "transactions": 31
+    },
+    {
+      "countryCode": "CL",
+      "month": 8,
+      "category": "Lodging",
+      "amount": 1247.7,
+      "transactions": 29
+    },
+    {
+      "countryCode": "CL",
+      "month": 8,
+      "category": "Restaurants",
+      "amount": 336.29,
+      "transactions": 38
+    },
+    {
+      "countryCode": "CL",
+      "month": 8,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 81.25,
+      "transactions": 8
+    },
+    {
+      "countryCode": "CL",
+      "month": 8,
+      "category": "Travel Misc",
+      "amount": 24.68,
+      "transactions": 8
+    },
+    {
+      "countryCode": "CL",
+      "month": 9,
+      "category": "Car Services",
+      "amount": 1070.95,
+      "transactions": 17
+    },
+    {
+      "countryCode": "CL",
+      "month": 9,
+      "category": "Fuel and Gas",
+      "amount": 2099.88,
+      "transactions": 40
+    },
+    {
+      "countryCode": "CL",
+      "month": 9,
+      "category": "Lodging",
+      "amount": 1307.46,
+      "transactions": 35
+    },
+    {
+      "countryCode": "CL",
+      "month": 9,
+      "category": "Parking",
+      "amount": 132.27,
+      "transactions": 8
+    },
+    {
+      "countryCode": "CL",
+      "month": 9,
+      "category": "Restaurants",
+      "amount": 589.42,
+      "transactions": 64
+    },
+    {
+      "countryCode": "CL",
+      "month": 9,
+      "category": "Taxi and Rideshare",
+      "amount": 3.17,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CL",
+      "month": 9,
+      "category": "Toll",
+      "amount": 100.64,
+      "transactions": 27
+    },
+    {
+      "countryCode": "CL",
+      "month": 9,
+      "category": "Travel Misc",
+      "amount": 111.62,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CO",
+      "month": 1,
+      "category": "Electronics",
+      "amount": 4732.09,
+      "transactions": 21
+    },
+    {
+      "countryCode": "CO",
+      "month": 1,
+      "category": "Fuel and Gas",
+      "amount": 1381.72,
+      "transactions": 40
+    },
+    {
+      "countryCode": "CO",
+      "month": 1,
+      "category": "General Merchandise",
+      "amount": 1218.67,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CO",
+      "month": 1,
+      "category": "Government Services",
+      "amount": 34.89,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CO",
+      "month": 1,
+      "category": "Lodging",
+      "amount": 147.35,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CO",
+      "month": 1,
+      "category": "Restaurants",
+      "amount": 47.98,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CO",
+      "month": 1,
+      "category": "SaaS / Software",
+      "amount": 178.75,
+      "transactions": 6
+    },
+    {
+      "countryCode": "CO",
+      "month": 1,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 15.41,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CO",
+      "month": 1,
+      "category": "Taxi and Rideshare",
+      "amount": 24.63,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CO",
+      "month": 1,
+      "category": "Travel Misc",
+      "amount": 11.16,
+      "transactions": 2
+    },
+    {
+      "countryCode": "CO",
+      "month": 2,
+      "category": "Electronics",
+      "amount": 986.22,
+      "transactions": 30
+    },
+    {
+      "countryCode": "CO",
+      "month": 2,
+      "category": "Fuel and Gas",
+      "amount": 1414.1,
+      "transactions": 41
+    },
+    {
+      "countryCode": "CO",
+      "month": 2,
+      "category": "General Merchandise",
+      "amount": 351.28,
+      "transactions": 8
+    },
+    {
+      "countryCode": "CO",
+      "month": 2,
+      "category": "Government Services",
+      "amount": 33.43,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CO",
+      "month": 2,
+      "category": "Lodging",
+      "amount": 215.64,
+      "transactions": 7
+    },
+    {
+      "countryCode": "CO",
+      "month": 2,
+      "category": "Other",
+      "amount": 24.9,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CO",
+      "month": 2,
+      "category": "Restaurants",
+      "amount": 125.7,
+      "transactions": 8
+    },
+    {
+      "countryCode": "CO",
+      "month": 2,
+      "category": "SaaS / Software",
+      "amount": 141.03,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CO",
+      "month": 2,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 52.99,
+      "transactions": 5
+    },
+    {
+      "countryCode": "CO",
+      "month": 2,
+      "category": "Taxi and Rideshare",
+      "amount": 13.91,
+      "transactions": 5
+    },
+    {
+      "countryCode": "CO",
+      "month": 2,
+      "category": "Travel Misc",
+      "amount": 15.12,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CO",
+      "month": 3,
+      "category": "Car Services",
+      "amount": 113.3,
+      "transactions": 2
+    },
+    {
+      "countryCode": "CO",
+      "month": 3,
+      "category": "Electronics",
+      "amount": 3184.33,
+      "transactions": 28
+    },
+    {
+      "countryCode": "CO",
+      "month": 3,
+      "category": "Fuel and Gas",
+      "amount": 1146.06,
+      "transactions": 29
+    },
+    {
+      "countryCode": "CO",
+      "month": 3,
+      "category": "General Merchandise",
+      "amount": 652.25,
+      "transactions": 10
+    },
+    {
+      "countryCode": "CO",
+      "month": 3,
+      "category": "Lodging",
+      "amount": 206.17,
+      "transactions": 7
+    },
+    {
+      "countryCode": "CO",
+      "month": 3,
+      "category": "Other",
+      "amount": 19.54,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CO",
+      "month": 3,
+      "category": "Restaurants",
+      "amount": 304.62,
+      "transactions": 25
+    },
+    {
+      "countryCode": "CO",
+      "month": 3,
+      "category": "SaaS / Software",
+      "amount": 500.39,
+      "transactions": 11
+    },
+    {
+      "countryCode": "CO",
+      "month": 3,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 84.44,
+      "transactions": 8
+    },
+    {
+      "countryCode": "CO",
+      "month": 3,
+      "category": "Taxi and Rideshare",
+      "amount": 37.62,
+      "transactions": 7
+    },
+    {
+      "countryCode": "CO",
+      "month": 3,
+      "category": "Travel Misc",
+      "amount": 74.89,
+      "transactions": 7
+    },
+    {
+      "countryCode": "CO",
+      "month": 4,
+      "category": "Clubs and memberships",
+      "amount": 27.69,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CO",
+      "month": 4,
+      "category": "Electronics",
+      "amount": 199.59,
+      "transactions": 13
+    },
+    {
+      "countryCode": "CO",
+      "month": 4,
+      "category": "Fuel and Gas",
+      "amount": 1389.14,
+      "transactions": 37
+    },
+    {
+      "countryCode": "CO",
+      "month": 4,
+      "category": "General Merchandise",
+      "amount": 132.7,
+      "transactions": 8
+    },
+    {
+      "countryCode": "CO",
+      "month": 4,
+      "category": "Lodging",
+      "amount": 213.6,
+      "transactions": 8
+    },
+    {
+      "countryCode": "CO",
+      "month": 4,
+      "category": "Office",
+      "amount": 23.38,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CO",
+      "month": 4,
+      "category": "Restaurants",
+      "amount": 277.97,
+      "transactions": 29
+    },
+    {
+      "countryCode": "CO",
+      "month": 4,
+      "category": "SaaS / Software",
+      "amount": 308.35,
+      "transactions": 10
+    },
+    {
+      "countryCode": "CO",
+      "month": 4,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 246.42,
+      "transactions": 23
+    },
+    {
+      "countryCode": "CO",
+      "month": 4,
+      "category": "Taxi and Rideshare",
+      "amount": 28.87,
+      "transactions": 5
+    },
+    {
+      "countryCode": "CO",
+      "month": 4,
+      "category": "Travel Misc",
+      "amount": 59.11,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CO",
+      "month": 5,
+      "category": "Clubs and memberships",
+      "amount": 104.26,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CO",
+      "month": 5,
+      "category": "Electronics",
+      "amount": 821.79,
+      "transactions": 25
+    },
+    {
+      "countryCode": "CO",
+      "month": 5,
+      "category": "Fuel and Gas",
+      "amount": 1451.77,
+      "transactions": 108
+    },
+    {
+      "countryCode": "CO",
+      "month": 5,
+      "category": "General Merchandise",
+      "amount": 245.88,
+      "transactions": 20
+    },
+    {
+      "countryCode": "CO",
+      "month": 5,
+      "category": "Insurance",
+      "amount": 282.83,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CO",
+      "month": 5,
+      "category": "Lodging",
+      "amount": 872.65,
+      "transactions": 47
+    },
+    {
+      "countryCode": "CO",
+      "month": 5,
+      "category": "Restaurants",
+      "amount": 567.61,
+      "transactions": 55
+    },
+    {
+      "countryCode": "CO",
+      "month": 5,
+      "category": "SaaS / Software",
+      "amount": 296.48,
+      "transactions": 25
+    },
+    {
+      "countryCode": "CO",
+      "month": 5,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 114.58,
+      "transactions": 18
+    },
+    {
+      "countryCode": "CO",
+      "month": 5,
+      "category": "Taxi and Rideshare",
+      "amount": 22.27,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CO",
+      "month": 5,
+      "category": "Travel Misc",
+      "amount": 102.55,
+      "transactions": 10
+    },
+    {
+      "countryCode": "CO",
+      "month": 6,
+      "category": "Airlines",
+      "amount": 3.63,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CO",
+      "month": 6,
+      "category": "Car Services",
+      "amount": 150.14,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CO",
+      "month": 6,
+      "category": "Fuel and Gas",
+      "amount": 1884.71,
+      "transactions": 48
+    },
+    {
+      "countryCode": "CO",
+      "month": 6,
+      "category": "Internet and Phone",
+      "amount": 368.95,
+      "transactions": 5
+    },
+    {
+      "countryCode": "CO",
+      "month": 6,
+      "category": "Lodging",
+      "amount": 960.24,
+      "transactions": 27
+    },
+    {
+      "countryCode": "CO",
+      "month": 6,
+      "category": "Office supplies and cleaning",
+      "amount": 68.04,
+      "transactions": 3
+    },
+    {
+      "countryCode": "CO",
+      "month": 6,
+      "category": "Parking",
+      "amount": 3.54,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CO",
+      "month": 6,
+      "category": "Restaurants",
+      "amount": 530.42,
+      "transactions": 33
+    },
+    {
+      "countryCode": "CO",
+      "month": 6,
+      "category": "Taxi and Rideshare",
+      "amount": 34.92,
+      "transactions": 6
+    },
+    {
+      "countryCode": "CO",
+      "month": 6,
+      "category": "Travel Misc",
+      "amount": 90.47,
+      "transactions": 23
+    },
+    {
+      "countryCode": "CO",
+      "month": 7,
+      "category": "Car Services",
+      "amount": 14.75,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CO",
+      "month": 7,
+      "category": "Fuel and Gas",
+      "amount": 2217.34,
+      "transactions": 54
+    },
+    {
+      "countryCode": "CO",
+      "month": 7,
+      "category": "Internet and Phone",
+      "amount": 23.09,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CO",
+      "month": 7,
+      "category": "Lodging",
+      "amount": 1167.57,
+      "transactions": 39
+    },
+    {
+      "countryCode": "CO",
+      "month": 7,
+      "category": "Restaurants",
+      "amount": 613.93,
+      "transactions": 47
+    },
+    {
+      "countryCode": "CO",
+      "month": 7,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 5.97,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CO",
+      "month": 7,
+      "category": "Taxi and Rideshare",
+      "amount": 48.35,
+      "transactions": 6
+    },
+    {
+      "countryCode": "CO",
+      "month": 7,
+      "category": "Toll",
+      "amount": 156.77,
+      "transactions": 36
+    },
+    {
+      "countryCode": "CO",
+      "month": 7,
+      "category": "Travel Misc",
+      "amount": 8.55,
+      "transactions": 2
+    },
+    {
+      "countryCode": "CO",
+      "month": 8,
+      "category": "Car Services",
+      "amount": 766.61,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CO",
+      "month": 8,
+      "category": "Fuel and Gas",
+      "amount": 411.13,
+      "transactions": 10
+    },
+    {
+      "countryCode": "CO",
+      "month": 8,
+      "category": "Lodging",
+      "amount": 107.99,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CO",
+      "month": 8,
+      "category": "Restaurants",
+      "amount": 92.59,
+      "transactions": 7
+    },
+    {
+      "countryCode": "CO",
+      "month": 8,
+      "category": "Taxi and Rideshare",
+      "amount": 128.41,
+      "transactions": 8
+    },
+    {
+      "countryCode": "CO",
+      "month": 8,
+      "category": "Travel Misc",
+      "amount": 55.47,
+      "transactions": 7
+    },
+    {
+      "countryCode": "CO",
+      "month": 9,
+      "category": "Airlines",
+      "amount": 150.4,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CO",
+      "month": 9,
+      "category": "Internet and Phone",
+      "amount": 0.0,
+      "transactions": 2
+    },
+    {
+      "countryCode": "CO",
+      "month": 9,
+      "category": "Lodging",
+      "amount": 37.9,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CO",
+      "month": 9,
+      "category": "Office Supplies",
+      "amount": 12.82,
+      "transactions": 1
+    },
+    {
+      "countryCode": "CO",
+      "month": 9,
+      "category": "Restaurants",
+      "amount": 43.43,
+      "transactions": 4
+    },
+    {
+      "countryCode": "CO",
+      "month": 9,
+      "category": "Taxi and Rideshare",
+      "amount": 244.51,
+      "transactions": 24
+    },
+    {
+      "countryCode": "CO",
+      "month": 9,
+      "category": "Travel Misc",
+      "amount": 4.19,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "Car Rental",
+      "amount": 82.8,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "Car Services",
+      "amount": 473.44,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "Fuel and Gas",
+      "amount": 6368.93,
+      "transactions": 158
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "General Merchandise",
+      "amount": 3658.07,
+      "transactions": 32
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "Lodging",
+      "amount": 802.34,
+      "transactions": 10
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "Office supplies and cleaning",
+      "amount": 169.47,
+      "transactions": 3
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "Professional Services",
+      "amount": 32.83,
+      "transactions": 5
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "Restaurants",
+      "amount": 311.71,
+      "transactions": 20
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "SaaS / Software",
+      "amount": 258.67,
+      "transactions": 9
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "Shipping",
+      "amount": 21.36,
+      "transactions": 4
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 1502.61,
+      "transactions": 47
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "Taxi and Rideshare",
+      "amount": 258.6,
+      "transactions": 21
+    },
+    {
+      "countryCode": "MX",
+      "month": 1,
+      "category": "Travel Misc",
+      "amount": 770.98,
+      "transactions": 13
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "Car Rental",
+      "amount": 164.89,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "Car Services",
+      "amount": 54.45,
+      "transactions": 5
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "Clothing",
+      "amount": 24.24,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "Fuel and Gas",
+      "amount": 7253.84,
+      "transactions": 183
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "General Merchandise",
+      "amount": 1428.68,
+      "transactions": 28
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "Lodging",
+      "amount": 482.75,
+      "transactions": 12
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "Office supplies and cleaning",
+      "amount": 376.23,
+      "transactions": 9
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "Professional Services",
+      "amount": 48.35,
+      "transactions": 6
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "Restaurants",
+      "amount": 294.11,
+      "transactions": 19
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "SaaS / Software",
+      "amount": 17.97,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "Shipping",
+      "amount": 66.69,
+      "transactions": 16
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 3576.89,
+      "transactions": 47
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "Taxi and Rideshare",
+      "amount": 111.85,
+      "transactions": 6
+    },
+    {
+      "countryCode": "MX",
+      "month": 2,
+      "category": "Travel Misc",
+      "amount": 98.93,
+      "transactions": 4
+    },
+    {
+      "countryCode": "MX",
+      "month": 3,
+      "category": "Airlines",
+      "amount": 70.7,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 3,
+      "category": "Fuel and Gas",
+      "amount": 23.41,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 3,
+      "category": "General Merchandise",
+      "amount": 1146.15,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 3,
+      "category": "Office",
+      "amount": 10.22,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 3,
+      "category": "Office supplies and cleaning",
+      "amount": 48.65,
+      "transactions": 5
+    },
+    {
+      "countryCode": "MX",
+      "month": 3,
+      "category": "Shipping",
+      "amount": 5.74,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 3,
+      "category": "Travel Misc",
+      "amount": 26.42,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 4,
+      "category": "Car Services",
+      "amount": 22.09,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 4,
+      "category": "Fees and Financial institutions",
+      "amount": 5.94,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 4,
+      "category": "Fuel and Gas",
+      "amount": 2835.83,
+      "transactions": 75
+    },
+    {
+      "countryCode": "MX",
+      "month": 4,
+      "category": "General Merchandise",
+      "amount": 710.88,
+      "transactions": 18
+    },
+    {
+      "countryCode": "MX",
+      "month": 4,
+      "category": "Lodging",
+      "amount": 1039.17,
+      "transactions": 38
+    },
+    {
+      "countryCode": "MX",
+      "month": 4,
+      "category": "Office supplies and cleaning",
+      "amount": 34.52,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 4,
+      "category": "Restaurants",
+      "amount": 324.77,
+      "transactions": 23
+    },
+    {
+      "countryCode": "MX",
+      "month": 4,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 494.82,
+      "transactions": 46
+    },
+    {
+      "countryCode": "MX",
+      "month": 4,
+      "category": "Taxi and Rideshare",
+      "amount": 28.55,
+      "transactions": 3
+    },
+    {
+      "countryCode": "MX",
+      "month": 4,
+      "category": "Travel Misc",
+      "amount": 52.53,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 4,
+      "category": "Utilities",
+      "amount": 37.3,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Airlines",
+      "amount": 226.7,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Car Services",
+      "amount": 26.91,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Electronics",
+      "amount": 31.46,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Entertainment",
+      "amount": 17.98,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Fees and Financial institutions",
+      "amount": 31.38,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Fuel and Gas",
+      "amount": 9258.69,
+      "transactions": 246
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "General Merchandise",
+      "amount": 1772.19,
+      "transactions": 55
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Lodging",
+      "amount": 3323.78,
+      "transactions": 83
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Office",
+      "amount": 11.99,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Office supplies and cleaning",
+      "amount": 186.48,
+      "transactions": 19
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Restaurants",
+      "amount": 1397.97,
+      "transactions": 104
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "SaaS / Software",
+      "amount": 101.29,
+      "transactions": 5
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Shipping",
+      "amount": 28.57,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 1508.11,
+      "transactions": 149
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Taxi and Rideshare",
+      "amount": 59.06,
+      "transactions": 4
+    },
+    {
+      "countryCode": "MX",
+      "month": 5,
+      "category": "Travel Misc",
+      "amount": 698.11,
+      "transactions": 12
+    },
+    {
+      "countryCode": "MX",
+      "month": 6,
+      "category": "Airlines",
+      "amount": 282.73,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 6,
+      "category": "Baggage",
+      "amount": 1.57,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 6,
+      "category": "Car Services",
+      "amount": 381.42,
+      "transactions": 15
+    },
+    {
+      "countryCode": "MX",
+      "month": 6,
+      "category": "Fuel and Gas",
+      "amount": 10793.43,
+      "transactions": 294
+    },
+    {
+      "countryCode": "MX",
+      "month": 6,
+      "category": "Internet and Phone",
+      "amount": 300.33,
+      "transactions": 12
+    },
+    {
+      "countryCode": "MX",
+      "month": 6,
+      "category": "Lodging",
+      "amount": 2986.06,
+      "transactions": 72
+    },
+    {
+      "countryCode": "MX",
+      "month": 6,
+      "category": "Office supplies and cleaning",
+      "amount": 10.31,
+      "transactions": 7
+    },
+    {
+      "countryCode": "MX",
+      "month": 6,
+      "category": "Parking",
+      "amount": 15.45,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 6,
+      "category": "Restaurants",
+      "amount": 1848.8,
+      "transactions": 187
+    },
+    {
+      "countryCode": "MX",
+      "month": 6,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 1028.15,
+      "transactions": 38
+    },
+    {
+      "countryCode": "MX",
+      "month": 6,
+      "category": "Taxi and Rideshare",
+      "amount": 24.14,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 6,
+      "category": "Travel Misc",
+      "amount": 185.02,
+      "transactions": 17
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Airlines",
+      "amount": 152.31,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Car Services",
+      "amount": 294.16,
+      "transactions": 8
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Fuel and Gas",
+      "amount": 12207.39,
+      "transactions": 335
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Internet and Phone",
+      "amount": 259.79,
+      "transactions": 16
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Lodging",
+      "amount": 4545.55,
+      "transactions": 122
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Office Supplies",
+      "amount": 30.19,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Parking",
+      "amount": 46.47,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Restaurants",
+      "amount": 2952.36,
+      "transactions": 276
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Shipping",
+      "amount": 39.46,
+      "transactions": 10
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Tag",
+      "amount": 88.49,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Taxi and Rideshare",
+      "amount": 47.27,
+      "transactions": 5
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Toll",
+      "amount": 888.0,
+      "transactions": 24
+    },
+    {
+      "countryCode": "MX",
+      "month": 7,
+      "category": "Travel Misc",
+      "amount": 282.75,
+      "transactions": 9
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Airlines",
+      "amount": 275.03,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Car Services",
+      "amount": 326.71,
+      "transactions": 7
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Fees and Financial institutions",
+      "amount": 43.34,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Fuel and Gas",
+      "amount": 8510.67,
+      "transactions": 244
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Government Services",
+      "amount": 36.48,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Internet and Phone",
+      "amount": 186.21,
+      "transactions": 11
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Lodging",
+      "amount": 3246.62,
+      "transactions": 76
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Office supplies and cleaning",
+      "amount": 62.02,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Restaurants",
+      "amount": 2194.78,
+      "transactions": 166
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Shipping",
+      "amount": 96.72,
+      "transactions": 3
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 371.38,
+      "transactions": 40
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Taxi and Rideshare",
+      "amount": 19.9,
+      "transactions": 2
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Toll",
+      "amount": 209.82,
+      "transactions": 6
+    },
+    {
+      "countryCode": "MX",
+      "month": 8,
+      "category": "Travel Misc",
+      "amount": 817.12,
+      "transactions": 23
+    },
+    {
+      "countryCode": "MX",
+      "month": 9,
+      "category": "Airlines",
+      "amount": 163.5,
+      "transactions": 1
+    },
+    {
+      "countryCode": "MX",
+      "month": 9,
+      "category": "Car Services",
+      "amount": 41.29,
+      "transactions": 11
+    },
+    {
+      "countryCode": "MX",
+      "month": 9,
+      "category": "Fuel and Gas",
+      "amount": 13487.69,
+      "transactions": 378
+    },
+    {
+      "countryCode": "MX",
+      "month": 9,
+      "category": "Internet and Phone",
+      "amount": 262.24,
+      "transactions": 17
+    },
+    {
+      "countryCode": "MX",
+      "month": 9,
+      "category": "Lodging",
+      "amount": 5515.47,
+      "transactions": 131
+    },
+    {
+      "countryCode": "MX",
+      "month": 9,
+      "category": "Office Supplies",
+      "amount": 25.9,
+      "transactions": 14
+    },
+    {
+      "countryCode": "MX",
+      "month": 9,
+      "category": "Restaurants",
+      "amount": 3796.5,
+      "transactions": 328
+    },
+    {
+      "countryCode": "MX",
+      "month": 9,
+      "category": "Taxi and Rideshare",
+      "amount": 5.0,
+      "transactions": 3
+    },
+    {
+      "countryCode": "MX",
+      "month": 9,
+      "category": "Toll",
+      "amount": 2876.36,
+      "transactions": 98
+    },
+    {
+      "countryCode": "PE",
+      "month": 1,
+      "category": "Alcohol and Bars",
+      "amount": 77.02,
+      "transactions": 5
+    },
+    {
+      "countryCode": "PE",
+      "month": 1,
+      "category": "Car Services",
+      "amount": 569.98,
+      "transactions": 3
+    },
+    {
+      "countryCode": "PE",
+      "month": 1,
+      "category": "Freight, Moving and Delivery Services",
+      "amount": 24.58,
+      "transactions": 2
+    },
+    {
+      "countryCode": "PE",
+      "month": 1,
+      "category": "Fuel and Gas",
+      "amount": 3197.32,
+      "transactions": 53
+    },
+    {
+      "countryCode": "PE",
+      "month": 1,
+      "category": "General Merchandise",
+      "amount": 2211.77,
+      "transactions": 16
+    },
+    {
+      "countryCode": "PE",
+      "month": 1,
+      "category": "Lodging",
+      "amount": 267.98,
+      "transactions": 14
+    },
+    {
+      "countryCode": "PE",
+      "month": 1,
+      "category": "Parking",
+      "amount": 0.93,
+      "transactions": 1
+    },
+    {
+      "countryCode": "PE",
+      "month": 1,
+      "category": "Restaurants",
+      "amount": 226.14,
+      "transactions": 26
+    },
+    {
+      "countryCode": "PE",
+      "month": 1,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 29.93,
+      "transactions": 8
+    },
+    {
+      "countryCode": "PE",
+      "month": 1,
+      "category": "Taxi and Rideshare",
+      "amount": 57.19,
+      "transactions": 4
+    },
+    {
+      "countryCode": "PE",
+      "month": 1,
+      "category": "Travel Misc",
+      "amount": 204.92,
+      "transactions": 63
+    },
+    {
+      "countryCode": "PE",
+      "month": 2,
+      "category": "Airlines",
+      "amount": 293.96,
+      "transactions": 2
+    },
+    {
+      "countryCode": "PE",
+      "month": 2,
+      "category": "Alcohol and Bars",
+      "amount": 59.28,
+      "transactions": 8
+    },
+    {
+      "countryCode": "PE",
+      "month": 2,
+      "category": "Car Services",
+      "amount": 969.28,
+      "transactions": 4
+    },
+    {
+      "countryCode": "PE",
+      "month": 2,
+      "category": "Fuel and Gas",
+      "amount": 4416.38,
+      "transactions": 71
+    },
+    {
+      "countryCode": "PE",
+      "month": 2,
+      "category": "General Merchandise",
+      "amount": 572.73,
+      "transactions": 5
+    },
+    {
+      "countryCode": "PE",
+      "month": 2,
+      "category": "Lodging",
+      "amount": 450.03,
+      "transactions": 24
+    },
+    {
+      "countryCode": "PE",
+      "month": 2,
+      "category": "Office",
+      "amount": 274.2,
+      "transactions": 5
+    },
+    {
+      "countryCode": "PE",
+      "month": 2,
+      "category": "Restaurants",
+      "amount": 517.55,
+      "transactions": 44
+    },
+    {
+      "countryCode": "PE",
+      "month": 2,
+      "category": "Shipping",
+      "amount": 20.87,
+      "transactions": 1
+    },
+    {
+      "countryCode": "PE",
+      "month": 2,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 120.51,
+      "transactions": 23
+    },
+    {
+      "countryCode": "PE",
+      "month": 2,
+      "category": "Taxi and Rideshare",
+      "amount": 40.75,
+      "transactions": 2
+    },
+    {
+      "countryCode": "PE",
+      "month": 2,
+      "category": "Travel Misc",
+      "amount": 431.44,
+      "transactions": 134
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Alcohol and Bars",
+      "amount": 79.9,
+      "transactions": 4
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Car Rental",
+      "amount": 4814.34,
+      "transactions": 6
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Car Services",
+      "amount": 89.19,
+      "transactions": 3
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Fuel and Gas",
+      "amount": 6829.48,
+      "transactions": 100
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "General Merchandise",
+      "amount": 355.54,
+      "transactions": 15
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Government Services",
+      "amount": 65.23,
+      "transactions": 1
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Insurance",
+      "amount": 81.08,
+      "transactions": 2
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Lodging",
+      "amount": 626.78,
+      "transactions": 31
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Office",
+      "amount": 95.6,
+      "transactions": 2
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Parking",
+      "amount": 2.08,
+      "transactions": 2
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Professional Services",
+      "amount": 20.72,
+      "transactions": 1
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Restaurants",
+      "amount": 367.02,
+      "transactions": 38
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "SaaS / Software",
+      "amount": 10.34,
+      "transactions": 1
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Shipping",
+      "amount": 44.7,
+      "transactions": 2
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 96.34,
+      "transactions": 4
+    },
+    {
+      "countryCode": "PE",
+      "month": 3,
+      "category": "Travel Misc",
+      "amount": 223.05,
+      "transactions": 75
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "Alcohol and Bars",
+      "amount": 96.66,
+      "transactions": 5
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "Car Rental",
+      "amount": 5630.16,
+      "transactions": 12
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "Car Services",
+      "amount": 133.11,
+      "transactions": 2
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "Fuel and Gas",
+      "amount": 6911.45,
+      "transactions": 90
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "General Merchandise",
+      "amount": 441.72,
+      "transactions": 18
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "Government Services",
+      "amount": 186.98,
+      "transactions": 3
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "Insurance",
+      "amount": 17.97,
+      "transactions": 1
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "Lodging",
+      "amount": 1238.55,
+      "transactions": 59
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "Other",
+      "amount": 392.32,
+      "transactions": 4
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "Restaurants",
+      "amount": 234.78,
+      "transactions": 29
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "SaaS / Software",
+      "amount": 10.42,
+      "transactions": 1
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 42.97,
+      "transactions": 12
+    },
+    {
+      "countryCode": "PE",
+      "month": 4,
+      "category": "Travel Misc",
+      "amount": 207.9,
+      "transactions": 38
+    },
+    {
+      "countryCode": "PE",
+      "month": 5,
+      "category": "Alcohol and Bars",
+      "amount": 33.02,
+      "transactions": 3
+    },
+    {
+      "countryCode": "PE",
+      "month": 5,
+      "category": "Car Rental",
+      "amount": 5628.16,
+      "transactions": 10
+    },
+    {
+      "countryCode": "PE",
+      "month": 5,
+      "category": "Car Services",
+      "amount": 28.75,
+      "transactions": 3
+    },
+    {
+      "countryCode": "PE",
+      "month": 5,
+      "category": "Fuel and Gas",
+      "amount": 6023.82,
+      "transactions": 74
+    },
+    {
+      "countryCode": "PE",
+      "month": 5,
+      "category": "General Merchandise",
+      "amount": 353.74,
+      "transactions": 20
+    },
+    {
+      "countryCode": "PE",
+      "month": 5,
+      "category": "Insurance",
+      "amount": 45.53,
+      "transactions": 2
+    },
+    {
+      "countryCode": "PE",
+      "month": 5,
+      "category": "Lodging",
+      "amount": 1565.83,
+      "transactions": 70
+    },
+    {
+      "countryCode": "PE",
+      "month": 5,
+      "category": "Restaurants",
+      "amount": 410.74,
+      "transactions": 53
+    },
+    {
+      "countryCode": "PE",
+      "month": 5,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 168.9,
+      "transactions": 35
+    },
+    {
+      "countryCode": "PE",
+      "month": 5,
+      "category": "Travel Misc",
+      "amount": 218.54,
+      "transactions": 47
+    },
+    {
+      "countryCode": "PE",
+      "month": 6,
+      "category": "Car Services",
+      "amount": 376.17,
+      "transactions": 7
+    },
+    {
+      "countryCode": "PE",
+      "month": 6,
+      "category": "Fuel and Gas",
+      "amount": 4836.85,
+      "transactions": 72
+    },
+    {
+      "countryCode": "PE",
+      "month": 6,
+      "category": "Lodging",
+      "amount": 1322.36,
+      "transactions": 47
+    },
+    {
+      "countryCode": "PE",
+      "month": 6,
+      "category": "Office supplies and cleaning",
+      "amount": 24.22,
+      "transactions": 2
+    },
+    {
+      "countryCode": "PE",
+      "month": 6,
+      "category": "Restaurants",
+      "amount": 405.09,
+      "transactions": 59
+    },
+    {
+      "countryCode": "PE",
+      "month": 6,
+      "category": "Shipping",
+      "amount": 11.82,
+      "transactions": 1
+    },
+    {
+      "countryCode": "PE",
+      "month": 6,
+      "category": "Taxi and Rideshare",
+      "amount": 89.25,
+      "transactions": 10
+    },
+    {
+      "countryCode": "PE",
+      "month": 6,
+      "category": "Travel Misc",
+      "amount": 344.03,
+      "transactions": 47
+    },
+    {
+      "countryCode": "PE",
+      "month": 7,
+      "category": "Airlines",
+      "amount": 408.81,
+      "transactions": 1
+    },
+    {
+      "countryCode": "PE",
+      "month": 7,
+      "category": "Car Services",
+      "amount": 214.74,
+      "transactions": 4
+    },
+    {
+      "countryCode": "PE",
+      "month": 7,
+      "category": "Fuel and Gas",
+      "amount": 6790.9,
+      "transactions": 90
+    },
+    {
+      "countryCode": "PE",
+      "month": 7,
+      "category": "General Merchandise",
+      "amount": 166.34,
+      "transactions": 3
+    },
+    {
+      "countryCode": "PE",
+      "month": 7,
+      "category": "Lodging",
+      "amount": 2421.23,
+      "transactions": 76
+    },
+    {
+      "countryCode": "PE",
+      "month": 7,
+      "category": "Parking",
+      "amount": 0.65,
+      "transactions": 1
+    },
+    {
+      "countryCode": "PE",
+      "month": 7,
+      "category": "Restaurants",
+      "amount": 519.6,
+      "transactions": 65
+    },
+    {
+      "countryCode": "PE",
+      "month": 7,
+      "category": "Taxi and Rideshare",
+      "amount": 136.78,
+      "transactions": 15
+    },
+    {
+      "countryCode": "PE",
+      "month": 7,
+      "category": "Toll",
+      "amount": 217.45,
+      "transactions": 60
+    },
+    {
+      "countryCode": "PE",
+      "month": 7,
+      "category": "Travel Misc",
+      "amount": 198.78,
+      "transactions": 6
+    },
+    {
+      "countryCode": "PE",
+      "month": 8,
+      "category": "Car Services",
+      "amount": 238.47,
+      "transactions": 3
+    },
+    {
+      "countryCode": "PE",
+      "month": 8,
+      "category": "Fuel and Gas",
+      "amount": 3977.07,
+      "transactions": 47
+    },
+    {
+      "countryCode": "PE",
+      "month": 8,
+      "category": "General Merchandise",
+      "amount": 16.7,
+      "transactions": 1
+    },
+    {
+      "countryCode": "PE",
+      "month": 8,
+      "category": "Lodging",
+      "amount": 1260.99,
+      "transactions": 43
+    },
+    {
+      "countryCode": "PE",
+      "month": 8,
+      "category": "Parking",
+      "amount": 21.32,
+      "transactions": 1
+    },
+    {
+      "countryCode": "PE",
+      "month": 8,
+      "category": "Restaurants",
+      "amount": 275.99,
+      "transactions": 23
+    },
+    {
+      "countryCode": "PE",
+      "month": 8,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 27.59,
+      "transactions": 4
+    },
+    {
+      "countryCode": "PE",
+      "month": 8,
+      "category": "Taxi and Rideshare",
+      "amount": 34.17,
+      "transactions": 3
+    },
+    {
+      "countryCode": "PE",
+      "month": 8,
+      "category": "Toll",
+      "amount": 17.42,
+      "transactions": 5
+    },
+    {
+      "countryCode": "PE",
+      "month": 8,
+      "category": "Travel Misc",
+      "amount": 287.71,
+      "transactions": 19
+    },
+    {
+      "countryCode": "PE",
+      "month": 9,
+      "category": "Airlines",
+      "amount": 341.3,
+      "transactions": 2
+    },
+    {
+      "countryCode": "PE",
+      "month": 9,
+      "category": "Car Services",
+      "amount": 665.1,
+      "transactions": 3
+    },
+    {
+      "countryCode": "PE",
+      "month": 9,
+      "category": "Fuel and Gas",
+      "amount": 4073.35,
+      "transactions": 50
+    },
+    {
+      "countryCode": "PE",
+      "month": 9,
+      "category": "Lodging",
+      "amount": 781.8,
+      "transactions": 35
+    },
+    {
+      "countryCode": "PE",
+      "month": 9,
+      "category": "Restaurants",
+      "amount": 274.94,
+      "transactions": 29
+    },
+    {
+      "countryCode": "PE",
+      "month": 9,
+      "category": "Taxi and Rideshare",
+      "amount": 44.21,
+      "transactions": 10
+    },
+    {
+      "countryCode": "PE",
+      "month": 9,
+      "category": "Toll",
+      "amount": 33.8,
+      "transactions": 17
+    },
+    {
+      "countryCode": "PE",
+      "month": 9,
+      "category": "Travel Misc",
+      "amount": 122.04,
+      "transactions": 5
+    }
+  ],
+  "cardCategoryLabels": {
+    "Advertising": {
+      "pt": "Publicidade",
+      "es": "Publicidad",
+      "en": "Advertising"
+    },
+    "Airlines": {
+      "pt": "Passagens aéreas",
+      "es": "Pasajes aéreos",
+      "en": "Airlines"
+    },
+    "Alcohol and Bars": {
+      "pt": "Bares e bebidas",
+      "es": "Bares y bebidas",
+      "en": "Alcohol and bars"
+    },
+    "Baggage": {
+      "pt": "Bagagem",
+      "es": "Equipaje",
+      "en": "Baggage"
+    },
+    "Books and Newspapers": {
+      "pt": "Livros e jornais",
+      "es": "Libros y periódicos",
+      "en": "Books and newspapers"
+    },
+    "Car Rental": {
+      "pt": "Aluguel de veículos",
+      "es": "Alquiler de vehículos",
+      "en": "Car rental"
+    },
+    "Car Services": {
+      "pt": "Serviços de veículos",
+      "es": "Servicios de vehículos",
+      "en": "Vehicle services"
+    },
+    "Charitable donations": {
+      "pt": "Doações",
+      "es": "Donaciones",
+      "en": "Donations"
+    },
+    "Clothing": {
+      "pt": "Vestuário",
+      "es": "Ropa",
+      "en": "Clothing"
+    },
+    "Clubs and memberships": {
+      "pt": "Clubes e associações",
+      "es": "Clubes y membresías",
+      "en": "Clubs and memberships"
+    },
+    "Education": {
+      "pt": "Educação",
+      "es": "Educación",
+      "en": "Education"
+    },
+    "Electronics": {
+      "pt": "Eletrônicos",
+      "es": "Electrónica",
+      "en": "Electronics"
+    },
+    "Entertainment": {
+      "pt": "Entretenimento",
+      "es": "Entretenimiento",
+      "en": "Entertainment"
+    },
+    "Fees and Financial institutions": {
+      "pt": "Tarifas financeiras",
+      "es": "Comisiones financieras",
+      "en": "Financial fees"
+    },
+    "Freight, Moving and Delivery Services": {
+      "pt": "Fretes e entregas",
+      "es": "Fletes y entregas",
+      "en": "Freight and delivery"
+    },
+    "Fuel and Gas": {
+      "pt": "Combustível",
+      "es": "Combustible",
+      "en": "Fuel and gas"
+    },
+    "General Merchandise": {
+      "pt": "Mercadorias em geral",
+      "es": "Mercancías generales",
+      "en": "General merchandise"
+    },
+    "Government Services": {
+      "pt": "Serviços públicos",
+      "es": "Servicios gubernamentales",
+      "en": "Government services"
+    },
+    "Insurance": {
+      "pt": "Seguros",
+      "es": "Seguros",
+      "en": "Insurance"
+    },
+    "Internet and Phone": {
+      "pt": "Internet e telefone",
+      "es": "Internet y teléfono",
+      "en": "Internet and phone"
+    },
+    "Laundry": {
+      "pt": "Lavanderia",
+      "es": "Lavandería",
+      "en": "Laundry"
+    },
+    "Lodging": {
+      "pt": "Hospedagem",
+      "es": "Alojamiento",
+      "en": "Lodging"
+    },
+    "Medical": {
+      "pt": "Saúde",
+      "es": "Salud",
+      "en": "Medical"
+    },
+    "Office": {
+      "pt": "Escritório",
+      "es": "Oficina",
+      "en": "Office"
+    },
+    "Office Supplies": {
+      "pt": "Materiais de escritório",
+      "es": "Material de oficina",
+      "en": "Office supplies"
+    },
+    "Office supplies and cleaning": {
+      "pt": "Escritório e limpeza",
+      "es": "Oficina y limpieza",
+      "en": "Office supplies and cleaning"
+    },
+    "Other": {
+      "pt": "Outros",
+      "es": "Otros",
+      "en": "Other"
+    },
+    "Parking": {
+      "pt": "Estacionamento",
+      "es": "Estacionamiento",
+      "en": "Parking"
+    },
+    "Pet": {
+      "pt": "Animais",
+      "es": "Animales",
+      "en": "Pet"
+    },
+    "Professional Services": {
+      "pt": "Serviços profissionais",
+      "es": "Servicios profesionales",
+      "en": "Professional services"
+    },
+    "Restaurants": {
+      "pt": "Restaurantes",
+      "es": "Restaurantes",
+      "en": "Restaurants"
+    },
+    "SaaS / Software": {
+      "pt": "Software e SaaS",
+      "es": "Software y SaaS",
+      "en": "Software and SaaS"
+    },
+    "Shipping": {
+      "pt": "Envios",
+      "es": "Envíos",
+      "en": "Shipping"
+    },
+    "Streaming Services": {
+      "pt": "Streaming",
+      "es": "Streaming",
+      "en": "Streaming services"
+    },
+    "Supermarkets and Grocery Stores": {
+      "pt": "Supermercados",
+      "es": "Supermercados",
+      "en": "Supermarkets and groceries"
+    },
+    "Tag": {
+      "pt": "Tag",
+      "es": "Tag",
+      "en": "Tag"
+    },
+    "Taxes and tax preparation": {
+      "pt": "Impostos",
+      "es": "Impuestos",
+      "en": "Taxes and tax preparation"
+    },
+    "Taxi and Rideshare": {
+      "pt": "Táxi e aplicativos",
+      "es": "Taxi y aplicaciones",
+      "en": "Taxi and rideshare"
+    },
+    "Toll": {
+      "pt": "Pedágios",
+      "es": "Peajes",
+      "en": "Tolls"
+    },
+    "Travel Misc": {
+      "pt": "Outras viagens",
+      "es": "Otros viajes",
+      "en": "Other travel"
+    },
+    "Uncategorized": {
+      "pt": "Sem categoria",
+      "es": "Sin categoría",
+      "en": "Uncategorized"
+    },
+    "Utilities": {
+      "pt": "Utilidades",
+      "es": "Servicios básicos",
+      "en": "Utilities"
+    }
+  },
+  "cardCategoryAliases": {
+    "Advertising": [
+      "Advertising"
+    ],
+    "Airlines": [
+      "Airlines"
+    ],
+    "Alcohol and Bars": [
+      "Alcohol and Bars"
+    ],
+    "Baggage": [
+      "Baggage"
+    ],
+    "Books and Newspapers": [
+      "Books and Newspapers"
+    ],
+    "Car Rental": [
+      "Car Rental"
+    ],
+    "Car Services": [
+      "Car Service",
+      "Car Services",
+      "Car services"
+    ],
+    "Charitable donations": [
+      "Charitable donations"
+    ],
+    "Clothing": [
+      "Clothing"
+    ],
+    "Clubs and memberships": [
+      "Clubs and memberships"
+    ],
+    "Education": [
+      "Education"
+    ],
+    "Electronics": [
+      "Electronics"
+    ],
+    "Entertainment": [
+      "Entertainment"
+    ],
+    "Fees and Financial institutions": [
+      "Fees and Financial institutions"
+    ],
+    "Freight, Moving and Delivery Services": [
+      "Freight, Moving and Delivery Services"
+    ],
+    "Fuel and Gas": [
+      "Fuel & Gas",
+      "Fuel and Gas"
+    ],
+    "General Merchandise": [
+      "General Merchandise"
+    ],
+    "Government Services": [
+      "Government Services"
+    ],
+    "Insurance": [
+      "Insurance"
+    ],
+    "Internet and Phone": [
+      "Internet & Phone",
+      "Internet and Phone",
+      "Phone and Internet"
+    ],
+    "Laundry": [
+      "Laundry"
+    ],
+    "Lodging": [
+      "Hotel & Lodging",
+      "Lodging"
+    ],
+    "Medical": [
+      "Medical"
+    ],
+    "Office": [
+      "Office"
+    ],
+    "Office Supplies": [
+      "Office Supplies",
+      "Office and Supplies"
+    ],
+    "Office supplies and cleaning": [
+      "Office supplies and cleaning"
+    ],
+    "Other": [
+      "Other"
+    ],
+    "Parking": [
+      "Parking"
+    ],
+    "Pet": [
+      "Pet"
+    ],
+    "Professional Services": [
+      "Professional Services"
+    ],
+    "Restaurants": [
+      "Restaurant",
+      "Restaurants"
+    ],
+    "SaaS / Software": [
+      "SaaS / Software"
+    ],
+    "Shipping": [
+      "Shipping"
+    ],
+    "Streaming Services": [
+      "Streaming Services"
+    ],
+    "Supermarkets and Grocery Stores": [
+      "Supermarkets and Grocery Stores"
+    ],
+    "Tag": [
+      "Tag"
+    ],
+    "Taxes and tax preparation": [
+      "Taxes and tax preparation"
+    ],
+    "Taxi and Rideshare": [
+      "Taxi & Rideshare",
+      "Taxi and Rideshare"
+    ],
+    "Toll": [
+      "Toll"
+    ],
+    "Travel Misc": [
+      "Travel Misc"
+    ],
+    "Uncategorized": [
+      "Uncategorized"
+    ],
+    "Utilities": [
+      "Utilities"
+    ]
+  },
+  "methodology": {
+    "revenueFormula": "income + billables + managementFees",
+    "profitFormula": "revenue - expenses",
+    "marginFormula": "profit / revenue",
+    "returnOnCostFormula": "profit / expenses",
+    "allocatedOverheadFormula": "pmSalary + seatCharges + procurement + otherIndirect",
+    "localExpensesFormula": "expenses - allocatedOverhead",
+    "contributionProfitFormula": "revenue - localExpenses",
+    "contributionMarginFormula": "contributionProfit / revenue",
+    "managementFeesFormula": "billables * 7.8%",
+    "costAllocation": "PM salary, seat charges, procurement and other indirect costs are allocated equally across six countries in the source workbook.",
+    "costAllocationLabels": {
+      "pt": "Gestão, postos de trabalho, compras e outros indiretos são divididos igualmente entre os seis países na planilha.",
+      "es": "Gestión, puestos de trabajo, compras y otros indirectos se reparten igualmente entre los seis países en la hoja.",
+      "en": "Management, seat charges, procurement and other indirect costs are divided equally across six countries in the workbook."
+    },
+    "cardBasis": "Numeric amounts only, matching the supplied pivot and P&L. Credits/refunds remain negative. Category variants are normalized by the explicit alias map.",
+    "blankComponents": [
+      {
+        "countryCode": "CO",
+        "month": 9,
+        "field": "billables",
+        "cell": "P&L!D52",
+        "treatment": "zero_as_used_by_source_formula"
+      }
+    ],
+    "sourceRanges": {
+      "pnl": [
+        "P&L!B5:H14",
+        "P&L!B18:H27",
+        "P&L!B31:H40",
+        "P&L!B44:H53",
+        "P&L!B57:H66",
+        "P&L!B70:H79"
+      ],
+      "card": "Expenses!A4:K11",
+      "payroll": "Expenses!A18:K30",
+      "cashTransfers": "Expenses!R3:AA10",
+      "procurement": "Expenses!M3:O11",
+      "otherIndirect": "Expenses!AD3:AH12",
+      "expenseControl": "Expenses!M18:W25",
+      "cardTransactions": "Card Raw!A1:G31808"
+    }
+  },
+  "reconciliation": {
+    "checks": {
+      "revenueAndProfitFormulasMatch": true,
+      "costComponentsMatchPnl": true,
+      "countryTotalsMatchSource": true,
+      "cardCategoriesMatchPivot": true,
+      "transactionDatesMatchMonths": true,
+      "maxCostComponentDifference": 0.0,
+      "maxCardPivotDifference": 0.0,
+      "cachedFormulaErrorCount": 0
+    },
+    "numericCardTotal": 944636.04,
+    "excludedTextCardAmount": 192.62,
+    "allParsedCardAmounts": 944828.66,
+    "negativeCardTransactionCount": 164,
+    "negativeCardAmount": -5491.28,
+    "auxiliaryIncomeTotal": 1675113.75,
+    "pnlIncomeTotal": 1675766.25,
+    "auxiliaryIncomeDifference": -652.5,
+    "issues": [
+      {
+        "id": "income_summary_difference",
+        "severity": "warning",
+        "status": "open",
+        "amount": -652.5,
+        "title": {
+          "pt": "Resumo de receitas divergente",
+          "es": "Resumen de ingresos divergente",
+          "en": "Income summary mismatch"
+        },
+        "detail": {
+          "pt": "O resumo auxiliar tem $652,50 a menos que a P&L. Abril e setembro explicam $651,96. O relatório usa a P&L por país e mês.",
+          "es": "El resumen auxiliar tiene $652,50 menos que P&L. Abril y septiembre explican $651,96. El informe utiliza P&L por país y mes.",
+          "en": "The auxiliary income summary is $652.50 below P&L. April and September account for $651.96. This report uses country-month P&L."
+        },
+        "source": {
+          "sheet": "Expenses",
+          "range": "A42:B52"
+        },
+        "byMonth": [
+          {
+            "month": 1,
+            "sourceCell": "Expenses!B43",
+            "auxiliaryIncome": 163583,
+            "pnlIncome": 163583.48,
+            "difference": -0.48
+          },
+          {
+            "month": 2,
+            "sourceCell": "Expenses!B44",
+            "auxiliaryIncome": 192582,
+            "pnlIncome": 192581.79,
+            "difference": 0.21
+          },
+          {
+            "month": 3,
+            "sourceCell": "Expenses!B45",
+            "auxiliaryIncome": 187986,
+            "pnlIncome": 187986.03,
+            "difference": -0.03
+          },
+          {
+            "month": 4,
+            "sourceCell": "Expenses!B46",
+            "auxiliaryIncome": 180947,
+            "pnlIncome": 181412.47,
+            "difference": -465.47
+          },
+          {
+            "month": 5,
+            "sourceCell": "Expenses!B47",
+            "auxiliaryIncome": 200722.93,
+            "pnlIncome": 200722.94,
+            "difference": -0.01
+          },
+          {
+            "month": 6,
+            "sourceCell": "Expenses!B48",
+            "auxiliaryIncome": 205963.36,
+            "pnlIncome": 205963.36,
+            "difference": 0.0
+          },
+          {
+            "month": 7,
+            "sourceCell": "Expenses!B49",
+            "auxiliaryIncome": 226235.68,
+            "pnlIncome": 226235.69,
+            "difference": -0.01
+          },
+          {
+            "month": 8,
+            "sourceCell": "Expenses!B50",
+            "auxiliaryIncome": 162913,
+            "pnlIncome": 162913.22,
+            "difference": -0.22
+          },
+          {
+            "month": 9,
+            "sourceCell": "Expenses!B51",
+            "auxiliaryIncome": 154180.78,
+            "pnlIncome": 154367.27,
+            "difference": -186.49
+          }
+        ]
+      },
+      {
+        "id": "text_card_amounts",
+        "severity": "warning",
+        "status": "open",
+        "amount": 192.62,
+        "count": 7,
+        "title": {
+          "pt": "Sete despesas fora do pivô",
+          "es": "Siete gastos fuera de la tabla dinámica",
+          "en": "Seven expenses excluded from the pivot"
+        },
+        "detail": {
+          "pt": "Sete valores de junho estão como texto e somam $192,62. O pivô e a P&L não os incluem. Os totais deste relatório preservam a fonte até revisão contábil.",
+          "es": "Siete importes de junio están guardados como texto y suman $192,62. La tabla dinámica y P&L no los incluyen. Este informe conserva los totales de origen hasta su revisión.",
+          "en": "Seven June amounts are stored as text, totaling $192.62. The pivot and P&L exclude them. This report preserves source totals pending accounting review."
+        },
+        "source": {
+          "sheet": "Card Raw",
+          "range": "A2:G31808"
+        },
+        "excludedAmounts": [
+          {
+            "row": 15855,
+            "countryCode": "CO",
+            "month": 6,
+            "amount": 29.6,
+            "sourceCell": "F15855"
+          },
+          {
+            "row": 15951,
+            "countryCode": "BR",
+            "month": 6,
+            "amount": 11.75,
+            "sourceCell": "F15951"
+          },
+          {
+            "row": 15952,
+            "countryCode": "BR",
+            "month": 6,
+            "amount": 60.7,
+            "sourceCell": "F15952"
+          },
+          {
+            "row": 16277,
+            "countryCode": "MX",
+            "month": 6,
+            "amount": 5.75,
+            "sourceCell": "F16277"
+          },
+          {
+            "row": 16648,
+            "countryCode": "BR",
+            "month": 6,
+            "amount": 13.53,
+            "sourceCell": "F16648"
+          },
+          {
+            "row": 18018,
+            "countryCode": "PE",
+            "month": 6,
+            "amount": 25.0,
+            "sourceCell": "F18018"
+          },
+          {
+            "row": 18090,
+            "countryCode": "CL",
+            "month": 6,
+            "amount": 46.29,
+            "sourceCell": "F18090"
+          }
+        ]
+      },
+      {
+        "id": "blank_colombia_billables",
+        "severity": "info",
+        "status": "documented",
+        "amount": 0,
+        "title": {
+          "pt": "Reembolsáveis da Colômbia em branco",
+          "es": "Reembolsables de Colombia en blanco",
+          "en": "Colombia billables cell is blank"
+        },
+        "detail": {
+          "pt": "Setembro tem célula vazia em Billables. A fórmula da fonte a trata como zero, com receita total igual à receita base de $3,68.",
+          "es": "Septiembre tiene una celda vacía en Billables. La fórmula de origen la trata como cero y los ingresos totales igualan los ingresos base de $3,68.",
+          "en": "September has a blank Billables cell. The source formula treats it as zero, with total revenue equal to base income of $3.68."
+        },
+        "source": {
+          "sheet": "P&L",
+          "range": "C52:F52"
+        }
+      },
+      {
+        "id": "presentation_allocation_scope",
+        "severity": "info",
+        "status": "explained",
+        "amount": 17737.571,
+        "title": {
+          "pt": "PPT: países antes do rateio",
+          "es": "PPT: países antes del reparto",
+          "en": "PPT: countries before cost allocation"
+        },
+        "detail": {
+          "pt": "Em setembro, os cinco cards de países do PPT excluem $2.351,28 de rateio por país e não mostram a Colômbia. O total LATAM inclui ambos. A ponte de despesas é $11.756,38 em rateios + $5.981,19 da Colômbia = $17.737,57.",
+          "es": "En septiembre, las cinco tarjetas de países del PPT excluyen $2.351,28 de reparto por país y no muestran Colombia. LATAM incluye ambos. El puente de gastos es $11.756,38 en repartos + $5.981,19 de Colombia = $17.737,57.",
+          "en": "In September, the five country cards in the PPT exclude $2,351.28 of allocated costs per country and omit Colombia. LATAM includes both. The expense bridge is $11,756.38 of allocations + $5,981.19 for Colombia = $17,737.57."
+        },
+        "source": {
+          "sheet": "Expenses",
+          "range": "J19:J30,AF11:AG11",
+          "presentation": "September MBR - Oct 15.pptx",
+          "slides": [
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ]
+        }
+      }
+    ]
+  }
+}

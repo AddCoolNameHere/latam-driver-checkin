@@ -91,6 +91,7 @@
       { label: { pt: "PMO Hub",          es: "PMO Hub",          en: "PMO Hub" },          href: "pmo.html",            icon: "notes",    access: "admin" },
     ]},
     { label: { pt: "Financeiro", es: "Financiero", en: "Finance" }, items: [
+      { label: { pt: "Relatório financeiro", es: "Informe financiero", en: "Financial Report" }, href: "financial-report.html", icon: "chart", access: "admin" },
       { label: { pt: "Fundos",           es: "Fondos",           en: "Funds" },            href: "ramp.html",                  icon: "wallet", access: "all" },
       { label: { pt: "Folha",            es: "Nómina",           en: "Payroll" },          href: "timesheet.html",             icon: "report", access: "all" },
       { label: { pt: "Divergências AR",  es: "Divergencias AR",  en: "AR Divergences" },   href: "ar-divergencias-admin.html", icon: "alert",  access: "all" },

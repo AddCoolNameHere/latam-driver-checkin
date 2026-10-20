@@ -23,3 +23,7 @@ TKM_Report_*.pdf
 
 # wrangler (cache local do deploy do Worker)
 .wrangler/
+
+# Fontes locais do relatório financeiro. Publicar somente os dados agregados.
+/Financial Reports/*.xlsx
+/Financial Reports/*.pptx
