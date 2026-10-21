@@ -27,3 +27,4 @@ TKM_Report_*.pdf
 # Fontes locais do relatório financeiro. Publicar somente os dados agregados.
 /Financial Reports/*.xlsx
 /Financial Reports/*.pptx
+/Financial Reports/__pycache__/

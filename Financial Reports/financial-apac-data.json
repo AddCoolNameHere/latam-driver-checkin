@@ -1,0 +1,4666 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "title": "APAC Financial Report",
+    "region": "apac",
+    "reportRegionLabel": {
+      "pt": "Ásia-Pacífico",
+      "es": "Asia-Pacífico",
+      "en": "Asia-Pacific"
+    },
+    "year": 2026,
+    "firstMonth": 1,
+    "lastMonth": 9,
+    "currency": "USD",
+    "currencySymbol": "$",
+    "currencyStatus": "confirmed_by_user",
+    "unit": "currency_units",
+    "currencyConfirmation": {
+      "pt": "Os valores financeiros da coleção são em USD, conforme confirmação do usuário. Nenhuma conversão cambial foi aplicada.",
+      "es": "Los valores financieros de la colección están en USD, según la confirmación del usuario. No se aplicó conversión de divisas.",
+      "en": "The collection's financial amounts are in USD, as confirmed by the user. No currency conversion was applied."
+    },
+    "sourceFile": "APAC (Jan-Sep).xlsx",
+    "sourceType": "workbook_snapshot",
+    "sourceModifiedAt": "2026-10-20T19:48:01",
+    "extractedAt": "2026-10-21T03:37:58.465915+00:00",
+    "sourceSha256": "a21794beadb10a0505bd1bbff46b172e033c87cc9bbe91f27b13465084f2daa3",
+    "dateRange": {
+      "from": "2026-01-01",
+      "to": "2026-09-30"
+    },
+    "dateRangeBasis": "P&L month labels and Card Raw Month column",
+    "storedTransactionDateRange": {
+      "from": "2026-01-01",
+      "to": "2026-12-07"
+    },
+    "recordCount": 36,
+    "countryCount": 4,
+    "transactionCount": 4344,
+    "includedTransactionCount": 4344,
+    "managementFeeRate": 0.078,
+    "financialsLive": false,
+    "operationsLive": false,
+    "idleAvailable": false,
+    "basis": {
+      "pt": "Valores salvos na planilha APAC. Períodos seguem a P&L e a coluna Month; todos os anos dos lançamentos são 2026. Divergências de datas estão documentadas.",
+      "es": "Valores guardados en la hoja APAC. Los períodos siguen P&L y la columna Month; todos los años de los movimientos son 2026. Las divergencias de fechas están documentadas.",
+      "en": "Cached APAC workbook values. Periods follow P&L and the Month column; all transaction years are 2026. Date mismatches are documented."
+    }
+  },
+  "countries": [
+    {
+      "code": "TH",
+      "name": "Thailand",
+      "labels": {
+        "pt": "Tailândia",
+        "es": "Tailandia",
+        "en": "Thailand"
+      }
+    },
+    {
+      "code": "AU",
+      "name": "Australia",
+      "labels": {
+        "pt": "Austrália",
+        "es": "Australia",
+        "en": "Australia"
+      }
+    },
+    {
+      "code": "TW",
+      "name": "Taiwan",
+      "labels": {
+        "pt": "Taiwan",
+        "es": "Taiwán",
+        "en": "Taiwan"
+      }
+    },
+    {
+      "code": "NZ",
+      "name": "New Zealand",
+      "labels": {
+        "pt": "Nova Zelândia",
+        "es": "Nueva Zelanda",
+        "en": "New Zealand"
+      }
+    }
+  ],
+  "months": [
+    {
+      "month": 1,
+      "period": "2026-01",
+      "label": "January"
+    },
+    {
+      "month": 2,
+      "period": "2026-02",
+      "label": "February"
+    },
+    {
+      "month": 3,
+      "period": "2026-03",
+      "label": "March"
+    },
+    {
+      "month": 4,
+      "period": "2026-04",
+      "label": "April"
+    },
+    {
+      "month": 5,
+      "period": "2026-05",
+      "label": "May"
+    },
+    {
+      "month": 6,
+      "period": "2026-06",
+      "label": "June"
+    },
+    {
+      "month": 7,
+      "period": "2026-07",
+      "label": "July"
+    },
+    {
+      "month": 8,
+      "period": "2026-08",
+      "label": "August"
+    },
+    {
+      "month": 9,
+      "period": "2026-09",
+      "label": "September"
+    }
+  ],
+  "records": [
+    {
+      "country": "Thailand",
+      "countryCode": "TH",
+      "month": 1,
+      "period": "2026-01",
+      "income": 36002.84,
+      "billables": 6.7,
+      "managementFees": 0.5226,
+      "revenue": 36010.0626,
+      "expenses": 24471.24,
+      "profit": 11538.8226,
+      "billedKms": 12596.3,
+      "costs": {
+        "card": 4572.52,
+        "payroll": 18616.66,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 1282.06,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 24471.24,
+      "contributionProfit": 11538.8226,
+      "margin": 0.32043328,
+      "returnOnCost": 0.47152586,
+      "contributionMargin": 0.32043328,
+      "source": {
+        "sheet": "P&L",
+        "range": "B5:I5",
+        "billedKmsCell": "C5",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "F4",
+          "cashTransfers": "Q4",
+          "card": "C9"
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Thailand",
+          "month": "January"
+        }
+      }
+    },
+    {
+      "country": "Thailand",
+      "countryCode": "TH",
+      "month": 2,
+      "period": "2026-02",
+      "income": 37030.81,
+      "billables": 1635.5,
+      "managementFees": 127.569,
+      "revenue": 38793.879,
+      "expenses": 21959.72,
+      "profit": 16834.159,
+      "billedKms": 13860.3,
+      "costs": {
+        "card": 4447.74,
+        "payroll": 17511.98,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 21959.72,
+      "contributionProfit": 16834.159,
+      "margin": 0.43393853,
+      "returnOnCost": 0.76659261,
+      "contributionMargin": 0.43393853,
+      "source": {
+        "sheet": "P&L",
+        "range": "B6:I6",
+        "billedKmsCell": "C6",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "G4",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Thailand",
+          "month": "February"
+        }
+      }
+    },
+    {
+      "country": "Thailand",
+      "countryCode": "TH",
+      "month": 3,
+      "period": "2026-03",
+      "income": 37120.07,
+      "billables": 1039.2,
+      "managementFees": 81.0576,
+      "revenue": 38240.3276,
+      "expenses": 21344.5,
+      "profit": 16895.8276,
+      "billedKms": 14023.5,
+      "costs": {
+        "card": 4860.89,
+        "payroll": 16483.61,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 21344.5,
+      "contributionProfit": 16895.8276,
+      "margin": 0.44183271,
+      "returnOnCost": 0.79157758,
+      "contributionMargin": 0.44183271,
+      "source": {
+        "sheet": "P&L",
+        "range": "B7:I7",
+        "billedKmsCell": "C7",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "H4",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Thailand",
+          "month": "March"
+        }
+      }
+    },
+    {
+      "country": "Thailand",
+      "countryCode": "TH",
+      "month": 4,
+      "period": "2026-04",
+      "income": 35865.79,
+      "billables": 26.49,
+      "managementFees": 2.06622,
+      "revenue": 35894.34622,
+      "expenses": 21525.84,
+      "profit": 14368.50622,
+      "billedKms": 12222.2,
+      "costs": {
+        "card": 4930.99,
+        "payroll": 16594.85,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 21525.84,
+      "contributionProfit": 14368.50622,
+      "margin": 0.40029998,
+      "returnOnCost": 0.66750037,
+      "contributionMargin": 0.40029998,
+      "source": {
+        "sheet": "P&L",
+        "range": "B8:I8",
+        "billedKmsCell": "C8",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "I4",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Thailand",
+          "month": "April"
+        }
+      }
+    },
+    {
+      "country": "Thailand",
+      "countryCode": "TH",
+      "month": 5,
+      "period": "2026-05",
+      "income": 38146.58,
+      "billables": 461.51,
+      "managementFees": 35.99778,
+      "revenue": 38644.08778,
+      "expenses": 25478.91,
+      "profit": 13165.17778,
+      "billedKms": 12294.8,
+      "costs": {
+        "card": 5635.45,
+        "payroll": 19843.46,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 25478.91,
+      "contributionProfit": 13165.17778,
+      "margin": 0.34067767,
+      "returnOnCost": 0.51670883,
+      "contributionMargin": 0.34067767,
+      "source": {
+        "sheet": "P&L",
+        "range": "B9:I9",
+        "billedKmsCell": "C9",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "J4",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Thailand",
+          "month": "May"
+        }
+      }
+    },
+    {
+      "country": "Thailand",
+      "countryCode": "TH",
+      "month": 6,
+      "period": "2026-06",
+      "income": 34363.49,
+      "billables": 425.52,
+      "managementFees": 33.19056,
+      "revenue": 34822.20056,
+      "expenses": 26182.01,
+      "profit": 8640.19056,
+      "billedKms": 11278.6,
+      "costs": {
+        "card": 6807.68,
+        "payroll": 19374.33,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 26182.01,
+      "contributionProfit": 8640.19056,
+      "margin": 0.24812305,
+      "returnOnCost": 0.33000486,
+      "contributionMargin": 0.24812305,
+      "source": {
+        "sheet": "P&L",
+        "range": "B10:I10",
+        "billedKmsCell": "C10",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "K4",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Thailand",
+          "month": "June"
+        }
+      }
+    },
+    {
+      "country": "Thailand",
+      "countryCode": "TH",
+      "month": 7,
+      "period": "2026-07",
+      "income": 30787.28,
+      "billables": 1042.64,
+      "managementFees": 81.32592,
+      "revenue": 31911.24592,
+      "expenses": 25212.17,
+      "profit": 6699.07592,
+      "billedKms": 9408.2,
+      "costs": {
+        "card": 5699.18,
+        "payroll": 19512.99,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 25212.17,
+      "contributionProfit": 6699.07592,
+      "margin": 0.20992837,
+      "returnOnCost": 0.26570803,
+      "contributionMargin": 0.20992837,
+      "source": {
+        "sheet": "P&L",
+        "range": "B11:I11",
+        "billedKmsCell": "C11",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "L4",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Thailand",
+          "month": "July"
+        }
+      }
+    },
+    {
+      "country": "Thailand",
+      "countryCode": "TH",
+      "month": 8,
+      "period": "2026-08",
+      "income": 33606.12,
+      "billables": 353.84,
+      "managementFees": 27.59952,
+      "revenue": 33987.55952,
+      "expenses": 24624.71,
+      "profit": 9362.84952,
+      "billedKms": 10452.3,
+      "costs": {
+        "card": 4855.58,
+        "payroll": 19769.13,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 24624.71,
+      "contributionProfit": 9362.84952,
+      "margin": 0.27547872,
+      "returnOnCost": 0.38022172,
+      "contributionMargin": 0.27547872,
+      "source": {
+        "sheet": "P&L",
+        "range": "B12:I12",
+        "billedKmsCell": "C12",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "M4",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Thailand",
+          "month": "August"
+        }
+      }
+    },
+    {
+      "country": "Thailand",
+      "countryCode": "TH",
+      "month": 9,
+      "period": "2026-09",
+      "income": 29432.42,
+      "billables": 1278.17,
+      "managementFees": 99.69726,
+      "revenue": 30810.28726,
+      "expenses": 25490.82,
+      "profit": 5319.46726,
+      "billedKms": 9440.2,
+      "costs": {
+        "card": 5949.15,
+        "payroll": 19541.67,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 25490.82,
+      "contributionProfit": 5319.46726,
+      "margin": 0.17265231,
+      "returnOnCost": 0.20868168,
+      "contributionMargin": 0.17265231,
+      "source": {
+        "sheet": "P&L",
+        "range": "B13:I13",
+        "billedKmsCell": "C13",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "N4",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Thailand",
+          "month": "September"
+        }
+      }
+    },
+    {
+      "country": "Australia",
+      "countryCode": "AU",
+      "month": 1,
+      "period": "2026-01",
+      "income": 26594.01,
+      "billables": 757.42,
+      "managementFees": 59.07876,
+      "revenue": 27410.50876,
+      "expenses": 31368.55,
+      "profit": -3958.04124,
+      "billedKms": 4470.3,
+      "costs": {
+        "card": 14518.32,
+        "payroll": 16850.23,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 31368.55,
+      "contributionProfit": -3958.04124,
+      "margin": -0.14439868,
+      "returnOnCost": -0.12617865,
+      "contributionMargin": -0.14439868,
+      "source": {
+        "sheet": "P&L",
+        "range": "B18:I18",
+        "billedKmsCell": "C18",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "F5",
+          "cashTransfers": "Q5",
+          "card": "C6"
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Australia",
+          "month": "January"
+        }
+      }
+    },
+    {
+      "country": "Australia",
+      "countryCode": "AU",
+      "month": 2,
+      "period": "2026-02",
+      "income": 37180,
+      "billables": 948.7,
+      "managementFees": 73.9986,
+      "revenue": 38202.6986,
+      "expenses": 33391.73,
+      "profit": 4810.9686,
+      "billedKms": 7728.1,
+      "costs": {
+        "card": 13152.3,
+        "payroll": 20239.43,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 33391.73,
+      "contributionProfit": 4810.9686,
+      "margin": 0.12593269,
+      "returnOnCost": 0.14407665,
+      "contributionMargin": 0.12593269,
+      "source": {
+        "sheet": "P&L",
+        "range": "B19:I19",
+        "billedKmsCell": "C19",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "G5",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Australia",
+          "month": "February"
+        }
+      }
+    },
+    {
+      "country": "Australia",
+      "countryCode": "AU",
+      "month": 3,
+      "period": "2026-03",
+      "income": 38993.69,
+      "billables": 2041.99,
+      "managementFees": 159.27522,
+      "revenue": 41194.95522,
+      "expenses": 32270.56,
+      "profit": 8924.39522,
+      "billedKms": 5562.3,
+      "costs": {
+        "card": 12958.46,
+        "payroll": 19312.1,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 32270.56,
+      "contributionProfit": 8924.39522,
+      "margin": 0.21663806,
+      "returnOnCost": 0.27654913,
+      "contributionMargin": 0.21663806,
+      "source": {
+        "sheet": "P&L",
+        "range": "B20:I20",
+        "billedKmsCell": "C20",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "H5",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Australia",
+          "month": "March"
+        }
+      }
+    },
+    {
+      "country": "Australia",
+      "countryCode": "AU",
+      "month": 4,
+      "period": "2026-04",
+      "income": 29208.61,
+      "billables": 2750.47,
+      "managementFees": 214.53666,
+      "revenue": 32173.61666,
+      "expenses": 38343.38,
+      "profit": -6169.76334,
+      "billedKms": 4997.2,
+      "costs": {
+        "card": 16731.01,
+        "payroll": 21612.37,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 38343.38,
+      "contributionProfit": -6169.76334,
+      "margin": -0.19176468,
+      "returnOnCost": -0.16090818,
+      "contributionMargin": -0.19176468,
+      "source": {
+        "sheet": "P&L",
+        "range": "B21:I21",
+        "billedKmsCell": "C21",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "I5",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Australia",
+          "month": "April"
+        }
+      }
+    },
+    {
+      "country": "Australia",
+      "countryCode": "AU",
+      "month": 5,
+      "period": "2026-05",
+      "income": 35540.07,
+      "billables": 1144.14,
+      "managementFees": 89.24292,
+      "revenue": 36773.45292,
+      "expenses": 38416.12,
+      "profit": -1642.66708,
+      "billedKms": 5733,
+      "costs": {
+        "card": 16121.41,
+        "payroll": 22294.71,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 38416.12,
+      "contributionProfit": -1642.66708,
+      "margin": -0.04466992,
+      "returnOnCost": -0.04275984,
+      "contributionMargin": -0.04466992,
+      "source": {
+        "sheet": "P&L",
+        "range": "B22:I22",
+        "billedKmsCell": "C22",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "J5",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Australia",
+          "month": "May"
+        }
+      }
+    },
+    {
+      "country": "Australia",
+      "countryCode": "AU",
+      "month": 6,
+      "period": "2026-06",
+      "income": 24373.94,
+      "billables": 4340.42,
+      "managementFees": 338.55276,
+      "revenue": 29052.91276,
+      "expenses": 32114.12,
+      "profit": -3061.20724,
+      "billedKms": 4210.3,
+      "costs": {
+        "card": 12209.82,
+        "payroll": 19904.3,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 32114.12,
+      "contributionProfit": -3061.20724,
+      "margin": -0.10536662,
+      "returnOnCost": -0.09532278,
+      "contributionMargin": -0.10536662,
+      "source": {
+        "sheet": "P&L",
+        "range": "B23:I23",
+        "billedKmsCell": "C23",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "K5",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Australia",
+          "month": "June"
+        }
+      }
+    },
+    {
+      "country": "Australia",
+      "countryCode": "AU",
+      "month": 7,
+      "period": "2026-07",
+      "income": 31401.33,
+      "billables": 2628.5,
+      "managementFees": 205.023,
+      "revenue": 34234.853,
+      "expenses": 40375.72,
+      "profit": -6140.867,
+      "billedKms": 4631,
+      "costs": {
+        "card": 18352.93,
+        "payroll": 22022.79,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 40375.72,
+      "contributionProfit": -6140.867,
+      "margin": -0.17937472,
+      "returnOnCost": -0.15209306,
+      "contributionMargin": -0.17937472,
+      "source": {
+        "sheet": "P&L",
+        "range": "B24:I24",
+        "billedKmsCell": "C24",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "L5",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Australia",
+          "month": "July"
+        }
+      }
+    },
+    {
+      "country": "Australia",
+      "countryCode": "AU",
+      "month": 8,
+      "period": "2026-08",
+      "income": 38024.8,
+      "billables": 3599.61,
+      "managementFees": 280.76958,
+      "revenue": 41905.17958,
+      "expenses": 40955.6,
+      "profit": 949.57958,
+      "billedKms": 6182.6,
+      "costs": {
+        "card": 20955.95,
+        "payroll": 19999.65,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 40955.6,
+      "contributionProfit": 949.57958,
+      "margin": 0.0226602,
+      "returnOnCost": 0.02318559,
+      "contributionMargin": 0.0226602,
+      "source": {
+        "sheet": "P&L",
+        "range": "B25:I25",
+        "billedKmsCell": "C25",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "M5",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Australia",
+          "month": "August"
+        }
+      }
+    },
+    {
+      "country": "Australia",
+      "countryCode": "AU",
+      "month": 9,
+      "period": "2026-09",
+      "income": 36323.85,
+      "billables": 889.2,
+      "managementFees": 69.3576,
+      "revenue": 37282.4076,
+      "expenses": 45442.48,
+      "profit": -8160.0724,
+      "billedKms": 4458,
+      "costs": {
+        "card": 23632.77,
+        "payroll": 21809.71,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 45442.48,
+      "contributionProfit": -8160.0724,
+      "margin": -0.21887193,
+      "returnOnCost": -0.17956926,
+      "contributionMargin": -0.21887193,
+      "source": {
+        "sheet": "P&L",
+        "range": "B26:I26",
+        "billedKmsCell": "C26",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "N5",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Australia",
+          "month": "September"
+        }
+      }
+    },
+    {
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "month": 1,
+      "period": "2026-01",
+      "income": 14552.71,
+      "billables": 470.24,
+      "managementFees": 36.67872,
+      "revenue": 15059.62872,
+      "expenses": 10056.55,
+      "profit": 5003.07872,
+      "billedKms": 2559.2,
+      "costs": {
+        "card": 849.96,
+        "payroll": 7975.41,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 1231.18,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 10056.55,
+      "contributionProfit": 5003.07872,
+      "margin": 0.33221793,
+      "returnOnCost": 0.49749454,
+      "contributionMargin": 0.33221793,
+      "source": {
+        "sheet": "P&L",
+        "range": "B31:I31",
+        "billedKmsCell": "C31",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "F6",
+          "cashTransfers": "Q6",
+          "card": "C8"
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Taiwan",
+          "month": "January"
+        }
+      }
+    },
+    {
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "month": 2,
+      "period": "2026-02",
+      "income": 14971.79,
+      "billables": 6034.03,
+      "managementFees": 470.65434,
+      "revenue": 21476.47434,
+      "expenses": 16132.86,
+      "profit": 5343.61434,
+      "billedKms": 2712.3,
+      "costs": {
+        "card": 6742.26,
+        "payroll": 9390.6,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 16132.86,
+      "contributionProfit": 5343.61434,
+      "margin": 0.24881246,
+      "returnOnCost": 0.33122548,
+      "contributionMargin": 0.24881246,
+      "source": {
+        "sheet": "P&L",
+        "range": "B32:I32",
+        "billedKmsCell": "C32",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "G6",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Taiwan",
+          "month": "February"
+        }
+      }
+    },
+    {
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "month": 3,
+      "period": "2026-03",
+      "income": 20182.22,
+      "billables": 1389.77,
+      "managementFees": 108.40206,
+      "revenue": 21680.39206,
+      "expenses": 14794.42,
+      "profit": 6885.97206,
+      "billedKms": 3549.4,
+      "costs": {
+        "card": 5041.13,
+        "payroll": 9753.29,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 14794.42,
+      "contributionProfit": 6885.97206,
+      "margin": 0.31761289,
+      "returnOnCost": 0.46544387,
+      "contributionMargin": 0.31761289,
+      "source": {
+        "sheet": "P&L",
+        "range": "B33:I33",
+        "billedKmsCell": "C33",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "H6",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Taiwan",
+          "month": "March"
+        }
+      }
+    },
+    {
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "month": 4,
+      "period": "2026-04",
+      "income": 18566.31,
+      "billables": 3583.97,
+      "managementFees": 279.54966,
+      "revenue": 22429.82966,
+      "expenses": 15586.85,
+      "profit": 6842.97966,
+      "billedKms": 3728.3,
+      "costs": {
+        "card": 5765.04,
+        "payroll": 9821.81,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 15586.85,
+      "contributionProfit": 6842.97966,
+      "margin": 0.30508389,
+      "returnOnCost": 0.43902262,
+      "contributionMargin": 0.30508389,
+      "source": {
+        "sheet": "P&L",
+        "range": "B34:I34",
+        "billedKmsCell": "C34",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "I6",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Taiwan",
+          "month": "April"
+        }
+      }
+    },
+    {
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "month": 5,
+      "period": "2026-05",
+      "income": 18598.79,
+      "billables": 478.23,
+      "managementFees": 37.30194,
+      "revenue": 19114.32194,
+      "expenses": 13276.29,
+      "profit": 5838.03194,
+      "billedKms": 3542.1,
+      "costs": {
+        "card": 3435.04,
+        "payroll": 9841.25,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 13276.29,
+      "contributionProfit": 5838.03194,
+      "margin": 0.3054271,
+      "returnOnCost": 0.43973369,
+      "contributionMargin": 0.3054271,
+      "source": {
+        "sheet": "P&L",
+        "range": "B35:I35",
+        "billedKmsCell": "C35",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "J6",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Taiwan",
+          "month": "May"
+        }
+      }
+    },
+    {
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "month": 6,
+      "period": "2026-06",
+      "income": 15401.87,
+      "billables": 3351.71,
+      "managementFees": 261.43338,
+      "revenue": 19015.01338,
+      "expenses": 13981.14,
+      "profit": 5033.87338,
+      "billedKms": 2473.2,
+      "costs": {
+        "card": 4343.86,
+        "payroll": 9637.28,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 13981.14,
+      "contributionProfit": 5033.87338,
+      "margin": 0.26473152,
+      "returnOnCost": 0.36004742,
+      "contributionMargin": 0.26473152,
+      "source": {
+        "sheet": "P&L",
+        "range": "B36:I36",
+        "billedKmsCell": "C36",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "K6",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Taiwan",
+          "month": "June"
+        }
+      }
+    },
+    {
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "month": 7,
+      "period": "2026-07",
+      "income": 14411.24,
+      "billables": 531.49,
+      "managementFees": 41.45622,
+      "revenue": 14984.18622,
+      "expenses": 11163.07,
+      "profit": 3821.11622,
+      "billedKms": 2488.7,
+      "costs": {
+        "card": 1409.72,
+        "payroll": 9753.4,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": -0.05
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 11163.07,
+      "contributionProfit": 3821.11622,
+      "margin": 0.25500993,
+      "returnOnCost": 0.34229976,
+      "contributionMargin": 0.25500993,
+      "source": {
+        "sheet": "P&L",
+        "range": "B37:I37",
+        "billedKmsCell": "C37",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "L6",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Taiwan",
+          "month": "July"
+        }
+      }
+    },
+    {
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "month": 8,
+      "period": "2026-08",
+      "income": 11558.23,
+      "billables": 3211.97,
+      "managementFees": 250.53366,
+      "revenue": 15020.73366,
+      "expenses": 13479.73,
+      "profit": 1541.00366,
+      "billedKms": 2065,
+      "costs": {
+        "card": 5237.64,
+        "payroll": 8242.09,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 13479.73,
+      "contributionProfit": 1541.00366,
+      "margin": 0.10259177,
+      "returnOnCost": 0.11432007,
+      "contributionMargin": 0.10259177,
+      "source": {
+        "sheet": "P&L",
+        "range": "B38:I38",
+        "billedKmsCell": "C38",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "M6",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Taiwan",
+          "month": "August"
+        }
+      }
+    },
+    {
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "month": 9,
+      "period": "2026-09",
+      "income": 15144.25,
+      "billables": 2579.16,
+      "managementFees": 201.17448,
+      "revenue": 17924.58448,
+      "expenses": 13071.18,
+      "profit": 4853.40448,
+      "billedKms": 1992.6,
+      "costs": {
+        "card": 4987.03,
+        "payroll": 8084.15,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 13071.18,
+      "contributionProfit": 4853.40448,
+      "margin": 0.27076803,
+      "returnOnCost": 0.37130576,
+      "contributionMargin": 0.27076803,
+      "source": {
+        "sheet": "P&L",
+        "range": "B39:I39",
+        "billedKmsCell": "C39",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "N6",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_Taiwan",
+          "month": "September"
+        }
+      }
+    },
+    {
+      "country": "New Zealand",
+      "countryCode": "NZ",
+      "month": 1,
+      "period": "2026-01",
+      "income": 12750,
+      "billables": 156.9,
+      "managementFees": 12.2382,
+      "revenue": 12919.1382,
+      "expenses": 7997.25,
+      "profit": 4921.8882,
+      "billedKms": 2916.8,
+      "costs": {
+        "card": 2382.13,
+        "payroll": 5615.12,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 7997.25,
+      "contributionProfit": 4921.8882,
+      "margin": 0.38097651,
+      "returnOnCost": 0.61544759,
+      "contributionMargin": 0.38097651,
+      "source": {
+        "sheet": "P&L",
+        "range": "B44:I44",
+        "billedKmsCell": "C44",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "F7",
+          "cashTransfers": "Q7",
+          "card": "C7"
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_New Zealand",
+          "month": "January"
+        }
+      }
+    },
+    {
+      "country": "New Zealand",
+      "countryCode": "NZ",
+      "month": 2,
+      "period": "2026-02",
+      "income": 4181.66,
+      "billables": 0,
+      "managementFees": 0,
+      "revenue": 4181.66,
+      "expenses": 7056.4,
+      "profit": -2874.74,
+      "billedKms": 818.1,
+      "costs": {
+        "card": 1283.34,
+        "payroll": 5773.06,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 7056.4,
+      "contributionProfit": -2874.74,
+      "margin": -0.68746383,
+      "returnOnCost": -0.40739471,
+      "contributionMargin": -0.68746383,
+      "source": {
+        "sheet": "P&L",
+        "range": "B45:I45",
+        "billedKmsCell": "C45",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "G7",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_New Zealand",
+          "month": "February"
+        }
+      }
+    },
+    {
+      "country": "New Zealand",
+      "countryCode": "NZ",
+      "month": 3,
+      "period": "2026-03",
+      "income": 13299.6,
+      "billables": 110.14,
+      "managementFees": 8.59092,
+      "revenue": 13418.33092,
+      "expenses": 8316.35,
+      "profit": 5101.98092,
+      "billedKms": 2155.9,
+      "costs": {
+        "card": 2259.71,
+        "payroll": 6056.64,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 8316.35,
+      "contributionProfit": 5101.98092,
+      "margin": 0.38022471,
+      "returnOnCost": 0.613488,
+      "contributionMargin": 0.38022471,
+      "source": {
+        "sheet": "P&L",
+        "range": "B46:I46",
+        "billedKmsCell": "C46",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "H7",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_New Zealand",
+          "month": "March"
+        }
+      }
+    },
+    {
+      "country": "New Zealand",
+      "countryCode": "NZ",
+      "month": 4,
+      "period": "2026-04",
+      "income": 8953.54,
+      "billables": 702.3,
+      "managementFees": 54.7794,
+      "revenue": 9710.6194,
+      "expenses": 10839.48,
+      "profit": -1128.8606,
+      "billedKms": 1755.6,
+      "costs": {
+        "card": 4762.35,
+        "payroll": 6077.13,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 10839.48,
+      "contributionProfit": -1128.8606,
+      "margin": -0.11625011,
+      "returnOnCost": -0.10414343,
+      "contributionMargin": -0.11625011,
+      "source": {
+        "sheet": "P&L",
+        "range": "B47:I47",
+        "billedKmsCell": "C47",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "I7",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_New Zealand",
+          "month": "April"
+        }
+      }
+    },
+    {
+      "country": "New Zealand",
+      "countryCode": "NZ",
+      "month": 5,
+      "period": "2026-05",
+      "income": 9562.5,
+      "billables": 1977.4,
+      "managementFees": 154.2372,
+      "revenue": 11694.1372,
+      "expenses": 14107.39,
+      "profit": -2413.2528,
+      "billedKms": 4385.6,
+      "costs": {
+        "card": 8337.86,
+        "payroll": 5769.53,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 14107.39,
+      "contributionProfit": -2413.2528,
+      "margin": -0.20636433,
+      "returnOnCost": -0.17106302,
+      "contributionMargin": -0.20636433,
+      "source": {
+        "sheet": "P&L",
+        "range": "B48:I48",
+        "billedKmsCell": "C48",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "J7",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_New Zealand",
+          "month": "May"
+        }
+      }
+    },
+    {
+      "country": "New Zealand",
+      "countryCode": "NZ",
+      "month": 6,
+      "period": "2026-06",
+      "income": 6983.96,
+      "billables": 0,
+      "managementFees": 0,
+      "revenue": 6983.96,
+      "expenses": 9815.82,
+      "profit": -2831.86,
+      "billedKms": 1190.3,
+      "costs": {
+        "card": 2666.87,
+        "payroll": 7148.95,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 9815.82,
+      "contributionProfit": -2831.86,
+      "margin": -0.40548056,
+      "returnOnCost": -0.28849959,
+      "contributionMargin": -0.40548056,
+      "source": {
+        "sheet": "P&L",
+        "range": "B49:I49",
+        "billedKmsCell": "C49",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "K7",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_New Zealand",
+          "month": "June"
+        }
+      }
+    },
+    {
+      "country": "New Zealand",
+      "countryCode": "NZ",
+      "month": 7,
+      "period": "2026-07",
+      "income": 0,
+      "billables": 0,
+      "managementFees": 0,
+      "revenue": 0,
+      "expenses": 24.57,
+      "profit": -24.57,
+      "billedKms": null,
+      "costs": {
+        "card": 24.57,
+        "payroll": 0,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 24.57,
+      "contributionProfit": -24.57,
+      "margin": null,
+      "returnOnCost": -1.0,
+      "contributionMargin": null,
+      "source": {
+        "sheet": "P&L",
+        "range": "B50:I50",
+        "billedKmsCell": "C50",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "L7",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_New Zealand",
+          "month": "July"
+        }
+      }
+    },
+    {
+      "country": "New Zealand",
+      "countryCode": "NZ",
+      "month": 8,
+      "period": "2026-08",
+      "income": 0,
+      "billables": 0,
+      "managementFees": 0,
+      "revenue": 0,
+      "expenses": 0,
+      "profit": 0,
+      "billedKms": null,
+      "costs": {
+        "card": 0.0,
+        "payroll": 0,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 0,
+      "contributionProfit": 0,
+      "margin": null,
+      "returnOnCost": null,
+      "contributionMargin": null,
+      "source": {
+        "sheet": "P&L",
+        "range": "B51:I51",
+        "billedKmsCell": "C51",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "M7",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_New Zealand",
+          "month": "August"
+        }
+      }
+    },
+    {
+      "country": "New Zealand",
+      "countryCode": "NZ",
+      "month": 9,
+      "period": "2026-09",
+      "income": 0,
+      "billables": 0,
+      "managementFees": 0,
+      "revenue": 0,
+      "expenses": 0,
+      "profit": 0,
+      "billedKms": null,
+      "costs": {
+        "card": 0.0,
+        "payroll": 0,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "allocatedOverhead": 0,
+      "localExpenses": 0,
+      "contributionProfit": 0,
+      "margin": null,
+      "returnOnCost": null,
+      "contributionMargin": null,
+      "source": {
+        "sheet": "P&L",
+        "range": "B52:I52",
+        "billedKmsCell": "C52",
+        "costSheet": "Expenses & Revenue",
+        "costCells": {
+          "payroll": "N7",
+          "cashTransfers": null,
+          "card": null
+        },
+        "cardAggregation": {
+          "sheet": "Card Raw",
+          "range": "D2:G4345",
+          "department": "SV_New Zealand",
+          "month": "September"
+        }
+      }
+    }
+  ],
+  "totals": {
+    "income": 809114.37,
+    "billables": 49947.33,
+    "managementFees": 3895.89174,
+    "revenue": 862957.59174,
+    "expenses": 728667.53,
+    "profit": 134290.06174,
+    "costs": {
+      "card": 255920.66,
+      "payroll": 470233.68,
+      "pmSalary": 0,
+      "seatCharges": 0,
+      "procurement": 0,
+      "cashTransfers": 2513.24,
+      "otherIndirect": 0,
+      "sourceAdjustment": -0.05
+    },
+    "margin": 0.15561606,
+    "returnOnCost": 0.18429538,
+    "allocatedOverhead": 0,
+    "localExpenses": 728667.53,
+    "contributionProfit": 134290.06174,
+    "contributionMargin": 0.15561606,
+    "billedKms": 191882.3,
+    "billedKmsMissingRecords": 3,
+    "billedKmsCoverage": "partial"
+  },
+  "monthly": [
+    {
+      "month": 1,
+      "period": "2026-01",
+      "income": 89899.56,
+      "billables": 1391.26,
+      "managementFees": 108.51828,
+      "revenue": 91399.33828,
+      "expenses": 73893.59,
+      "profit": 17505.74828,
+      "costs": {
+        "card": 22322.93,
+        "payroll": 49057.42,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 2513.24,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "margin": 0.19153036,
+      "returnOnCost": 0.23690483,
+      "allocatedOverhead": 0,
+      "localExpenses": 73893.59,
+      "contributionProfit": 17505.74828,
+      "contributionMargin": 0.19153036,
+      "billedKms": 22542.6,
+      "billedKmsMissingRecords": 0,
+      "billedKmsCoverage": "recorded"
+    },
+    {
+      "month": 2,
+      "period": "2026-02",
+      "income": 93364.26,
+      "billables": 8618.23,
+      "managementFees": 672.22194,
+      "revenue": 102654.71194,
+      "expenses": 78540.71,
+      "profit": 24114.00194,
+      "costs": {
+        "card": 25625.64,
+        "payroll": 52915.07,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "margin": 0.23490399,
+      "returnOnCost": 0.30702552,
+      "allocatedOverhead": 0,
+      "localExpenses": 78540.71,
+      "contributionProfit": 24114.00194,
+      "contributionMargin": 0.23490399,
+      "billedKms": 25118.8,
+      "billedKmsMissingRecords": 0,
+      "billedKmsCoverage": "recorded"
+    },
+    {
+      "month": 3,
+      "period": "2026-03",
+      "income": 109595.58,
+      "billables": 4581.1,
+      "managementFees": 357.3258,
+      "revenue": 114534.0058,
+      "expenses": 76725.83,
+      "profit": 37808.1758,
+      "costs": {
+        "card": 25120.19,
+        "payroll": 51605.64,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "margin": 0.33010437,
+      "returnOnCost": 0.49276985,
+      "allocatedOverhead": 0,
+      "localExpenses": 76725.83,
+      "contributionProfit": 37808.1758,
+      "contributionMargin": 0.33010437,
+      "billedKms": 25291.1,
+      "billedKmsMissingRecords": 0,
+      "billedKmsCoverage": "recorded"
+    },
+    {
+      "month": 4,
+      "period": "2026-04",
+      "income": 92594.25,
+      "billables": 7063.23,
+      "managementFees": 550.93194,
+      "revenue": 100208.41194,
+      "expenses": 86295.55,
+      "profit": 13912.86194,
+      "costs": {
+        "card": 32189.39,
+        "payroll": 54106.16,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "margin": 0.13883926,
+      "returnOnCost": 0.1612234,
+      "allocatedOverhead": 0,
+      "localExpenses": 86295.55,
+      "contributionProfit": 13912.86194,
+      "contributionMargin": 0.13883926,
+      "billedKms": 22703.3,
+      "billedKmsMissingRecords": 0,
+      "billedKmsCoverage": "recorded"
+    },
+    {
+      "month": 5,
+      "period": "2026-05",
+      "income": 101847.94,
+      "billables": 4061.28,
+      "managementFees": 316.77984,
+      "revenue": 106225.99984,
+      "expenses": 91278.71,
+      "profit": 14947.28984,
+      "costs": {
+        "card": 33529.76,
+        "payroll": 57748.95,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "margin": 0.14071216,
+      "returnOnCost": 0.16375439,
+      "allocatedOverhead": 0,
+      "localExpenses": 91278.71,
+      "contributionProfit": 14947.28984,
+      "contributionMargin": 0.14071216,
+      "billedKms": 25955.5,
+      "billedKmsMissingRecords": 0,
+      "billedKmsCoverage": "recorded"
+    },
+    {
+      "month": 6,
+      "period": "2026-06",
+      "income": 81123.26,
+      "billables": 8117.65,
+      "managementFees": 633.1767,
+      "revenue": 89874.0867,
+      "expenses": 82093.09,
+      "profit": 7780.9967,
+      "costs": {
+        "card": 26028.23,
+        "payroll": 56064.86,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "margin": 0.08657664,
+      "returnOnCost": 0.0947826,
+      "allocatedOverhead": 0,
+      "localExpenses": 82093.09,
+      "contributionProfit": 7780.9967,
+      "contributionMargin": 0.08657664,
+      "billedKms": 19152.4,
+      "billedKmsMissingRecords": 0,
+      "billedKmsCoverage": "recorded"
+    },
+    {
+      "month": 7,
+      "period": "2026-07",
+      "income": 76599.85,
+      "billables": 4202.63,
+      "managementFees": 327.80514,
+      "revenue": 81130.28514,
+      "expenses": 76775.53,
+      "profit": 4354.75514,
+      "costs": {
+        "card": 25486.4,
+        "payroll": 51289.18,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": -0.05
+      },
+      "margin": 0.05367607,
+      "returnOnCost": 0.05672061,
+      "allocatedOverhead": 0,
+      "localExpenses": 76775.53,
+      "contributionProfit": 4354.75514,
+      "contributionMargin": 0.05367607,
+      "billedKms": 16527.9,
+      "billedKmsMissingRecords": 1,
+      "billedKmsCoverage": "partial"
+    },
+    {
+      "month": 8,
+      "period": "2026-08",
+      "income": 83189.15,
+      "billables": 7165.42,
+      "managementFees": 558.90276,
+      "revenue": 90913.47276,
+      "expenses": 79060.04,
+      "profit": 11853.43276,
+      "costs": {
+        "card": 31049.17,
+        "payroll": 48010.87,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "margin": 0.13038148,
+      "returnOnCost": 0.14992951,
+      "allocatedOverhead": 0,
+      "localExpenses": 79060.04,
+      "contributionProfit": 11853.43276,
+      "contributionMargin": 0.13038148,
+      "billedKms": 18699.9,
+      "billedKmsMissingRecords": 1,
+      "billedKmsCoverage": "partial"
+    },
+    {
+      "month": 9,
+      "period": "2026-09",
+      "income": 80900.52,
+      "billables": 4746.53,
+      "managementFees": 370.22934,
+      "revenue": 86017.27934,
+      "expenses": 84004.48,
+      "profit": 2012.79934,
+      "costs": {
+        "card": 34568.95,
+        "payroll": 49435.53,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "margin": 0.02339994,
+      "returnOnCost": 0.02396062,
+      "allocatedOverhead": 0,
+      "localExpenses": 84004.48,
+      "contributionProfit": 2012.79934,
+      "contributionMargin": 0.02339994,
+      "billedKms": 15890.8,
+      "billedKmsMissingRecords": 1,
+      "billedKmsCoverage": "partial"
+    }
+  ],
+  "countryTotals": [
+    {
+      "countryCode": "TH",
+      "country": "Thailand",
+      "income": 312355.4,
+      "billables": 6269.57,
+      "managementFees": 489.02646,
+      "revenue": 319113.99646,
+      "expenses": 216289.92,
+      "profit": 102824.07646,
+      "costs": {
+        "card": 47759.18,
+        "payroll": 167248.68,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 1282.06,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "margin": 0.32221738,
+      "returnOnCost": 0.4753993,
+      "allocatedOverhead": 0,
+      "localExpenses": 216289.92,
+      "contributionProfit": 102824.07646,
+      "contributionMargin": 0.32221738,
+      "billedKms": 105576.4,
+      "billedKmsMissingRecords": 0,
+      "billedKmsCoverage": "recorded"
+    },
+    {
+      "countryCode": "AU",
+      "country": "Australia",
+      "income": 297640.3,
+      "billables": 19100.45,
+      "managementFees": 1489.8351,
+      "revenue": 318230.5851,
+      "expenses": 332678.26,
+      "profit": -14447.6749,
+      "costs": {
+        "card": 148632.97,
+        "payroll": 184045.29,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "margin": -0.04540002,
+      "returnOnCost": -0.04342837,
+      "allocatedOverhead": 0,
+      "localExpenses": 332678.26,
+      "contributionProfit": -14447.6749,
+      "contributionMargin": -0.04540002,
+      "billedKms": 47972.8,
+      "billedKmsMissingRecords": 0,
+      "billedKmsCoverage": "recorded"
+    },
+    {
+      "countryCode": "TW",
+      "country": "Taiwan",
+      "income": 143387.41,
+      "billables": 21630.57,
+      "managementFees": 1687.18446,
+      "revenue": 166705.16446,
+      "expenses": 121542.09,
+      "profit": 45163.07446,
+      "costs": {
+        "card": 37811.68,
+        "payroll": 82499.28,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 1231.18,
+        "otherIndirect": 0,
+        "sourceAdjustment": -0.05
+      },
+      "margin": 0.27091587,
+      "returnOnCost": 0.37158382,
+      "allocatedOverhead": 0,
+      "localExpenses": 121542.09,
+      "contributionProfit": 45163.07446,
+      "contributionMargin": 0.27091587,
+      "billedKms": 25110.8,
+      "billedKmsMissingRecords": 0,
+      "billedKmsCoverage": "recorded"
+    },
+    {
+      "countryCode": "NZ",
+      "country": "New Zealand",
+      "income": 55731.26,
+      "billables": 2946.74,
+      "managementFees": 229.84572,
+      "revenue": 58907.84572,
+      "expenses": 58157.26,
+      "profit": 750.58572,
+      "costs": {
+        "card": 21716.83,
+        "payroll": 36440.43,
+        "pmSalary": 0,
+        "seatCharges": 0,
+        "procurement": 0,
+        "cashTransfers": 0,
+        "otherIndirect": 0,
+        "sourceAdjustment": 0
+      },
+      "margin": 0.01274169,
+      "returnOnCost": 0.01290614,
+      "allocatedOverhead": 0,
+      "localExpenses": 58157.26,
+      "contributionProfit": 750.58572,
+      "contributionMargin": 0.01274169,
+      "billedKms": 13222.3,
+      "billedKmsMissingRecords": 3,
+      "billedKmsCoverage": "partial"
+    }
+  ],
+  "costCategories": [
+    {
+      "id": "card",
+      "label": {
+        "pt": "Cartão corporativo",
+        "es": "Tarjeta corporativa",
+        "en": "Corporate card"
+      }
+    },
+    {
+      "id": "payroll",
+      "label": {
+        "pt": "Folha operacional",
+        "es": "Nómina operativa",
+        "en": "Operating payroll"
+      }
+    },
+    {
+      "id": "pmSalary",
+      "label": {
+        "pt": "Gestão de projeto",
+        "es": "Gestión del proyecto",
+        "en": "Project management"
+      }
+    },
+    {
+      "id": "seatCharges",
+      "label": {
+        "pt": "Postos de trabalho",
+        "es": "Puestos de trabajo",
+        "en": "Seat charges"
+      }
+    },
+    {
+      "id": "procurement",
+      "label": {
+        "pt": "Compras",
+        "es": "Compras",
+        "en": "Procurement"
+      }
+    },
+    {
+      "id": "cashTransfers",
+      "label": {
+        "pt": "Transferências",
+        "es": "Transferencias",
+        "en": "Cash transfers"
+      }
+    },
+    {
+      "id": "otherIndirect",
+      "label": {
+        "pt": "Outros indiretos",
+        "es": "Otros indirectos",
+        "en": "Other indirect costs"
+      }
+    },
+    {
+      "id": "sourceAdjustment",
+      "label": {
+        "pt": "Diferença da fonte",
+        "es": "Diferencia de origen",
+        "en": "Source difference"
+      }
+    }
+  ],
+  "cardCategoryRecords": [
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "Alcohol and Bars",
+      "amount": 139.19,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "Car Services",
+      "amount": 27.71,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "Education",
+      "amount": 39.53,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "Fuel and Gas",
+      "amount": 2648.73,
+      "transactions": 78
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "General Merchandise",
+      "amount": 681.76,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "Internet and Phone",
+      "amount": 126.48,
+      "transactions": 5
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "Lodging",
+      "amount": 683.28,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "Office supplies and cleaning",
+      "amount": 36.44,
+      "transactions": 5
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "Other",
+      "amount": 503.36,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "Restaurants",
+      "amount": 4803.75,
+      "transactions": 79
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "SaaS / Software",
+      "amount": 329.62,
+      "transactions": 11
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 391.96,
+      "transactions": 17
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "Taxi and Rideshare",
+      "amount": 80.37,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AU",
+      "month": 1,
+      "category": "Travel Misc",
+      "amount": 4026.14,
+      "transactions": 24
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "Alcohol and Bars",
+      "amount": 43.83,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "Car Services",
+      "amount": 14.51,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "Fuel and Gas",
+      "amount": 3291.99,
+      "transactions": 99
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "General Merchandise",
+      "amount": 1126.24,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "Internet and Phone",
+      "amount": 71.54,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "Lodging",
+      "amount": 1233.09,
+      "transactions": 8
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "Office supplies and cleaning",
+      "amount": 28.7,
+      "transactions": 7
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "Parking",
+      "amount": 56.47,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "Restaurants",
+      "amount": 1111.61,
+      "transactions": 19
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "SaaS / Software",
+      "amount": 957.86,
+      "transactions": 23
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 716.8,
+      "transactions": 33
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "Taxi and Rideshare",
+      "amount": 29.89,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 2,
+      "category": "Travel Misc",
+      "amount": 4469.77,
+      "transactions": 23
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "Alcohol and Bars",
+      "amount": 62.05,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "Car Services",
+      "amount": 645.97,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "Fuel and Gas",
+      "amount": 3675.16,
+      "transactions": 97
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "General Merchandise",
+      "amount": 2363.89,
+      "transactions": 5
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "Internet and Phone",
+      "amount": 50.43,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "Lodging",
+      "amount": 373.19,
+      "transactions": 5
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "Office supplies and cleaning",
+      "amount": 20.31,
+      "transactions": 8
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "Other",
+      "amount": 53.33,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "Restaurants",
+      "amount": 412.64,
+      "transactions": 21
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "SaaS / Software",
+      "amount": 1226.86,
+      "transactions": 33
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 716.85,
+      "transactions": 30
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "Taxi and Rideshare",
+      "amount": 140.61,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AU",
+      "month": 3,
+      "category": "Travel Misc",
+      "amount": 3217.17,
+      "transactions": 20
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Alcohol and Bars",
+      "amount": 25.5,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Car Services",
+      "amount": 55.47,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Entertainment",
+      "amount": 521.13,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Fuel and Gas",
+      "amount": 3338.91,
+      "transactions": 81
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "General Merchandise",
+      "amount": 2622.36,
+      "transactions": 5
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Internet and Phone",
+      "amount": 92.84,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Lodging",
+      "amount": 3338.38,
+      "transactions": 18
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Office supplies and cleaning",
+      "amount": 34.7,
+      "transactions": 8
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Other",
+      "amount": 448.03,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Professional Services",
+      "amount": 35.35,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Restaurants",
+      "amount": 559.53,
+      "transactions": 30
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "SaaS / Software",
+      "amount": 540.16,
+      "transactions": 10
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 751.83,
+      "transactions": 36
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Taxi and Rideshare",
+      "amount": 159.53,
+      "transactions": 8
+    },
+    {
+      "countryCode": "AU",
+      "month": 4,
+      "category": "Travel Misc",
+      "amount": 4207.29,
+      "transactions": 15
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Alcohol and Bars",
+      "amount": 31.12,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Car Services",
+      "amount": 491.3,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Entertainment",
+      "amount": 450.61,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Fuel and Gas",
+      "amount": 3474.97,
+      "transactions": 80
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "General Merchandise",
+      "amount": 1069.85,
+      "transactions": 9
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Government Services",
+      "amount": 32.94,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Internet and Phone",
+      "amount": 39.86,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Lodging",
+      "amount": 2976.08,
+      "transactions": 18
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Office supplies and cleaning",
+      "amount": 45.88,
+      "transactions": 6
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Other",
+      "amount": 1245.64,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Professional Services",
+      "amount": 309.99,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Restaurants",
+      "amount": 866.52,
+      "transactions": 36
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 1425.67,
+      "transactions": 59
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Taxi and Rideshare",
+      "amount": 42.94,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 5,
+      "category": "Travel Misc",
+      "amount": 3618.04,
+      "transactions": 16
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "Car Services",
+      "amount": 4923.01,
+      "transactions": 6
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "Fees and Financial institutions",
+      "amount": 23.88,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "Fuel and Gas",
+      "amount": 2303.33,
+      "transactions": 63
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "General Merchandise",
+      "amount": 702.11,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "Internet and Phone",
+      "amount": 189.7,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "Lodging",
+      "amount": 2080.41,
+      "transactions": 14
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "Office supplies and cleaning",
+      "amount": 4.96,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "Parking",
+      "amount": 52.61,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "Restaurants",
+      "amount": 1053.88,
+      "transactions": 46
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "Shipping",
+      "amount": 4.56,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 313.42,
+      "transactions": 15
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "Taxi and Rideshare",
+      "amount": 89.24,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AU",
+      "month": 6,
+      "category": "Travel Misc",
+      "amount": 468.71,
+      "transactions": 6
+    },
+    {
+      "countryCode": "AU",
+      "month": 7,
+      "category": "Car Services",
+      "amount": 2746.38,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AU",
+      "month": 7,
+      "category": "Fuel and Gas",
+      "amount": 2973.82,
+      "transactions": 71
+    },
+    {
+      "countryCode": "AU",
+      "month": 7,
+      "category": "Internet and Phone",
+      "amount": 522.56,
+      "transactions": 7
+    },
+    {
+      "countryCode": "AU",
+      "month": 7,
+      "category": "Lodging",
+      "amount": 8395.64,
+      "transactions": 53
+    },
+    {
+      "countryCode": "AU",
+      "month": 7,
+      "category": "Office Supplies",
+      "amount": 4.69,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 7,
+      "category": "Parking",
+      "amount": 141.41,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 7,
+      "category": "Restaurants",
+      "amount": 2355.87,
+      "transactions": 134
+    },
+    {
+      "countryCode": "AU",
+      "month": 7,
+      "category": "Shipping",
+      "amount": 27.74,
+      "transactions": 7
+    },
+    {
+      "countryCode": "AU",
+      "month": 7,
+      "category": "Taxi and Rideshare",
+      "amount": 350.63,
+      "transactions": 7
+    },
+    {
+      "countryCode": "AU",
+      "month": 7,
+      "category": "Toll",
+      "amount": 834.19,
+      "transactions": 5
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Car Services",
+      "amount": 4511.07,
+      "transactions": 10
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Fuel and Gas",
+      "amount": 3047.67,
+      "transactions": 66
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Internet and Phone",
+      "amount": 145.91,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Lodging",
+      "amount": 8799.39,
+      "transactions": 69
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Office Supplies",
+      "amount": 76.84,
+      "transactions": 2
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Other",
+      "amount": 47.77,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Parking",
+      "amount": 155.08,
+      "transactions": 5
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Restaurants",
+      "amount": 3493.63,
+      "transactions": 146
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Shipping",
+      "amount": 9.31,
+      "transactions": 6
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 41.28,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Taxi and Rideshare",
+      "amount": 40.28,
+      "transactions": 3
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Toll",
+      "amount": 517.02,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 8,
+      "category": "Travel Misc",
+      "amount": 70.7,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 9,
+      "category": "Airlines",
+      "amount": 318.76,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 9,
+      "category": "Car Services",
+      "amount": 5069.06,
+      "transactions": 11
+    },
+    {
+      "countryCode": "AU",
+      "month": 9,
+      "category": "Fuel and Gas",
+      "amount": 4027.46,
+      "transactions": 91
+    },
+    {
+      "countryCode": "AU",
+      "month": 9,
+      "category": "Internet and Phone",
+      "amount": 353.5,
+      "transactions": 11
+    },
+    {
+      "countryCode": "AU",
+      "month": 9,
+      "category": "Lodging",
+      "amount": 9397.7,
+      "transactions": 67
+    },
+    {
+      "countryCode": "AU",
+      "month": 9,
+      "category": "Office Supplies",
+      "amount": 30.91,
+      "transactions": 1
+    },
+    {
+      "countryCode": "AU",
+      "month": 9,
+      "category": "Restaurants",
+      "amount": 3235.66,
+      "transactions": 165
+    },
+    {
+      "countryCode": "AU",
+      "month": 9,
+      "category": "Shipping",
+      "amount": 99.31,
+      "transactions": 20
+    },
+    {
+      "countryCode": "AU",
+      "month": 9,
+      "category": "Taxi and Rideshare",
+      "amount": 55.36,
+      "transactions": 4
+    },
+    {
+      "countryCode": "AU",
+      "month": 9,
+      "category": "Travel Misc",
+      "amount": 1045.05,
+      "transactions": 7
+    },
+    {
+      "countryCode": "NZ",
+      "month": 1,
+      "category": "Alcohol and Bars",
+      "amount": 12.21,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 1,
+      "category": "Car Services",
+      "amount": 63.15,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 1,
+      "category": "Fuel and Gas",
+      "amount": 1279.5,
+      "transactions": 27
+    },
+    {
+      "countryCode": "NZ",
+      "month": 1,
+      "category": "General Merchandise",
+      "amount": 24.37,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NZ",
+      "month": 1,
+      "category": "Lodging",
+      "amount": 408.36,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 1,
+      "category": "Restaurants",
+      "amount": 173.75,
+      "transactions": 6
+    },
+    {
+      "countryCode": "NZ",
+      "month": 1,
+      "category": "Shipping",
+      "amount": 14.3,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NZ",
+      "month": 1,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 107.14,
+      "transactions": 6
+    },
+    {
+      "countryCode": "NZ",
+      "month": 1,
+      "category": "Travel Misc",
+      "amount": 196.8,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 1,
+      "category": "Utilities",
+      "amount": 102.55,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 2,
+      "category": "Fuel and Gas",
+      "amount": 840.47,
+      "transactions": 16
+    },
+    {
+      "countryCode": "NZ",
+      "month": 2,
+      "category": "Lodging",
+      "amount": 99.45,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 2,
+      "category": "Restaurants",
+      "amount": 118.57,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NZ",
+      "month": 2,
+      "category": "Shipping",
+      "amount": 7.49,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 2,
+      "category": "Travel Misc",
+      "amount": 217.36,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 3,
+      "category": "Alcohol and Bars",
+      "amount": 196.33,
+      "transactions": 4
+    },
+    {
+      "countryCode": "NZ",
+      "month": 3,
+      "category": "Car Services",
+      "amount": 117.4,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 3,
+      "category": "Fuel and Gas",
+      "amount": 1389.37,
+      "transactions": 22
+    },
+    {
+      "countryCode": "NZ",
+      "month": 3,
+      "category": "General Merchandise",
+      "amount": 14.43,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 3,
+      "category": "Lodging",
+      "amount": 351.25,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 3,
+      "category": "Other",
+      "amount": 71.3,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 3,
+      "category": "Parking",
+      "amount": 12.38,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 3,
+      "category": "Restaurants",
+      "amount": 23.55,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NZ",
+      "month": 3,
+      "category": "Shipping",
+      "amount": 65.99,
+      "transactions": 4
+    },
+    {
+      "countryCode": "NZ",
+      "month": 3,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 17.71,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 4,
+      "category": "Alcohol and Bars",
+      "amount": 108.0,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NZ",
+      "month": 4,
+      "category": "Fuel and Gas",
+      "amount": 1723.5,
+      "transactions": 28
+    },
+    {
+      "countryCode": "NZ",
+      "month": 4,
+      "category": "General Merchandise",
+      "amount": 749.57,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 4,
+      "category": "Lodging",
+      "amount": 612.13,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NZ",
+      "month": 4,
+      "category": "Restaurants",
+      "amount": 1183.52,
+      "transactions": 13
+    },
+    {
+      "countryCode": "NZ",
+      "month": 4,
+      "category": "Shipping",
+      "amount": 21.78,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NZ",
+      "month": 4,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 244.75,
+      "transactions": 13
+    },
+    {
+      "countryCode": "NZ",
+      "month": 4,
+      "category": "Travel Misc",
+      "amount": 119.1,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NZ",
+      "month": 5,
+      "category": "Alcohol and Bars",
+      "amount": 12.3,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NZ",
+      "month": 5,
+      "category": "Car Services",
+      "amount": 864.12,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 5,
+      "category": "Fuel and Gas",
+      "amount": 2826.46,
+      "transactions": 48
+    },
+    {
+      "countryCode": "NZ",
+      "month": 5,
+      "category": "Government Services",
+      "amount": 92.3,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 5,
+      "category": "Lodging",
+      "amount": 1442.46,
+      "transactions": 7
+    },
+    {
+      "countryCode": "NZ",
+      "month": 5,
+      "category": "Parking",
+      "amount": 13.74,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NZ",
+      "month": 5,
+      "category": "Restaurants",
+      "amount": 506.74,
+      "transactions": 21
+    },
+    {
+      "countryCode": "NZ",
+      "month": 5,
+      "category": "Shipping",
+      "amount": 22.02,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NZ",
+      "month": 5,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 265.03,
+      "transactions": 14
+    },
+    {
+      "countryCode": "NZ",
+      "month": 5,
+      "category": "Travel Misc",
+      "amount": 1365.61,
+      "transactions": 10
+    },
+    {
+      "countryCode": "NZ",
+      "month": 5,
+      "category": "Utilities",
+      "amount": 927.08,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NZ",
+      "month": 6,
+      "category": "Fuel and Gas",
+      "amount": 993.56,
+      "transactions": 15
+    },
+    {
+      "countryCode": "NZ",
+      "month": 6,
+      "category": "Lodging",
+      "amount": 743.8,
+      "transactions": 4
+    },
+    {
+      "countryCode": "NZ",
+      "month": 6,
+      "category": "Restaurants",
+      "amount": 242.29,
+      "transactions": 5
+    },
+    {
+      "countryCode": "NZ",
+      "month": 6,
+      "category": "Shipping",
+      "amount": 14.49,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NZ",
+      "month": 6,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 126.12,
+      "transactions": 7
+    },
+    {
+      "countryCode": "NZ",
+      "month": 6,
+      "category": "Taxi and Rideshare",
+      "amount": 23.91,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NZ",
+      "month": 6,
+      "category": "Travel Misc",
+      "amount": 522.7,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NZ",
+      "month": 7,
+      "category": "Taxi and Rideshare",
+      "amount": 24.57,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 1,
+      "category": "Advertising",
+      "amount": 89.42,
+      "transactions": 3
+    },
+    {
+      "countryCode": "TH",
+      "month": 1,
+      "category": "Car Rental",
+      "amount": 948.21,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 1,
+      "category": "Fuel and Gas",
+      "amount": 2619.13,
+      "transactions": 86
+    },
+    {
+      "countryCode": "TH",
+      "month": 1,
+      "category": "General Merchandise",
+      "amount": 59.49,
+      "transactions": 6
+    },
+    {
+      "countryCode": "TH",
+      "month": 1,
+      "category": "Lodging",
+      "amount": 525.66,
+      "transactions": 15
+    },
+    {
+      "countryCode": "TH",
+      "month": 1,
+      "category": "Office",
+      "amount": 173.57,
+      "transactions": 5
+    },
+    {
+      "countryCode": "TH",
+      "month": 1,
+      "category": "Restaurants",
+      "amount": 39.41,
+      "transactions": 4
+    },
+    {
+      "countryCode": "TH",
+      "month": 1,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 117.63,
+      "transactions": 12
+    },
+    {
+      "countryCode": "TH",
+      "month": 2,
+      "category": "Advertising",
+      "amount": 215.03,
+      "transactions": 7
+    },
+    {
+      "countryCode": "TH",
+      "month": 2,
+      "category": "Car Rental",
+      "amount": 958.34,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 2,
+      "category": "Fuel and Gas",
+      "amount": 2301.25,
+      "transactions": 78
+    },
+    {
+      "countryCode": "TH",
+      "month": 2,
+      "category": "Lodging",
+      "amount": 24.56,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 2,
+      "category": "Office",
+      "amount": 625.71,
+      "transactions": 11
+    },
+    {
+      "countryCode": "TH",
+      "month": 2,
+      "category": "Restaurants",
+      "amount": 166.74,
+      "transactions": 17
+    },
+    {
+      "countryCode": "TH",
+      "month": 2,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 156.11,
+      "transactions": 16
+    },
+    {
+      "countryCode": "TH",
+      "month": 3,
+      "category": "Advertising",
+      "amount": 136.15,
+      "transactions": 6
+    },
+    {
+      "countryCode": "TH",
+      "month": 3,
+      "category": "Car Rental",
+      "amount": 923.55,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 3,
+      "category": "Fuel and Gas",
+      "amount": 2762.86,
+      "transactions": 111
+    },
+    {
+      "countryCode": "TH",
+      "month": 3,
+      "category": "General Merchandise",
+      "amount": 511.37,
+      "transactions": 8
+    },
+    {
+      "countryCode": "TH",
+      "month": 3,
+      "category": "Office",
+      "amount": 62.04,
+      "transactions": 3
+    },
+    {
+      "countryCode": "TH",
+      "month": 3,
+      "category": "Restaurants",
+      "amount": 191.5,
+      "transactions": 20
+    },
+    {
+      "countryCode": "TH",
+      "month": 3,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 180.38,
+      "transactions": 19
+    },
+    {
+      "countryCode": "TH",
+      "month": 3,
+      "category": "Travel Misc",
+      "amount": 50.36,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 3,
+      "category": "Utilities",
+      "amount": 42.68,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 4,
+      "category": "Advertising",
+      "amount": 29.76,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 4,
+      "category": "Car Rental",
+      "amount": 938.99,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 4,
+      "category": "Fuel and Gas",
+      "amount": 3310.78,
+      "transactions": 94
+    },
+    {
+      "countryCode": "TH",
+      "month": 4,
+      "category": "Office",
+      "amount": 297.83,
+      "transactions": 9
+    },
+    {
+      "countryCode": "TH",
+      "month": 4,
+      "category": "Restaurants",
+      "amount": 170.95,
+      "transactions": 18
+    },
+    {
+      "countryCode": "TH",
+      "month": 4,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 150.69,
+      "transactions": 16
+    },
+    {
+      "countryCode": "TH",
+      "month": 4,
+      "category": "Travel Misc",
+      "amount": 31.99,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 5,
+      "category": "Advertising",
+      "amount": 32.06,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 5,
+      "category": "Car Rental",
+      "amount": 921.83,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 5,
+      "category": "Fuel and Gas",
+      "amount": 3603.49,
+      "transactions": 104
+    },
+    {
+      "countryCode": "TH",
+      "month": 5,
+      "category": "General Merchandise",
+      "amount": 460.31,
+      "transactions": 7
+    },
+    {
+      "countryCode": "TH",
+      "month": 5,
+      "category": "Office",
+      "amount": 127.12,
+      "transactions": 2
+    },
+    {
+      "countryCode": "TH",
+      "month": 5,
+      "category": "Restaurants",
+      "amount": 189.03,
+      "transactions": 20
+    },
+    {
+      "countryCode": "TH",
+      "month": 5,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 206.05,
+      "transactions": 22
+    },
+    {
+      "countryCode": "TH",
+      "month": 5,
+      "category": "Taxes and tax preparation",
+      "amount": 63.56,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 5,
+      "category": "Travel Misc",
+      "amount": 32.0,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 6,
+      "category": "Car Services",
+      "amount": 1371.68,
+      "transactions": 4
+    },
+    {
+      "countryCode": "TH",
+      "month": 6,
+      "category": "Fuel and Gas",
+      "amount": 3979.89,
+      "transactions": 115
+    },
+    {
+      "countryCode": "TH",
+      "month": 6,
+      "category": "General Merchandise",
+      "amount": 328.33,
+      "transactions": 8
+    },
+    {
+      "countryCode": "TH",
+      "month": 6,
+      "category": "Lodging",
+      "amount": 372.44,
+      "transactions": 2
+    },
+    {
+      "countryCode": "TH",
+      "month": 6,
+      "category": "Office supplies and cleaning",
+      "amount": 253.87,
+      "transactions": 4
+    },
+    {
+      "countryCode": "TH",
+      "month": 6,
+      "category": "Restaurants",
+      "amount": 184.87,
+      "transactions": 20
+    },
+    {
+      "countryCode": "TH",
+      "month": 6,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 94.72,
+      "transactions": 10
+    },
+    {
+      "countryCode": "TH",
+      "month": 6,
+      "category": "Taxes and tax preparation",
+      "amount": 190.01,
+      "transactions": 3
+    },
+    {
+      "countryCode": "TH",
+      "month": 6,
+      "category": "Travel Misc",
+      "amount": 31.87,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 7,
+      "category": "Car Rental",
+      "amount": 858.61,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 7,
+      "category": "Car Services",
+      "amount": 999.48,
+      "transactions": 6
+    },
+    {
+      "countryCode": "TH",
+      "month": 7,
+      "category": "Fuel and Gas",
+      "amount": 3124.81,
+      "transactions": 100
+    },
+    {
+      "countryCode": "TH",
+      "month": 7,
+      "category": "Lodging",
+      "amount": 131.3,
+      "transactions": 6
+    },
+    {
+      "countryCode": "TH",
+      "month": 7,
+      "category": "Parking",
+      "amount": 22.12,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 7,
+      "category": "Restaurants",
+      "amount": 532.86,
+      "transactions": 60
+    },
+    {
+      "countryCode": "TH",
+      "month": 7,
+      "category": "Toll",
+      "amount": 30.0,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 8,
+      "category": "Car Services",
+      "amount": 1266.0,
+      "transactions": 6
+    },
+    {
+      "countryCode": "TH",
+      "month": 8,
+      "category": "Fuel and Gas",
+      "amount": 2974.15,
+      "transactions": 93
+    },
+    {
+      "countryCode": "TH",
+      "month": 8,
+      "category": "Restaurants",
+      "amount": 584.23,
+      "transactions": 59
+    },
+    {
+      "countryCode": "TH",
+      "month": 8,
+      "category": "Toll",
+      "amount": 31.2,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TH",
+      "month": 9,
+      "category": "Airlines",
+      "amount": 109.86,
+      "transactions": 2
+    },
+    {
+      "countryCode": "TH",
+      "month": 9,
+      "category": "Car Services",
+      "amount": 2105.59,
+      "transactions": 9
+    },
+    {
+      "countryCode": "TH",
+      "month": 9,
+      "category": "Fuel and Gas",
+      "amount": 3057.91,
+      "transactions": 95
+    },
+    {
+      "countryCode": "TH",
+      "month": 9,
+      "category": "Lodging",
+      "amount": 89.7,
+      "transactions": 3
+    },
+    {
+      "countryCode": "TH",
+      "month": 9,
+      "category": "Restaurants",
+      "amount": 555.45,
+      "transactions": 59
+    },
+    {
+      "countryCode": "TH",
+      "month": 9,
+      "category": "Travel Misc",
+      "amount": 30.64,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TW",
+      "month": 1,
+      "category": "Fuel and Gas",
+      "amount": 849.96,
+      "transactions": 22
+    },
+    {
+      "countryCode": "TW",
+      "month": 2,
+      "category": "Car Services",
+      "amount": 13.16,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TW",
+      "month": 2,
+      "category": "Fuel and Gas",
+      "amount": 713.3,
+      "transactions": 19
+    },
+    {
+      "countryCode": "TW",
+      "month": 2,
+      "category": "General Merchandise",
+      "amount": 6015.8,
+      "transactions": 2
+    },
+    {
+      "countryCode": "TW",
+      "month": 3,
+      "category": "Fuel and Gas",
+      "amount": 1452.23,
+      "transactions": 38
+    },
+    {
+      "countryCode": "TW",
+      "month": 3,
+      "category": "General Merchandise",
+      "amount": 1528.81,
+      "transactions": 2
+    },
+    {
+      "countryCode": "TW",
+      "month": 3,
+      "category": "Lodging",
+      "amount": 772.48,
+      "transactions": 6
+    },
+    {
+      "countryCode": "TW",
+      "month": 3,
+      "category": "Restaurants",
+      "amount": 153.94,
+      "transactions": 4
+    },
+    {
+      "countryCode": "TW",
+      "month": 3,
+      "category": "Utilities",
+      "amount": 1133.67,
+      "transactions": 2
+    },
+    {
+      "countryCode": "TW",
+      "month": 4,
+      "category": "Alcohol and Bars",
+      "amount": 47.87,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TW",
+      "month": 4,
+      "category": "Car Services",
+      "amount": 2736.51,
+      "transactions": 2
+    },
+    {
+      "countryCode": "TW",
+      "month": 4,
+      "category": "Fuel and Gas",
+      "amount": 1614.85,
+      "transactions": 40
+    },
+    {
+      "countryCode": "TW",
+      "month": 4,
+      "category": "General Merchandise",
+      "amount": 737.21,
+      "transactions": 3
+    },
+    {
+      "countryCode": "TW",
+      "month": 4,
+      "category": "Lodging",
+      "amount": 545.99,
+      "transactions": 4
+    },
+    {
+      "countryCode": "TW",
+      "month": 4,
+      "category": "Restaurants",
+      "amount": 35.05,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TW",
+      "month": 4,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 47.56,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TW",
+      "month": 5,
+      "category": "Car Services",
+      "amount": 155.82,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TW",
+      "month": 5,
+      "category": "Fuel and Gas",
+      "amount": 1734.52,
+      "transactions": 43
+    },
+    {
+      "countryCode": "TW",
+      "month": 5,
+      "category": "General Merchandise",
+      "amount": 288.75,
+      "transactions": 2
+    },
+    {
+      "countryCode": "TW",
+      "month": 5,
+      "category": "Lodging",
+      "amount": 1209.25,
+      "transactions": 8
+    },
+    {
+      "countryCode": "TW",
+      "month": 5,
+      "category": "Parking",
+      "amount": 41.79,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TW",
+      "month": 5,
+      "category": "Utilities",
+      "amount": 4.91,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TW",
+      "month": 6,
+      "category": "Fuel and Gas",
+      "amount": 603.03,
+      "transactions": 15
+    },
+    {
+      "countryCode": "TW",
+      "month": 6,
+      "category": "General Merchandise",
+      "amount": 668.17,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TW",
+      "month": 6,
+      "category": "Lodging",
+      "amount": 1016.17,
+      "transactions": 5
+    },
+    {
+      "countryCode": "TW",
+      "month": 6,
+      "category": "Utilities",
+      "amount": 2056.49,
+      "transactions": 1
+    },
+    {
+      "countryCode": "TW",
+      "month": 7,
+      "category": "Car Services",
+      "amount": 484.67,
+      "transactions": 5
+    },
+    {
+      "countryCode": "TW",
+      "month": 7,
+      "category": "Fuel and Gas",
+      "amount": 925.05,
+      "transactions": 25
+    },
+    {
+      "countryCode": "TW",
+      "month": 8,
+      "category": "Car Services",
+      "amount": 3162.49,
+      "transactions": 3
+    },
+    {
+      "countryCode": "TW",
+      "month": 8,
+      "category": "Fuel and Gas",
+      "amount": 873.68,
+      "transactions": 21
+    },
+    {
+      "countryCode": "TW",
+      "month": 8,
+      "category": "Lodging",
+      "amount": 1201.47,
+      "transactions": 4
+    },
+    {
+      "countryCode": "TW",
+      "month": 9,
+      "category": "Car Services",
+      "amount": 2815.26,
+      "transactions": 4
+    },
+    {
+      "countryCode": "TW",
+      "month": 9,
+      "category": "Fuel and Gas",
+      "amount": 1296.42,
+      "transactions": 33
+    },
+    {
+      "countryCode": "TW",
+      "month": 9,
+      "category": "Lodging",
+      "amount": 875.35,
+      "transactions": 2
+    }
+  ],
+  "cardCategoryLabels": {
+    "Advertising": {
+      "pt": "Publicidade",
+      "es": "Publicidad",
+      "en": "Advertising"
+    },
+    "Airlines": {
+      "pt": "Passagens aéreas",
+      "es": "Pasajes aéreos",
+      "en": "Airlines"
+    },
+    "Alcohol and Bars": {
+      "pt": "Bares e bebidas",
+      "es": "Bares y bebidas",
+      "en": "Alcohol and bars"
+    },
+    "Car Rental": {
+      "pt": "Aluguel de veículos",
+      "es": "Alquiler de vehículos",
+      "en": "Car rental"
+    },
+    "Car Services": {
+      "pt": "Serviços de veículos",
+      "es": "Servicios de vehículos",
+      "en": "Vehicle services"
+    },
+    "Education": {
+      "pt": "Educação",
+      "es": "Educación",
+      "en": "Education"
+    },
+    "Entertainment": {
+      "pt": "Entretenimento",
+      "es": "Entretenimiento",
+      "en": "Entertainment"
+    },
+    "Fees and Financial institutions": {
+      "pt": "Tarifas financeiras",
+      "es": "Comisiones financieras",
+      "en": "Financial fees"
+    },
+    "Fuel and Gas": {
+      "pt": "Combustível",
+      "es": "Combustible",
+      "en": "Fuel and gas"
+    },
+    "General Merchandise": {
+      "pt": "Mercadorias em geral",
+      "es": "Mercancías generales",
+      "en": "General merchandise"
+    },
+    "Government Services": {
+      "pt": "Serviços públicos",
+      "es": "Servicios gubernamentales",
+      "en": "Government services"
+    },
+    "Internet and Phone": {
+      "pt": "Internet e telefone",
+      "es": "Internet y teléfono",
+      "en": "Internet and phone"
+    },
+    "Lodging": {
+      "pt": "Hospedagem",
+      "es": "Alojamiento",
+      "en": "Lodging"
+    },
+    "Office": {
+      "pt": "Escritório",
+      "es": "Oficina",
+      "en": "Office"
+    },
+    "Office Supplies": {
+      "pt": "Materiais de escritório",
+      "es": "Material de oficina",
+      "en": "Office supplies"
+    },
+    "Office supplies and cleaning": {
+      "pt": "Escritório e limpeza",
+      "es": "Oficina y limpieza",
+      "en": "Office supplies and cleaning"
+    },
+    "Other": {
+      "pt": "Outros",
+      "es": "Otros",
+      "en": "Other"
+    },
+    "Parking": {
+      "pt": "Estacionamento",
+      "es": "Estacionamiento",
+      "en": "Parking"
+    },
+    "Professional Services": {
+      "pt": "Serviços profissionais",
+      "es": "Servicios profesionales",
+      "en": "Professional services"
+    },
+    "Restaurants": {
+      "pt": "Restaurantes",
+      "es": "Restaurantes",
+      "en": "Restaurants"
+    },
+    "SaaS / Software": {
+      "pt": "Software e SaaS",
+      "es": "Software y SaaS",
+      "en": "Software and SaaS"
+    },
+    "Shipping": {
+      "pt": "Envios",
+      "es": "Envíos",
+      "en": "Shipping"
+    },
+    "Supermarkets and Grocery Stores": {
+      "pt": "Supermercados",
+      "es": "Supermercados",
+      "en": "Supermarkets and groceries"
+    },
+    "Taxes and tax preparation": {
+      "pt": "Impostos",
+      "es": "Impuestos",
+      "en": "Taxes and tax preparation"
+    },
+    "Taxi and Rideshare": {
+      "pt": "Táxi e aplicativos",
+      "es": "Taxi y aplicaciones",
+      "en": "Taxi and rideshare"
+    },
+    "Toll": {
+      "pt": "Pedágios",
+      "es": "Peajes",
+      "en": "Tolls"
+    },
+    "Travel Misc": {
+      "pt": "Outras viagens",
+      "es": "Otros viajes",
+      "en": "Other travel"
+    },
+    "Utilities": {
+      "pt": "Utilidades",
+      "es": "Servicios básicos",
+      "en": "Utilities"
+    }
+  },
+  "cardCategoryAliases": {
+    "Advertising": [
+      "Advertising"
+    ],
+    "Airlines": [
+      "Airlines"
+    ],
+    "Alcohol and Bars": [
+      "Alcohol and Bars"
+    ],
+    "Car Rental": [
+      "Car Rental"
+    ],
+    "Car Services": [
+      "Car Services",
+      "Car services"
+    ],
+    "Education": [
+      "Education"
+    ],
+    "Entertainment": [
+      "Entertainment"
+    ],
+    "Fees and Financial institutions": [
+      "Fees and Financial institutions"
+    ],
+    "Fuel and Gas": [
+      "Fuel and Gas"
+    ],
+    "General Merchandise": [
+      "General Merchandise"
+    ],
+    "Government Services": [
+      "Government Services"
+    ],
+    "Internet and Phone": [
+      "Internet and Phone",
+      "Phone and Internet"
+    ],
+    "Lodging": [
+      "Lodging",
+      "Lodging "
+    ],
+    "Office": [
+      "Office"
+    ],
+    "Office Supplies": [
+      "Office and Supplies",
+      "Office supplies"
+    ],
+    "Office supplies and cleaning": [
+      "Office supplies and cleaning"
+    ],
+    "Other": [
+      "Other"
+    ],
+    "Parking": [
+      "Parking"
+    ],
+    "Professional Services": [
+      "Professional Services"
+    ],
+    "Restaurants": [
+      "Restaurants",
+      "Restaurants "
+    ],
+    "SaaS / Software": [
+      "SaaS / Software"
+    ],
+    "Shipping": [
+      "Shipping",
+      "Shipping "
+    ],
+    "Supermarkets and Grocery Stores": [
+      "Supermarkets and Grocery Stores"
+    ],
+    "Taxes and tax preparation": [
+      "Taxes and tax preparation"
+    ],
+    "Taxi and Rideshare": [
+      "Taxi & Rideshare",
+      "Taxi and Rideshare"
+    ],
+    "Toll": [
+      "Toll"
+    ],
+    "Travel Misc": [
+      "Travel Misc"
+    ],
+    "Utilities": [
+      "Utilities"
+    ]
+  },
+  "methodology": {
+    "revenueFormula": "income + billables + managementFees",
+    "profitFormula": "revenue - expenses",
+    "marginFormula": "profit / revenue",
+    "returnOnCostFormula": "profit / expenses",
+    "allocatedOverheadFormula": "0 (no allocated overhead in source P&L)",
+    "overheadCostKeys": [],
+    "localExpensesFormula": "expenses - allocatedOverhead",
+    "contributionProfitFormula": "revenue - localExpenses",
+    "contributionMarginFormula": "contributionProfit / revenue",
+    "managementFeesFormula": "billables * 7.8% (verified in each source formula)",
+    "costAllocation": "P&L includes country card costs, payroll and January transfers. No indirect-cost allocation is applied. India seat charges appear separately and are not included in P&L. Taiwan's reconciliation difference is identified separately.",
+    "costAllocationLabels": {
+      "pt": "A P&L inclui cartão, folha e transferências de janeiro por país. Não há rateio de custos indiretos. Os postos da Índia aparecem separados e não integram a P&L. A diferença de conciliação de Taiwan está identificada à parte.",
+      "es": "P&L incluye tarjeta, nómina y transferencias de enero por país. No hay reparto de costes indirectos. Los puestos de India figuran por separado y no integran P&L. La diferencia de conciliación de Taiwán se identifica aparte.",
+      "en": "P&L includes country card costs, payroll and January transfers. No indirect-cost allocation is applied. India seat charges appear separately and are not included in P&L. Taiwan's reconciliation difference is identified separately."
+    },
+    "zeroCostKeys": [
+      "pmSalary",
+      "seatCharges",
+      "procurement",
+      "otherIndirect"
+    ],
+    "zeroCostMeaning": {
+      "pt": "Zero significa não incluído na P&L fornecida; não comprova ausência do custo na empresa.",
+      "es": "Cero significa no incluido en P&L proporcionada; no demuestra ausencia del coste en la empresa.",
+      "en": "Zero means excluded from the supplied P&L; it does not establish that the company incurred no such cost."
+    },
+    "cardBasis": "All numeric Statement Amount rows, grouped by Ramp Department and the explicit Month column. Credits/refunds remain negative. No employee or merchant detail is exported.",
+    "billedKmsBasis": {
+      "pt": "KMS da P&L reconciliados com a seção Billed KMS. É uma medida histórica da planilha financeira, sem sincronização operacional online.",
+      "es": "KMS de P&L conciliados con la sección Billed KMS. Es una medida histórica de la hoja financiera, sin sincronización operativa en línea.",
+      "en": "P&L KMS reconciled with the Billed KMS section. This is a historical financial-workbook measure, without live operational synchronization."
+    },
+    "blankComponents": [
+      {
+        "countryCode": "NZ",
+        "month": 7,
+        "field": "billables",
+        "cell": "P&L!E50",
+        "treatment": "zero_as_used_by_source_formula"
+      },
+      {
+        "countryCode": "NZ",
+        "month": 7,
+        "field": "billedKms",
+        "cell": "P&L!C50",
+        "treatment": "preserved_as_missing"
+      },
+      {
+        "countryCode": "NZ",
+        "month": 8,
+        "field": "billables",
+        "cell": "P&L!E51",
+        "treatment": "zero_as_used_by_source_formula"
+      },
+      {
+        "countryCode": "NZ",
+        "month": 8,
+        "field": "billedKms",
+        "cell": "P&L!C51",
+        "treatment": "preserved_as_missing"
+      },
+      {
+        "countryCode": "NZ",
+        "month": 9,
+        "field": "billables",
+        "cell": "P&L!E52",
+        "treatment": "zero_as_used_by_source_formula"
+      },
+      {
+        "countryCode": "NZ",
+        "month": 9,
+        "field": "billedKms",
+        "cell": "P&L!C52",
+        "treatment": "preserved_as_missing"
+      }
+    ],
+    "sourceRanges": {
+      "pnl": [
+        "P&L!B5:I14",
+        "P&L!B18:I27",
+        "P&L!B31:I40",
+        "P&L!B44:I53"
+      ],
+      "card": "Expenses & Revenue!B3:C10 (January only)",
+      "payroll": "Expenses & Revenue!E3:N8",
+      "cashTransfers": "Expenses & Revenue!P3:Q8 (January only)",
+      "unallocatedSeatCharges": "Expenses & Revenue!E10:F10",
+      "incomeControl": "Expenses & Revenue!B15:K20",
+      "billedKmsControl": "Expenses & Revenue!B24:K29",
+      "cardTransactions": "Card Raw!A1:G4345"
+    }
+  },
+  "reconciliation": {
+    "checks": {
+      "revenueAndProfitFormulasMatch": true,
+      "managementFeeFormulasVerified": true,
+      "costComponentsMatchPnl": true,
+      "unadjustedCostComponentsMatchPnl": false,
+      "countryTotalsMatchSource": true,
+      "cardCategoriesMatchPivot": true,
+      "cardPivotCheckMonths": [
+        1
+      ],
+      "incomeMatchesAuxiliary": true,
+      "payrollMatchesSource": true,
+      "billedKmsMatchSource": true,
+      "transactionDatesMatchMonths": false,
+      "maxCostComponentDifference": 0.0,
+      "maxUnadjustedCostDifference": 0.05,
+      "maxCardPivotDifference": 0.0,
+      "cachedFormulaErrorCount": 0
+    },
+    "numericCardTotal": 255920.66,
+    "excludedTextCardAmount": 0,
+    "allParsedCardAmounts": 255920.66,
+    "negativeCardTransactionCount": 5,
+    "negativeCardAmount": -1181.56,
+    "auxiliaryIncomeTotal": 809114.37,
+    "pnlIncomeTotal": 809114.37,
+    "auxiliaryIncomeDifference": 0,
+    "sourceCostDifference": -0.05,
+    "unallocatedSourceCosts": [
+      {
+        "id": "indiaSeatCharges",
+        "amount": 12148.11,
+        "source": {
+          "sheet": "Expenses & Revenue",
+          "range": "E10:F10"
+        }
+      }
+    ],
+    "transactionDateMismatchCount": 171,
+    "transactionDateMismatchAmount": 6890.79,
+    "issues": [
+      {
+        "id": "apac_india_seat_charges_outside_pnl",
+        "severity": "warning",
+        "status": "open",
+        "amount": 12148.11,
+        "title": {
+          "pt": "Postos da Índia fora da P&L",
+          "es": "Puestos de India fuera de P&L",
+          "en": "India seat charges outside P&L"
+        },
+        "detail": {
+          "pt": "A fonte registra US$ 12.148,11 em postos da Índia (US$ 1.349,79 × 9), sem distribuição por país. Esse valor não entra nas despesas da P&L. O relatório preserva a P&L e não inventa um rateio.",
+          "es": "La fuente registra US$ 12.148,11 en puestos de India (US$ 1.349,79 × 9), sin distribución por país. Este importe no se incluye en los gastos de P&L. El informe conserva P&L y no inventa un reparto.",
+          "en": "The source lists US$12,148.11 of India seat charges (US$1,349.79 × 9), without a country allocation. This amount is excluded from P&L expenses. The report preserves P&L and applies no invented allocation."
+        },
+        "source": {
+          "sheet": "Expenses & Revenue",
+          "range": "E10:F10"
+        }
+      },
+      {
+        "id": "apac_july_transaction_dates",
+        "severity": "warning",
+        "status": "open",
+        "amount": 6890.79,
+        "count": 171,
+        "title": {
+          "pt": "Datas divergentes nos lançamentos de julho",
+          "es": "Fechas divergentes en los movimientos de julio",
+          "en": "Date mismatches in July transactions"
+        },
+        "detail": {
+          "pt": "171 lançamentos classificados como julho têm datas armazenadas em outros meses. As categorias seguem a coluna Month, que reconcilia com a P&L, sem mudar as datas originais.",
+          "es": "171 movimientos clasificados como julio tienen fechas guardadas en otros meses. Las categorías siguen la columna Month, que concilia con P&L, sin cambiar las fechas originales.",
+          "en": "171 transactions classified as July have stored dates in other months. Categories follow the Month column, which reconciles with P&L, without changing source dates."
+        },
+        "source": {
+          "sheet": "Card Raw",
+          "range": "A2:G4345"
+        },
+        "byCountryMonth": [
+          {
+            "countryCode": "AU",
+            "month": 7,
+            "count": 93,
+            "amount": 4615.19,
+            "storedDateMonths": {
+              "2": 12,
+              "1": 12,
+              "3": 10,
+              "5": 4,
+              "4": 3,
+              "6": 12,
+              "10": 9,
+              "9": 12,
+              "8": 14,
+              "12": 3,
+              "11": 2
+            }
+          },
+          {
+            "countryCode": "TH",
+            "month": 7,
+            "count": 66,
+            "amount": 1562.8,
+            "storedDateMonths": {
+              "2": 8,
+              "1": 2,
+              "6": 8,
+              "5": 3,
+              "4": 4,
+              "3": 7,
+              "9": 6,
+              "8": 11,
+              "12": 5,
+              "11": 7,
+              "10": 5
+            }
+          },
+          {
+            "countryCode": "TW",
+            "month": 7,
+            "count": 12,
+            "amount": 712.8,
+            "storedDateMonths": {
+              "1": 1,
+              "2": 2,
+              "3": 3,
+              "6": 2,
+              "8": 4
+            }
+          }
+        ]
+      },
+      {
+        "id": "apac_taiwan_cost_difference",
+        "severity": "info",
+        "status": "open",
+        "amount": -0.05,
+        "title": {
+          "pt": "Diferença de US$ 0,05 em Taiwan",
+          "es": "Diferencia de US$ 0,05 en Taiwán",
+          "en": "US$0.05 Taiwan difference"
+        },
+        "detail": {
+          "pt": "Em julho, a despesa da P&L de Taiwan é US$ 0,05 menor que cartão mais folha. A linha Diferença da fonte preserva o total publicado e identifica a diferença, sem atribuí-la a uma categoria operacional.",
+          "es": "En julio, el gasto de P&L de Taiwán es US$ 0,05 menor que tarjeta más nómina. La línea Diferencia de origen conserva el total publicado e identifica la diferencia sin atribuirla a una categoría operativa.",
+          "en": "Taiwan's July P&L expense is US$0.05 below card costs plus payroll. The Source difference line preserves the reported total and identifies the difference without assigning it to an operating category."
+        },
+        "source": {
+          "sheet": "P&L",
+          "range": "H37"
+        },
+        "differences": [
+          {
+            "countryCode": "TW",
+            "month": 7,
+            "amount": -0.05,
+            "pnlExpenses": 11163.07,
+            "card": 1409.72,
+            "payroll": 9753.4,
+            "cashTransfers": 0,
+            "pnlCell": "P&L!H37",
+            "payrollCell": "Expenses & Revenue!L6"
+          }
+        ]
+      },
+      {
+        "id": "apac_new_zealand_blank_components",
+        "severity": "info",
+        "status": "documented",
+        "amount": 0,
+        "title": {
+          "pt": "Nova Zelândia: campos vazios de julho a setembro",
+          "es": "Nueva Zelanda: campos vacíos de julio a septiembre",
+          "en": "New Zealand: blank July–September fields"
+        },
+        "detail": {
+          "pt": "A P&L registra receita zero de julho a setembro e despesa de US$ 24,57 em julho. Billables vazios entram como zero nas fórmulas da fonte. KMS vazios permanecem indisponíveis; não são convertidos em zero.",
+          "es": "P&L registra ingresos cero de julio a septiembre y un gasto de US$ 24,57 en julio. Los Billables vacíos cuentan como cero en las fórmulas de origen. Los KMS vacíos siguen sin estar disponibles; no se convierten en cero.",
+          "en": "P&L records zero revenue in July–September and US$24.57 of July expense. Blank Billables contribute zero in source formulas. Blank KMS remain unavailable and are not converted to zero."
+        },
+        "source": {
+          "sheet": "P&L",
+          "range": "B50:I52"
+        }
+      }
+    ]
+  }
+}

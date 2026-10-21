@@ -1,11 +1,11 @@
-/* Financial Report · Aceolution LATAM. Static statements + period-verified online operations. */
+/* Financial Report · Aceolution regions. Static statements + period-verified online operations. */
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
   const esc = value => escapeHtml(value);
-  const costKeys = ['card','payroll','pmSalary','seatCharges','procurement','cashTransfers','otherIndirect'];
-  const overheadKeys = ['pmSalary','seatCharges','procurement','otherIndirect'];
-  const codes = ['AR','BR','CL','CO','MX','PE'];
+  const region = window.FinancialRegion.current;
+  let costKeys = [], codes = [];
+  const defaultOverheadKeys = ['pmSalary','seatCharges','procurement','otherIndirect'];
   const countryLabels = {AR:['Argentina','Argentina','Argentina'],BR:['Brasil','Brasil','Brazil'],CL:['Chile','Chile','Chile'],CO:['Colômbia','Colombia','Colombia'],MX:['México','México','Mexico'],PE:['Peru','Perú','Peru']};
   const icons = {sliders:'<path d="M4 7h7m4 0h5M4 17h3m4 0h9"/><circle cx="13" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',screen:'<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4"/>',download:'<path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"/>',refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6 6a8 8 0 0 1 13 3M5 15a8 8 0 0 0 13 3"/>',close:'<path d="m6 6 12 12M6 18 18 6"/>',revenue:'<path d="M4 18V6m0 12h16M7 13l4-4 4 2 5-6"/>',expenses:'<path d="M4 6h16v14H4zM8 3v6m8-6v6M8 13h8m-8 3h5"/>',profit:'<path d="M12 3v18m5-14H9a3 3 0 0 0 0 6h6a3 3 0 0 1 0 6H6"/>',margin:'<path d="m5 19 14-14"/><circle cx="7" cy="7" r="3"/><circle cx="17" cy="17" r="3"/>'};
   const tabs=['opening','revenue','costs','overview','countries','idle','scenarios','sources'];
@@ -19,13 +19,20 @@
   let idleResult=null,idleKey='',idleSequence=0,idleRange='ytd',idleMetric='idleDays';
 
   function t(key, values) {
+    const regionalKey = {subtitle:region.subtitleKey,allCountries:region.allCountriesKey,statementScope:region.statementScopeKey}[key];
+    if(regionalKey)key=regionalKey;
+    if(region.code!=='latam')key=({allocatedOverhead:'includedIndirectCosts',afterAllocation:'afterSourceCosts',beforeAllocation:'beforeIndirectCosts',contributionProfit:'contributionBeforeIndirect',reconciliation:'regionalReconciliation',reconciliationHint:'regionalReconciliationHint'}[key]||key);
     let text = window.FINANCIAL_I18N?.[lang]?.[key] ?? key;
     Object.entries(values || {}).forEach(([name,value]) => { text = text.replaceAll(`{${name}}`, String(value)); });
     return text;
   }
   function localized(value) { return typeof value === 'object' && value ? value[lang] || value.en || value.pt || '' : value || ''; }
   function locale() { return {pt:'pt-BR',es:'es-ES',en:'en-US'}[lang]; }
-  function countryName(code) { return code === 'ALL' ? t('allCountries') : countryLabels[code]?.[['pt','es','en'].indexOf(lang)] || code; }
+  function countryName(code) {
+    if(code==='ALL')return t('allCountries');
+    const entry=data?.countries.find(row=>row.code===code)||data?.meta.scopeCountries?.find(row=>row.code===code);
+    return localized(entry?.label||entry?.labels)||countryLabels[code]?.[['pt','es','en'].indexOf(lang)]||entry?.name||code;
+  }
   function n(value, digits=0) { return Number.isFinite(value) ? new Intl.NumberFormat(locale(),{minimumFractionDigits:digits,maximumFractionDigits:digits}).format(value) : '—'; }
   function money(value, precise=false) {
     if (!Number.isFinite(value)) return '—';
@@ -39,7 +46,7 @@
   function signed(value, formatter=n) { return `${value>0?'+':''}${formatter(value)}`; }
   function signClass(value) { return value < -1e-9 ? 'fr-negative' : 'fr-positive'; }
   function svgIcon(name) { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] || ''}</svg>`; }
-  function storageKey(kind) { return `AC_FINANCIAL_${kind}_V1_${user.username}`; }
+  function storageKey(kind) { return `${region.storageNamespace}_${kind}_V1_${user.username}`; }
   function persistSettings() {
     try { localStorage.setItem(storageKey('SETTINGS'),JSON.stringify({settings,state})); return true; }
     catch (error) { toast(t('storageUnavailable')); return false; }
@@ -48,8 +55,18 @@
 
   // Validate inputs and recompute derived measures rather than trusting uploaded totals.
   function validateData(input) {
-    if (!input || input.schemaVersion !== 1 || !input.meta || !Number.isInteger(input.meta.year) || input.meta.year < 2000 || input.meta.year > 2100 || !Array.isArray(input.records) || !input.records.length || input.records.length > 72) throw new Error('schema');
+    if (!input || input.schemaVersion !== 1 || !input.meta || !Number.isInteger(input.meta.year) || input.meta.year < 2000 || input.meta.year > 2100 || !Array.isArray(input.records) || !input.records.length || input.records.length > 240) throw new Error('schema');
     const result = JSON.parse(JSON.stringify(input));
+    if((result.meta.region||'latam')!==region.code)throw new Error('region');
+    if(!Array.isArray(result.countries)||!result.countries.length||result.countries.length>20||result.countries.some(row=>!row||!/^[A-Z]{2}$/.test(row.code)||typeof row.name!=='string'))throw new Error('countries');
+    const codes=result.countries.map(row=>row.code);
+    if(new Set(codes).size!==codes.length)throw new Error('countries');
+    if(!Array.isArray(result.costCategories)||!result.costCategories.length||result.costCategories.length>20||result.costCategories.some(row=>!row||!/^[a-z][A-Za-z0-9]{0,40}$/.test(row.id)||!row.label))throw new Error('categories');
+    const costKeys=result.costCategories.map(row=>row.id);
+    if(new Set(costKeys).size!==costKeys.length)throw new Error('categories');
+    if(sourceData&&(codes.join('|')!==sourceData.countries.map(row=>row.code).join('|')||costKeys.join('|')!==sourceData.costCategories.map(row=>row.id).join('|')))throw new Error('region-shape');
+    const overheadKeys=result.methodology?.overheadCostKeys||defaultOverheadKeys.filter(key=>costKeys.includes(key));
+    if(!Array.isArray(overheadKeys)||new Set(overheadKeys).size!==overheadKeys.length||overheadKeys.some(key=>!costKeys.includes(key)))throw new Error('overhead');
     if(result.meta.currency && result.meta.currency!=='USD')throw new Error('currency');
     result.meta.currency='USD';
     if(Array.isArray(result.reconciliation?.issues))result.reconciliation.issues=result.reconciliation.issues.filter(issue=>issue.id!=='currency_unconfirmed');
@@ -60,6 +77,7 @@
       seen.add(`${row.countryCode}:${row.month}`);
       if (!['income','billables','managementFees','revenue','expenses'].every(key=>validNumber(row[key])) || !row.costs || !costKeys.every(key=>validNumber(row.costs[key]))) throw new Error('number');
       if (Math.abs(row.revenue-row.income-row.billables-row.managementFees)>.05 || Math.abs(row.expenses-costKeys.reduce((sum,key)=>sum+row.costs[key],0))>.05) throw new Error('reconciliation');
+      if(row.billedKms!=null&&(!validNumber(row.billedKms)||row.billedKms<0))throw new Error('billed-kms');
       row.allocatedOverhead=overheadKeys.reduce((sum,key)=>sum+row.costs[key],0);
       row.localExpenses=row.expenses-row.allocatedOverhead;
       row.contributionProfit=row.revenue-row.localExpenses;
@@ -70,10 +88,9 @@
       row.period=`${result.meta.year}-${String(row.month).padStart(2,'0')}`;
     });
     const months=[...new Set(result.records.map(row=>row.month))].sort((a,b)=>a-b);
-    // A missing country is not a zero. Require a full six-country monthly close.
+    // A missing country is not a zero. Require every declared country in each monthly close.
     if (months.some(month=>codes.some(code=>!seen.has(`${code}:${month}`))) || months.some((month,i)=>i && month!==months[i-1]+1)) throw new Error('coverage');
     result.months=months.map(month=>({month,period:`${result.meta.year}-${String(month).padStart(2,'0')}`}));
-    result.countries=codes.map(code=>({code,name:countryLabels[code][2]}));
     result.meta.firstMonth=months[0]; result.meta.lastMonth=months.at(-1);
     if (!Array.isArray(result.costCategories) || result.costCategories.length!==costKeys.length || new Set(result.costCategories.map(category=>category.id)).size!==costKeys.length || costKeys.some(key=>!result.costCategories.find(category=>category.id===key))) throw new Error('categories');
     if (result.cardCategoryRecords != null) {
@@ -85,9 +102,23 @@
       });
       if (result.cardCategoryRecords.length && result.records.some(row=>Math.abs((cardTotals.get(`${row.countryCode}:${row.month}`)||0)-row.costs.card)>.05)) throw new Error('card-total');
     }
-    result.totals=aggregate(result.records);
-    result.monthly=months.map(month=>({month,period:`${result.meta.year}-${String(month).padStart(2,'0')}`,...aggregate(result.records.filter(row=>row.month===month))}));
-    result.countryTotals=codes.map(countryCode=>({countryCode,country:countryLabels[countryCode][2],...aggregate(result.records.filter(row=>row.countryCode===countryCode))}));
+    if(result.cardCountryRecords!=null){
+      if(!Array.isArray(result.cardCountryRecords)||result.cardCountryRecords.length>240||!Array.isArray(result.meta.scopeCountries))throw new Error('country-card');
+      const scopeCodes=result.meta.scopeCountries.map(row=>row.code),cardSeen=new Set();
+      result.cardCountryRecords.forEach(row=>{
+        const key=row.countryCode+':'+row.month;
+        if(!scopeCodes.includes(row.countryCode)||!months.includes(row.month)||!validNumber(row.amount)||!Number.isInteger(row.transactions)||row.transactions<0||cardSeen.has(key))throw new Error('country-card');
+        cardSeen.add(key);
+      });
+      months.forEach(month=>{
+        const cardTotal=result.cardCountryRecords.filter(row=>row.month===month).reduce((sum,row)=>sum+row.amount,0);
+        const statementTotal=result.records.filter(row=>row.month===month).reduce((sum,row)=>sum+(row.costs.card||0),0);
+        if(Math.abs(cardTotal-statementTotal)>.05||scopeCodes.some(code=>!cardSeen.has(code+':'+month)))throw new Error('country-card-total');
+      });
+    }
+    result.totals=aggregate(result.records,costKeys);
+    result.monthly=months.map(month=>({month,period:`${result.meta.year}-${String(month).padStart(2,'0')}`,...aggregate(result.records.filter(row=>row.month===month),costKeys)}));
+    result.countryTotals=codes.map(countryCode=>({countryCode,country:result.countries.find(row=>row.code===countryCode).name,...aggregate(result.records.filter(row=>row.countryCode===countryCode),costKeys)}));
     result.meta.recordCount=result.records.length;
     result.meta.countryCount=codes.length;
     return result;
@@ -104,9 +135,13 @@
     return out;
   }
   function rowsFor(country=state.country,start=state.start,end=state.end) { return data.records.filter(row=>(country==='ALL'||row.countryCode===country)&&row.month>=start&&row.month<=end); }
-  function aggregate(rows) {
-    const result={income:0,billables:0,managementFees:0,revenue:0,expenses:0,profit:0,allocatedOverhead:0,localExpenses:0,contributionProfit:0,costs:Object.fromEntries(costKeys.map(key=>[key,0]))};
-    rows.forEach(row=>{Object.keys(result).filter(key=>key!=='costs').forEach(key=>result[key]+=row[key]);costKeys.forEach(key=>result.costs[key]+=row.costs[key]);});
+  function selectData(next) { data=next;codes=data.countries.map(row=>row.code);costKeys=data.costCategories.map(row=>row.id); }
+  function aggregate(rows, keys=costKeys) {
+    const result={income:0,billables:0,managementFees:0,revenue:0,expenses:0,profit:0,allocatedOverhead:0,localExpenses:0,contributionProfit:0,costs:Object.fromEntries(keys.map(key=>[key,0]))};
+    rows.forEach(row=>{Object.keys(result).filter(key=>key!=='costs').forEach(key=>result[key]+=row[key]);keys.forEach(key=>result.costs[key]+=row.costs[key]);});
+    const kms=rows.map(row=>row.billedKms).filter(Number.isFinite);
+    result.billedKms=kms.length?kms.reduce((sum,value)=>sum+value,0):null;
+    result.billedKmsMissingRecords=rows.length-kms.length;
     result.margin=result.revenue!==0?result.profit/result.revenue:null;
     result.contributionMargin=result.revenue!==0?result.contributionProfit/result.revenue:null;
     result.returnOnCost=result.expenses!==0?result.profit/result.expenses:null;
@@ -121,8 +156,14 @@
     document.querySelectorAll('[data-lang]').forEach(el=>el.classList.toggle('active',el.dataset.lang===lang));
     document.querySelector('.fr-tabs').setAttribute('aria-label',t('overview'));
     $('report-title').textContent=settings.title||t('title');
-    document.title=`${settings.title||t('title')} · LATAM · Aceolution`;
+    document.title=`${settings.title||t('title')} · ${region.shortLabel} · Aceolution`;
+    renderRegionNavigation();
     if(data) { fillFilters();render(); }
+  }
+  function renderRegionNavigation() {
+    document.querySelectorAll('[data-region-brand]').forEach(el=>{el.textContent=t(region.brandKey);});
+    const nav=$('region-nav');
+    if(nav){nav.setAttribute('aria-label',t('regionReports'));nav.innerHTML=Object.values(window.FinancialRegion.regions).map(item=>`<a class="fr-btn ${item.code===region.code?'active':''}" href="${esc(item.reportUrl)}"${item.code===region.code?' aria-current="page"':''}>${esc(t(item.labelKey))}</a>`).join('');}
   }
   function fillFilters() {
     const min=data.meta.firstMonth,max=data.meta.lastMonth;
@@ -147,11 +188,11 @@
     $('mbr-btn').classList.toggle('active',state.country==='ALL'&&state.start===9&&state.end===9);
     $('mbr-btn').hidden=!data.months.some(row=>row.month===9);
     $('latest-btn').classList.toggle('active',state.start===data.meta.lastMonth&&state.end===data.meta.lastMonth);
-    renderKpis(total);renderTrend();renderInsights(total);renderCountryBars();renderTables(total);renderCosts(total);renderScenario();renderSources();renderOperations();renderMbr();renderIdle();
+    renderKpis(total);renderTrend();renderInsights(total);renderCountryBars();renderTables(total);renderCountryCards();renderCosts(total);renderScenario();renderSources();renderOperations();renderMbr();renderIdle();
     $('editorial-card').hidden=!settings.commentText.trim();$('editorial-title').textContent=settings.commentTitle||t('managementCommentary');$('editorial-text').textContent=settings.commentText;
     setTab(state.tab,false);
   }
-  function renderMbr() { window.FinancialMbr.render({data,state,settings,imported,t,esc,n,money,pct,signed,monthName,periodLabel,countryName,localized,aggregate,rowsFor,selectedCountries,signClass,costKeys}); }
+  function renderMbr() { window.FinancialMbr.render({data,state,settings,imported,region,t,esc,n,money,pct,signed,monthName,periodLabel,countryName,localized,aggregate,rowsFor,selectedCountries,signClass,costKeys}); }
   function deltaText(key,current,previous) {
     if(!previous || Math.abs(previous[key])<.00001)return t('noPrevious');
     return `${signed((current[key]-previous[key])/Math.abs(previous[key]),value=>pct(value))} ${t('vsPrevious')}`;
@@ -196,8 +237,19 @@
   }
   function renderTables(total) {
     const head=first=>`<thead><tr>${[first,'revenue','localExpenses','contributionProfit','allocatedOverhead','profit','margin','returnOnCost'].map(key=>`<th scope="col">${esc(t(key))}</th>`).join('')}</tr></thead>`;
-    $('country-table').innerHTML=`<table class="fr-table"><caption>${esc(t('fullPrecisionNote'))}</caption>${head('country')}<tbody>${selectedCountries().sort((a,b)=>b.revenue-a.revenue).map(row=>tableRow(countryName(row.code),row,row.code)).join('')}</tbody><tfoot>${tableRow(t('total'),total)}</tfoot></table>`;
+    $('country-table').innerHTML=`${data.meta.countryBreakdown==='card-only'?`<p class="fr-muted">${esc(localized(data.meta.scopeNote))}</p>`:''}<table class="fr-table"><caption>${esc(t('fullPrecisionNote'))}</caption>${head('country')}<tbody>${selectedCountries().sort((a,b)=>b.revenue-a.revenue).map(row=>tableRow(countryName(row.code),row,row.code)).join('')}</tbody><tfoot>${tableRow(t('total'),total)}</tfoot></table>`;
     $('monthly-table').innerHTML=`<table class="fr-table">${head('month')}<tbody>${data.months.filter(({month})=>month>=state.start&&month<=state.end).map(({month})=>tableRow(monthName(month),aggregate(rowsFor(state.country,month,month)))).join('')}</tbody><tfoot>${tableRow(t('total'),total)}</tfoot></table>`;
+  }
+  function renderCountryCards() {
+    const panel=document.querySelector('[data-panel="countries"]');
+    let host=$('country-card-breakdown');
+    if(!data.cardCountryRecords?.length){if(host)host.remove();return;}
+    if(!host){host=document.createElement('article');host.id='country-card-breakdown';host.className='fr-card fr-spaced';panel.insertBefore(host,panel.children[1]||null);}
+    const months=data.months.filter(row=>row.month>=state.start&&row.month<=state.end);
+    const totalFor=(code,month)=>data.cardCountryRecords.filter(row=>(code==='ALL'||row.countryCode===code)&&row.month>=state.start&&row.month<=state.end&&(!month||row.month===month)).reduce((sum,row)=>sum+row.amount,0);
+    const total=totalFor('ALL');
+    const row=(code,label)=>`<tr><td>${esc(label)}</td>${months.map(({month})=>`<td>${esc(money(totalFor(code,month),true))}</td>`).join('')}<td><strong>${esc(money(totalFor(code),true))}</strong></td><td>${pct(total?totalFor(code)/total:null)}</td></tr>`;
+    host.innerHTML=`<h2>${esc(t('countryCardBreakdown'))}</h2><p class="fr-muted">${esc(t('countryCardBreakdownHint'))}</p><div class="fr-table-scroll"><table class="fr-table fr-compact-table"><thead><tr><th>${esc(t('country'))}</th>${months.map(({month})=>`<th>${esc(monthName(month,true))}</th>`).join('')}<th>${esc(t('total'))}</th><th>${esc(t('share'))}</th></tr></thead><tbody>${data.meta.scopeCountries.map(country=>row(country.code,countryName(country.code))).join('')}</tbody><tfoot>${row('ALL',t('total'))}</tfoot></table></div>`;
   }
   function renderCosts(total) {
     const categories=data.costCategories.map(category=>({...category,value:total.costs[category.id]})).sort((a,b)=>b.value-a.value),max=Math.max(...categories.map(row=>Math.abs(row.value)),1);
@@ -223,11 +275,21 @@
   }
   function renderSources() {
     const sourceName=data.meta.sourceFile||t('importedActuals');
-    $('source-details').innerHTML=`<div class="fr-source-grid"><div><h3>${esc(t('financialSourceTitle'))}</h3><p>${esc(sourceName)}<br>${esc(periodLabel(data.meta.firstMonth,data.meta.lastMonth))} · P&amp;L</p><p>${esc(t('financialSourceText'))}</p></div><div><h3>${esc(t('operationalSourceTitle'))}</h3><p>${esc(t('operationalSourceText'))}</p><a href="https://docs.google.com/spreadsheets/d/1hwRnvbIKHWMRVY84lT6svbCg5BcMKkIJ7iaKpnNOGjg/edit" target="_blank" rel="noopener">${esc(t('openMastersheet'))} ↗</a></div><div><h3>${esc(t('presentationSourceTitle'))}</h3><p>September MBR – Oct 15.pptx<br>${esc(t('presentationSourceText'))}</p><a href="https://app.powerbi.com/groups/me/reports/d1fdf283-bdf6-4266-a414-ff7067db0a41/?pbi_source=PowerPoint" target="_blank" rel="noopener">Power BI ↗</a></div></div><dl class="fr-definition-list">${[['idleDays','idleDefinition'],['revenue','revenueFormula'],['profit','profitFormula'],['margin','marginFormula'],['returnOnCost','returnFormula'],['allocatedOverhead','allocationFormula'],['contributionProfit','contributionFormula'],['currency','currencyFormula']].map(([term,definition])=>`<dt>${esc(t(term))}</dt><dd>${esc(t(definition))}</dd>`).join('')}</dl>`;
+    const scope=localized(data.meta.scopeNote);
+    const operational=region.operationsEnabled?`<p>${esc(t('operationalSourceText'))}</p><a href="https://docs.google.com/spreadsheets/d/1hwRnvbIKHWMRVY84lT6svbCg5BcMKkIJ7iaKpnNOGjg/edit" target="_blank" rel="noopener">${esc(t('openMastersheet'))} ↗</a>`:`<p>${esc(t('regionSourceUnavailable'))}</p>${data.records.some(row=>Number.isFinite(row.billedKms))?`<p>${esc(t('financialBilledKmsNote'))}</p>`:''}`;
+    const presentation=region.code==='latam'?`<p>September MBR – Oct 15.pptx<br>${esc(t('presentationSourceText'))}</p><a href="https://app.powerbi.com/groups/me/reports/d1fdf283-bdf6-4266-a414-ff7067db0a41/?pbi_source=PowerPoint" target="_blank" rel="noopener">Power BI ↗</a>`:`<p>${esc(t('regionalPresentationSource'))}</p>`;
+    const definitions=[...(region.operationsEnabled?[['idleDays',t('idleDefinition')]]:[]),['revenue',t('revenueFormula')],['profit',t('profitFormula')],['margin',t('marginFormula')],['returnOnCost',t('returnFormula')],['allocatedOverhead',localized(data.methodology?.costAllocationLabels)||t('allocationFormula')],['contributionProfit',region.code==='latam'?t('contributionFormula'):`${t('contributionProfit')} = ${t('profit')} + ${t('allocatedOverhead')}`],['currency',t('currencyFormula')]];
+    $('source-details').innerHTML=`<div class="fr-source-grid"><div><h3>${esc(t('financialSourceTitle'))}</h3><p>${esc(sourceName)}<br>${esc(periodLabel(data.meta.firstMonth,data.meta.lastMonth))}</p><p>${esc(t('financialSourceText'))}</p>${scope?`<p>${esc(scope)}</p>`:''}</div><div><h3>${esc(t('operationalSourceTitle'))}</h3>${operational}</div><div><h3>${esc(t('presentationSourceTitle'))}</h3>${presentation}</div></div><dl class="fr-definition-list">${definitions.map(([term,definition])=>`<dt>${esc(t(term))}</dt><dd>${esc(definition)}</dd>`).join('')}</dl>`;
     const issues=Array.isArray(data.reconciliation?.issues)?data.reconciliation.issues:[];
-    $('reconciliation').innerHTML=issues.map((issue,index)=>`<div class="fr-reconciliation-item"><span>${String(index+1).padStart(2,'0')}</span><div><h3>${esc(localized(issue.title))}</h3><p>${esc(localized(issue.detail))}</p>${issue.source?`<p>${esc(t('sourceRange'))}: ${esc(issue.source.sheet||'')}!${esc(issue.source.range||'')}</p>`:''}</div></div>`).join('');
+    $('reconciliation').innerHTML=issues.length?issues.map((issue,index)=>`<div class="fr-reconciliation-item"><span>${String(index+1).padStart(2,'0')}</span><div><h3>${esc(localized(issue.title))}</h3><p>${esc(localized(issue.detail))}</p>${issue.source?`<p>${esc(t('sourceRange'))}: ${esc(issue.source.sheet||'')}!${esc(issue.source.range||'')}</p>`:''}</div></div>`).join(''):`<p class="fr-muted">${esc(t('noReconciliationIssues'))}</p>`;
   }
   function renderOperations() {
+    if(!region.operationsEnabled){
+      $('refresh-ops').hidden=true;
+      const total=aggregate(rowsFor()),kms=total.billedKms;
+      $('operations').innerHTML=`<p class="fr-muted">${esc(t('regionSourceUnavailable'))}</p>${kms!==null?`<div class="fr-ops-values"><div><div class="fr-ops-value">${n(kms)} km${total.billedKmsMissingRecords?'*':''}</div><div class="fr-ops-label">${esc(t('financialBilledKms'))} · ${esc(periodLabel())}</div></div><div><div class="fr-ops-value">${kms>0&&!total.billedKmsMissingRecords?esc(money(total.expenses/kms,true)):'—'}</div><div class="fr-ops-label">${esc(t('financialCostPerBilledKm'))}</div></div></div><p class="fr-footnote">${esc(t('financialBilledKmsNote'))}${total.billedKmsMissingRecords?' '+esc(t('financialBilledKmsPartial')):''}</p>`:''}`;
+      return;
+    }
     const context=t('lastMonthOps',{month:periodLabel(state.end,state.end)});
     const result=operationResult;
     let body=`<div class="fr-ops-status"><span class="fr-source-dot"></span><span>${esc(context)}<br>${esc(!result?t('loadingOps'):t({live:'opsLive',cache:'opsCache',stale:'opsStale',unverified:'opsUnverified',unavailable:'opsUnavailable'}[result.status]||'opsUnavailable'))}</span></div>`;
@@ -242,6 +304,7 @@
     $('operations').innerHTML=body;
   }
   async function loadOperations(forceRefresh=false) {
+    if(!region.operationsEnabled){renderOperations();return;}
     const key=`${data.meta.year}:${state.end}:${state.country}`;
     if(key===operationKey&&!forceRefresh)return;
     operationKey=key;operationResult=null;const sequence=++operationSequence;
@@ -251,6 +314,12 @@
     if(sequence===operationSequence){$('refresh-ops').disabled=false;renderOperations();}
   }
   function renderIdle() {
+    if(!region.operationsEnabled){
+      $('refresh-idle').hidden=true;document.querySelector('.fr-idle-controls').hidden=true;
+      const intro=document.querySelector('[data-panel="idle"] [data-i18n="idleIntro"]');if(intro)intro.textContent=t('idleRegionUnavailable');
+      $('idle-content').innerHTML=`<div class="fr-scope-note"><strong>${esc(t('scopeNotice'))}</strong><p>${esc(t('idleRegionUnavailable'))}</p></div>`;
+      return;
+    }
     const metricNames={idleDays:'idleDays',techDays:'idleTechnical',mechDays:'idleMechanical',weatherDays:'idleWeather'};
     document.querySelectorAll('[data-idle-range]').forEach(button=>button.classList.toggle('active',button.dataset.idleRange===idleRange));
     document.querySelectorAll('[data-idle-metric]').forEach(button=>button.classList.toggle('active',({technical:'techDays',mechanical:'mechDays',weather:'weatherDays',idleDays:'idleDays'}[button.dataset.idleMetric])===idleMetric));
@@ -279,7 +348,7 @@
     $('idle-content').innerHTML=`<div class="fr-idle-meta"><span class="fr-tag">${esc(t('idlePeriod',{period:periodLabel(start,state.end),country:countryName(state.country)}))}</span><span>${esc(t(statusKey))}${partial&&statusKey!=='idlePartial'?' · '+esc(t('idlePartial')):''}</span></div><div class="fr-idle-kpis">${['idleDays','techDays','mechDays','weatherDays'].map(key=>`<div class="fr-idle-kpi"><span>${esc(t(metricNames[key]))}</span><strong>${n(total[key])}</strong><small>${esc(t('driverDays'))}</small></div>`).join('')}</div><p class="fr-footnote">${esc(t('idleDefinition'))}</p><p class="fr-footnote">${esc(t('idleOverlap'))}</p><div class="fr-idle-chart"><div class="fr-card-head"><h3>${esc(t('idleMonths'))} · ${esc(t(metricNames[idleMetric]))}</h3><span class="fr-tag">${esc(t('driverDays'))}</span></div>${monthRows.map(row=>`<div class="fr-idle-bar"><span>${esc(monthName(row.month,true))}</span><span class="fr-country-track"><i style="width:${(row.values[idleMetric]||0)/max*100}%"></i></span><strong>${n(row.values[idleMetric])}${coverage(row.selected)==='idlePartialCell'?'*':''}</strong></div>`).join('')}</div><h3 class="fr-subheading">${esc(t('idleCountries'))} · ${esc(t(metricNames[idleMetric]))}</h3><div class="fr-table-scroll"><table class="fr-table"><thead><tr><th>${esc(t('country'))}</th>${months.map(row=>`<th>${esc(monthName(row.month,true))}</th>`).join('')}<th>${esc(t('total'))}</th></tr></thead><tbody>${selected.map(code=>{const rows=monthRows.map(month=>month.countries?.find(row=>row.countryCode===code));return `<tr><td>${esc(countryName(code))}</td>${rows.map(row=>`<td title="${esc(t(!row||row.coverage==='missing'?'idleMissingCell':row.coverage==='partial'?'idlePartialCell':'idleRecorded'))}">${n(row?.[idleMetric])}${row?.coverage==='partial'?'*':''}</td>`).join('')}<td><strong>${n(sumRows(rows)[idleMetric])}${rows.some(row=>!row||row.coverage!=='recorded')?'*':''}</strong></td></tr>`;}).join('')}</tbody><tfoot><tr><td>${esc(t('total'))}</td>${monthRows.map(row=>`<td>${n(row.values[idleMetric])}${coverage(row.selected)!=='idleRecorded'?'*':''}</td>`).join('')}<td>${n(total[idleMetric])}${partial?'*':''}</td></tr></tfoot></table></div>${partial?`<p class="fr-footnote">* ${esc(t('idlePartial'))}</p>`:''}<div class="fr-idle-context">${[['idleObserved',n(total.observedRecords)],['idleEligibleRecords',n(total.eligibleRecords)],['idleWeekendRecords',n(total.weekendRecords)],['idleHolidayRecords',n(total.holidayRecords)],['idleMapping',n(total.mappingRecords)],['idleOtherDown',n(total.otherDownRecords)],['idleUnclassified',n(total.unclassifiedRecords)],['idleRate',pct(total.eligibleRecords>0?total.idleDays/total.eligibleRecords:null)]].map(([key,value])=>`<div><span>${esc(t(key))}</span><strong>${esc(value)}</strong></div>`).join('')}</div><p class="fr-footnote">${esc(t('idleRateFormula'))}</p><details class="fr-detail fr-spaced"><summary>${esc(t('idleCoverage'))}</summary><div class="fr-table-scroll"><table class="fr-table"><thead><tr>${['month','idleCoverage','sourceFile','idleObserved','idleUnclassified'].map(key=>`<th>${esc(t(key))}</th>`).join('')}</tr></thead><tbody>${monthRows.map(row=>`<tr><td>${esc(monthName(row.month))}</td><td>${esc(t(coverage(row.selected)))}</td><td>${esc(sourceName(row.source||result.source,row.status))}</td><td>${n(row.values.observedRecords)}</td><td>${n(row.values.unclassifiedRecords)}</td></tr>`).join('')}</tbody></table></div></details><p class="fr-footnote">${esc(t('idleExclusions'))}</p><p class="fr-footnote">${esc(t('idleNoCost'))}</p><p class="fr-footnote">${result.dataThrough?esc(t('idleThrough',{date:dateText(result.dataThrough)}))+' · ':''}${result.asOf?esc(t('opsRetrieved',{date:new Date(result.asOf).toLocaleString(locale())})):''}</p>`;
   }
   async function loadIdle(forceRefresh=false) {
-    if(!data||!window.FinancialIdle)return;
+    if(!data||!region.operationsEnabled||!window.FinancialIdle)return;
     const key=`${data.meta.year}:${state.end}`;
     if(key===idleKey&&!forceRefresh)return;
     idleKey=key;idleResult=null;const sequence=++idleSequence;$('refresh-idle').disabled=true;renderIdle();
@@ -301,7 +370,7 @@
     const headings=['countryCode','country','period','income','billables','managementFees','revenue','localExpenses','contributionProfit','allocatedOverhead','expenses','profit','margin','returnOnCost',...costKeys];
     const cell=value=>`"${String(value??'').replace(/"/g,'""')}"`;
     const lines=rowsFor().map(row=>[row.countryCode,countryName(row.countryCode),row.period,...headings.slice(3,14).map(key=>row[key]),...costKeys.map(key=>row.costs[key])].map(cell).join(','));
-    download(`latam-financial-${data.meta.year}-${state.start}-${state.end}-${state.country}.csv`,'\uFEFF'+headings.map(cell).join(',')+'\r\n'+lines.join('\r\n'),'text/csv;charset=utf-8');
+    download(`${region.code}-financial-${data.meta.year}-${state.start}-${state.end}-${state.country}.csv`,'\uFEFF'+headings.map(cell).join(',')+'\r\n'+lines.join('\r\n'),'text/csv;charset=utf-8');
   }
   function openCustomize() {
     $('custom-title').value=settings.title;$('margin-target').value=settings.target;$('display-unit').value=settings.unit;$('comment-title').value=settings.commentTitle;$('comment-text').value=settings.commentText;
@@ -314,7 +383,7 @@
       const next=validateData(JSON.parse(await file.text()));
       // Only store after all validation succeeds; do not overwrite a working report on failure.
       localStorage.setItem(storageKey('DATA'),JSON.stringify(next));
-      data=next;imported=true;state.start=state.end=data.meta.lastMonth;operationKey='';changeSelection();toast(t('dataImported'));
+      selectData(next);imported=true;state.start=state.end=data.meta.lastMonth;operationKey='';changeSelection();toast(t('dataImported'));
     }catch(error){console.warn('[Financial Report] Import rejected',error.message);toast(t(error.name==='QuotaExceededError'?'storageUnavailable':'invalidData'));}
   }
   function wireEvents() {
@@ -349,20 +418,20 @@
     $('print-btn').addEventListener('click',()=>window.print());$('csv-btn').addEventListener('click',downloadCsv);
     ['revenue-change','cost-change','horizon'].forEach(id=>$(id).addEventListener('input',event=>{settings[{'revenue-change':'revenueChange','cost-change':'costChange',horizon:'horizon'}[id]]=Number(event.target.value);renderScenario();persistSettings();}));
     $('scenario-reset').addEventListener('click',()=>{settings.revenueChange=0;settings.costChange=0;settings.horizon=3;renderScenario();persistSettings();});
-    $('download-data').addEventListener('click',()=>download('latam-financial-data.json',JSON.stringify(data,null,2),'application/json'));
+    $('download-data').addEventListener('click',()=>download(`${region.code}-financial-data.json`,JSON.stringify(data,null,2),'application/json'));
     $('import-data').addEventListener('change',event=>{importFinancial(event.target.files[0]);event.target.value='';});
-    $('restore-data').addEventListener('click',()=>{try{localStorage.removeItem(storageKey('DATA'));}catch(error){toast(t('storageUnavailable'));return;}data=sourceData;imported=false;state.start=state.end=data.meta.lastMonth;operationKey='';changeSelection();toast(t('dataRestored'));});
-    $('export-settings').addEventListener('click',()=>{if(!$('customize-form').reportValidity())return;const edited=sanitizeSettings({...settings,title:$('custom-title').value,target:Number($('margin-target').value),unit:$('display-unit').value,commentTitle:$('comment-title').value,commentText:$('comment-text').value});download('latam-financial-settings.json',JSON.stringify({schemaVersion:1,settings:edited,state},null,2),'application/json');});
-    $('import-settings').addEventListener('change',async event=>{const file=event.target.files[0];event.target.value='';if(!file)return;try{if(file.size>100000)throw new Error('size');const payload=JSON.parse(await file.text());if(payload.schemaVersion!==1)throw new Error('schema');const nextSettings=sanitizeSettings(payload.settings);let nextState={...state};if(payload.state){const proposed=payload.state;if(!Number.isInteger(proposed.start)||!Number.isInteger(proposed.end)||proposed.start<1||proposed.end>12||proposed.start>proposed.end||!['ALL',...codes].includes(proposed.country)||!tabs.includes(proposed.tab))throw new Error('state');nextState={country:proposed.country,start:proposed.start,end:proposed.end,tab:proposed.tab};}settings=nextSettings;state=nextState;fillFilters();const saved=persistSettings();$('customize-dialog').close();changeSelection();if(saved)toast(t('settingsImported'));}catch(error){toast(t('invalidSettings'));}});
+    $('restore-data').addEventListener('click',()=>{try{localStorage.removeItem(storageKey('DATA'));}catch(error){toast(t('storageUnavailable'));return;}selectData(sourceData);imported=false;state.start=state.end=data.meta.lastMonth;operationKey='';changeSelection();toast(t('dataRestored'));});
+    $('export-settings').addEventListener('click',()=>{if(!$('customize-form').reportValidity())return;const edited=sanitizeSettings({...settings,title:$('custom-title').value,target:Number($('margin-target').value),unit:$('display-unit').value,commentTitle:$('comment-title').value,commentText:$('comment-text').value});download(`${region.code}-financial-settings.json`,JSON.stringify({schemaVersion:1,region:region.code,settings:edited,state},null,2),'application/json');});
+    $('import-settings').addEventListener('change',async event=>{const file=event.target.files[0];event.target.value='';if(!file)return;try{if(file.size>100000)throw new Error('size');const payload=JSON.parse(await file.text());if(payload.schemaVersion!==1||(payload.region||'latam')!==region.code)throw new Error('schema');const nextSettings=sanitizeSettings(payload.settings);let nextState={...state};if(payload.state){const proposed=payload.state;if(!Number.isInteger(proposed.start)||!Number.isInteger(proposed.end)||proposed.start<1||proposed.end>12||proposed.start>proposed.end||!['ALL',...codes].includes(proposed.country)||!tabs.includes(proposed.tab))throw new Error('state');nextState={country:proposed.country,start:proposed.start,end:proposed.end,tab:proposed.tab};}settings=nextSettings;state=nextState;fillFilters();const saved=persistSettings();$('customize-dialog').close();changeSelection();if(saved)toast(t('settingsImported'));}catch(error){toast(t('invalidSettings'));}});
   }
   async function startApp(loginUser) {
     user=loginUser;
     try {const saved=JSON.parse(localStorage.getItem(storageKey('SETTINGS'))||'null');if(saved){settings=sanitizeSettings(saved.settings);state={...state,...saved.state};}}catch(error){console.warn('[Financial Report] Saved settings ignored');}
     $('app-content').hidden=false;applyLanguage();wireEvents();
     try {
-      const response=await fetch('Financial%20Reports/financial-data.json?v=20261020');if(!response.ok)throw new Error('HTTP '+response.status);
-      sourceData=validateData(await response.json());data=sourceData;
-      try{const saved=localStorage.getItem(storageKey('DATA'));if(saved){data=validateData(JSON.parse(saved));imported=true;}}catch(error){console.warn('[Financial Report] Saved financial data ignored',error.message);}
+      const response=await fetch(region.dataUrl);if(!response.ok)throw new Error('HTTP '+response.status);
+      sourceData=validateData(await response.json());selectData(sourceData);
+      try{const saved=localStorage.getItem(storageKey('DATA'));if(saved){selectData(validateData(JSON.parse(saved)));imported=true;}}catch(error){console.warn('[Financial Report] Saved financial data ignored',error.message);}
       if(!readStorage(storageKey('SETTINGS')))state.start=state.end=data.meta.lastMonth;
       fillFilters();$('load-state').hidden=true;$('report-content').hidden=false;render();loadOperations();loadIdle();
     }catch(error){console.error('[Financial Report] Could not load financial data',error);$('load-state').innerHTML=`<p>${esc(t('loadError'))}</p><button type="button" class="fr-btn" id="retry-data">${esc(t('retry'))}</button>`;$('retry-data').addEventListener('click',()=>location.reload());}

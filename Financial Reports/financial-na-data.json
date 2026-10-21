@@ -1,0 +1,2685 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "title": "North America Financial Report",
+    "region": "na",
+    "year": 2026,
+    "firstMonth": 1,
+    "lastMonth": 9,
+    "currency": "USD",
+    "currencySymbol": "$",
+    "currencyStatus": "confirmed_by_user",
+    "unit": "currency_units",
+    "currencyConfirmation": {
+      "pt": "Lucas confirmou que os valores financeiros são sempre em USD. Nenhuma conversão cambial foi aplicada.",
+      "es": "Lucas confirmó que los importes financieros están siempre en USD. No se aplicó conversión de divisas.",
+      "en": "Lucas confirmed that financial amounts are always in USD. No currency conversion was applied."
+    },
+    "sourceFile": "SV-NA (Jan-Sep).xlsx",
+    "sourceType": "workbook_snapshot",
+    "pnlSheet": "Revenue",
+    "sourceModifiedAt": "2026-10-20T19:47:40",
+    "extractedAt": "2026-10-21T03:39:19.209599+00:00",
+    "sourceSha256": "d4eef5197b60e021b332d49c9b1a4fdbbbcf50c1c889a8d3a9ab67268cedb315",
+    "dateRange": {
+      "from": "2026-01-01",
+      "to": "2026-09-30"
+    },
+    "dateRangeBasis": "Closing month labels; source transaction dates contain documented inconsistencies.",
+    "recordCount": 9,
+    "countryCount": 1,
+    "scopeCountries": [
+      {
+        "code": "US",
+        "name": "United States",
+        "label": {
+          "pt": "Estados Unidos",
+          "es": "Estados Unidos",
+          "en": "United States"
+        }
+      },
+      {
+        "code": "CA",
+        "name": "Canada",
+        "label": {
+          "pt": "Canadá",
+          "es": "Canadá",
+          "en": "Canada"
+        }
+      }
+    ],
+    "countryBreakdown": "card-only",
+    "scopeNote": {
+      "pt": "O fechamento fornecido é consolidado para América do Norte. Estados Unidos e Canadá estão identificados apenas nas despesas de cartão; receita, folha e outros custos não têm divisão por país.",
+      "es": "El cierre proporcionado es consolidado para Norteamérica. Estados Unidos y Canadá solo están identificados en los gastos de tarjeta; los ingresos, la nómina y otros gastos no tienen desglose por país.",
+      "en": "The supplied close is consolidated for North America. The United States and Canada are identified only in card expenses; revenue, payroll and other costs are not split by country."
+    },
+    "transactionCount": 12604,
+    "includedTransactionCount": 12603,
+    "procurementTransactionCount": 935,
+    "managementFeeRate": 0.078,
+    "financialsLive": false,
+    "basis": {
+      "pt": "Valores salvos no fechamento SV-NA. O cabeçalho de folha identifica 2026. O período segue Month, preservando o pivô e a P&L fornecidos.",
+      "es": "Valores guardados en el cierre SV-NA. El encabezado de nómina identifica 2026. El período sigue Month, conservando la tabla dinámica y P&L originales.",
+      "en": "Cached values from the SV-NA close. The payroll heading identifies 2026. Reporting periods follow Month, preserving the supplied pivot and P&L."
+    }
+  },
+  "countries": [
+    {
+      "code": "NA",
+      "name": "North America (consolidated)",
+      "label": {
+        "pt": "América do Norte (consolidado)",
+        "es": "Norteamérica (consolidado)",
+        "en": "North America (consolidated)"
+      }
+    }
+  ],
+  "months": [
+    {
+      "month": 1,
+      "period": "2026-01",
+      "label": "January"
+    },
+    {
+      "month": 2,
+      "period": "2026-02",
+      "label": "February"
+    },
+    {
+      "month": 3,
+      "period": "2026-03",
+      "label": "March"
+    },
+    {
+      "month": 4,
+      "period": "2026-04",
+      "label": "April"
+    },
+    {
+      "month": 5,
+      "period": "2026-05",
+      "label": "May"
+    },
+    {
+      "month": 6,
+      "period": "2026-06",
+      "label": "June"
+    },
+    {
+      "month": 7,
+      "period": "2026-07",
+      "label": "July"
+    },
+    {
+      "month": 8,
+      "period": "2026-08",
+      "label": "August"
+    },
+    {
+      "month": 9,
+      "period": "2026-09",
+      "label": "September"
+    }
+  ],
+  "records": [
+    {
+      "country": "North America (consolidated)",
+      "countryCode": "NA",
+      "month": 1,
+      "period": "2026-01",
+      "kms": 43186.64,
+      "income": 228527.09,
+      "billables": 12361.92428571,
+      "managementFees": 964.23009429,
+      "revenue": 241853.24438,
+      "expenses": 180937.45187205,
+      "profit": 60915.79250795,
+      "costs": {
+        "card": 24767.81,
+        "payroll": 117849.55,
+        "procurement": 5198.81,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 13919.58
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 161735.75,
+      "contributionProfit": 80117.49438,
+      "margin": 0.25187089,
+      "returnOnCost": 0.33666768,
+      "contributionMargin": 0.33126491,
+      "source": {
+        "sheet": "Revenue",
+        "range": "A3:H3",
+        "costSheet": "IDC Expenses",
+        "costCells": {
+          "card": "N4",
+          "payroll": "P4",
+          "procurement": "M4",
+          "otherIndirect": "O4",
+          "nonBillablePayroll": "Q4"
+        },
+        "kmsCell": "B3"
+      }
+    },
+    {
+      "country": "North America (consolidated)",
+      "countryCode": "NA",
+      "month": 2,
+      "period": "2026-02",
+      "kms": 55976.4,
+      "income": 281897,
+      "billables": 23591.97428571,
+      "managementFees": 1840.17399429,
+      "revenue": 307329.14828,
+      "expenses": 181170.99187205,
+      "profit": 126158.15640795,
+      "costs": {
+        "card": 32453.24,
+        "payroll": 114504.03,
+        "procurement": 4729.42,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 10282.6
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 161969.29,
+      "contributionProfit": 145359.85828,
+      "margin": 0.41049851,
+      "returnOnCost": 0.69634854,
+      "contributionMargin": 0.47297778,
+      "source": {
+        "sheet": "Revenue",
+        "range": "A4:H4",
+        "costSheet": "IDC Expenses",
+        "costCells": {
+          "card": "N5",
+          "payroll": "P5",
+          "procurement": "M5",
+          "otherIndirect": "O5",
+          "nonBillablePayroll": "Q5"
+        },
+        "kmsCell": "B4"
+      }
+    },
+    {
+      "country": "North America (consolidated)",
+      "countryCode": "NA",
+      "month": 3,
+      "period": "2026-03",
+      "kms": 72076,
+      "income": 346395.72,
+      "billables": 23454.14428571,
+      "managementFees": 1829.42325429,
+      "revenue": 371679.28754,
+      "expenses": 266774.49187205,
+      "profit": 104904.79566795,
+      "costs": {
+        "card": 52595.6,
+        "payroll": 133120.04,
+        "procurement": 47929.19,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 13927.96
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 247572.79,
+      "contributionProfit": 124106.49754,
+      "margin": 0.28224547,
+      "returnOnCost": 0.39323398,
+      "contributionMargin": 0.33390749,
+      "source": {
+        "sheet": "Revenue",
+        "range": "A5:H5",
+        "costSheet": "IDC Expenses",
+        "costCells": {
+          "card": "N6",
+          "payroll": "P6",
+          "procurement": "M6",
+          "otherIndirect": "O6",
+          "nonBillablePayroll": "Q6"
+        },
+        "kmsCell": "B5"
+      }
+    },
+    {
+      "country": "North America (consolidated)",
+      "countryCode": "NA",
+      "month": 4,
+      "period": "2026-04",
+      "kms": 86556,
+      "income": 410772.48,
+      "billables": 14712.41428571,
+      "managementFees": 1147.56831429,
+      "revenue": 426632.4626,
+      "expenses": 300398.85187205,
+      "profit": 126233.61072795,
+      "costs": {
+        "card": 61749.27,
+        "payroll": 159825.75,
+        "procurement": 47788.45,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 11833.68
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 281197.15,
+      "contributionProfit": 145435.3126,
+      "margin": 0.29588374,
+      "returnOnCost": 0.42022002,
+      "contributionMargin": 0.34089134,
+      "source": {
+        "sheet": "Revenue",
+        "range": "A6:H6",
+        "costSheet": "IDC Expenses",
+        "costCells": {
+          "card": "N7",
+          "payroll": "P7",
+          "procurement": "M7",
+          "otherIndirect": "O7",
+          "nonBillablePayroll": "Q7"
+        },
+        "kmsCell": "B6"
+      }
+    },
+    {
+      "country": "North America (consolidated)",
+      "countryCode": "NA",
+      "month": 5,
+      "period": "2026-05",
+      "kms": 62966,
+      "income": 288420.34,
+      "billables": 16393.43428571,
+      "managementFees": 1278.68787429,
+      "revenue": 306092.46216,
+      "expenses": 228499.85187205,
+      "profit": 77592.61028795,
+      "costs": {
+        "card": 47401.16,
+        "payroll": 112903.96,
+        "procurement": 37671.1,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 11321.93
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 209298.15,
+      "contributionProfit": 96794.31216,
+      "margin": 0.25349403,
+      "returnOnCost": 0.33957401,
+      "contributionMargin": 0.31622573,
+      "source": {
+        "sheet": "Revenue",
+        "range": "A7:H7",
+        "costSheet": "IDC Expenses",
+        "costCells": {
+          "card": "N8",
+          "payroll": "P8",
+          "procurement": "M8",
+          "otherIndirect": "O8",
+          "nonBillablePayroll": "Q8"
+        },
+        "kmsCell": "B7"
+      }
+    },
+    {
+      "country": "North America (consolidated)",
+      "countryCode": "NA",
+      "month": 6,
+      "period": "2026-06",
+      "kms": 67956,
+      "income": 306845.67,
+      "billables": 19856.38428571,
+      "managementFees": 1548.79797429,
+      "revenue": 328250.85226,
+      "expenses": 270920.82187205,
+      "profit": 57330.03038795,
+      "costs": {
+        "card": 63001.97,
+        "payroll": 114469.17,
+        "procurement": 62924.93,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 11323.05
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 251719.12,
+      "contributionProfit": 76531.73226,
+      "margin": 0.1746531,
+      "returnOnCost": 0.21161175,
+      "contributionMargin": 0.23315014,
+      "source": {
+        "sheet": "Revenue",
+        "range": "A8:H8",
+        "costSheet": "IDC Expenses",
+        "costCells": {
+          "card": "N9",
+          "payroll": "P9",
+          "procurement": "M9",
+          "otherIndirect": "O9",
+          "nonBillablePayroll": "Q9"
+        },
+        "kmsCell": "B8"
+      }
+    },
+    {
+      "country": "North America (consolidated)",
+      "countryCode": "NA",
+      "month": 7,
+      "period": "2026-07",
+      "kms": 50405,
+      "income": 254101.89,
+      "billables": 12559.64,
+      "managementFees": 979.65192,
+      "revenue": 267641.18192,
+      "expenses": 258598.14187205,
+      "profit": 9043.04004795,
+      "costs": {
+        "card": 55496.89,
+        "payroll": 108319.39,
+        "procurement": 59300.82,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 16279.34
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 239396.44,
+      "contributionProfit": 28244.74192,
+      "margin": 0.03378792,
+      "returnOnCost": 0.03496947,
+      "contributionMargin": 0.10553212,
+      "source": {
+        "sheet": "Revenue",
+        "range": "A9:H9",
+        "costSheet": "IDC Expenses",
+        "costCells": {
+          "card": "N10",
+          "payroll": "P10",
+          "procurement": "M10",
+          "otherIndirect": "O10",
+          "nonBillablePayroll": "Q10"
+        },
+        "kmsCell": "B9"
+      }
+    },
+    {
+      "country": "North America (consolidated)",
+      "countryCode": "NA",
+      "month": 8,
+      "period": "2026-08",
+      "kms": 34586,
+      "income": 165103.47,
+      "billables": 3397.69,
+      "managementFees": 265.01982,
+      "revenue": 168766.17982,
+      "expenses": 197212.48187205,
+      "profit": -28446.30205205,
+      "costs": {
+        "card": 43947.69,
+        "payroll": 83100.26,
+        "procurement": 35726.47,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 15236.36
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 178010.78,
+      "contributionProfit": -9244.60018,
+      "margin": -0.16855452,
+      "returnOnCost": -0.14424189,
+      "contributionMargin": -0.05477756,
+      "source": {
+        "sheet": "Revenue",
+        "range": "A10:H10",
+        "costSheet": "IDC Expenses",
+        "costCells": {
+          "card": "N11",
+          "payroll": "P11",
+          "procurement": "M11",
+          "otherIndirect": "O11",
+          "nonBillablePayroll": "Q11"
+        },
+        "kmsCell": "B10"
+      }
+    },
+    {
+      "country": "North America (consolidated)",
+      "countryCode": "NA",
+      "month": 9,
+      "period": "2026-09",
+      "kms": 28070,
+      "income": 137926.48,
+      "billables": 4532.89,
+      "managementFees": 353.56542,
+      "revenue": 142812.93542,
+      "expenses": 200526.36187205,
+      "profit": -57713.42645205,
+      "costs": {
+        "card": 42952.65,
+        "payroll": 79996.44,
+        "procurement": 39201.75,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 19173.82
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 181324.66,
+      "contributionProfit": -38511.72458,
+      "margin": -0.40411904,
+      "returnOnCost": -0.28780967,
+      "contributionMargin": -0.26966552,
+      "source": {
+        "sheet": "Revenue",
+        "range": "A11:H11",
+        "costSheet": "IDC Expenses",
+        "costCells": {
+          "card": "N12",
+          "payroll": "P12",
+          "procurement": "M12",
+          "otherIndirect": "O12",
+          "nonBillablePayroll": "Q12"
+        },
+        "kmsCell": "B11"
+      }
+    }
+  ],
+  "totals": {
+    "income": 2419990.14,
+    "billables": 130860.49571429,
+    "managementFees": 10207.11866571,
+    "revenue": 2561057.75438,
+    "expenses": 2085039.44684847,
+    "profit": 476018.30753153,
+    "costs": {
+      "card": 424366.28,
+      "payroll": 1024088.59,
+      "procurement": 340470.94,
+      "otherIndirect": 172815.31684847,
+      "nonBillablePayroll": 123298.32
+    },
+    "allocatedOverhead": 172815.31684847,
+    "localExpenses": 1912224.13,
+    "contributionProfit": 648833.62438,
+    "kms": 501778.04,
+    "margin": 0.18586785,
+    "returnOnCost": 0.22830182,
+    "contributionMargin": 0.25334596
+  },
+  "monthly": [
+    {
+      "month": 1,
+      "period": "2026-01",
+      "income": 228527.09,
+      "billables": 12361.92428571,
+      "managementFees": 964.23009429,
+      "revenue": 241853.24438,
+      "expenses": 180937.45187205,
+      "profit": 60915.79250795,
+      "costs": {
+        "card": 24767.81,
+        "payroll": 117849.55,
+        "procurement": 5198.81,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 13919.58
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 161735.75,
+      "contributionProfit": 80117.49438,
+      "kms": 43186.64,
+      "margin": 0.25187089,
+      "returnOnCost": 0.33666768,
+      "contributionMargin": 0.33126491
+    },
+    {
+      "month": 2,
+      "period": "2026-02",
+      "income": 281897,
+      "billables": 23591.97428571,
+      "managementFees": 1840.17399429,
+      "revenue": 307329.14828,
+      "expenses": 181170.99187205,
+      "profit": 126158.15640795,
+      "costs": {
+        "card": 32453.24,
+        "payroll": 114504.03,
+        "procurement": 4729.42,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 10282.6
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 161969.29,
+      "contributionProfit": 145359.85828,
+      "kms": 55976.4,
+      "margin": 0.41049851,
+      "returnOnCost": 0.69634854,
+      "contributionMargin": 0.47297778
+    },
+    {
+      "month": 3,
+      "period": "2026-03",
+      "income": 346395.72,
+      "billables": 23454.14428571,
+      "managementFees": 1829.42325429,
+      "revenue": 371679.28754,
+      "expenses": 266774.49187205,
+      "profit": 104904.79566795,
+      "costs": {
+        "card": 52595.6,
+        "payroll": 133120.04,
+        "procurement": 47929.19,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 13927.96
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 247572.79,
+      "contributionProfit": 124106.49754,
+      "kms": 72076,
+      "margin": 0.28224547,
+      "returnOnCost": 0.39323398,
+      "contributionMargin": 0.33390749
+    },
+    {
+      "month": 4,
+      "period": "2026-04",
+      "income": 410772.48,
+      "billables": 14712.41428571,
+      "managementFees": 1147.56831429,
+      "revenue": 426632.4626,
+      "expenses": 300398.85187205,
+      "profit": 126233.61072795,
+      "costs": {
+        "card": 61749.27,
+        "payroll": 159825.75,
+        "procurement": 47788.45,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 11833.68
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 281197.15,
+      "contributionProfit": 145435.3126,
+      "kms": 86556,
+      "margin": 0.29588374,
+      "returnOnCost": 0.42022002,
+      "contributionMargin": 0.34089134
+    },
+    {
+      "month": 5,
+      "period": "2026-05",
+      "income": 288420.34,
+      "billables": 16393.43428571,
+      "managementFees": 1278.68787429,
+      "revenue": 306092.46216,
+      "expenses": 228499.85187205,
+      "profit": 77592.61028795,
+      "costs": {
+        "card": 47401.16,
+        "payroll": 112903.96,
+        "procurement": 37671.1,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 11321.93
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 209298.15,
+      "contributionProfit": 96794.31216,
+      "kms": 62966,
+      "margin": 0.25349403,
+      "returnOnCost": 0.33957401,
+      "contributionMargin": 0.31622573
+    },
+    {
+      "month": 6,
+      "period": "2026-06",
+      "income": 306845.67,
+      "billables": 19856.38428571,
+      "managementFees": 1548.79797429,
+      "revenue": 328250.85226,
+      "expenses": 270920.82187205,
+      "profit": 57330.03038795,
+      "costs": {
+        "card": 63001.97,
+        "payroll": 114469.17,
+        "procurement": 62924.93,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 11323.05
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 251719.12,
+      "contributionProfit": 76531.73226,
+      "kms": 67956,
+      "margin": 0.1746531,
+      "returnOnCost": 0.21161175,
+      "contributionMargin": 0.23315014
+    },
+    {
+      "month": 7,
+      "period": "2026-07",
+      "income": 254101.89,
+      "billables": 12559.64,
+      "managementFees": 979.65192,
+      "revenue": 267641.18192,
+      "expenses": 258598.14187205,
+      "profit": 9043.04004795,
+      "costs": {
+        "card": 55496.89,
+        "payroll": 108319.39,
+        "procurement": 59300.82,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 16279.34
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 239396.44,
+      "contributionProfit": 28244.74192,
+      "kms": 50405,
+      "margin": 0.03378792,
+      "returnOnCost": 0.03496947,
+      "contributionMargin": 0.10553212
+    },
+    {
+      "month": 8,
+      "period": "2026-08",
+      "income": 165103.47,
+      "billables": 3397.69,
+      "managementFees": 265.01982,
+      "revenue": 168766.17982,
+      "expenses": 197212.48187205,
+      "profit": -28446.30205205,
+      "costs": {
+        "card": 43947.69,
+        "payroll": 83100.26,
+        "procurement": 35726.47,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 15236.36
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 178010.78,
+      "contributionProfit": -9244.60018,
+      "kms": 34586,
+      "margin": -0.16855452,
+      "returnOnCost": -0.14424189,
+      "contributionMargin": -0.05477756
+    },
+    {
+      "month": 9,
+      "period": "2026-09",
+      "income": 137926.48,
+      "billables": 4532.89,
+      "managementFees": 353.56542,
+      "revenue": 142812.93542,
+      "expenses": 200526.36187205,
+      "profit": -57713.42645205,
+      "costs": {
+        "card": 42952.65,
+        "payroll": 79996.44,
+        "procurement": 39201.75,
+        "otherIndirect": 19201.70187205,
+        "nonBillablePayroll": 19173.82
+      },
+      "allocatedOverhead": 19201.70187205,
+      "localExpenses": 181324.66,
+      "contributionProfit": -38511.72458,
+      "kms": 28070,
+      "margin": -0.40411904,
+      "returnOnCost": -0.28780967,
+      "contributionMargin": -0.26966552
+    }
+  ],
+  "countryTotals": [
+    {
+      "countryCode": "NA",
+      "country": "North America (consolidated)",
+      "income": 2419990.14,
+      "billables": 130860.49571429,
+      "managementFees": 10207.11866571,
+      "revenue": 2561057.75438,
+      "expenses": 2085039.44684847,
+      "profit": 476018.30753153,
+      "costs": {
+        "card": 424366.28,
+        "payroll": 1024088.59,
+        "procurement": 340470.94,
+        "otherIndirect": 172815.31684847,
+        "nonBillablePayroll": 123298.32
+      },
+      "allocatedOverhead": 172815.31684847,
+      "localExpenses": 1912224.13,
+      "contributionProfit": 648833.62438,
+      "kms": 501778.04,
+      "margin": 0.18586785,
+      "returnOnCost": 0.22830182,
+      "contributionMargin": 0.25334596
+    }
+  ],
+  "costCategories": [
+    {
+      "id": "card",
+      "label": {
+        "pt": "Cartão corporativo",
+        "es": "Tarjeta corporativa",
+        "en": "Corporate card"
+      }
+    },
+    {
+      "id": "payroll",
+      "label": {
+        "pt": "Folha operacional",
+        "es": "Nómina operativa",
+        "en": "Operating payroll"
+      }
+    },
+    {
+      "id": "procurement",
+      "label": {
+        "pt": "Compras e reservas",
+        "es": "Compras y reservas",
+        "en": "Procurement and bookings"
+      }
+    },
+    {
+      "id": "otherIndirect",
+      "label": {
+        "pt": "Outros serviços indiretos",
+        "es": "Otros servicios indirectos",
+        "en": "Other indirect services"
+      }
+    },
+    {
+      "id": "nonBillablePayroll",
+      "label": {
+        "pt": "Outros custos diretos não faturáveis",
+        "es": "Otros costos directos no facturables",
+        "en": "Other non-billable direct costs"
+      }
+    }
+  ],
+  "cardCategoryRecords": [
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Airlines",
+      "amount": 115.0,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Alcohol and Bars",
+      "amount": 27.12,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Car Rental",
+      "amount": 143.03,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Car Services",
+      "amount": 602.12,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Electronics",
+      "amount": 42.32,
+      "transactions": 4
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Entertainment",
+      "amount": 34.72,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Fuel and Gas",
+      "amount": 10629.7,
+      "transactions": 480
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "General Merchandise",
+      "amount": 1474.16,
+      "transactions": 20
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Insurance",
+      "amount": 220.54,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Lodging",
+      "amount": 3639.65,
+      "transactions": 13
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Office supplies and cleaning",
+      "amount": 372.69,
+      "transactions": 6
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Parking",
+      "amount": 2.35,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Restaurants",
+      "amount": 1656.77,
+      "transactions": 77
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "SaaS / Software",
+      "amount": 580.51,
+      "transactions": 4
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Shipping",
+      "amount": 9.81,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 673.14,
+      "transactions": 21
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Taxi and Rideshare",
+      "amount": 2615.38,
+      "transactions": 56
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Travel Misc",
+      "amount": 1928.8,
+      "transactions": 9
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Car Rental",
+      "amount": 267.74,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Car Services",
+      "amount": 1496.01,
+      "transactions": 5
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Electronics",
+      "amount": 83.35,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Fuel and Gas",
+      "amount": 13603.07,
+      "transactions": 604
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "General Merchandise",
+      "amount": 6361.08,
+      "transactions": 27
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Government Services",
+      "amount": 350.64,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Insurance",
+      "amount": 82.45,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Legal",
+      "amount": 7.16,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Lodging",
+      "amount": 3340.24,
+      "transactions": 19
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Office supplies and cleaning",
+      "amount": 23.63,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Parking",
+      "amount": 140.0,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Professional Services",
+      "amount": 851.92,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Restaurants",
+      "amount": 1937.01,
+      "transactions": 95
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "SaaS / Software",
+      "amount": -312.71,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 230.8,
+      "transactions": 11
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Taxi and Rideshare",
+      "amount": 1698.33,
+      "transactions": 69
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Travel Misc",
+      "amount": 2292.52,
+      "transactions": 10
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Airlines",
+      "amount": 35.0,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Alcohol and Bars",
+      "amount": 9.49,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Car Services",
+      "amount": 2600.76,
+      "transactions": 7
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Electronics",
+      "amount": 32.09,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Entertainment",
+      "amount": 30.29,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Fuel and Gas",
+      "amount": 23725.07,
+      "transactions": 968
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "General Merchandise",
+      "amount": 6219.51,
+      "transactions": 38
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Government Services",
+      "amount": 45.0,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Internet and Phone",
+      "amount": 49.44,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Lodging",
+      "amount": 4341.0,
+      "transactions": 36
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Medical",
+      "amount": 47.26,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Office supplies and cleaning",
+      "amount": 726.24,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Other",
+      "amount": 216.75,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Parking",
+      "amount": 198.0,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Restaurants",
+      "amount": 7385.39,
+      "transactions": 365
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Shipping",
+      "amount": 9.62,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 1111.41,
+      "transactions": 51
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Taxi and Rideshare",
+      "amount": 2402.81,
+      "transactions": 83
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Travel Misc",
+      "amount": 3410.47,
+      "transactions": 12
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Airlines",
+      "amount": 81.11,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Alcohol and Bars",
+      "amount": 35.42,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Car Rental",
+      "amount": 907.86,
+      "transactions": 4
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Car Services",
+      "amount": 2727.66,
+      "transactions": 21
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Electronics",
+      "amount": 27.24,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Freight, Moving and Delivery Services",
+      "amount": 73.69,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Fuel and Gas",
+      "amount": 35423.86,
+      "transactions": 1262
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "General Merchandise",
+      "amount": 2992.65,
+      "transactions": 45
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Government Services",
+      "amount": 45.0,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Internet and Phone",
+      "amount": 2.11,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Lodging",
+      "amount": 1529.44,
+      "transactions": 25
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Office supplies and cleaning",
+      "amount": 352.92,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Other",
+      "amount": 104.09,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Parking",
+      "amount": 195.0,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Professional Services",
+      "amount": 587.65,
+      "transactions": 5
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Restaurants",
+      "amount": 9267.21,
+      "transactions": 501
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "SaaS / Software",
+      "amount": 35.14,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Shipping",
+      "amount": 59.37,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 2010.49,
+      "transactions": 87
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Taxi and Rideshare",
+      "amount": 5089.29,
+      "transactions": 127
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Travel Misc",
+      "amount": 202.07,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Alcohol and Bars",
+      "amount": 11.98,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Books and Newspapers",
+      "amount": 38.45,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Car Rental",
+      "amount": 452.49,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Car Services",
+      "amount": 1767.02,
+      "transactions": 23
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Education",
+      "amount": 0.0,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Electronics",
+      "amount": 46.23,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Fuel and Gas",
+      "amount": 27991.5,
+      "transactions": 908
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "General Merchandise",
+      "amount": 3166.73,
+      "transactions": 55
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Internet and Phone",
+      "amount": 4.04,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Lodging",
+      "amount": 1447.27,
+      "transactions": 16
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Other",
+      "amount": 83.13,
+      "transactions": 6
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Parking",
+      "amount": 113.56,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Professional Services",
+      "amount": 136.88,
+      "transactions": 10
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Restaurants",
+      "amount": 6232.48,
+      "transactions": 343
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "SaaS / Software",
+      "amount": 116.84,
+      "transactions": 6
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 1124.03,
+      "transactions": 38
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Taxi and Rideshare",
+      "amount": 2364.33,
+      "transactions": 69
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Travel Misc",
+      "amount": 285.62,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Vehicle Maintenance",
+      "amount": 2018.58,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Airlines",
+      "amount": 373.99,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Car Rental",
+      "amount": 1388.45,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Car Services",
+      "amount": 7934.19,
+      "transactions": 29
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Fuel and Gas",
+      "amount": 22946.25,
+      "transactions": 749
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "General Merchandise",
+      "amount": 8071.0,
+      "transactions": 47
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Government Services",
+      "amount": 3337.17,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Lodging",
+      "amount": 5644.59,
+      "transactions": 52
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Office supplies and cleaning",
+      "amount": 0.6,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Parking",
+      "amount": 7.45,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Restaurants",
+      "amount": 10108.3,
+      "transactions": 618
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Storage",
+      "amount": 152.06,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 229.65,
+      "transactions": 10
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Taxi and Rideshare",
+      "amount": 2388.86,
+      "transactions": 59
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Travel Misc",
+      "amount": 419.41,
+      "transactions": 10
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Airlines",
+      "amount": 55.79,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Car Rental",
+      "amount": 306.81,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Car Services",
+      "amount": 10199.87,
+      "transactions": 63
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Fuel and Gas",
+      "amount": 21274.09,
+      "transactions": 678
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "General Merchandise",
+      "amount": 97.95,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Government Services",
+      "amount": 85.5,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Internet and Phone",
+      "amount": 88.56,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Lodging",
+      "amount": 9506.74,
+      "transactions": 64
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Office supplies and cleaning",
+      "amount": 48.44,
+      "transactions": 3
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Other",
+      "amount": 82.42,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Restaurants",
+      "amount": 10810.94,
+      "transactions": 713
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Shipping",
+      "amount": 4.37,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Supermarkets and Grocery Stores",
+      "amount": 20.04,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Taxi and Rideshare",
+      "amount": 2378.98,
+      "transactions": 63
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Travel Misc",
+      "amount": 536.39,
+      "transactions": 13
+    },
+    {
+      "countryCode": "NA",
+      "month": 8,
+      "category": "Airlines",
+      "amount": 418.49,
+      "transactions": 6
+    },
+    {
+      "countryCode": "NA",
+      "month": 8,
+      "category": "Car Services",
+      "amount": 5748.9,
+      "transactions": 46
+    },
+    {
+      "countryCode": "NA",
+      "month": 8,
+      "category": "Fuel and Gas",
+      "amount": 16789.57,
+      "transactions": 525
+    },
+    {
+      "countryCode": "NA",
+      "month": 8,
+      "category": "Laundry",
+      "amount": 19.25,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 8,
+      "category": "Lodging",
+      "amount": 9631.58,
+      "transactions": 84
+    },
+    {
+      "countryCode": "NA",
+      "month": 8,
+      "category": "Office supplies and cleaning",
+      "amount": 75.27,
+      "transactions": 4
+    },
+    {
+      "countryCode": "NA",
+      "month": 8,
+      "category": "Restaurants",
+      "amount": 9711.88,
+      "transactions": 682
+    },
+    {
+      "countryCode": "NA",
+      "month": 8,
+      "category": "Taxi and Rideshare",
+      "amount": 1552.75,
+      "transactions": 31
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Airlines",
+      "amount": 366.97,
+      "transactions": 7
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Car Services",
+      "amount": 4322.11,
+      "transactions": 37
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Fuel and Gas",
+      "amount": 14289.41,
+      "transactions": 415
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Laundry",
+      "amount": 53.0,
+      "transactions": 5
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Lodging",
+      "amount": 10479.91,
+      "transactions": 94
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Parking",
+      "amount": 147.49,
+      "transactions": 6
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Restaurants",
+      "amount": 9354.94,
+      "transactions": 670
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Shipping",
+      "amount": 484.57,
+      "transactions": 9
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Storage",
+      "amount": 534.31,
+      "transactions": 4
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Taxi and Rideshare",
+      "amount": 2310.38,
+      "transactions": 55
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Travel Misc",
+      "amount": 609.56,
+      "transactions": 7
+    }
+  ],
+  "cardCategoryLabels": {
+    "Airlines": {
+      "pt": "Passagens aéreas",
+      "es": "Pasajes aéreos",
+      "en": "Airlines"
+    },
+    "Alcohol and Bars": {
+      "pt": "Bares e bebidas",
+      "es": "Bares y bebidas",
+      "en": "Alcohol and bars"
+    },
+    "Books and Newspapers": {
+      "pt": "Livros e jornais",
+      "es": "Libros y periódicos",
+      "en": "Books and newspapers"
+    },
+    "Car Rental": {
+      "pt": "Aluguel de veículos",
+      "es": "Alquiler de vehículos",
+      "en": "Car rental"
+    },
+    "Car Services": {
+      "pt": "Serviços de veículos",
+      "es": "Servicios de vehículos",
+      "en": "Vehicle services"
+    },
+    "Education": {
+      "pt": "Educação",
+      "es": "Educación",
+      "en": "Education"
+    },
+    "Electronics": {
+      "pt": "Eletrônicos",
+      "es": "Electrónica",
+      "en": "Electronics"
+    },
+    "Entertainment": {
+      "pt": "Entretenimento",
+      "es": "Entretenimiento",
+      "en": "Entertainment"
+    },
+    "Freight, Moving and Delivery Services": {
+      "pt": "Fretes e entregas",
+      "es": "Fletes y entregas",
+      "en": "Freight and delivery"
+    },
+    "Fuel and Gas": {
+      "pt": "Combustível",
+      "es": "Combustible",
+      "en": "Fuel and gas"
+    },
+    "General Merchandise": {
+      "pt": "Mercadorias em geral",
+      "es": "Mercancías generales",
+      "en": "General merchandise"
+    },
+    "Government Services": {
+      "pt": "Serviços públicos",
+      "es": "Servicios gubernamentales",
+      "en": "Government services"
+    },
+    "Insurance": {
+      "pt": "Seguros",
+      "es": "Seguros",
+      "en": "Insurance"
+    },
+    "Internet and Phone": {
+      "pt": "Internet e telefone",
+      "es": "Internet y teléfono",
+      "en": "Internet and phone"
+    },
+    "Laundry": {
+      "pt": "Lavanderia",
+      "es": "Lavandería",
+      "en": "Laundry"
+    },
+    "Legal": {
+      "pt": "Jurídico",
+      "es": "Legal",
+      "en": "Legal"
+    },
+    "Lodging": {
+      "pt": "Hospedagem",
+      "es": "Alojamiento",
+      "en": "Lodging"
+    },
+    "Medical": {
+      "pt": "Saúde",
+      "es": "Salud",
+      "en": "Medical"
+    },
+    "Office supplies and cleaning": {
+      "pt": "Escritório e limpeza",
+      "es": "Oficina y limpieza",
+      "en": "Office supplies and cleaning"
+    },
+    "Other": {
+      "pt": "Outros",
+      "es": "Otros",
+      "en": "Other"
+    },
+    "Parking": {
+      "pt": "Estacionamento",
+      "es": "Estacionamiento",
+      "en": "Parking"
+    },
+    "Professional Services": {
+      "pt": "Serviços profissionais",
+      "es": "Servicios profesionales",
+      "en": "Professional services"
+    },
+    "Restaurants": {
+      "pt": "Restaurantes",
+      "es": "Restaurantes",
+      "en": "Restaurants"
+    },
+    "SaaS / Software": {
+      "pt": "Software e SaaS",
+      "es": "Software y SaaS",
+      "en": "Software and SaaS"
+    },
+    "Shipping": {
+      "pt": "Envios",
+      "es": "Envíos",
+      "en": "Shipping"
+    },
+    "Storage": {
+      "pt": "Armazenamento",
+      "es": "Almacenamiento",
+      "en": "Storage"
+    },
+    "Supermarkets and Grocery Stores": {
+      "pt": "Supermercados",
+      "es": "Supermercados",
+      "en": "Supermarkets and groceries"
+    },
+    "Taxi and Rideshare": {
+      "pt": "Táxi e aplicativos",
+      "es": "Taxi y aplicaciones",
+      "en": "Taxi and rideshare"
+    },
+    "Travel Misc": {
+      "pt": "Outras viagens",
+      "es": "Otros viajes",
+      "en": "Other travel"
+    },
+    "Vehicle Maintenance": {
+      "pt": "Manutenção de veículos",
+      "es": "Mantenimiento de vehículos",
+      "en": "Vehicle maintenance"
+    }
+  },
+  "cardCategoryAliases": {
+    "Airlines": [
+      "Airlines"
+    ],
+    "Alcohol and Bars": [
+      "Alcohol and Bars"
+    ],
+    "Books and Newspapers": [
+      "Books and Newspapers"
+    ],
+    "Car Rental": [
+      "Car Rental"
+    ],
+    "Car Services": [
+      "Car services"
+    ],
+    "Education": [
+      "Education"
+    ],
+    "Electronics": [
+      "Electronics"
+    ],
+    "Entertainment": [
+      "Entertainment"
+    ],
+    "Freight, Moving and Delivery Services": [
+      "Freight, Moving and Delivery Services"
+    ],
+    "Fuel and Gas": [
+      "Fuel and Gas",
+      "Fuel and gas"
+    ],
+    "General Merchandise": [
+      "General Merchandise"
+    ],
+    "Government Services": [
+      "Government Services",
+      "Government services"
+    ],
+    "Insurance": [
+      "Insurance"
+    ],
+    "Internet and Phone": [
+      "Internet and Phone",
+      "Phone and Internet"
+    ],
+    "Laundry": [
+      "Laundry"
+    ],
+    "Legal": [
+      "Legal"
+    ],
+    "Lodging": [
+      "Lodging"
+    ],
+    "Medical": [
+      "Medical"
+    ],
+    "Office supplies and cleaning": [
+      "Office supplies and cleaning"
+    ],
+    "Other": [
+      "Other"
+    ],
+    "Parking": [
+      "Parking"
+    ],
+    "Professional Services": [
+      "Professional Services"
+    ],
+    "Restaurants": [
+      "Restaurants"
+    ],
+    "SaaS / Software": [
+      "SaaS / Software"
+    ],
+    "Shipping": [
+      "Shipping"
+    ],
+    "Storage": [
+      "Storage"
+    ],
+    "Supermarkets and Grocery Stores": [
+      "Supermarkets and Grocery Stores"
+    ],
+    "Taxi and Rideshare": [
+      "Taxi and Rideshare"
+    ],
+    "Travel Misc": [
+      "Travel Misc"
+    ],
+    "Vehicle Maintenance": [
+      "Vehicle Maintanence"
+    ]
+  },
+  "cardCountryRecords": [
+    {
+      "countryCode": "US",
+      "month": 1,
+      "amount": 24767.81,
+      "transactions": 703
+    },
+    {
+      "countryCode": "US",
+      "month": 2,
+      "amount": 32453.24,
+      "transactions": 856
+    },
+    {
+      "countryCode": "US",
+      "month": 3,
+      "amount": 52595.6,
+      "transactions": 1574
+    },
+    {
+      "countryCode": "US",
+      "month": 4,
+      "amount": 52535.9,
+      "transactions": 1823
+    },
+    {
+      "countryCode": "US",
+      "month": 5,
+      "amount": 39516.36,
+      "transactions": 1327
+    },
+    {
+      "countryCode": "US",
+      "month": 6,
+      "amount": 53319.8,
+      "transactions": 1336
+    },
+    {
+      "countryCode": "US",
+      "month": 7,
+      "amount": 33195.82,
+      "transactions": 1119
+    },
+    {
+      "countryCode": "US",
+      "month": 8,
+      "amount": 26282.3,
+      "transactions": 971
+    },
+    {
+      "countryCode": "US",
+      "month": 9,
+      "amount": 25176.81,
+      "transactions": 934
+    },
+    {
+      "countryCode": "CA",
+      "month": 1,
+      "amount": 0.0,
+      "transactions": 0
+    },
+    {
+      "countryCode": "CA",
+      "month": 2,
+      "amount": 0.0,
+      "transactions": 0
+    },
+    {
+      "countryCode": "CA",
+      "month": 3,
+      "amount": 0.0,
+      "transactions": 0
+    },
+    {
+      "countryCode": "CA",
+      "month": 4,
+      "amount": 9213.37,
+      "transactions": 275
+    },
+    {
+      "countryCode": "CA",
+      "month": 5,
+      "amount": 7884.8,
+      "transactions": 163
+    },
+    {
+      "countryCode": "CA",
+      "month": 6,
+      "amount": 9682.17,
+      "transactions": 247
+    },
+    {
+      "countryCode": "CA",
+      "month": 7,
+      "amount": 22301.07,
+      "transactions": 491
+    },
+    {
+      "countryCode": "CA",
+      "month": 8,
+      "amount": 17665.39,
+      "transactions": 409
+    },
+    {
+      "countryCode": "CA",
+      "month": 9,
+      "amount": 17775.84,
+      "transactions": 375
+    }
+  ],
+  "procurementCategoryRecords": [
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Hotel",
+      "amount": 4349.25,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 1,
+      "category": "Rental",
+      "amount": 849.56,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Flight",
+      "amount": 727.6,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 2,
+      "category": "Hotel",
+      "amount": 4001.82,
+      "transactions": 12
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Flight",
+      "amount": 10991.74,
+      "transactions": 13
+    },
+    {
+      "countryCode": "NA",
+      "month": 3,
+      "category": "Hotel",
+      "amount": 36937.45,
+      "transactions": 38
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Flight",
+      "amount": 7227.56,
+      "transactions": 9
+    },
+    {
+      "countryCode": "NA",
+      "month": 4,
+      "category": "Hotel",
+      "amount": 40560.89,
+      "transactions": 41
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Flight",
+      "amount": 2292.81,
+      "transactions": 7
+    },
+    {
+      "countryCode": "NA",
+      "month": 5,
+      "category": "Hotel",
+      "amount": 35378.29,
+      "transactions": 54
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Flight",
+      "amount": 3853.91,
+      "transactions": 21
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Hotel",
+      "amount": 58721.02,
+      "transactions": 256
+    },
+    {
+      "countryCode": "NA",
+      "month": 6,
+      "category": "Travel Desk Serivce Fee",
+      "amount": 350.0,
+      "transactions": 34
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Flight",
+      "amount": 4248.53,
+      "transactions": 17
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Hotel",
+      "amount": 48934.21,
+      "transactions": 168
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Services",
+      "amount": 5662.08,
+      "transactions": 2
+    },
+    {
+      "countryCode": "NA",
+      "month": 7,
+      "category": "Train",
+      "amount": 456.0,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 8,
+      "category": "Flight",
+      "amount": 2035.09,
+      "transactions": 10
+    },
+    {
+      "countryCode": "NA",
+      "month": 8,
+      "category": "Hotel",
+      "amount": 33192.98,
+      "transactions": 122
+    },
+    {
+      "countryCode": "NA",
+      "month": 8,
+      "category": "Parking",
+      "amount": 498.4,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Depot Consumables",
+      "amount": 1066.2,
+      "transactions": 1
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Flight",
+      "amount": 3663.77,
+      "transactions": 14
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Hotel",
+      "amount": 34415.28,
+      "transactions": 110
+    },
+    {
+      "countryCode": "NA",
+      "month": 9,
+      "category": "Services",
+      "amount": 56.5,
+      "transactions": 1
+    }
+  ],
+  "procurementCategoryLabels": {
+    "Depot Consumables": {
+      "pt": "Consumíveis de depósito",
+      "es": "Consumibles de depósito",
+      "en": "Depot consumables"
+    },
+    "Flight": {
+      "pt": "Passagens aéreas",
+      "es": "Pasajes aéreos",
+      "en": "Flights"
+    },
+    "Hotel": {
+      "pt": "Hospedagem",
+      "es": "Alojamiento",
+      "en": "Hotels"
+    },
+    "Parking": {
+      "pt": "Estacionamento",
+      "es": "Estacionamiento",
+      "en": "Parking"
+    },
+    "Rental": {
+      "pt": "Locação",
+      "es": "Alquiler",
+      "en": "Rental"
+    },
+    "Services": {
+      "pt": "Serviços",
+      "es": "Servicios",
+      "en": "Services"
+    },
+    "Train": {
+      "pt": "Trem",
+      "es": "Tren",
+      "en": "Train"
+    },
+    "Travel Desk Serivce Fee": {
+      "pt": "Taxa de agência de viagens",
+      "es": "Tarifa de agencia de viajes",
+      "en": "Travel desk service fee"
+    }
+  },
+  "methodology": {
+    "revenueFormula": "income + billables + managementFees",
+    "profitFormula": "revenue - expenses",
+    "marginFormula": "profit / revenue",
+    "returnOnCostFormula": "profit / expenses",
+    "managementFeesFormula": "billables * 7.8% (Revenue!E3:E11)",
+    "overheadCostKeys": [
+      "otherIndirect"
+    ],
+    "allocatedOverheadFormula": "otherIndirect",
+    "localExpensesFormula": "expenses - otherIndirect",
+    "contributionProfitFormula": "revenue - localExpenses",
+    "contributionMarginFormula": "contributionProfit / revenue",
+    "costAllocation": "Only other indirect services are spread equally across the nine months, as IDC Expenses!H12 = H11/9. No country allocation is applied. Procurement and both direct payroll lines retain their source monthly amounts.",
+    "costAllocationLabels": {
+      "pt": "Somente os outros serviços indiretos são distribuídos por nove meses na fonte (H11/9). Não há rateio entre países. Compras e as duas linhas de custos diretos mantêm os valores mensais do fechamento.",
+      "es": "Solo los otros servicios indirectos se distribuyen entre nueve meses en la fuente (H11/9). No hay reparto entre países. Compras y ambas líneas de costos directos mantienen los importes mensuales del cierre.",
+      "en": "Only other indirect services are spread over nine months in the source (H11/9). No country allocation is applied. Procurement and both direct-cost lines keep their monthly close amounts."
+    },
+    "cardBasis": "Numeric Statement Amount values, grouped by the source Month column. Negative credits remain negative. The country breakdown uses only Ramp Department SV USA and SV Canada; it is not a country P&L.",
+    "cardCountryLabels": {
+      "pt": "Abertura exclusiva de cartão por país; não representa lucro, receita ou despesa total de cada país.",
+      "es": "Desglose exclusivo de tarjetas por país; no representa beneficios, ingresos ni gastos totales de cada país.",
+      "en": "Card-only country breakdown; it does not represent country profit, revenue or total expenses."
+    },
+    "blankComponents": [],
+    "sourceRanges": {
+      "pnl": [
+        "Revenue!A3:H12"
+      ],
+      "expenseControl": "IDC Expenses!L3:R13",
+      "cardTransactions": "Card Raw!A1:G12605",
+      "procurementTransactions": "Proc Raw!A1:E936",
+      "payroll": "DC Expenses!F4:I17",
+      "otherIndirect": "IDC Expenses!G3:I12",
+      "presentationControl": "PPT Slides!Q3:W13"
+    }
+  },
+  "reconciliation": {
+    "checks": {
+      "revenueAndProfitFormulasMatch": true,
+      "costComponentsMatchPnl": true,
+      "countryTotalsMatchSource": true,
+      "cardCategoriesMatchPivot": true,
+      "cardCountryTotalsMatchPivot": true,
+      "procurementCategoriesMatchPnl": true,
+      "presentationTotalsMatchSource": true,
+      "transactionDatesMatchMonths": false,
+      "allTransactionYearsMatchReport": false,
+      "cachedFormulaErrorCount": 0,
+      "maxCostComponentDifference": 0.0,
+      "maxCardPivotDifference": 0.0,
+      "maxProcurementDifference": 0.0,
+      "maxSourceTotalDifference": 0.0,
+      "maxPresentationDifference": 0.0
+    },
+    "numericCardTotal": 424366.28,
+    "excludedTextCardAmount": 37.02,
+    "allParsedCardAmounts": 424403.3,
+    "negativeCardTransactionCount": 91,
+    "negativeCardAmount": -3187.71,
+    "auxiliaryIncomeTotal": 2419035.95,
+    "pnlIncomeTotal": 2419990.14,
+    "auxiliaryIncomeDifference": -954.19,
+    "biweeklyPayrollTotal": 1106358.8,
+    "monthlyPayrollTotal": 1024088.59,
+    "biweeklyPayrollDifference": 82270.21,
+    "nonBillableSummaryDifference": -0.03,
+    "issues": [
+      {
+        "id": "na_consolidated_scope",
+        "severity": "info",
+        "status": "documented",
+        "title": {
+          "pt": "Resultado regional consolidado",
+          "es": "Resultado regional consolidado",
+          "en": "Consolidated regional result"
+        },
+        "detail": {
+          "pt": "A planilha identifica Estados Unidos e Canadá no cartão, mas não divide receita, folha e os demais custos entre países. A P&L é exibida como América do Norte consolidada; somente o cartão tem abertura por país.",
+          "es": "La hoja identifica Estados Unidos y Canadá en las tarjetas, pero no separa ingresos, nómina y otros gastos por país. P&L se presenta para Norteamérica consolidada; solo las tarjetas tienen desglose por país.",
+          "en": "The workbook identifies the United States and Canada in card transactions but does not split revenue, payroll or the remaining costs by country. P&L is shown for consolidated North America; only card costs have a country breakdown."
+        },
+        "source": {
+          "sheet": "Revenue",
+          "range": "A2:H12"
+        }
+      },
+      {
+        "id": "na_card_period_labels",
+        "severity": "warning",
+        "status": "open",
+        "count": 179,
+        "title": {
+          "pt": "Datas diferentes do mês do fechamento",
+          "es": "Fechas distintas del mes de cierre",
+          "en": "Dates differ from the closing month"
+        },
+        "detail": {
+          "pt": "179 datas de cartão diferem da coluna Month e 1 data registra outro ano. Os totais usam Month, como o pivô e a P&L da fonte. Nenhuma data foi corrigida ou movimentada entre meses.",
+          "es": "179 fechas de tarjeta difieren de la columna Month y 1 fecha corresponde a otro año. Los totales usan Month, como la tabla dinámica y P&L de origen. No se corrigieron fechas ni se trasladaron gastos entre meses.",
+          "en": "179 card dates differ from the Month column and 1 date records another year. Totals use Month, matching the source pivot and P&L. No dates were corrected or expenses shifted between months."
+        },
+        "source": {
+          "sheet": "Card Raw",
+          "range": "A2:G12605"
+        },
+        "bySourcePeriod": [
+          {
+            "transactionMonth": "2026-02",
+            "sourceMonth": 8,
+            "count": 1,
+            "amount": 48.96
+          },
+          {
+            "transactionMonth": "2026-03",
+            "sourceMonth": 8,
+            "count": 37,
+            "amount": 1530.33
+          },
+          {
+            "transactionMonth": "2026-04",
+            "sourceMonth": 8,
+            "count": 53,
+            "amount": 1755.87
+          },
+          {
+            "transactionMonth": "2026-05",
+            "sourceMonth": 8,
+            "count": 56,
+            "amount": 1454.01
+          },
+          {
+            "transactionMonth": "2026-06",
+            "sourceMonth": 8,
+            "count": 3,
+            "amount": 89.07
+          },
+          {
+            "transactionMonth": "2026-08",
+            "sourceMonth": 6,
+            "count": 3,
+            "amount": 37.47
+          },
+          {
+            "transactionMonth": "2026-09",
+            "sourceMonth": 6,
+            "count": 5,
+            "amount": 1065.05
+          },
+          {
+            "transactionMonth": "2026-09",
+            "sourceMonth": 8,
+            "count": 10,
+            "amount": 346.13
+          },
+          {
+            "transactionMonth": "2026-10",
+            "sourceMonth": 6,
+            "count": 5,
+            "amount": 112.62
+          },
+          {
+            "transactionMonth": "2026-11",
+            "sourceMonth": 6,
+            "count": 2,
+            "amount": 50.82
+          },
+          {
+            "transactionMonth": "2026-12",
+            "sourceMonth": 6,
+            "count": 4,
+            "amount": 116.17
+          }
+        ],
+        "outOfYearCount": 1,
+        "outOfYearReferences": [
+          {
+            "sourceCell": "A10309",
+            "recordedYear": 2027,
+            "sourceMonth": 8
+          }
+        ]
+      },
+      {
+        "id": "na_text_card_amount",
+        "severity": "warning",
+        "status": "open",
+        "count": 1,
+        "amount": 37.02,
+        "title": {
+          "pt": "Valor de cartão armazenado como texto",
+          "es": "Importe de tarjeta guardado como texto",
+          "en": "Card amount stored as text"
+        },
+        "detail": {
+          "pt": "Um valor de USD 37,02 de julho, no Canadá, está como texto e fica fora do pivô. O relatório preserva o fechamento da fonte e não o adiciona às despesas.",
+          "es": "Un importe de USD 37,02 de julio en Canadá está guardado como texto y queda fuera de la tabla dinámica. El informe conserva el cierre de origen y no lo añade a los gastos.",
+          "en": "One July Canada amount of USD 37.02 is stored as text and excluded from the pivot. The report preserves the source close and does not add it to expenses."
+        },
+        "source": {
+          "sheet": "Card Raw",
+          "range": "F9640"
+        }
+      },
+      {
+        "id": "na_auxiliary_income_difference",
+        "severity": "warning",
+        "status": "open",
+        "amount": -954.19,
+        "title": {
+          "pt": "Faturamento auxiliar difere da receita",
+          "es": "Facturación auxiliar distinta de los ingresos",
+          "en": "Auxiliary invoicing differs from income"
+        },
+        "detail": {
+          "pt": "A coluna Invoiced do resumo de folha soma USD 954,19 a menos que Income. Abril explica USD 954,22; janeiro e agosto têm diferenças menores. O relatório usa Revenue, que confere com PPT Slides.",
+          "es": "La columna Invoiced del resumen de nómina suma USD 954,19 menos que Income. Abril explica USD 954,22; enero y agosto presentan diferencias menores. El informe usa Revenue, que coincide con PPT Slides.",
+          "en": "The payroll summary's Invoiced column totals USD 954.19 less than Income. April accounts for USD 954.22, with smaller January and August differences. The report uses Revenue, which matches PPT Slides."
+        },
+        "source": {
+          "sheet": "DC Expenses",
+          "range": "F5:H17"
+        },
+        "byMonth": [
+          {
+            "month": 1,
+            "sourceCell": "DC Expenses!H5",
+            "auxiliaryIncome": 228527,
+            "pnlIncome": 228527.09,
+            "difference": -0.09
+          },
+          {
+            "month": 2,
+            "sourceCell": "DC Expenses!H6",
+            "auxiliaryIncome": 281897,
+            "pnlIncome": 281897,
+            "difference": 0
+          },
+          {
+            "month": 3,
+            "sourceCell": "DC Expenses!H7",
+            "auxiliaryIncome": 346395.72,
+            "pnlIncome": 346395.72,
+            "difference": 0.0
+          },
+          {
+            "month": 4,
+            "sourceCell": "DC Expenses!H8",
+            "auxiliaryIncome": 409818.26,
+            "pnlIncome": 410772.48,
+            "difference": -954.22
+          },
+          {
+            "month": 5,
+            "sourceCell": "DC Expenses!H9",
+            "auxiliaryIncome": 288420.34,
+            "pnlIncome": 288420.34,
+            "difference": 0.0
+          },
+          {
+            "month": 6,
+            "sourceCell": "DC Expenses!H10",
+            "auxiliaryIncome": 306845.67,
+            "pnlIncome": 306845.67,
+            "difference": 0.0
+          },
+          {
+            "month": 7,
+            "sourceCell": "DC Expenses!H11",
+            "auxiliaryIncome": 254101.89,
+            "pnlIncome": 254101.89,
+            "difference": 0.0
+          },
+          {
+            "month": 8,
+            "sourceCell": "DC Expenses!H12",
+            "auxiliaryIncome": 165103.59,
+            "pnlIncome": 165103.47,
+            "difference": 0.12
+          },
+          {
+            "month": 9,
+            "sourceCell": "DC Expenses!H13",
+            "auxiliaryIncome": 137926.48,
+            "pnlIncome": 137926.48,
+            "difference": 0.0
+          }
+        ]
+      },
+      {
+        "id": "na_payroll_auxiliary_difference",
+        "severity": "warning",
+        "status": "open",
+        "amount": 82270.21,
+        "title": {
+          "pt": "Listagem quinzenal não fecha com a mensal",
+          "es": "Lista quincenal distinta del cierre mensual",
+          "en": "Biweekly listing differs from monthly payroll"
+        },
+        "detail": {
+          "pt": "A listagem quinzenal soma USD 1.106.358,80, enquanto a folha mensal usada no fechamento soma USD 1.024.088,59: diferença de USD 82.270,21. Não foram somadas as duas visões nem feitas correções automáticas. O relatório segue os valores mensais da P&L.",
+          "es": "La lista quincenal suma USD 1.106.358,80 y la nómina mensual del cierre suma USD 1.024.088,59: una diferencia de USD 82.270,21. No se sumaron ambas vistas ni se hicieron ajustes automáticos. El informe sigue los importes mensuales de P&L.",
+          "en": "The biweekly listing totals USD 1,106,358.80 while monthly payroll in the close totals USD 1,024,088.59, a USD 82,270.21 difference. The two views were not added together or automatically adjusted. The report follows the monthly P&L amounts."
+        },
+        "source": {
+          "sheet": "DC Expenses",
+          "range": "A3:I33"
+        }
+      },
+      {
+        "id": "na_payroll_rounding",
+        "severity": "info",
+        "status": "documented",
+        "amount": -0.03,
+        "title": {
+          "pt": "Centavos nos totais auxiliares de folha",
+          "es": "Centavos en totales auxiliares de nómina",
+          "en": "Small payroll summary differences"
+        },
+        "detail": {
+          "pt": "O total Paid auxiliar fica USD 0,01 acima da soma mensal. O resumo de apoio soma USD 123.298,29 e a linha mensal Other NB DC soma USD 123.298,32. O relatório mantém as linhas mensais que reconciliam com a P&L.",
+          "es": "El total auxiliar Paid supera en USD 0,01 la suma mensual. El resumen de apoyo suma USD 123.298,29 y las líneas mensuales Other NB DC suman USD 123.298,32. El informe mantiene las líneas mensuales que concilian con P&L.",
+          "en": "The auxiliary Paid total is USD 0.01 above its monthly sum. The support summary totals USD 123,298.29 while monthly Other NB DC totals USD 123,298.32. The report keeps the monthly lines that reconcile with P&L."
+        },
+        "source": {
+          "sheet": "DC Expenses",
+          "range": "G17,L4:L6"
+        },
+        "payrollSummaryDifference": 0.01
+      }
+    ]
+  }
+}
