@@ -16,9 +16,9 @@
     "currencyStatus": "confirmed_by_user",
     "unit": "currency_units",
     "currencyConfirmation": {
-      "pt": "Os valores financeiros da coleção são em USD, conforme confirmação do usuário. Nenhuma conversão cambial foi aplicada.",
-      "es": "Los valores financieros de la colección están en USD, según la confirmación del usuario. No se aplicó conversión de divisas.",
-      "en": "The collection's financial amounts are in USD, as confirmed by the user. No currency conversion was applied."
+      "pt": "Valores em USD, sem conversão cambial.",
+      "es": "Valores en USD, sin conversión de divisas.",
+      "en": "Values in USD, with no currency conversion."
     },
     "sourceFile": "APAC (Jan-Sep).xlsx",
     "sourceType": "workbook_snapshot",
@@ -43,9 +43,9 @@
     "operationsLive": false,
     "idleAvailable": false,
     "basis": {
-      "pt": "Valores salvos na planilha APAC. Períodos seguem a P&L e a coluna Month; todos os anos dos lançamentos são 2026. Divergências de datas estão documentadas.",
-      "es": "Valores guardados en la hoja APAC. Los períodos siguen P&L y la columna Month; todos los años de los movimientos son 2026. Las divergencias de fechas están documentadas.",
-      "en": "Cached APAC workbook values. Periods follow P&L and the Month column; all transaction years are 2026. Date mismatches are documented."
+      "pt": "Fechamento de janeiro a setembro de 2026 da planilha APAC. Os meses seguem a P&L e a coluna Month do cartão.",
+      "es": "Cierre de enero a septiembre de 2026 de la hoja APAC. Los meses siguen el P&L y la columna Month de tarjeta.",
+      "en": "January–September 2026 close from the APAC workbook. Reporting months follow the P&L and the card data’s Month column."
     }
   },
   "countries": [
@@ -4280,7 +4280,7 @@
       "en": "Other travel"
     },
     "Utilities": {
-      "pt": "Utilidades",
+      "pt": "Serviços básicos",
       "es": "Servicios básicos",
       "en": "Utilities"
     }
@@ -4389,11 +4389,11 @@
     "contributionProfitFormula": "revenue - localExpenses",
     "contributionMarginFormula": "contributionProfit / revenue",
     "managementFeesFormula": "billables * 7.8% (verified in each source formula)",
-    "costAllocation": "P&L includes country card costs, payroll and January transfers. No indirect-cost allocation is applied. India seat charges appear separately and are not included in P&L. Taiwan's reconciliation difference is identified separately.",
+    "costAllocation": "The P&L includes card expenses, payroll and January transfers by country. It excludes allocated indirect costs and India seat charges. Taiwan’s USD 0.05 difference is shown separately.",
     "costAllocationLabels": {
-      "pt": "A P&L inclui cartão, folha e transferências de janeiro por país. Não há rateio de custos indiretos. Os postos da Índia aparecem separados e não integram a P&L. A diferença de conciliação de Taiwan está identificada à parte.",
-      "es": "P&L incluye tarjeta, nómina y transferencias de enero por país. No hay reparto de costes indirectos. Los puestos de India figuran por separado y no integran P&L. La diferencia de conciliación de Taiwán se identifica aparte.",
-      "en": "P&L includes country card costs, payroll and January transfers. No indirect-cost allocation is applied. India seat charges appear separately and are not included in P&L. Taiwan's reconciliation difference is identified separately."
+      "pt": "A P&L reúne cartão, folha e transferências de janeiro por país. Não inclui custos indiretos rateados nem os postos da Índia. A diferença de USD 0,05 em Taiwan aparece em linha separada.",
+      "es": "El P&L incluye tarjeta, nómina y transferencias de enero por país. No incluye costos indirectos asignados ni los puestos de India. La diferencia de USD 0,05 en Taiwán aparece en una línea separada.",
+      "en": "The P&L includes card expenses, payroll and January transfers by country. It excludes allocated indirect costs and India seat charges. Taiwan’s USD 0.05 difference is shown separately."
     },
     "zeroCostKeys": [
       "pmSalary",
@@ -4402,15 +4402,15 @@
       "otherIndirect"
     ],
     "zeroCostMeaning": {
-      "pt": "Zero significa não incluído na P&L fornecida; não comprova ausência do custo na empresa.",
-      "es": "Cero significa no incluido en P&L proporcionada; no demuestra ausencia del coste en la empresa.",
-      "en": "Zero means excluded from the supplied P&L; it does not establish that the company incurred no such cost."
+      "pt": "Zero indica custo não incluído nesta P&L, e não ausência de custo na empresa.",
+      "es": "Cero indica un costo no incluido en este P&L, no la ausencia de ese costo en la empresa.",
+      "en": "Zero means the cost is not included in this P&L, rather than that the company incurred no such cost."
     },
     "cardBasis": "All numeric Statement Amount rows, grouped by Ramp Department and the explicit Month column. Credits/refunds remain negative. No employee or merchant detail is exported.",
     "billedKmsBasis": {
-      "pt": "KMS da P&L reconciliados com a seção Billed KMS. É uma medida histórica da planilha financeira, sem sincronização operacional online.",
-      "es": "KMS de P&L conciliados con la sección Billed KMS. Es una medida histórica de la hoja financiera, sin sincronización operativa en línea.",
-      "en": "P&L KMS reconciled with the Billed KMS section. This is a historical financial-workbook measure, without live operational synchronization."
+      "pt": "Quilômetros faturados da P&L, conferidos com a seção Billed KMS da planilha. Campos vazios permanecem sem informação.",
+      "es": "Kilómetros facturados del P&L, cotejados con la sección Billed KMS de la hoja. Los campos vacíos siguen sin información.",
+      "en": "Billed kilometers from the P&L, checked against the workbook’s Billed KMS section. Blank fields remain unavailable."
     },
     "blankComponents": [
       {
@@ -4520,14 +4520,14 @@
         "status": "open",
         "amount": 12148.11,
         "title": {
-          "pt": "Postos da Índia fora da P&L",
-          "es": "Puestos de India fuera de P&L",
-          "en": "India seat charges outside P&L"
+          "pt": "Índia: custo fora da P&L",
+          "es": "India: costo fuera del P&L",
+          "en": "India: cost outside the P&L"
         },
         "detail": {
-          "pt": "A fonte registra US$ 12.148,11 em postos da Índia (US$ 1.349,79 × 9), sem distribuição por país. Esse valor não entra nas despesas da P&L. O relatório preserva a P&L e não inventa um rateio.",
-          "es": "La fuente registra US$ 12.148,11 en puestos de India (US$ 1.349,79 × 9), sin distribución por país. Este importe no se incluye en los gastos de P&L. El informe conserva P&L y no inventa un reparto.",
-          "en": "The source lists US$12,148.11 of India seat charges (US$1,349.79 × 9), without a country allocation. This amount is excluded from P&L expenses. The report preserves P&L and applies no invented allocation."
+          "pt": "USD 12.148,11 de postos da Índia (USD 1.349,79 × 9) constam em linha separada, sem rateio por país. Esse custo fica fora das despesas e do resultado apresentados.",
+          "es": "Los puestos de India suman USD 12.148,11 (USD 1.349,79 × 9), en una línea separada y sin asignación por país. Este costo queda fuera de los gastos y del resultado presentados.",
+          "en": "India seat charges of USD 12,148.11 (USD 1,349.79 × 9) appear separately, with no country allocation. This cost is excluded from the reported expenses and profit."
         },
         "source": {
           "sheet": "Expenses & Revenue",
@@ -4541,14 +4541,14 @@
         "amount": 6890.79,
         "count": 171,
         "title": {
-          "pt": "Datas divergentes nos lançamentos de julho",
-          "es": "Fechas divergentes en los movimientos de julio",
-          "en": "Date mismatches in July transactions"
+          "pt": "Julho: divergências nas datas",
+          "es": "Julio: diferencias en las fechas",
+          "en": "July: transaction date mismatches"
         },
         "detail": {
-          "pt": "171 lançamentos classificados como julho têm datas armazenadas em outros meses. As categorias seguem a coluna Month, que reconcilia com a P&L, sem mudar as datas originais.",
-          "es": "171 movimientos clasificados como julio tienen fechas guardadas en otros meses. Las categorías siguen la columna Month, que concilia con P&L, sin cambiar las fechas originales.",
-          "en": "171 transactions classified as July have stored dates in other months. Categories follow the Month column, which reconciles with P&L, without changing source dates."
+          "pt": "171 lançamentos de julho têm datas de outros meses. O relatório usa a coluna Month para conciliar com a P&L.",
+          "es": "171 movimientos de julio tienen fechas de otros meses. El informe usa la columna Month para conciliar con el P&L.",
+          "en": "171 July transactions have dates in other months. The report uses the Month column to reconcile with the P&L."
         },
         "source": {
           "sheet": "Card Raw",
@@ -4614,14 +4614,14 @@
         "status": "open",
         "amount": -0.05,
         "title": {
-          "pt": "Diferença de US$ 0,05 em Taiwan",
-          "es": "Diferencia de US$ 0,05 en Taiwán",
-          "en": "US$0.05 Taiwan difference"
+          "pt": "Taiwan: diferença de USD 0,05",
+          "es": "Taiwán: diferencia de USD 0,05",
+          "en": "Taiwan: USD 0.05 difference"
         },
         "detail": {
-          "pt": "Em julho, a despesa da P&L de Taiwan é US$ 0,05 menor que cartão mais folha. A linha Diferença da fonte preserva o total publicado e identifica a diferença, sem atribuí-la a uma categoria operacional.",
-          "es": "En julio, el gasto de P&L de Taiwán es US$ 0,05 menor que tarjeta más nómina. La línea Diferencia de origen conserva el total publicado e identifica la diferencia sin atribuirla a una categoría operativa.",
-          "en": "Taiwan's July P&L expense is US$0.05 below card costs plus payroll. The Source difference line preserves the reported total and identifies the difference without assigning it to an operating category."
+          "pt": "Em julho, cartão e folha somam USD 0,05 a mais que a despesa da P&L. O ajuste de −USD 0,05 aparece em “Diferença da fonte” para conciliar o total.",
+          "es": "En julio, tarjeta y nómina suman USD 0,05 más que el gasto del P&L. El ajuste de −USD 0,05 figura en “Diferencia de origen” para conciliar el total.",
+          "en": "July card expenses and payroll total USD 0.05 more than the P&L expense. A −USD 0.05 adjustment appears under “Source difference” to reconcile the total."
         },
         "source": {
           "sheet": "P&L",
@@ -4647,14 +4647,14 @@
         "status": "documented",
         "amount": 0,
         "title": {
-          "pt": "Nova Zelândia: campos vazios de julho a setembro",
-          "es": "Nueva Zelanda: campos vacíos de julio a septiembre",
-          "en": "New Zealand: blank July–September fields"
+          "pt": "Nova Zelândia: julho a setembro",
+          "es": "Nueva Zelanda: julio a septiembre",
+          "en": "New Zealand: July–September"
         },
         "detail": {
-          "pt": "A P&L registra receita zero de julho a setembro e despesa de US$ 24,57 em julho. Billables vazios entram como zero nas fórmulas da fonte. KMS vazios permanecem indisponíveis; não são convertidos em zero.",
-          "es": "P&L registra ingresos cero de julio a septiembre y un gasto de US$ 24,57 en julio. Los Billables vacíos cuentan como cero en las fórmulas de origen. Los KMS vacíos siguen sin estar disponibles; no se convierten en cero.",
-          "en": "P&L records zero revenue in July–September and US$24.57 of July expense. Blank Billables contribute zero in source formulas. Blank KMS remain unavailable and are not converted to zero."
+          "pt": "De julho a setembro, a receita é zero e os KMS não estão informados. Julho registra despesa de USD 24,57. As fórmulas da P&L tratam os campos vazios de despesas faturáveis como zero.",
+          "es": "De julio a septiembre, los ingresos son cero y no se informan KMS. Julio registra un gasto de USD 24,57. Las fórmulas del P&L tratan los campos vacíos de gastos facturables como cero.",
+          "en": "July–September revenue is zero and KMS are unavailable. July records USD 24.57 in expenses. P&L formulas treat blank billable-expense fields as zero."
         },
         "source": {
           "sheet": "P&L",

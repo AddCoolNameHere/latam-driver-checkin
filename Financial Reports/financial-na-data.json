@@ -11,9 +11,9 @@
     "currencyStatus": "confirmed_by_user",
     "unit": "currency_units",
     "currencyConfirmation": {
-      "pt": "Lucas confirmou que os valores financeiros são sempre em USD. Nenhuma conversão cambial foi aplicada.",
-      "es": "Lucas confirmó que los importes financieros están siempre en USD. No se aplicó conversión de divisas.",
-      "en": "Lucas confirmed that financial amounts are always in USD. No currency conversion was applied."
+      "pt": "Valores em USD, sem conversão cambial.",
+      "es": "Importes en USD, sin conversión de divisas.",
+      "en": "Amounts in USD; no currency conversion."
     },
     "sourceFile": "SV-NA (Jan-Sep).xlsx",
     "sourceType": "workbook_snapshot",
@@ -25,7 +25,7 @@
       "from": "2026-01-01",
       "to": "2026-09-30"
     },
-    "dateRangeBasis": "Closing month labels; source transaction dates contain documented inconsistencies.",
+    "dateRangeBasis": "Source Month column; transaction-date discrepancies are listed in reconciliation.",
     "recordCount": 9,
     "countryCount": 1,
     "scopeCountries": [
@@ -50,9 +50,9 @@
     ],
     "countryBreakdown": "card-only",
     "scopeNote": {
-      "pt": "O fechamento fornecido é consolidado para América do Norte. Estados Unidos e Canadá estão identificados apenas nas despesas de cartão; receita, folha e outros custos não têm divisão por país.",
-      "es": "El cierre proporcionado es consolidado para Norteamérica. Estados Unidos y Canadá solo están identificados en los gastos de tarjeta; los ingresos, la nómina y otros gastos no tienen desglose por país.",
-      "en": "The supplied close is consolidated for North America. The United States and Canada are identified only in card expenses; revenue, payroll and other costs are not split by country."
+      "pt": "Receitas e despesas consolidadas de Estados Unidos e Canadá. Apenas os gastos de cartão têm abertura por país.",
+      "es": "Ingresos y gastos consolidados de Estados Unidos y Canadá. Solo los gastos de tarjeta tienen desglose por país.",
+      "en": "Consolidated revenue and expenses for the United States and Canada. Only card spending is broken down by country."
     },
     "transactionCount": 12604,
     "includedTransactionCount": 12603,
@@ -60,9 +60,9 @@
     "managementFeeRate": 0.078,
     "financialsLive": false,
     "basis": {
-      "pt": "Valores salvos no fechamento SV-NA. O cabeçalho de folha identifica 2026. O período segue Month, preservando o pivô e a P&L fornecidos.",
-      "es": "Valores guardados en el cierre SV-NA. El encabezado de nómina identifica 2026. El período sigue Month, conservando la tabla dinámica y P&L originales.",
-      "en": "Cached values from the SV-NA close. The payroll heading identifies 2026. Reporting periods follow Month, preserving the supplied pivot and P&L."
+      "pt": "Fechamento SV-NA de janeiro a setembro de 2026. Valores da aba Revenue; meses conforme a coluna Month.",
+      "es": "Cierre SV-NA de enero a septiembre de 2026. Importes de la pestaña Revenue; meses según la columna Month.",
+      "en": "SV-NA close for January–September 2026. Values from the Revenue sheet; periods follow the Month column."
     }
   },
   "countries": [
@@ -2362,17 +2362,17 @@
     "localExpensesFormula": "expenses - otherIndirect",
     "contributionProfitFormula": "revenue - localExpenses",
     "contributionMarginFormula": "contributionProfit / revenue",
-    "costAllocation": "Only other indirect services are spread equally across the nine months, as IDC Expenses!H12 = H11/9. No country allocation is applied. Procurement and both direct payroll lines retain their source monthly amounts.",
+    "costAllocation": "Other indirect services are allocated equally across January–September (IDC Expenses!H12 = H11/9). Procurement and both direct-cost lines use source monthly amounts, with no country allocation.",
     "costAllocationLabels": {
-      "pt": "Somente os outros serviços indiretos são distribuídos por nove meses na fonte (H11/9). Não há rateio entre países. Compras e as duas linhas de custos diretos mantêm os valores mensais do fechamento.",
-      "es": "Solo los otros servicios indirectos se distribuyen entre nueve meses en la fuente (H11/9). No hay reparto entre países. Compras y ambas líneas de costos directos mantienen los importes mensuales del cierre.",
-      "en": "Only other indirect services are spread over nine months in the source (H11/9). No country allocation is applied. Procurement and both direct-cost lines keep their monthly close amounts."
+      "pt": "Outros serviços indiretos rateados igualmente entre janeiro e setembro (IDC Expenses!H12 = H11/9). Compras e as duas linhas de custos diretos seguem os valores mensais, sem rateio entre países.",
+      "es": "Otros servicios indirectos repartidos por igual entre enero y septiembre (IDC Expenses!H12 = H11/9). Compras y ambas líneas de costos directos siguen los importes mensuales, sin reparto por país.",
+      "en": "Other indirect services are allocated equally across January–September (IDC Expenses!H12 = H11/9). Procurement and both direct-cost lines use monthly amounts, with no country allocation."
     },
-    "cardBasis": "Numeric Statement Amount values, grouped by the source Month column. Negative credits remain negative. The country breakdown uses only Ramp Department SV USA and SV Canada; it is not a country P&L.",
+    "cardBasis": "Numeric Statement Amount values by Month, including negative credits. Country totals use Ramp Department SV USA and SV Canada and cover card spending only.",
     "cardCountryLabels": {
-      "pt": "Abertura exclusiva de cartão por país; não representa lucro, receita ou despesa total de cada país.",
-      "es": "Desglose exclusivo de tarjetas por país; no representa beneficios, ingresos ni gastos totales de cada país.",
-      "en": "Card-only country breakdown; it does not represent country profit, revenue or total expenses."
+      "pt": "Cartão corporativo por país. Receita, folha e demais custos permanecem consolidados.",
+      "es": "Tarjetas corporativas por país. Los ingresos, la nómina y los demás gastos permanecen consolidados.",
+      "en": "Corporate card spending by country. Revenue, payroll and other costs remain consolidated."
     },
     "blankComponents": [],
     "sourceRanges": {
@@ -2428,9 +2428,9 @@
           "en": "Consolidated regional result"
         },
         "detail": {
-          "pt": "A planilha identifica Estados Unidos e Canadá no cartão, mas não divide receita, folha e os demais custos entre países. A P&L é exibida como América do Norte consolidada; somente o cartão tem abertura por país.",
-          "es": "La hoja identifica Estados Unidos y Canadá en las tarjetas, pero no separa ingresos, nómina y otros gastos por país. P&L se presenta para Norteamérica consolidada; solo las tarjetas tienen desglose por país.",
-          "en": "The workbook identifies the United States and Canada in card transactions but does not split revenue, payroll or the remaining costs by country. P&L is shown for consolidated North America; only card costs have a country breakdown."
+          "pt": "A P&L reúne Estados Unidos e Canadá. A planilha separa apenas as despesas de cartão por país; receita, folha e demais custos são consolidados.",
+          "es": "P&L reúne Estados Unidos y Canadá. La hoja separa por país únicamente los gastos de tarjeta; los ingresos, la nómina y los demás gastos están consolidados.",
+          "en": "P&L combines the United States and Canada. Only card expenses are split by country; revenue, payroll and other costs are consolidated."
         },
         "source": {
           "sheet": "Revenue",
@@ -2443,14 +2443,14 @@
         "status": "open",
         "count": 179,
         "title": {
-          "pt": "Datas diferentes do mês do fechamento",
-          "es": "Fechas distintas del mes de cierre",
-          "en": "Dates differ from the closing month"
+          "pt": "Datas de cartão divergentes",
+          "es": "Fechas de tarjeta discrepantes",
+          "en": "Card date discrepancies"
         },
         "detail": {
-          "pt": "179 datas de cartão diferem da coluna Month e 1 data registra outro ano. Os totais usam Month, como o pivô e a P&L da fonte. Nenhuma data foi corrigida ou movimentada entre meses.",
-          "es": "179 fechas de tarjeta difieren de la columna Month y 1 fecha corresponde a otro año. Los totales usan Month, como la tabla dinámica y P&L de origen. No se corrigieron fechas ni se trasladaron gastos entre meses.",
-          "en": "179 card dates differ from the Month column and 1 date records another year. Totals use Month, matching the source pivot and P&L. No dates were corrected or expenses shifted between months."
+          "pt": "179 lançamentos têm datas fora do mês informado em Month; 1 registra outro ano. O fechamento segue Month, conforme a tabela dinâmica e a P&L.",
+          "es": "179 movimientos tienen fechas fuera del mes indicado en Month; 1 corresponde a otro año. El cierre sigue Month, según la tabla dinámica y P&L.",
+          "en": "179 card dates fall outside the month in the Month column; 1 records another year. The close follows Month, consistent with the pivot table and P&L."
         },
         "source": {
           "sheet": "Card Raw",
@@ -2545,9 +2545,9 @@
           "en": "Card amount stored as text"
         },
         "detail": {
-          "pt": "Um valor de USD 37,02 de julho, no Canadá, está como texto e fica fora do pivô. O relatório preserva o fechamento da fonte e não o adiciona às despesas.",
-          "es": "Un importe de USD 37,02 de julio en Canadá está guardado como texto y queda fuera de la tabla dinámica. El informe conserva el cierre de origen y no lo añade a los gastos.",
-          "en": "One July Canada amount of USD 37.02 is stored as text and excluded from the pivot. The report preserves the source close and does not add it to expenses."
+          "pt": "Um lançamento de USD 37,02 do Canadá (julho) está armazenado como texto e não entra na tabela dinâmica nem nas despesas do fechamento.",
+          "es": "Un movimiento de USD 37,02 de Canadá (julio) está guardado como texto y queda fuera de la tabla dinámica y de los gastos del cierre.",
+          "en": "A USD 37.02 Canada entry for July is stored as text and excluded from both the pivot table and closing expenses."
         },
         "source": {
           "sheet": "Card Raw",
@@ -2560,14 +2560,14 @@
         "status": "open",
         "amount": -954.19,
         "title": {
-          "pt": "Faturamento auxiliar difere da receita",
-          "es": "Facturación auxiliar distinta de los ingresos",
-          "en": "Auxiliary invoicing differs from income"
+          "pt": "Divergência de faturamento",
+          "es": "Diferencia de facturación",
+          "en": "Invoicing difference"
         },
         "detail": {
-          "pt": "A coluna Invoiced do resumo de folha soma USD 954,19 a menos que Income. Abril explica USD 954,22; janeiro e agosto têm diferenças menores. O relatório usa Revenue, que confere com PPT Slides.",
-          "es": "La columna Invoiced del resumen de nómina suma USD 954,19 menos que Income. Abril explica USD 954,22; enero y agosto presentan diferencias menores. El informe usa Revenue, que coincide con PPT Slides.",
-          "en": "The payroll summary's Invoiced column totals USD 954.19 less than Income. April accounts for USD 954.22, with smaller January and August differences. The report uses Revenue, which matches PPT Slides."
+          "pt": "Invoiced (DC Expenses) soma USD 954,19 a menos que Income (Revenue): USD 954,22 em abril, com diferenças menores em janeiro e agosto. Este relatório segue a aba Revenue, consistente com PPT Slides.",
+          "es": "Invoiced (DC Expenses) suma USD 954,19 menos que Income (Revenue): USD 954,22 en abril, con diferencias menores en enero y agosto. Este informe sigue la pestaña Revenue, consistente con PPT Slides.",
+          "en": "Invoiced (DC Expenses) totals USD 954.19 less than Income (Revenue): USD 954.22 in April, with smaller differences in January and August. This report follows the Revenue sheet, consistent with PPT Slides."
         },
         "source": {
           "sheet": "DC Expenses",
@@ -2645,14 +2645,14 @@
         "status": "open",
         "amount": 82270.21,
         "title": {
-          "pt": "Listagem quinzenal não fecha com a mensal",
-          "es": "Lista quincenal distinta del cierre mensual",
-          "en": "Biweekly listing differs from monthly payroll"
+          "pt": "Divergência entre folhas quinzenal e mensal",
+          "es": "Diferencia entre nóminas quincenal y mensual",
+          "en": "Biweekly and monthly payroll differ"
         },
         "detail": {
-          "pt": "A listagem quinzenal soma USD 1.106.358,80, enquanto a folha mensal usada no fechamento soma USD 1.024.088,59: diferença de USD 82.270,21. Não foram somadas as duas visões nem feitas correções automáticas. O relatório segue os valores mensais da P&L.",
-          "es": "La lista quincenal suma USD 1.106.358,80 y la nómina mensual del cierre suma USD 1.024.088,59: una diferencia de USD 82.270,21. No se sumaron ambas vistas ni se hicieron ajustes automáticos. El informe sigue los importes mensuales de P&L.",
-          "en": "The biweekly listing totals USD 1,106,358.80 while monthly payroll in the close totals USD 1,024,088.59, a USD 82,270.21 difference. The two views were not added together or automatically adjusted. The report follows the monthly P&L amounts."
+          "pt": "A P&L usa a folha mensal de USD 1.024.088,59. A listagem quinzenal soma USD 1.106.358,80, diferença de USD 82.270,21.",
+          "es": "P&L usa la nómina mensual de USD 1.024.088,59. La lista quincenal suma USD 1.106.358,80, una diferencia de USD 82.270,21.",
+          "en": "P&L uses monthly payroll of USD 1,024,088.59. The biweekly listing totals USD 1,106,358.80, a difference of USD 82,270.21."
         },
         "source": {
           "sheet": "DC Expenses",
@@ -2665,14 +2665,14 @@
         "status": "documented",
         "amount": -0.03,
         "title": {
-          "pt": "Centavos nos totais auxiliares de folha",
-          "es": "Centavos en totales auxiliares de nómina",
-          "en": "Small payroll summary differences"
+          "pt": "Diferenças de centavos na folha",
+          "es": "Diferencias de centavos en nómina",
+          "en": "Minor payroll total differences"
         },
         "detail": {
-          "pt": "O total Paid auxiliar fica USD 0,01 acima da soma mensal. O resumo de apoio soma USD 123.298,29 e a linha mensal Other NB DC soma USD 123.298,32. O relatório mantém as linhas mensais que reconciliam com a P&L.",
-          "es": "El total auxiliar Paid supera en USD 0,01 la suma mensual. El resumen de apoyo suma USD 123.298,29 y las líneas mensuales Other NB DC suman USD 123.298,32. El informe mantiene las líneas mensuales que concilian con P&L.",
-          "en": "The auxiliary Paid total is USD 0.01 above its monthly sum. The support summary totals USD 123,298.29 while monthly Other NB DC totals USD 123,298.32. The report keeps the monthly lines that reconcile with P&L."
+          "pt": "Paid supera a soma mensal em USD 0,01. Em Other NB DC, o resumo soma USD 123.298,29 e as linhas mensais, USD 123.298,32. A P&L usa as somas mensais.",
+          "es": "Paid supera la suma mensual en USD 0,01. En Other NB DC, el resumen suma USD 123.298,29 y las líneas mensuales, USD 123.298,32. P&L usa las sumas mensuales.",
+          "en": "Paid exceeds the monthly sum by USD 0.01. Other NB DC totals USD 123,298.29 in the summary and USD 123,298.32 across monthly lines. P&L uses the monthly sums."
         },
         "source": {
           "sheet": "DC Expenses",

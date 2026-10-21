@@ -5,19 +5,19 @@
     latam: Object.freeze({
       code: 'latam', shortLabel: 'LATAM', labelKey: 'regionLatam', brandKey: 'brandLatam',
       subtitleKey: 'subtitle', allCountriesKey: 'allCountries', statementScopeKey: 'statementScope',
-      dataUrl: 'Financial%20Reports/financial-data.json?v=20261020',
+      dataUrl: 'Financial%20Reports/financial-data.json?v=20261021editorial',
       storageNamespace: 'AC_FINANCIAL', operationsEnabled: true, reportUrl: 'financial-report.html'
     }),
     na: Object.freeze({
       code: 'na', shortLabel: 'NA', labelKey: 'regionNa', brandKey: 'brandNa',
       subtitleKey: 'subtitleNa', allCountriesKey: 'allCountriesNa', statementScopeKey: 'statementScopeRegional',
-      dataUrl: 'Financial%20Reports/financial-na-data.json?v=20261021regions',
+      dataUrl: 'Financial%20Reports/financial-na-data.json?v=20261021editorial',
       storageNamespace: 'AC_FINANCIAL_NA', operationsEnabled: false, reportUrl: 'financial-report-na.html'
     }),
     apac: Object.freeze({
       code: 'apac', shortLabel: 'APAC', labelKey: 'regionApac', brandKey: 'brandApac',
       subtitleKey: 'subtitleApac', allCountriesKey: 'allCountriesApac', statementScopeKey: 'statementScopeRegional',
-      dataUrl: 'Financial%20Reports/financial-apac-data.json?v=20261021regions',
+      dataUrl: 'Financial%20Reports/financial-apac-data.json?v=20261021editorial',
       storageNamespace: 'AC_FINANCIAL_APAC', operationsEnabled: false, reportUrl: 'financial-report-apac.html'
     })
   });

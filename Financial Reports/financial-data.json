@@ -10,9 +10,9 @@
     "currencyStatus": "confirmed_by_user",
     "unit": "currency_units",
     "currencyConfirmation": {
-      "pt": "Lucas confirmou que todos os valores financeiros são sempre em USD. Nenhuma conversão cambial foi aplicada.",
-      "es": "Lucas confirmó que todos los importes financieros están siempre en USD. No se aplicó ninguna conversión de divisas.",
-      "en": "Lucas confirmed that all financial amounts are always in USD. No currency conversion was applied."
+      "pt": "Valores em USD, sem conversão cambial.",
+      "es": "Importes en USD, sin conversión de divisas.",
+      "en": "Values in USD, with no currency conversion."
     },
     "sourceFile": "LATAM (Jan-Sep).xlsx",
     "sourceType": "workbook_snapshot",
@@ -30,9 +30,9 @@
     "managementFeeRate": 0.078,
     "financialsLive": false,
     "basis": {
-      "pt": "Valores salvos na planilha fornecida. Datas dos lançamentos confirmam 2026.",
-      "es": "Valores guardados en la hoja proporcionada. Las fechas de los movimientos confirman 2026.",
-      "en": "Cached values from the supplied workbook. Transaction dates confirm 2026."
+      "pt": "Fechamento de janeiro a setembro de 2026, conforme os valores salvos na planilha.",
+      "es": "Cierre de enero a septiembre de 2026, según los valores guardados en la hoja.",
+      "en": "January–September 2026 close, based on saved workbook values."
     }
   },
   "countries": [
@@ -8063,9 +8063,9 @@
           "en": "Seven expenses excluded from the pivot"
         },
         "detail": {
-          "pt": "Sete valores de junho estão como texto e somam $192,62. O pivô e a P&L não os incluem. Os totais deste relatório preservam a fonte até revisão contábil.",
-          "es": "Siete importes de junio están guardados como texto y suman $192,62. La tabla dinámica y P&L no los incluyen. Este informe conserva los totales de origen hasta su revisión.",
-          "en": "Seven June amounts are stored as text, totaling $192.62. The pivot and P&L exclude them. This report preserves source totals pending accounting review."
+          "pt": "Sete despesas de junho, no total de $192,62, estão como texto e ficam fora do pivô e da P&L. Pendentes de revisão contábil.",
+          "es": "Siete gastos de junio, por un total de $192,62, están guardados como texto y quedan fuera de la tabla dinámica y del P&L. Pendientes de revisión contable.",
+          "en": "Seven June expenses totaling $192.62 are stored as text and excluded from the pivot and P&L. Pending accounting review."
         },
         "source": {
           "sheet": "Card Raw",

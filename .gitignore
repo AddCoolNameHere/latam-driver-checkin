@@ -28,3 +28,7 @@ TKM_Report_*.pdf
 /Financial Reports/*.xlsx
 /Financial Reports/*.pptx
 /Financial Reports/__pycache__/
+
+# Roteiros de apresentação e prévias gerados localmente.
+/output/pdf/
+/tmp/pdfs/

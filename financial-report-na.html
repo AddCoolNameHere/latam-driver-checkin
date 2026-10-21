@@ -9,16 +9,16 @@
   <link rel="stylesheet" href="theme.css?v=20261015ui">
   <link rel="stylesheet" href="ui.css?v=20261015ui">
   <link rel="stylesheet" href="sv-skin.css?v=20261015ui">
-  <link rel="stylesheet" href="financial-report.css?v=20261021regions">
+  <link rel="stylesheet" href="financial-report.css?v=20261021editorial">
   <script src="auth.js?v=20260518b"></script>
   <script src="theme.js?v=20261015ui"></script>
   <script src="common.js?v=20261015ui"></script>
-  <script src="financial-regions.js?v=20261021regions" defer></script>
+  <script src="financial-regions.js?v=20261021editorial" defer></script>
   <script src="financial-operations.js?v=20261020review" defer></script>
   <script src="financial-idle.js?v=20261020idle2" defer></script>
-  <script src="financial-i18n.js?v=20261021regions" defer></script>
-  <script src="financial-mbr.js?v=20261021regions" defer></script>
-  <script src="financial-report.js?v=20261021regions" defer></script>
+  <script src="financial-i18n.js?v=20261021editorial" defer></script>
+  <script src="financial-mbr.js?v=20261021editorial" defer></script>
+  <script src="financial-report.js?v=20261021editorial" defer></script>
   <script src="sv-shell.js?v=20261020finance" defer></script>
 </head>
 <body class="financial-page" data-financial-region="na">
@@ -77,7 +77,7 @@
         <section class="fr-panel" data-panel="revenue" hidden><div id="revenue-content"></div></section>
 
         <section class="fr-panel" data-panel="costs" hidden>
-          <article class="fr-card fr-expense-summary"><h2 data-i18n="expenseMatrix"></h2><p class="fr-muted" data-i18n="expenseMatrixHint"></p><div id="expense-matrix" class="fr-table-scroll"></div></article>
+          <article class="fr-card fr-expense-summary"><h2 data-i18n="expenseMatrix"></h2><div id="expense-matrix" class="fr-table-scroll"></div></article>
           <div class="fr-grid-main"><article class="fr-card"><div class="fr-card-head"><div><p class="fr-section-number" data-i18n="costStructure"></p><h2 data-i18n="whereMoneyGoes"></h2></div></div><div id="cost-breakdown"></div></article><article class="fr-card"><p class="fr-section-number" data-i18n="profitBridge"></p><h2 data-i18n="revenueToProfit"></h2><div id="profit-bridge"></div></article></div>
           <article class="fr-card fr-spaced"><h2 data-i18n="expenseMovement"></h2><div id="expense-variance"></div></article>
           <details class="fr-card fr-spaced fr-detail"><summary data-i18n="expandCategories"></summary><p class="fr-muted" data-i18n="cardCategoriesHint"></p><div id="card-categories"></div></details>
@@ -95,7 +95,6 @@
             <article class="fr-card fr-reading-card">
               <p class="fr-section-number">02 / <span data-i18n="executiveReading"></span></p><h2 data-i18n="whatMatters"></h2>
               <div id="insights"></div>
-              <div class="fr-target-note" id="target-note"></div>
             </article>
           </div>
           <div class="fr-grid-bottom">
@@ -104,11 +103,11 @@
           </div>
           <article class="fr-card fr-editorial" id="editorial-card" hidden><div><p class="fr-section-number" data-i18n="managementCommentary"></p><h2 id="editorial-title"></h2></div><p id="editorial-text"></p></article>
           <article class="fr-card fr-spaced"><div class="fr-card-head"><div><h2 data-i18n="monthlyMatrix"></h2><p class="fr-muted" data-i18n="monthlyMatrixHint"></p></div><label class="fr-field"><span data-i18n="metric"></span><select id="monthly-metric"><option value="profit" data-i18n="profit"></option><option value="revenue" data-i18n="revenue"></option><option value="expenses" data-i18n="expenses"></option><option value="margin" data-i18n="margin"></option></select></label></div><div class="fr-table-scroll" id="monthly-matrix"></div></article>
-          <article class="fr-card fr-spaced"><div class="fr-card-head"><div><h2 data-i18n="monthlyDetail"></h2><p class="fr-muted" data-i18n="monthlyDetailHint"></p></div></div><div class="fr-table-scroll" id="monthly-table"></div></article>
+          <article class="fr-card fr-spaced"><div class="fr-card-head"><div><h2 data-i18n="monthlyDetail"></h2></div></div><div class="fr-table-scroll" id="monthly-table"></div></article>
         </section>
 
         <section class="fr-panel" data-panel="countries" hidden>
-          <article class="fr-card"><div class="fr-card-head"><div><p class="fr-section-number" data-i18n="portfolio"></p><h2 data-i18n="countryPerformance"></h2><p class="fr-muted" data-i18n="countryHint"></p></div><button type="button" id="csv-btn" class="fr-btn no-print" data-icon="download" data-i18n="exportCsv"></button></div><div class="fr-table-scroll" id="country-table"></div></article>
+          <article class="fr-card"><div class="fr-card-head"><div><p class="fr-section-number" data-i18n="portfolio"></p><h2 data-i18n="countryPerformance"></h2></div><button type="button" id="csv-btn" class="fr-btn no-print" data-icon="download" data-i18n="exportCsv"></button></div><div class="fr-table-scroll" id="country-table"></div></article>
           <article class="fr-card fr-spaced"><h2 data-i18n="countryDrivers"></h2><div id="country-variance"></div></article>
         </section>
 
@@ -124,7 +123,7 @@
             <label class="fr-field fr-horizon"><span data-i18n="horizon"></span><select id="horizon"><option value="1">1</option><option value="3" selected>3</option><option value="6">6</option><option value="12">12</option></select></label>
             <button type="button" class="fr-text-btn" id="scenario-reset" data-i18n="resetAssumptions"></button>
           </article><article class="fr-card"><div class="fr-card-head"><h2 data-i18n="scenarioResult"></h2><span class="fr-tag" id="scenario-horizon"></span></div><div id="scenario-result"></div></article></div>
-          <article class="fr-card fr-spaced"><h2 data-i18n="sensitivityTitle"></h2><p class="fr-muted" data-i18n="sensitivityHint"></p><div class="fr-table-scroll" id="sensitivity"></div></article>
+          <article class="fr-card fr-spaced"><h2 data-i18n="sensitivityTitle"></h2><div class="fr-table-scroll" id="sensitivity"></div></article>
         </section>
 
         <section class="fr-panel" data-panel="sources" hidden>
