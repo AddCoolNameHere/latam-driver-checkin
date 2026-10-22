@@ -106,6 +106,7 @@
     if(result.cardCountryRecords!=null){
       if(!Array.isArray(result.cardCountryRecords)||result.cardCountryRecords.length>240||!Array.isArray(result.meta.scopeCountries))throw new Error('country-card');
       const scopeCodes=result.meta.scopeCountries.map(row=>row.code),cardSeen=new Set();
+      if(!scopeCodes.length||new Set(scopeCodes).size!==scopeCodes.length||scopeCodes.some(code=>!/^[A-Z]{2}$/.test(code)))throw new Error('country-card-scope');
       result.cardCountryRecords.forEach(row=>{
         const key=row.countryCode+':'+row.month;
         if(!scopeCodes.includes(row.countryCode)||!months.includes(row.month)||!validNumber(row.amount)||!Number.isInteger(row.transactions)||row.transactions<0||cardSeen.has(key))throw new Error('country-card');
@@ -115,6 +116,31 @@
         const cardTotal=result.cardCountryRecords.filter(row=>row.month===month).reduce((sum,row)=>sum+row.amount,0);
         const statementTotal=result.records.filter(row=>row.month===month).reduce((sum,row)=>sum+(row.costs.card||0),0);
         if(Math.abs(cardTotal-statementTotal)>.05||scopeCodes.some(code=>!cardSeen.has(code+':'+month)))throw new Error('country-card-total');
+      });
+    }
+    if(result.cardCountryCategoryRecords!=null){
+      if(!Array.isArray(result.cardCountryCategoryRecords)||result.cardCountryCategoryRecords.length>10000||!Array.isArray(result.cardCountryRecords))throw new Error('country-card-categories');
+      const scopeCodes=result.meta.scopeCountries.map(row=>row.code),seenCategories=new Set(),countryTotals=new Map(),categoryTotals=new Map();
+      result.cardCountryCategoryRecords.forEach(row=>{
+        const key=`${row.countryCode}:${row.month}:${row.category}`;
+        if(!scopeCodes.includes(row.countryCode)||!months.includes(row.month)||!validNumber(row.amount)||!Number.isInteger(row.transactions)||row.transactions<0||typeof row.category!=='string'||row.category.length>160||seenCategories.has(key))throw new Error('country-card-category');
+        seenCategories.add(key);
+        for(const [map,totalKey] of [[countryTotals,`${row.countryCode}:${row.month}`],[categoryTotals,`${row.month}:${row.category}`]]){
+          const total=map.get(totalKey)||{amount:0,transactions:0};total.amount+=row.amount;total.transactions+=row.transactions;map.set(totalKey,total);
+        }
+      });
+      result.cardCountryRecords.forEach(row=>{
+        const total=countryTotals.get(`${row.countryCode}:${row.month}`)||{amount:0,transactions:0};
+        if(Math.abs(total.amount-row.amount)>.05||total.transactions!==row.transactions)throw new Error('country-card-category-total');
+      });
+      const expectedCategories=new Map();
+      (result.cardCategoryRecords||[]).forEach(row=>{
+        const key=`${row.month}:${row.category}`,total=expectedCategories.get(key)||{amount:0,transactions:0};total.amount+=row.amount;total.transactions+=row.transactions;expectedCategories.set(key,total);
+      });
+      if(categoryTotals.size!==expectedCategories.size)throw new Error('country-card-category-coverage');
+      expectedCategories.forEach((expected,key)=>{
+        const actual=categoryTotals.get(key);
+        if(!actual||Math.abs(actual.amount-expected.amount)>.05||actual.transactions!==expected.transactions)throw new Error('country-card-category-region');
       });
     }
     result.totals=aggregate(result.records,costKeys);
@@ -137,6 +163,10 @@
   }
   function rowsFor(country=state.country,start=state.start,end=state.end) { return data.records.filter(row=>(country==='ALL'||row.countryCode===country)&&row.month>=start&&row.month<=end); }
   function selectData(next) { data=next;codes=data.countries.map(row=>row.code);costKeys=data.costCategories.map(row=>row.id); }
+  function hasCountrySpend() { return !!window.FinancialCountrySpend?.enabled(data); }
+  function isCountrySpend() { return !!window.FinancialCountrySpend?.isCountry(data,state.country); }
+  function selectableCountries() { return ['ALL',...(hasCountrySpend()?data.meta.scopeCountries.map(row=>row.code):codes)]; }
+  function availableTabs() { return isCountrySpend()?['opening','costs','overview','countries','sources']:tabs; }
   function aggregate(rows, keys=costKeys) {
     const result={income:0,billables:0,managementFees:0,revenue:0,expenses:0,profit:0,allocatedOverhead:0,localExpenses:0,contributionProfit:0,costs:Object.fromEntries(keys.map(key=>[key,0]))};
     rows.forEach(row=>{Object.keys(result).filter(key=>key!=='costs').forEach(key=>result[key]+=row[key]);keys.forEach(key=>result.costs[key]+=row.costs[key]);});
@@ -168,16 +198,15 @@
   }
   function fillFilters() {
     const min=data.meta.firstMonth,max=data.meta.lastMonth;
-    if(!codes.includes(state.country)&&state.country!=='ALL')state.country='ALL';
+    if(!selectableCountries().includes(state.country))state.country='ALL';
     state.start=Math.min(max,Math.max(min,Number.isInteger(Number(state.start))?Number(state.start):max));
     state.end=Math.min(max,Math.max(state.start,Number.isInteger(Number(state.end))?Number(state.end):max));
-    $('country-filter').innerHTML=['ALL',...codes].map(code=>`<option value="${code}">${esc(countryName(code))}</option>`).join('');
+    $('country-filter').innerHTML=selectableCountries().map(code=>`<option value="${code}">${esc(countryName(code))}</option>`).join('');
     const options=data.months.map(({month})=>`<option value="${month}">${esc(monthName(month))} ${data.meta.year}</option>`).join('');
     $('start-filter').innerHTML=options;$('end-filter').innerHTML=options;
     $('country-filter').value=state.country;$('start-filter').value=state.start;$('end-filter').value=state.end;
   }
   function render() {
-    const total=aggregate(rowsFor());
     $('report-title').textContent=settings.title||t('title');
     $('report-period').textContent=`${countryName(state.country)} / ${periodLabel()}`;
     $('trend-period').textContent=periodLabel(data.meta.firstMonth,data.meta.lastMonth);
@@ -189,6 +218,10 @@
     $('mbr-btn').classList.toggle('active',state.country==='ALL'&&state.start===9&&state.end===9);
     $('mbr-btn').hidden=!data.months.some(row=>row.month===9);
     $('latest-btn').classList.toggle('active',state.start===data.meta.lastMonth&&state.end===data.meta.lastMonth);
+    document.body.classList.toggle('fr-country-spend-mode',isCountrySpend());
+    window.FinancialCountrySpend?.render({data,state,lang,settings,t,esc,n,money,pct,signed,monthName,periodLabel,countryName,localized});
+    if(isCountrySpend()){renderSources();setTab(state.tab,false);return;}
+    const total=aggregate(rowsFor());
     renderKpis(total);renderTrend();renderInsights(total);renderCountryBars();renderTables(total);renderCountryCards();renderCosts(total);renderScenario();renderSources();renderOperations();renderMbr();renderIdle();
     $('editorial-card').hidden=!settings.commentText.trim();$('editorial-title').textContent=settings.commentTitle||t('managementCommentary');$('editorial-text').textContent=settings.commentText;
     setTab(state.tab,false);
@@ -283,6 +316,7 @@
     $('reconciliation').innerHTML=issues.length?issues.map((issue,index)=>`<div class="fr-reconciliation-item"><span>${String(index+1).padStart(2,'0')}</span><div><h3>${esc(localized(issue.title))}</h3><p>${esc(localized(issue.detail))}</p>${issue.source?`<p>${esc(t('sourceRange'))}: ${esc(issue.source.sheet||'')}!${esc(issue.source.range||'')}</p>`:''}</div></div>`).join(''):`<p class="fr-muted">${esc(t('noReconciliationIssues'))}</p>`;
   }
   function renderOperations() {
+    if(isCountrySpend())return;
     if(!region.operationsEnabled){
       $('refresh-ops').hidden=true;
       const total=aggregate(rowsFor()),kms=total.billedKms;
@@ -356,16 +390,26 @@
     if(sequence===idleSequence){$('refresh-idle').disabled=false;renderIdle();}
   }
   function setTab(tab,save=true) {
-    state.tab=tabs.includes(tab)?tab:'opening';
-    document.querySelectorAll('[data-tab]').forEach(el=>{el.classList.toggle('active',el.dataset.tab===state.tab);el.setAttribute('aria-current',el.dataset.tab===state.tab?'page':'false');});
-    document.querySelectorAll('[data-panel]').forEach(el=>el.hidden=el.dataset.panel!==state.tab);
-    const index=tabs.indexOf(state.tab);$('presentation-position').textContent=t('presentationSection',{index:index+1,total:tabs.length});$('presentation-prev').disabled=index===0;$('presentation-next').disabled=index===tabs.length-1;
+    const visibleTabs=availableTabs(),countrySpend=isCountrySpend();
+    state.tab=visibleTabs.includes(tab)?tab:'opening';
+    document.querySelectorAll('[data-tab]').forEach(el=>{el.hidden=!visibleTabs.includes(el.dataset.tab);el.classList.toggle('active',el.dataset.tab===state.tab);el.setAttribute('aria-current',el.dataset.tab===state.tab?'page':'false');});
+    document.querySelectorAll('[data-panel]').forEach(el=>el.hidden=el.dataset.panel!==state.tab||(countrySpend&&el.dataset.panel!=='sources'));
+    window.FinancialCountrySpend?.setTab(state.tab);
+    const index=visibleTabs.indexOf(state.tab);$('presentation-position').textContent=t('presentationSection',{index:index+1,total:visibleTabs.length});$('presentation-prev').disabled=index===0;$('presentation-next').disabled=index===visibleTabs.length-1;
     if(state.tab==='idle')loadIdle();
     if(save)persistSettings();
   }
   function changeSelection() { fillFilters();render();persistSettings();loadOperations();if(idleResult||state.tab==='idle')loadIdle(); }
   function download(name,content,type) { const url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000); }
-  function downloadCsv() {
+  function downloadCsv(cardSpend=isCountrySpend()) {
+    if(hasCountrySpend()&&cardSpend){
+      const detail=data.cardCountryCategoryRecords?.length?data.cardCountryCategoryRecords:data.cardCountryRecords;
+      const headings=['countryCode','country','period','category','cardExpensesUSD','transactions'];
+      const cell=value=>`"${String(value??'').replace(/"/g,'""')}"`;
+      const lines=detail.filter(row=>(state.country==='ALL'||row.countryCode===state.country)&&row.month>=state.start&&row.month<=state.end).map(row=>[row.countryCode,countryName(row.countryCode),`${data.meta.year}-${String(row.month).padStart(2,'0')}`,row.category?(localized(data.cardCategoryLabels?.[row.category])||row.category):t('total'),row.amount,row.transactions].map(cell).join(','));
+      download(`${region.code}-card-spend-${data.meta.year}-${state.start}-${state.end}-${state.country}.csv`,'\uFEFF'+headings.map(cell).join(',')+'\r\n'+lines.join('\r\n'),'text/csv;charset=utf-8');
+      return;
+    }
     const headings=['countryCode','country','period','income','billables','managementFees','revenue','localExpenses','contributionProfit','allocatedOverhead','expenses','profit','margin','returnOnCost',...costKeys];
     const cell=value=>`"${String(value??'').replace(/"/g,'""')}"`;
     const lines=rowsFor().map(row=>[row.countryCode,countryName(row.countryCode),row.period,...headings.slice(3,14).map(key=>row[key]),...costKeys.map(key=>row.costs[key])].map(cell).join(','));
@@ -394,6 +438,7 @@
     $('mbr-btn').addEventListener('click',()=>{state.start=state.end=9;state.country='ALL';state.tab='opening';changeSelection();});
     $('latest-btn').addEventListener('click',()=>{state.start=state.end=data.meta.lastMonth;changeSelection();});
     document.addEventListener('click',event=>{
+      if(event.target.closest('[data-spend-export]'))downloadCsv(true);
       const tab=event.target.closest('[data-tab],[data-go]');if(tab)setTab(tab.dataset.tab||tab.dataset.go);
       const country=event.target.closest('[data-country]');if(country){state.country=country.dataset.country;changeSelection();}
       const month=event.target.closest('[data-month]');if(month){state.start=state.end=Number(month.dataset.month);changeSelection();}
@@ -409,19 +454,19 @@
     $('customize-form').addEventListener('submit',event=>{event.preventDefault();settings=sanitizeSettings({...settings,title:$('custom-title').value,target:Number($('margin-target').value),unit:$('display-unit').value,commentTitle:$('comment-title').value,commentText:$('comment-text').value});const saved=persistSettings();$('customize-dialog').close();render();if(saved)toast(t('settingsSaved'));});
     $('present-btn').addEventListener('click',()=>{document.body.classList.add('fr-present');$('exit-present').hidden=false;$('presentation-nav').hidden=false;setTab('opening');window.scrollTo({top:0,behavior:'smooth'});loadIdle();});
     function exitPresent(){document.body.classList.remove('fr-present','fr-present-filters');$('presentation-filters').setAttribute('aria-expanded','false');$('exit-present').hidden=true;$('presentation-nav').hidden=true;}
-    function presentationStep(direction){const index=tabs.indexOf(state.tab),next=index+direction;if(next>=0&&next<tabs.length){setTab(tabs[next]);window.scrollTo({top:0,behavior:'smooth'});}}
+    function presentationStep(direction){const visibleTabs=availableTabs(),index=visibleTabs.indexOf(state.tab),next=index+direction;if(next>=0&&next<visibleTabs.length){setTab(visibleTabs[next]);window.scrollTo({top:0,behavior:'smooth'});}}
     $('presentation-filters').addEventListener('click',()=>{const visible=document.body.classList.toggle('fr-present-filters');$('presentation-filters').setAttribute('aria-expanded',String(visible));});
     $('presentation-prev').addEventListener('click',()=>presentationStep(-1));$('presentation-next').addEventListener('click',()=>presentationStep(1));
     document.addEventListener('keydown',event=>{if(document.body.classList.contains('fr-present')&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(event.target.tagName)&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();presentationStep(event.key==='ArrowRight'?1:-1);}});
     $('exit-present').addEventListener('click',exitPresent);document.addEventListener('keydown',event=>{if(event.key==='Escape')exitPresent();});
-    $('print-btn').addEventListener('click',()=>window.print());$('csv-btn').addEventListener('click',downloadCsv);
+    $('print-btn').addEventListener('click',()=>window.print());$('csv-btn').addEventListener('click',()=>downloadCsv());
     ['revenue-change','cost-change','horizon'].forEach(id=>$(id).addEventListener('input',event=>{settings[{'revenue-change':'revenueChange','cost-change':'costChange',horizon:'horizon'}[id]]=Number(event.target.value);renderScenario();persistSettings();}));
     $('scenario-reset').addEventListener('click',()=>{settings.revenueChange=0;settings.costChange=0;settings.horizon=3;renderScenario();persistSettings();});
     $('download-data').addEventListener('click',()=>download(`${region.code}-financial-data.json`,JSON.stringify(data,null,2),'application/json'));
     $('import-data').addEventListener('change',event=>{importFinancial(event.target.files[0]);event.target.value='';});
     $('restore-data').addEventListener('click',()=>{try{localStorage.removeItem(storageKey('DATA'));}catch(error){toast(t('storageUnavailable'));return;}selectData(sourceData);imported=false;state.start=state.end=data.meta.lastMonth;operationKey='';changeSelection();toast(t('dataRestored'));});
     $('export-settings').addEventListener('click',()=>{if(!$('customize-form').reportValidity())return;const edited=sanitizeSettings({...settings,title:$('custom-title').value,target:Number($('margin-target').value),unit:$('display-unit').value,commentTitle:$('comment-title').value,commentText:$('comment-text').value});download(`${region.code}-financial-settings.json`,JSON.stringify({schemaVersion:1,region:region.code,settings:edited,state},null,2),'application/json');});
-    $('import-settings').addEventListener('change',async event=>{const file=event.target.files[0];event.target.value='';if(!file)return;try{if(file.size>100000)throw new Error('size');const payload=JSON.parse(await file.text());if(payload.schemaVersion!==1||(payload.region||'latam')!==region.code)throw new Error('schema');const nextSettings=sanitizeSettings(payload.settings);let nextState={...state};if(payload.state){const proposed=payload.state;if(!Number.isInteger(proposed.start)||!Number.isInteger(proposed.end)||proposed.start<1||proposed.end>12||proposed.start>proposed.end||!['ALL',...codes].includes(proposed.country)||!tabs.includes(proposed.tab))throw new Error('state');nextState={country:proposed.country,start:proposed.start,end:proposed.end,tab:proposed.tab};}settings=nextSettings;state=nextState;fillFilters();const saved=persistSettings();$('customize-dialog').close();changeSelection();if(saved)toast(t('settingsImported'));}catch(error){toast(t('invalidSettings'));}});
+    $('import-settings').addEventListener('change',async event=>{const file=event.target.files[0];event.target.value='';if(!file)return;try{if(file.size>100000)throw new Error('size');const payload=JSON.parse(await file.text());if(payload.schemaVersion!==1||(payload.region||'latam')!==region.code)throw new Error('schema');const nextSettings=sanitizeSettings(payload.settings);let nextState={...state};if(payload.state){const proposed={...payload.state};if(region.code==='na'&&hasCountrySpend()&&proposed.country==='NA')proposed.country='ALL';if(!Number.isInteger(proposed.start)||!Number.isInteger(proposed.end)||proposed.start<1||proposed.end>12||proposed.start>proposed.end||!selectableCountries().includes(proposed.country)||!tabs.includes(proposed.tab))throw new Error('state');nextState={country:proposed.country,start:proposed.start,end:proposed.end,tab:proposed.tab};}settings=nextSettings;state=nextState;fillFilters();const saved=persistSettings();$('customize-dialog').close();changeSelection();if(saved)toast(t('settingsImported'));}catch(error){toast(t('invalidSettings'));}});
   }
   async function startApp(loginUser) {
     user=loginUser;

@@ -177,6 +177,7 @@ def main():
         assert card_rows[0] == ("Transaction Date", "User", "Merchant Name", "Ramp Category", "Ramp Department", "Statement Amount", "Month")
         category_groups = defaultdict(lambda: {"amount": 0.0, "transactions": 0})
         country_groups = defaultdict(lambda: {"amount": 0.0, "transactions": 0})
+        country_category_groups = defaultdict(lambda: {"amount": 0.0, "transactions": 0})
         category_originals = defaultdict(set)
         date_month_mismatches = defaultdict(lambda: {"count": 0, "amount": 0.0})
         excluded_text = Counter()
@@ -203,7 +204,8 @@ def main():
             category = aliases.get(original_category, original_category)
             assert category in category_labels, category
             category_originals[category].add(original_category)
-            for group in [category_groups[(month, category)], country_groups[(country_code, month)]]:
+            for group in [category_groups[(month, category)], country_groups[(country_code, month)],
+                          country_category_groups[(country_code, month, category)]]:
                 group["amount"] += amount
                 group["transactions"] += 1
             if amount < 0:
@@ -213,6 +215,21 @@ def main():
                         for (month, category), value in sorted(category_groups.items())]
         card_country_records = [{"countryCode": code, "month": month, **country_groups[(code, month)]}
                                 for code in ["US", "CA"] for month in range(1, 10)]
+        card_country_category_records = [
+            {"countryCode": code, "month": month, "category": category, **value}
+            for (code, month, category), value in sorted(country_category_groups.items())]
+        for row in card_country_records:
+            detail = [c for c in card_country_category_records
+                      if c["countryCode"] == row["countryCode"] and c["month"] == row["month"]]
+            check(sum(c["amount"] for c in detail), row["amount"],
+                  f"card country categories {row['countryCode']} month {row['month']}")
+            assert sum(c["transactions"] for c in detail) == row["transactions"]
+        for row in card_records:
+            detail = [c for c in card_country_category_records
+                      if c["month"] == row["month"] and c["category"] == row["category"]]
+            check(sum(c["amount"] for c in detail), row["amount"],
+                  f"card regional category {row['category']} month {row['month']}")
+            assert sum(c["transactions"] for c in detail) == row["transactions"]
         card_differences = []
         for row in records:
             card_differences.append(check(sum(c["amount"] for c in card_records if c["month"] == row["month"]), row["costs"]["card"], f"card month {row['month']}"))
@@ -319,6 +336,7 @@ def main():
             "cardCategoryRecords": card_records, "cardCategoryLabels": category_labels,
             "cardCategoryAliases": {key: sorted(items) for key,items in sorted(category_originals.items())},
             "cardCountryRecords": card_country_records,
+            "cardCountryCategoryRecords": card_country_category_records,
             "procurementCategoryRecords": procurement_records, "procurementCategoryLabels": procurement_labels,
             "methodology": {
                 "revenueFormula": "income + billables + managementFees", "profitFormula": "revenue - expenses",
@@ -335,6 +353,8 @@ def main():
             "reconciliation": {
                 "checks": {"revenueAndProfitFormulasMatch": True, "costComponentsMatchPnl": True, "countryTotalsMatchSource": True,
                            "cardCategoriesMatchPivot": True, "cardCountryTotalsMatchPivot": True, "procurementCategoriesMatchPnl": True,
+                           "cardCountryCategoriesMatchCountryTotals": True,
+                           "cardCountryCategoriesMatchRegionalCategories": True,
                            "presentationTotalsMatchSource": True, "transactionDatesMatchMonths": mismatch_count == 0,
                            "allTransactionYearsMatchReport": len(out_of_year) == 0, "cachedFormulaErrorCount": len(errors),
                            "maxCostComponentDifference": max(abs(x) for x in component_differences),
@@ -352,6 +372,7 @@ def main():
         OUTPUT.write_text(json.dumps(tidy(result), ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
         print(json.dumps({"output": OUTPUT.name, "records": len(records), "countryScopes": ["NA"],
                           "cardCountryRecords": len(card_country_records), "cardCategoryRecords": len(card_records),
+                          "cardCountryCategoryRecords": len(card_country_category_records),
                           "procurementCategoryRecords": len(procurement_records), "totals": tidy(totals),
                           "checks": tidy(result["reconciliation"]["checks"]), "issues": [i["id"] for i in issues]}, ensure_ascii=True, indent=2))
     finally:

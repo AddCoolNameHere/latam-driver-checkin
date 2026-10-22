@@ -11,7 +11,7 @@
     na: Object.freeze({
       code: 'na', shortLabel: 'NA', labelKey: 'regionNa', brandKey: 'brandNa',
       subtitleKey: 'subtitleNa', allCountriesKey: 'allCountriesNa', statementScopeKey: 'statementScopeRegional',
-      dataUrl: 'Financial%20Reports/financial-na-data.json?v=20261021editorial',
+      dataUrl: 'Financial%20Reports/financial-na-data.json?v=20261022countries',
       storageNamespace: 'AC_FINANCIAL_NA', operationsEnabled: false, reportUrl: 'financial-report-na.html'
     }),
     apac: Object.freeze({
