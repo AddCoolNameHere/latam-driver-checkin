@@ -14,7 +14,7 @@
  * - [data-theme="dark"]    → dark mode (toggle pelo theme.js)
  *
  * O toggle é controlado por theme.js e aparece (botão flutuante
- * no canto inferior direito) só pra usuários em ADMIN_USERNAMES.
+ * no canto inferior direito) para todos os usuários logados.
  *
  * ============================================================
  */
@@ -146,8 +146,8 @@ table, [class*="value"], [class*="-num"], [class*="amount"], [class*="money"] { 
 
 /* ============================================================
  * Floating theme toggle (injetado pelo theme.js)
- * Nas páginas com sidebar (body.sv-shell) ele some: o toggle vai
- * pro rodapé da sidebar e pra paleta de comandos (Ctrl+K).
+ * Visível também nas páginas com sidebar, sem precisar abrir
+ * o menu do usuário ou a paleta de comandos (Ctrl+K).
  * ============================================================ */
 .theme-toggle-btn {
   position: fixed;
@@ -177,7 +177,6 @@ table, [class*="value"], [class*="-num"], [class*="amount"], [class*="money"] { 
   transform: rotate(-12deg) scale(1.04);
 }
 .theme-toggle-btn:active { transform: scale(0.96); }
-body.sv-shell .theme-toggle-btn { display: none !important; }
 
 /* Em telas pequenas, recolhe pra não cobrir conteúdo */
 @media (max-width: 640px) {
