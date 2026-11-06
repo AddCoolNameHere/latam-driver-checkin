@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Documentos do Motorista · Aceolution LATAM</title>
+<!-- Integração com o app do motorista (/app/). Só age com ?app=1. -->
+<script src="driver-embed.js?v=20261106app"></script>
 <link rel="icon" type="image/png" href="aceolution-globe.png">
 <link rel="stylesheet" href="theme.css?v=20261023toggle">
 <!-- Kit de UI do portal: bandeiras SVG nos países (Windows não desenha emoji de
@@ -1485,6 +1487,25 @@ window.addEventListener('beforeunload', (e) => {
 applyI18n();
 loadDrivers();
 loadSubmittedStatus();
+
+// Dentro do app (/app/): país e nome já são conhecidos pelo login, então os
+// passos 1 e 2 se resolvem sozinhos e a página abre direto no formulário.
+if (window.SVEmbed) SVEmbed.run({
+  page: 'docs',
+  hide: ['#step-2-back', '#step-3-back', '#step-2 .step-sub'],
+  prepare: (s) => {
+    const step1 = document.getElementById('step-1');
+    if (!step1 || step1.classList.contains('hidden') || !state.countries || !state.countries.length) return;
+    const want = String(s.country || '').trim().toLowerCase();
+    const c = state.countries.find(x => String(x).trim().toLowerCase() === want);
+    if (c) selectCountry(c);
+  },
+  after: () => {
+    const step2 = document.getElementById('step-2');
+    const next = document.getElementById('step-2-next');
+    if (step2 && !step2.classList.contains('hidden') && next && !next.disabled) next.click();
+  },
+});
 
 </script>
 </body>

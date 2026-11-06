@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Daily Check-in · Aceolution LATAM</title>
+<!-- Integração com o app do motorista (/app/). Só age com ?app=1. -->
+<script src="../driver-embed.js?v=20261106app"></script>
 <link rel="icon" type="image/png" href="../aceolution-globe.png">
 <!-- Aquece as conexões dos hosts críticos: o fetch dos drivers e o mapa
      começam com o handshake TLS já pago (ajuda em 4G ruim). -->
@@ -1792,13 +1794,16 @@ function renderDrivers(drivers) {
   // Mantém o primeiro <option> (placeholder "-- Escolha --"), remove optgroups antigos
   while (select.children.length > 1) select.removeChild(select.lastElementChild);
 
-  let lastCountry = '';
+  // null (não '') — motorista sem país na HR vinha primeiro, não abria grupo e
+  // ia parar DENTRO do <option> placeholder. Sem país → grupo "—".
+  let lastCountry = null;
   drivers.forEach(d => {
-    if (d.country !== lastCountry) {
+    const country = d.country || '—';
+    if (country !== lastCountry) {
       const optgroup = document.createElement('optgroup');
-      optgroup.label = d.country;
+      optgroup.label = country;
       select.appendChild(optgroup);
-      lastCountry = d.country;
+      lastCountry = country;
     }
     const opt = document.createElement('option');
     opt.value = JSON.stringify(d);
@@ -1928,9 +1933,21 @@ async function loadDriverSsds() {
 
   // 2) Revalida no fundo
   try {
-    const res = await fetch(CONFIG.scriptUrl + '?action=getDriverSsds&email=' + encodeURIComponent(state.driver.email));
-    const data = await res.json();
-    const ssds = (data.success && data.ssds) ? data.ssds : [];
+    const email = state.driver.email;
+    // Backend até v5.83 lê a aba Assets só no layout do Forms antigo e casa pelo
+    // VID: devolve [] ou os discos de uma resposta velha (às vezes de quem usava
+    // o carro antes). O último relatório semanal do PRÓPRIO motorista (por e-mail)
+    // é mais confiável → busca os dois em paralelo e prefere o relatório.
+    const [data, fromForm] = await Promise.all([
+      fetch(CONFIG.scriptUrl + '?action=getDriverSsds&email=' + encodeURIComponent(email))
+        .then(r => r.json()).catch(() => null),
+      ssdsFromLastAssetsForm(email),          // null = falhou, [] = não tem
+    ]);
+    // Sem rede nas duas: mantém a lista do cache local (cai no catch abaixo).
+    if (data === null && fromForm === null) throw new Error('sem rede');
+    const ssds = (fromForm && fromForm.length) ? fromForm
+      : ((data && data.success && Array.isArray(data.ssds)) ? data.ssds : []);
+    if (!state.driver || state.driver.email !== email) return;   // trocou de motorista
     state.driverSsds = ssds;
     try { localStorage.setItem(cacheKey, JSON.stringify(ssds)); } catch (e) {}
     // Não sobrescreve uma escolha já feita pelo motorista
@@ -1941,6 +1958,44 @@ async function loadDriverSsds() {
       state.driverSsds = [];
       populateSsdSelect();
     }
+  }
+}
+
+/**
+ * Discos a partir do último Relatório Semanal de Equipamentos (getLastAssetsForm).
+ * A aba Assets Management tem cabeçalho sem a coluna de e-mail, então nas linhas
+ * do assets.html cada valor vem um rótulo à esquerda: compensa igual ao assets.html.
+ * Retorna [{code, inUse}], [] se não há relatório, ou null se a busca falhou — nunca lança.
+ */
+async function ssdsFromLastAssetsForm(email) {
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getLastAssetsForm&email=' + encodeURIComponent(email));
+    const data = await res.json();
+    const a = data && data.success && data.assets;
+    if (!a) return [];
+    const keys = Object.keys(a).filter(k => !k.startsWith('_'));
+    const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const iName = keys.findIndex(k => /nome completo|nombre/.test(norm(k)));
+    const shifted = !keys.some(k => /e-?mail/i.test(k)) && iName >= 0 && /@/.test(String(a[keys[iName]] || ''));
+    const val = (re) => {
+      const i = keys.findIndex(k => re.test(norm(k)));
+      if (i < 0) return '';
+      const j = shifted ? i + 1 : i;
+      return j < keys.length ? String(a[keys[j]] || '') : '';
+    };
+    const codes = s => s.split(/[\s,;\/]+/)
+      .map(x => x.replace(/^SN:?/i, '').trim())
+      .filter(x => x.length >= 5 && /\d/.test(x) && !/@/.test(x));
+    const inUse = codes(val(/qual disco esta usando|que disco estas usando/));
+    const others = codes(val(/codigos dos outros|codigos de los discos/));
+    const out = [];
+    inUse.slice(0, 1).forEach(c => out.push({ code: c, inUse: true }));
+    others.forEach(c => { if (!out.some(s => s.code.toUpperCase() === c.toUpperCase())) out.push({ code: c, inUse: false }); });
+    if (out.length) console.log('[Check-in] SSDs do último relatório semanal (' + out.length + ')');
+    return out;
+  } catch (err) {
+    console.warn('[Check-in] fallback de SSDs pelo relatório semanal falhou:', err);
+    return null;
   }
 }
 
@@ -2918,6 +2973,9 @@ setupDnmListeners();   // v5.17: handlers do "Did Not Map" flow
 // ir trabalhar sem ficar refazendo o formulário.
 flushPending();
 window.addEventListener('online', flushPending);
+
+// Dentro do app (/app/): esconde o cabeçalho e seleciona o motorista logado.
+if (window.SVEmbed) SVEmbed.run({ page: 'checkin' });
 
 </script>
 

@@ -302,7 +302,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.83',
+        version: 'v5.84',
         ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
@@ -2192,7 +2192,9 @@ function getDriverProfile_(email) {
     // Pega VID do CTS atual (mais confiável); fallback pra VID Calendar
     const lookupVid = (metrics && metrics.vid) || (vidInfo && vidInfo.vid) || null;
     if (lookupVid) {
-      assets = getDriverAssets_(lookupVid);
+      assets = getDriverAssets_(lookupVid, email);
+    } else if (email) {
+      assets = getDriverAssets_(null, email);   // v5.84
     }
   } catch (e) {
     Logger.log('Erro buscando assets: ' + e);
@@ -4838,12 +4840,15 @@ function _vehicleIssueColumnsIdx(sheet) {
 function getDriverSsdsByEmail_(email) {
   if (!email) return [];
 
-  // Pega VID do driver via VID Calendar
-  const vidIndex = buildVidIndexByEmail_();
-  const vidInfo = vidIndex[email.toLowerCase()];
-  if (!vidInfo || !vidInfo.vid) return [];
-
-  const assets = getDriverAssets_(vidInfo.vid);
+  // v5.84: busca pelo e-mail primeiro (linhas do assets.html têm e-mail na col B);
+  // VID do VID Calendar só como fallback pras linhas do Forms antigo.
+  let assets = getDriverAssets_(null, email);
+  if (!assets) {
+    const vidIndex = buildVidIndexByEmail_();
+    const vidInfo = vidIndex[email.toLowerCase()];
+    if (!vidInfo || !vidInfo.vid) return [];
+    assets = getDriverAssets_(vidInfo.vid);
+  }
   if (!assets) return [];
 
   // Lista combinada: o que está em uso primeiro (marcado), depois os outros
@@ -5745,60 +5750,72 @@ function testBiweeklyTimesheet() {
  *                                    Col 22: Modo hotel
  *                                    Col 27: Comentarios
  */
-function getDriverAssets_(vid) {
-  if (!vid && vid !== 0) return null;
+function getDriverAssets_(vid, email) {
+  const hasVid = !!vid || vid === 0;
+  const target = email ? String(email).trim().toLowerCase() : '';
+  if (!hasVid && !target) return null;
   const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
   const sheet = getSheetWithFallback_(ss, CONFIG.assetsSheet, ['Assets Management', 'Assets']);
   if (!sheet || sheet.getLastRow() < 2) return null;
 
   const data = sheet.getDataRange().getValues();
-  const vidStr = String(vid).trim();
+  const vidStr = hasVid ? String(vid).trim() : '';
 
-  // Procura a linha mais recente desse VID. Como a aba já está ordenada
-  // por data desc (mais recente primeiro), o primeiro match é o mais novo.
-  let mostRecent = null;
-  let mostRecentTs = null;
+  // v5.84: a aba MISTURA dois layouts. Linhas do Forms antigo: B=nome, C=VID…
+  // Linhas do assets.html (v5.23+): B=e-mail, C=nome, D=VID… → tudo +1 coluna.
+  // Antes lia sempre o layout antigo: nas linhas novas o "VID" era o nome, então
+  // nunca casava e o getDriverSsds voltava [] pra todo mundo.
+  // E-mail tem prioridade: várias linhas novas gravaram o NOME no campo VID
+  // (prefill quebrado do assets.html, corrigido 2026-11-06).
+  let byEmail = null, byEmailTs = null, byVid = null, byVidTs = null;
   for (let i = 1; i < data.length; i++) {
-    const rowVid = data[i][2];
-    if (!rowVid && rowVid !== 0) continue;
-    if (String(rowVid).trim() !== vidStr) continue;
-
     const ts = data[i][0];
-    // Se data inválida, ignora; senão compara
     if (!(ts instanceof Date)) continue;
-    if (!mostRecentTs || ts > mostRecentTs) {
-      mostRecentTs = ts;
-      mostRecent = data[i];
+    const off = /@/.test(String(data[i][1] || '')) ? 1 : 0;
+    if (target && off === 1 && String(data[i][1]).trim().toLowerCase() === target) {
+      if (!byEmailTs || ts > byEmailTs) { byEmailTs = ts; byEmail = { row: data[i], off: off }; }
+    }
+    if (hasVid) {
+      const rowVid = data[i][2 + off];
+      if ((rowVid || rowVid === 0) && String(rowVid).trim() === vidStr) {
+        if (!byVidTs || ts > byVidTs) { byVidTs = ts; byVid = { row: data[i], off: off }; }
+      }
     }
   }
 
-  if (!mostRecent) return null;
+  const hit = byEmail || byVid;
+  if (!hit) return null;
+  const r = hit.row, o = hit.off;
+  const col = (oldIdx) => r[oldIdx + o];   // índice do layout antigo + deslocamento
 
-  // Parse da lista de "outros discos" — pode vir separada por \n, vírgula,
-  // ponto-e-vírgula, espaço, etc. Normalizamos pra array de strings limpas.
-  const otherDiscsRaw = mostRecent[16] ? String(mostRecent[16]) : '';
-  const otherDiscs = otherDiscsRaw
-    .split(/[\n,;]+/)
-    .map(s => s.replace(/^SN:?\s*/i, '').trim())  // remove prefixo "SN:" comum
-    .filter(s => s && s !== '.' && s.length > 1);
+  const cleanDisc = (s) => String(s).replace(/^SN:?\s*/i, '').trim();
+  // Códigos vêm separados por \n, vírgula, ponto-e-vírgula ou ESPAÇO (o mais comum).
+  // Só fica o que parece código de disco (≥5 caracteres e com dígito).
+  const otherDiscs = String(col(16) || '')
+    .split(/[\s,;\/]+/)
+    .map(cleanDisc)
+    .filter(s => s.length >= 5 && /\d/.test(s));
+  const inUseTok = String(col(15) || '').split(/[\s,;\/]+/).map(cleanDisc)
+    .filter(s => s.length >= 5 && /\d/.test(s));
 
+  const rowVid = String(col(2) || '').trim();
   return {
-    vid: vidStr,
-    name: mostRecent[1] || '',
-    country: mostRecent[3] || '',
-    plate: mostRecent[12] || '',
-    odometer: safeNumber(mostRecent[10]),
-    discCount: safeNumber(mostRecent[14]),
-    discInUse: mostRecent[15] ? String(mostRecent[15]).replace(/^SN:?\s*/i, '').trim() : '',
+    vid: /^\d{4,6}$/.test(rowVid) ? rowVid : vidStr,
+    name: col(1) || '',
+    country: col(3) || '',
+    plate: col(12) || '',
+    odometer: safeNumber(col(10)),
+    discCount: safeNumber(col(14)),
+    discInUse: inUseTok[0] || '',
     otherDiscs: otherDiscs,
-    phoneCount: safeNumber(mostRecent[17]),
-    phoneModel: mostRecent[18] ? String(mostRecent[18]).trim() : '',
-    phoneImei: mostRecent[19] ? String(mostRecent[19]).trim() : '',
-    breathalyzer: safeNumber(mostRecent[20]),
-    city: mostRecent[21] ? String(mostRecent[21]).trim() : '',
-    hotelMode: mostRecent[22] || '',
-    comments: mostRecent[27] ? String(mostRecent[27]).trim() : '',
-    lastUpdate: mostRecentTs.toISOString(),
+    phoneCount: safeNumber(col(17)),
+    phoneModel: col(18) ? String(col(18)).trim() : '',
+    phoneImei: col(19) ? String(col(19)).trim() : '',
+    breathalyzer: safeNumber(col(20)),
+    city: col(21) ? String(col(21)).trim() : '',
+    hotelMode: col(22) || '',
+    comments: col(27) ? String(col(27)).trim() : '',
+    lastUpdate: (byEmail ? byEmailTs : byVidTs).toISOString(),
   };
 }
 

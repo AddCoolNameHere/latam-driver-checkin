@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Cash Flow LATAM — Aceolution</title>
+<!-- Integração com o app do motorista (/app/). Só age com ?app=1. -->
+<script src="driver-embed.js?v=20261106app"></script>
 <link rel="icon" type="image/png" href="aceolution-globe.png">
 <!-- Tokens + fonte Geist do portal (o theme.css faz @import do Google Fonts;
      preconnect/preload deixam isso em paralelo) + kit de UI (emoji → ícone SVG). -->
@@ -1729,6 +1731,10 @@ function escapeHtml(s) {
 
 applyI18n();
 populateCategoryDropdown();
+
+// Dentro do app (/app/): esconde o cabeçalho e seleciona o motorista logado
+// (a lista só carrega depois de escolher "Pedir dinheiro"/"Subir recibo").
+if (window.SVEmbed) SVEmbed.run({ page: 'cash' });
 </script>
 </body>
 </html>

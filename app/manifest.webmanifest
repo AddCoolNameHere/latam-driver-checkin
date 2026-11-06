@@ -1,0 +1,14 @@
+{
+  "name": "Street View LATAM — Motoristas",
+  "short_name": "SV LATAM",
+  "description": "Check-in, equipamentos, cash e documentos dos motoristas Street View LATAM.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F8FAFC",
+  "theme_color": "#1A365D",
+  "icons": [
+    { "src": "../aceolution-globe-hd.png", "sizes": "659x659", "type": "image/png", "purpose": "any" }
+  ]
+}

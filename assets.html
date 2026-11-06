@@ -6,6 +6,8 @@
 <!-- App gerencia o próprio PT/ES — impede o auto-translate do browser de bagunçar a UI (ex: "Dom" virando "Sol" no celular) -->
 <meta name="google" content="notranslate">
 <title>Relatório Semanal de Equipamentos · Aceolution LATAM</title>
+<!-- Integração com o app do motorista (/app/). Só age com ?app=1. -->
+<script src="driver-embed.js?v=20261106app"></script>
 <link rel="icon" type="image/png" href="aceolution-globe.png">
 <link rel="stylesheet" href="theme.css?v=20261023toggle">
 <!-- Kit de UI do portal: emoji de ícone → SVG (📷 ✓ ✗ ←) e bandeiras SVG nos chips de país. -->
@@ -714,6 +716,7 @@
         <label class="with-hint" for="vid-input">
           <span data-i18n="vidLabel">VID (ID do veículo)</span>
           <span class="prefilled-pill prefilled-vid hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
+          <span class="label-hint" id="vid-source-hint"></span>
         </label>
         <input type="text" id="vid-input" inputmode="numeric" placeholder="40623">
       </div>
@@ -1079,6 +1082,7 @@ const I18N = {
     prefillBannerHasData: 'Achei sua última resposta de {date}. Os campos fixos vieram preenchidos — confere e ajusta se mudou algo.',
     prefillBannerNoData: 'Não achei resposta anterior sua. Você é primeira vez? Preenche tudo com calma.',
     odometerLastHint: 'Última leitura: {value} km',
+    vidFromCts: 'Último VID na CTS ({date}) — confere',
     footerText: 'Plataforma interna — Aceolution do Brasil Ltda.',
   },
   es: {
@@ -1139,6 +1143,7 @@ const I18N = {
     prefillBannerHasData: 'Encontré tu última respuesta del {date}. Los campos fijos vienen pre-llenados — revisa y ajusta si algo cambió.',
     prefillBannerNoData: 'No encontré respuesta anterior tuya. ¿Es la primera vez? Rellena todo con calma.',
     odometerLastHint: 'Última lectura: {value} km',
+    vidFromCts: 'Último VID en la CTS ({date}) — revisalo',
     footerText: 'Plataforma interna — Aceolution Brasil Ltda.',
   },
   en: {
@@ -1199,6 +1204,7 @@ const I18N = {
     prefillBannerHasData: 'I found your last response from {date}. The fixed fields came pre-filled — review and adjust if anything changed.',
     prefillBannerNoData: 'I did not find any previous response from you. Is this your first time? Fill everything in carefully.',
     odometerLastHint: 'Last reading: {value} km',
+    vidFromCts: 'Last VID in CTS ({date}) — please check',
     footerText: 'Internal platform — Aceolution Brasil Ltda.',
   },
 };
@@ -1324,9 +1330,25 @@ document.getElementById('driver-select').addEventListener('change', async (e) =>
 // LOAD LAST ASSETS (pre-fill)
 // ================================================================
 
+// Limpa o que o prefill escreve — trocando de motorista não pode sobrar VID/placa do anterior.
+function resetPrefill() {
+  ['vid-input', 'plate-input', 'vehicle-date-input', 'city-input', 'disk-count-input',
+   'disks-other-input', 'phone-count-input', 'phone-model-input', 'phone-imei-input',
+   'breath-count-input'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.querySelectorAll('.prefilled-pill').forEach(p => p.classList.add('hidden'));
+  ['vid-source-hint', 'odometer-last-hint'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = ''; });
+  document.querySelectorAll('#country-group .chip').forEach(c => c.classList.remove('selected'));
+  state.selections.country = null;
+}
+
 async function loadDriverAssets() {
-  // 1) Cache local primeiro (rápido)
-  const cached = readLocalCache(state.selectedDriver.email);
+  const email = state.selectedDriver.email;
+  resetPrefill();
+  loadFleetVids().catch(() => {});   // adianta a busca do VID da CTS (usada no passo 3)
+
+  // 1) Cache local primeiro (rápido). Normaliza: caches antigos guardaram a
+  //    resposta do backend ainda deslocada (ver normalizeAssets).
+  const cached = normalizeAssets(readLocalCache(email));
   if (cached) {
     state.lastAssets = cached;
     applyPrefill(cached);
@@ -1335,13 +1357,15 @@ async function loadDriverAssets() {
   // 2) Sempre busca backend (source of truth)
   try {
     const url = CONFIG.scriptUrl + '?action=getLastAssetsForm&email=' +
-      encodeURIComponent(state.selectedDriver.email);
+      encodeURIComponent(email);
     const res = await fetch(url);
     const data = await res.json();
+    if (!state.selectedDriver || state.selectedDriver.email !== email) return;  // trocou de motorista no meio
     if (data.success && data.assets) {
-      state.lastAssets = data.assets;
-      writeLocalCache(state.selectedDriver.email, data.assets);
-      applyPrefill(data.assets);
+      const assets = normalizeAssets(data.assets);
+      state.lastAssets = assets;
+      writeLocalCache(email, assets);
+      applyPrefill(assets);
     } else if (!cached) {
       // Sem cache e sem backend → mostra banner vazio
       state.lastAssets = null;
@@ -1350,6 +1374,103 @@ async function loadDriverAssets() {
   } catch (err) {
     console.warn('[Assets] backend getDriverAssets falhou:', err);
     if (!cached) renderPrefillBanner();
+  }
+
+  // 3) VID ainda vazio (primeira vez, ou o último envio gravou lixo no VID):
+  //    sugere o VID que a CTS registrou por último pra esse motorista.
+  if (!getVal('vid-input')) await prefillVidFromCts(email);
+}
+
+// ================================================================
+// FIX 2026-11-06 — resposta deslocada do getLastAssetsForm
+// ================================================================
+/**
+ * A aba Assets Management tem o cabeçalho do Google Forms antigo, SEM a coluna
+ * de e-mail, mas o saveAssetWeekly_ grava A=data, B=e-mail, C=nome, D=VID…
+ * Então o getLastAssetsForm (que monta o objeto pelos rótulos) devolvia cada
+ * valor UM rótulo à esquerda do certo: sob "VID" vinha o nome, sob "PATENTE"
+ * vinham os targets, sob "ciudad" os bafômetros. O prefill jogava isso no
+ * formulário, o motorista reenviava e a sujeira se propagava toda semana.
+ *
+ * Detecta o deslocamento (valor sob "Nome Completo" é um e-mail e não existe
+ * rótulo de e-mail) e anda cada valor um rótulo pra direita. Se um dia o
+ * cabeçalho for corrigido na planilha, não mexe em nada.
+ */
+function normalizeAssets(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  const keys = Object.keys(obj).filter(k => !k.startsWith('_'));
+  if (keys.some(k => /e-?mail/i.test(k))) return obj;          // já tem rótulo de e-mail → alinhado
+  const nameIdx = keys.findIndex(k => /nome completo|nombre/i.test(k));
+  if (nameIdx < 0 || !/@/.test(String(obj[keys[nameIdx]] || ''))) return obj;
+
+  const out = {};
+  Object.keys(obj).forEach(k => { if (k.startsWith('_')) out[k] = obj[k]; });
+  keys.forEach((k, i) => {
+    if (i === nameIdx) out['Endereço de e-mail'] = obj[k];      // B de verdade
+    out[k] = i < nameIdx ? obj[k]                               // Carimbo (A) já está certo
+      : (i + 1 < keys.length ? obj[keys[i + 1]] : '');
+  });
+  out._shiftFixed = true;
+  console.log('[Assets] resposta do backend realinhada (cabeçalho da aba sem coluna de e-mail)');
+  return out;
+}
+
+/**
+ * Validação por campo antes de pré-preencher. Envios antigos já gravaram valor
+ * do campo vizinho (nome no VID, "150" na placa, número na cidade…) — esses
+ * NÃO são sugeridos de novo; o campo fica vazio pro motorista digitar.
+ */
+const PREFILL_OK = {
+  vid: v => /^\s*(?:vid[\s:#-]*)?\d{4,6}\s*$/i.test(String(v)),
+  plate: v => {
+    const s = String(v).replace(/[\s.\-]/g, '');
+    return s.length >= 5 && s.length <= 10 && /[a-z]/i.test(s) && /\d/.test(s) && !/@/.test(s);
+  },
+  count: (max) => v => /^\s*\d{1,3}\s*$/.test(String(v)) && Number(v) <= max,
+  text: v => /[a-zà-ÿ]/i.test(String(v)) && !/@/.test(String(v)) && String(v).trim().length >= 2,
+  codes: v => /[a-z0-9]{5,}/i.test(String(v)) && /\d/.test(String(v)) && !/@/.test(String(v)),
+  // Cada IMEI separado (pode vir "35-123456-…" ou "651236/10/…"); avalia token a
+  // token pra uma lista de discos não virar "IMEI" juntando os dígitos.
+  imei: v => String(v).split(/[\s,;]+/).some(tok => /^\d{14,16}$/.test(tok.replace(/[.\-\/]/g, ''))),
+  odometer: v => /^\s*\d[\d.,]{0,9}\s*$/.test(String(v)),
+};
+function cleanVid(v) {
+  const m = String(v || '').match(/\d{4,6}/);
+  return m ? m[0] : '';
+}
+
+// Uma busca por carregamento de página, disparada junto com o getLastAssetsForm.
+let fleetVidsPromise = null;
+function loadFleetVids() {
+  if (!fleetVidsPromise) {
+    // Em produção passa pelo Worker (cache KV, ~0,1 s) — direto no Apps Script leva 15 s+.
+    const base = location.hostname.endsWith('latamace.com') ? '/api' : CONFIG.scriptUrl;
+    fleetVidsPromise = fetch(base + '?action=getFleetVids').then(r => r.json())
+      .catch(err => { fleetVidsPromise = null; throw err; });
+  }
+  return fleetVidsPromise;
+}
+
+/** Último VID que a CTS registrou pra esse e-mail (getFleetVids: por VID, quem rodou por último). */
+async function prefillVidFromCts(email) {
+  try {
+    const data = await loadFleetVids();
+    if (!data || !data.success || !Array.isArray(data.vids)) return;
+    const mine = data.vids
+      .filter(v => String(v.email || '').trim().toLowerCase() === String(email).toLowerCase() && /^\d{4,6}$/.test(String(v.vid)))
+      .sort((a, b) => String(b.lastDate || '').localeCompare(String(a.lastDate || '')));
+    // O motorista pode ter trocado de seleção ou já digitado enquanto carregava.
+    if (!mine.length || !state.selectedDriver || state.selectedDriver.email !== email || getVal('vid-input')) return;
+    setInput('vid-input', String(mine[0].vid), 'prefilled-vid');
+    const hint = document.getElementById('vid-source-hint');
+    // lastDate vem 'YYYY-MM-DD' (sem hora): new Date() leria como meia-noite UTC
+    // e no Brasil mostraria o dia anterior — passa como DD/MM/YYYY (data local).
+    const ld = String(mine[0].lastDate || '');
+    const m = ld.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (hint) hint.textContent = t('vidFromCts').replace('{date}', formatDateLocal(m ? m[3] + '/' + m[2] + '/' + m[1] : ld) || '—');
+    console.log('[Assets] VID sugerido pela CTS: ' + mine[0].vid + ' (último uso ' + mine[0].lastDate + ')');
+  } catch (err) {
+    console.warn('[Assets] getFleetVids falhou (VID fica pro motorista digitar):', err);
   }
 }
 
@@ -1373,14 +1494,19 @@ function writeLocalCache(email, assets) {
   }
 }
 
-// Helper: encontra valor pelo header (match case-insensitive, ignora pontuação)
+// Helper: encontra valor pelo header (match case-insensitive, ignora pontuação e acento).
+// Tira o ACENTO antes de filtrar: antes "odómetro" virava "odmetro" e "códigos"
+// virava "cdigos", e o hint do odômetro / outros discos nunca casavam.
+function normHeader(s) {
+  return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
 function pickHeader(obj, candidates) {
   if (!obj) return '';
   for (const cand of candidates) {
-    const normCand = String(cand).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normCand = normHeader(cand);
     for (const key of Object.keys(obj)) {
       if (key.startsWith('_')) continue;
-      const normKey = String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
+      const normKey = normHeader(key);
       if (normKey.includes(normCand) || normCand.includes(normKey)) {
         const val = obj[key];
         if (val !== null && val !== undefined && val !== '') return val;
@@ -1392,9 +1518,17 @@ function pickHeader(obj, candidates) {
 
 function applyPrefill(assets) {
   renderPrefillBanner();
+  // Só sugere o que passa na validação do campo (ver PREFILL_OK).
+  const fill = (id, candidates, ok, pill) => {
+    const v = pickHeader(assets, candidates);
+    if (v !== '' && ok(v)) setInput(id, v, pill);
+    else if (v !== '') console.log('[Assets] prefill ignorado em ' + id + ' (valor não parece válido)');
+  };
 
   // VID (col D)
-  setInput('vid-input', pickHeader(assets, ['VID']), 'prefilled-vid');
+  const vid = pickHeader(assets, ['VID']);
+  if (vid !== '' && PREFILL_OK.vid(vid)) setInput('vid-input', cleanVid(vid), 'prefilled-vid');
+  else if (vid !== '') console.log('[Assets] prefill ignorado em vid-input (valor não parece um VID)');
 
   // País (col E) — auto-select chip
   const country = String(pickHeader(assets, ['Pais', 'País', 'Country'])).trim();
@@ -1414,10 +1548,10 @@ function applyPrefill(assets) {
   }
 
   // Placa (col N)
-  setInput('plate-input', pickHeader(assets, ['patente', 'placa']), 'prefilled-plate');
+  fill('plate-input', ['patente', 'placa'], PREFILL_OK.plate, 'prefilled-plate');
 
   // Vehicle received date (col O) — formato pode vir como string ou ISO
-  const vdate = pickHeader(assets, ['cuando recibio', 'quando recebeu', 'vehicle received', 'recibió el carro']);
+  const vdate = pickHeader(assets, ['cuando recibio', 'quando recebeu', 'vehicle received', 'recibió el carro', 'cuanto tiempo hace']);
   if (vdate) {
     const iso = parseDateToIso(vdate);
     if (iso) {
@@ -1428,28 +1562,29 @@ function applyPrefill(assets) {
   }
 
   // Cidade (col W)
-  setInput('city-input', pickHeader(assets, ['ciudad', 'cidade', 'city']), 'prefilled-city');
+  fill('city-input', ['ciudad', 'cidade', 'city'], PREFILL_OK.text, 'prefilled-city');
 
   // Disk count (col P)
-  setInput('disk-count-input', pickHeader(assets, ['cuantos discos', 'quantos discos']), 'prefilled-diskcount');
+  fill('disk-count-input', ['cuantos discos', 'quantos discos'], PREFILL_OK.count(50), 'prefilled-diskcount');
 
   // Disks other codes (col R) — NÃO inclui o disco em uso (col Q), driver atualiza esse
-  setInput('disks-other-input', pickHeader(assets, ['codigos de los otros', 'codigos dos outros']), 'prefilled-diskother');
+  fill('disks-other-input', ['codigos de los otros', 'codigos dos outros'], PREFILL_OK.codes, 'prefilled-diskother');
 
   // Phone count (col S)
-  setInput('phone-count-input', pickHeader(assets, ['cuantos celulares', 'quantos celulares']), 'prefilled-phonecount');
+  fill('phone-count-input', ['cuantos celulares', 'quantos celulares'], PREFILL_OK.count(10), 'prefilled-phonecount');
 
   // Phone model (col T)
-  setInput('phone-model-input', pickHeader(assets, ['modelo del celular', 'modelo do celular']), 'prefilled-phonemodel');
+  fill('phone-model-input', ['modelo del celular', 'modelo do celular'], PREFILL_OK.text, 'prefilled-phonemodel');
 
   // Phone IMEI (col U)
-  setInput('phone-imei-input', pickHeader(assets, ['imei']), 'prefilled-phoneimei');
+  fill('phone-imei-input', ['imei'], PREFILL_OK.imei, 'prefilled-phoneimei');
 
   // Breathalyzer count (col V)
-  setInput('breath-count-input', pickHeader(assets, ['alcoholimetros', 'bafometros', 'bafômetros']), 'prefilled-breath');
+  fill('breath-count-input', ['alcoholimetros', 'bafometros', 'bafômetros'], PREFILL_OK.count(20), 'prefilled-breath');
 
   // Odometer (col L) — mostra última leitura como hint, NÃO pré-preenche
-  const lastOdo = pickHeader(assets, ['lectura del odometro', 'valor do odometro', 'odometer']);
+  const odoRaw = pickHeader(assets, ['lectura del odometro', 'valor do odometro', 'odometer']);
+  const lastOdo = odoRaw !== '' && PREFILL_OK.odometer(odoRaw) ? odoRaw : '';
   const odoHint = document.getElementById('odometer-last-hint');
   if (lastOdo) {
     odoHint.textContent = t('odometerLastHint').replace('{value}', lastOdo);
@@ -1771,6 +1906,9 @@ function showToast(msg, type) {
 
 applyI18n();
 loadDrivers();
+
+// Dentro do app (/app/): esconde o cabeçalho e seleciona o motorista logado.
+if (window.SVEmbed) SVEmbed.run({ page: 'assets', hide: ['.step-sub[data-i18n="step1Sub"]'] });
 
 </script>
 

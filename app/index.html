@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>SV LATAM · Motoristas</title>
+<meta name="description" content="App dos motoristas Street View LATAM: check-in, equipamentos, cash e documentos.">
+<meta name="theme-color" content="#F8FAFC">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="../aceolution-globe.png">
+<link rel="apple-touch-icon" href="../aceolution-globe-hd.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="SV LATAM">
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<link rel="stylesheet" href="../theme.css?v=20261023toggle">
+<script>
+  // App de motorista = sempre light (igual às páginas de motorista): não
+  // carrega theme.js, senão herda o dark de um admin no mesmo browser.
+  document.documentElement.removeAttribute('data-theme');
+</script>
+<style>
+/* ============================================================
+ * App do motorista — /app/
+ * Casca única (login + início + barra de abas) em volta das 5
+ * páginas de motorista, que rodam em iframes com ?app=1
+ * (ver ../driver-embed.js). Tokens do theme.css; sempre light.
+ * ============================================================ */
+:root {
+  --top-h: 56px;
+  --nav-h: 64px;
+  --bump: 20px;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --card-r: 16px;
+  --grad: linear-gradient(140deg, #1A365D 0%, #2C5282 55%, #4A9FE0 120%);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-sans);
+  background: var(--c-bg);
+  color: var(--c-text);
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  font-size: 15px;
+  line-height: 1.4;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.hidden { display: none !important; }
+.mono { font-family: var(--font-mono); }
+svg.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ---------- Botões ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 44px; padding: 0 18px; border-radius: 12px;
+  font-weight: 650; font-size: 15px; white-space: nowrap;
+  transition: transform .12s var(--ease-out), background .15s, box-shadow .15s;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--c-primary); color: #fff; box-shadow: 0 6px 16px rgba(44,82,130,.28); }
+.btn-primary:disabled { opacity: .6; box-shadow: none; }
+.btn-soft { background: var(--c-bg-tint); color: var(--c-primary); }
+.btn-sm { height: 34px; padding: 0 12px; font-size: 13px; border-radius: 10px; }
+.btn-block { width: 100%; }
+
+/* ============================================================
+ * LOGIN
+ * ============================================================ */
+.login {
+  position: fixed; inset: 0; overflow-y: auto;
+  background: var(--c-bg);
+  display: flex; flex-direction: column;
+}
+.login-top {
+  position: relative; overflow: hidden;
+  background: var(--grad); color: #fff;
+  padding: calc(var(--sat) + 22px) 24px 84px;
+}
+.login-top::after {
+  content: ""; position: absolute; right: -70px; top: 30px;
+  width: 260px; height: 260px; border-radius: 50%;
+  background: url("../aceolution-globe-hd.png") center/contain no-repeat;
+  opacity: .14; pointer-events: none;
+}
+.login-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 44px; }
+.login-logo { height: 26px; width: auto; }
+.lang-pills { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.16); }
+.lang-pills button { font-size: 12px; font-weight: 650; padding: 5px 10px; border-radius: 999px; color: rgba(255,255,255,.85); }
+.lang-pills button.active { background: #fff; color: var(--c-primary-dark); }
+.login-kicker { font-size: 12px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; opacity: .8; }
+.login-top h1 { font-size: 30px; line-height: 1.12; font-weight: 750; letter-spacing: -.02em; margin: 8px 0 10px; max-width: 320px; }
+.login-top p { font-size: 15px; opacity: .88; max-width: 320px; }
+.login-card {
+  position: relative; z-index: 1;
+  margin: -56px 16px 24px; padding: 22px 20px 20px;
+  background: var(--c-surface); border-radius: 20px;
+  border: 1px solid var(--c-border); box-shadow: var(--shadow-lg);
+  max-width: 460px; align-self: center; width: calc(100% - 32px);
+}
+.login-card label { display: block; font-size: 13px; font-weight: 650; margin-bottom: 8px; }
+.email-field {
+  display: flex; align-items: center; min-width: 0;
+  border: 1.5px solid var(--c-border-strong); border-radius: 12px; background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+.email-field:focus-within { border-color: var(--c-accent); box-shadow: 0 0 0 4px var(--ring); }
+.email-field input {
+  flex: 1; min-width: 0; height: 50px; padding: 0 0 0 14px;
+  border: 0; outline: 0; background: transparent;
+  font: inherit; font-size: 16px; color: var(--c-text);
+}
+.email-domain { flex: none; padding: 0 12px 0 2px; color: var(--c-text-muted); font-size: 12.5px; max-width: 56%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.login-hint { font-size: 12.5px; color: var(--c-text-muted); margin: 8px 2px 16px; }
+.login-error {
+  font-size: 13.5px; color: var(--c-danger); background: #FEF2F2; border: 1px solid #FECACA;
+  border-radius: 10px; padding: 10px 12px; margin-bottom: 14px;
+}
+.login-foot { display: flex; align-items: center; gap: 8px; justify-content: center; font-size: 12.5px; color: var(--c-text-muted); margin-top: 14px; }
+.login-foot svg.ic { width: 16px; height: 16px; color: var(--c-success); }
+
+/* ============================================================
+ * CASCA DO APP
+ * ============================================================ */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+  height: calc(var(--top-h) + var(--sat));
+  padding: var(--sat) 14px 0 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: rgba(248,250,252,.9);
+  -webkit-backdrop-filter: saturate(1.6) blur(14px); backdrop-filter: saturate(1.6) blur(14px);
+  border-bottom: 1px solid transparent; transition: border-color .2s;
+}
+.topbar.scrolled { border-bottom-color: var(--c-border); }
+.tb-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tb-globe { width: 28px; height: 28px; flex: none; }
+.tb-title { font-size: 17px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb-title small { display: block; font-size: 11px; font-weight: 600; color: var(--c-text-muted); letter-spacing: .08em; text-transform: uppercase; }
+.avatar {
+  width: 38px; height: 38px; border-radius: 50%; flex: none;
+  display: grid; place-items: center;
+  background: var(--grad); color: #fff; font-weight: 700; font-size: 14px; letter-spacing: .02em;
+  box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(26,54,93,.25);
+}
+
+#views {
+  position: fixed; left: 0; right: 0;
+  top: calc(var(--top-h) + var(--sat));
+  bottom: calc(var(--nav-h) + var(--sab));
+}
+.view {
+  position: absolute; inset: 0;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .18s var(--ease-out), visibility 0s linear .18s;
+}
+.view.active { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .18s var(--ease-out); }
+
+/* Abas com iframe: termina acima da "corcova" do botão de check-in, pra ela
+ * não cobrir botão nenhum da página embutida. */
+.view-frame { bottom: var(--bump); display: flex; flex-direction: column; }
+.frame-wrap { position: relative; flex: 1; min-height: 0; }
+.frame-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--c-bg); }
+.frame-load {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  background: var(--c-bg); color: var(--c-text-muted); font-size: 14px;
+  transition: opacity .2s;
+}
+.frame-wrap.ready .frame-load { opacity: 0; pointer-events: none; }
+.spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--c-border); border-top-color: var(--c-accent); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Cash ↔ Divergencias (só Argentina) */
+.seg { flex: none; padding: 10px 16px 4px; }
+.seg-inner { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 12px; background: #E9EEF5; max-width: 520px; margin: 0 auto; }
+.seg button { height: 34px; border-radius: 9px; font-size: 13.5px; font-weight: 650; color: var(--c-text-muted); }
+.seg button.active { background: #fff; color: var(--c-primary-dark); box-shadow: var(--shadow-sm); }
+
+/* ---------- Barra de abas ---------- */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  height: calc(var(--nav-h) + var(--sab));
+  padding-bottom: var(--sab);
+  /* No computador não estica: as 5 abas ficam numa faixa de até 560px. */
+  padding-left: max(0px, calc((100vw - 560px) / 2));
+  padding-right: max(0px, calc((100vw - 560px) / 2));
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  background: rgba(255,255,255,.94);
+  -webkit-backdrop-filter: saturate(1.6) blur(16px); backdrop-filter: saturate(1.6) blur(16px);
+  border-top: 1px solid var(--c-border);
+  box-shadow: 0 -6px 24px rgba(15,23,42,.05);
+}
+.tab {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  font-size: 11px; font-weight: 600; color: var(--c-text-dim);
+  transition: color .15s;
+}
+.tab svg.ic { width: 24px; height: 24px; transition: transform .2s var(--ease-spring); }
+.tab.active { color: var(--c-primary); }
+.tab.active svg.ic { stroke-width: 2.2; transform: translateY(-1px); }
+.tab:active svg.ic { transform: scale(.88); }
+.tab-dot {
+  position: absolute; top: 9px; left: calc(50% + 8px);
+  width: 9px; height: 9px; border-radius: 50%;
+  background: #EF4444; box-shadow: 0 0 0 2px #fff;
+}
+
+/* Check-in: o botão principal, maior e "saltado" da barra */
+.tab-main { justify-content: flex-end; padding-bottom: 8px; color: var(--c-primary-dark); font-weight: 750; }
+.tab-main.active { color: var(--c-primary-dark); }
+.fab {
+  position: absolute; left: 50%; top: calc(-1 * var(--bump) - 2px);
+  width: 62px; height: 62px; margin-left: -31px; border-radius: 50%;
+  display: grid; place-items: center; color: #fff;
+  background: linear-gradient(150deg, #4A9FE0 0%, #2C5282 58%, #1A365D 100%);
+  box-shadow: 0 0 0 5px var(--c-bg), 0 10px 24px rgba(44,82,130,.45);
+  transition: transform .18s var(--ease-spring), box-shadow .2s;
+}
+.fab svg.ic { width: 30px; height: 30px; stroke-width: 2.2; }
+.tab-main:active .fab { transform: scale(.92); }
+.tab-main.active .fab { box-shadow: 0 0 0 5px var(--c-bg), 0 0 0 8px rgba(74,159,224,.35), 0 10px 24px rgba(44,82,130,.45); }
+.fab.pending::before {
+  content: ""; position: absolute; inset: -5px; border-radius: 50%;
+  border: 2px solid rgba(74,159,224,.7);
+  animation: pulse 2.2s var(--ease-out) infinite;
+}
+@keyframes pulse { 0% { transform: scale(.92); opacity: .9; } 100% { transform: scale(1.38); opacity: 0; } }
+.fab-ok {
+  position: absolute; right: -2px; top: -2px;
+  width: 20px; height: 20px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--c-success); color: #fff; box-shadow: 0 0 0 2px #fff;
+}
+.fab-ok svg.ic { width: 13px; height: 13px; stroke-width: 3; }
+.tab-main .tab-lbl { position: relative; z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fab.pending::before { animation: none; }
+  .view, .view.active { transition: none; }
+}
+
+/* ============================================================
+ * INÍCIO
+ * ============================================================ */
+.home-scroll {
+  position: absolute; inset: 0; overflow-y: auto;
+  -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;
+}
+.home { max-width: 560px; margin: 0 auto; padding: 8px 16px 28px; }
+
+.hero {
+  position: relative; overflow: hidden;
+  border-radius: 22px; padding: 20px 20px 64px;
+  background: var(--grad); color: #fff;
+  box-shadow: 0 14px 30px rgba(26,54,93,.25);
+}
+.hero::after {
+  content: ""; position: absolute; right: -54px; bottom: -64px;
+  width: 210px; height: 210px; border-radius: 50%;
+  background: url("../aceolution-globe-hd.png") center/contain no-repeat;
+  opacity: .16; pointer-events: none;
+}
+.hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.hero-date { font-size: 13px; opacity: .85; }
+.hero-hello { font-size: 27px; font-weight: 750; letter-spacing: -.02em; line-height: 1.15; margin-top: 4px; }
+.hero-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; position: relative; z-index: 1; }
+.chip-glass {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+  background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.22);
+}
+.chip-glass svg.ic { width: 14px; height: 14px; }
+.refresh {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: rgba(255,255,255,.14); color: #fff;
+}
+.refresh svg.ic { width: 15px; height: 15px; }
+.refresh.spinning svg.ic { animation: spin .9s linear infinite; }
+
+/* Cartão "Hoje" — encaixado na base do hero */
+.today {
+  position: relative; z-index: 2;
+  margin: -48px 10px 0; padding: 16px;
+  display: flex; align-items: center; gap: 14px;
+  background: var(--c-surface); border-radius: 18px;
+  border: 1px solid var(--c-border); box-shadow: var(--shadow-lg);
+}
+.today-ic { width: 48px; height: 48px; border-radius: 14px; flex: none; display: grid; place-items: center; }
+.today-ic svg.ic { width: 26px; height: 26px; }
+.today.pending .today-ic { background: #FEF3C7; color: #B45309; }
+.today.done .today-ic { background: #DCFCE7; color: #15803D; }
+.today.closed .today-ic { background: var(--c-bg-tint); color: var(--c-primary); }
+.today-txt { flex: 1; min-width: 0; }
+.today-title { font-weight: 700; font-size: 15.5px; line-height: 1.25; }
+.today-sub { font-size: 13px; color: var(--c-text-muted); margin-top: 2px; }
+.today-sync { display: inline-block; font-size: 11.5px; font-weight: 650; color: var(--c-warn); }
+.today .btn { flex: none; }
+.today-wide { flex-wrap: wrap; }
+.today-wide .btn { width: 100%; }
+
+.notice {
+  display: flex; gap: 10px; align-items: flex-start;
+  margin-top: 14px; padding: 10px 12px; border-radius: 12px;
+  background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; font-size: 13px;
+}
+.notice svg.ic { width: 18px; height: 18px; margin-top: 1px; }
+
+.section-title {
+  font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--c-text-muted); margin: 22px 4px 10px;
+}
+.card {
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-radius: var(--card-r); box-shadow: var(--shadow-sm);
+  padding: 16px; margin-bottom: 12px;
+}
+.card-h { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.card-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; background: var(--c-bg-tint); color: var(--c-primary); }
+.card-ic svg.ic { width: 18px; height: 18px; }
+.card-t { font-weight: 700; font-size: 15.5px; flex: 1; min-width: 0; }
+.card-meta { font-size: 12px; color: var(--c-text-muted); }
+
+/* Onde você está */
+.base-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 12px 6px 8px; border-radius: 999px; font-weight: 700; font-size: 14px;
+}
+.base-badge svg.ic { width: 18px; height: 18px; }
+.base-badge.home { background: #DCFCE7; color: #166534; }
+.base-badge.hotel { background: #EDE9FE; color: #5B21B6; }
+.base-addr { margin-top: 10px; font-size: 14.5px; line-height: 1.4; }
+.base-meta { margin-top: 4px; font-size: 12.5px; color: var(--c-text-muted); }
+.map-box {
+  position: relative; margin-top: 12px; height: 150px; border-radius: 12px; overflow: hidden;
+  background: #E9EEF5; border: 1px solid var(--c-border);
+}
+.map-box .leaflet-container { width: 100%; height: 100%; background: #E9EEF5; font: inherit; }
+.map-box .leaflet-control-attribution { font-size: 9px; }
+.map-legend { display: flex; gap: 14px; margin-top: 8px; font-size: 12px; color: var(--c-text-muted); }
+.map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.map-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(0,0,0,.08); }
+.last-area { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--c-border); }
+.last-area svg.ic { width: 18px; height: 18px; color: var(--c-accent); margin-top: 1px; }
+.last-area b { display: block; font-size: 12px; color: var(--c-text-muted); font-weight: 600; }
+.last-area div { font-size: 14px; }
+.map-link { color: var(--c-primary); font-weight: 600; font-size: 12.5px; text-decoration: none; white-space: nowrap; }
+
+/* Discos */
+.disk-inuse {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; border-radius: 12px;
+  background: linear-gradient(135deg, #F0FDF4, #ECFDF5); border: 1px solid #BBF7D0;
+}
+.disk-inuse .disk-ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: #16A34A; color: #fff; flex: none; }
+.disk-inuse .disk-ic svg.ic { width: 20px; height: 20px; }
+.disk-inuse small { display: block; font-size: 11.5px; font-weight: 700; color: #15803D; text-transform: uppercase; letter-spacing: .06em; }
+.disk-inuse .mono { font-size: 15px; font-weight: 600; word-break: break-all; }
+.disk-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.disk-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 9px; font-size: 13px;
+  background: var(--c-bg); border: 1px solid var(--c-border);
+}
+.disk-chip svg.ic { width: 14px; height: 14px; color: var(--c-text-dim); }
+.kv { display: flex; justify-content: space-between; gap: 12px; padding-top: 10px; margin-top: 12px; border-top: 1px dashed var(--c-border); font-size: 13.5px; }
+.kv span { color: var(--c-text-muted); display: inline-flex; align-items: center; gap: 6px; }
+.kv span svg.ic { width: 16px; height: 16px; }
+.kv b { font-weight: 650; }
+.empty { font-size: 13.5px; color: var(--c-text-muted); }
+
+/* Pendências */
+.todo { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+.todo + .todo { border-top: 1px solid var(--c-border); }
+.todo:first-of-type { padding-top: 2px; }
+.todo-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+.todo-ic svg.ic { width: 18px; height: 18px; }
+.todo.ok .todo-ic { background: #DCFCE7; color: #15803D; }
+.todo.warn .todo-ic { background: #FEF3C7; color: #B45309; }
+.todo.bad .todo-ic { background: #FEE2E2; color: #B91C1C; }
+.todo-txt { flex: 1; min-width: 0; }
+.todo-t { font-weight: 650; font-size: 14.5px; }
+.todo-s { font-size: 12.5px; color: var(--c-text-muted); margin-top: 1px; }
+
+/* Números do mês */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.stat { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--card-r); box-shadow: var(--shadow-sm); padding: 14px 16px; }
+.stat-n { font-size: 26px; font-weight: 750; letter-spacing: -.02em; color: var(--c-primary-dark); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat-l { font-size: 12.5px; color: var(--c-text-muted); margin-top: 4px; }
+
+.foot { text-align: center; font-size: 11.5px; color: var(--c-text-dim); margin: 18px 0 4px; }
+
+/* Esqueleto enquanto o primeiro resumo não chega */
+.sk { border-radius: 10px; background: linear-gradient(90deg, #EEF2F7 25%, #F6F8FB 37%, #EEF2F7 63%); background-size: 400% 100%; animation: sk 1.3s ease infinite; }
+@keyframes sk { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+/* ============================================================
+ * PERFIL (bottom sheet)
+ * ============================================================ */
+.sheet-bg { position: fixed; inset: 0; z-index: 50; background: rgba(15,23,42,.42); opacity: 0; transition: opacity .2s; }
+.sheet-bg.open { opacity: 1; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 51;
+  max-width: 560px; margin: 0 auto;
+  background: var(--c-surface); border-radius: 22px 22px 0 0;
+  padding: 10px 20px calc(20px + var(--sab));
+  box-shadow: 0 -12px 40px rgba(15,23,42,.18);
+  transform: translateY(105%); transition: transform .26s var(--ease-out);
+}
+.sheet.open { transform: translateY(0); }
+.sheet-grab { width: 40px; height: 5px; border-radius: 999px; background: var(--c-border-strong); margin: 0 auto 16px; }
+.sheet-who { display: flex; align-items: center; gap: 14px; }
+.sheet-who .avatar { width: 54px; height: 54px; font-size: 19px; box-shadow: none; }
+.sheet-name { font-size: 18px; font-weight: 750; }
+.sheet-mail { font-size: 13px; color: var(--c-text-muted); word-break: break-all; }
+.sheet-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-top: 1px solid var(--c-border); margin-top: 14px; }
+.sheet-row + .sheet-row { margin-top: 0; }
+.sheet-row > span { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14.5px; }
+.sheet-row > span svg.ic { color: var(--c-text-muted); }
+.lang-seg { display: inline-flex; padding: 3px; border-radius: 10px; background: #E9EEF5; }
+.lang-seg button { font-size: 12.5px; font-weight: 700; padding: 6px 12px; border-radius: 8px; color: var(--c-text-muted); }
+.lang-seg button.active { background: #fff; color: var(--c-primary-dark); box-shadow: var(--shadow-sm); }
+.sheet-hint { font-size: 12.5px; color: var(--c-text-muted); line-height: 1.45; }
+.btn-out { width: 100%; margin-top: 8px; height: 46px; border-radius: 12px; font-weight: 650; color: var(--c-danger); background: #FEF2F2; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-out.confirm { background: var(--c-danger); color: #fff; }
+
+@media (min-width: 720px) {
+  .login-top { padding-left: calc(50% - 230px); padding-right: calc(50% - 230px); }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     LOGIN
+     ============================================================ -->
+<section id="login" class="login hidden" aria-labelledby="login-title">
+  <div class="login-top">
+    <div class="login-bar">
+      <img src="../aceolution-white.png" alt="Aceolution" class="login-logo" onerror="this.style.display='none'">
+      <div class="lang-pills" id="login-lang">
+        <button type="button" data-lang="pt">PT</button>
+        <button type="button" data-lang="es">ES</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+    </div>
+    <div class="login-kicker">Street View LATAM</div>
+    <h1 id="login-title" data-t="loginTitle">Seu app de motorista</h1>
+    <p data-t="loginSub">Check-in, equipamentos, cash e documentos num lugar só.</p>
+  </div>
+
+  <form id="login-form" class="login-card" novalidate>
+    <label for="login-email" data-t="loginLabel">Seu e-mail Xpense</label>
+    <div class="email-field">
+      <input id="login-email" type="text" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" data-tp="loginPh" placeholder="nome.sobrenome">
+      <span class="email-domain" id="email-domain">@field-ops-xpense-it.com</span>
+    </div>
+    <div class="login-hint" data-t="loginHint">Pode digitar só a parte antes do @.</div>
+    <div id="login-error" class="login-error hidden" role="alert"></div>
+    <button type="submit" id="login-btn" class="btn btn-primary btn-block" data-t="loginBtn">Entrar</button>
+    <div class="login-foot"><span id="login-foot-ic"></span><span data-t="loginRemember">Você só precisa entrar uma vez neste celular.</span></div>
+  </form>
+</section>
+
+<!-- ============================================================
+     APP
+     ============================================================ -->
+<section id="app" class="hidden">
+  <header class="topbar" id="topbar">
+    <div class="tb-left">
+      <img src="../aceolution-globe.png" alt="" class="tb-globe">
+      <div class="tb-title" id="tb-title">Street View LATAM</div>
+    </div>
+    <button type="button" class="avatar" id="tb-avatar" aria-label="Perfil"></button>
+  </header>
+
+  <main id="views">
+    <div class="view active" id="view-home">
+      <div class="home-scroll" id="home-scroll">
+        <div class="home" id="home"></div>
+      </div>
+    </div>
+    <div class="view view-frame" id="view-assets"><div class="frame-wrap"></div></div>
+    <div class="view view-frame" id="view-checkin"><div class="frame-wrap"></div></div>
+    <div class="view view-frame" id="view-cash"><div class="frame-wrap"></div></div>
+    <div class="view view-frame" id="view-ardiv"><div class="frame-wrap"></div></div>
+    <div class="view view-frame" id="view-docs"><div class="frame-wrap"></div></div>
+  </main>
+
+  <nav class="tabbar" id="tabbar" aria-label="Navegação"></nav>
+</section>
+
+<div class="sheet-bg hidden" id="sheet-bg"></div>
+<div class="sheet hidden" id="sheet" role="dialog" aria-modal="true"></div>
+
+<script>
+'use strict';
+
+// ================================================================
+// CONFIG
+// ================================================================
+const CFG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  domain: 'field-ops-xpense-it.com',     // domínio do e-mail Xpense dos motoristas
+  summaryFreshMs: 5 * 60 * 1000,         // resumo da home: revalida depois disso
+  weeklyLateDays: 7,                     // relatório semanal "atrasado" depois disso
+};
+// Em produção passa pelo Worker (latamace.com/api, com cache KV); fora dele vai direto.
+const API = location.hostname.endsWith('latamace.com') ? '/api' : CFG.scriptUrl;
+
+// Chaves de localStorage. A sessão e o idioma são lidos também pelo
+// ../driver-embed.js dentro dos iframes — não renomear sem mexer lá.
+const KEYS = {
+  session: 'svapp.session.v1',
+  lang: 'svapp.lang',
+  summary: 'svapp.summary.v1:',   // + email
+  events: 'svapp.events.v1:',     // + email
+  drivers: 'checkin_drivers_v1',  // mesmo cache do check-in (lista de motoristas)
+};
+
+const TABS = {
+  home:    { t: 'tabHome' },
+  assets:  { t: 'tabAssets',  src: '../assets.html?app=1' },
+  checkin: { t: 'tabCheckin', src: '../checkin/?app=1' },
+  cash:    { t: 'tabCash',    src: '../cash.html?app=1' },
+  ardiv:   { t: 'tabArdiv',   src: '../ar-divergencias.html?app=1', nav: 'cash', ar: true },
+  docs:    { t: 'tabDocs',    src: '../driver-docs.html?app=1' },
+};
+const NAV = ['home', 'assets', 'checkin', 'cash', 'docs'];
+
+// ================================================================
+// I18N (pt / es / en)
+// ================================================================
+const I18N = {
+  pt: {
+    loginTitle: 'Seu app de motorista',
+    loginSub: 'Check-in, equipamentos, cash e documentos num lugar só.',
+    loginLabel: 'Seu e-mail Xpense',
+    loginPh: 'nome.sobrenome',
+    loginHint: 'Pode digitar só a parte antes do @.',
+    loginBtn: 'Entrar',
+    loginChecking: 'Conferindo…',
+    loginRemember: 'Você só precisa entrar uma vez neste celular.',
+    loginEmpty: 'Digite seu e-mail Xpense.',
+    loginNotFound: 'Não encontramos esse e-mail entre os motoristas ativos. Confira se digitou certo ou fale com o time LATAM.',
+    loginOffline: 'Sem conexão com o servidor. Tente de novo em instantes.',
+    tabHome: 'Início', tabAssets: 'Equipamentos', tabCheckin: 'Check-in', tabCash: 'Cash',
+    tabArdiv: 'Divergências', tabDocs: 'Documentos',
+    opening: 'Abrindo…',
+    hello: 'Olá, {name}',
+    updatedAgo: 'Atualizado {ago}',
+    refreshing: 'Atualizando…',
+    refreshFail: 'Não deu pra atualizar agora. Mostrando os últimos dados salvos.',
+    loadFail: 'Não deu pra carregar seu resumo. Confira a internet e toque em atualizar.',
+    todayPendingT: 'Check-in de hoje pendente',
+    todayPendingS: 'Faça antes de começar a mapear.',
+    todayPendingB: 'Fazer check-in',
+    todayDoneT: 'Check-in feito às {time}',
+    todayDoneS: 'No fim do dia, lembre do checkout.',
+    todayDoneB: 'Encerrar o dia',
+    todayClosedT: 'Dia encerrado',
+    todayClosedS: 'Check-in {in} · checkout {out}',
+    syncing: 'enviado — sincronizando',
+    whereT: 'Onde você está',
+    baseHome: 'Em casa', baseHotel: 'Em hotel',
+    baseUpdated: 'Base atualizada {ago}',
+    baseNone: 'Você ainda não cadastrou sua base. O check-in pede ela.',
+    legendBase: 'Sua base', legendArea: 'Última área',
+    lastArea: 'Última área de mapeamento',
+    openMap: 'Abrir no mapa',
+    disksT: 'Seus discos',
+    diskInUse: 'Em uso agora',
+    disksOther: 'Outros discos',
+    disksNone: 'Nenhum disco no seu último relatório de equipamentos.',
+    disksFrom: 'relatório de {date}',
+    disksCount: '{n} no total',
+    odometer: 'Odômetro',
+    todoT: 'Pendências',
+    weeklyT: 'Relatório semanal',
+    weeklyOk: 'Enviado {ago}',
+    weeklyLate: 'Último envio {ago} — hora de mandar de novo',
+    weeklyNever: 'Você ainda não enviou nenhum',
+    docsT: 'Documentos',
+    docsOk: 'Enviados {ago}',
+    docsPending: 'Documento e habilitação ainda não enviados',
+    vehicleOk: 'Veículo OK',
+    vehicleMinor: 'Alerta no veículo',
+    vehicleCritical: 'Problema crítico no veículo',
+    vehicleFrom: 'Informado no check-in {ago}',
+    send: 'Enviar',
+    monthT: 'Seu mês',
+    monthDays: 'dias com check-in em {month}',
+    lastCheckin: 'último check-in',
+    never: '—',
+    footer: 'Aceolution do Brasil · uso interno',
+    profileLang: 'Idioma',
+    profileCountry: 'País',
+    install: 'Instalar app',
+    installHintIos: 'Pra abrir como app: toque em Compartilhar e depois em "Adicionar à Tela de Início".',
+    installHintAndroid: 'Pra abrir como app: menu ⋮ do navegador → "Adicionar à tela inicial".',
+    reload: 'Recarregar o app',
+    logout: 'Sair',
+    logoutConfirm: 'Toque de novo para sair',
+    agoNow: 'agora', agoMin: 'há {n} min', agoHour: 'há {n} h', agoToday: 'hoje',
+    agoYesterday: 'ontem', agoDays: 'há {n} dias',
+  },
+  es: {
+    loginTitle: 'Tu app de conductor',
+    loginSub: 'Check-in, equipos, cash y documentos en un solo lugar.',
+    loginLabel: 'Tu e-mail Xpense',
+    loginPh: 'nombre.apellido',
+    loginHint: 'Podés escribir solo la parte antes del @.',
+    loginBtn: 'Entrar',
+    loginChecking: 'Verificando…',
+    loginRemember: 'Solo necesitás entrar una vez en este celular.',
+    loginEmpty: 'Escribí tu e-mail Xpense.',
+    loginNotFound: 'No encontramos ese e-mail entre los conductores activos. Revisá si lo escribiste bien o hablá con el equipo LATAM.',
+    loginOffline: 'Sin conexión con el servidor. Probá de nuevo en un momento.',
+    tabHome: 'Inicio', tabAssets: 'Equipos', tabCheckin: 'Check-in', tabCash: 'Cash',
+    tabArdiv: 'Divergencias', tabDocs: 'Documentos',
+    opening: 'Abriendo…',
+    hello: 'Hola, {name}',
+    updatedAgo: 'Actualizado {ago}',
+    refreshing: 'Actualizando…',
+    refreshFail: 'No se pudo actualizar ahora. Mostrando los últimos datos guardados.',
+    loadFail: 'No se pudo cargar tu resumen. Revisá internet y tocá actualizar.',
+    todayPendingT: 'Check-in de hoy pendiente',
+    todayPendingS: 'Hacelo antes de empezar a mapear.',
+    todayPendingB: 'Hacer check-in',
+    todayDoneT: 'Check-in hecho a las {time}',
+    todayDoneS: 'Al final del día, acordate del checkout.',
+    todayDoneB: 'Terminar el día',
+    todayClosedT: 'Día terminado',
+    todayClosedS: 'Check-in {in} · checkout {out}',
+    syncing: 'enviado — sincronizando',
+    whereT: 'Dónde estás',
+    baseHome: 'En casa', baseHotel: 'En hotel',
+    baseUpdated: 'Base actualizada {ago}',
+    baseNone: 'Todavía no cargaste tu base. El check-in te la pide.',
+    legendBase: 'Tu base', legendArea: 'Última área',
+    lastArea: 'Última área de mapeo',
+    openMap: 'Abrir en el mapa',
+    disksT: 'Tus discos',
+    diskInUse: 'En uso ahora',
+    disksOther: 'Otros discos',
+    disksNone: 'Ningún disco en tu último reporte de equipos.',
+    disksFrom: 'reporte del {date}',
+    disksCount: '{n} en total',
+    odometer: 'Odómetro',
+    todoT: 'Pendientes',
+    weeklyT: 'Reporte semanal',
+    weeklyOk: 'Enviado {ago}',
+    weeklyLate: 'Último envío {ago} — ya toca mandarlo de nuevo',
+    weeklyNever: 'Todavía no enviaste ninguno',
+    docsT: 'Documentos',
+    docsOk: 'Enviados {ago}',
+    docsPending: 'Documento y licencia todavía no enviados',
+    vehicleOk: 'Vehículo OK',
+    vehicleMinor: 'Alerta en el vehículo',
+    vehicleCritical: 'Problema crítico en el vehículo',
+    vehicleFrom: 'Informado en el check-in {ago}',
+    send: 'Enviar',
+    monthT: 'Tu mes',
+    monthDays: 'días con check-in en {month}',
+    lastCheckin: 'último check-in',
+    never: '—',
+    footer: 'Aceolution · uso interno',
+    profileLang: 'Idioma',
+    profileCountry: 'País',
+    install: 'Instalar app',
+    installHintIos: 'Para abrirlo como app: tocá Compartir y después "Agregar a pantalla de inicio".',
+    installHintAndroid: 'Para abrirlo como app: menú ⋮ del navegador → "Agregar a pantalla principal".',
+    reload: 'Recargar la app',
+    logout: 'Salir',
+    logoutConfirm: 'Tocá de nuevo para salir',
+    agoNow: 'recién', agoMin: 'hace {n} min', agoHour: 'hace {n} h', agoToday: 'hoy',
+    agoYesterday: 'ayer', agoDays: 'hace {n} días',
+  },
+  en: {
+    loginTitle: 'Your driver app',
+    loginSub: 'Check-in, equipment, cash and documents in one place.',
+    loginLabel: 'Your Xpense email',
+    loginPh: 'first.last',
+    loginHint: 'You can type just the part before the @.',
+    loginBtn: 'Sign in',
+    loginChecking: 'Checking…',
+    loginRemember: 'You only need to sign in once on this phone.',
+    loginEmpty: 'Enter your Xpense email.',
+    loginNotFound: "We couldn't find that email among active drivers. Check the spelling or contact the LATAM team.",
+    loginOffline: "Can't reach the server. Try again in a moment.",
+    tabHome: 'Home', tabAssets: 'Equipment', tabCheckin: 'Check-in', tabCash: 'Cash',
+    tabArdiv: 'Discrepancies', tabDocs: 'Documents',
+    opening: 'Opening…',
+    hello: 'Hi, {name}',
+    updatedAgo: 'Updated {ago}',
+    refreshing: 'Updating…',
+    refreshFail: "Couldn't update right now. Showing the last saved data.",
+    loadFail: "Couldn't load your summary. Check your connection and tap refresh.",
+    todayPendingT: "Today's check-in is pending",
+    todayPendingS: 'Do it before you start mapping.',
+    todayPendingB: 'Check in',
+    todayDoneT: 'Checked in at {time}',
+    todayDoneS: 'Remember to check out at the end of the day.',
+    todayDoneB: 'End my day',
+    todayClosedT: 'Day closed',
+    todayClosedS: 'Check-in {in} · check-out {out}',
+    syncing: 'sent — syncing',
+    whereT: 'Where you are',
+    baseHome: 'At home', baseHotel: 'At a hotel',
+    baseUpdated: 'Base updated {ago}',
+    baseNone: "You haven't set your base yet. The check-in asks for it.",
+    legendBase: 'Your base', legendArea: 'Last area',
+    lastArea: 'Last mapping area',
+    openMap: 'Open in maps',
+    disksT: 'Your disks',
+    diskInUse: 'In use now',
+    disksOther: 'Other disks',
+    disksNone: 'No disks in your last equipment report.',
+    disksFrom: 'report of {date}',
+    disksCount: '{n} total',
+    odometer: 'Odometer',
+    todoT: 'To-dos',
+    weeklyT: 'Weekly report',
+    weeklyOk: 'Sent {ago}',
+    weeklyLate: 'Last sent {ago} — time to send it again',
+    weeklyNever: "You haven't sent one yet",
+    docsT: 'Documents',
+    docsOk: 'Sent {ago}',
+    docsPending: 'ID and driver license not sent yet',
+    vehicleOk: 'Vehicle OK',
+    vehicleMinor: 'Vehicle warning',
+    vehicleCritical: 'Critical vehicle issue',
+    vehicleFrom: 'Reported at check-in {ago}',
+    send: 'Send',
+    monthT: 'Your month',
+    monthDays: 'check-in days in {month}',
+    lastCheckin: 'last check-in',
+    never: '—',
+    footer: 'Aceolution · internal use',
+    profileLang: 'Language',
+    profileCountry: 'Country',
+    install: 'Install app',
+    installHintIos: 'To open it like an app: tap Share, then "Add to Home Screen".',
+    installHintAndroid: 'To open it like an app: browser menu ⋮ → "Add to Home screen".',
+    reload: 'Reload app',
+    logout: 'Sign out',
+    logoutConfirm: 'Tap again to sign out',
+    agoNow: 'just now', agoMin: '{n} min ago', agoHour: '{n} h ago', agoToday: 'today',
+    agoYesterday: 'yesterday', agoDays: '{n} days ago',
+  },
+};
+const LOCALE = { pt: 'pt-BR', es: 'es-419', en: 'en-US' };
+
+const COUNTRIES = {
+  argentina: { flag: '🇦🇷', pt: 'Argentina', es: 'Argentina', en: 'Argentina' },
+  brazil:    { flag: '🇧🇷', pt: 'Brasil', es: 'Brasil', en: 'Brazil' },
+  brasil:    { flag: '🇧🇷', pt: 'Brasil', es: 'Brasil', en: 'Brazil' },
+  chile:     { flag: '🇨🇱', pt: 'Chile', es: 'Chile', en: 'Chile' },
+  colombia:  { flag: '🇨🇴', pt: 'Colômbia', es: 'Colombia', en: 'Colombia' },
+  mexico:    { flag: '🇲🇽', pt: 'México', es: 'México', en: 'Mexico' },
+  peru:      { flag: '🇵🇪', pt: 'Peru', es: 'Perú', en: 'Peru' },
+};
+
+// ================================================================
+// ÍCONES (traço, 24×24)
+// ================================================================
+const ICONS = {
+  home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/>',
+  box: '<path d="M21 8 12 3 3 8v8l9 5 9-5V8z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/>',
+  checkin: '<path d="M12 21.5s-7-6.2-7-11.7a7 7 0 0 1 14 0c0 5.5-7 11.7-7 11.7z"/><path d="m9 9.6 2.1 2.1L15.2 7.6"/>',
+  wallet: '<path d="M4 7.5V6a2 2 0 0 1 2-2h11v3.5"/><path d="M4 7.5V18a2 2 0 0 0 2 2h14V9.5a2 2 0 0 0-2-2H4z"/><circle cx="16.3" cy="13.8" r="1.2"/>',
+  id: '<rect x="3" y="5" width="18" height="14" rx="2.2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16.2c.6-1.5 1.8-2.3 3.2-2.3s2.6.8 3.2 2.3"/><path d="M14.5 10h4M14.5 13.5h3"/>',
+  pin: '<path d="M12 21.5s-7-6.2-7-11.7a7 7 0 0 1 14 0c0 5.5-7 11.7-7 11.7z"/><circle cx="12" cy="9.8" r="2.5"/>',
+  bed: '<path d="M3 19V6"/><path d="M3 14h18v5"/><path d="M21 14v-2.5a3 3 0 0 0-3-3h-7V14"/><circle cx="7" cy="10.5" r="2"/>',
+  disk: '<rect x="3" y="13" width="18" height="7" rx="2"/><path d="M5.5 13 8 5h8l2.5 8"/><path d="M7 16.5h.01M10.5 16.5h.01"/>',
+  car: '<path d="M5 17v-4.5L7 7h10l2 5.5V17"/><path d="M3.5 12.5h17"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="16.5" cy="17" r="1.8"/>',
+  alert: '<path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4.5M12 17.3h.01"/>',
+  ok: '<circle cx="12" cy="12" r="9"/><path d="m8.4 12.2 2.5 2.5 4.8-4.9"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>',
+  flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20v-4h-4"/>',
+  clipboard: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11h6M9 15h4"/>',
+  gauge: '<path d="M4.5 18a8.5 8.5 0 1 1 15 0"/><path d="m12 13 3.5-3.5"/><circle cx="12" cy="13" r="1.2"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
+  download: '<path d="M12 4v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 20h14"/>',
+  logout: '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/>',
+  shield: '<path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6L12 3z"/><path d="m9 12 2 2 4-4"/>',
+};
+function ic(name, cls) {
+  return '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[name] || '') + '</svg>';
+}
+
+// ================================================================
+// UTILITÁRIOS
+// ================================================================
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+function lsJson(k, fallback) { try { const v = JSON.parse(lsGet(k) || 'null'); return v == null ? fallback : v; } catch (e) { return fallback; } }
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function norm(s) {
+  return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+function pad(n) { return String(n).padStart(2, '0'); }
+function dayKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function toDate(v) { if (!v) return null; const d = new Date(v); return isNaN(d.getTime()) ? null : d; }
+
+function t(key, vars) {
+  const dict = I18N[S.lang] || I18N.pt;
+  let s = dict[key];
+  if (s == null) s = I18N.pt[key];
+  if (s == null) return key;
+  if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
+  return s;
+}
+function fmtTime(d) { return d.toLocaleTimeString(LOCALE[S.lang], { hour: '2-digit', minute: '2-digit' }); }
+function fmtDay(d) { return d.toLocaleDateString(LOCALE[S.lang], { day: '2-digit', month: '2-digit' }); }
+function ago(d) {
+  if (!d) return '';
+  const diff = Date.now() - d.getTime();
+  const min = Math.round(diff / 60000);
+  if (min < 2) return t('agoNow');
+  if (min < 60) return t('agoMin', { n: min });
+  const now = new Date();
+  if (dayKey(d) === dayKey(now)) return diff < 6 * 3600000 ? t('agoHour', { n: Math.round(min / 60) }) : t('agoToday');
+  const y = new Date(now); y.setDate(now.getDate() - 1);
+  if (dayKey(d) === dayKey(y)) return t('agoYesterday');
+  const a = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const b = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return t('agoDays', { n: Math.max(2, Math.round((b - a) / 86400000)) });
+}
+function country(c) { return COUNTRIES[norm(c)] || null; }
+function countryName(c) { const m = country(c); return m ? (m[S.lang] || m.pt) : String(c || ''); }
+function isAR() { return !!S.session && norm(S.session.country) === 'argentina'; }
+function firstName(name) {
+  const w = String(name || '').trim().split(/\s+/)[0] || '';
+  return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '';
+}
+function initials(name) {
+  const p = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!p.length) return '?';
+  return ((p[0][0] || '') + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+}
+function defaultLangFor(c) {
+  if (!String(c || '').trim()) return browserLang();   // sem país na HR: vai pelo idioma do celular
+  return norm(c) === 'brazil' || norm(c) === 'brasil' ? 'pt' : 'es';
+}
+function browserLang() {
+  const l = String((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
+  return l.startsWith('pt') ? 'pt' : l.startsWith('en') ? 'en' : 'es';
+}
+
+/** GET no backend com timeout. Lança se a resposta não for {success:true}. */
+async function api(params, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs || 25000);
+  try {
+    const res = await fetch(API + '?' + new URLSearchParams(params).toString(), { signal: ctrl.signal });
+    const data = await res.json();
+    if (!data || data.success === false) throw new Error((data && data.error) || 'resposta inválida');
+    return data;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ================================================================
+// ESTADO
+// ================================================================
+const S = {
+  lang: 'pt',
+  session: null,
+  summary: null,
+  tab: 'home',
+  loading: false,
+  lastError: false,
+  map: null,
+  refreshTimer: null,
+  preloadTimer: null,
+  gen: 0,             // sobe a cada login/logout: resumo de uma sessão antiga é descartado
+  lastFrame: '',      // última aba (fora o check-in) com iframe vivo — ver keepFrames()
+  sheetOpen: false,
+  installEvt: null,
+  logoutArmed: false,
+};
+
+// ================================================================
+// LOGIN
+// ================================================================
+function showLogin() {
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('login').classList.remove('hidden');
+  document.getElementById('login-foot-ic').innerHTML = ic('shield');
+  applyStaticI18n();
+  updateDomainHint();
+}
+
+function updateDomainHint() {
+  const v = document.getElementById('login-email').value;
+  document.getElementById('email-domain').classList.toggle('hidden', v.includes('@'));
+}
+
+function loginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.classList.toggle('hidden', !msg);
+}
+
+function findDriver(list, email) {
+  if (!Array.isArray(list)) return null;
+  return list.find(d => d && String(d.email || '').trim().toLowerCase() === email) || null;
+}
+
+async function doLogin(ev) {
+  ev.preventDefault();
+  const input = document.getElementById('login-email');
+  let email = input.value.trim().toLowerCase().replace(/\s+/g, '');
+  if (!email) { loginError(t('loginEmpty')); input.focus(); return; }
+  if (!email.includes('@')) email += '@' + CFG.domain;
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.textContent = t('loginChecking');
+  loginError('');
+
+  let list = null;
+  let driver = null;
+  try {
+    const data = await api({ action: 'getDrivers' });
+    list = data.drivers;
+    lsSet(KEYS.drivers, JSON.stringify(list));
+    driver = findDriver(list, email);
+    // Motorista recém-cadastrado pode não estar na cópia do cache: fura o cache uma vez.
+    if (!driver) {
+      try { driver = findDriver((await api({ action: 'getDrivers', nocache: '1' })).drivers, email); } catch (e) {}
+    }
+  } catch (err) {
+    console.warn('[Driver App] getDrivers falhou no login, tentando a lista salva:', err);
+    list = lsJson(KEYS.drivers, null);
+    driver = findDriver(list, email);
+    if (!driver && !list) {
+      btn.disabled = false;
+      btn.textContent = t('loginBtn');
+      loginError(t('loginOffline'));
+      return;
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = t('loginBtn');
+  if (!driver) { loginError(t('loginNotFound')); return; }
+
+  S.session = {
+    email: String(driver.email).trim(),
+    name: String(driver.name || '').trim(),
+    country: String(driver.country || '').trim(),
+    city: String(driver.city || '').trim(),
+    at: Date.now(),
+  };
+  lsSet(KEYS.session, JSON.stringify(S.session));
+  // Idioma: se a pessoa não escolheu na tela de login, vai pelo país.
+  if (!lsGet(KEYS.lang)) setLang(defaultLangFor(S.session.country), { silent: true });
+  console.log('[Driver App] login ok: ' + S.session.email + ' (' + S.session.country + ')');
+  showApp();
+}
+
+// ================================================================
+// CASCA: abas, iframes, histórico
+// ================================================================
+function showApp() {
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('tb-avatar').textContent = initials(S.session.name);
+
+  S.summary = lsJson(KEYS.summary + S.session.email, null);
+  renderNav();
+  renderSegs();
+  applyStaticI18n();
+
+  S.gen++;
+  const start = tabFromHash() || 'home';
+  // Link direto pra uma aba (ex: link antigo /checkin/ → /app/#checkin): deixa a
+  // home EMBAIXO no histórico, senão o "voltar" do Android fecha o app.
+  history.replaceState({ tab: 'home' }, '', hashFor('home'));
+  if (start !== 'home') history.pushState({ tab: start }, '', hashFor(start));
+  openTab(start, { push: false, force: true });
+  renderHome();
+
+  const fresh = S.summary && (Date.now() - S.summary.at) < CFG.summaryFreshMs;
+  if (!fresh) loadSummary();
+
+  // Check-in é o que o motorista abre todo dia: pré-carrega em segundo
+  // plano pra abrir instantâneo quando tocar no botão.
+  clearTimeout(S.preloadTimer);
+  S.preloadTimer = setTimeout(() => { if (S.session) ensureFrame('checkin'); }, 1500);
+  revalidateSession();
+}
+
+/**
+ * Nome/país podem mudar na HR — atualiza a sessão em silêncio.
+ * Desloga só se o e-mail SUMIU da lista de motoristas (confirmado sem cache):
+ * celular de projeto passado pra outro motorista não pode continuar enviando
+ * check-in no nome de quem saiu. Rede falhando nunca desloga.
+ */
+async function revalidateSession() {
+  const email = S.session && S.session.email.toLowerCase();
+  if (!email) return;
+  try {
+    let list = (await api({ action: 'getDrivers' })).drivers;
+    let d = findDriver(list, email);
+    if (!d && Array.isArray(list) && list.length) {
+      list = (await api({ action: 'getDrivers', nocache: '1' })).drivers;
+      d = findDriver(list, email);
+      if (!d && Array.isArray(list) && list.length && S.session && S.session.email.toLowerCase() === email) {
+        console.warn('[Driver App] ' + email + ' não está mais na lista de motoristas — saindo');
+        logout();
+        return;
+      }
+    }
+    if (!d || !S.session || S.session.email.toLowerCase() !== email) return;
+    const next = { ...S.session, name: String(d.name || '').trim() || S.session.name,
+      country: String(d.country || '').trim() || S.session.country, city: String(d.city || '').trim() };
+    if (next.name !== S.session.name || next.country !== S.session.country || next.city !== S.session.city) {
+      S.session = next;
+      lsSet(KEYS.session, JSON.stringify(next));
+      document.getElementById('tb-avatar').textContent = initials(next.name);
+      renderNav(); renderSegs(); renderHome();
+    }
+  } catch (e) { /* offline — fica com o que tem */ }
+}
+
+function tabFromHash() {
+  const h = location.hash.replace('#', '');
+  if (!TABS[h]) return '';
+  if (TABS[h].ar && !isAR()) return 'cash';
+  return h;
+}
+function hashFor(tab) { return location.pathname + location.search + (tab === 'home' ? '' : '#' + tab); }
+
+function renderNav() {
+  const nav = document.getElementById('tabbar');
+  const icons = { home: 'home', assets: 'box', checkin: 'checkin', cash: 'wallet', docs: 'id' };
+  nav.innerHTML = NAV.map(id => {
+    if (id === 'checkin') {
+      return '<button type="button" class="tab tab-main" data-tab="checkin" aria-label="Check-in">' +
+        '<span class="fab" id="fab">' + ic('checkin') + '<span class="fab-ok hidden" id="fab-ok">' + ic('check') + '</span></span>' +
+        '<span class="tab-lbl" data-t="tabCheckin">' + esc(t('tabCheckin')) + '</span></button>';
+    }
+    return '<button type="button" class="tab" data-tab="' + id + '">' + ic(icons[id]) +
+      '<span data-t="' + TABS[id].t + '">' + esc(t(TABS[id].t)) + '</span>' +
+      '<span class="tab-dot hidden" id="dot-' + id + '"></span></button>';
+  }).join('');
+  nav.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => openTab(b.dataset.tab)));
+  markNav();
+}
+
+function markNav() {
+  const navTab = (TABS[S.tab] && TABS[S.tab].nav) || S.tab;
+  document.querySelectorAll('#tabbar .tab').forEach(b => {
+    const on = b.dataset.tab === navTab;
+    b.classList.toggle('active', on);
+    if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+}
+
+/** Argentina: a aba Cash tem um seletor Cash | Divergencias (as duas são "dinheiro"). */
+function renderSegs() {
+  ['cash', 'ardiv'].forEach(id => {
+    const view = document.getElementById('view-' + id);
+    let seg = view.querySelector('.seg');
+    if (!isAR()) { if (seg) seg.remove(); return; }
+    if (!seg) {
+      seg = document.createElement('div');
+      seg.className = 'seg';
+      view.insertBefore(seg, view.firstChild);
+    }
+    seg.innerHTML = '<div class="seg-inner">' +
+      '<button type="button" data-seg="cash" class="' + (id === 'cash' ? 'active' : '') + '">' + esc(t('tabCash')) + '</button>' +
+      '<button type="button" data-seg="ardiv" class="' + (id === 'ardiv' ? 'active' : '') + '">' + esc(t('tabArdiv')) + '</button></div>';
+    seg.querySelectorAll('button').forEach(b => b.addEventListener('click', () => openTab(b.dataset.seg)));
+  });
+}
+
+/** Cria o iframe da aba na primeira vez; depois ele fica vivo (troca de aba é instantânea e o formulário não se perde). */
+function ensureFrame(tab) {
+  const def = TABS[tab];
+  if (!def || !def.src) return null;
+  const wrap = document.querySelector('#view-' + tab + ' .frame-wrap');
+  let frame = wrap.querySelector('iframe');
+  if (frame) return frame;
+  wrap.classList.remove('ready');
+  wrap.innerHTML = '<div class="frame-load"><div class="spinner"></div><div data-t="opening">' + esc(t('opening')) + '</div></div>';
+  frame = document.createElement('iframe');
+  frame.title = t(def.t);
+  frame.setAttribute('allow', 'geolocation; camera');
+  frame.dataset.day = dayKey(new Date());
+  frame.src = def.src;
+  frame.addEventListener('load', () => { frame.dataset.loaded = '1'; wrap.classList.add('ready'); });
+  wrap.appendChild(frame);
+  return frame;
+}
+
+/** Joga fora o iframe da aba (a próxima abertura carrega do zero). */
+function dropFrame(tab) {
+  const wrap = document.querySelector('#view-' + tab + ' .frame-wrap');
+  if (!wrap || !wrap.querySelector('iframe')) return;
+  wrap.innerHTML = '';
+  wrap.classList.remove('ready');
+}
+
+/**
+ * O iframe terminou de carregar mas a página NÃO subiu (sem sinal → página de
+ * erro do navegador, que nem é da mesma origem). Sem isso a aba ficava presa
+ * no erro pra sempre — no app instalado não tem botão de recarregar.
+ */
+function frameBroken(tab) {
+  const f = document.querySelector('#view-' + tab + ' .frame-wrap iframe');
+  if (!f || f.dataset.loaded !== '1') return false;
+  try { return !(f.contentWindow && f.contentWindow.SVEmbed && f.contentWindow.SVEmbed.active); }
+  catch (e) { return true; }
+}
+
+/** Página aberta num dia anterior (quinzena do AR, check-in largado pela metade ontem…). */
+function frameStale(tab) {
+  const f = document.querySelector('#view-' + tab + ' .frame-wrap iframe');
+  return !!(f && f.dataset.day && f.dataset.day !== dayKey(new Date()));
+}
+
+/**
+ * Memória: celular simples mata o navegador ao abrir a câmera se tiver muita
+ * página aberta. Fica vivo só o check-in (o uso diário) + a última outra aba.
+ */
+function keepFrames(tab) {
+  if (!TABS[tab] || !TABS[tab].src || tab === 'checkin') return;
+  if (S.lastFrame && S.lastFrame !== tab) dropFrame(S.lastFrame);
+  S.lastFrame = tab;
+}
+
+/** Recria as abas que quebraram (ex: voltou a internet). */
+function healFrames() {
+  Object.keys(TABS).forEach(tab => {
+    if (TABS[tab].src && frameBroken(tab)) {
+      console.log('[Driver App] aba ' + tab + ' não carregou — recarregando');
+      dropFrame(tab);
+      if (tab === S.tab || tab === 'checkin') ensureFrame(tab);
+    }
+  });
+}
+
+function openTab(tab, opts) {
+  opts = opts || {};
+  if (!TABS[tab]) tab = 'home';
+  if (TABS[tab].ar && !isAR()) tab = 'cash';
+
+  // Tocar de novo na aba atual = volta pro topo (como nos apps); se a página
+  // quebrou ao carregar, recarrega.
+  if (tab === S.tab && !opts.force) {
+    if (tab === 'home') document.getElementById('home-scroll').scrollTo({ top: 0, behavior: 'smooth' });
+    else if (frameBroken(tab)) { dropFrame(tab); ensureFrame(tab); }
+    else {
+      const f = document.querySelector('#view-' + tab + ' iframe');
+      try { f && f.contentWindow.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+    }
+    return;
+  }
+
+  if (TABS[tab].src && tab !== S.tab && (frameBroken(tab) || frameStale(tab))) {
+    console.log('[Driver App] aba ' + tab + (frameStale(tab) ? ' é de outro dia' : ' não carregou') + ' — recarregando');
+    dropFrame(tab);
+  }
+  S.tab = tab;
+  document.querySelectorAll('#views .view').forEach(v => v.classList.toggle('active', v.id === 'view-' + tab));
+  if (TABS[tab].src) { keepFrames(tab); ensureFrame(tab); }
+  markNav();
+  renderTitle();
+  if (opts.push !== false) history.pushState({ tab }, '', hashFor(tab));
+
+  if (tab === 'home') {
+    const stale = !S.summary || (Date.now() - S.summary.at) > CFG.summaryFreshMs;
+    if (stale) loadSummary();
+    setTimeout(invalidateMap, 220);
+  }
+}
+
+function renderTitle() {
+  const el = document.getElementById('tb-title');
+  if (S.tab === 'home') el.innerHTML = '<small>Street View</small>LATAM';
+  else el.textContent = t(TABS[S.tab].t);
+  document.getElementById('topbar').classList.toggle('scrolled', S.tab !== 'home' || document.getElementById('home-scroll').scrollTop > 4);
+}
+
+window.addEventListener('popstate', (e) => {
+  if (!S.session) {
+    // Na tela de login: "voltar" pra uma entrada #aba antiga não pode decidir
+    // em que aba o PRÓXIMO login abre.
+    if (location.hash) history.replaceState({}, '', location.pathname + location.search);
+    return;
+  }
+  // Painel do perfil aberto: o "voltar" só fecha ele.
+  if (S.sheetOpen) { closeSheet(true); return; }
+  const tab = (e.state && e.state.tab) || tabFromHash() || 'home';
+  openTab(tab, { push: false, force: true });
+});
+
+// ================================================================
+// EVENTOS DAS PÁGINAS EMBUTIDAS (chamado pelo driver-embed.js)
+// ================================================================
+const POST_EVENTS = { checkin: 'checkin', checkout: 'checkout', base: 'base', assetWeekly: 'assets', submitDriverDocs: 'docs' };
+
+function getEvents() {
+  return S.session ? lsJson(KEYS.events + S.session.email, {}) : {};
+}
+function setEvent(kind, ts) {
+  const ev = getEvents();
+  ev[kind] = ts;
+  // Limpa o que tem mais de 3 dias.
+  Object.keys(ev).forEach(k => { if (Date.now() - ev[k] > 3 * 86400000) delete ev[k]; });
+  lsSet(KEYS.events + S.session.email, JSON.stringify(ev));
+}
+
+window.SVApp = {
+  openTab: (tab) => openTab(tab),
+  onEmbedEvent(page, evt) {
+    if (!evt || !S.session) return;
+    if (evt.kind === 'ready') {
+      const wrap = document.querySelector('#view-' + page + ' .frame-wrap');
+      if (wrap) wrap.classList.add('ready');
+      return;
+    }
+    if (evt.kind === 'post' && evt.ok) {
+      const kind = POST_EVENTS[evt.type];
+      if (!kind) return;
+      // Envio de OUTRO motorista (ex: fila offline do check-in que sobrou no
+      // aparelho de quem usava antes) não marca nada pra quem está logado.
+      if (evt.email && String(evt.email).trim().toLowerCase() !== S.session.email.toLowerCase()) {
+        console.warn('[Driver App] envio ' + evt.type + ' de ' + evt.email + ' ignorado no resumo');
+        return;
+      }
+      console.log('[Driver App] ' + page + ' enviou ' + evt.type + ' — atualizando o resumo');
+      setEvent(kind, Date.now());
+      renderHome();
+      // O check-in passa por uma fila (Worker → planilha): espera ela escoar antes de reler.
+      clearTimeout(S.refreshTimer);
+      S.refreshTimer = setTimeout(() => loadSummary({ force: true }), 25000);
+    }
+  },
+};
+
+// ================================================================
+// RESUMO DA HOME (dados)
+// ================================================================
+/**
+ * Lê o último relatório semanal (aba Assets Management, via getLastAssetsForm).
+ *
+ * ⚠ A aba tem o cabeçalho antigo do Google Forms (sem coluna de e-mail), mas o
+ * assets.html grava com e-mail na coluna B — então os valores ficam UMA coluna
+ * à direita do rótulo. Detecta pelo valor sob "Nome Completo" (se for e-mail,
+ * está deslocado) e compensa. Se um dia o cabeçalho for corrigido, shift = 0.
+ */
+function parseWeekly(a) {
+  if (!a || typeof a !== 'object') return null;
+  const keys = Object.keys(a).filter(k => !k.startsWith('_'));
+  const vals = keys.map(k => a[k]);
+  const find = (re) => keys.findIndex(k => re.test(norm(k)));
+  const iName = find(/nome completo|nombre/);
+  const shift = (iName >= 0 && /@/.test(String(vals[iName] || ''))) ? 1 : 0;
+  const at = (i) => (i >= 0 && i + shift < vals.length) ? vals[i + shift] : '';
+
+  const iTs = find(/carimbo|timestamp/);
+  const isCode = (s) => s.length >= 5 && /\d/.test(s) && /^[a-z0-9-]+$/i.test(s);
+  const clean = (s) => String(s || '').trim().replace(/^sn:?\s*/i, '');
+  const inUseRaw = clean(at(find(/qual disco esta usando|que disco estas usando/)));
+  const inUse = isCode(inUseRaw) ? inUseRaw : '';
+  const others = [];
+  String(at(find(/codigos dos outros|codigos de los discos/)) || '').split(/[\s,;\/|]+/).forEach(tok => {
+    const c = clean(tok);
+    if (isCode(c) && c.toUpperCase() !== inUse.toUpperCase() && !others.some(o => o.toUpperCase() === c.toUpperCase())) others.push(c);
+  });
+  const countRaw = parseInt(String(at(find(/quantos discos|cuantos discos/)) || '').replace(/\D/g, ''), 10);
+  const odoRaw = String(at(find(/odometro/)) || '').replace(/[^\d]/g, '');
+  const odometer = odoRaw && odoRaw.length <= 7 ? parseInt(odoRaw, 10) : null;
+
+  return {
+    at: iTs >= 0 ? String(vals[iTs] || '') : '',
+    inUse,
+    others,
+    count: isNaN(countRaw) ? null : countRaw,
+    odometer: odometer && odometer > 0 ? odometer : null,
+  };
+}
+
+function trimHistory(list) {
+  return (Array.isArray(list) ? list : []).map(h => ({
+    ts: h.timestamp, co: h.checkoutTimestamp || null,
+    has: h.hasCheckin || 'Yes',
+    area: h.destAddress || '', lat: h.destLat || null, lng: h.destLng || null,
+    vs: h.vehicleStatus || '', vi: h.vehicleIssue || '',
+  }));
+}
+
+async function loadSummary(opts) {
+  if (!S.session || S.loading) return;
+  opts = opts || {};
+  S.loading = true;
+  renderRefresh();
+
+  const email = S.session.email;
+  const gen = S.gen;
+  const nc = opts.force ? { nocache: '1' } : {};
+  const prev = S.summary || {};
+  // Histórico SEM o cache do Worker (30 min) enquanto o check-in de hoje não
+  // aparece: senão a home podia mostrar "pendente" com a cópia velha (ex: fez o
+  // check-in no Safari e depois instalou o app) e o motorista enviava de novo.
+  // Depois que aparece, volta a usar o cache (alivia o pico das 7h–9h).
+  const ncHist = (opts.force || !computeToday(S.summary).ci) ? { nocache: '1' } : {};
+  // Obs: a aba Vehicle Issues NÃO entra aqui — cada check-in "parado no
+  // mecânico" abre uma linha nova e ninguém fecha (motorista com 15 "abertas"
+  // desde julho). O status do veículo vem do último check-in (vs/vi).
+  const parts = await Promise.allSettled([
+    api({ action: 'getBase', email }),
+    api({ action: 'getDriverHistory', email, days: '40', ...ncHist }),
+    api({ action: 'getLastAssetsForm', email, ...nc }),
+    api({ action: 'getDriverSsds', email }),
+    api({ action: 'getDriverDocsStatus', ...nc }),
+  ]);
+  // Saiu (ou trocou de conta) enquanto carregava: descarta. O logout já zerou
+  // S.loading, então o login novo carregou o resumo dele — não mexe em nada.
+  if (S.gen !== gen) return;
+  if (!S.session || S.session.email !== email) { S.loading = false; return; }
+  const ok = (i) => parts[i].status === 'fulfilled' ? parts[i].value : null;
+  const failed = parts.filter(p => p.status === 'rejected').length;
+  if (failed) console.warn('[Driver App] resumo: ' + failed + '/' + parts.length + ' leituras falharam', parts.filter(p => p.status === 'rejected').map(p => String(p.reason)));
+
+  const next = {
+    at: Date.now(),
+    base: ok(0) ? (ok(0).base || null) : (prev.base || null),
+    history: ok(1) ? trimHistory(ok(1).history) : (prev.history || []),
+    weekly: ok(2) ? parseWeekly(ok(2).assets) : (prev.weekly || null),
+    ssds: ok(3) ? (ok(3).ssds || []) : (prev.ssds || []),
+    docsAt: ok(4)
+      ? ((ok(4).submissions || []).find(s => norm(s.name) === norm(S.session.name)) || {}).timestamp || null
+      : (prev.docsAt || null),
+  };
+
+  S.loading = false;
+  if (failed === parts.length) {
+    // Tudo falhou (offline): mantém o que tinha, sem fingir que atualizou.
+    S.lastError = true;
+    renderHome();
+    return;
+  }
+  S.lastError = failed > 0 && !!S.summary;
+  S.summary = next;
+  lsSet(KEYS.summary + email, JSON.stringify(next));
+  renderHome();
+}
+
+/** Combina o histórico do servidor com o que o próprio app acabou de enviar (a fila pode atrasar a planilha). */
+function computeToday(sum) {
+  const tk = dayKey(new Date());
+  let ci = null, co = null;
+  (sum && sum.history || []).forEach(h => {
+    const d = toDate(h.ts);
+    if (d && h.has !== 'No' && dayKey(d) === tk && (!ci || d > ci.t)) ci = { t: d, area: h.area };
+    const c = toDate(h.co);
+    if (c && dayKey(c) === tk && (!co || c > co.t)) co = { t: c };
+  });
+  const ev = getEvents();
+  const evCi = ev.checkin ? new Date(ev.checkin) : null;
+  const evCo = ev.checkout ? new Date(ev.checkout) : null;
+  if (!ci && evCi && dayKey(evCi) === tk) ci = { t: evCi, pending: true };
+  if (!co && evCo && dayKey(evCo) === tk) co = { t: evCo, pending: true };
+  return { ci, co };
+}
+
+function computeMonth(sum) {
+  const now = new Date();
+  const days = new Set();
+  let last = null;
+  (sum && sum.history || []).forEach(h => {
+    const d = toDate(h.ts);
+    if (!d || h.has === 'No') return;
+    if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) days.add(dayKey(d));
+    if (!last || d > last) last = d;
+  });
+  const ev = getEvents();
+  if (ev.checkin) {
+    const e = new Date(ev.checkin);
+    if (e.getMonth() === now.getMonth() && e.getFullYear() === now.getFullYear()) days.add(dayKey(e));
+    if (!last || e > last) last = e;
+  }
+  return { days: days.size, last };
+}
+
+function lastArea(sum) {
+  const h = (sum && sum.history || []).find(x => x.area);
+  return h ? { address: h.area, lat: Number(h.lat) || null, lng: Number(h.lng) || null, t: toDate(h.ts) } : null;
+}
+
+function disksOf(sum) {
+  // 1º: o último relatório semanal do PRÓPRIO motorista (por e-mail). O
+  // getDriverSsds (até o backend v5.83) casa pelo VID numa resposta velha do
+  // Forms — às vezes os discos de quem usava o carro antes —, então só entra
+  // quando o motorista nunca mandou o relatório pelo formulário novo.
+  const w = sum && sum.weekly;
+  if (w && (w.inUse || w.others.length)) {
+    const total = Math.max(w.count || 0, (w.inUse ? 1 : 0) + w.others.length);
+    return { inUse: w.inUse, others: w.others, count: total, from: toDate(w.at) };
+  }
+  const ssds = (sum && sum.ssds) || [];
+  if (!ssds.length) return null;
+  const inUse = (ssds.find(s => s.inUse) || {}).code || '';
+  return { inUse, others: ssds.filter(s => !s.inUse).map(s => s.code), count: ssds.length, from: null };
+}
+
+// ================================================================
+// RESUMO DA HOME (tela)
+// ================================================================
+function renderRefresh() {
+  const btn = document.getElementById('home-refresh');
+  if (!btn) return;
+  btn.classList.toggle('spinning', S.loading);
+  btn.querySelector('span').textContent = S.loading ? t('refreshing')
+    : (S.summary ? t('updatedAgo', { ago: ago(new Date(S.summary.at)) }) : t('refreshing'));
+}
+
+function renderHome() {
+  if (!S.session) return;
+  const el = document.getElementById('home');
+  const sum = S.summary;
+  const name = firstName(S.session.name);
+  const cm = country(S.session.country);
+  const dateStr = cap(new Date().toLocaleDateString(LOCALE[S.lang], { weekday: 'long', day: 'numeric', month: 'long' }));
+
+  let html = '';
+
+  // ---- Hero ----
+  html += '<div class="hero">' +
+    '<div class="hero-top"><div class="hero-date">' + esc(dateStr) + '</div>' +
+    '<button type="button" class="refresh" id="home-refresh">' + ic('refresh') + '<span></span></button></div>' +
+    '<div class="hero-hello">' + esc(t('hello', { name })) + ' 👋</div>' +
+    // Sem país nem cidade na HR: não mostra um selo vazio só com o globo.
+    ((S.session.country || S.session.city) ?
+      '<div class="hero-chips">' +
+        '<span class="chip-glass">' + (cm ? esc(cm.flag) + ' ' : ic('globe')) + esc(countryName(S.session.country)) +
+        (S.session.city ? (S.session.country ? ' · ' : '') + esc(S.session.city) : '') + '</span>' +
+      '</div>' : '') +
+    '</div>';
+
+  // ---- Hoje ----
+  const today = computeToday(sum);
+  const fab = document.getElementById('fab');
+  const fabOk = document.getElementById('fab-ok');
+  if (fab) fab.classList.toggle('pending', !today.ci && !today.co);
+  if (fabOk) fabOk.classList.toggle('hidden', !today.ci && !today.co);
+
+  if (!sum && !today.ci) {
+    html += '<div class="today"><div class="today-ic sk"></div><div class="today-txt">' +
+      '<div class="sk" style="height:16px;width:70%"></div><div class="sk" style="height:12px;width:45%;margin-top:8px"></div></div></div>';
+  } else if (today.co) {
+    const inT = today.ci ? fmtTime(today.ci.t) : '—';
+    html += '<div class="today closed"><div class="today-ic">' + ic('flag') + '</div><div class="today-txt">' +
+      '<div class="today-title">' + esc(t('todayClosedT')) + '</div>' +
+      '<div class="today-sub">' + esc(t('todayClosedS', { in: inT, out: fmtTime(today.co.t) })) +
+      (today.co.pending ? ' <span class="today-sync">· ' + esc(t('syncing')) + '</span>' : '') + '</div></div></div>';
+  } else if (today.ci) {
+    html += '<div class="today done today-wide"><div class="today-ic">' + ic('ok') + '</div><div class="today-txt">' +
+      '<div class="today-title">' + esc(t('todayDoneT', { time: fmtTime(today.ci.t) })) + '</div>' +
+      '<div class="today-sub">' + (today.ci.pending ? '<span class="today-sync">' + esc(t('syncing')) + '</span> · ' : '') +
+      esc(t('todayDoneS')) + '</div></div>' +
+      '<button type="button" class="btn btn-soft" data-go="checkin">' + esc(t('todayDoneB')) + '</button></div>';
+  } else {
+    html += '<div class="today pending today-wide"><div class="today-ic">' + ic('clock') + '</div><div class="today-txt">' +
+      '<div class="today-title">' + esc(t('todayPendingT')) + '</div>' +
+      '<div class="today-sub">' + esc(t('todayPendingS')) + '</div></div>' +
+      '<button type="button" class="btn btn-primary" data-go="checkin">' + ic('checkin') + esc(t('todayPendingB')) + '</button></div>';
+  }
+
+  if (S.lastError) {
+    html += '<div class="notice">' + ic('alert') + '<div>' + esc(sum ? t('refreshFail') : t('loadFail')) + '</div></div>';
+  }
+
+  if (!sum) {
+    html += '<div class="section-title">&nbsp;</div>' +
+      '<div class="card"><div class="sk" style="height:18px;width:40%"></div><div class="sk" style="height:110px;margin-top:14px"></div></div>' +
+      '<div class="card"><div class="sk" style="height:18px;width:35%"></div><div class="sk" style="height:48px;margin-top:14px"></div></div>';
+    el.innerHTML = html;
+    bindHome();
+    return;
+  }
+
+  // ---- Onde você está ----
+  const base = sum.base;
+  const area = lastArea(sum);
+  const isHotel = base && norm(base.type) === 'hotel';
+  html += '<div class="section-title">' + esc(t('whereT')) + '</div><div class="card">';
+  if (base) {
+    const mapUrl = (base.lat && base.lng) ? 'https://www.google.com/maps/search/?api=1&query=' + base.lat + ',' + base.lng : '';
+    html += '<span class="base-badge ' + (isHotel ? 'hotel' : 'home') + '">' + ic(isHotel ? 'bed' : 'home') +
+      esc(isHotel ? t('baseHotel') : t('baseHome')) + '</span>' +
+      '<div class="base-addr">' + esc(base.address || '') + '</div>' +
+      '<div class="base-meta">' + esc(t('baseUpdated', { ago: ago(toDate(base.updatedAt)) })) +
+      (mapUrl ? ' · <a class="map-link" href="' + esc(mapUrl) + '" target="_blank" rel="noopener">' + esc(t('openMap')) + '</a>' : '') + '</div>';
+  } else {
+    html += '<div class="empty">' + esc(t('baseNone')) + '</div>';
+  }
+  const pts = [];
+  if (base && Number(base.lat) && Number(base.lng)) pts.push({ lat: Number(base.lat), lng: Number(base.lng), kind: 'base' });
+  if (area && area.lat && area.lng) pts.push({ lat: area.lat, lng: area.lng, kind: 'area' });
+  if (pts.length) {
+    html += '<div class="map-box" id="home-map"></div><div class="map-legend">' +
+      (pts.some(p => p.kind === 'base') ? '<span><i style="background:#2C5282"></i>' + esc(t('legendBase')) + '</span>' : '') +
+      (pts.some(p => p.kind === 'area') ? '<span><i style="background:#F59E0B"></i>' + esc(t('legendArea')) + '</span>' : '') + '</div>';
+  }
+  if (area) {
+    html += '<div class="last-area">' + ic('pin') + '<div><b>' + esc(t('lastArea')) +
+      (area.t ? ' · ' + esc(fmtDay(area.t)) : '') + '</b><div>' + esc(area.address) + '</div></div></div>';
+  }
+  html += '</div>';
+
+  // ---- Discos ----
+  const disks = disksOf(sum);
+  html += '<div class="card"><div class="card-h"><div class="card-ic">' + ic('disk') + '</div>' +
+    '<div class="card-t">' + esc(t('disksT')) + '</div>' +
+    (disks ? '<div class="card-meta">' + esc(t('disksCount', { n: disks.count })) + '</div>' : '') + '</div>';
+  if (disks) {
+    if (disks.inUse) {
+      html += '<div class="disk-inuse"><div class="disk-ic">' + ic('disk') + '</div><div>' +
+        '<small>' + esc(t('diskInUse')) + '</small><div class="mono">' + esc(disks.inUse) + '</div></div></div>';
+    }
+    if (disks.others.length) {
+      html += '<div class="disk-list">' + disks.others.map(c =>
+        '<span class="disk-chip mono">' + ic('disk') + esc(c) + '</span>').join('') + '</div>';
+    }
+  } else {
+    html += '<div class="empty">' + esc(t('disksNone')) + '</div>';
+  }
+  const w = sum.weekly;
+  if (w && w.odometer) {
+    html += '<div class="kv"><span>' + ic('gauge') + esc(t('odometer')) + '</span><b>' +
+      esc(w.odometer.toLocaleString(LOCALE[S.lang])) + ' km</b></div>';
+  }
+  if (disks && disks.from) {
+    html += '<div class="card-meta" style="margin-top:10px">' + esc(t('disksFrom', { date: fmtDay(disks.from) })) + '</div>';
+  }
+  html += '</div>';
+
+  // ---- Pendências ----
+  const ev = getEvents();
+  let weeklyAt = w ? toDate(w.at) : null;
+  if (ev.assets && (!weeklyAt || ev.assets > weeklyAt.getTime())) weeklyAt = new Date(ev.assets);
+  const weeklyLate = !weeklyAt || (Date.now() - weeklyAt.getTime()) > CFG.weeklyLateDays * 86400000;
+  let docsAt = toDate(sum.docsAt);
+  if (ev.docs && (!docsAt || ev.docs > docsAt.getTime())) docsAt = new Date(ev.docs);
+  const veh = lastVehicle(sum);
+
+  html += '<div class="section-title">' + esc(t('todoT')) + '</div><div class="card">';
+  html += todoRow(weeklyLate ? 'warn' : 'ok', weeklyLate ? 'clipboard' : 'ok', t('weeklyT'),
+    !weeklyAt ? t('weeklyNever') : (weeklyLate ? t('weeklyLate', { ago: ago(weeklyAt) }) : t('weeklyOk', { ago: ago(weeklyAt) })),
+    weeklyLate ? 'assets' : '');
+  html += todoRow(docsAt ? 'ok' : 'warn', docsAt ? 'ok' : 'id', t('docsT'),
+    docsAt ? t('docsOk', { ago: ago(docsAt) }) : t('docsPending'), docsAt ? '' : 'docs');
+  if (veh) {
+    const lvl = veh.status === 'critical' ? 'bad' : veh.status === 'minor' ? 'warn' : 'ok';
+    const title = lvl === 'bad' ? t('vehicleCritical') : lvl === 'warn' ? t('vehicleMinor') : t('vehicleOk');
+    const sub = (lvl !== 'ok' && veh.issue ? veh.issue + ' · ' : '') + t('vehicleFrom', { ago: ago(veh.t) });
+    html += todoRow(lvl, lvl === 'ok' ? 'ok' : 'car', title, sub, '');
+  }
+  html += '</div>';
+
+  // ---- Seu mês ----
+  const month = computeMonth(sum);
+  const monthName = new Date().toLocaleDateString(LOCALE[S.lang], { month: 'long' });
+  html += '<div class="section-title">' + esc(t('monthT')) + '</div><div class="stats">' +
+    '<div class="stat"><div class="stat-n">' + month.days + '</div><div class="stat-l">' + esc(t('monthDays', { month: monthName })) + '</div></div>' +
+    '<div class="stat"><div class="stat-n">' + (month.last ? esc(fmtDay(month.last)) : esc(t('never'))) + '</div><div class="stat-l">' + esc(t('lastCheckin')) + '</div></div>' +
+    '</div>';
+
+  html += '<div class="foot">' + esc(t('footer')) + '</div>';
+
+  el.innerHTML = html;
+  bindHome();
+
+  // Bolinhas de pendência na barra
+  const dotA = document.getElementById('dot-assets');
+  const dotD = document.getElementById('dot-docs');
+  if (dotA) dotA.classList.toggle('hidden', !weeklyLate);
+  if (dotD) dotD.classList.toggle('hidden', !!docsAt);
+
+  if (pts.length) drawMap(pts);
+}
+
+function cap(s) { s = String(s || ''); return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+/** Status do veículo informado no check-in mais recente (OK / Minor Issue / Critical Issue). */
+function lastVehicle(sum) {
+  let best = null;
+  (sum && sum.history || []).forEach(h => {
+    const d = toDate(h.ts);
+    if (!d || h.has === 'No' || !h.vs) return;
+    if (!best || d > best.t) best = { t: d, vs: h.vs, vi: h.vi };
+  });
+  if (!best) return null;
+  const v = norm(best.vs);
+  return {
+    t: best.t,
+    status: v.includes('critical') ? 'critical' : v.includes('minor') ? 'minor' : 'ok',
+    issue: String(best.vi || '').trim().slice(0, 90),
+  };
+}
+
+function todoRow(level, icon, title, sub, goTab) {
+  return '<div class="todo ' + level + '"><div class="todo-ic">' + ic(icon) + '</div>' +
+    '<div class="todo-txt"><div class="todo-t">' + esc(title) + '</div><div class="todo-s">' + esc(sub) + '</div></div>' +
+    (goTab ? '<button type="button" class="btn btn-soft btn-sm" data-go="' + goTab + '">' + esc(t('send')) + '</button>' : '') +
+    '</div>';
+}
+
+function bindHome() {
+  document.querySelectorAll('#home [data-go]').forEach(b => b.addEventListener('click', () => openTab(b.dataset.go)));
+  const r = document.getElementById('home-refresh');
+  if (r) r.addEventListener('click', () => loadSummary({ force: true }));
+  renderRefresh();
+}
+
+// ---- Mini-mapa (Leaflet + OSM; carregado só quando há coordenadas) ----
+let leafletPromise = null;
+function loadLeaflet() {
+  if (window.L) return Promise.resolve(window.L);
+  if (leafletPromise) return leafletPromise;
+  leafletPromise = new Promise((resolve, reject) => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s.onload = () => resolve(window.L);
+    s.onerror = () => { leafletPromise = null; reject(new Error('leaflet')); };
+    document.head.appendChild(s);
+  });
+  return leafletPromise;
+}
+
+function drawMap(pts) {
+  loadLeaflet().then(L => {
+    const box = document.getElementById('home-map');
+    if (!box) return;
+    if (S.map) { try { S.map.remove(); } catch (e) {} S.map = null; }
+    const map = L.map(box, {
+      zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
+      touchZoom: false, boxZoom: false, keyboard: false, tap: false, attributionControl: true,
+    });
+    map.attributionControl.setPrefix('');
+    // Sem CARTO: exige API key desde ago/2026. Tiles do próprio OSM.
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(map);
+    pts.forEach(p => {
+      L.circleMarker([p.lat, p.lng], {
+        radius: p.kind === 'base' ? 8 : 7, color: '#fff', weight: 3, opacity: 1,
+        fillColor: p.kind === 'base' ? '#2C5282' : '#F59E0B', fillOpacity: 1,
+      }).addTo(map);
+    });
+    if (pts.length > 1) map.fitBounds(pts.map(p => [p.lat, p.lng]), { padding: [26, 26], maxZoom: 14 });
+    else map.setView([pts[0].lat, pts[0].lng], 13);
+    S.map = map;
+  }).catch(() => {
+    const box = document.getElementById('home-map');
+    if (box) box.remove();
+  });
+}
+function invalidateMap() { if (S.map) { try { S.map.invalidateSize(); } catch (e) {} } }
+
+// ================================================================
+// PERFIL / IDIOMA / SAIR
+// ================================================================
+function isIos() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+function isStandalone() { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
+
+function openSheet() {
+  const s = S.session;
+  const cm = country(s.country);
+  S.logoutArmed = false;
+  let install = '';
+  if (!isStandalone()) {
+    install = S.installEvt
+      ? '<div class="sheet-row"><span>' + ic('download') + esc(t('install')) + '</span>' +
+        '<button type="button" class="btn btn-primary btn-sm" id="sheet-install">' + esc(t('install')) + '</button></div>'
+      : '<div class="sheet-row"><div class="sheet-hint">' + esc(isIos() ? t('installHintIos') : t('installHintAndroid')) + '</div></div>';
+  }
+  const sheet = document.getElementById('sheet');
+  sheet.innerHTML = '<div class="sheet-grab"></div>' +
+    '<div class="sheet-who"><div class="avatar">' + esc(initials(s.name)) + '</div><div style="min-width:0">' +
+      '<div class="sheet-name">' + esc(s.name) + '</div><div class="sheet-mail">' + esc(s.email) + '</div></div></div>' +
+    '<div class="sheet-row"><span>' + ic('globe') + esc(t('profileCountry')) + '</span><b>' +
+      (cm ? esc(cm.flag) + ' ' : '') + esc(countryName(s.country)) + '</b></div>' +
+    '<div class="sheet-row"><span>' + ic('globe') + esc(t('profileLang')) + '</span><div class="lang-seg">' +
+      ['pt', 'es', 'en'].map(l => '<button type="button" data-lang="' + l + '" class="' + (l === S.lang ? 'active' : '') + '">' + l.toUpperCase() + '</button>').join('') +
+    '</div></div>' + install +
+    // Escape pra página que travou (sem sinal etc.): no app instalado não tem o
+    // botão de recarregar do navegador nem puxar-pra-atualizar.
+    '<div class="sheet-row"><span>' + ic('refresh') + esc(t('reload')) + '</span>' +
+      '<button type="button" class="btn btn-soft btn-sm" id="sheet-reload">' + ic('refresh') + '</button></div>' +
+    '<button type="button" class="btn-out" id="sheet-logout">' + ic('logout') + '<span>' + esc(t('logout')) + '</span></button>';
+
+  sheet.querySelectorAll('.lang-seg button').forEach(b => b.addEventListener('click', () => { setLang(b.dataset.lang); openSheet(); }));
+  const ins = document.getElementById('sheet-install');
+  if (ins) ins.addEventListener('click', async () => {
+    try { S.installEvt.prompt(); await S.installEvt.userChoice; } catch (e) {}
+    S.installEvt = null; closeSheet();
+  });
+  document.getElementById('sheet-reload').addEventListener('click', () => {
+    console.log('[Driver App] recarregar pedido pelo motorista');
+    // Volta pro estado de base (sem a entrada do painel no histórico) e recarrega tudo.
+    history.replaceState({ tab: S.tab }, '', hashFor(S.tab));
+    location.reload();
+  });
+  document.getElementById('sheet-logout').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    if (!S.logoutArmed) {
+      S.logoutArmed = true;
+      btn.classList.add('confirm');
+      btn.querySelector('span').textContent = t('logoutConfirm');
+      setTimeout(() => { if (S.logoutArmed && btn.isConnected) { S.logoutArmed = false; btn.classList.remove('confirm'); btn.querySelector('span').textContent = t('logout'); } }, 4000);
+      return;
+    }
+    logout();
+  });
+
+  const bg = document.getElementById('sheet-bg');
+  bg.classList.remove('hidden'); sheet.classList.remove('hidden');
+  // 2 frames: o primeiro aplica o display, o segundo dispara a transição.
+  requestAnimationFrame(() => requestAnimationFrame(() => { bg.classList.add('open'); sheet.classList.add('open'); }));
+  // Entra no histórico: o "voltar" do Android fecha o painel em vez de trocar de aba.
+  // (openSheet é chamado de novo ao trocar idioma — só empilha na primeira vez.)
+  if (!S.sheetOpen) {
+    S.sheetOpen = true;
+    history.pushState({ tab: S.tab, sheet: true }, '', hashFor(S.tab));
+  }
+}
+/** fromHistory=true: já veio do "voltar" (ou é o logout) — não mexe no histórico de novo. */
+function closeSheet(fromHistory) {
+  const wasOpen = S.sheetOpen;
+  S.sheetOpen = false;
+  if (wasOpen && fromHistory !== true && history.state && history.state.sheet) history.back();
+  const bg = document.getElementById('sheet-bg');
+  const sheet = document.getElementById('sheet');
+  bg.classList.remove('open'); sheet.classList.remove('open');
+  setTimeout(() => { bg.classList.add('hidden'); sheet.classList.add('hidden'); }, 260);
+}
+
+function logout() {
+  const email = S.session && S.session.email;
+  console.log('[Driver App] logout: ' + email);
+  lsDel(KEYS.session);
+  // Idioma volta pro padrão: o próximo login cai no idioma do país dele
+  // (a não ser que escolha outro na tela de login).
+  lsDel(KEYS.lang);
+  // Os envios recentes (events) FICAM: a chave já é por e-mail, e são eles que
+  // seguram o "check-in feito" enquanto a planilha não recebeu — apagar fazia a
+  // home mostrar "pendente" depois de sair e entrar de novo (e o motorista reenviava).
+  if (email) lsDel(KEYS.summary + email);
+  S.gen++;
+  S.loading = false;
+  clearTimeout(S.preloadTimer); clearTimeout(S.refreshTimer);
+  S.session = null; S.summary = null; S.tab = 'home'; S.lastFrame = '';
+  if (S.map) { try { S.map.remove(); } catch (e) {} S.map = null; }
+  document.querySelectorAll('.frame-wrap').forEach(w => { w.innerHTML = ''; w.classList.remove('ready'); });
+  closeSheet(true);
+  history.replaceState({}, '', location.pathname + location.search);
+  document.getElementById('login-email').value = '';
+  showLogin();
+}
+
+function setLang(l, opts) {
+  if (!I18N[l]) return;
+  S.lang = l;
+  lsSet(KEYS.lang, l);
+  document.documentElement.lang = LOCALE[l];
+  if (opts && opts.silent) return;
+  applyStaticI18n();
+  if (S.session) {
+    renderNav(); renderSegs(); renderTitle(); renderHome();
+    // Repassa pras páginas embutidas que já estão abertas.
+    document.querySelectorAll('.frame-wrap iframe').forEach(f => {
+      try { if (f.contentWindow.SVEmbed) f.contentWindow.SVEmbed.setLang(l); } catch (e) {}
+    });
+  }
+}
+
+function applyStaticI18n() {
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
+  document.querySelectorAll('[data-tp]').forEach(el => { el.placeholder = t(el.dataset.tp); });
+  document.querySelectorAll('#login-lang button').forEach(b => b.classList.toggle('active', b.dataset.lang === S.lang));
+}
+
+// ================================================================
+// BOOT
+// ================================================================
+(function boot() {
+  const savedLang = lsGet(KEYS.lang);
+  S.lang = I18N[savedLang] ? savedLang : browserLang();
+  document.documentElement.lang = LOCALE[S.lang];
+
+  document.getElementById('login-form').addEventListener('submit', doLogin);
+  document.getElementById('login-email').addEventListener('input', () => { updateDomainHint(); loginError(''); });
+  document.querySelectorAll('#login-lang button').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+  document.getElementById('tb-avatar').addEventListener('click', openSheet);
+  document.getElementById('sheet-bg').addEventListener('click', () => closeSheet());
+  document.getElementById('home-scroll').addEventListener('scroll', (e) => {
+    if (S.tab === 'home') document.getElementById('topbar').classList.toggle('scrolled', e.target.scrollTop > 4);
+  }, { passive: true });
+
+  // Voltou pro app (estava em segundo plano): atualiza o resumo se envelheceu
+  // e recarrega páginas abertas em outro dia (ex: check-in deixado aberto ontem).
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !S.session) return;
+    Object.keys(TABS).forEach(tab => {
+      if (!TABS[tab].src || !frameStale(tab)) return;
+      console.log('[Driver App] aba ' + tab + ' é de outro dia — recarregando');
+      dropFrame(tab);
+      if (tab === S.tab || tab === 'checkin') ensureFrame(tab);
+    });
+    healFrames();
+    if (!S.summary || (Date.now() - S.summary.at) > CFG.summaryFreshMs) loadSummary();
+    else renderHome();
+  });
+  // Voltou a internet: abas que não carregaram tentam de novo.
+  window.addEventListener('online', () => { if (S.session) healFrames(); });
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.installEvt = e; });
+
+  const s = lsJson(KEYS.session, null);
+  if (s && s.email) {
+    S.session = s;
+    console.log('[Driver App] sessão lembrada: ' + s.email);
+    showApp();
+  } else {
+    showLogin();
+  }
+})();
+</script>
+</body>
+</html>

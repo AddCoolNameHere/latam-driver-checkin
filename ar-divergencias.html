@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Divergencias de Pago Argentina · Aceolution LATAM</title>
+<!-- Integração com o app do motorista (/app/). Só age com ?app=1. -->
+<script src="driver-embed.js?v=20261106app"></script>
 <link rel="icon" type="image/png" href="aceolution-globe.png">
 <link rel="stylesheet" href="theme.css?v=20261023toggle">
 <script src="theme.js?v=20261015ui"></script>
@@ -1438,6 +1440,18 @@ state.quinzenas = generateQuinzenas(12);
 applyI18n();
 rebuildQuinzenaSelect();
 loadDrivers();
+
+// Dentro do app (/app/): o motorista já está logado, então o passo 1
+// (Identificación) se resolve sozinho e a página abre direto na quinzena.
+if (window.SVEmbed) SVEmbed.run({
+  page: 'ardiv',
+  hide: ['#step-2-back', '#step-1 .step-sub'],
+  after: () => {
+    const step1 = document.getElementById('step-1');
+    const next = document.getElementById('step-1-next');
+    if (step1 && !step1.classList.contains('hidden') && next && !next.disabled) next.click();
+  },
+});
 
 </script>
 
