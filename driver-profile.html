@@ -579,6 +579,9 @@
   }
   .hero-status-active { background: var(--dp-ok-bg); color: var(--dp-ok-fg); border-color: var(--dp-ok-bd); }
   .hero-status-inactive { background: var(--dp-bad-bg); color: var(--dp-bad-fg); border-color: var(--dp-bad-bd); }
+  /* Situation=Vacation na HR: não é "inativo" — selo próprio (teal) */
+  .hero-status-vacation { background: rgba(13,148,136,.10); color: #0F766E; border-color: rgba(13,148,136,.28); }
+  [data-theme="dark"] .hero-status-vacation { background: rgba(45,212,191,.12); color: #5EEAD4; border-color: rgba(45,212,191,.3); }
   /* Botão X pra fechar perfil e voltar pra busca (ghost, 32px) */
   .hero-close {
     flex-shrink: 0;
@@ -2221,6 +2224,7 @@ let state = {
 const I18N = {
   pt: {
     loginTitle: 'Login',
+    statusVacation: 'De férias',
     loginSubtitle: 'Acesse com suas credenciais',
     loginUser: 'Usuário',
     loginPass: 'Senha',
@@ -2380,6 +2384,7 @@ const I18N = {
   },
   es: {
     loginTitle: 'Login',
+    statusVacation: 'De vacaciones',
     loginSubtitle: 'Accede con tus credenciales',
     loginUser: 'Usuario',
     loginPass: 'Contraseña',
@@ -2539,6 +2544,7 @@ const I18N = {
   },
   en: {
     loginTitle: 'Login',
+    statusVacation: 'On vacation',
     loginSubtitle: 'Sign in with your credentials',
     loginUser: 'Username',
     loginPass: 'Password',
@@ -3094,8 +3100,11 @@ function renderProfile(p) {
   document.getElementById('hero-avatar').textContent = initials;
   document.getElementById('hero-name').textContent = p.driver.name;
 
-  const statusClass = p.driver.status === 'Active' ? 'hero-status-active' : 'hero-status-inactive';
-  const statusLabel = p.driver.status || '—';
+  // Situation=Vacation (férias) não é "inativo": selo próprio "🌴 De férias".
+  const onVacation = /vacation|f[eé]rias|vacaciones/i.test(String(p.driver.status || ''));
+  const statusClass = p.driver.status === 'Active' ? 'hero-status-active'
+    : onVacation ? 'hero-status-vacation' : 'hero-status-inactive';
+  const statusLabel = onVacation ? '🌴 ' + t('statusVacation') : (p.driver.status || '—');
   let metaHtml = `
     <span class="hero-meta-item">📍 ${escapeHtml(p.driver.country || '—')}</span>
     <span class="hero-meta-item">📧 ${escapeHtml(p.driver.email || '—')}</span>

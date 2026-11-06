@@ -296,6 +296,7 @@ svg.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-wid
 .today.pending .today-ic { background: #FEF3C7; color: #B45309; }
 .today.done .today-ic { background: #DCFCE7; color: #15803D; }
 .today.closed .today-ic { background: var(--c-bg-tint); color: var(--c-primary); }
+.today.vacation .today-ic { background: #CCFBF1; font-size: 26px; line-height: 1; }
 .today-txt { flex: 1; min-width: 0; }
 .today-title { font-weight: 700; font-size: 15.5px; line-height: 1.25; }
 .today-sub { font-size: 13px; color: var(--c-text-muted); margin-top: 2px; }
@@ -565,6 +566,11 @@ const I18N = {
     todayDoneB: 'Encerrar o dia',
     todayClosedT: 'Dia encerrado',
     todayClosedS: 'Check-in {in} · checkout {out}',
+    vacT: 'Você está de férias',
+    vacS: 'Aproveite! Não precisa fazer check-in. Voltou antes? Faça o check-in normalmente.',
+    vacB: 'Voltei — fazer check-in',
+    vacChip: 'De férias',
+    vacPaused: 'Pausado durante as férias',
     syncing: 'enviado — sincronizando',
     whereT: 'Onde você está',
     baseHome: 'Em casa', baseHotel: 'Em hotel',
@@ -637,6 +643,11 @@ const I18N = {
     todayDoneB: 'Terminar el día',
     todayClosedT: 'Día terminado',
     todayClosedS: 'Check-in {in} · checkout {out}',
+    vacT: 'Estás de vacaciones',
+    vacS: '¡Disfrutá! No hace falta hacer check-in. ¿Volviste antes? Hacé el check-in normalmente.',
+    vacB: 'Volví — hacer check-in',
+    vacChip: 'De vacaciones',
+    vacPaused: 'En pausa durante las vacaciones',
     syncing: 'enviado — sincronizando',
     whereT: 'Dónde estás',
     baseHome: 'En casa', baseHotel: 'En hotel',
@@ -709,6 +720,11 @@ const I18N = {
     todayDoneB: 'End my day',
     todayClosedT: 'Day closed',
     todayClosedS: 'Check-in {in} · check-out {out}',
+    vacT: "You're on vacation",
+    vacS: 'Enjoy! No check-in needed. Back early? Just check in as usual.',
+    vacB: "I'm back — check in",
+    vacChip: 'On vacation',
+    vacPaused: 'Paused while on vacation',
     syncing: 'sent — syncing',
     whereT: 'Where you are',
     baseHome: 'At home', baseHotel: 'At a hotel',
@@ -843,6 +859,8 @@ function ago(d) {
 function country(c) { return COUNTRIES[norm(c)] || null; }
 function countryName(c) { const m = country(c); return m ? (m[S.lang] || m.pt) : String(c || ''); }
 function isAR() { return !!S.session && norm(S.session.country) === 'argentina'; }
+/** Situation "Vacation" na HR (vem no getDrivers a partir do backend v5.84). */
+function onVacation() { return !!S.session && /vacation|ferias|vacaciones/.test(norm(S.session.situation)); }
 function firstName(name) {
   const w = String(name || '').trim().split(/\s+/)[0] || '';
   return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '';
@@ -966,6 +984,7 @@ async function doLogin(ev) {
     name: String(driver.name || '').trim(),
     country: String(driver.country || '').trim(),
     city: String(driver.city || '').trim(),
+    situation: String(driver.situation || '').trim(),   // "Vacation" = de férias (backend v5.84+)
     at: Date.now(),
   };
   lsSet(KEYS.session, JSON.stringify(S.session));
@@ -1030,8 +1049,11 @@ async function revalidateSession() {
     }
     if (!d || !S.session || S.session.email.toLowerCase() !== email) return;
     const next = { ...S.session, name: String(d.name || '').trim() || S.session.name,
-      country: String(d.country || '').trim() || S.session.country, city: String(d.city || '').trim() };
-    if (next.name !== S.session.name || next.country !== S.session.country || next.city !== S.session.city) {
+      country: String(d.country || '').trim() || S.session.country, city: String(d.city || '').trim(),
+      // Backend antigo não manda situation: mantém o que tinha (não "tira" a férias por engano).
+      situation: d.situation !== undefined ? String(d.situation || '').trim() : (S.session.situation || '') };
+    if (next.name !== S.session.name || next.country !== S.session.country || next.city !== S.session.city ||
+        next.situation !== (S.session.situation || '')) {
       S.session = next;
       lsSet(KEYS.session, JSON.stringify(next));
       document.getElementById('tb-avatar').textContent = initials(next.name);
@@ -1442,6 +1464,7 @@ function renderHome() {
   const name = firstName(S.session.name);
   const cm = country(S.session.country);
   const dateStr = cap(new Date().toLocaleDateString(LOCALE[S.lang], { weekday: 'long', day: 'numeric', month: 'long' }));
+  const vacation = onVacation();
 
   let html = '';
 
@@ -1451,10 +1474,12 @@ function renderHome() {
     '<button type="button" class="refresh" id="home-refresh">' + ic('refresh') + '<span></span></button></div>' +
     '<div class="hero-hello">' + esc(t('hello', { name })) + ' 👋</div>' +
     // Sem país nem cidade na HR: não mostra um selo vazio só com o globo.
-    ((S.session.country || S.session.city) ?
+    ((S.session.country || S.session.city || vacation) ?
       '<div class="hero-chips">' +
-        '<span class="chip-glass">' + (cm ? esc(cm.flag) + ' ' : ic('globe')) + esc(countryName(S.session.country)) +
-        (S.session.city ? (S.session.country ? ' · ' : '') + esc(S.session.city) : '') + '</span>' +
+        ((S.session.country || S.session.city) ?
+          '<span class="chip-glass">' + (cm ? esc(cm.flag) + ' ' : ic('globe')) + esc(countryName(S.session.country)) +
+          (S.session.city ? (S.session.country ? ' · ' : '') + esc(S.session.city) : '') + '</span>' : '') +
+        (vacation ? '<span class="chip-glass">🌴 ' + esc(t('vacChip')) + '</span>' : '') +
       '</div>' : '') +
     '</div>';
 
@@ -1462,10 +1487,16 @@ function renderHome() {
   const today = computeToday(sum);
   const fab = document.getElementById('fab');
   const fabOk = document.getElementById('fab-ok');
-  if (fab) fab.classList.toggle('pending', !today.ci && !today.co);
+  // De férias: o botão do check-in não fica pulsando cobrando.
+  if (fab) fab.classList.toggle('pending', !today.ci && !today.co && !vacation);
   if (fabOk) fabOk.classList.toggle('hidden', !today.ci && !today.co);
 
-  if (!sum && !today.ci) {
+  if (vacation && !today.ci && !today.co) {
+    html += '<div class="today vacation today-wide"><div class="today-ic" aria-hidden="true">🌴</div><div class="today-txt">' +
+      '<div class="today-title">' + esc(t('vacT')) + '</div>' +
+      '<div class="today-sub">' + esc(t('vacS')) + '</div></div>' +
+      '<button type="button" class="btn btn-soft" data-go="checkin">' + esc(t('vacB')) + '</button></div>';
+  } else if (!sum && !today.ci) {
     html += '<div class="today"><div class="today-ic sk"></div><div class="today-txt">' +
       '<div class="sk" style="height:16px;width:70%"></div><div class="sk" style="height:12px;width:45%;margin-top:8px"></div></div></div>';
   } else if (today.co) {
@@ -1566,9 +1597,14 @@ function renderHome() {
   const veh = lastVehicle(sum);
 
   html += '<div class="section-title">' + esc(t('todoT')) + '</div><div class="card">';
-  html += todoRow(weeklyLate ? 'warn' : 'ok', weeklyLate ? 'clipboard' : 'ok', t('weeklyT'),
-    !weeklyAt ? t('weeklyNever') : (weeklyLate ? t('weeklyLate', { ago: ago(weeklyAt) }) : t('weeklyOk', { ago: ago(weeklyAt) })),
-    weeklyLate ? 'assets' : '');
+  if (vacation) {
+    // De férias não roda o carro: o relatório semanal não fica cobrando.
+    html += todoRow('ok', 'ok', t('weeklyT'), t('vacPaused'), '');
+  } else {
+    html += todoRow(weeklyLate ? 'warn' : 'ok', weeklyLate ? 'clipboard' : 'ok', t('weeklyT'),
+      !weeklyAt ? t('weeklyNever') : (weeklyLate ? t('weeklyLate', { ago: ago(weeklyAt) }) : t('weeklyOk', { ago: ago(weeklyAt) })),
+      weeklyLate ? 'assets' : '');
+  }
   html += todoRow(docsAt ? 'ok' : 'warn', docsAt ? 'ok' : 'id', t('docsT'),
     docsAt ? t('docsOk', { ago: ago(docsAt) }) : t('docsPending'), docsAt ? '' : 'docs');
   if (veh) {
@@ -1595,7 +1631,7 @@ function renderHome() {
   // Bolinhas de pendência na barra
   const dotA = document.getElementById('dot-assets');
   const dotD = document.getElementById('dot-docs');
-  if (dotA) dotA.classList.toggle('hidden', !weeklyLate);
+  if (dotA) dotA.classList.toggle('hidden', !weeklyLate || vacation);
   if (dotD) dotD.classList.toggle('hidden', !!docsAt);
 
   if (pts.length) drawMap(pts);

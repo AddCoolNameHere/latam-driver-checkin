@@ -787,6 +787,20 @@
   .scorecard.danger::before { background: var(--c-danger); }
   .scorecard.accent::before { background: var(--c-accent); }
   .scorecard.success::before { background: #22C55E; }
+  /* v5.84: motoristas com Situation=Vacation na HR — fora das contagens, listados à parte */
+  .vacation-strip {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    background: var(--c-surface); border-radius: 12px; padding: 10px 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 12px; font-size: 13px;
+  }
+  .vacation-strip.hidden { display: none; }
+  .vacation-strip-title { font-weight: 700; color: var(--c-text); margin-right: 4px; }
+  .vacation-strip-sub { color: var(--c-text-muted, #64748B); margin-right: 6px; }
+  .vacation-chip {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px;
+    background: #CCFBF1; color: #115E59; text-decoration: none; font-weight: 600; white-space: nowrap;
+  }
+  .vacation-chip:hover { background: #99F6E4; }
   .scorecard.success .scorecard-value { color: #16A34A; }
 
   .scorecard-label {
@@ -2376,6 +2390,7 @@
     <div class="scorecard-sub" data-i18n="scIssuesSub">veículos no período</div>
   </div>
 </div>
+<div class="vacation-strip hidden" id="vacation-strip"></div>
 
 <div class="map-section">
   <div class="section-header">
@@ -2917,6 +2932,9 @@ const I18N = {
     scActiveDrivers: 'DRIVERS ATIVOS',
     scInFilter: 'no filtro selecionado',
     scWithCheckin: 'com check-in no período',
+    vacationTitle: '🌴 De férias',
+    vacationSub: 'fora das contagens acima',
+    vacationShort: 'de férias',
     scHotelMode: 'EM HOTEL MODE',
     scOfTotal: '% do total',
     scSavings: 'ECONOMIA HOTEL MODE',
@@ -3295,6 +3313,9 @@ const I18N = {
     scActiveDrivers: 'CONDUCTORES ACTIVOS',
     scInFilter: 'en el filtro seleccionado',
     scWithCheckin: 'con check-in en el período',
+    vacationTitle: '🌴 De vacaciones',
+    vacationSub: 'fuera de los conteos de arriba',
+    vacationShort: 'de vacaciones',
     scHotelMode: 'EN HOTEL MODE',
     scOfTotal: '% del total',
     scSavings: 'AHORRO HOTEL MODE',
@@ -3673,6 +3694,9 @@ const I18N = {
     scActiveDrivers: 'ACTIVE DRIVERS',
     scInFilter: 'in selected filter',
     scWithCheckin: 'checked in this period',
+    vacationTitle: '🌴 On vacation',
+    vacationSub: 'not counted above',
+    vacationShort: 'on vacation',
     scHotelMode: 'IN HOTEL MODE',
     scOfTotal: '% of total',
     scSavings: 'HOTEL MODE SAVINGS',
@@ -4745,7 +4769,18 @@ async function fetchRealData(forceRefresh) {
   const hmByEmail = {};
   state.hmByDriver.forEach(d => { if (d.email) hmByEmail[d.email] = d; });
 
-  const { drivers, bases, lastCheckins } = dashData.data;
+  const { bases, lastCheckins } = dashData.data;
+  // v5.84: o backend manda também quem está de FÉRIAS (Situation=Vacation na HR).
+  // Eles saem de TODAS as contagens/mapa/rankings (que seguem só com ativos, como
+  // antes) e aparecem à parte no bloco "De férias". Backend antigo: situation não
+  // vem e nada muda.
+  const isVacation = (d) => /vacation|f[eé]rias|vacaciones/i.test(String(d.situation || ''));
+  const allDrivers = dashData.data.drivers || [];
+  state.vacation = allDrivers.filter(isVacation).map(d => ({
+    name: d.name, email: d.email, country: d.country,
+  }));
+  const drivers = allDrivers.filter(d => !isVacation(d));
+  if (state.vacation.length) console.log('[Dashboard] ' + state.vacation.length + ' motorista(s) de férias fora das contagens');
 
   // Consolida tudo num único array
   const enriched = drivers.map(d => {
@@ -8797,6 +8832,28 @@ function translateCountry(c) {
   return map[c] || c;
 }
 
+/** Motoristas de férias (Situation=Vacation na HR) dentro do filtro de país atual. */
+function vacationInFilter() {
+  return (state.vacation || []).filter(d =>
+    state.filter.country === 'all' || d.country === state.filter.country);
+}
+
+/** Bloco "🌴 De férias": nome clicável → perfil do motorista. Some quando não há ninguém. */
+function renderVacationStrip(list) {
+  const el = document.getElementById('vacation-strip');
+  if (!el) return;
+  if (!list.length) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+  const sorted = [...list].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR'));
+  el.innerHTML =
+    '<span class="vacation-strip-title">' + escapeHtml(t('vacationTitle')) + ' (' + list.length + ')</span>' +
+    '<span class="vacation-strip-sub">' + escapeHtml(t('vacationSub')) + '</span>' +
+    sorted.map(d =>
+      '<a class="vacation-chip" href="driver-profile.html?email=' + encodeURIComponent(d.email || '') + '"' +
+      ' title="' + escapeHtml((d.email || '') + (d.country ? ' · ' + d.country : '')) + '">' +
+      escapeHtml(d.name || d.email || '—') + '</a>').join('');
+  el.classList.remove('hidden');
+}
+
 function renderScorecards(drivers, periodHours) {
   const total = drivers.length;
   const withCheckin = drivers.filter(d => d.hoursAgo !== null && d.hoursAgo <= periodHours).length;
@@ -8813,7 +8870,10 @@ function renderScorecards(drivers, periodHours) {
   }, 0);
 
   document.getElementById('sc-total').textContent = total;
-  document.getElementById('sc-total-sub').textContent = withCheckin + ' ' + t('scWithCheckin');
+  const vac = vacationInFilter();
+  document.getElementById('sc-total-sub').textContent = withCheckin + ' ' + t('scWithCheckin') +
+    (vac.length ? ' · 🌴 ' + vac.length + ' ' + t('vacationShort') : '');
+  renderVacationStrip(vac);
 
   document.getElementById('sc-hotel').textContent = hotelMode;
   const pct = total > 0 ? Math.round((hotelMode / total) * 100) : 0;

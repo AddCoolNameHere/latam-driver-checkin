@@ -170,11 +170,14 @@ function doGet(e) {
     if (action === 'getDrivers') {
       // v5.32: inclui drivers em offboarding pro check-in não deixar ninguém de fora
       // v5.51: cache de 30min — a lista quase não muda e a leitura da HR inteira é cara
+      // v5.84: inclui quem está de FÉRIAS (Situation=Vacation) + campo situation —
+      // o app dos motoristas faz login por essa lista e mostra "de férias".
+      // Chave v2: a lista mudou de formato, não reaproveita o cache antigo.
       const cache = CacheService.getScriptCache();
-      const cached = cache.get('checkin_drivers_v1');
+      const cached = cache.get('checkin_drivers_v2');
       if (cached) return jsonResponse({ success: true, drivers: JSON.parse(cached), cached: true });
-      const drivers = getActiveDrivers(true);
-      try { cache.put('checkin_drivers_v1', JSON.stringify(drivers), 1800); } catch (e) {}
+      const drivers = getActiveDrivers(true, true);
+      try { cache.put('checkin_drivers_v2', JSON.stringify(drivers), 1800); } catch (e) {}
       return jsonResponse({ success: true, drivers: drivers });
     }
 
@@ -809,7 +812,14 @@ function doPost(e) {
 // FUNÇÕES DE LEITURA — ORIGINAIS (portal check-in)
 // ================================================================
 
-function getActiveDrivers(includeOffboarding) {
+// v5.84: Situation "Vacation" na HR (férias). Motorista de férias continua sendo
+// motorista: entra no app e no check-in (pode voltar antes de a HR mudar o status),
+// mas NÃO entra nas contagens de ativos (portal do cliente, metas).
+function isVacationSituation_(sit) {
+  return /vacation|f[eé]rias|vacaciones/i.test(String(sit || ''));
+}
+
+function getActiveDrivers(includeOffboarding, includeVacation) {
   const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
   const sheet = ss.getSheetByName(CONFIG.hrSheet);
   const data = sheet.getDataRange().getValues();
@@ -824,13 +834,15 @@ function getActiveDrivers(includeOffboarding) {
   const drivers = [];
   for (let i = 1; i < data.length; i++) {
     const sit = data[i][situationIdx];
-    const ok = sit === 'Active' || (includeOffboarding && sit === 'Offboarding');
+    const ok = sit === 'Active' || (includeOffboarding && sit === 'Offboarding') ||
+               (includeVacation && isVacationSituation_(sit));
     if (ok && data[i][emailIdx]) {
       drivers.push({
         name: String(data[i][nameIdx] || '').trim(),
         email: String(data[i][emailIdx]).trim(),
         country: String(data[i][countryIdx] || '').trim(),
         city: data[i][cityIdx] || '',
+        situation: String(sit || '').trim(),   // v5.84: o app mostra "de férias"
       });
     }
   }
@@ -912,7 +924,7 @@ function getDriverLastArea(email) {
 // FUNÇÕES DE LEITURA — v2 (dashboard)
 // ================================================================
 
-function getDriversWithAddress() {
+function getDriversWithAddress(includeVacation) {
   const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
   const sheet = ss.getSheetByName(CONFIG.hrSheet);
   const data = sheet.getDataRange().getValues();
@@ -930,12 +942,15 @@ function getDriversWithAddress() {
 
   const drivers = [];
   for (let i = 1; i < data.length; i++) {
-    if (data[i][situationIdx] === 'Active' && data[i][emailIdx]) {
+    const sit = data[i][situationIdx];
+    const ok = sit === 'Active' || (includeVacation && isVacationSituation_(sit));
+    if (ok && data[i][emailIdx]) {
       drivers.push({
         name: data[i][nameIdx],
         email: data[i][emailIdx],
         country: data[i][countryIdx],
         city: data[i][cityIdx] || '',
+        situation: String(sit || '').trim(),   // v5.84: dashboard separa "de férias"
         zipCode: zipIdx >= 0 ? String(data[i][zipIdx] || '').trim() : '',
         fullAddress: addressIdx >= 0 ? (data[i][addressIdx] || '') : '',
         homeLat: homeLatIdx >= 0 ? (data[i][homeLatIdx] || null) : null,
@@ -957,7 +972,9 @@ function getDashboardData(days) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
 
-  const drivers = getDriversWithAddress();
+  // v5.84: inclui quem está de férias (com situation) — o dashboard tira eles
+  // das contagens e mostra à parte como "De férias".
+  const drivers = getDriversWithAddress(true);
 
   const bases = {};
   if (baseSheet && baseSheet.getLastRow() > 1) {
@@ -5060,7 +5077,8 @@ function sendDailyReport() {
   const checkins = data.lastCheckins;
 
   // Drivers ativos (só pros ativos, não PMO)
-  const activeDrivers = drivers.filter(d => d.email);
+  // v5.84: getDashboardData agora traz quem está de férias — fora das contagens/alertas
+  const activeDrivers = drivers.filter(d => d.email && !isVacationSituation_(d.situation));
 
   // Drivers sem check-in há mais de X horas (threshold configurável)
   const missingDrivers = [];
@@ -5213,7 +5231,8 @@ function sendWeeklyReport() {
   const drivers = data.drivers;
   const bases = data.bases;
   const checkins = data.lastCheckins;
-  const activeDrivers = drivers.filter(d => d.email);
+  // v5.84: getDashboardData agora traz quem está de férias — fora das contagens/alertas
+  const activeDrivers = drivers.filter(d => d.email && !isVacationSituation_(d.situation));
 
   // Métricas
   const now = Date.now();
