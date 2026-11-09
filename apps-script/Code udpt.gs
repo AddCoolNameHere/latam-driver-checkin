@@ -140,6 +140,11 @@ const EMAIL_CONFIG = {
   // v5.16: notificações de cash requests/receipts (pedidos de dinheiro/reembolso)
   cashRecipients: 'lucas.fuss@aceolution.com',
 
+  // v5.85: resumo semanal de cash (pedidos + recibos da semana passada), toda segunda.
+  // Ver sendWeeklyCashDigest / setupWeeklyCashDigest.
+  cashDigestRecipients: 'bia@aceolution.com, santhosh.b@aceolution.com, priyaspb@aceolution.com',
+  cashDigestHour: 8,  // 8h SP = 16:30 na Índia
+
   // Link público do dashboard (pra botão "Abrir dashboard" nos emails)
   dashboardUrl: 'https://addcoolnamehere.github.io/latam-driver-checkin/dashboard.html',
 
@@ -305,7 +310,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.84',
+        version: 'v5.85',
         ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
@@ -8294,10 +8299,12 @@ function getCashTransactions_(startDate, endDate) {
     if (sheet && sheet.getLastRow() >= 2) {
       const lastCol = Math.max(sheet.getLastColumn(), 20);
       const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, lastCol).getValues();
-      // Estrutura: A=Beneficiary, B=Country, C=USD Amount, D=Date Request, E=Date Needed,
-      // F=Reason, G=Responsible, H=Status, I=Save, K=Google Rates,
-      // L=Local Amount, M=Currency, N=USD Rate Used,
+      // Estrutura (mesma do saveCashRequest_): A=Beneficiary, B=Country, C=USD Amount,
+      // D=Date Request, E=Date Needed, F=Reason, G=Responsible, H=Status, I=Fee USD,
+      // J=Local Amount, K=Personal E-mail, L=Corporate E-mail, M=Month, N=(vazio),
       // O=Category, P=Location Address, Q=Lat, R=Lng, S=Method, T=Attachment URL
+      // v5.85: antes lia valor local em L e moeda em M (layout antigo) → ramp.html mostrava
+      // "COP 0" e o mês no lugar da moeda. Não existe coluna de moeda: deriva do país.
       data.forEach((row, idx) => {
         if (!row[0] || !row[3]) return;  // sem driver ou sem data
         const dateRequest = row[3] instanceof Date ? row[3] : new Date(row[3]);
@@ -8305,11 +8312,15 @@ function getCashTransactions_(startDate, endDate) {
         if (start && dateRequest < start) return;
         if (end && dateRequest > end) return;
 
+        const country = String(row[1] || '').trim();
+        const usdAmount = safeNumber(row[2]);
+        const localAmount = safeNumber(row[9]);
         requests.push({
           rowIdx: idx + 2,  // pra futuras edições admin
           driverName: String(row[0] || '').trim(),
-          country: String(row[1] || '').trim(),
-          usdAmount: safeNumber(row[2]),
+          driverEmail: String(row[11] || '').trim(),
+          country: country,
+          usdAmount: usdAmount,
           dateRequest: Utilities.formatDate(dateRequest, 'America/Sao_Paulo', 'yyyy-MM-dd HH:mm:ss'),
           dateNeeded: row[4] instanceof Date
             ? Utilities.formatDate(row[4], 'America/Sao_Paulo', 'yyyy-MM-dd')
@@ -8317,9 +8328,9 @@ function getCashTransactions_(startDate, endDate) {
           reason: String(row[5] || '').trim(),
           responsible: String(row[6] || '').trim(),
           status: String(row[7] || '').trim() || 'Pending',
-          localAmount: safeNumber(row[11]),
-          currency: String(row[12] || '').toUpperCase(),
-          usdRate: safeNumber(row[13]),
+          localAmount: localAmount,
+          currency: CASH_COUNTRY_CURRENCY[country.toLowerCase()] || '',
+          usdRate: localAmount > 0 && usdAmount > 0 ? Math.round(localAmount / usdAmount * 1e6) / 1e6 : null,
           category: String(row[14] || '').trim(),
           locationAddress: String(row[15] || '').trim(),
           locationLat: row[16] !== '' && row[16] !== null ? safeNumber(row[16]) : null,
@@ -8535,10 +8546,10 @@ function updateCashRequest_(data) {
     reason: oldRow[5],
     responsible: oldRow[6],
     status: oldRow[7],
-    localAmount: oldRow[11],
-    currency: oldRow[12],
+    localAmount: oldRow[9],   // v5.85: J (antes lia L = e-mail)
     category: oldRow[14],
   };
+  const currency = CASH_COUNTRY_CURRENCY[String(oldRow[1] || '').trim().toLowerCase()] || '';
 
   // Aplica updates (só nos campos que vieram)
   if (data.status !== undefined) sheet.getRange(rowIdx, 8).setValue(data.status);
@@ -8548,20 +8559,20 @@ function updateCashRequest_(data) {
     const dn = data.dateNeeded ? new Date(data.dateNeeded + 'T12:00:00') : '';
     sheet.getRange(rowIdx, 5).setValue(dn);
   }
+  // v5.85: valor local mora em J (col 10). Antes gravava em L (e-mail corporativo!),
+  // a "moeda" em M (Mês) e o rate em N. E como o ramp.html manda localAmount em TODA
+  // edição (lido errado = 0), trocar só o status zerava o USD. Agora: só mexe se o
+  // valor mudou de verdade; moeda vem do país (não existe coluna de moeda).
   if (data.localAmount !== undefined) {
     const localAmount = safeNumber(data.localAmount);
-    sheet.getRange(rowIdx, 12).setValue(localAmount);
-    // Recalcula USD se moeda + valor presentes
-    const currency = data.currency || oldRow[12];
-    if (currency) {
-      const conv = convertToUsd_(localAmount, currency);
-      if (conv.usdAmount !== null) {
-        sheet.getRange(rowIdx, 3).setValue(conv.usdAmount);
-        sheet.getRange(rowIdx, 14).setValue(conv.rate);
+    if (localAmount !== safeNumber(oldRow[9])) {
+      sheet.getRange(rowIdx, 10).setValue(localAmount);
+      if (currency) {
+        const conv = convertToUsd_(localAmount, currency);
+        if (conv.usdAmount !== null) sheet.getRange(rowIdx, 3).setValue(conv.usdAmount);
       }
     }
   }
-  if (data.currency !== undefined) sheet.getRange(rowIdx, 13).setValue(String(data.currency).toUpperCase());
   if (data.category !== undefined) sheet.getRange(rowIdx, 15).setValue(data.category);
 
   appendCashAudit_('UPDATE', CONFIG.cashTransferSheet, rowIdx, before, data, data.adminUser);
@@ -8647,8 +8658,8 @@ function deleteCashRequest_(data) {
     dateRequest: oldRow[3],
     reason: oldRow[5],
     status: oldRow[7],
-    localAmount: oldRow[11],
-    currency: oldRow[12],
+    localAmount: oldRow[9],   // v5.85: J (antes lia L = e-mail)
+    driverEmail: oldRow[11],
   };
 
   // Loga ANTES de deletar (senão perde a info)
@@ -9045,6 +9056,321 @@ function escapeHtml_(s) {
   return String(s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+
+// ================================================================
+// v5.85: RESUMO SEMANAL DE CASH — pedidos de dinheiro + recibos (reembolsos)
+// ================================================================
+//
+// Toda segunda (EMAIL_CONFIG.cashDigestHour, hora de SP) manda pra
+// EMAIL_CONFIG.cashDigestRecipients um resumão da semana ANTERIOR
+// (seg 00:00 → dom 23:59:59, hora de SP), agrupado país → motorista.
+// Mesma fonte dos emails individuais (sendCashNotificationEmail_):
+//   - Cash Transfer Management (pedidos) — SÓ os enviados pelo app (cash.html).
+//     Lançamentos do admin (salário/reembolso mensal em lote) entram com data
+//     sem hora (00:00:00 no fuso da planilha) e ficam de fora: não são "pedidos".
+//   - Cash Receipts BR + HC (recibos de gasto = reembolsos)
+// Email em inglês: o Santhosh (Aceolution) não lê pt/es.
+//
+// Rodar 1x no editor:  setupWeeklyCashDigest()  → manda o da semana passada
+//                      AGORA pros destinatários + instala o gatilho de segunda.
+// Teste só pro Lucas:  previewWeeklyCashDigest()
+// Reenviar um período: sendCashDigestFor('2026-11-02', '2026-11-08')
+
+const CASH_DIGEST_COUNTRIES = {
+  argentina: { name: 'Argentina', flag: '🇦🇷' },
+  brazil: { name: 'Brazil', flag: '🇧🇷' }, brasil: { name: 'Brazil', flag: '🇧🇷' },
+  chile: { name: 'Chile', flag: '🇨🇱' },
+  colombia: { name: 'Colombia', flag: '🇨🇴' },
+  mexico: { name: 'Mexico', flag: '🇲🇽' },
+  peru: { name: 'Peru', flag: '🇵🇪' },
+};
+
+// Categorias gravadas pelo cash.html (pt/es) → rótulo em inglês pro resumo
+const CASH_DIGEST_CATEGORY_EN = {
+  'alimentação': 'Meals', 'alimentacao': 'Meals', 'comida': 'Meals',
+  'pedágio': 'Tolls', 'pedagio': 'Tolls', 'peajes': 'Tolls', 'peaje': 'Tolls',
+  'combustível': 'Fuel', 'combustivel': 'Fuel', 'combustible': 'Fuel',
+  'estacionamento': 'Parking', 'estacionamiento': 'Parking',
+  'hotel': 'Hotel',
+  'manutenção do carro': 'Car maintenance', 'reparo del vehículo': 'Car maintenance',
+  'outros': 'Other', 'otros': 'Other',
+};
+
+const CASH_DIGEST_REASON_EN = {
+  'salary': 'Salary advance',
+  'operational spends': 'Operational spends',
+};
+
+/** Trigger handler (segunda): resumo da semana passada pros destinatários. */
+function sendWeeklyCashDigest() {
+  return sendCashDigest_(EMAIL_CONFIG.cashDigestRecipients, cashDigestLastWeek_());
+}
+
+/** Teste: mesmo email da semana passada, mas só pro Lucas. */
+function previewWeeklyCashDigest() {
+  return sendCashDigest_(EMAIL_CONFIG.recipients, cashDigestLastWeek_());
+}
+
+/** Reenvio manual de um período qualquer ('yyyy-MM-dd', inclusive). */
+function sendCashDigestFor(startStr, endStr) {
+  return sendCashDigest_(EMAIL_CONFIG.cashDigestRecipients, { start: startStr, end: endStr });
+}
+
+/** Instala o gatilho de segunda (remove duplicata antes). */
+function installWeeklyCashDigestTrigger() {
+  ScriptApp.getProjectTriggers()
+    .filter(t => t.getHandlerFunction() === 'sendWeeklyCashDigest')
+    .forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('sendWeeklyCashDigest')
+    .timeBased()
+    .onWeekDay(ScriptApp.WeekDay.MONDAY)
+    .atHour(EMAIL_CONFIG.cashDigestHour)
+    .inTimezone('America/Sao_Paulo')
+    .create();
+  Logger.log('[Cash Digest] gatilho instalado: toda segunda às ' + EMAIL_CONFIG.cashDigestHour + 'h (SP) → ' + EMAIL_CONFIG.cashDigestRecipients);
+}
+
+/** Rodar UMA vez: instala o gatilho e já manda o da semana passada. */
+function setupWeeklyCashDigest() {
+  installWeeklyCashDigestTrigger();
+  return sendWeeklyCashDigest();
+}
+
+function sendCashDigest_(to, range) {
+  const digest = collectCashDigest_(range.start, range.end);
+  const mail = buildCashDigestEmail_(digest);
+  MailApp.sendEmail({ to: to, subject: mail.subject, htmlBody: mail.html, name: 'Aceolution LATAM' });
+  Logger.log('[Cash Digest] enviado pra ' + to + ' — ' + range.start + ' → ' + range.end
+    + ' · ' + digest.items.length + ' itens · USD ' + digest.totalUsd.toFixed(2));
+  return { to: to, start: range.start, end: range.end, items: digest.items.length, totalUsd: digest.totalUsd };
+}
+
+/** Semana passada (seg→dom) em hora de SP, como 'yyyy-MM-dd'. */
+function cashDigestLastWeek_() {
+  const todayStr = Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyyy-MM-dd');
+  const today = new Date(todayStr + 'T12:00:00Z');   // meio-dia UTC: sem virar o dia por fuso
+  const sinceMonday = (today.getUTCDay() + 6) % 7;   // seg=0 … dom=6
+  const thisMonday = today.getTime() - sinceMonday * 86400000;
+  const iso = ms => new Date(ms).toISOString().slice(0, 10);
+  return { start: iso(thisMonday - 7 * 86400000), end: iso(thisMonday - 86400000) };
+}
+
+/**
+ * Junta pedidos + recibos do período num formato só ({kind, ts, country, driver, ...}).
+ * Lê via getCashTransactions_ com folga de 1 dia (os limites dele são no fuso do
+ * script) e recorta exato pelos timestamps, que já vêm formatados em hora de SP.
+ */
+function collectCashDigest_(startStr, endStr) {
+  const shift = (s, days) => new Date(new Date(s + 'T12:00:00Z').getTime() + days * 86400000).toISOString().slice(0, 10);
+  const tx = getCashTransactions_(shift(startStr, -1), shift(endStr, 1));
+  const lo = startStr + ' 00:00:00';
+  const hi = endStr + ' 23:59:59';
+  const inRange = s => !!s && s >= lo && s <= hi;
+  const countryOf = c => {
+    const key = String(c || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    return CASH_DIGEST_COUNTRIES[key] || { name: String(c || '').trim() || 'No country', flag: '🌎' };
+  };
+  const catEn = c => CASH_DIGEST_CATEGORY_EN[String(c || '').trim().toLowerCase()] || String(c || '').trim();
+
+  const items = [];
+  tx.requests.forEach(r => {
+    if (!inRange(r.dateRequest)) return;
+    if (r.dateRequest.slice(11) === '00:00:00') return;  // lançamento do admin, não é pedido do app
+    const c = countryOf(r.country);
+    const reason = CASH_DIGEST_REASON_EN[String(r.reason || '').trim().toLowerCase()] || r.reason || 'Request';
+    items.push({
+      kind: 'request', ts: r.dateRequest, country: c.name, flag: c.flag, driver: r.driverName,
+      label: r.category ? reason + ' · ' + catEn(r.category) : reason,
+      detail: r.locationAddress || '',
+      localAmount: r.localAmount || 0, currency: r.currency || '',
+      usdAmount: r.usdAmount > 0 ? r.usdAmount : null,
+      status: r.status || 'Requested', neededBy: r.dateNeeded || '',
+      link: r.attachmentUrl || '',
+    });
+  });
+  tx.receipts.forEach(r => {
+    if (!inRange(r.timestamp)) return;
+    const c = countryOf(r.country);
+    items.push({
+      kind: 'receipt', ts: r.timestamp, country: c.name, flag: c.flag, driver: r.driverName,
+      label: catEn(r.category) || 'Expense',
+      detail: [r.establishment, r.hotelDates, r.notes].filter(Boolean).join(' · '),
+      localAmount: r.localAmount || 0, currency: r.currency || '',
+      usdAmount: r.usdAmount !== null && r.usdAmount !== undefined && r.usdAmount > 0 ? r.usdAmount : null,
+      paidOn: r.paymentDate || '',
+      link: r.receiptUrl || '',
+    });
+  });
+
+  const totalUsd = items.reduce((s, i) => s + (i.usdAmount || 0), 0);
+  return { start: startStr, end: endStr, items: items, totalUsd: totalUsd };
+}
+
+/** Monta subject + HTML do resumo (tabelas + estilo inline, pra Gmail/Outlook). */
+function buildCashDigestEmail_(d) {
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const ymd = s => { const p = String(s).slice(0, 10).split('-').map(Number); return { y: p[0], m: p[1], d: p[2] }; };
+  const shortDate = s => { if (!s) return ''; const x = ymd(s); return MONTHS[x.m - 1] + ' ' + x.d; };
+  const dayLabel = s => {
+    const x = ymd(s);
+    return DAYS[new Date(Date.UTC(x.y, x.m - 1, x.d, 12)).getUTCDay()] + ', ' + MONTHS[x.m - 1] + ' ' + x.d;
+  };
+  const num = (n, dec) => {
+    const parts = Math.abs(n).toFixed(dec).split('.');
+    return (n < 0 ? '-' : '') + parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (parts[1] ? '.' + parts[1] : '');
+  };
+  const usd = n => 'USD ' + num(n || 0, 2);
+  const local = i => i.localAmount > 0
+    ? (i.currency ? i.currency + ' ' : '') + num(i.localAmount, Number.isInteger(i.localAmount) ? 0 : 2)
+    : '—';
+  const esc = escapeHtml_;
+  const s = { start: ymd(d.start), end: ymd(d.end) };
+  const period = s.start.m === s.end.m
+    ? MONTHS[s.start.m - 1] + ' ' + s.start.d + '–' + s.end.d + ', ' + s.end.y
+    : MONTHS[s.start.m - 1] + ' ' + s.start.d + ' – ' + MONTHS[s.end.m - 1] + ' ' + s.end.d + ', ' + s.end.y;
+
+  const requests = d.items.filter(i => i.kind === 'request');
+  const receipts = d.items.filter(i => i.kind === 'receipt');
+  const sumUsd = list => list.reduce((t, i) => t + (i.usdAmount || 0), 0);
+
+  // país → motorista
+  const countries = {};
+  d.items.forEach(i => {
+    const c = countries[i.country] || (countries[i.country] = { name: i.country, flag: i.flag, drivers: {}, items: [] });
+    c.items.push(i);
+    const key = String(i.driver || '').trim().toLowerCase();
+    const dr = c.drivers[key] || (c.drivers[key] = { name: i.driver || '—', items: [] });
+    dr.items.push(i);
+  });
+  const countryList = Object.keys(countries).map(k => countries[k])
+    .sort((a, b) => sumUsd(b.items) - sumUsd(a.items) || a.name.localeCompare(b.name));
+  const driverCount = countryList.reduce((t, c) => t + Object.keys(c.drivers).length, 0);
+
+  const subject = d.items.length
+    ? `💰 LATAM weekly cash summary · ${period} · ${usd(d.totalUsd)} (${requests.length} request${requests.length === 1 ? '' : 's'}, ${receipts.length} receipt${receipts.length === 1 ? '' : 's'})`
+    : `💰 LATAM weekly cash summary · ${period} · nothing submitted`;
+
+  const C = { primary: '#2C5282', dark: '#1A365D', accent: '#4A9FE0', ink: '#1E293B', muted: '#64748B', line: '#E2E8F0', soft: '#F8FAFC' };
+  const th = (label, align) => `<th style="text-align:${align || 'left'};font-size:11px;font-weight:600;color:${C.muted};text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid ${C.line};">${label}</th>`;
+  const kpi = (label, value, sub) => `<td style="width:25%;padding:12px 14px;background:${C.soft};border:1px solid ${C.line};border-radius:6px;vertical-align:top;">
+      <div style="font-size:11px;color:${C.muted};text-transform:uppercase;letter-spacing:.04em;">${label}</div>
+      <div style="font-size:20px;font-weight:700;color:${C.ink};margin-top:4px;">${value}</div>
+      <div style="font-size:12px;color:${C.muted};margin-top:2px;">${sub}</div></td>`;
+  const badge = kind => kind === 'request'
+    ? `<span style="display:inline-block;padding:2px 7px;border-radius:10px;background:#DBEAFE;color:#1E40AF;font-size:11px;font-weight:600;">Request</span>`
+    : `<span style="display:inline-block;padding:2px 7px;border-radius:10px;background:#DCFCE7;color:#166534;font-size:11px;font-weight:600;">Receipt</span>`;
+
+  let html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:720px;margin:0 auto;color:${C.ink};">
+  <div style="background:${C.primary};color:#fff;padding:18px 22px;border-radius:8px 8px 0 0;">
+    <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.85;">Aceolution · Street View LATAM</div>
+    <div style="font-size:21px;font-weight:700;margin-top:4px;">Weekly cash summary · ${period}</div>
+    <div style="font-size:13px;opacity:.9;margin-top:4px;">Money requests and expense receipts (reimbursements) submitted by drivers, by country and driver.</div>
+  </div>
+  <div style="background:#fff;border:1px solid ${C.line};border-top:none;padding:20px 22px;border-radius:0 0 8px 8px;">`;
+
+  if (!d.items.length) {
+    html += `<p style="font-size:14px;color:${C.muted};margin:6px 0 12px;">No money requests or expense receipts were submitted this week.</p>`;
+  } else {
+    // ---- Big numbers
+    html += `<table role="presentation" cellspacing="6" cellpadding="0" style="width:100%;border-collapse:separate;margin:0 -6px 14px;"><tr>
+      ${kpi('Total', usd(d.totalUsd), d.items.length + ' submissions')}
+      ${kpi('Money requests', String(requests.length), usd(sumUsd(requests)))}
+      ${kpi('Expense receipts', String(receipts.length), usd(sumUsd(receipts)))}
+      ${kpi('Drivers', String(driverCount), countryList.length + (countryList.length === 1 ? ' country' : ' countries'))}
+    </tr></table>`;
+
+    // ---- Por país
+    html += `<div style="font-size:15px;font-weight:700;color:${C.dark};margin:8px 0 6px;">By country</div>
+    <table cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px;">
+      <tr>${th('Country')}${th('Drivers', 'right')}${th('Requests', 'right')}${th('Receipts', 'right')}${th('Total', 'right')}</tr>`;
+    countryList.forEach(c => {
+      const rq = c.items.filter(i => i.kind === 'request');
+      const rc = c.items.filter(i => i.kind === 'receipt');
+      html += `<tr>
+        <td style="padding:8px 10px;border-bottom:1px solid ${C.line};">${c.flag} <strong>${esc(c.name)}</strong></td>
+        <td style="padding:8px 10px;border-bottom:1px solid ${C.line};text-align:right;">${Object.keys(c.drivers).length}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid ${C.line};text-align:right;">${rq.length ? rq.length + ' · ' + usd(sumUsd(rq)) : '—'}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid ${C.line};text-align:right;">${rc.length ? rc.length + ' · ' + usd(sumUsd(rc)) : '—'}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid ${C.line};text-align:right;font-weight:700;">${usd(sumUsd(c.items))}</td>
+      </tr>`;
+    });
+    html += `</table>`;
+
+    // ---- Pontos de atenção
+    const openReq = requests.filter(i => !/finished|cancel/i.test(i.status));
+    const noAmount = requests.filter(i => !i.usdAmount && !(i.localAmount > 0));
+    const noPhoto = receipts.filter(i => !i.link);
+    const noUsd = d.items.filter(i => !i.usdAmount && i.localAmount > 0);
+    const notes = [];
+    if (openReq.length) notes.push(`<strong>${openReq.length} money request${openReq.length === 1 ? '' : 's'} still open</strong>: `
+      + openReq.map(i => `${esc(i.driver)} (${esc(i.country)}, ${i.usdAmount ? usd(i.usdAmount) : 'no amount'}${i.neededBy ? ', needed by ' + shortDate(i.neededBy) : ''}, ${esc(i.status)})`).join('; '));
+    if (noAmount.length) notes.push(`<strong>${noAmount.length} request${noAmount.length === 1 ? '' : 's'} without an amount</strong>: ` + noAmount.map(i => esc(i.driver)).join(', '));
+    if (noPhoto.length) notes.push(`<strong>${noPhoto.length} receipt${noPhoto.length === 1 ? '' : 's'} without a photo</strong>: `
+      + noPhoto.map(i => `${esc(i.driver)} (${esc(i.label)}, ${local(i)})`).join('; '));
+    if (noUsd.length) notes.push(`<strong>${noUsd.length} item${noUsd.length === 1 ? '' : 's'} without USD conversion</strong> (not counted in the USD totals)`);
+    if (notes.length) {
+      html += `<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:12px 14px;margin-bottom:20px;font-size:13px;line-height:1.5;">
+        <div style="font-weight:700;color:#92400E;margin-bottom:4px;">Needs attention</div>
+        ${notes.map(n => `<div style="margin-top:4px;">• ${n}</div>`).join('')}
+      </div>`;
+    }
+
+    // ---- Detalhe: país → motorista → itens
+    countryList.forEach(c => {
+      const byCat = {};
+      c.items.forEach(i => { const k = i.kind === 'request' ? 'Requests' : i.label; byCat[k] = (byCat[k] || 0) + (i.usdAmount || 0); });
+      const catLine = Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]).map(k => esc(k) + ' ' + usd(byCat[k])).join(' · ');
+      const drivers = Object.keys(c.drivers).map(k => c.drivers[k])
+        .sort((a, b) => sumUsd(b.items) - sumUsd(a.items) || a.name.localeCompare(b.name));
+
+      html += `<div style="margin:22px 0 4px;padding-bottom:6px;border-bottom:2px solid ${C.primary};">
+        <span style="font-size:17px;font-weight:700;color:${C.dark};">${c.flag} ${esc(c.name)}</span>
+        <span style="float:right;font-size:15px;font-weight:700;color:${C.dark};">${usd(sumUsd(c.items))}</span>
+      </div>
+      <div style="font-size:12px;color:${C.muted};margin-bottom:8px;">${catLine}</div>
+      <table cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;font-size:12.5px;">
+        <tr>${th('Date')}${th('Type')}${th('Details')}${th('Amount', 'right')}${th('USD', 'right')}${th('File', 'center')}</tr>`;
+
+      drivers.forEach(dr => {
+        const nRq = dr.items.filter(i => i.kind === 'request').length;
+        const nRc = dr.items.length - nRq;
+        const counts = [nRq ? nRq + ' request' + (nRq === 1 ? '' : 's') : '', nRc ? nRc + ' receipt' + (nRc === 1 ? '' : 's') : ''].filter(Boolean).join(' · ');
+        html += `<tr><td colspan="6" style="padding:9px 10px;background:#EEF4FB;border-bottom:1px solid ${C.line};">
+          <strong>${esc(dr.name)}</strong> <span style="color:${C.muted};">· ${counts}</span>
+          <span style="float:right;font-weight:700;">${usd(sumUsd(dr.items))}</span></td></tr>`;
+        dr.items.slice().sort((a, b) => a.ts.localeCompare(b.ts)).forEach(i => {
+          const extra = i.kind === 'request'
+            ? [i.neededBy ? 'Needed by ' + shortDate(i.neededBy) : '', 'Status: ' + esc(i.status), esc(i.detail)].filter(Boolean).join(' · ')
+            : [i.paidOn ? 'Paid ' + shortDate(i.paidOn) : '', esc(i.detail)].filter(Boolean).join(' · ');
+          const file = i.link
+            ? `<a href="${esc(i.link)}" style="color:${C.accent};text-decoration:none;">View</a>`
+            : (i.kind === 'receipt' ? `<span style="color:#DC2626;">Missing</span>` : `<span style="color:${C.muted};">—</span>`);
+          html += `<tr>
+            <td style="padding:7px 10px;border-bottom:1px solid ${C.line};white-space:nowrap;color:${C.muted};vertical-align:top;">${dayLabel(i.ts)}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid ${C.line};vertical-align:top;">${badge(i.kind)}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid ${C.line};vertical-align:top;"><strong>${esc(i.label)}</strong>${extra ? `<div style="color:${C.muted};font-size:11.5px;margin-top:2px;">${extra}</div>` : ''}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid ${C.line};text-align:right;white-space:nowrap;vertical-align:top;">${local(i)}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid ${C.line};text-align:right;white-space:nowrap;vertical-align:top;font-weight:600;">${i.usdAmount ? num(i.usdAmount, 2) : '—'}</td>
+            <td style="padding:7px 10px;border-bottom:1px solid ${C.line};text-align:center;vertical-align:top;">${file}</td>
+          </tr>`;
+        });
+      });
+      html += `</table>`;
+    });
+  }
+
+  html += `
+    <div style="margin-top:22px;padding-top:12px;border-top:1px solid ${C.line};font-size:11px;color:#94A3B8;line-height:1.5;">
+      Period: ${dayLabel(d.start)} – ${dayLabel(d.end)}, ${s.end.y} (São Paulo time). USD values use the exchange rate at submission time.<br>
+      Source: Mastersheet tabs ${esc(CONFIG.cashTransferSheet)}, ${esc(CONFIG.cashReceiptsBrSheet)} and ${esc(CONFIG.cashReceiptsHcSheet)} — only what drivers submitted through the app. Sent automatically every Monday.
+    </div>
+  </div>
+</div>`;
+
+  return { subject: subject, html: html };
 }
 
 
