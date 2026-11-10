@@ -677,7 +677,7 @@
           <div class="mode-card-sub" data-i18n="modeRequestSub">Solicitar dinheiro para gastos futuros agendados do projeto</div>
         </div>
       </button>
-      <button type="button" class="mode-card" onclick="selectMode('receipt')">
+      <button type="button" class="mode-card" id="mode-card-receipt" onclick="selectMode('receipt')">
         <div class="mode-card-icon">🧾</div>
         <div class="mode-card-content">
           <div class="mode-card-title" data-i18n="modeReceipt">Subir recibo</div>
@@ -844,6 +844,19 @@ const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
 };
 
+// Países FORA do "Subir recibo" (reembolso). Só o recibo — "Pedir dinheiro" segue normal.
+// Pra reverter: deixar a lista vazia → const RECEIPT_BLOCKED_COUNTRIES = [];
+// (2026-11-10: Colômbia tirada a pedido do Lucas, temporário)
+const RECEIPT_BLOCKED_COUNTRIES = ['Colombia'];
+
+function normCountry(c) {
+  return String(c || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+}
+function isReceiptBlocked(country) {
+  const n = normCountry(country);
+  return !!n && RECEIPT_BLOCKED_COUNTRIES.some(b => normCountry(b) === n);
+}
+
 // ================================================================
 // I18N — PT (default) + ES (drivers latam não-brasileiros)
 // ================================================================
@@ -909,6 +922,7 @@ const I18N = {
     sending: 'Enviando...',
     successRequest: '✓ Pedido enviado com sucesso!',
     successReceipt: '✓ Recibo enviado com sucesso!',
+    receiptBlocked: 'O envio de recibos está pausado para o seu país.',
     errorSend: 'Erro ao enviar. Tente novamente.',
     fillAllRequired: 'Preencha os campos obrigatórios (*)',
     invalidAmount: 'Valor inválido — verifique o número',
@@ -986,6 +1000,7 @@ const I18N = {
     sending: 'Enviando...',
     successRequest: '✓ ¡Pedido enviado con éxito!',
     successReceipt: '✓ ¡Recibo enviado con éxito!',
+    receiptBlocked: 'El envío de recibos está pausado para tu país.',
     errorSend: 'Error al enviar. Intenta de nuevo.',
     fillAllRequired: 'Completa los campos obligatorios (*)',
     invalidAmount: 'Valor inválido — revisa el número',
@@ -1065,6 +1080,7 @@ const I18N = {
     sending: 'Sending...',
     successRequest: '✓ Request submitted successfully!',
     successReceipt: '✓ Receipt submitted successfully!',
+    receiptBlocked: 'Receipt uploads are paused for your country.',
     errorSend: 'Error submitting. Please try again.',
     fillAllRequired: 'Fill in the required fields (*)',
     invalidAmount: 'Invalid amount — check the number',
@@ -1191,9 +1207,12 @@ function selectMode(mode) {
     document.getElementById('request-flow').classList.add('hidden');
   }
 
-  // Carrega drivers se ainda não carregou
+  // Carrega drivers se ainda não carregou; se já carregou, refaz a lista
+  // (o recibo esconde os países de RECEIPT_BLOCKED_COUNTRIES, o pedido não)
   if (Object.keys(state.driversByCountry).length === 0) {
     loadDrivers();
+  } else {
+    populateDriverSelect();
   }
 }
 
@@ -1230,7 +1249,9 @@ async function loadDrivers() {
 
 function populateDriverSelect() {
   const select = document.getElementById('driver-select');
-  const countries = Object.keys(state.driversByCountry).sort();
+  const prevEmail = state.selectedDriver ? state.selectedDriver.email : '';
+  const hideCountry = c => state.mode === 'receipt' && isReceiptBlocked(c);
+  const countries = Object.keys(state.driversByCountry).filter(c => !hideCountry(c)).sort();
 
   // Flag emojis
   const flags = {
@@ -1245,7 +1266,8 @@ function populateDriverSelect() {
   let html = '<option value="">-- ' + t('driverLabel') + ' --</option>';
   countries.forEach(country => {
     const flag = flags[country] || '🌎';
-    const drivers = state.driversByCountry[country];
+    const drivers = state.driversByCountry[country].filter(d => !hideCountry(d.country));
+    if (!drivers.length) return;
     html += `<optgroup label="${flag} ${country} (${drivers.length})">`;
     drivers.forEach(d => {
       const data = JSON.stringify(d).replace(/'/g, '&apos;').replace(/"/g, '&quot;');
@@ -1254,6 +1276,15 @@ function populateDriverSelect() {
     html += '</optgroup>';
   });
   select.innerHTML = html;
+
+  // Trocou de modo: mantém o motorista escolhido se ele continua na lista
+  if (prevEmail) {
+    const keep = Array.from(select.options).find(o => {
+      try { return o.value && JSON.parse(o.value).email === prevEmail; } catch (e) { return false; }
+    });
+    if (keep) select.value = keep.value;
+    else state.selectedDriver = null;
+  }
 }
 
 function onDriverChange() {
@@ -1655,6 +1686,9 @@ async function submitCashReceipt() {
   if (!state.selectedDriver) {
     return toast(t('selectDriver'), 'error');
   }
+  if (isReceiptBlocked(state.selectedDriver.country)) {
+    return toast(t('receiptBlocked'), 'error');
+  }
   if (!state.recCategory) {
     return toast(t('selectCategory'), 'error');
   }
@@ -1735,6 +1769,16 @@ populateCategoryDropdown();
 // Dentro do app (/app/): esconde o cabeçalho e seleciona o motorista logado
 // (a lista só carrega depois de escolher "Pedir dinheiro"/"Subir recibo").
 if (window.SVEmbed) SVEmbed.run({ page: 'cash' });
+
+// No app, motorista de país bloqueado nem vê o card "Subir recibo"
+(function hideBlockedReceiptCard() {
+  const s = window.SVEmbed && SVEmbed.active ? SVEmbed.session : null;
+  if (s && isReceiptBlocked(s.country)) {
+    const card = document.getElementById('mode-card-receipt');
+    if (card) card.classList.add('hidden');
+    console.log('[Cash] "Subir recibo" escondido para ' + s.country + ' (RECEIPT_BLOCKED_COUNTRIES)');
+  }
+})();
 </script>
 </body>
 </html>
