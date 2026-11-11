@@ -554,6 +554,101 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
   .cm-main { padding: 20px 16px 44px; }
   .cm-card-value { font-size: 25px; }
 }
+
+/* ---------- Accidents & incidents (faixa no topo do Monthly) ---------- */
+.cm-safety {
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-radius: 14px; box-shadow: var(--shadow-sm);
+  padding: 16px 20px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+}
+.cm-safety-head { min-width: 170px; }
+.cm-safety-head .cm-card-label { margin-bottom: 4px; }
+.cm-safety-head .cm-card-foot { font-size: 11.5px; }
+.cm-safety-nums { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; }
+.cm-safety-num {
+  flex: 1; min-width: 120px; padding: 8px 14px; border-radius: 10px;
+  background: var(--c-bg); border: 1px solid var(--c-border);
+}
+.cm-safety-num .v { font-size: 26px; font-weight: 800; letter-spacing: -0.8px; color: var(--c-primary-dark); line-height: 1.1; }
+.cm-safety-num .l { font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--c-text-muted); margin-top: 2px; }
+.cm-safety-num.acc .v { color: var(--c-danger); }
+.cm-safety-num.ok .v { color: var(--c-success); }
+.cm-safety-sev { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--c-text-muted); }
+
+/* ---------- Aba Idle days ---------- */
+.cm-idle-grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-bottom: 30px; }
+@media (max-width: 900px) { .cm-idle-grid { grid-template-columns: 1fr; } }
+.cm-panel {
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-radius: 14px; box-shadow: var(--shadow-sm); padding: 16px 18px; min-width: 0;
+}
+.cm-panel-title { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--c-text-muted); margin-bottom: 12px; }
+.cm-reason { display: grid; grid-template-columns: 130px minmax(0, 1fr) 70px; gap: 10px; align-items: center; padding: 5px 0; font-size: 13px; }
+.cm-reason-bar { height: 10px; border-radius: 999px; background: var(--c-bg-tint); overflow: hidden; }
+.cm-reason-bar span { display: block; height: 100%; border-radius: 999px; background: var(--c-accent); }
+.cm-reason-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.cm-reason-val small { font-weight: 500; color: var(--c-text-muted); margin-left: 4px; }
+.cm-chips { display: flex; flex-wrap: wrap; gap: 4px; white-space: normal; min-width: 220px; }
+.cm-chip { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: var(--c-bg-tint); color: var(--c-primary-dark); white-space: nowrap; }
+.cm-panel table.cm-pace-table { min-width: 0; }
+
+/* ---------- Modo admin (só o Lucas vê) ---------- */
+.cm-admin-btn { padding: 8px 10px; }
+.cm-admin-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.cm-admin-btn.on { background: rgba(255,255,255,0.3); }
+.cm-modal-bg {
+  position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 1000;
+  display: grid; place-items: center; padding: 16px;
+}
+.cm-modal {
+  background: var(--c-surface); border-radius: 14px; padding: 22px; width: 100%; max-width: 360px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+.cm-modal h3 { font-size: 16px; margin-bottom: 4px; }
+.cm-modal p { font-size: 12.5px; color: var(--c-text-muted); margin-bottom: 14px; }
+.cm-modal input, .cm-ov-pop input, .cm-ov-pop textarea {
+  width: 100%; font-family: inherit; font-size: 14px; padding: 9px 11px;
+  border: 1px solid var(--c-border); border-radius: 9px; background: var(--c-surface); color: var(--c-text);
+}
+.cm-modal .cm-err, .cm-ov-pop .cm-err { color: var(--c-danger); font-size: 12px; min-height: 16px; margin-top: 6px; }
+.cm-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; flex-wrap: wrap; }
+.cm-btn.primary { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+.cm-btn.ghost { background: transparent; }
+.cm-btn:disabled { opacity: 0.55; cursor: wait; }
+
+body.cm-ov-editing .cm-ov-atom {
+  outline: 1px dashed rgba(74,159,224,0.75); outline-offset: 1px; border-radius: 3px; cursor: text;
+}
+body.cm-ov-editing .cm-ov-atom:hover { background: rgba(74,159,224,0.14); }
+body.cm-ov-editing .cm-ov-atom.cm-ov-on { background: rgba(250,204,21,0.35); outline-color: #CA8A04; }
+.cm-ov-pop {
+  position: absolute; z-index: 1001; width: 320px; max-width: calc(100vw - 24px);
+  background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.22); padding: 14px; font-size: 13px; color: var(--c-text);
+}
+.cm-ov-pop .t { font-weight: 700; margin-bottom: 2px; }
+.cm-ov-pop .s { color: var(--c-text-muted); font-size: 12px; margin-bottom: 10px; }
+.cm-ov-pop .src { background: var(--c-bg); border-radius: 8px; padding: 8px 10px; font-size: 11.5px; color: var(--c-text-muted); margin: 10px 0 8px; }
+.cm-ov-pop textarea { font-size: 12.5px; min-height: 52px; resize: vertical; margin-top: 6px; }
+.cm-ov-pop .cm-modal-actions { justify-content: flex-start; }
+.cm-ov-bar {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 999;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+  background: #1A365D; color: #fff; border-radius: 999px; padding: 8px 10px 8px 18px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.28); font-size: 12.5px; max-width: calc(100vw - 24px);
+}
+.cm-ov-bar button {
+  background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.28); color: #fff;
+  font-family: inherit; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+}
+.cm-ov-bar button:hover { background: rgba(255,255,255,0.26); }
+.cm-ov-toast {
+  position: fixed; right: 16px; top: 16px; z-index: 1002; background: #1A365D; color: #fff;
+  padding: 10px 14px; border-radius: 10px; font-size: 13px; box-shadow: 0 10px 26px rgba(0,0,0,0.25);
+  max-width: calc(100vw - 32px);
+}
+.cm-ov-toast.err { background: var(--c-danger); }
 </style>
 </head>
 <body>
@@ -595,6 +690,9 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
         </div>
         <button id="change-country" class="cm-ghost-btn" type="button">⌖ Change country</button>
         <button id="refresh" class="cm-ghost-btn" type="button">↻ Refresh</button>
+        <button id="admin-btn" class="cm-ghost-btn cm-admin-btn" type="button" title="Admin" aria-label="Admin">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </button>
         <span id="updated"></span>
       </div>
     </div>
@@ -602,6 +700,7 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
     <div class="cm-tabs" role="tablist">
       <button class="cm-tab active" id="tab-monthly" type="button" role="tab" aria-selected="true">Monthly</button>
       <button class="cm-tab" id="tab-weekly" type="button" role="tab" aria-selected="false">Weekly</button>
+      <button class="cm-tab" id="tab-idle" type="button" role="tab" aria-selected="false">Idle days</button>
     </div>
   </div>
 </header>
@@ -615,13 +714,14 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
     <div class="cm-section-title">Monthly overview</div>
     <div class="cm-section-note" id="overview-note"></div>
   </div>
-  <section class="cm-kpis" id="kpis"></section>
+  <section class="cm-safety" id="safety" data-ov-sec="safety" hidden></section>
+  <section class="cm-kpis" id="kpis" data-ov-sec="kpis"></section>
 
   <div class="cm-section-head" id="pace-head" style="display:none">
     <div class="cm-section-title">Pace &amp; projection</div>
     <div class="cm-section-note" id="pace-note"></div>
   </div>
-  <section id="pace"></section>
+  <section id="pace" data-ov-sec="pace"></section>
 
   <div class="cm-section-head">
     <div class="cm-section-title">Driver performance</div>
@@ -657,11 +757,37 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
       </div>
       <button id="csv" class="cm-btn" type="button">Export CSV</button>
     </div>
-    <div id="table-area">
+    <div id="table-area" data-ov-sec="table">
       <div class="cm-state"><div class="cm-spinner"></div>Loading operational data…</div>
     </div>
   </section>
   </div><!-- /#monthly-view -->
+
+  <!-- ============ ABA IDLE DAYS (mesmo mês/país do Monthly) ============ -->
+  <div id="idle-view" hidden>
+    <div class="cm-section-head">
+      <div class="cm-section-title">Idle days</div>
+      <div class="cm-section-note" id="idle-note"></div>
+    </div>
+    <section class="cm-pace-tiles" id="idle-tiles" data-ov-sec="idle-tiles"></section>
+    <div class="cm-idle-grid" id="idle-grid">
+      <div class="cm-panel" id="idle-reasons" data-ov-sec="idle-reasons"></div>
+      <div class="cm-panel" id="idle-countries" data-ov-sec="idle-countries"></div>
+    </div>
+    <div class="cm-section-head">
+      <div class="cm-section-title">Idle days by driver</div>
+      <div class="cm-section-note" id="idle-table-note"></div>
+    </div>
+    <section class="cm-table-wrap">
+      <div class="cm-table-tools">
+        <input type="search" id="idle-search" class="cm-search" placeholder="Search driver or country…">
+        <div class="cm-soh-legend"><b>Idle day</b><span>a day with a CTS record and no mapping (status ⬇)</span></div>
+      </div>
+      <div id="idle-table-area" data-ov-sec="idle-table">
+        <div class="cm-state"><div class="cm-spinner"></div>Loading operational data…</div>
+      </div>
+    </section>
+  </div>
 
   <!-- ============ ABA WEEKLY ============ -->
   <div id="weekly-view" hidden>
@@ -669,7 +795,7 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
       <div class="cm-section-title" id="week-section-title">Week overview</div>
       <div class="cm-section-note" id="week-note"></div>
     </div>
-    <section class="cm-pace-tiles" id="week-tiles"></section>
+    <section class="cm-pace-tiles" id="week-tiles" data-ov-sec="week-tiles"></section>
 
     <div class="cm-section-head">
       <div class="cm-section-title">Driver performance</div>
@@ -705,7 +831,7 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
         </div>
         <button id="week-csv" class="cm-btn" type="button">Export CSV</button>
       </div>
-      <div id="week-table-area">
+      <div id="week-table-area" data-ov-sec="week-table">
         <div class="cm-state"><div class="cm-spinner"></div>Loading weekly data…</div>
       </div>
     </section>
@@ -732,6 +858,9 @@ const CM = {
   scriptUrl: location.hostname.endsWith('latamace.com')
     ? '/api'
     : 'https://script.google.com/macros/s/AKfycbz8jEuAmpZdspmW4WgnFD1BnsuH9dbX0oD2qxncLAx81aUpCxT6_8kNo3Wt0NzNYLEYlQ/exec',
+  // Modo admin (POST, cts-1.4): SEMPRE direto no Web App da CTS — o Worker
+  // (/api) só repassa GET pra este backend; POST lá vai pro backend do check-in.
+  adminUrl: 'https://script.google.com/macros/s/AKfycbz8jEuAmpZdspmW4WgnFD1BnsuH9dbX0oD2qxncLAx81aUpCxT6_8kNo3Wt0NzNYLEYlQ/exec',
   cachePrefix: 'CM_CACHE_',
   ttlSec: 900,          // 15 min — a RAW CTS é atualizada 1x/dia
   // O backend cacheia 30min do lado dele; só o 1º acesso paga a montagem
@@ -769,6 +898,11 @@ const state = {
   weekFilterEff: 'all',
   weekFilterSoh: 'all',
   countryList: [],
+
+  // aba Idle days (usa o mesmo payload do Monthly)
+  idleSearch: '',
+  idleSortKey: 'idleDays',
+  idleSortDir: -1,
 };
 
 /* ---------- helpers ---------- */
@@ -1071,6 +1205,8 @@ function renderKpis(d) {
     notice.innerHTML = '⚠️ Showing the last cached data — the live connection timed out. Try refreshing in a moment.';
     notice.classList.remove('hidden');
   } else {
+    // limpa também o texto: o setView reabre o aviso se sobrar conteúdo velho
+    notice.innerHTML = '';
     notice.classList.add('hidden');
   }
 }
@@ -1265,6 +1401,246 @@ function renderTable() {
   $('table-note').textContent = rows.length + ' driver' + (rows.length === 1 ? '' : 's') +
     (state.search ? ' matching “' + state.search + '”' : '') +
     (filtered ? ' · filtered' : '');
+}
+
+/* ============================================================
+ * ACCIDENTS & INCIDENTS — faixa no topo do Monthly (cts-1.4)
+ * ------------------------------------------------------------
+ * Fonte: aba `incidents` da CTS (via espelho). type "Accident" =
+ * acidente, o resto = incidente. "Days since last accident" conta
+ * até hoje. Payload sem `incidents` (snapshot antigo / backend
+ * cts-1.3) esconde a faixa — nunca quebra a página.
+ * ============================================================ */
+const SEV_ORDER = ['High', 'Medium', 'Low'];
+const SEV_PILL = { High: 'pill-danger', Medium: 'pill-warn', Low: 'pill-neutral' };
+
+function shortDate(ymd) {
+  if (!ymd) return '—';
+  const t = new Date(ymd + 'T12:00:00');
+  return isNaN(t) ? String(ymd) : t.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function renderSafety(d) {
+  const el = $('safety');
+  const s = d && d.incidents;
+  if (!s || !s.available) { el.hidden = true; el.innerHTML = ''; return; }
+
+  const m = s.month || {}, y = s.ytd || {};
+  const sevKeys = Object.keys(m.bySeverity || {}).sort((a, b) => {
+    const ia = SEV_ORDER.indexOf(a), ib = SEV_ORDER.indexOf(b);
+    return (ia < 0 ? 9 : ia) - (ib < 0 ? 9 : ib);
+  });
+  const sevHtml = m.total > 0
+    ? '<b>Severity</b>' + sevKeys.map(k =>
+        '<span class="cm-pill ' + (SEV_PILL[k] || 'pill-neutral') + '">' + esc(k) + ' ' + num(m.bySeverity[k]) + '</span>').join('')
+    : '<span>No accidents or incidents reported this month.</span>';
+  const box = (cls, v, label, title) =>
+    '<div class="cm-safety-num' + (cls ? ' ' + cls : '') + '"' + (title ? ' title="' + esc(title) + '"' : '') + '>' +
+    '<div class="v">' + v + '</div><div class="l">' + esc(label) + '</div></div>';
+  const days = s.daysSinceLastAccident;
+
+  el.innerHTML =
+    '<div class="cm-safety-head">' +
+      '<div class="cm-card-label">Accidents &amp; incidents</div>' +
+      '<div class="cm-card-foot" data-ov-skip>' + esc(periodLabel(d.month, d.year)) +
+        (s.dataThrough ? ' · log through ' + esc(shortDate(s.dataThrough)) : '') + '</div>' +
+    '</div>' +
+    '<div class="cm-safety-nums">' +
+      box(m.accidents > 0 ? 'acc' : 'ok', num(m.accidents), 'Accidents') +
+      box('', num(m.incidents), 'Other incidents') +
+      box('', num(y.total), 'Year to date',
+          num(y.accidents) + ' accidents · ' + num(y.incidents) + ' other incidents in ' + s.year) +
+      box('ok', days == null ? '—' : num(days), 'Days since last accident',
+          s.lastAccident ? 'Last accident: ' + shortDate(s.lastAccident) : 'No accident on record this year') +
+    '</div>' +
+    '<div class="cm-safety-sev">' + sevHtml + '</div>';
+  el.hidden = false;
+}
+
+/* ============================================================
+ * ABA IDLE DAYS (cts-1.4)
+ * ------------------------------------------------------------
+ * Mesmo payload do Monthly (mesmo mês/país, sem fetch extra).
+ * Dia parado = dia com linha na CTS e sem mapeamento; o motivo é o
+ * status da CTS (⬇Weather → Weather). Payload sem idleByReason /
+ * idleDates (backend cts-1.3): a tabela funciona, os quebra-motivos
+ * avisam que chegam no próximo refresh.
+ * ============================================================ */
+function idleSummary(drivers) {
+  const by = {};
+  let idle = 0, mapping = 0, withIdle = 0;
+  drivers.forEach(d => {
+    idle += Number(d.idleDays) || 0;
+    mapping += Number(d.mappingDays) || 0;
+    if (d.idleDays > 0) withIdle++;
+    Object.keys(d.idleByReason || {}).forEach(k => { by[k] = (by[k] || 0) + d.idleByReason[k]; });
+  });
+  const total = idle + mapping;
+  return {
+    idleDays: idle, mappingDays: mapping, driverDays: total,
+    idlePct: total > 0 ? idle / total : 0,
+    driversWithIdle: withIdle, drivers: drivers.length, byReason: by,
+  };
+}
+
+function idleRate(d) {
+  const i = Number(d.idleDays) || 0, t = i + (Number(d.mappingDays) || 0);
+  return t > 0 ? i / t : 0;
+}
+
+/** Segunda-feira da semana de uma data YYYY-MM-DD. */
+function mondayOf(ymd) {
+  const t = new Date(ymd + 'T12:00:00Z');
+  t.setUTCDate(t.getUTCDate() - ((t.getUTCDay() + 6) % 7));
+  return t.toISOString().slice(0, 10);
+}
+
+/** Linhas de barra horizontal: [{ label, value, sub, skip }] — skip = rótulo com data. */
+function barRows(items) {
+  const max = Math.max(1, ...items.map(i => i.value));
+  return items.map(i =>
+    '<div class="cm-reason"><div' + (i.skip ? ' data-ov-skip' : '') + '>' + esc(i.label) + '</div>' +
+    '<div class="cm-reason-bar"><span style="width:' + (i.value / max * 100).toFixed(1) + '%"></span></div>' +
+    '<div class="cm-reason-val">' + num(i.value) + (i.sub ? '<small>' + i.sub + '</small>' : '') + '</div></div>').join('');
+}
+
+function renderIdle() {
+  const d = state.data;
+  if (!d) return;
+  const all = d.drivers || [];
+  const s = idleSummary(all);
+  const hasReasons = all.some(x => x.idleByReason);
+
+  $('idle-note').textContent = (state.country === 'ALL' ? 'All LATAM' : state.country) + ' · ' + periodLabel(d.month, d.year);
+
+  const tile = (label, value, sub) =>
+    '<div class="cm-tile"><div class="cm-tile-label">' + esc(label) + '</div>' +
+    '<div class="cm-tile-value">' + value + '</div>' +
+    (sub ? '<div class="cm-card-foot" style="margin-top:6px">' + sub + '</div>' : '') + '</div>';
+  const reasons = Object.keys(s.byReason)
+    .map(k => ({ label: k, value: s.byReason[k] }))
+    .sort((a, b) => b.value - a.value);
+  const top = reasons[0];
+
+  $('idle-tiles').innerHTML = [
+    tile('Idle days', num(s.idleDays), 'of ' + num(s.driverDays) + ' driver-days on record'),
+    tile('Idle rate', pct(s.idlePct), 'idle ÷ (idle + mapping days)'),
+    tile('Mapping days', num(s.mappingDays)),
+    tile('Drivers with idle days', num(s.driversWithIdle), 'of ' + num(s.drivers) + ' drivers'),
+    tile('Avg idle days / driver', num(s.drivers ? s.idleDays / s.drivers : 0, 1)),
+    tile('Top reason', top ? esc(top.label) : '—',
+         top ? num(top.value) + ' days · ' + pct(s.idleDays ? top.value / s.idleDays : 0, 0) + ' of idle' : ''),
+  ].join('');
+
+  $('idle-reasons').innerHTML = '<div class="cm-panel-title">Idle days by reason</div>' +
+    (!s.idleDays ? '<div class="cm-muted">No idle days in this period.</div>'
+      : !hasReasons ? '<div class="cm-muted">The reason breakdown appears after the next data refresh.</div>'
+      : barRows(reasons.map(r => ({ label: r.label, value: r.value, sub: pct(r.value / s.idleDays, 0) }))));
+
+  if (state.country === 'ALL') {
+    // LATAM: um país por linha — barra = dias parados, rótulo = % do país
+    const byC = {};
+    all.forEach(x => { (byC[x.country] = byC[x.country] || []).push(x); });
+    const rows = Object.keys(byC).map(c => {
+      const cs = idleSummary(byC[c]);
+      return { label: c, value: cs.idleDays, sub: pct(cs.idlePct, 0) + ' rate' };
+    }).sort((a, b) => b.value - a.value);
+    $('idle-countries').innerHTML = '<div class="cm-panel-title">Idle days by country</div>' +
+      (rows.length ? barRows(rows) : '<div class="cm-muted">No drivers in this period.</div>');
+  } else {
+    // País único: por semana (a partir das datas de cada motorista)
+    const byW = {};
+    all.forEach(x => (x.idleDates || []).forEach(i => { const w = mondayOf(i.d); byW[w] = (byW[w] || 0) + 1; }));
+    const rows = Object.keys(byW).sort().map(w => ({ label: 'Week of ' + shortDate(w), value: byW[w], skip: true }));
+    $('idle-countries').innerHTML = '<div class="cm-panel-title">Idle days by week</div>' +
+      (rows.length ? barRows(rows)
+        : '<div class="cm-muted">' + (s.idleDays ? 'The weekly breakdown appears after the next data refresh.' : 'No idle days in this period.') + '</div>');
+  }
+
+  renderIdleTable();
+}
+
+const IDLE_COLUMNS = [
+  { key: 'name',        label: 'Driver' },
+  { key: 'country',     label: 'Country' },
+  { key: 'mappingDays', label: 'Mapping days' },
+  { key: 'idleDays',    label: 'Idle days' },
+  { key: 'idleRate',    label: 'Idle rate' },
+  { key: 'reasons',     label: 'Reasons',    nosort: true },
+  { key: 'dates',       label: 'Idle dates', nosort: true },
+];
+
+function renderIdleTable() {
+  const area = $('idle-table-area');
+  const q = state.idleSearch.trim().toLowerCase();
+  const rows = ((state.data && state.data.drivers) || [])
+    .filter(d => !q || (d.name || '').toLowerCase().includes(q) || (d.country || '').toLowerCase().includes(q))
+    .map(d => Object.assign({}, d, { idleRate: idleRate(d) }));
+
+  if (!rows.length) {
+    area.innerHTML = '<div class="cm-state"><h3>No driver data</h3>' +
+      '<p>There are no CTS records for this country and period yet.</p></div>';
+    $('idle-table-note').textContent = '';
+    return;
+  }
+
+  const key = state.idleSortKey, dir = state.idleSortDir;
+  rows.sort((a, b) => {
+    const va = a[key], vb = b[key];
+    const c = (typeof va === 'string' || typeof vb === 'string')
+      ? String(va || '').localeCompare(String(vb || ''))
+      : (Number(va) || 0) - (Number(vb) || 0);
+    return c * dir || String(a.name || '').localeCompare(String(b.name || ''));
+  });
+
+  const head = IDLE_COLUMNS.map(c => {
+    if (c.nosort) return '<th>' + esc(c.label) + '</th>';
+    const sorted = key === c.key;
+    const arrow = sorted ? (dir === -1 ? '▼' : '▲') : '▾';
+    return '<th data-key="' + c.key + '" class="' + (sorted ? 'sorted' : '') + '">' +
+           esc(c.label) + '<span class="cm-arrow">' + arrow + '</span></th>';
+  }).join('');
+
+  const body = rows.map(d => {
+    const reasons = Object.keys(d.idleByReason || {})
+      .sort((a, b) => d.idleByReason[b] - d.idleByReason[a])
+      .map(r => '<span class="cm-chip">' + esc(r) + ' ' + num(d.idleByReason[r]) + '</span>').join('');
+    const dates = (d.idleDates || [])
+      .map(i => '<span class="cm-chip" title="' + esc(i.r) + '">' + esc(shortDate(i.d)) + '</span>').join('');
+    return '<tr>' +
+      '<td><div class="cm-driver"><div class="cm-avatar">' + esc(initials(d.name)) +
+        '</div><span class="cm-driver-name">' + esc(d.name) + '</span></div></td>' +
+      '<td class="cm-muted">' + esc(d.country) + '</td>' +
+      '<td class="cm-num">' + num(d.mappingDays) + '</td>' +
+      '<td class="cm-num">' + (d.idleDays > 0 ? '<strong>' + num(d.idleDays) + '</strong>' : num(0)) + '</td>' +
+      '<td class="cm-num">' + pct(d.idleRate, 0) + '</td>' +
+      '<td>' + (reasons ? '<div class="cm-chips">' + reasons + '</div>' : '<span class="cm-muted">—</span>') + '</td>' +
+      '<td>' + (dates ? '<div class="cm-chips" data-ov-skip>' + dates + '</div>' : '<span class="cm-muted">—</span>') + '</td>' +
+      '</tr>';
+  }).join('');
+
+  const s = idleSummary(rows);
+  const foot = '<tr><td>' + rows.length + ' driver' + (rows.length === 1 ? '' : 's') + '</td><td></td>' +
+    '<td class="cm-num">' + num(s.mappingDays) + '</td>' +
+    '<td class="cm-num">' + num(s.idleDays) + '</td>' +
+    '<td class="cm-num">' + pct(s.idlePct, 0) + '</td><td></td><td></td></tr>';
+
+  area.innerHTML = '<div class="cm-scroll"><table class="cm-table">' +
+    '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody>' +
+    '<tfoot>' + foot + '</tfoot></table></div>';
+
+  area.querySelectorAll('th[data-key]').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.key;
+      if (state.idleSortKey === k) state.idleSortDir *= -1;
+      else { state.idleSortKey = k; state.idleSortDir = (k === 'name' || k === 'country') ? 1 : -1; }
+      renderIdleTable();
+    });
+  });
+
+  $('idle-table-note').textContent = rows.length + ' driver' + (rows.length === 1 ? '' : 's') +
+    ' · ' + s.driversWithIdle + ' with idle days' +
+    (state.idleSearch ? ' · matching “' + state.idleSearch + '”' : '');
 }
 
 /* ============================================================
@@ -1725,28 +2101,31 @@ async function loadWeeks(force) {
 }
 
 /* ---------- troca de aba ---------- */
-function setView(v) {
+/* 'monthly' | 'weekly' | 'idle'. Idle usa o mesmo payload (e o mesmo seletor
+   de mês) do Monthly. opts.noLoad = só troca a aba (splash ainda aberto). */
+function setView(v, opts) {
   state.view = v;
   const weekly = v === 'weekly';
 
-  $('tab-monthly').classList.toggle('active', !weekly);
-  $('tab-weekly').classList.toggle('active', weekly);
-  $('tab-monthly').setAttribute('aria-selected', String(!weekly));
-  $('tab-weekly').setAttribute('aria-selected', String(weekly));
-
-  $('monthly-view').hidden = weekly;
-  $('weekly-view').hidden = !weekly;
+  ['monthly', 'weekly', 'idle'].forEach(k => {
+    const on = k === v;
+    $('tab-' + k).classList.toggle('active', on);
+    $('tab-' + k).setAttribute('aria-selected', String(on));
+    $(k + '-view').hidden = !on;
+  });
   $('period').hidden = weekly;
   $('week-controls').hidden = !weekly;
   $('notice').classList.toggle('hidden', weekly || !$('notice').innerHTML);
+  if (opts && opts.noLoad) return;
 
   if (weekly) {
     if (!state.weeks) loadWeeks();
     else { renderWeekly(); $('updated').textContent = stamp(state.weeks); }
   } else if (!state.data) {
-    // entrou direto no Weekly (?view=weekly): o mensal ainda não foi buscado
+    // entrou direto no Weekly/Idle (?view=...): o mensal ainda não foi buscado
     load();
   } else {
+    if (v === 'idle') renderIdle();
     $('updated').textContent = stamp(state.data);
   }
 }
@@ -1961,6 +2340,11 @@ async function load(force) {
     '<div class="cm-card"><div class="cm-skeleton" style="width:55%"></div>' +
     '<div class="cm-skeleton" style="width:75%;height:28px"></div>' +
     '<div class="cm-skeleton" style="width:65%"></div></div>').join('');
+  $('safety').hidden = true;
+  $('idle-tiles').innerHTML = '';
+  $('idle-reasons').innerHTML = '';
+  $('idle-countries').innerHTML = '';
+  $('idle-table-area').innerHTML = '<div class="cm-state"><div class="cm-spinner"></div>Loading operational data…</div>';
   $('refresh').disabled = true;
   $('updated').textContent = '';
 
@@ -1979,9 +2363,11 @@ async function load(force) {
 
     renderPeriods(d.months);
     renderCountries(d.countries);
+    renderSafety(d);
     renderKpis(d);
     renderPace(d);
     renderTable();
+    renderIdle();
 
     $('overview-note').textContent =
       (state.country === 'ALL' ? 'All LATAM' : state.country) + ' · ' + periodLabel(d.month, d.year);
@@ -1995,6 +2381,12 @@ async function load(force) {
       '<button class="cm-btn" id="retry">Try again</button></div>';
     const r = $('retry');
     if (r) r.addEventListener('click', () => load(true));
+    $('idle-table-area').innerHTML =
+      '<div class="cm-state"><h3>Could not load the data</h3>' +
+      '<p>The reporting service did not respond in time. This usually resolves in a few seconds.</p>' +
+      '<button class="cm-btn" id="idle-retry">Try again</button></div>';
+    const ir = $('idle-retry');
+    if (ir) ir.addEventListener('click', () => load(true));
   } finally {
     $('refresh').disabled = false;
   }
@@ -2040,7 +2432,8 @@ function exportCsv() {
   if (deepLinked) state.country = q.get('country');
   if (parseInt(q.get('month'), 10)) state.month = parseInt(q.get('month'), 10);
   if (parseInt(q.get('year'), 10)) state.year = parseInt(q.get('year'), 10);
-  const wantWeekly = (q.get('view') || '').toLowerCase() === 'weekly';
+  const wantView = (q.get('view') || '').toLowerCase();   // 'weekly' | 'idle'
+  const wantWeekly = wantView === 'weekly';
   if (q.get('week')) state.weekA = q.get('week');
   if (q.get('week2')) { state.weekB = q.get('week2'); state.compare = true; }
 
@@ -2089,14 +2482,547 @@ function exportCsv() {
   });
   if (state.compare) setCompare(true);   // deep link com ?week2= já entra comparando
 
+  // ---- aba Idle days ----
+  $('tab-idle').addEventListener('click', () => setView('idle'));
+  $('idle-search').addEventListener('input', (e) => { state.idleSearch = e.target.value; renderIdleTable(); });
+
   // Link direto (?country=Argentina) pula o splash; senão o cliente escolhe.
   if (deepLinked) {
     hideSplash();
-    if (wantWeekly) setView('weekly'); else load();
+    if (wantWeekly) setView('weekly');
+    else if (wantView === 'idle') setView('idle');
+    else load();
   } else {
     showSplash();
     if (wantWeekly) setView('weekly');
+    else if (wantView === 'idle') setView('idle', { noLoad: true });
   }
+})();
+
+/* ============================================================
+ * MODO ADMIN (cts-1.4) — editar os números na mão
+ * ------------------------------------------------------------
+ * Cadeado no header → senha única (Script Property ADMIN_PASSWORD do
+ * backend da CTS — nunca no código, o repo é público) → token de 6h.
+ * Com a edição ligada, todo número das seções [data-ov-sec] fica
+ * clicável. Duas saídas por número:
+ *   - "Only this session": guarda no sessionStorage desta aba (some ao
+ *     fechar a aba). Ninguém mais vê.
+ *   - "Change at the source": o mesmo + o backend anota na aba _admin_log
+ *     do espelho e manda e-mail dizendo ONDE mudar (CTS_SOURCES no .gs).
+ * Visitante comum não roda nada disso: sem token e sem edição salva a
+ * página nem é decorada.
+ * Edição é por número: mudar o TKM não recalcula efficiency/% da meta.
+ * Logs: [Client Metrics Admin]
+ * ============================================================ */
+const OV_STORE = 'CM_OVERRIDES';
+const ADMIN_STORE = 'CM_ADMIN';
+// texto que NÃO vira número editável (cabeçalhos, rótulos, datas)
+const OV_SKIP = 'th, button, select, option, input, textarea, .cm-avatar, .cm-card-label, ' +
+                '.cm-tile-label, .cm-panel-title, .cm-safety-num .l, [data-ov-skip]';
+// número "solto": não grudado em letra (W32 fica de fora); aceita 1,234.5 / 87% / 1.2 pp
+const OV_NUM_RE = /(^|[^\w.])(\d[\d,]*(?:\.\d+)?(?:\s?%|\s?pp)?)/g;
+// palavra perto do número → de onde ele vem (chave do CTS_SOURCES do backend)
+const OV_SOURCE_RULES = [
+  [/idle/i, 'idle'],
+  [/accident|incident/i, 'incidents'],
+  [/projection|days left|req\.\s*\/\s*day|last day|tkm \/ hour/i, 'pace'],
+  [/goal/i, 'goal'],
+  [/efficien/i, 'efficiency'],
+  [/km driven|\bkm\b/i, 'km'],
+  [/swarm/i, 'swarm'],
+  [/churn/i, 'churn'],
+  [/system on|on h\b/i, 'soh'],
+  [/mapping day/i, 'mappingDays'],
+  [/driver/i, 'drivers'],
+  [/fleet|active|half/i, 'fleet'],
+  [/vid|vehicle/i, 'vids'],
+  [/hotel/i, 'hotel'],
+  [/tkm/i, 'tkm'],
+];
+
+const admin = { token: null, expiresAt: 0, sources: null, editing: false, overrides: {}, observer: null, pop: null };
+
+function ssGet(k) { try { return JSON.parse(sessionStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+function ssSet(k, v) {
+  try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, JSON.stringify(v)); }
+  catch (e) { /* aba privada / storage bloqueado — fica só em memória */ }
+}
+const adminUnlocked = () => !!admin.token && admin.expiresAt > Date.now();
+const ovActive = () => adminUnlocked() || Object.keys(admin.overrides).length > 0;
+
+/* Contexto de período de uma seção: weekly usa as semanas, o resto o mês do payload. */
+function ovPeriod(sec) {
+  if (/^week/.test(sec)) {
+    const wa = weekByKey(state.weekA), wb = weekByKey(state.weekB);
+    return state.compare
+      ? { key: state.weekA + '~' + state.weekB, label: weekLabelLong(wa) + ' vs ' + weekLabelLong(wb) }
+      : { key: String(state.weekA), label: weekLabelLong(wa) };
+  }
+  const d = state.data || {};
+  const m = d.month || state.month, y = d.year || state.year;
+  return { key: m + '.' + y, label: periodLabel(m, y) };
+}
+
+/* Rótulo da coluna de uma célula (respeita colspan dos cabeçalhos agrupados do compare). */
+function ovColLabel(td) {
+  const table = td.closest('table');
+  let idx = 0;
+  for (const c of td.parentElement.cells) { if (c === td) break; idx += c.colSpan || 1; }
+  const parts = [];
+  Array.from((table && table.tHead && table.tHead.rows) || []).forEach(hr => {
+    let pos = 0;
+    for (const th of hr.cells) {
+      const span = th.colSpan || 1;
+      if (idx >= pos && idx < pos + span) {
+        const t = th.textContent.replace(/[▼▲▾]/g, '').trim();
+        if (t) parts.push(t);
+        break;
+      }
+      pos += span;
+    }
+  });
+  return parts.join(' · ');
+}
+
+/* O "item" de um número (card, tile, célula…) + rótulo legível. */
+function ovItem(atom) {
+  const td = atom.closest('td');
+  if (td) {
+    const tr = td.parentElement;
+    const first = tr.cells[0];
+    const row = tr.closest('tfoot') ? 'Total'
+      : ((first.querySelector('.cm-driver-name') || first).textContent.trim());
+    return { el: td, label: row, col: ovColLabel(td), cell: true };
+  }
+  const box = atom.closest('.cm-card, .cm-tile, .cm-safety-num, .cm-reason, .cm-safety-sev, .cm-safety-head');
+  if (!box) return { el: atom.parentElement, label: '', col: '' };
+  let label = '';
+  const lab = box.querySelector('.cm-card-label, .cm-tile-label, .l');
+  if (lab) label = lab.textContent.trim();
+  else if (box.classList.contains('cm-reason')) label = box.firstElementChild.textContent.trim();
+  else if (box.classList.contains('cm-safety-sev')) label = 'Severity';
+  const panel = box.closest('.cm-panel');
+  const col = panel ? ((panel.querySelector('.cm-panel-title') || {}).textContent || '').trim() : '';
+  return { el: box, label: label, col: col };
+}
+
+/* Embrulha cada número de uma seção num <span.cm-ov-atom>, dá uma chave estável
+   (seção|país|período|item|coluna|n-ésimo) e aplica as edições salvas. */
+function ovDecorate(sec) {
+  const secName = sec.dataset.ovSec;
+  const texts = [];
+  const w = document.createTreeWalker(sec, NodeFilter.SHOW_TEXT, null);
+  let n;
+  while ((n = w.nextNode())) {
+    if (!/\d/.test(n.nodeValue)) continue;
+    const p = n.parentElement;
+    if (!p || p.closest('.cm-ov-atom') || p.closest(OV_SKIP)) continue;
+    texts.push(n);
+  }
+  texts.forEach(t => {
+    const s = t.nodeValue;
+    const frag = document.createDocumentFragment();
+    let last = 0, m, any = false;
+    OV_NUM_RE.lastIndex = 0;
+    while ((m = OV_NUM_RE.exec(s))) {
+      const start = m.index + m[1].length;
+      if (start > last) frag.appendChild(document.createTextNode(s.slice(last, start)));
+      const sp = document.createElement('span');
+      sp.className = 'cm-ov-atom';
+      sp.textContent = m[2];
+      frag.appendChild(sp);
+      last = start + m[2].length;
+      any = true;
+    }
+    if (!any) return;
+    if (last < s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+    t.parentNode.replaceChild(frag, t);
+  });
+
+  const per = ovPeriod(secName);
+  const country = (!/^week/.test(secName) && state.data && state.data.country) || state.country;
+  const counters = new Map();
+  sec.querySelectorAll('.cm-ov-atom').forEach(a => {
+    const it = ovItem(a);
+    const i = counters.get(it.el) || 0;
+    counters.set(it.el, i + 1);
+    const key = [secName, country, per.key, it.label, it.col, i].join('|');
+    a.dataset.ovKey = key;
+    const o = admin.overrides[key];
+    if (o) {
+      if (!('ovOrig' in a.dataset)) a.dataset.ovOrig = a.textContent;
+      if (a.textContent !== o.to) a.textContent = o.to;
+      a.classList.add('cm-ov-on');
+    } else if ('ovOrig' in a.dataset) {
+      a.textContent = a.dataset.ovOrig;
+      delete a.dataset.ovOrig;
+      a.classList.remove('cm-ov-on');
+    }
+  });
+}
+
+function ovDecorateAll() {
+  if (!ovActive()) return;
+  document.querySelectorAll('[data-ov-sec]').forEach(ovDecorate);
+  if (admin.observer) admin.observer.takeRecords();   // descarta as mutações que a gente mesmo fez
+}
+
+/* Toda vez que um render troca o innerHTML de uma seção, decora de novo
+   (microtask, antes do paint — o número original não chega a piscar). */
+function ovEnsureObserver() {
+  if (admin.observer) return;
+  admin.observer = new MutationObserver((records) => {
+    if (!ovActive()) return;
+    const secs = new Set();
+    records.forEach(r => {
+      const el = r.target.nodeType === 1 ? r.target : r.target.parentElement;
+      const s = el && el.closest('[data-ov-sec]');
+      if (s) secs.add(s);
+    });
+    secs.forEach(ovDecorate);
+    admin.observer.takeRecords();
+  });
+  document.querySelectorAll('[data-ov-sec]').forEach(s =>
+    admin.observer.observe(s, { childList: true, subtree: true }));
+}
+
+function ovRestoreAll() {
+  document.querySelectorAll('.cm-ov-atom').forEach(a => {
+    if ('ovOrig' in a.dataset) { a.textContent = a.dataset.ovOrig; delete a.dataset.ovOrig; }
+    a.classList.remove('cm-ov-on');
+  });
+  if (admin.observer) admin.observer.takeRecords();
+}
+
+function ovSaveOverrides() { ssSet(OV_STORE, Object.keys(admin.overrides).length ? admin.overrides : null); }
+
+/* ---------- POST direto no Web App da CTS ---------- */
+async function adminPost(body) {
+  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), 45000) : null;
+  try {
+    // text/plain = sem preflight de CORS (Apps Script não responde OPTIONS)
+    const res = await fetch(CM.adminUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(body),
+      signal: ctrl ? ctrl.signal : undefined,
+    });
+    const txt = await res.text();
+    try { return JSON.parse(txt); }
+    catch (e) {
+      // backend ainda cts-1.3 (sem doPost) devolve página HTML de erro
+      console.error('[Client Metrics Admin] resposta não-JSON', txt.slice(0, 200));
+      return { success: false, error: 'backend_outdated' };
+    }
+  } catch (err) {
+    console.error('[Client Metrics Admin] POST falhou', err);
+    return { success: false, error: 'network' };
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+function adminErrorText(r) {
+  switch (r && r.error) {
+    case 'wrong_password':  return 'Wrong password.';
+    case 'locked':          return r.message || 'Too many attempts. Try again in 15 minutes.';
+    case 'not_configured':  return 'No admin password set yet (ADMIN_PASSWORD in the backend Script Properties).';
+    case 'backend_outdated': return 'Admin service not available — the backend needs the cts-1.4 deployment.';
+    case 'network':         return 'Could not reach the admin service. Check the connection and try again.';
+    case 'session_expired': return 'Admin session expired — unlock again.';
+    default:                return (r && (r.message || r.error)) || 'Something went wrong.';
+  }
+}
+
+function ovToast(msg, isErr) {
+  const t = document.createElement('div');
+  t.className = 'cm-ov-toast' + (isErr ? ' err' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4500);
+}
+
+/* ---------- senha ---------- */
+function closeAdminModal() { const m = $('admin-modal'); if (m) m.remove(); }
+
+function openAdminModal() {
+  closeAdminModal();
+  const bg = document.createElement('div');
+  bg.className = 'cm-modal-bg';
+  bg.id = 'admin-modal';
+  bg.innerHTML =
+    '<form class="cm-modal" id="admin-form" autocomplete="off">' +
+      '<h3>Admin mode</h3>' +
+      '<p>Enter the admin password to edit the numbers on this page.</p>' +
+      '<input type="password" id="admin-pw" placeholder="Password" aria-label="Admin password">' +
+      '<div class="cm-err" id="admin-err"></div>' +
+      '<div class="cm-modal-actions">' +
+        '<button type="button" class="cm-btn ghost" id="admin-cancel">Cancel</button>' +
+        '<button type="submit" class="cm-btn primary" id="admin-go">Unlock</button>' +
+      '</div>' +
+    '</form>';
+  document.body.appendChild(bg);
+  bg.addEventListener('click', (e) => { if (e.target === bg) closeAdminModal(); });
+  $('admin-cancel').addEventListener('click', closeAdminModal);
+  $('admin-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pw = $('admin-pw').value;
+    if (!pw) return;
+    $('admin-go').disabled = true;
+    $('admin-err').textContent = '';
+    const r = await adminPost({ action: 'adminCheck', password: pw });
+    if (!$('admin-modal')) return;   // fechou enquanto esperava
+    $('admin-go').disabled = false;
+    if (!r || !r.success) {
+      $('admin-err').textContent = adminErrorText(r);
+      $('admin-pw').select();
+      return;
+    }
+    admin.token = r.token;
+    admin.expiresAt = Date.now() + (Number(r.expiresIn) || 21600) * 1000 - 60000;
+    admin.sources = r.sources || null;
+    ssSet(ADMIN_STORE, { token: admin.token, expiresAt: admin.expiresAt, sources: admin.sources });
+    console.log('[Client Metrics Admin] desbloqueado');
+    closeAdminModal();
+    setEditing(true);
+    ovToast('Admin mode on — click any number to change it.');
+  });
+  setTimeout(() => $('admin-pw') && $('admin-pw').focus(), 30);
+}
+
+/* ---------- modo edição + barra ---------- */
+function setEditing(on) {
+  admin.editing = !!on && adminUnlocked();
+  document.body.classList.toggle('cm-ov-editing', admin.editing);
+  $('admin-btn').classList.toggle('on', adminUnlocked());
+  $('admin-btn').title = adminUnlocked() ? (admin.editing ? 'Done editing' : 'Edit numbers') : 'Admin';
+  if (admin.editing) { ovEnsureObserver(); ovDecorateAll(); }
+  else ovClosePop();
+  ovRenderBar();
+}
+
+function ovRenderBar() {
+  let bar = $('ov-bar');
+  if (!admin.editing) { if (bar) bar.remove(); return; }
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'ov-bar';
+    bar.className = 'cm-ov-bar';
+    bar.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      if (b.dataset.act === 'done') setEditing(false);
+      if (b.dataset.act === 'clear') { admin.overrides = {}; ovSaveOverrides(); ovRestoreAll(); ovRenderBar(); }
+      if (b.dataset.act === 'exit') adminExit();
+    });
+    document.body.appendChild(bar);
+  }
+  const n = Object.keys(admin.overrides).length;
+  bar.innerHTML = '<span>✎ Click any number to change it' + (n ? ' · <b>' + n + '</b> edited' : '') + '</span>' +
+    (n ? '<button type="button" data-act="clear" title="Back to the real numbers">Clear edits</button>' : '') +
+    '<button type="button" data-act="done" title="Hide this bar — edits stay on screen">Done</button>' +
+    '<button type="button" data-act="exit" title="Lock and restore the real numbers">Exit admin</button>';
+}
+
+/* Sai do admin: tranca e volta pros números reais. */
+function adminExit() {
+  setEditing(false);
+  admin.overrides = {};
+  ovSaveOverrides();
+  ovRestoreAll();
+  admin.token = null;
+  admin.expiresAt = 0;
+  ssSet(ADMIN_STORE, null);
+  $('admin-btn').classList.remove('on');
+  $('admin-btn').title = 'Admin';
+  console.log('[Client Metrics Admin] saiu');
+}
+
+/* ---------- popover de um número ---------- */
+function ovClosePop() { if (admin.pop) { admin.pop.remove(); admin.pop = null; } }
+
+function ovGuessSource(sec, atom, it, nearBefore, nearAfter) {
+  if (/^week/.test(sec)) return 'weekly';
+  if (/^idle/.test(sec)) return 'idle';
+  if (sec === 'safety') return 'incidents';
+  if (sec === 'pace') return 'pace';
+  const test = (s) => { for (const [re, k] of OV_SOURCE_RULES) if (re.test(s || '')) return k; return null; };
+  // número principal (valor do card/tile/célula) → manda o rótulo; resto → palavra vizinha
+  if (it.cell || atom.closest('.cm-card-value, .cm-tile-value, .cm-split-val')) {
+    return test(it.col) || test(it.label) || 'other';
+  }
+  return test(nearAfter) || test(nearBefore) || test(it.label) || 'other';
+}
+
+function ovOpenPop(a) {
+  ovClosePop();
+  const sec = a.closest('[data-ov-sec]');
+  if (!sec) return;
+  const secName = sec.dataset.ovSec;
+  const it = ovItem(a);
+
+  // texto em volta do número, cortado no "·" mais próximo (ex.: "8,000 km driven · …")
+  const range = document.createRange();
+  range.setStart(it.el, 0);
+  range.setEndBefore(a);
+  const before = range.toString();
+  const full = it.el.textContent;
+  const after = full.slice(before.length + a.textContent.length);
+  const clean = (s) => s.replace(/^[\s·:,\-]+|[\s·:,\-]+$/g, '');
+  const nearAfter = clean(after.split(/\d/)[0].split('·')[0]);
+  const nearBefore = clean(before.split(/\d/).pop().split('·').pop());
+  const isMain = it.cell || !!a.closest('.cm-card-value, .cm-tile-value, .cm-split-val, .v');
+  const hint = isMain ? '' : (nearAfter.length > 2 ? nearAfter : nearBefore);
+
+  const sourceKey = ovGuessSource(secName, a, it, nearBefore, nearAfter);
+  const src = admin.sources ? (admin.sources[sourceKey] || admin.sources.other) : null;
+  const per = ovPeriod(secName);
+  const view = { monthly: 'Monthly', weekly: 'Weekly', idle: 'Idle days' }[state.view] || state.view;
+  const country = state.country === 'ALL' ? 'All LATAM' : state.country;
+  const title = (it.cell ? it.label + ' · ' + it.col : (it.label || it.col || 'Number')) + (hint ? ' — ' + hint : '');
+  const context = it.cell
+    ? 'Table row “' + it.label + '”, column “' + it.col + '”'
+    : 'Text on the page: “' + full.replace(/\s+/g, ' ').trim().slice(0, 220) + '”';
+  const key = a.dataset.ovKey;
+  const orig = 'ovOrig' in a.dataset ? a.dataset.ovOrig : a.textContent;
+  const edited = !!admin.overrides[key];
+
+  const pop = document.createElement('div');
+  pop.className = 'cm-ov-pop';
+  pop.setAttribute('role', 'dialog');
+  pop.innerHTML =
+    '<div class="t">' + esc(title) + '</div>' +
+    '<div class="s">' + esc(country + ' · ' + per.label + ' · ' + view) + (edited ? ' · original ' + esc(orig) : '') + '</div>' +
+    '<input type="text" id="ov-val" aria-label="New value" value="' + esc(a.textContent) + '">' +
+    (src ? '<div class="src"><b>Source:</b> ' + esc(src.where) + '<br><b>Who changes it:</b> ' + esc(src.who) + '</div>' : '') +
+    '<textarea id="ov-note" placeholder="Note for the e-mail (only for “change at the source”)"></textarea>' +
+    '<div class="cm-err" id="ov-err"></div>' +
+    '<div class="cm-modal-actions">' +
+      '<button type="button" class="cm-btn primary" id="ov-session" title="Only in this browser tab, until you close it">Only this session</button>' +
+      '<button type="button" class="cm-btn" id="ov-root" title="Also logs it and e-mails you where to fix it">Change at the source</button>' +
+      (edited ? '<button type="button" class="cm-btn ghost" id="ov-revert">Revert</button>' : '') +
+    '</div>';
+  document.body.appendChild(pop);
+  admin.pop = pop;
+
+  // posiciona embaixo do número, sem sair da tela
+  const r = a.getBoundingClientRect();
+  const w = pop.offsetWidth;
+  let left = r.left + window.scrollX;
+  left = Math.max(window.scrollX + 12, Math.min(left, window.scrollX + document.documentElement.clientWidth - w - 12));
+  let top = r.bottom + window.scrollY + 6;
+  if (r.bottom + pop.offsetHeight + 12 > window.innerHeight && r.top > pop.offsetHeight + 12) {
+    top = r.top + window.scrollY - pop.offsetHeight - 6;   // sem espaço embaixo → abre em cima
+  }
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+
+  const input = $('ov-val');
+  input.focus();
+  input.select();
+
+  const saveLocal = (to, root) => {
+    admin.overrides[key] = { to: to, from: orig, label: title, root: !!root, at: Date.now() };
+    ovSaveOverrides();
+    document.querySelectorAll('[data-ov-sec]').forEach(ovDecorate);
+    if (admin.observer) admin.observer.takeRecords();
+    ovRenderBar();
+  };
+
+  $('ov-session').addEventListener('click', () => {
+    const to = input.value.trim();
+    if (!to) { $('ov-err').textContent = 'Type the new value.'; return; }
+    if (to === orig) { delete admin.overrides[key]; ovSaveOverrides(); ovDecorateAll(); ovRenderBar(); }
+    else saveLocal(to, false);
+    ovClosePop();
+  });
+
+  $('ov-root').addEventListener('click', async () => {
+    const to = input.value.trim();
+    if (!to) { $('ov-err').textContent = 'Type the new value.'; return; }
+    if (to === orig) { $('ov-err').textContent = 'That is the current value — nothing to change.'; return; }
+    if (!adminUnlocked()) { ovClosePop(); openAdminModal(); return; }
+    pop.querySelectorAll('button').forEach(b => { b.disabled = true; });
+    $('ov-err').textContent = '';
+    $('ov-root').textContent = 'Sending…';
+    const res = await adminPost({
+      action: 'adminRootChange',
+      token: admin.token,
+      note: $('ov-note').value.trim(),
+      context: { view: view, country: country, period: per.label },
+      changes: [{ label: title, context: context, from: orig, to: to, sourceKey: sourceKey }],
+    });
+    if (admin.pop !== pop) return;   // fechou enquanto mandava
+    if (res && res.success) {
+      saveLocal(to, true);
+      ovClosePop();
+      console.log('[Client Metrics Admin] mudança na raiz registrada', sourceKey, orig, '→', to);
+      ovToast('Changed here for this session · logged and e-mailed to ' + (res.emailed || 'you') + '.');
+      return;
+    }
+    pop.querySelectorAll('button').forEach(b => { b.disabled = false; });
+    $('ov-root').textContent = 'Change at the source';
+    $('ov-err').textContent = adminErrorText(res);
+    if (res && res.error === 'session_expired') {
+      admin.token = null; admin.expiresAt = 0; ssSet(ADMIN_STORE, null);
+      setTimeout(() => { setEditing(false); openAdminModal(); }, 1200);
+    }
+  });
+
+  const rv = $('ov-revert');
+  if (rv) rv.addEventListener('click', () => {
+    delete admin.overrides[key];
+    ovSaveOverrides();
+    ovDecorateAll();
+    ovRenderBar();
+    ovClosePop();
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); $('ov-session').click(); }
+  });
+}
+
+(function adminInit() {
+  const s = ssGet(ADMIN_STORE);
+  if (s && s.token && s.expiresAt > Date.now()) {
+    admin.token = s.token;
+    admin.expiresAt = s.expiresAt;
+    admin.sources = s.sources || null;
+  }
+  admin.overrides = ssGet(OV_STORE) || {};
+  $('admin-btn').classList.toggle('on', adminUnlocked());
+  $('admin-btn').title = adminUnlocked() ? 'Edit numbers' : 'Admin';
+  if (ovActive()) { ovEnsureObserver(); ovDecorateAll(); }
+
+  $('admin-btn').addEventListener('click', () => {
+    if (!adminUnlocked()) openAdminModal();
+    else setEditing(!admin.editing);
+  });
+
+  // captura: no modo edição, clicar num número abre o popover (e não dispara
+  // ordenação/links por baixo); clicar fora fecha
+  document.addEventListener('click', (e) => {
+    if (!admin.editing) return;
+    const t = e.target;
+    if (admin.pop && admin.pop.contains(t)) return;
+    const a = t.closest && t.closest('.cm-ov-atom');
+    if (a && a.closest('[data-ov-sec]')) {
+      e.preventDefault();
+      e.stopPropagation();
+      ovOpenPop(a);
+      return;
+    }
+    if (admin.pop && !(t.closest && t.closest('#ov-bar'))) ovClosePop();
+  }, true);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (admin.pop) ovClosePop();
+    else if ($('admin-modal')) closeAdminModal();
+  });
 })();
 /* Splash — spotlight que segue o mouse dentro do card (Rare UI). Só visual:
    escreve --mx/--my no card e o CSS desenha o brilho radial nesse ponto. */

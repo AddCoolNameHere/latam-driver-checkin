@@ -33,7 +33,7 @@
  * Logs: [CTS Backend]
  */
 
-const CTS_VERSION = 'cts-1.3';
+const CTS_VERSION = 'cts-1.4';
 
 const CTS_CONFIG = {
   // ID da planilha que tem as abas KMS/Targets/QC. A conta que publica este
@@ -45,6 +45,9 @@ const CTS_CONFIG = {
   kmsSheet: 'KMS',
   targetsSheet: 'Targets',
   qcSheet: 'QC',
+  incidentsSheet: 'incidents',   // cts-1.4: acidentes/incidentes da CTS (copiada pelo espelho)
+  adminLogSheet: '_admin_log',   // cts-1.4: pedidos de mudança "na raiz" (aba nossa, no espelho)
+  adminEmailDefault: 'lucas.fuss@aceolution.com',   // Script Property ADMIN_EMAIL troca
   hrSheet: 'HR and Vendors Database',
   vidStatusSheet: 'VID Status',
   cacheSeconds: 1800,
@@ -111,6 +114,24 @@ function doGet(e) {
     return ctsJson_({ success: false, error: 'action desconhecida: ' + action });
   } catch (err) {
     Logger.log('[CTS Backend] doGet erro: ' + err + '\n' + (err && err.stack));
+    return ctsJson_({ success: false, error: String(err) });
+  }
+}
+
+/**
+ * POST (cts-1.4) — só o modo admin do portal. Corpo = JSON em text/plain (sem
+ * preflight de CORS). Vem DIRETO do navegador pra este Web App: o Worker
+ * (/api) não repassa POST pra cá.
+ */
+function doPost(e) {
+  let body = {};
+  try { body = JSON.parse((e && e.postData && e.postData.contents) || '{}'); } catch (err) { body = {}; }
+  try {
+    if (body.action === 'adminCheck') return ctsJson_(ctsAdminCheck_(body));
+    if (body.action === 'adminRootChange') return ctsJson_(ctsAdminRootChange_(body));
+    return ctsJson_({ success: false, error: 'action desconhecida: ' + body.action });
+  } catch (err) {
+    Logger.log('[CTS Backend] doPost erro: ' + err + '\n' + (err && err.stack));
     return ctsJson_({ success: false, error: String(err) });
   }
 }
@@ -409,8 +430,101 @@ function ctsSource_() {
     }
   } catch (e) { Logger.log('[CTS Backend] QC falhou (segue sem): ' + e); }
 
-  _ctsSource = { tz: tz, rows: rows, maxDate: maxDate, targets: targets, qc: qc };
+  // ---- incidents (cts-1.4) ----
+  // 1 linha por ticket: vehicle_id · vendor · country_code · type · program · ticket ·
+  // ticket_creation_date · incident_date · week_start · incident_month · region ·
+  // item (de quem é a culpa) · severity · email. Email/ticket NÃO saem no payload público.
+  let incidents = null;
+  try {
+    const iSheet = ss.getSheetByName(CTS_CONFIG.incidentsSheet);
+    if (iSheet && iSheet.getLastRow() > 1) {
+      const iv = iSheet.getDataRange().getValues();
+      const ih = iv[0];
+      const ix2 = {
+        date: ctsCol_(ih, ['incident_date']), cc: ctsCol_(ih, ['country_code']),
+        type: ctsCol_(ih, ['type']), item: ctsCol_(ih, ['item']), sev: ctsCol_(ih, ['severity']),
+        ticket: ctsCol_(ih, ['ticket']), vid: ctsCol_(ih, ['vehicle_id']),
+      };
+      if (ix2.date >= 0 && ix2.cc >= 0) {
+        const iDates = ctsDisplayCol_(iSheet, ix2.date, iv.length);
+        const seen = {};
+        incidents = [];
+        for (let i = 1; i < iv.length; i++) {
+          const r = iv[i];
+          const d = ctsYmd_(iDates[i], tz);
+          const c = ctsCountry_(r[ix2.cc]);
+          if (!d || !c) continue;
+          const t = ix2.ticket >= 0 ? String(r[ix2.ticket] || '') : '';
+          if (t && seen[t]) continue;   // ticket repetido = mesma ocorrência
+          if (t) seen[t] = 1;
+          incidents.push({
+            date: d, month: d.slice(0, 7), cc: c.code,
+            type: ix2.type >= 0 ? String(r[ix2.type] || '').trim() : '',
+            liability: ix2.item >= 0 ? String(r[ix2.item] || '').trim() : '',
+            severity: ix2.sev >= 0 ? String(r[ix2.sev] || '').trim() : '',
+          });
+        }
+      }
+    }
+  } catch (e) { Logger.log('[CTS Backend] incidents falhou (segue sem): ' + e); incidents = null; }
+
+  _ctsSource = { tz: tz, rows: rows, maxDate: maxDate, targets: targets, qc: qc, incidents: incidents };
   return _ctsSource;
+}
+
+/**
+ * Card "Accidents & incidents" (cts-1.4). type 'Accident' = acidente; o resto
+ * (Other, Lost an item, Robbery, Fines, PR incident...) = incidente.
+ * "Days since last accident" é contado até HOJE (número vivo de segurança),
+ * mesmo olhando um mês antigo.
+ */
+function ctsIncidentsSummary_(list, scopeCodes, mk) {
+  if (!list) return { available: false };
+  const inScope = {};
+  scopeCodes.forEach(function (cc) { inScope[cc] = 1; });
+  const rows = list.filter(function (r) { return inScope[r.cc]; });
+  const year = mk.slice(0, 4);
+  const isAcc = function (r) { return /^accident/i.test(r.type); };
+  const blank = function () { return { total: 0, accidents: 0, incidents: 0, bySeverity: {}, byLiability: {}, byType: {} }; };
+  const add = function (b, r) {
+    b.total++;
+    if (isAcc(r)) b.accidents++; else b.incidents++;
+    const s = r.severity || 'Unknown', l = r.liability || 'Unknown', t = r.type || 'Other';
+    b.bySeverity[s] = (b.bySeverity[s] || 0) + 1;
+    b.byLiability[l] = (b.byLiability[l] || 0) + 1;
+    b.byType[t] = (b.byType[t] || 0) + 1;
+  };
+  const month = blank(), ytd = blank();
+  const byCC = {};
+  let lastAcc = '', last = '';
+  rows.forEach(function (r) {
+    if (r.date > last) last = r.date;
+    if (isAcc(r) && r.date > lastAcc) lastAcc = r.date;
+    if (r.month === mk) {
+      add(month, r);
+      const b = byCC[r.cc] || (byCC[r.cc] = { month: 0, accidents: 0, ytd: 0 });
+      b.month++; if (isAcc(r)) b.accidents++;
+    }
+    if (r.month.slice(0, 4) === year && r.month <= mk) {
+      add(ytd, r);
+      (byCC[r.cc] || (byCC[r.cc] = { month: 0, accidents: 0, ytd: 0 })).ytd++;
+    }
+  });
+  const today = Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyyy-MM-dd');
+  const days = function (a, b) { return Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86400000); };
+  return {
+    available: true,
+    month: month,
+    ytd: ytd,
+    year: +year,
+    lastIncident: last || null,
+    lastAccident: lastAcc || null,
+    daysSinceLastAccident: lastAcc ? Math.max(0, days(lastAcc, today)) : null,
+    dataThrough: list.reduce(function (m, r) { return r.date > m ? r.date : m; }, '') || null,
+    byCountry: CTS_COUNTRIES.filter(function (c) { return byCC[c.code]; }).map(function (c) {
+      return { country: c.name, month: byCC[c.code].month, accidents: byCC[c.code].accidents, ytd: byCC[c.code].ytd };
+    }),
+  };
 }
 
 let _ctsMaster = null;
@@ -488,7 +602,25 @@ function ctsMaster_() {
  * Linhas sem email ("no driver", "winterized") contam no total do país mas não
  * viram motorista.
  */
-function ctsDriverRows_(rows, nameByEmail, monthKeyForQc, qc) {
+/**
+ * Motivo do dia parado (cts-1.4), direto do status da CTS: '⬇Weather' → 'Weather',
+ * '⬇Mech.' → 'Mechanical'. Sem status e sem mapeamento → 'Not reported'.
+ */
+const CTS_IDLE_LABELS = {
+  'weather': 'Weather', 'travelling': 'Travelling', 'traveling': 'Travelling',
+  'mech.': 'Mechanical', 'mech': 'Mechanical', 'tech.': 'Technical', 'tech': 'Technical',
+  'personal': 'Personal', 'holiday': 'Holiday', 'idle with driver': 'Idle with driver',
+  'at in-field wh': 'At in-field WH', 'at google wh': 'At Google WH', 'training': 'Training',
+  'disks': 'Disks', 'no drive day': 'No drive day', 'strike': 'Strike',
+};
+function ctsIdleReason_(status) {
+  const s = String(status == null ? '' : status).replace(/[⬇⬆*]/g, '').trim();
+  if (!s) return 'Not reported';
+  return CTS_IDLE_LABELS[s.toLowerCase()] || s;
+}
+
+function ctsDriverRows_(rows, nameByEmail, monthKeyForQc, qc, opts) {
+  opts = opts || {};
   const by = {};
   rows.forEach(function (r) {
     if (!r.email) return;
@@ -499,7 +631,7 @@ function ctsDriverRows_(rows, nameByEmail, monthKeyForQc, qc) {
         email: r.email, cc: r.cc,
         tkm: 0, km: 0, hours: 0,
         tkmSwarm: 0, kmSwarm: 0, tkmChurn: 0, kmChurn: 0,
-        _days: {}, _onDays: {}, _swarmDays: {}, _churnDays: {},
+        _days: {}, _onDays: {}, _swarmDays: {}, _churnDays: {}, _reason: {},
         _hotelDate: '', hotel: false, vids: [],
       };
     }
@@ -509,6 +641,7 @@ function ctsDriverRows_(rows, nameByEmail, monthKeyForQc, qc) {
     // um dia conta 1x mesmo com 2 linhas (troca de VID / swarm+churn no mesmo dia)
     const mapping = ctsIsMappingDay_(r.status, r.hours, r.tkm);
     D._days[r.date] = D._days[r.date] || mapping;
+    if (!mapping && !D._reason[r.date]) D._reason[r.date] = ctsIdleReason_(r.status);
     if (r.hours > 0) D._onDays[r.date] = 1;
     if (r.date >= D._hotelDate) { D._hotelDate = r.date; D.hotel = r.hotel; }   // hotel do dia mais recente
     if (r.vid && D.vids.indexOf(r.vid) < 0) D.vids.push(r.vid);
@@ -521,7 +654,16 @@ function ctsDriverRows_(rows, nameByEmail, monthKeyForQc, qc) {
     const onDays = Object.keys(D._onDays).length;
     const typed = D.tkmSwarm + D.tkmChurn;
     const q = qc && monthKeyForQc ? qc[monthKeyForQc + '|' + D.email] : null;
-    return {
+    // dias parados = dias com linha na CTS e sem mapeamento (mesma conta do idleDays)
+    const idleByReason = {};
+    const idleDates = [];
+    days.sort().forEach(function (d) {
+      if (D._days[d]) return;
+      const why = D._reason[d] || 'Not reported';
+      idleByReason[why] = (idleByReason[why] || 0) + 1;
+      if (opts.idleDates) idleDates.push({ d: d, r: why });
+    });
+    const out = {
       email: D.email,
       name: nameByEmail[D.email] || ctsNameFromEmail_(D.email),
       country: ctsCountry_(D.cc).name,
@@ -540,8 +682,30 @@ function ctsDriverRows_(rows, nameByEmail, monthKeyForQc, qc) {
       hotelMode: D.hotel,
       vids: D.vids,
       vidCount: D.vids.length,
+      idleByReason: idleByReason,
     };
+    if (opts.idleDates) out.idleDates = idleDates;
+    return out;
   }).sort(function (a, b) { return b.tkm - a.tkm; });
+}
+
+/** Soma de dias parados por motivo (cts-1.4) de uma lista de motoristas. */
+function ctsIdleSummary_(drivers) {
+  const by = {};
+  let idle = 0, mapping = 0, withIdle = 0;
+  drivers.forEach(function (d) {
+    idle += d.idleDays || 0;
+    mapping += d.mappingDays || 0;
+    if (d.idleDays > 0) withIdle++;
+    Object.keys(d.idleByReason || {}).forEach(function (k) { by[k] = (by[k] || 0) + d.idleByReason[k]; });
+  });
+  const total = idle + mapping;
+  return {
+    idleDays: idle, mappingDays: mapping, driverDays: total,
+    idlePct: total > 0 ? idle / total : 0,
+    driversWithIdle: withIdle, drivers: drivers.length,
+    byReason: by,
+  };
 }
 
 /** Status de frota per Google (regra da Calc_Data_VID) das linhas de um mês. */
@@ -687,7 +851,7 @@ function getClientMetrics_(month, year, country) {
     });
 
     // ---- motoristas ----
-    const drivers = ctsDriverRows_(rows, master.nameByEmail, mk, src.qc).map(function (d) {
+    const drivers = ctsDriverRows_(rows, master.nameByEmail, mk, src.qc, { idleDates: true }).map(function (d) {
       d.tkmDriverTotal = d.tkm;
       delete d.email;   // portal é público: email não sai no payload mensal
       return d;
@@ -696,6 +860,11 @@ function getClientMetrics_(month, year, country) {
     const totalByName = {};
     drivers.forEach(function (d) { totalByName[d.name] = (totalByName[d.name] || 0) + d.tkm; });
     drivers.forEach(function (d) { d.tkmDriverTotal = totalByName[d.name]; });
+
+    // ---- idle days por país (cts-1.4) ----
+    perCountry.forEach(function (pc) {
+      pc.idle = ctsIdleSummary_(drivers.filter(function (d) { return d.country === pc.country; }));
+    });
 
     // ---- KPIs ----
     const sum = function (k) { return perCountry.reduce(function (a, c) { return a + (c[k] || 0); }, 0); };
@@ -789,7 +958,9 @@ function getClientMetrics_(month, year, country) {
         swarmPct: swarmTkm + churnTkm > 0 ? swarmTkm / (swarmTkm + churnTkm) : 0,
         churnPct: swarmTkm + churnTkm > 0 ? churnTkm / (swarmTkm + churnTkm) : 0,
         fleet: fl,
+        idle: ctsIdleSummary_(drivers),
       },
+      incidents: ctsIncidentsSummary_(src.incidents, scope.map(function (c) { return c.code; }), mk),
       perCountry: perCountry,
       drivers: drivers,
       generatedAt: new Date().toISOString(),
@@ -851,6 +1022,227 @@ function getClientWeeks_(weeksBack) {
     Logger.log('[CTS Backend] getClientWeeks_ erro: ' + err + '\n' + (err && err.stack));
     return { success: false, error: String(err) };
   }
+}
+
+// ================================================================
+// MODO ADMIN (cts-1.4) — senha única, sem login
+// ================================================================
+//
+// Senha: Configurações do projeto → Propriedades do script → ADMIN_PASSWORD.
+// (Nunca no código: o repositório é público.) ADMIN_EMAIL é opcional.
+//
+// adminCheck      { password }                  → { token } válido por 6h
+// adminRootChange { token, changes[], context } → grava na aba _admin_log do
+//                  espelho + manda e-mail dizendo ONDE mudar cada número.
+// "Só nesta sessão" nem chega aqui: fica no navegador de quem está apresentando.
+
+/** De onde vem cada número do portal (o e-mail diz onde mexer). */
+const CTS_SOURCES = {
+  goal: {
+    label: 'Meta mensal (CTS Goal)',
+    where: 'Planilha da CTS → aba Targets (colunas Overall / Swarm / Churn, linhas do país nos dias úteis do mês). O "entregue" do card vem da aba KMS, coluna TKM.',
+    who: 'CTS (planilha deles, só leitura pra nós) — pedir a correção pra CTS. O espelho copia de hora em hora.',
+  },
+  tkm: {
+    label: 'TKM',
+    where: 'Planilha da CTS → aba KMS, coluna TKM (linhas do país/mês; por motorista = coluna email).',
+    who: 'CTS — pedir a correção pra CTS.',
+  },
+  km: {
+    label: 'KM driven',
+    where: 'Planilha da CTS → aba KMS, coluna total_kms.',
+    who: 'CTS — pedir a correção pra CTS.',
+  },
+  efficiency: {
+    label: 'Efficiency (TKM ÷ KM)',
+    where: 'Calculado: TKM ÷ total_kms da aba KMS. Muda sozinho quando TKM ou KM mudarem.',
+    who: 'Corrigir TKM/KM na origem (CTS).',
+  },
+  drivers: {
+    label: 'Total drivers',
+    where: 'LATAM MASTERSHEET → aba HR and Vendors Database: conta Situation = Active ou Offboarding, por Country.',
+    who: 'Nós — editar a Situation na HR.',
+  },
+  mappingDays: {
+    label: 'Mapping days',
+    where: 'Planilha da CTS → aba KMS: dias com status ⬆ por motorista.',
+    who: 'CTS — pedir a correção do status pra CTS.',
+  },
+  vids: {
+    label: 'VIDs',
+    where: 'Card Total VIDs = curadoria do ops-map (ops-map.html → Admin; aba VID Status da Mastersheet, VIDs ativos). Coluna VIDs da tabela = vehicle_id distintos da aba KMS.',
+    who: 'Nós (card) — ops-map. CTS (tabela).',
+  },
+  soh: {
+    label: 'Avg system on hours',
+    where: 'Planilha da CTS → aba KMS, coluna mapping_hours (média por dia com horas).',
+    who: 'CTS — pedir a correção pra CTS.',
+  },
+  fleet: {
+    label: 'Fleet status per Google',
+    where: 'Aba KMS (total_kms por VID/dia: > 30 km = dia ativo; ≥ 10 dias = active, 3–9 = half) sobre a frota da curadoria do ops-map (VID Status).',
+    who: 'CTS (km) + nós (curadoria no ops-map).',
+  },
+  swarm: {
+    label: 'Swarm',
+    where: 'Aba KMS (season_name terminando em "Swarm") + meta na aba Targets, coluna Swarm.',
+    who: 'CTS — pedir a correção pra CTS.',
+  },
+  churn: {
+    label: 'Churn',
+    where: 'Aba KMS (season_name terminando em "Churn") + meta na aba Targets, coluna Churn.',
+    who: 'CTS — pedir a correção pra CTS.',
+  },
+  pace: {
+    label: 'Pace & projection',
+    where: 'Calculado: dias úteis/meta da aba Targets + TKM da aba KMS. Muda quando meta ou TKM mudarem.',
+    who: 'Corrigir meta/TKM na origem (CTS).',
+  },
+  hotel: {
+    label: 'Hotel mode',
+    where: 'Planilha da CTS → aba KMS, coluna hotel (Yes/No do dia mais recente do motorista).',
+    who: 'CTS — pedir a correção pra CTS.',
+  },
+  idle: {
+    label: 'Idle days',
+    where: 'Planilha da CTS → aba KMS, coluna status (⬇Motivo) por motorista e dia. Dia sem status e sem mapeamento = "Not reported".',
+    who: 'CTS — pedir a correção do status pra CTS.',
+  },
+  incidents: {
+    label: 'Accidents & incidents',
+    where: 'Planilha da CTS → aba incidents (type, severity, item = liability, incident_date, country_code). 1 linha por ticket.',
+    who: 'CTS — pedir a correção pra CTS.',
+  },
+  weekly: {
+    label: 'Aba Weekly',
+    where: 'Mesmas fontes do mensal, recortadas por semana ISO: aba KMS da CTS (TKM, total_kms, mapping_hours, status, hotel).',
+    who: 'CTS — pedir a correção pra CTS.',
+  },
+  other: {
+    label: 'Outro número',
+    where: 'Não mapeado automaticamente — conferir as abas KMS/Targets do CTS Mirror.',
+    who: '—',
+  },
+};
+
+const CTS_LINKS = {
+  cts: 'https://docs.google.com/spreadsheets/d/1EczaKGKiQXkgVVjXHJs3OVtCdpeQvlkPYPTdl4S5NeM/edit',
+  mirror: 'https://docs.google.com/spreadsheets/d/18lTqa5I0bNcPiLCXUpid9dGT19x4r7vTlKZ7b23C_NM/edit',
+  master: 'https://docs.google.com/spreadsheets/d/1hwRnvbIKHWMRVY84lT6svbCg5BcMKkIJ7iaKpnNOGjg/edit',
+  opsMap: 'https://latamace.com/ops-map.html',
+};
+
+function ctsAdminCheck_(body) {
+  const cache = CacheService.getScriptCache();
+  const fails = parseInt(cache.get('adm_fail'), 10) || 0;
+  if (fails >= 8) return { success: false, error: 'locked', message: 'Too many attempts. Try again in 15 minutes.' };
+  const pw = PropertiesService.getScriptProperties().getProperty('ADMIN_PASSWORD');
+  if (!pw) return { success: false, error: 'not_configured', message: 'ADMIN_PASSWORD not set in Script Properties.' };
+  if (String(body.password || '') !== pw) {
+    cache.put('adm_fail', String(fails + 1), 900);
+    Utilities.sleep(800);   // freia tentativa em massa
+    return { success: false, error: 'wrong_password' };
+  }
+  cache.remove('adm_fail');
+  const token = Utilities.getUuid();
+  cache.put('adm_' + token, '1', 21600);
+  Logger.log('[CTS Backend] admin: login ok');
+  return { success: true, token: token, expiresIn: 21600, sources: CTS_SOURCES };
+}
+
+function ctsAdminTokenOk_(token) {
+  return !!token && CacheService.getScriptCache().get('adm_' + token) === '1';
+}
+
+function ctsAdminRootChange_(body) {
+  if (!ctsAdminTokenOk_(body.token)) return { success: false, error: 'session_expired' };
+  const changes = (Array.isArray(body.changes) ? body.changes : []).slice(0, 50);
+  if (!changes.length) return { success: false, error: 'nada pra registrar' };
+  const ctx = body.context || {};
+  const clip = function (s, n) { return String(s == null ? '' : s).slice(0, n || 300); };
+  const now = new Date();
+
+  // 1) anota (aba _admin_log no espelho — nossa planilha; o cts-mirror.gs não mexe nela)
+  let logged = false;
+  try {
+    const ss = SpreadsheetApp.openById(CTS_CONFIG.ctsSpreadsheetId);
+    let sh = ss.getSheetByName(CTS_CONFIG.adminLogSheet);
+    if (!sh) {
+      sh = ss.insertSheet(CTS_CONFIG.adminLogSheet);
+      sh.appendRow(['Quando', 'Aba', 'País', 'Período', 'Número', 'Contexto', 'Estava', 'Quer', 'Onde mudar', 'Quem muda', 'Nota', 'Status']);
+      sh.setFrozenRows(1);
+    }
+    const rows = changes.map(function (c) {
+      const src = CTS_SOURCES[c.sourceKey] || CTS_SOURCES.other;
+      return [now, clip(ctx.view, 40), clip(ctx.country, 40), clip(ctx.period, 60), clip(c.label, 200),
+              clip(c.context, 300), clip(c.from, 200), clip(c.to, 200), src.where, src.who, clip(body.note, 500), 'Pendente'];
+    });
+    sh.getRange(sh.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+    logged = true;
+  } catch (e) { Logger.log('[CTS Backend] admin: log falhou: ' + e); }
+
+  // 2) e-mail (MailApp — GmailApp não tem escopo autorizado nos nossos projetos)
+  const to = PropertiesService.getScriptProperties().getProperty('ADMIN_EMAIL') || CTS_CONFIG.adminEmailDefault;
+  const e_ = ctsEsc_;
+  const items = changes.map(function (c) {
+    const src = CTS_SOURCES[c.sourceKey] || CTS_SOURCES.other;
+    return '<tr>' +
+      '<td style="padding:10px;border-bottom:1px solid #E2E8F0;vertical-align:top"><b>' + e_(c.label) + '</b>' +
+        (c.context ? '<div style="color:#64748B;font-size:12px;margin-top:3px">' + e_(clip(c.context, 300)) + '</div>' : '') + '</td>' +
+      '<td style="padding:10px;border-bottom:1px solid #E2E8F0;vertical-align:top;white-space:nowrap">' +
+        '<span style="color:#B91C1C;text-decoration:line-through">' + e_(c.from) + '</span><br>' +
+        '<span style="color:#15803D;font-weight:700">' + e_(c.to) + '</span></td>' +
+      '<td style="padding:10px;border-bottom:1px solid #E2E8F0;vertical-align:top;font-size:13px">' + e_(src.where) +
+        '<div style="color:#64748B;font-size:12px;margin-top:4px">Quem muda: ' + e_(src.who) + '</div></td>' +
+      '</tr>';
+  }).join('');
+  const first = changes[0];
+  const subject = '[/cts-data] Mudar na raiz: ' + clip(first.label, 80) +
+    (changes.length > 1 ? ' (+' + (changes.length - 1) + ')' : '') +
+    ' · ' + (ctx.country || 'ALL') + ' · ' + (ctx.period || '');
+  const html =
+    '<div style="font-family:Arial,sans-serif;max-width:760px;color:#1A202C">' +
+    '<h2 style="color:#1A365D;margin:0 0 6px">Pedido de mudança na raiz — /cts-data</h2>' +
+    '<div style="color:#64748B;font-size:13px;margin-bottom:14px">' +
+      e_(Utilities.formatDate(now, 'America/Sao_Paulo', 'dd/MM/yyyy HH:mm')) + ' (SP) · aba ' + e_(ctx.view || '—') +
+      ' · ' + e_(ctx.country || 'ALL') + ' · ' + e_(ctx.period || '—') + '</div>' +
+    (body.note ? '<div style="background:#EBF4FB;border-radius:8px;padding:10px 12px;margin-bottom:14px"><b>Nota:</b> ' + e_(clip(body.note, 500)) + '</div>' : '') +
+    '<table style="border-collapse:collapse;width:100%;font-size:14px">' +
+    '<tr style="background:#F1F5F9;text-align:left"><th style="padding:10px">Número</th><th style="padding:10px">Estava → Quer</th><th style="padding:10px">Onde mudar</th></tr>' +
+    items + '</table>' +
+    '<div style="margin-top:16px;font-size:13px">Links: <a href="' + CTS_LINKS.cts + '">Planilha da CTS</a> · ' +
+      '<a href="' + CTS_LINKS.mirror + '">CTS Mirror</a> (aba ' + CTS_CONFIG.adminLogSheet + ' = histórico destes pedidos) · ' +
+      '<a href="' + CTS_LINKS.master + '">Mastersheet</a> · <a href="' + CTS_LINKS.opsMap + '">ops-map</a></div>' +
+    '<div style="margin-top:12px;color:#94A3B8;font-size:12px">Enquanto a origem não muda, o portal mostra o valor antigo pra todo mundo — ' +
+      'o valor novo só aparece na sessão de quem editou. ' + (logged ? 'Anotado na aba ' + CTS_CONFIG.adminLogSheet + '.' : '⚠ não consegui anotar na planilha (ver log do Apps Script).') + '</div>' +
+    '</div>';
+  MailApp.sendEmail({ to: to, subject: subject, htmlBody: html, name: 'Street View LATAM · /cts-data' });
+  Logger.log('[CTS Backend] admin: pedido de mudança enviado pra ' + to + ' (' + changes.length + ' item)');
+  return { success: true, emailed: to, logged: logged };
+}
+
+function ctsEsc_(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+/**
+ * Rodar UMA vez no editor depois de colar a cts-1.4: autoriza o envio de e-mail
+ * (MailApp) e a escrita no espelho, e manda um e-mail de teste.
+ */
+function testAdminSetup() {
+  const pw = PropertiesService.getScriptProperties().getProperty('ADMIN_PASSWORD');
+  Logger.log('ADMIN_PASSWORD ' + (pw ? 'definida (' + pw.length + ' caracteres)' : 'NÃO definida — Configurações do projeto → Propriedades do script'));
+  const t = ctsAdminCheck_({ password: pw || '' });
+  if (!t.success) { Logger.log('adminCheck: ' + JSON.stringify(t)); return; }
+  const r = ctsAdminRootChange_({
+    token: t.token,
+    note: 'Teste do setup (pode ignorar / apagar a linha na aba _admin_log).',
+    context: { view: 'Monthly', country: 'ALL', period: 'teste' },
+    changes: [{ label: 'TKM delivered (teste)', context: 'e-mail de teste do testAdminSetup', from: '100', to: '101', sourceKey: 'tkm' }],
+  });
+  Logger.log('adminRootChange: ' + JSON.stringify(r));
 }
 
 /** Rodar no editor pra autorizar os escopos e ver os números no log. */
