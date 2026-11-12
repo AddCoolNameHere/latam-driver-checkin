@@ -311,13 +311,13 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.86',
+        version: 'v5.87',
         ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
                     'getDriverSsds', 'getDriverVehicleIssues',
-                    'getLastAssetsForm', 'getDriverDisks', 'getPMONotes', 'getArgentinaDrivers',
+                    'getLastAssetsForm', 'getDriverDisks', 'getDiskOverview', 'getPMONotes', 'getArgentinaDrivers',
                     'getCountryScope', 'getDriverDocsStatus',
                     'getScopeAssignments', 'POST saveScopeAssignments', 'POST deleteScopeAssignments',
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
@@ -562,6 +562,11 @@ function doGet(e) {
       const email = e.parameter.email;
       if (!email) return jsonResponse({ success: false, error: 'email obrigatório' });
       return jsonResponse(Object.assign({ success: true }, getDriverDisks_(email)));
+    }
+
+    // v5.87: página de discos (disks.html) — todos os discos, quem tem, transferências, devoluções.
+    if (action === 'getDiskOverview') {
+      return jsonResponse(Object.assign({ success: true }, getDiskOverview_()));
     }
 
     // v5.24: PMO Notes — lista/filtra notes do pmo.html
@@ -6115,44 +6120,58 @@ function saveDiskLedger_(ss, data, reportRow) {
  *   source 'ledger' = já confirmou por aqui; 'report' = ainda não usou o formulário
  *   novo → lista vem do último relatório semanal (mesma fonte do dropdown do check-in).
  */
+/**
+ * v5.87: lê a aba SSD Tracking inteira e roda a máquina de estados — fonte
+ * comum do getDriverDisks_ (um motorista) e do getDiskOverview_ (página de discos).
+ * rows = linhas em ordem cronológica; state[código] = onde o disco está agora.
+ */
+function readDiskLedger_(ss) {
+  const sh = getDiskLedgerSheet_(ss, false);
+  const out = { rows: [], state: {} };
+  if (!sh || sh.getLastRow() < 2) return out;
+
+  out.rows = sh.getRange(2, 1, sh.getLastRow() - 1, 10).getValues()
+    .map(function(r, i) {
+      return {
+        i: i, ts: r[0] instanceof Date ? r[0].getTime() : 0,
+        email: String(r[1] || '').trim().toLowerCase(), name: String(r[2] || '').trim(),
+        country: String(r[3] || '').trim(), vid: String(r[4] || '').trim(),
+        code: diskNorm_(r[5]), st: diskStatusCode_(r[6]),
+        otherEmail: String(r[7] || '').trim().toLowerCase(), otherName: String(r[8] || '').trim(),
+        reportRow: r[9] || '',
+      };
+    })
+    .sort(function(a, b) { return (a.ts - b.ts) || (a.i - b.i); });
+
+  const state = out.state;
+  out.rows.forEach(function(r) {
+    if (!r.code || !r.st || r.st === 'none_new') return;
+    const s = state[r.code] || (state[r.code] = { code: r.code, holder: '', holderName: '', pendingTo: '', pendingToName: '', pendingFrom: '', pendingFromName: '' });
+    s.at = r.ts; s.status = r.st; s.deniedBy = ''; s.by = r.email; s.byName = r.name; s.country = r.country || s.country || '';
+    if (r.st === 'with_me' || r.st === 'received') {
+      s.holder = r.email; s.holderName = r.name; s.pendingTo = ''; s.pendingToName = '';
+    } else if (r.st === 'returned' || r.st === 'unknown') {
+      s.holder = ''; s.holderName = ''; s.pendingTo = ''; s.pendingToName = '';
+    } else if (r.st === 'handed') {
+      s.holder = ''; s.holderName = ''; s.pendingTo = r.otherEmail; s.pendingToName = r.otherName;
+      s.pendingFrom = r.email; s.pendingFromName = r.name;
+    } else if (r.st === 'not_received') {
+      // Quem "recebeu" negou: o disco volta pra quem disse que entregou.
+      s.holder = s.pendingTo === r.email ? s.pendingFrom : (r.otherEmail || s.pendingFrom || '');
+      s.holderName = s.holder === s.pendingFrom ? s.pendingFromName : r.otherName;
+      s.pendingTo = ''; s.pendingToName = '';
+      s.deniedBy = r.name || r.email;
+    }
+  });
+  return out;
+}
+
 function getDriverDisks_(email) {
   const target = String(email || '').trim().toLowerCase();
   const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
-  const sh = getDiskLedgerSheet_(ss, false);
-  const state = {};
-  let known = false;
-
-  if (sh && sh.getLastRow() > 1) {
-    const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 9).getValues()
-      .map(function(r, i) {
-        return {
-          i: i, ts: r[0] instanceof Date ? r[0].getTime() : 0,
-          email: String(r[1] || '').trim().toLowerCase(), name: String(r[2] || '').trim(),
-          code: diskNorm_(r[5]), st: diskStatusCode_(r[6]),
-          otherEmail: String(r[7] || '').trim().toLowerCase(), otherName: String(r[8] || '').trim(),
-        };
-      })
-      .sort(function(a, b) { return (a.ts - b.ts) || (a.i - b.i); });
-
-    rows.forEach(function(r) {
-      if (r.email === target) known = true;
-      if (!r.code || !r.st || r.st === 'none_new') return;
-      const s = state[r.code] || (state[r.code] = { code: r.code, holder: '', pendingTo: '', pendingFrom: '', pendingFromName: '' });
-      s.at = r.ts; s.status = r.st; s.deniedBy = '';
-      if (r.st === 'with_me' || r.st === 'received') {
-        s.holder = r.email; s.pendingTo = '';
-      } else if (r.st === 'returned' || r.st === 'unknown') {
-        s.holder = ''; s.pendingTo = '';
-      } else if (r.st === 'handed') {
-        s.holder = ''; s.pendingTo = r.otherEmail; s.pendingFrom = r.email; s.pendingFromName = r.name;
-      } else if (r.st === 'not_received') {
-        // Quem "recebeu" negou: o disco volta pra quem disse que entregou.
-        s.holder = s.pendingTo === r.email ? s.pendingFrom : (r.otherEmail || s.pendingFrom || '');
-        s.pendingTo = '';
-        s.deniedBy = r.name || r.email;
-      }
-    });
-  }
+  const ledger = readDiskLedger_(ss);
+  const state = ledger.state;
+  const known = ledger.rows.some(function(r) { return r.email === target; });
 
   const iso = function(ms) { return ms ? new Date(ms).toISOString() : ''; };
   const disks = [], incoming = [];
@@ -6188,6 +6207,143 @@ function getDriverDisks_(email) {
 
   disks.sort(function(a, b) { return a.code < b.code ? -1 : a.code > b.code ? 1 : 0; });
   return { disks: disks, incoming: incoming, known: known, inUse: inUse };
+}
+
+/**
+ * v5.87: visão geral de TODOS os discos (página disks.html).
+ * Mesma regra do getDriverDisks_, só que pro time inteiro e lendo cada aba UMA vez:
+ *   - disco que já passou pela confirmação → onde a SSD Tracking diz que ele está;
+ *   - motorista que ainda não confirmou nada → discos do último relatório semanal
+ *     dele (source 'report'), tirando os que a SSD Tracking já sabe onde estão.
+ * Retorna { disks:[…], events:[…] (linhas da SSD Tracking, mais nova primeiro), drivers:[…] }
+ *   disks[].kind: 'in_use' (com um motorista) | 'transit' (entregue, falta o outro confirmar)
+ *                 | 'returned' (devolvido) | 'unknown' (motorista disse que não reconhece)
+ */
+function getDiskOverview_() {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const ledger = readDiskLedger_(ss);
+  const iso = function(ms) { return ms ? new Date(ms).toISOString() : ''; };
+
+  const drivers = getActiveDrivers(true, true);
+  const drv = {};
+  drivers.forEach(function(d) { drv[String(d.email).trim().toLowerCase()] = d; });
+
+  const lastConfirm = {};
+  ledger.rows.forEach(function(r) { if (r.email) lastConfirm[r.email] = Math.max(lastConfirm[r.email] || 0, r.ts); });
+
+  // Último relatório semanal de cada motorista (por e-mail) e de cada VID (Forms antigo, sem e-mail).
+  const rep = latestAssetReportsIndex_(ss);
+
+  const disks = [];
+  Object.keys(ledger.state).forEach(function(k) {
+    const s = ledger.state[k];
+    const kind = s.holder ? 'in_use' : s.pendingTo ? 'transit' : (s.status === 'unknown' ? 'unknown' : 'returned');
+    const holder = drv[s.holder];
+    const r = s.holder ? rep.byEmail[s.holder] : null;
+    disks.push({
+      code: s.code, kind: kind, source: 'ledger', at: iso(s.at), status: s.status,
+      holderEmail: s.holder, holderName: (holder && holder.name) || s.holderName || '',
+      country: (holder && holder.country) || s.country || '',
+      inUseNow: !!(r && r.inUse === s.code),
+      byEmail: s.by || '', byName: s.byName || '',
+      fromEmail: kind === 'transit' ? s.pendingFrom : '', fromName: kind === 'transit' ? s.pendingFromName : '',
+      toEmail: kind === 'transit' ? s.pendingTo : '', toName: kind === 'transit' ? ((drv[s.pendingTo] && drv[s.pendingTo].name) || s.pendingToName) : '',
+      deniedBy: s.deniedBy || '',
+    });
+  });
+
+  let vidByEmail = null;
+  drivers.forEach(function(d) {
+    const em = String(d.email).trim().toLowerCase();
+    if (lastConfirm[em]) return;                       // já confirmou: a SSD Tracking manda
+    let r = rep.byEmail[em];
+    if (!r) {
+      if (!vidByEmail) { try { vidByEmail = vidByEmailLight_(ss); } catch (err) { vidByEmail = {}; Logger.log('[getDiskOverview_] VID index falhou: ' + err); } }
+      const v = vidByEmail[em];
+      r = v ? rep.byVid[v] : null;
+    }
+    if (!r) return;
+    r.codes.forEach(function(code) {
+      if (ledger.state[code]) return;
+      disks.push({
+        code: code, kind: 'in_use', source: 'report', at: r.at, status: '',
+        holderEmail: em, holderName: d.name, country: d.country, inUseNow: r.inUse === code,
+        byEmail: '', byName: '', fromEmail: '', fromName: '', toEmail: '', toName: '', deniedBy: '',
+      });
+    });
+  });
+
+  const events = ledger.rows.slice().reverse().map(function(r) {
+    const d = drv[r.email];
+    return {
+      at: iso(r.ts), email: r.email, name: (d && d.name) || r.name, country: (d && d.country) || r.country,
+      vid: r.vid, code: r.code, status: r.st, otherEmail: r.otherEmail,
+      otherName: (drv[r.otherEmail] && drv[r.otherEmail].name) || r.otherName,
+    };
+  });
+
+  return {
+    disks: disks,
+    events: events,
+    drivers: drivers.map(function(d) {
+      const em = String(d.email).trim().toLowerCase();
+      return { email: em, name: d.name, country: d.country, situation: d.situation, lastConfirm: iso(lastConfirm[em]) };
+    }),
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+/** Assets Management lida uma vez: último relatório por e-mail (layout assets.html) e por VID. */
+function latestAssetReportsIndex_(ss) {
+  const out = { byEmail: {}, byVid: {} };
+  const sheet = getSheetWithFallback_(ss, CONFIG.assetsSheet, ['Assets Management', 'Assets']);
+  if (!sheet || sheet.getLastRow() < 2) return out;
+  const data = sheet.getDataRange().getValues();
+  const pickE = {}, pickV = {};
+  for (let i = 1; i < data.length; i++) {
+    const ts = data[i][0];
+    if (!(ts instanceof Date)) continue;
+    const off = /@/.test(String(data[i][1] || '')) ? 1 : 0;   // mesma detecção do getDriverAssets_
+    if (off === 1) {
+      const em = String(data[i][1]).trim().toLowerCase();
+      if (!pickE[em] || ts > pickE[em].ts) pickE[em] = { ts: ts, i: i, off: off };
+    }
+    const rawVid = data[i][2 + off];
+    const toks = String(rawVid === 0 ? '0' : (rawVid || '')).match(/\d{4,6}/g) || [];
+    toks.forEach(function(v) { if (!pickV[v] || ts > pickV[v].ts) pickV[v] = { ts: ts, i: i, off: off }; });
+  }
+  const parse = function(p) {
+    const row = data[p.i];
+    const toks = function(v) {
+      return String(v || '').split(/[\s,;\/]+/).map(diskNorm_).filter(diskValid_);
+    };
+    const inUse = toks(row[15 + p.off])[0] || '';
+    const codes = [];
+    [inUse].concat(toks(row[16 + p.off])).forEach(function(c) { if (c && codes.indexOf(c) < 0) codes.push(c); });
+    return { at: p.ts.toISOString(), inUse: inUse, codes: codes };
+  };
+  Object.keys(pickE).forEach(function(k) { out.byEmail[k] = parse(pickE[k]); });
+  Object.keys(pickV).forEach(function(k) { out.byVid[k] = parse(pickV[k]); });
+  return out;
+}
+
+/** e-mail → VID atual da VID CALENDAR. Versão leve do buildVidIndexByEmail_ (sem QC/mirror). */
+function vidByEmailLight_(ss) {
+  const sheet = getSheetWithFallback_(ss, CONFIG.vidCalendarSheet, ['VID CALENDAR', 'VID Calendar', 'VID Monthly Calendar']);
+  if (!sheet || sheet.getLastRow() < 14) return {};
+  const headers = sheet.getRange(13, 1, 1, sheet.getLastColumn()).getValues()[0]
+    .map(function(h) { return String(h || '').trim().toLowerCase(); });
+  const vidIdx = headers.indexOf('vid');
+  let emIdx = -1;
+  ['current/last driver', 'driver email', 'email'].some(function(n) { emIdx = headers.indexOf(n); return emIdx >= 0; });
+  if (vidIdx < 0 || emIdx < 0) return {};
+  const out = {};
+  sheet.getRange(14, 1, sheet.getLastRow() - 13, sheet.getLastColumn()).getValues().forEach(function(r) {
+    const em = String(r[emIdx] || '').trim().toLowerCase();
+    const v = String(r[vidIdx] || '').trim();
+    if (em && em !== 'no driver' && /@/.test(em) && v) out[em] = (v.match(/\d{4,6}/) || [v])[0];
+  });
+  return out;
 }
 
 function uploadAssetPhotoToDrive_(photo, safeDriverName, timestamp, label, folder) {

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discos · LATAM · Aceolution</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="/aceolution-globe.png">
+<script src="/auth.js?v=20261112disks"></script>
+<script src="/theme.js?v=20261015ui"></script>
+<script src="/common.js?v=20261015ui"></script>
+<link rel="stylesheet" href="/theme.css?v=20261023toggle">
+<!--
+  Discos (SSDs) — quem tem cada disco, transferências e devoluções.
+  Fonte: aba "SSD Tracking" (confirmação disco a disco do relatório semanal, v5.86)
+  + último relatório semanal de quem ainda não confirmou. Backend: ?action=getDiskOverview (v5.87).
+  Aberta pra qualquer usuário logado (pedido do Lucas, 2026-11-12).
+-->
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--c-bg); color: var(--c-text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+  .report-header { padding: 26px 28px 2px; }
+  .report-header-inner { max-width: 1344px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; }
+  .report-eyebrow { font-size: 12px; font-weight: 500; letter-spacing: .05em; color: var(--c-text-muted); text-transform: uppercase; margin-bottom: 6px; }
+  .report-title { font-size: 24px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.2; }
+  .report-subtitle { font-size: 14px; color: var(--c-text-muted); margin-top: 4px; max-width: 760px; }
+  .report-date { font-size: 13px; font-weight: 500; color: var(--c-text-muted); white-space: nowrap; }
+
+  main { max-width: 1400px; margin: 0 auto; padding: 20px 28px 40px; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .kpi-card {
+    background: linear-gradient(to top, color-mix(in srgb, var(--c-primary) 4%, var(--c-surface)), var(--c-surface));
+    border: 1px solid var(--sv-line, var(--c-border)); border-radius: 14px; box-shadow: var(--shadow-xs); padding: 16px 18px;
+    cursor: pointer; text-align: left; font: inherit; color: inherit; transition: border-color .15s;
+  }
+  .kpi-card:hover { border-color: var(--c-border-strong); }
+  .kpi-label { font-size: 12.5px; font-weight: 500; color: var(--c-text-muted); }
+  .kpi-value { font-size: 28px; font-weight: 600; letter-spacing: -0.035em; line-height: 1.2; font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .kpi-value.is-warn { color: var(--c-warn); }
+  .kpi-sub { font-size: 12px; color: var(--c-text-muted); margin-top: 2px; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    border: 1px solid var(--c-border); background: var(--c-surface); color: var(--c-text);
+    border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .chip.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+  .chip .n { font-size: 11.5px; opacity: .75; font-variant-numeric: tabular-nums; }
+  .filters select, .filters input {
+    font: inherit; font-size: 13.5px; color: var(--c-text); background: var(--c-surface);
+    border: 1px solid var(--c-border); border-radius: 9px; padding: 8px 10px; min-width: 0;
+  }
+  .filters select { max-width: 280px; }
+  .filters input { width: 240px; }
+  .filters .clear { font-size: 13px; color: var(--c-primary); background: none; border: 0; cursor: pointer; font: inherit; }
+
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--c-border); margin-bottom: 0; overflow-x: auto; scrollbar-width: none; }
+  .tab {
+    background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; font: inherit; font-size: 14px; font-weight: 500;
+    color: var(--c-text-muted); cursor: pointer; white-space: nowrap; display: inline-flex; gap: 7px; align-items: center; margin-bottom: -1px;
+  }
+  .tab.active { color: var(--c-text); border-bottom-color: var(--c-primary); }
+  .tab .n { font-size: 12px; background: var(--c-bg-tint); color: var(--c-text-muted); border-radius: 999px; padding: 1px 7px; font-variant-numeric: tabular-nums; }
+  .tab-hint { font-size: 13px; color: var(--c-text-muted); padding: 12px 2px 10px; }
+
+  .panel { background: var(--c-surface); border: 1px solid var(--sv-line, var(--c-border)); border-radius: 14px; box-shadow: var(--shadow-xs); overflow: hidden; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; font-size: 12px; font-weight: 500; color: var(--c-text-muted); padding: 10px 14px; border-bottom: 1px solid var(--c-border); white-space: nowrap; background: var(--c-surface); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--c-border); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: color-mix(in srgb, var(--c-bg-tint) 45%, transparent); }
+  .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; letter-spacing: .01em; white-space: nowrap; }
+  .code-btn { background: none; border: 0; padding: 0; color: var(--c-primary); cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+  .who { font-weight: 500; }
+  .muted { color: var(--c-text-muted); }
+  .small { font-size: 12px; }
+  .nowrap { white-space: nowrap; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 500; border-radius: 999px; padding: 2px 8px; white-space: nowrap; border: 1px solid transparent; }
+  .b-ok { background: color-mix(in srgb, var(--c-success) 12%, transparent); color: var(--c-success); }
+  .b-warn { background: color-mix(in srgb, var(--c-warn) 14%, transparent); color: var(--c-warn); }
+  .b-danger { background: color-mix(in srgb, var(--c-danger) 11%, transparent); color: var(--c-danger); }
+  .b-info { background: var(--c-bg-tint); color: var(--c-primary); }
+  .b-muted { border-color: var(--c-border); color: var(--c-text-muted); }
+  .disk-list { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .disk-list .in-use { font-weight: 600; }
+  .note { font-size: 12px; color: var(--c-warn); margin-top: 3px; }
+  .empty { padding: 40px 20px; text-align: center; color: var(--c-text-muted); font-size: 14px; }
+
+  .loading { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 80px 20px; color: var(--c-text-muted); font-size: 13px; }
+  .spinner { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--c-border); border-top-color: var(--c-primary); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border-radius: 12px; border: 1px solid #FECACA; background: #FEF2F2; color: #991B1B; font-size: 14px; }
+  [data-theme="dark"] .error-box { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.28); color: #F87171; }
+
+  @media (max-width: 980px) { .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 680px) {
+    .report-header { padding: 20px 16px 2px; }
+    main { padding: 16px 16px 32px; }
+    .kpi-row { gap: 10px; }
+    .kpi-card { padding: 12px 14px; }
+    .kpi-value { font-size: 23px; }
+    .filters select, .filters input { width: 100%; max-width: none; }
+    th, td { padding: 9px 10px; }
+  }
+  @media print { .filters, .tabs .n, .kpi-card { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div id="app" style="display:none;">
+  <section class="report-header">
+    <div class="report-header-inner">
+      <div>
+        <div class="report-eyebrow">Aceolution · Street View LATAM</div>
+        <h1 class="report-title" id="page-title">Discos</h1>
+        <div class="report-subtitle" id="page-sub"></div>
+      </div>
+      <div class="report-date" id="page-date">—</div>
+    </div>
+  </section>
+
+  <main>
+    <div id="content"><div class="loading"><div class="spinner"></div><div id="loading-text"></div></div></div>
+  </main>
+</div>
+
+<script>
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  cacheTtl: 120,
+};
+
+const COUNTRIES = [
+  { key: 'Argentina', flag: '🇦🇷' }, { key: 'Brazil', flag: '🇧🇷' }, { key: 'Chile', flag: '🇨🇱' },
+  { key: 'Colombia', flag: '🇨🇴' }, { key: 'Mexico', flag: '🇲🇽' }, { key: 'Peru', flag: '🇵🇪' },
+];
+
+const I18N = {
+  pt: {
+    title: 'Discos', sub: 'Onde está cada disco: quem tem, o que foi transferido e o que foi devolvido. Vem da confirmação disco a disco do relatório semanal; quem ainda não confirmou aparece com o último relatório.',
+    loading: 'Carregando discos…', updated: 'Atualizado', error: 'Erro ao carregar', needDeploy: 'O backend ainda não tem a página de discos — falta implantar a v5.87 do Apps Script.',
+    kInUse: 'Com motoristas', kInUseSub: '{n} na câmera agora', kTransit: 'Em trânsito', kTransitSub: 'entregues, falta confirmar',
+    kReturned: 'Devolvidos', kReturnedSub: 'situação atual', kPending: 'Motoristas sem confirmar', kPendingSub: 'de {n} ativos — usam o último relatório',
+    all: 'Todos', allDrivers: 'Todos os motoristas', search: 'Buscar disco ou motorista…', clear: 'Limpar filtros',
+    tInUse: 'Em uso', tTransfers: 'Transferidos', tReturned: 'Devolvidos', tUnknown: 'Não reconhecidos', tDrivers: 'Por motorista', tHistory: 'Histórico',
+    hInUse: 'Discos que estão com algum motorista agora.', hTransfers: 'Toda vez que um motorista marcou "Entregue a" — e se o outro confirmou.',
+    hReturned: 'Discos marcados como "Devolvi" (cada devolução, com quem devolveu e quando).', hUnknown: 'O motorista disse que não reconhece o disco — normalmente dado velho no relatório antigo. Vale conferir.',
+    hDrivers: 'Cada motorista com os discos que estão com ele.', hHistory: 'Todas as confirmações, da mais nova pra mais antiga. Clique num código pra ver só aquele disco.',
+    cDisk: 'Disco', cDriver: 'Motorista', cCountry: 'País', cUse: 'Uso', cSource: 'Fonte', cFrom: 'De', cTo: 'Para', cDate: 'Data', cStatus: 'Situação',
+    cWho: 'Quem devolveu', cNow: 'Onde está agora', cDisks: 'Discos', cLast: 'Última confirmação', cAction: 'Ação', cVid: 'VID(s)', cWhoSaid: 'Quem marcou',
+    camera: 'Na câmera', spare: 'Reserva', confirmed: 'Confirmado {d}', fromReport: 'Último relatório {d}', notConfirmed: 'não confirmado',
+    deniedNote: '{n} disse que não recebeu — voltou pra cá', dupNote: 'Aparece também com: {n}',
+    pending: 'Aguardando confirmação', receivedOn: 'Recebido {d}', deniedOn: 'Recusado {d}', superseded: 'Depois: {s}',
+    nowWith: 'Com {n}', nowTransit: 'Em trânsito → {n}', nowReturned: 'Devolvido', nowUnknown: 'Não reconhecido',
+    neverConfirmed: 'Ainda não confirmou', vacation: 'Férias', noDisks: 'Nenhum disco',
+    stWith: 'Está comigo', stReturned: 'Devolvi', stHanded: 'Entregou a {n}', stReceived: 'Recebeu de {n}', stReceivedNew: 'Recebeu (disco novo)',
+    stNotReceived: 'Não recebeu (de {n})', stUnknown: 'Não reconhece', stNone: 'Nenhum disco novo',
+    empty: 'Nada aqui com esses filtros.', emptyLedger: 'Ninguém confirmou discos ainda — a confirmação começou no relatório semanal de 13/11.',
+    diskFilter: 'Só o disco {c}',
+  },
+  es: {
+    title: 'Discos', sub: 'Dónde está cada disco: quién lo tiene, qué se transfirió y qué se devolvió. Viene de la confirmación disco por disco del informe semanal; quien todavía no confirmó aparece con su último informe.',
+    loading: 'Cargando discos…', updated: 'Actualizado', error: 'Error al cargar', needDeploy: 'El backend todavía no tiene la página de discos — falta implementar la v5.87 del Apps Script.',
+    kInUse: 'Con conductores', kInUseSub: '{n} en la cámara ahora', kTransit: 'En tránsito', kTransitSub: 'entregados, falta confirmar',
+    kReturned: 'Devueltos', kReturnedSub: 'situación actual', kPending: 'Conductores sin confirmar', kPendingSub: 'de {n} activos — usan el último informe',
+    all: 'Todos', allDrivers: 'Todos los conductores', search: 'Buscar disco o conductor…', clear: 'Limpiar filtros',
+    tInUse: 'En uso', tTransfers: 'Transferidos', tReturned: 'Devueltos', tUnknown: 'No reconocidos', tDrivers: 'Por conductor', tHistory: 'Historial',
+    hInUse: 'Discos que están con algún conductor ahora.', hTransfers: 'Cada vez que un conductor marcó "Entregado a" — y si el otro confirmó.',
+    hReturned: 'Discos marcados como "Devolví" (cada devolución, quién y cuándo).', hUnknown: 'El conductor dijo que no reconoce el disco — normalmente un dato viejo del informe anterior. Conviene revisar.',
+    hDrivers: 'Cada conductor con los discos que tiene.', hHistory: 'Todas las confirmaciones, de la más nueva a la más vieja. Hacé clic en un código para ver solo ese disco.',
+    cDisk: 'Disco', cDriver: 'Conductor', cCountry: 'País', cUse: 'Uso', cSource: 'Fuente', cFrom: 'De', cTo: 'Para', cDate: 'Fecha', cStatus: 'Situación',
+    cWho: 'Quién devolvió', cNow: 'Dónde está ahora', cDisks: 'Discos', cLast: 'Última confirmación', cAction: 'Acción', cVid: 'VID(s)', cWhoSaid: 'Quién marcó',
+    camera: 'En la cámara', spare: 'Reserva', confirmed: 'Confirmado {d}', fromReport: 'Último informe {d}', notConfirmed: 'sin confirmar',
+    deniedNote: '{n} dijo que no lo recibió — volvió acá', dupNote: 'También aparece con: {n}',
+    pending: 'Esperando confirmación', receivedOn: 'Recibido {d}', deniedOn: 'Rechazado {d}', superseded: 'Después: {s}',
+    nowWith: 'Con {n}', nowTransit: 'En tránsito → {n}', nowReturned: 'Devuelto', nowUnknown: 'No reconocido',
+    neverConfirmed: 'Todavía no confirmó', vacation: 'Vacaciones', noDisks: 'Ningún disco',
+    stWith: 'Lo tengo', stReturned: 'Lo devolví', stHanded: 'Entregó a {n}', stReceived: 'Recibió de {n}', stReceivedNew: 'Recibió (disco nuevo)',
+    stNotReceived: 'No lo recibió (de {n})', stUnknown: 'No lo reconoce', stNone: 'Ningún disco nuevo',
+    empty: 'Nada acá con estos filtros.', emptyLedger: 'Nadie confirmó discos todavía — la confirmación empezó en el informe semanal del 13/11.',
+    diskFilter: 'Solo el disco {c}',
+  },
+  en: {
+    title: 'Disks', sub: 'Where every disk is: who has it, what was handed over and what was returned. Comes from the disk-by-disk confirmation in the weekly report; drivers who have not confirmed yet show their last report.',
+    loading: 'Loading disks…', updated: 'Updated', error: 'Failed to load', needDeploy: 'The backend does not have the disks page yet — Apps Script v5.87 still needs to be deployed.',
+    kInUse: 'With drivers', kInUseSub: '{n} in the camera now', kTransit: 'In transit', kTransitSub: 'handed over, not confirmed yet',
+    kReturned: 'Returned', kReturnedSub: 'current status', kPending: 'Drivers not confirmed', kPendingSub: 'of {n} active — using last report',
+    all: 'All', allDrivers: 'All drivers', search: 'Search disk or driver…', clear: 'Clear filters',
+    tInUse: 'In use', tTransfers: 'Transfers', tReturned: 'Returned', tUnknown: 'Not recognized', tDrivers: 'By driver', tHistory: 'History',
+    hInUse: 'Disks currently with a driver.', hTransfers: 'Every time a driver marked "Handed to" — and whether the other driver confirmed.',
+    hReturned: 'Disks marked as "Returned" (each return, who and when).', hUnknown: 'The driver said they do not recognize the disk — usually stale data from the old report. Worth checking.',
+    hDrivers: 'Each driver with the disks they hold.', hHistory: 'Every confirmation, newest first. Click a code to see only that disk.',
+    cDisk: 'Disk', cDriver: 'Driver', cCountry: 'Country', cUse: 'Use', cSource: 'Source', cFrom: 'From', cTo: 'To', cDate: 'Date', cStatus: 'Status',
+    cWho: 'Returned by', cNow: 'Where it is now', cDisks: 'Disks', cLast: 'Last confirmation', cAction: 'Action', cVid: 'VID(s)', cWhoSaid: 'Marked by',
+    camera: 'In camera', spare: 'Spare', confirmed: 'Confirmed {d}', fromReport: 'Last report {d}', notConfirmed: 'not confirmed',
+    deniedNote: '{n} said they did not receive it — back here', dupNote: 'Also listed with: {n}',
+    pending: 'Waiting for confirmation', receivedOn: 'Received {d}', deniedOn: 'Rejected {d}', superseded: 'Later: {s}',
+    nowWith: 'With {n}', nowTransit: 'In transit → {n}', nowReturned: 'Returned', nowUnknown: 'Not recognized',
+    neverConfirmed: 'Not confirmed yet', vacation: 'Vacation', noDisks: 'No disks',
+    stWith: 'Has it', stReturned: 'Returned', stHanded: 'Handed to {n}', stReceived: 'Received from {n}', stReceivedNew: 'Received (new disk)',
+    stNotReceived: 'Did not receive (from {n})', stUnknown: 'Does not recognize', stNone: 'No new disk',
+    empty: 'Nothing here with these filters.', emptyLedger: 'No one has confirmed disks yet — confirmation started with the weekly report of Nov 13.',
+    diskFilter: 'Only disk {c}',
+  },
+};
+
+let currentLang = 'pt';
+try { const l = localStorage.getItem('disks.lang'); if (I18N[l]) currentLang = l; } catch (e) {}
+let DATA = null;
+const F = { country: '', driver: '', q: '', tab: 'inuse' };
+try { const s = JSON.parse(sessionStorage.getItem('disks.filters') || 'null'); if (s) Object.assign(F, s); } catch (e) {}
+
+function t(key, vars) {
+  let s = (I18N[currentLang] && I18N[currentLang][key]) || I18N.pt[key] || key;
+  if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
+  return s;
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function fmtDate(iso, withTime) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  const loc = currentLang === 'en' ? 'en-US' : currentLang === 'es' ? 'es-AR' : 'pt-BR';
+  const o = { day: '2-digit', month: '2-digit', year: '2-digit' };
+  if (withTime) { o.hour = '2-digit'; o.minute = '2-digit'; }
+  return d.toLocaleString(loc, o);
+}
+function flag(country) { const c = COUNTRIES.find(x => x.key === country); return c ? c.flag : ''; }
+function countryLabel(country) { return country ? (flag(country) + ' ' + country).trim() : '—'; }
+function uiIcon(name) { return (window.UI && typeof window.UI.icon === 'function') ? window.UI.icon(name) : ''; }
+
+function setLang(lang) {
+  currentLang = I18N[lang] ? lang : 'pt';
+  try { localStorage.setItem('disks.lang', currentLang); } catch (e) {}
+  document.querySelectorAll('.lang-switch button').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
+  applyI18n();
+  render();
+}
+function applyI18n() {
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : currentLang;
+  document.getElementById('page-title').textContent = t('title');
+  document.getElementById('page-sub').textContent = t('sub');
+  const lt = document.getElementById('loading-text'); if (lt) lt.textContent = t('loading');
+  document.title = t('title') + ' · LATAM · Aceolution';
+}
+
+function startApp(user) {
+  injectTopbar({
+    region: 'LATAM · DISKS',
+    user: user,
+    showBack: true,
+    showLangSwitch: true,
+    lang: currentLang,
+    onLangChange: (l) => setLang(l),
+    onRefresh: () => loadData(true),
+  });
+  document.getElementById('app').style.display = '';
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+  loadData(false);
+}
+
+async function loadData(force) {
+  const url = CONFIG.scriptUrl + '?action=getDiskOverview';
+  try {
+    const res = (typeof cachedFetch === 'function')
+      ? await cachedFetch(url, CONFIG.cacheTtl, { forceRefresh: !!force })
+      : await fetch(url).then(r => r.json());
+    if (!res || !res.success) {
+      const unknown = res && /unknown action|ação desconhecida|action/i.test(String(res.error || '')) && !res.disks;
+      throw new Error(unknown ? t('needDeploy') : (res && res.error) || 'backend');
+    }
+    DATA = prepare(res);
+    console.log('[Disks] ' + DATA.disks.length + ' discos, ' + DATA.events.length + ' linhas na SSD Tracking');
+    render();
+  } catch (err) {
+    console.error('[Disks] falha ao carregar', err);
+    document.getElementById('content').innerHTML =
+      '<div class="error-box">' + uiIcon('alert') + '<span>' + esc(t('error')) + ': ' + esc(err.message) + '</span></div>';
+  }
+}
+
+/* Junta índices que todas as abas usam. */
+function prepare(res) {
+  const D = { disks: res.disks || [], events: res.events || [], drivers: res.drivers || [], generatedAt: res.generatedAt };
+  D.driverBy = {};
+  D.drivers.forEach(d => { D.driverBy[d.email] = d; });
+  D.diskBy = {};
+  D.disks.forEach(d => { (D.diskBy[d.code] = D.diskBy[d.code] || []).push(d); });
+  // Transferências: cada "Entregue a" + o que aconteceu depois com aquele disco.
+  const chrono = D.events.slice().reverse();
+  D.transfers = [];
+  chrono.forEach((ev, i) => {
+    if (ev.status !== 'handed') return;
+    let outcome = { kind: 'pending' };
+    for (let j = i + 1; j < chrono.length; j++) {
+      const nx = chrono[j];
+      if (nx.code !== ev.code) continue;
+      if (nx.email === ev.otherEmail && nx.status === 'received') { outcome = { kind: 'received', at: nx.at }; break; }
+      if (nx.email === ev.otherEmail && nx.status === 'not_received') { outcome = { kind: 'denied', at: nx.at }; break; }
+      outcome = { kind: 'superseded', ev: nx }; break;
+    }
+    D.transfers.push(Object.assign({}, ev, { outcome }));
+  });
+  D.transfers.reverse();
+  return D;
+}
+
+/* ---------- filtros ---------- */
+function matchCountry(c) { return !F.country || c === F.country; }
+function matchQ(...texts) {
+  const q = F.q.trim().toLowerCase();
+  if (!q) return true;
+  return texts.some(x => String(x || '').toLowerCase().indexOf(q) >= 0);
+}
+function matchDriver(...emails) { return !F.driver || emails.indexOf(F.driver) >= 0; }
+function saveFilters() { try { sessionStorage.setItem('disks.filters', JSON.stringify(F)); } catch (e) {} }
+
+function nameOf(email, fallback) { const d = DATA.driverBy[email]; return (d && d.name) || fallback || email || '—'; }
+function countryOf(email, fallback) { const d = DATA.driverBy[email]; return (d && d.country) || fallback || ''; }
+
+function rowsInUse() {
+  return DATA.disks.filter(d => d.kind === 'in_use')
+    .filter(d => matchCountry(d.country) && matchDriver(d.holderEmail) && matchQ(d.code, d.holderName))
+    .sort((a, b) => (a.country || '').localeCompare(b.country || '') || (a.holderName || '').localeCompare(b.holderName || '') || (b.inUseNow - a.inUseNow) || a.code.localeCompare(b.code));
+}
+function rowsTransfers() {
+  return DATA.transfers.filter(ev => (matchCountry(ev.country) || matchCountry(countryOf(ev.otherEmail))) &&
+    matchDriver(ev.email, ev.otherEmail) && matchQ(ev.code, ev.name, ev.otherName));
+}
+function rowsEvents(status) {
+  return DATA.events.filter(ev => (!status || ev.status === status) && matchCountry(ev.country) &&
+    matchDriver(ev.email, ev.otherEmail) && matchQ(ev.code, ev.name, ev.otherName, ev.vid));
+}
+function rowsDrivers() {
+  const held = {};
+  DATA.disks.forEach(d => { if (d.kind === 'in_use') (held[d.holderEmail] = held[d.holderEmail] || []).push(d); });
+  return DATA.drivers.map(d => Object.assign({}, d, { disks: (held[d.email] || []).sort((a, b) => (b.inUseNow - a.inUseNow) || a.code.localeCompare(b.code)) }))
+    .filter(d => matchCountry(d.country) && matchDriver(d.email) && matchQ(d.name, ...d.disks.map(x => x.code)))
+    .sort((a, b) => (a.country || '').localeCompare(b.country || '') || a.name.localeCompare(b.name));
+}
+
+/* ---------- render ---------- */
+function render() {
+  if (!DATA) return;
+  const D = DATA;
+  document.getElementById('page-date').textContent = t('updated') + ' ' + fmtDate(D.generatedAt, true);
+
+  const inUse = D.disks.filter(d => d.kind === 'in_use');
+  const transit = D.disks.filter(d => d.kind === 'transit');
+  const returned = D.disks.filter(d => d.kind === 'returned');
+  const unknown = D.disks.filter(d => d.kind === 'unknown');
+  const activeDrivers = D.drivers.filter(d => !/vaca|férias|ferias/i.test(d.situation || ''));
+  const notConfirmed = activeDrivers.filter(d => !d.lastConfirm);
+
+  const counts = {
+    inuse: rowsInUse().length, transfers: rowsTransfers().length, returned: rowsEvents('returned').length,
+    unknown: rowsEvents('unknown').length, drivers: rowsDrivers().length, history: rowsEvents('').filter(e => e.status !== 'none_new').length,
+  };
+  const tabs = [
+    ['inuse', t('tInUse')], ['transfers', t('tTransfers')], ['returned', t('tReturned')],
+    ...(D.events.some(e => e.status === 'unknown') ? [['unknown', t('tUnknown')]] : []),
+    ['drivers', t('tDrivers')], ['history', t('tHistory')],
+  ];
+  if (!tabs.some(x => x[0] === F.tab)) F.tab = 'inuse';
+
+  const byCountry = {};
+  D.drivers.forEach(d => { (byCountry[d.country || '—'] = byCountry[d.country || '—'] || []).push(d); });
+  const driverOpts = Object.keys(byCountry).sort().map(c =>
+    '<optgroup label="' + esc(countryLabel(c)) + '">' +
+    byCountry[c].sort((a, b) => a.name.localeCompare(b.name)).map(d => '<option value="' + esc(d.email) + '"' + (F.driver === d.email ? ' selected' : '') + '>' + esc(d.name) + '</option>').join('') +
+    '</optgroup>').join('');
+  const countryCount = c => inUse.filter(d => d.country === c).length;
+
+  document.getElementById('content').innerHTML = `
+    <div class="kpi-row">
+      <button class="kpi-card" data-go="inuse"><div class="kpi-label">${esc(t('kInUse'))}</div><div class="kpi-value">${inUse.length}</div><div class="kpi-sub">${esc(t('kInUseSub', { n: inUse.filter(d => d.inUseNow).length }))}</div></button>
+      <button class="kpi-card" data-go="transfers"><div class="kpi-label">${esc(t('kTransit'))}</div><div class="kpi-value ${transit.length ? 'is-warn' : ''}">${transit.length}</div><div class="kpi-sub">${esc(t('kTransitSub'))}</div></button>
+      <button class="kpi-card" data-go="returned"><div class="kpi-label">${esc(t('kReturned'))}</div><div class="kpi-value">${returned.length}</div><div class="kpi-sub">${esc(t('kReturnedSub'))}${unknown.length ? ' · ' + unknown.length + ' ' + esc(t('nowUnknown').toLowerCase()) : ''}</div></button>
+      <button class="kpi-card" data-go="drivers"><div class="kpi-label">${esc(t('kPending'))}</div><div class="kpi-value ${notConfirmed.length ? 'is-warn' : ''}">${notConfirmed.length}</div><div class="kpi-sub">${esc(t('kPendingSub', { n: activeDrivers.length }))}</div></button>
+    </div>
+
+    <div class="filters">
+      <div class="chips">
+        <button class="chip ${!F.country ? 'active' : ''}" data-country="">${esc(t('all'))} <span class="n">${inUse.length}</span></button>
+        ${COUNTRIES.filter(c => D.drivers.some(d => d.country === c.key)).map(c =>
+          `<button class="chip ${F.country === c.key ? 'active' : ''}" data-country="${c.key}">${c.flag} ${c.key} <span class="n">${countryCount(c.key)}</span></button>`).join('')}
+      </div>
+      <select id="f-driver"><option value="">${esc(t('allDrivers'))}</option>${driverOpts}</select>
+      <input id="f-q" type="search" placeholder="${esc(t('search'))}" value="${esc(F.q)}" autocomplete="off">
+      ${F.country || F.driver || F.q ? `<button class="clear" id="f-clear">${esc(t('clear'))}</button>` : ''}
+    </div>
+
+    <div class="panel">
+      <div class="tabs" role="tablist">
+        ${tabs.map(([k, label]) => `<button class="tab ${F.tab === k ? 'active' : ''}" data-tab="${k}" role="tab">${esc(label)} <span class="n">${counts[k]}</span></button>`).join('')}
+      </div>
+      <div id="tab-body"></div>
+    </div>`;
+
+  renderTab();
+  bind();
+}
+
+function renderTab() {
+  const body = document.getElementById('tab-body');
+  const hint = { inuse: 'hInUse', transfers: 'hTransfers', returned: 'hReturned', unknown: 'hUnknown', drivers: 'hDrivers', history: 'hHistory' }[F.tab];
+  let html = '';
+  if (F.tab === 'inuse') html = tableInUse();
+  else if (F.tab === 'transfers') html = tableTransfers();
+  else if (F.tab === 'returned') html = tableReturned('returned');
+  else if (F.tab === 'unknown') html = tableReturned('unknown');
+  else if (F.tab === 'drivers') html = tableDrivers();
+  else html = tableHistory();
+  body.innerHTML = '<div class="tab-hint" style="padding-left:14px;padding-right:14px">' + esc(t(hint)) + '</div>' + html;
+}
+
+function codeCell(code) { return code ? `<button class="code code-btn" data-code="${esc(code)}" title="${esc(t('diskFilter', { c: code }))}">${esc(code)}</button>` : '—'; }
+function emptyRow(cols, ledgerEmpty) { return `<tr><td colspan="${cols}"><div class="empty">${esc(ledgerEmpty && !DATA.events.length ? t('emptyLedger') : t('empty'))}</div></td></tr>`; }
+function table(head, rows) {
+  return `<div class="table-wrap"><table><thead><tr>${head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function tableInUse() {
+  const rows = rowsInUse();
+  return table([t('cDisk'), t('cDriver'), t('cCountry'), t('cUse'), t('cSource')], rows.length ? rows.map(d => {
+    const others = (DATA.diskBy[d.code] || []).filter(x => x !== d && x.kind === 'in_use').map(x => x.holderName);
+    return `<tr>
+      <td>${codeCell(d.code)}</td>
+      <td><span class="who">${esc(d.holderName || '—')}</span>
+        ${d.deniedBy ? `<div class="note">${esc(t('deniedNote', { n: d.deniedBy }))}</div>` : ''}
+        ${others.length ? `<div class="note">${esc(t('dupNote', { n: others.join(', ') }))}</div>` : ''}</td>
+      <td class="nowrap">${esc(countryLabel(d.country))}</td>
+      <td>${d.inUseNow ? `<span class="badge b-info">${esc(t('camera'))}</span>` : `<span class="badge b-muted">${esc(t('spare'))}</span>`}</td>
+      <td class="small">${d.source === 'ledger'
+        ? `<span class="badge b-ok">${esc(t('confirmed', { d: fmtDate(d.at) }))}</span>`
+        : `<span class="muted">${esc(t('fromReport', { d: fmtDate(d.at) }))}</span> <span class="badge b-warn">${esc(t('notConfirmed'))}</span>`}</td>
+    </tr>`;
+  }).join('') : emptyRow(5));
+}
+
+function statusText(ev) {
+  switch (ev.status) {
+    case 'with_me': return t('stWith');
+    case 'returned': return t('stReturned');
+    case 'handed': return t('stHanded', { n: ev.otherName || ev.otherEmail || '?' });
+    case 'received': return ev.otherName || ev.otherEmail ? t('stReceived', { n: ev.otherName || ev.otherEmail }) : t('stReceivedNew');
+    case 'not_received': return t('stNotReceived', { n: ev.otherName || ev.otherEmail || '?' });
+    case 'unknown': return t('stUnknown');
+    case 'none_new': return t('stNone');
+    default: return ev.status || '—';
+  }
+}
+
+function tableTransfers() {
+  const rows = rowsTransfers();
+  return table([t('cDisk'), t('cFrom'), t('cTo'), t('cDate'), t('cStatus')], rows.length ? rows.map(ev => {
+    const o = ev.outcome;
+    const st = o.kind === 'received' ? `<span class="badge b-ok">${esc(t('receivedOn', { d: fmtDate(o.at) }))}</span>`
+      : o.kind === 'denied' ? `<span class="badge b-danger">${esc(t('deniedOn', { d: fmtDate(o.at) }))}</span>`
+      : o.kind === 'superseded' ? `<span class="muted small">${esc(t('superseded', { s: (o.ev.name || '') + ': ' + statusText(o.ev) }))}</span>`
+      : `<span class="badge b-warn">${esc(t('pending'))}</span>`;
+    return `<tr>
+      <td>${codeCell(ev.code)}</td>
+      <td><span class="who">${esc(ev.name)}</span><div class="muted small">${esc(countryLabel(ev.country))}</div></td>
+      <td><span class="who">${esc(ev.otherName || ev.otherEmail || '—')}</span><div class="muted small">${esc(countryLabel(countryOf(ev.otherEmail)))}</div></td>
+      <td class="nowrap">${esc(fmtDate(ev.at, true))}</td>
+      <td>${st}</td>
+    </tr>`;
+  }).join('') : emptyRow(5, true));
+}
+
+function nowCell(code) {
+  const cur = (DATA.disks.find(d => d.code === code && d.source === 'ledger')) || (DATA.diskBy[code] || [])[0];
+  if (!cur) return '—';
+  if (cur.kind === 'in_use') return `<span class="badge b-info">${esc(t('nowWith', { n: cur.holderName || '?' }))}</span>`;
+  if (cur.kind === 'transit') return `<span class="badge b-warn">${esc(t('nowTransit', { n: cur.toName || '?' }))}</span>`;
+  if (cur.kind === 'unknown') return `<span class="badge b-muted">${esc(t('nowUnknown'))}</span>`;
+  return `<span class="badge b-muted">${esc(t('nowReturned'))}</span>`;
+}
+
+function tableReturned(status) {
+  const rows = rowsEvents(status);
+  return table([t('cDisk'), status === 'returned' ? t('cWho') : t('cWhoSaid'), t('cCountry'), t('cDate'), t('cNow')], rows.length ? rows.map(ev => `<tr>
+      <td>${codeCell(ev.code)}</td>
+      <td><span class="who">${esc(ev.name)}</span>${ev.vid ? `<div class="muted small">VID ${esc(ev.vid)}</div>` : ''}</td>
+      <td class="nowrap">${esc(countryLabel(ev.country))}</td>
+      <td class="nowrap">${esc(fmtDate(ev.at, true))}</td>
+      <td>${nowCell(ev.code)}</td>
+    </tr>`).join('') : emptyRow(5, true));
+}
+
+function tableDrivers() {
+  const rows = rowsDrivers();
+  return table([t('cDriver'), t('cCountry'), t('cDisks'), t('cLast')], rows.length ? rows.map(d => `<tr>
+      <td><span class="who">${esc(d.name)}</span>${/vaca|férias|ferias/i.test(d.situation || '') ? ` <span class="badge b-muted">${esc(t('vacation'))}</span>` : ''}</td>
+      <td class="nowrap">${esc(countryLabel(d.country))}</td>
+      <td>${d.disks.length ? `<div class="disk-list">${d.disks.map(x =>
+          `<span class="${x.inUseNow ? 'in-use' : ''}">${codeCell(x.code)}${x.inUseNow ? ' <span class="badge b-info">' + esc(t('camera')) + '</span>' : ''}</span>`).join('')}</div>`
+        : `<span class="muted">${esc(t('noDisks'))}</span>`}</td>
+      <td class="nowrap">${d.lastConfirm ? `<span class="badge b-ok">${esc(fmtDate(d.lastConfirm, true))}</span>` : `<span class="badge b-warn">${esc(t('neverConfirmed'))}</span>`}</td>
+    </tr>`).join('') : emptyRow(4));
+}
+
+function tableHistory() {
+  const rows = rowsEvents('').filter(ev => ev.status !== 'none_new' || !F.q);
+  return table([t('cDate'), t('cDriver'), t('cDisk'), t('cAction'), t('cVid')], rows.length ? rows.map(ev => `<tr>
+      <td class="nowrap">${esc(fmtDate(ev.at, true))}</td>
+      <td><span class="who">${esc(ev.name)}</span><div class="muted small">${esc(countryLabel(ev.country))}</div></td>
+      <td>${codeCell(ev.code)}</td>
+      <td>${esc(statusText(ev))}</td>
+      <td class="muted small">${esc(ev.vid || '—')}</td>
+    </tr>`).join('') : emptyRow(5, true));
+}
+
+function bind() {
+  const root = document.getElementById('content');
+  root.querySelectorAll('[data-country]').forEach(b => b.onclick = () => { F.country = b.dataset.country; saveFilters(); render(); });
+  root.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { F.tab = b.dataset.tab; saveFilters(); render(); });
+  root.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { F.tab = b.dataset.go; saveFilters(); render(); });
+  root.querySelectorAll('[data-code]').forEach(b => b.onclick = () => { F.q = b.dataset.code; F.tab = 'history'; saveFilters(); render(); });
+  const sel = document.getElementById('f-driver');
+  sel.onchange = () => { F.driver = sel.value; saveFilters(); render(); };
+  const q = document.getElementById('f-q');
+  let timer = null;
+  q.oninput = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      F.q = q.value; saveFilters();
+      const pos = q.selectionStart;
+      render();
+      const nq = document.getElementById('f-q'); nq.focus(); try { nq.setSelectionRange(pos, pos); } catch (e) {}
+    }, 200);
+  };
+  const clear = document.getElementById('f-clear');
+  if (clear) clear.onclick = () => { F.country = ''; F.driver = ''; F.q = ''; saveFilters(); render(); };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyI18n();
+  injectLogin({
+    title: 'Discos',
+    sub: 'Acesso interno',
+    lang: currentLang,
+    onSuccess: startApp,
+  });
+});
+</script>
+
+<script src="/sv-shell.js?v=20261112disks"></script>
+</body>
+</html>
