@@ -846,8 +846,8 @@ const CONFIG = {
 
 // Países FORA do "Subir recibo" (reembolso). Só o recibo — "Pedir dinheiro" segue normal.
 // Pra reverter: deixar a lista vazia → const RECEIPT_BLOCKED_COUNTRIES = [];
-// (2026-11-10: Colômbia tirada a pedido do Lucas, temporário)
-const RECEIPT_BLOCKED_COUNTRIES = ['Colombia'];
+// (2026-11-10: Colômbia tirada a pedido do Lucas; liberada de novo em 2026-11-12)
+const RECEIPT_BLOCKED_COUNTRIES = [];
 
 function normCountry(c) {
   return String(c || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
