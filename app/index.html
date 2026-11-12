@@ -1301,6 +1301,9 @@ function setEvent(kind, ts) {
 }
 
 window.SVApp = {
+  // Versão da casca. O driver-embed.js (APP_BUILD_MIN) recarrega app aberto com
+  // build menor — é assim que uma mudança aqui chega em quem deixa o app aberto dias.
+  build: '2026-11-12',
   openTab: (tab) => openTab(tab),
   onEmbedEvent(page, evt) {
     if (!evt || !S.session) return;

@@ -124,6 +124,40 @@
   style.textContent = css;
   (document.head || root).appendChild(style);
 
+  // ---- App velho aberto no celular → recarrega a casca (2026-11-12) ----
+  // O app instalado pode ficar dias vivo em segundo plano com o JS antigo. As
+  // páginas embutidas carregam este arquivo de novo (o ?v= muda a cada versão),
+  // então é daqui que dá pra puxar a casca. Pra forçar uma atualização geral:
+  // sobe APP_BUILD_MIN aqui E window.SVApp.build no app/index.html, e troca o
+  // ?v= do driver-embed.js nas 5 páginas de motorista.
+  // Só recarrega com o app na tela Início e visível — nunca no meio de um formulário.
+  const APP_BUILD_MIN = '2026-11-12';
+  const RELOAD_KEY = 'svapp.shellReloadAt';
+  function shellOutdated() {
+    try {
+      const app = window.parent !== window && window.parent.SVApp;
+      return !!app && !(String(app.build || '') >= APP_BUILD_MIN);
+    } catch (e) { return false; }
+  }
+  /** true = resolvido (recarregou ou não precisa/não deve); false = tenta de novo depois. */
+  function reloadShellIfSafe() {
+    try {
+      if (!shellOutdated()) return true;
+      const last = Number(localStorage.getItem(RELOAD_KEY) || 0);
+      if (Date.now() - last < 5 * 60 * 1000) return true;   // já recarregou há pouco: sem loop se um cache servir a velha
+      const p = window.parent;
+      if (p.document.visibilityState !== 'visible') return false;
+      if (p.location.hash && p.location.hash !== '#') return false;   // fora da tela Início
+      localStorage.setItem(RELOAD_KEY, String(Date.now()));
+      console.log('[Driver App] app desatualizado (build < ' + APP_BUILD_MIN + ') — recarregando');
+      p.location.reload();
+      return true;
+    } catch (e) { return true; }
+  }
+  if (shellOutdated() && !reloadShellIfSafe()) {
+    const shellTimer = setInterval(function () { if (reloadShellIfSafe()) clearInterval(shellTimer); }, 4000);
+  }
+
   // ---- Avisa o app (janela pai, mesma origem) ----
   function notify(evt) {
     try {
