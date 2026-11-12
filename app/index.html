@@ -430,6 +430,27 @@ svg.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-wid
 .btn-out { width: 100%; margin-top: 8px; height: 46px; border-radius: 12px; font-weight: 650; color: var(--c-danger); background: #FEF2F2; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-out.confirm { background: var(--c-danger); color: #fff; }
 
+/* ============================================================
+ * LEMBRETE DE SEXTA (relatório semanal) — 2026-11-12
+ * ============================================================ */
+.wk-bg { position: fixed; inset: 0; z-index: 60; background: rgba(15,23,42,.5); opacity: 0; transition: opacity .2s; }
+.wk-bg.open { opacity: 1; }
+.wk-modal {
+  position: fixed; z-index: 61; left: 16px; right: 16px; top: 50%;
+  max-width: 420px; margin: 0 auto;
+  background: var(--c-surface); border-radius: 20px;
+  padding: 24px 20px 14px; text-align: center;
+  box-shadow: 0 24px 60px rgba(15,23,42,.28);
+  opacity: 0; transform: translateY(-46%) scale(.97);
+  transition: opacity .2s, transform .24s var(--ease-out);
+}
+.wk-modal.open { opacity: 1; transform: translateY(-50%) scale(1); }
+.wk-ic { width: 56px; height: 56px; border-radius: 16px; background: #FEF3C7; color: #B45309; display: grid; place-items: center; margin: 0 auto 14px; }
+.wk-ic svg.ic { width: 28px; height: 28px; }
+.wk-t { font-size: 18px; font-weight: 750; letter-spacing: -.01em; line-height: 1.3; }
+.wk-s { font-size: 14px; color: var(--c-text-muted); line-height: 1.5; margin: 8px 0 18px; }
+.wk-later { width: 100%; height: 44px; margin-top: 6px; border-radius: 12px; font-weight: 600; font-size: 14px; color: var(--c-text-muted); }
+
 @media (min-width: 720px) {
   .login-top { padding-left: calc(50% - 230px); padding-right: calc(50% - 230px); }
 }
@@ -499,6 +520,10 @@ svg.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-wid
 <div class="sheet-bg hidden" id="sheet-bg"></div>
 <div class="sheet hidden" id="sheet" role="dialog" aria-modal="true"></div>
 
+<!-- Lembrete de sexta 16h–23h: relatório semanal ainda não enviado hoje -->
+<div class="wk-bg hidden" id="wk-bg"></div>
+<div class="wk-modal hidden" id="wk-modal" role="alertdialog" aria-modal="true" aria-labelledby="wk-t"></div>
+
 <script>
 'use strict';
 
@@ -510,6 +535,10 @@ const CFG = {
   domain: 'field-ops-xpense-it.com',     // domínio do e-mail Xpense dos motoristas
   summaryFreshMs: 5 * 60 * 1000,         // resumo da home: revalida depois disso
   weeklyLateDays: 7,                     // relatório semanal "atrasado" depois disso
+  // Lembrete do relatório semanal: toda sexta, das 16h às 23h (hora do celular),
+  // aparece ao abrir/voltar pro app enquanto o relatório de HOJE não foi enviado.
+  // "Depois" adia snoozeMin minutos — não dá pra desligar.
+  weeklyPrompt: { weekday: 5, fromHour: 16, toHour: 23, snoozeMin: 20 },
 };
 // Em produção passa pelo Worker (latamace.com/api, com cache KV); fora dele vai direto.
 const API = location.hostname.endsWith('latamace.com') ? '/api' : CFG.scriptUrl;
@@ -521,6 +550,7 @@ const KEYS = {
   lang: 'svapp.lang',
   summary: 'svapp.summary.v1:',   // + email
   events: 'svapp.events.v1:',     // + email
+  weeklySnooze: 'svapp.weeklySnooze.v1:',  // + email — até quando o lembrete de sexta está adiado (ms)
   drivers: 'checkin_drivers_v1',  // mesmo cache do check-in (lista de motoristas)
 };
 
@@ -591,6 +621,11 @@ const I18N = {
     weeklyOk: 'Enviado {ago}',
     weeklyLate: 'Último envio {ago} — hora de mandar de novo',
     weeklyNever: 'Você ainda não enviou nenhum',
+    weeklyDueToday: 'Hoje é sexta — envie o relatório da semana',
+    wkT: 'Sexta-feira é dia do relatório semanal',
+    wkS: 'Antes de fechar a semana, preencha o relatório de equipamentos: os VIDs que você usou e a confirmação de cada disco.',
+    wkGo: 'Preencher agora',
+    wkLater: 'Lembrar em {n} min',
     docsT: 'Documentos',
     docsOk: 'Enviados {ago}',
     docsPending: 'Documento e habilitação ainda não enviados',
@@ -668,6 +703,11 @@ const I18N = {
     weeklyOk: 'Enviado {ago}',
     weeklyLate: 'Último envío {ago} — ya toca mandarlo de nuevo',
     weeklyNever: 'Todavía no enviaste ninguno',
+    weeklyDueToday: 'Hoy es viernes — mandá el reporte de la semana',
+    wkT: 'El viernes es día del reporte semanal',
+    wkS: 'Antes de cerrar la semana, completá el reporte de equipos: los VIDs que usaste y la confirmación de cada disco.',
+    wkGo: 'Completar ahora',
+    wkLater: 'Recordarme en {n} min',
     docsT: 'Documentos',
     docsOk: 'Enviados {ago}',
     docsPending: 'Documento y licencia todavía no enviados',
@@ -745,6 +785,11 @@ const I18N = {
     weeklyOk: 'Sent {ago}',
     weeklyLate: 'Last sent {ago} — time to send it again',
     weeklyNever: "You haven't sent one yet",
+    weeklyDueToday: "It's Friday — send this week's report",
+    wkT: 'Friday is weekly report day',
+    wkS: 'Before the week ends, fill out the equipment report: the VIDs you used and the check of each drive.',
+    wkGo: 'Fill it out now',
+    wkLater: 'Remind me in {n} min',
     docsT: 'Documents',
     docsOk: 'Sent {ago}',
     docsPending: 'ID and driver license not sent yet',
@@ -911,6 +956,8 @@ const S = {
   sheetOpen: false,
   installEvt: null,
   logoutArmed: false,
+  summaryTried: false, // já tentou reler o resumo nesta sessão (o lembrete de sexta espera por isso)
+  wkOpen: false,       // lembrete de sexta aberto
 };
 
 // ================================================================
@@ -1003,6 +1050,7 @@ function showApp() {
   document.getElementById('tb-avatar').textContent = initials(S.session.name);
 
   S.summary = lsJson(KEYS.summary + S.session.email, null);
+  S.summaryTried = false;
   renderNav();
   renderSegs();
   applyStaticI18n();
@@ -1213,6 +1261,7 @@ function openTab(tab, opts) {
     if (stale) loadSummary();
     setTimeout(invalidateMap, 220);
   }
+  checkWeeklyPrompt();
 }
 
 function renderTitle() {
@@ -1376,6 +1425,7 @@ async function loadSummary(opts) {
   };
 
   S.loading = false;
+  S.summaryTried = true;
   if (failed === parts.length) {
     // Tudo falhou (offline): mantém o que tinha, sem fingir que atualizou.
     S.lastError = true;
@@ -1528,6 +1578,7 @@ function renderHome() {
       '<div class="card"><div class="sk" style="height:18px;width:35%"></div><div class="sk" style="height:48px;margin-top:14px"></div></div>';
     el.innerHTML = html;
     bindHome();
+    checkWeeklyPrompt();
     return;
   }
 
@@ -1589,9 +1640,10 @@ function renderHome() {
 
   // ---- Pendências ----
   const ev = getEvents();
-  let weeklyAt = w ? toDate(w.at) : null;
-  if (ev.assets && (!weeklyAt || ev.assets > weeklyAt.getTime())) weeklyAt = new Date(ev.assets);
-  const weeklyLate = !weeklyAt || (Date.now() - weeklyAt.getTime()) > CFG.weeklyLateDays * 86400000;
+  const weeklyAt = lastWeeklyAt(sum);
+  // "Atrasado" = mais de 7 dias OU sexta 16h–23h sem o relatório de hoje (lembrete de sexta).
+  const weeklyDue = weeklyDueNow(weeklyAt);
+  const weeklyLate = !weeklyAt || (Date.now() - weeklyAt.getTime()) > CFG.weeklyLateDays * 86400000 || weeklyDue;
   let docsAt = toDate(sum.docsAt);
   if (ev.docs && (!docsAt || ev.docs > docsAt.getTime())) docsAt = new Date(ev.docs);
   const veh = lastVehicle(sum);
@@ -1602,7 +1654,8 @@ function renderHome() {
     html += todoRow('ok', 'ok', t('weeklyT'), t('vacPaused'), '');
   } else {
     html += todoRow(weeklyLate ? 'warn' : 'ok', weeklyLate ? 'clipboard' : 'ok', t('weeklyT'),
-      !weeklyAt ? t('weeklyNever') : (weeklyLate ? t('weeklyLate', { ago: ago(weeklyAt) }) : t('weeklyOk', { ago: ago(weeklyAt) })),
+      !weeklyAt ? t('weeklyNever') : weeklyDue ? t('weeklyDueToday')
+        : (weeklyLate ? t('weeklyLate', { ago: ago(weeklyAt) }) : t('weeklyOk', { ago: ago(weeklyAt) })),
       weeklyLate ? 'assets' : '');
   }
   html += todoRow(docsAt ? 'ok' : 'warn', docsAt ? 'ok' : 'id', t('docsT'),
@@ -1635,6 +1688,75 @@ function renderHome() {
   if (dotD) dotD.classList.toggle('hidden', !!docsAt);
 
   if (pts.length) drawMap(pts);
+  checkWeeklyPrompt();
+}
+
+// ================================================================
+// LEMBRETE DE SEXTA (relatório semanal) — 2026-11-12
+// ================================================================
+/** Último relatório semanal: o da planilha ou o que este app acabou de enviar. */
+function lastWeeklyAt(sum) {
+  const w = sum && sum.weekly;
+  let at = w ? toDate(w.at) : null;
+  const ev = getEvents();
+  if (ev.assets && (!at || ev.assets > at.getTime())) at = new Date(ev.assets);
+  return at;
+}
+
+/** Sexta, 16h–23h no relógio do celular, sem relatório enviado HOJE (e não está de férias). */
+function weeklyDueNow(at) {
+  const P = CFG.weeklyPrompt;
+  const now = new Date();
+  if (!S.session || onVacation()) return false;
+  if (now.getDay() !== P.weekday || now.getHours() < P.fromHour || now.getHours() >= P.toHour) return false;
+  return !(at && dayKey(at) === dayKey(now));
+}
+
+/**
+ * Abre (ou fecha) o lembrete. Chamado a cada renderHome, troca de aba, volta pro
+ * app e de minuto em minuto. Só decide depois de reler o resumo (ou de um resumo
+ * recente salvo) — senão piscaria pra quem já enviou de outro aparelho.
+ */
+function checkWeeklyPrompt() {
+  if (!S.session) return;
+  const known = S.summaryTried || (S.summary && (Date.now() - S.summary.at) < CFG.summaryFreshMs);
+  const due = known && !S.loading && weeklyDueNow(lastWeeklyAt(S.summary));
+  if (!due) { if (S.wkOpen && !S.loading) closeWeeklyPrompt(); return; }
+  if (S.wkOpen || S.tab === 'assets' || document.visibilityState !== 'visible') return;
+  if (Date.now() < Number(lsGet(KEYS.weeklySnooze + S.session.email) || 0)) return;
+  openWeeklyPrompt();
+}
+
+function openWeeklyPrompt() {
+  const m = document.getElementById('wk-modal');
+  const bg = document.getElementById('wk-bg');
+  m.innerHTML = '<div class="wk-ic">' + ic('clipboard') + '</div>' +
+    '<div class="wk-t" id="wk-t">' + esc(t('wkT')) + '</div>' +
+    '<div class="wk-s">' + esc(t('wkS')) + '</div>' +
+    '<button type="button" class="btn btn-primary btn-block" id="wk-go">' + esc(t('wkGo')) + '</button>' +
+    '<button type="button" class="wk-later" id="wk-later">' + esc(t('wkLater', { n: CFG.weeklyPrompt.snoozeMin })) + '</button>';
+  // Os dois botões adiam: quem foi pro formulário e voltou sem enviar é lembrado de novo.
+  document.getElementById('wk-go').addEventListener('click', () => { snoozeWeekly(); closeWeeklyPrompt(); openTab('assets'); });
+  document.getElementById('wk-later').addEventListener('click', () => {
+    console.log('[Driver App] lembrete de sexta adiado ' + CFG.weeklyPrompt.snoozeMin + ' min');
+    snoozeWeekly(); closeWeeklyPrompt();
+  });
+  if (!S.wkOpen) console.log('[Driver App] lembrete de sexta: relatório semanal de hoje pendente');
+  S.wkOpen = true;
+  bg.classList.remove('hidden'); m.classList.remove('hidden');
+  requestAnimationFrame(() => requestAnimationFrame(() => { bg.classList.add('open'); m.classList.add('open'); }));
+}
+
+function snoozeWeekly() {
+  if (S.session) lsSet(KEYS.weeklySnooze + S.session.email, String(Date.now() + CFG.weeklyPrompt.snoozeMin * 60000));
+}
+
+function closeWeeklyPrompt() {
+  S.wkOpen = false;
+  const m = document.getElementById('wk-modal');
+  const bg = document.getElementById('wk-bg');
+  bg.classList.remove('open'); m.classList.remove('open');
+  setTimeout(() => { if (!S.wkOpen) { bg.classList.add('hidden'); m.classList.add('hidden'); } }, 240);
 }
 
 function cap(s) { s = String(s || ''); return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
@@ -1809,7 +1931,8 @@ function logout() {
   S.gen++;
   S.loading = false;
   clearTimeout(S.preloadTimer); clearTimeout(S.refreshTimer);
-  S.session = null; S.summary = null; S.tab = 'home'; S.lastFrame = '';
+  S.session = null; S.summary = null; S.tab = 'home'; S.lastFrame = ''; S.summaryTried = false;
+  if (S.wkOpen) closeWeeklyPrompt();
   if (S.map) { try { S.map.remove(); } catch (e) {} S.map = null; }
   document.querySelectorAll('.frame-wrap').forEach(w => { w.innerHTML = ''; w.classList.remove('ready'); });
   closeSheet(true);
@@ -1827,6 +1950,7 @@ function setLang(l, opts) {
   applyStaticI18n();
   if (S.session) {
     renderNav(); renderSegs(); renderTitle(); renderHome();
+    if (S.wkOpen) openWeeklyPrompt();   // re-escreve o lembrete no idioma novo
     // Repassa pras páginas embutidas que já estão abertas.
     document.querySelectorAll('.frame-wrap iframe').forEach(f => {
       try { if (f.contentWindow.SVEmbed) f.contentWindow.SVEmbed.setLang(l); } catch (e) {}
@@ -1873,6 +1997,8 @@ function applyStaticI18n() {
   });
   // Voltou a internet: abas que não carregaram tentam de novo.
   window.addEventListener('online', () => { if (S.session) healFrames(); });
+  // Lembrete de sexta: confere de minuto em minuto (bate 16h com o app aberto, fim do adiamento).
+  setInterval(checkWeeklyPrompt, 60000);
   window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.installEvt = e; });
 
   const s = lsJson(KEYS.session, null);

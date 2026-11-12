@@ -656,6 +656,216 @@
     .chip, .yesno-btn, .submit-btn, .single-select .chip::after, .yesno-btn::after { transition: none; }
   }
 
+  /* ---------- VIDs (vários) e discos — 2026-11-12 ---------- */
+  .add-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+  .add-btn {
+    height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--c-primary);
+    border-radius: 10px;
+    background: var(--c-surface);
+    color: var(--c-primary);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: var(--shadow-xs);
+  }
+  .add-btn:active { transform: translateY(1px); }
+  .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag-list:empty { display: none; }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 36px;
+    padding: 0 4px 0 12px;
+    border-radius: 999px;
+    background: var(--c-primary);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .tag.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+  .tag button {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .suggest-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: var(--c-text-muted);
+  }
+  .suggest-chip {
+    min-height: 34px;
+    padding: 0 12px;
+    border: 1px dashed var(--c-primary);
+    border-radius: 999px;
+    background: var(--c-bg-tint);
+    color: var(--c-primary-dark);
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .suggest-chip small { font-weight: 500; color: var(--c-text-muted); margin-left: 4px; }
+  .sub-hint {
+    font-size: 12.5px;
+    color: var(--c-text-muted);
+    line-height: 1.4;
+    margin: -4px 0 10px;
+  }
+  .mini-loader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 13.5px;
+    color: var(--c-text-muted);
+  }
+  .mini-loader::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(26,32,44,0.12);
+    border-top-color: var(--c-text);
+    animation: spin 0.8s linear infinite;
+  }
+  .disk-list { display: flex; flex-direction: column; gap: 10px; }
+  .disk-item {
+    border: 1px solid var(--c-border);
+    border-radius: 12px;
+    padding: 12px;
+    background: var(--c-bg);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .disk-item.answered { background: var(--c-surface); }
+  .disk-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .disk-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--c-text);
+    word-break: break-all;
+  }
+  .disk-meta { font-size: 12px; color: var(--c-text-muted); }
+  .disk-note {
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: #92400E;
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: 8px;
+    padding: 6px 8px;
+    margin: -2px 0 10px;
+  }
+  .seg {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .seg.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .seg-btn {
+    min-height: 44px;
+    padding: 6px 4px;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 10px;
+    background: var(--c-surface);
+    color: var(--c-text);
+    font-size: 13.5px;
+    font-weight: 500;
+    font-family: inherit;
+    line-height: 1.2;
+    cursor: pointer;
+    box-shadow: var(--shadow-xs);
+    transition: border-color .15s, background-color .15s, color .15s, box-shadow .15s;
+  }
+  .seg-btn:active { transform: translateY(1px); }
+  .seg-btn.selected {
+    background: var(--c-bg-tint);
+    border-color: var(--c-primary);
+    color: var(--c-primary-dark);
+    box-shadow: 0 0 0 1px var(--c-primary);
+    font-weight: 600;
+  }
+  .seg-btn.selected.good {
+    background: #F0FDF4;
+    border-color: var(--c-success);
+    color: #15803D;
+    box-shadow: 0 0 0 1px var(--c-success);
+  }
+  .seg-btn.selected.bad {
+    background: #FEF2F2;
+    border-color: var(--c-danger);
+    color: #B91C1C;
+    box-shadow: 0 0 0 1px var(--c-danger);
+  }
+  .handed-select { margin-top: 8px; }
+  .link-btn {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 0;
+    border: 0;
+    background: none;
+    color: var(--c-text-muted);
+    font-size: 12.5px;
+    font-family: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+  .link-btn.on { color: #B91C1C; font-weight: 600; }
+  .empty-note {
+    font-size: 13.5px;
+    color: var(--c-text-muted);
+    padding: 12px;
+    border: 1px dashed var(--c-border-strong);
+    border-radius: 12px;
+    text-align: center;
+  }
+  .disk-summary {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--c-primary-dark);
+    background: var(--c-bg-tint);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .needs-answer {
+    border-color: var(--c-danger) !important;
+    box-shadow: 0 0 0 3px rgba(220,38,38,0.15) !important;
+  }
+  .seg.needs-answer { border: 0 !important; box-shadow: none !important; }
+  .seg.needs-answer .seg-btn { border-color: var(--c-danger); box-shadow: 0 0 0 2px rgba(220,38,38,0.15); }
+  @media (hover: hover) {
+    .seg-btn:hover:not(.selected), .add-btn:hover { background: var(--c-bg); }
+    .link-btn:hover { color: var(--c-text); }
+  }
+
   /* Por último e com !important: nada acima "desesconde" o que o JS marcou como .hidden */
   .hidden { display: none !important; }
 </style>
@@ -712,13 +922,22 @@
         <div class="step-title" data-i18n="step2">Veículo & País</div>
       </div>
 
-      <div class="field">
+      <!-- 2026-11-12: VID(s) digitado(s) TODA semana (não vem preenchido) — pode ser mais de um -->
+      <div class="field" id="vid-field">
         <label class="with-hint" for="vid-input">
-          <span data-i18n="vidLabel">VID (ID do veículo)</span>
-          <span class="prefilled-pill prefilled-vid hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
-          <span class="label-hint" id="vid-source-hint"></span>
+          <span data-i18n="vidLabel">VID(s) que você está usando</span>
+          <span class="label-hint" data-i18n="vidRequiredHint">Obrigatório toda semana</span>
         </label>
-        <input type="text" id="vid-input" inputmode="numeric" placeholder="40623">
+        <div class="add-row">
+          <input type="text" id="vid-input" inputmode="numeric" placeholder="40623" autocomplete="off" enterkeyhint="done">
+          <button type="button" class="add-btn" id="vid-add-btn" data-i18n="addBtn">Adicionar</button>
+        </div>
+        <div class="tag-list" id="vid-tags"></div>
+        <div class="suggest-row hidden" id="vid-suggest">
+          <span data-i18n="vidSuggest">Usou antes:</span>
+          <span id="vid-suggest-list" style="display:contents"></span>
+        </div>
+        <div class="last-value-hint" data-i18n="vidMultiHint">Usou mais de um carro na semana? Adicione todos.</div>
       </div>
 
       <div class="field">
@@ -865,32 +1084,55 @@
       </div>
     </div>
 
-    <!-- Step 5: Disks -->
-    <div class="card">
+    <!-- Step 5: Disks — 2026-11-12: confirmação disco a disco (aba SSD Tracking).
+         Quantidade / "outros discos" (colunas P e R da Assets Management) agora são
+         calculados a partir das confirmações. -->
+    <div class="card" id="disk-card">
       <div class="step-header">
         <div class="step-num">5</div>
-        <div class="step-title" data-i18n="step5">Discos (SSDs)</div>
+        <div>
+          <div class="step-title" data-i18n="step5">Discos (SSDs)</div>
+          <div class="step-sub" data-i18n="step5Sub">Confirme onde está cada disco, um por um</div>
+        </div>
       </div>
 
-      <div class="field">
-        <label class="with-hint" for="disk-count-input">
-          <span data-i18n="diskCountLabel">Quantos discos tem no total?</span>
-          <span class="prefilled-pill prefilled-diskcount hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
-        </label>
-        <input type="number" id="disk-count-input" min="0" inputmode="numeric" placeholder="6">
-      </div>
+      <div id="disk-loading" class="mini-loader" data-i18n="disksLoading">Carregando seus discos...</div>
 
-      <div class="field">
-        <label for="disk-in-use-input" data-i18n="diskInUseLabel">Qual disco está usando AGORA?</label>
-        <input type="text" id="disk-in-use-input" placeholder="S6EPNN0X802880">
-      </div>
+      <div id="disk-section" class="hidden">
+        <div class="field" id="disk-mine-field">
+          <label data-i18n="disksMineLabel">Discos registrados no seu nome</label>
+          <div class="sub-hint" data-i18n="disksMineHint">Para cada disco, diga onde ele está agora.</div>
+          <div class="disk-list" id="disk-list"></div>
+          <div id="disk-empty" class="empty-note hidden" data-i18n="disksMineEmpty">Nenhum disco registrado no seu nome.</div>
+        </div>
 
-      <div class="field">
-        <label class="with-hint" for="disks-other-input">
-          <span data-i18n="disksOtherLabel">Códigos dos outros discos (separados por espaço)</span>
-          <span class="prefilled-pill prefilled-diskother hidden" data-i18n="pillPrefilled">PRÉ-PREENCHIDO</span>
-        </label>
-        <textarea id="disks-other-input" placeholder="S6EPNN0X802604 S6EPNN0X801498 ..."></textarea>
+        <div class="field hidden" id="incoming-field">
+          <label data-i18n="incomingLabel">Discos que outros motoristas disseram que te entregaram</label>
+          <div class="disk-list" id="incoming-list"></div>
+        </div>
+
+        <div class="field" id="newdisk-field">
+          <label id="newdisk-q">Recebeu algum disco novo?</label>
+          <div class="sub-hint" id="newdisk-hint"></div>
+          <div class="seg two" id="newdisk-seg">
+            <button type="button" class="seg-btn" data-v="no" id="newdisk-no">Não recebi nenhum</button>
+            <button type="button" class="seg-btn" data-v="yes" id="newdisk-yes">Sim, recebi</button>
+          </div>
+          <div id="newdisk-entry" class="hidden" style="margin-top:12px;">
+            <div class="add-row">
+              <input type="text" id="newdisk-input" placeholder="S6EPNN0X802880" autocomplete="off" autocapitalize="characters" enterkeyhint="done" style="text-transform:uppercase;">
+              <button type="button" class="add-btn" id="newdisk-add-btn" data-i18n="addBtn">Adicionar</button>
+            </div>
+            <div class="tag-list" id="newdisk-tags"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="disk-in-use-input" data-i18n="diskInUseLabel">Qual disco está usando AGORA?</label>
+          <select id="disk-in-use-input"></select>
+        </div>
+
+        <div class="disk-summary" id="disk-summary"></div>
       </div>
     </div>
 
@@ -1033,7 +1275,16 @@ const I18N = {
     step1Sub: 'Escolhe seu nome — vou puxar suas info da semana passada',
     chooseOption: '-- Escolha --',
     step2: 'Veículo & País',
-    vidLabel: 'VID (ID do veículo)',
+    vidLabel: 'VID(s) que você está usando',
+    vidRequiredHint: 'Obrigatório toda semana',
+    addBtn: 'Adicionar',
+    vidSuggest: 'Usou antes:',
+    vidMultiHint: 'Usou mais de um carro na semana? Adicione todos.',
+    vidFromReport: 'último relatório',
+    vidFromCtsShort: 'CTS {date}',
+    vidRequired: 'Adicione o VID que você está usando',
+    vidInvalid: 'VID tem que ter de 4 a 6 números',
+    alreadyAdded: 'Já está na lista',
     countryLabel: 'País',
     plateLabel: 'Placa do veículo',
     vehicleDateLabel: 'Quando recebeu esse carro?',
@@ -1053,9 +1304,46 @@ const I18N = {
     odometerLabel: 'Leitura atual do odômetro (km)',
     targetsLabel: 'Targets cumpridos esta semana',
     step5: 'Discos (SSDs)',
-    diskCountLabel: 'Quantos discos tem no total?',
+    step5Sub: 'Confirme onde está cada disco, um por um',
+    disksLoading: 'Carregando seus discos...',
+    disksMineLabel: 'Discos registrados no seu nome',
+    disksMineHint: 'Para cada disco, diga onde ele está agora.',
+    disksMineEmpty: 'Nenhum disco registrado no seu nome.',
+    diskWithMe: 'Está comigo',
+    diskReturned: 'Devolvi',
+    diskHanded: 'Entregue a…',
+    diskHandedPick: '-- Entregue a quem? --',
+    diskUnknown: 'Não reconheço este disco',
+    diskUnknownOn: '✓ Marcado: não reconheço este disco (desfazer)',
+    diskFromReport: 'Do seu relatório de {date}',
+    diskFromReportNoDate: 'Do seu último relatório',
+    diskSince: 'Confirmado em {date}',
+    diskReceivedOn: 'Recebido em {date}',
+    diskDenied: '{name} disse que não recebeu este disco — confirme onde ele está.',
+    incomingLabel: 'Discos que outros motoristas disseram que te entregaram',
+    incomingFrom: 'De {name} · {date}',
+    incomingYes: 'Recebi',
+    incomingNo: 'Não recebi',
+    newDiskQ: 'Recebeu algum disco novo?',
+    newDiskHint: 'Inclua também qualquer disco com você que não aparece na lista acima.',
+    newDiskNo: 'Não recebi nenhum',
+    newDiskYes: 'Sim, recebi',
+    newDiskQFirst: 'Tem discos com você?',
+    newDiskHintFirst: 'Não achamos nenhum disco no seu nome. Adicione o código de cada disco que está com você.',
+    newDiskNoFirst: 'Não tenho nenhum',
+    newDiskYesFirst: 'Sim, tenho',
+    diskInvalid: 'Código de disco inválido',
+    diskInMyList: 'Esse disco já está na sua lista acima',
     diskInUseLabel: 'Qual disco está usando AGORA?',
-    disksOtherLabel: 'Códigos dos outros discos (separados por espaço)',
+    inUseChoose: '-- Escolha --',
+    inUseNone: 'Nenhum (não estou gravando)',
+    diskSummary: 'Ficam com você: {n} disco(s)',
+    diskSummaryZero: 'Nenhum disco fica com você',
+    errDiskPending: 'Diga onde está cada disco ({n} sem resposta)',
+    errDiskHanded: 'Escolha pra quem entregou o disco {code}',
+    errIncoming: 'Confirme se recebeu os discos que te entregaram',
+    errNewDisk: 'Responda se recebeu disco novo',
+    errNewDiskCodes: 'Adicione o código do disco novo (ou marque que não recebeu)',
     step6: 'Celulares do projeto',
     phoneCountLabel: 'Quantos celulares do projeto tem?',
     phoneModelLabel: 'Modelo do celular',
@@ -1094,7 +1382,16 @@ const I18N = {
     step1Sub: 'Elige tu nombre — voy a traer tu info de la semana pasada',
     chooseOption: '-- Elige --',
     step2: 'Vehículo y País',
-    vidLabel: 'VID (ID del vehículo)',
+    vidLabel: 'VID(s) que estás usando',
+    vidRequiredHint: 'Obligatorio cada semana',
+    addBtn: 'Agregar',
+    vidSuggest: 'Usaste antes:',
+    vidMultiHint: '¿Usaste más de un auto en la semana? Agrégalos todos.',
+    vidFromReport: 'último reporte',
+    vidFromCtsShort: 'CTS {date}',
+    vidRequired: 'Agrega el VID que estás usando',
+    vidInvalid: 'El VID tiene que tener de 4 a 6 números',
+    alreadyAdded: 'Ya está en la lista',
     countryLabel: 'País',
     plateLabel: 'Patente del vehículo',
     vehicleDateLabel: '¿Cuándo recibió ese carro?',
@@ -1114,9 +1411,46 @@ const I18N = {
     odometerLabel: 'Lectura actual del odómetro (km)',
     targetsLabel: 'Targets cumplidos esta semana',
     step5: 'Discos (SSDs)',
-    diskCountLabel: '¿Cuántos discos tienes en total?',
+    step5Sub: 'Confirma dónde está cada disco, uno por uno',
+    disksLoading: 'Cargando tus discos...',
+    disksMineLabel: 'Discos registrados a tu nombre',
+    disksMineHint: 'Para cada disco, di dónde está ahora.',
+    disksMineEmpty: 'Ningún disco registrado a tu nombre.',
+    diskWithMe: 'Lo tengo yo',
+    diskReturned: 'Lo devolví',
+    diskHanded: 'Entregado a…',
+    diskHandedPick: '-- ¿A quién se lo entregaste? --',
+    diskUnknown: 'No reconozco este disco',
+    diskUnknownOn: '✓ Marcado: no reconozco este disco (deshacer)',
+    diskFromReport: 'De tu reporte del {date}',
+    diskFromReportNoDate: 'De tu último reporte',
+    diskSince: 'Confirmado el {date}',
+    diskReceivedOn: 'Recibido el {date}',
+    diskDenied: '{name} dijo que no recibió este disco — confirma dónde está.',
+    incomingLabel: 'Discos que otros conductores dijeron que te entregaron',
+    incomingFrom: 'De {name} · {date}',
+    incomingYes: 'Lo recibí',
+    incomingNo: 'No lo recibí',
+    newDiskQ: '¿Recibiste algún disco nuevo?',
+    newDiskHint: 'Incluye también cualquier disco que tengas y que no aparece en la lista de arriba.',
+    newDiskNo: 'No recibí ninguno',
+    newDiskYes: 'Sí, recibí',
+    newDiskQFirst: '¿Tienes discos contigo?',
+    newDiskHintFirst: 'No encontramos ningún disco a tu nombre. Agrega el código de cada disco que tienes.',
+    newDiskNoFirst: 'No tengo ninguno',
+    newDiskYesFirst: 'Sí, tengo',
+    diskInvalid: 'Código de disco inválido',
+    diskInMyList: 'Ese disco ya está en tu lista de arriba',
     diskInUseLabel: '¿Qué disco estás usando AHORA?',
-    disksOtherLabel: 'Códigos de los otros discos (separados por espacio)',
+    inUseChoose: '-- Elige --',
+    inUseNone: 'Ninguno (no estoy grabando)',
+    diskSummary: 'Quedan contigo: {n} disco(s)',
+    diskSummaryZero: 'Ningún disco queda contigo',
+    errDiskPending: 'Di dónde está cada disco ({n} sin respuesta)',
+    errDiskHanded: 'Elige a quién le entregaste el disco {code}',
+    errIncoming: 'Confirma si recibiste los discos que te entregaron',
+    errNewDisk: 'Responde si recibiste un disco nuevo',
+    errNewDiskCodes: 'Agrega el código del disco nuevo (o marca que no recibiste)',
     step6: 'Celulares del proyecto',
     phoneCountLabel: '¿Cuántos celulares del proyecto tienes?',
     phoneModelLabel: 'Modelo del celular',
@@ -1155,7 +1489,16 @@ const I18N = {
     step1Sub: 'Pick your name — I will pull your info from last week',
     chooseOption: '-- Choose --',
     step2: 'Vehicle & Country',
-    vidLabel: 'VID (vehicle ID)',
+    vidLabel: 'VID(s) you are using',
+    vidRequiredHint: 'Required every week',
+    addBtn: 'Add',
+    vidSuggest: 'Used before:',
+    vidMultiHint: 'Used more than one car this week? Add them all.',
+    vidFromReport: 'last report',
+    vidFromCtsShort: 'CTS {date}',
+    vidRequired: 'Add the VID you are using',
+    vidInvalid: 'A VID has 4 to 6 digits',
+    alreadyAdded: 'Already in the list',
     countryLabel: 'Country',
     plateLabel: 'Vehicle license plate',
     vehicleDateLabel: 'When did you receive this car?',
@@ -1175,9 +1518,46 @@ const I18N = {
     odometerLabel: 'Current odometer reading (km)',
     targetsLabel: 'Targets met this week',
     step5: 'Drives (SSDs)',
-    diskCountLabel: 'How many drives do you have in total?',
+    step5Sub: 'Confirm where each drive is, one by one',
+    disksLoading: 'Loading your drives...',
+    disksMineLabel: 'Drives registered to you',
+    disksMineHint: 'For each drive, tell us where it is now.',
+    disksMineEmpty: 'No drives registered to you.',
+    diskWithMe: 'I have it',
+    diskReturned: 'Returned',
+    diskHanded: 'Handed to…',
+    diskHandedPick: '-- Handed to whom? --',
+    diskUnknown: "I don't recognize this drive",
+    diskUnknownOn: "✓ Marked: I don't recognize this drive (undo)",
+    diskFromReport: 'From your report of {date}',
+    diskFromReportNoDate: 'From your last report',
+    diskSince: 'Confirmed on {date}',
+    diskReceivedOn: 'Received on {date}',
+    diskDenied: '{name} said they did not receive this drive — confirm where it is.',
+    incomingLabel: 'Drives other drivers said they handed to you',
+    incomingFrom: 'From {name} · {date}',
+    incomingYes: 'Received',
+    incomingNo: 'Not received',
+    newDiskQ: 'Did you receive any new drive?',
+    newDiskHint: 'Also include any drive you have that is not in the list above.',
+    newDiskNo: 'No new drives',
+    newDiskYes: 'Yes, I did',
+    newDiskQFirst: 'Do you have any drives?',
+    newDiskHintFirst: 'We found no drives registered to you. Add the code of each drive you have.',
+    newDiskNoFirst: "I don't have any",
+    newDiskYesFirst: 'Yes, I do',
+    diskInvalid: 'Invalid drive code',
+    diskInMyList: 'That drive is already in your list above',
     diskInUseLabel: 'Which drive are you using RIGHT NOW?',
-    disksOtherLabel: 'Codes of the other drives (separated by spaces)',
+    inUseChoose: '-- Choose --',
+    inUseNone: 'None (not recording)',
+    diskSummary: 'Staying with you: {n} drive(s)',
+    diskSummaryZero: 'No drives stay with you',
+    errDiskPending: 'Tell us where each drive is ({n} unanswered)',
+    errDiskHanded: 'Choose who you handed drive {code} to',
+    errIncoming: 'Confirm whether you received the drives handed to you',
+    errNewDisk: 'Answer whether you received a new drive',
+    errNewDiskCodes: 'Add the new drive code (or mark that you received none)',
     step6: 'Project phones',
     phoneCountLabel: 'How many project phones do you have?',
     phoneModelLabel: 'Phone model',
@@ -1239,6 +1619,8 @@ document.querySelectorAll('.lang-switch button').forEach(btn => {
     applyI18n();
     // Re-apply prefill banner if shown
     if (state.lastAssets) renderPrefillBanner();
+    // Partes montadas por JS (VIDs e discos) têm texto próprio
+    if (state.selectedDriver) { renderVids(); renderDisks(); }
   });
 });
 
@@ -1261,6 +1643,11 @@ const state = {
     rain: new Set(),
     mech: new Set(),
   },
+  // 2026-11-12: VIDs digitados pelo motorista (toda semana, pode ser mais de um)
+  vids: [],
+  vidSuggestions: [],   // [{ vid, key, date }] — botões "Usou antes", nunca entram sozinhos
+  // 2026-11-12: confirmação disco a disco (ver bloco DISCOS)
+  disk: null,
 };
 
 // ================================================================
@@ -1332,18 +1719,22 @@ document.getElementById('driver-select').addEventListener('change', async (e) =>
 
 // Limpa o que o prefill escreve — trocando de motorista não pode sobrar VID/placa do anterior.
 function resetPrefill() {
-  ['vid-input', 'plate-input', 'vehicle-date-input', 'city-input', 'disk-count-input',
-   'disks-other-input', 'phone-count-input', 'phone-model-input', 'phone-imei-input',
-   'breath-count-input'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['vid-input', 'plate-input', 'vehicle-date-input', 'city-input',
+   'phone-count-input', 'phone-model-input', 'phone-imei-input',
+   'breath-count-input', 'newdisk-input'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.querySelectorAll('.prefilled-pill').forEach(p => p.classList.add('hidden'));
-  ['vid-source-hint', 'odometer-last-hint'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = ''; });
+  ['odometer-last-hint'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = ''; });
   document.querySelectorAll('#country-group .chip').forEach(c => c.classList.remove('selected'));
   state.selections.country = null;
+  state.vids = [];
+  state.vidSuggestions = [];
+  renderVids();
 }
 
 async function loadDriverAssets() {
   const email = state.selectedDriver.email;
   resetPrefill();
+  loadDriverDisks(email);              // em paralelo com o pré-preenchimento (passo 5)
   loadFleetVids().catch(() => {});   // adianta a busca do VID da CTS (usada no passo 3)
 
   // 1) Cache local primeiro (rápido). Normaliza: caches antigos guardaram a
@@ -1376,9 +1767,10 @@ async function loadDriverAssets() {
     if (!cached) renderPrefillBanner();
   }
 
-  // 3) VID ainda vazio (primeira vez, ou o último envio gravou lixo no VID):
-  //    sugere o VID que a CTS registrou por último pra esse motorista.
-  if (!getVal('vid-input')) await prefillVidFromCts(email);
+  // 3) VIDs que a CTS registrou por último pra esse motorista viram sugestão
+  //    (botão "Usou antes"). Desde 2026-11-12 o VID NÃO vem preenchido: o
+  //    motorista tem que informar toda semana.
+  await suggestVidsFromCts(email);
 }
 
 // ================================================================
@@ -1434,10 +1826,6 @@ const PREFILL_OK = {
   imei: v => String(v).split(/[\s,;]+/).some(tok => /^\d{14,16}$/.test(tok.replace(/[.\-\/]/g, ''))),
   odometer: v => /^\s*\d[\d.,]{0,9}\s*$/.test(String(v)),
 };
-function cleanVid(v) {
-  const m = String(v || '').match(/\d{4,6}/);
-  return m ? m[0] : '';
-}
 
 // Uma busca por carregamento de página, disparada junto com o getLastAssetsForm.
 let fleetVidsPromise = null;
@@ -1451,27 +1839,421 @@ function loadFleetVids() {
   return fleetVidsPromise;
 }
 
-/** Último VID que a CTS registrou pra esse e-mail (getFleetVids: por VID, quem rodou por último). */
-async function prefillVidFromCts(email) {
+/**
+ * VIDs que a CTS registrou por último pra esse e-mail (getFleetVids: por VID,
+ * quem rodou por último) → até 3 botões de sugestão. Nunca adiciona sozinho.
+ */
+async function suggestVidsFromCts(email) {
   try {
     const data = await loadFleetVids();
     if (!data || !data.success || !Array.isArray(data.vids)) return;
     const mine = data.vids
-      .filter(v => String(v.email || '').trim().toLowerCase() === String(email).toLowerCase() && /^\d{4,6}$/.test(String(v.vid)))
-      .sort((a, b) => String(b.lastDate || '').localeCompare(String(a.lastDate || '')));
-    // O motorista pode ter trocado de seleção ou já digitado enquanto carregava.
-    if (!mine.length || !state.selectedDriver || state.selectedDriver.email !== email || getVal('vid-input')) return;
-    setInput('vid-input', String(mine[0].vid), 'prefilled-vid');
-    const hint = document.getElementById('vid-source-hint');
-    // lastDate vem 'YYYY-MM-DD' (sem hora): new Date() leria como meia-noite UTC
-    // e no Brasil mostraria o dia anterior — passa como DD/MM/YYYY (data local).
-    const ld = String(mine[0].lastDate || '');
-    const m = ld.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (hint) hint.textContent = t('vidFromCts').replace('{date}', formatDateLocal(m ? m[3] + '/' + m[2] + '/' + m[1] : ld) || '—');
-    console.log('[Assets] VID sugerido pela CTS: ' + mine[0].vid + ' (último uso ' + mine[0].lastDate + ')');
+      .filter(v => String(v.email || '').trim().toLowerCase() === String(email).toLowerCase() && VID_RE.test(String(v.vid)))
+      .sort((a, b) => String(b.lastDate || '').localeCompare(String(a.lastDate || '')))
+      .slice(0, 3);
+    // O motorista pode ter trocado de seleção enquanto carregava.
+    if (!mine.length || !state.selectedDriver || state.selectedDriver.email !== email) return;
+    mine.forEach(v => {
+      // lastDate vem 'YYYY-MM-DD' (sem hora): new Date() leria como meia-noite UTC
+      // e no Brasil mostraria o dia anterior — monta dd/mm direto do texto.
+      const m = String(v.lastDate || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+      addVidSuggestion(String(v.vid), 'vidFromCtsShort', m ? m[3] + '/' + m[2] : '—');
+    });
+    console.log('[Assets] VIDs sugeridos pela CTS: ' + mine.map(v => v.vid + ' (' + v.lastDate + ')').join(', '));
   } catch (err) {
     console.warn('[Assets] getFleetVids falhou (VID fica pro motorista digitar):', err);
   }
+}
+
+// ================================================================
+// VIDs (2026-11-12) — informados TODA semana; pode ser mais de um
+// ================================================================
+const VID_RE = /^\d{4,6}$/;
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/** Tokens de VID num valor da planilha ("40623", "40623, 40624", "VID 40623"). */
+function vidTokens(v) {
+  return String(v == null ? '' : v).split(/[\s,;\/|]+/)
+    .map(s => s.replace(/^vid[:#-]*/i, ''))
+    .filter(s => VID_RE.test(s));
+}
+
+function addVidSuggestion(vid, key, date) {
+  if (!VID_RE.test(vid) || state.vidSuggestions.some(s => s.vid === vid)) return;
+  state.vidSuggestions.push({ vid, key, date });   // texto montado no render (troca de idioma)
+  renderVids();
+}
+
+/** Adiciona um VID digitado (ou tocado na sugestão). quiet = sem toast de erro. */
+function addVid(raw, quiet) {
+  const s = String(raw || '').trim().replace(/^vid[\s:#-]*/i, '');
+  if (!s) return false;
+  if (!VID_RE.test(s)) { if (!quiet) showToast(t('vidInvalid'), 'error'); return false; }
+  if (!state.vids.includes(s)) state.vids.push(s);
+  else if (!quiet) showToast(t('alreadyAdded'), 'error');
+  renderVids();
+  return true;
+}
+
+function renderVids() {
+  const tags = document.getElementById('vid-tags');
+  if (!tags) return;
+  tags.innerHTML = state.vids.map(v =>
+    `<span class="tag">${esc(v)}<button type="button" data-rm-vid="${esc(v)}" aria-label="×">×</button></span>`).join('');
+  const sugg = state.vidSuggestions.filter(s => !state.vids.includes(s.vid));
+  document.getElementById('vid-suggest-list').innerHTML = sugg.map(s =>
+    `<button type="button" class="suggest-chip" data-add-vid="${esc(s.vid)}">${esc(s.vid)}<small>${esc(t(s.key).replace('{date}', s.date))}</small></button>`).join('');
+  document.getElementById('vid-suggest').classList.toggle('hidden', !sugg.length);
+  if (state.vids.length) document.getElementById('vid-input').classList.remove('needs-answer');
+}
+
+document.getElementById('vid-add-btn').addEventListener('click', () => {
+  const input = document.getElementById('vid-input');
+  if (addVid(input.value)) input.value = '';
+  input.focus();
+});
+document.getElementById('vid-input').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  if (addVid(e.target.value)) e.target.value = '';
+});
+document.getElementById('vid-field').addEventListener('click', (e) => {
+  const rm = e.target.closest('[data-rm-vid]');
+  if (rm) { state.vids = state.vids.filter(v => v !== rm.dataset.rmVid); renderVids(); return; }
+  const add = e.target.closest('[data-add-vid]');
+  if (add) addVid(add.dataset.addVid, true);
+});
+
+// ================================================================
+// DISCOS (2026-11-12) — confirmação um por um
+// ================================================================
+/**
+ * Lista = discos no nome do motorista segundo a aba SSD Tracking (getDriverDisks,
+ * backend v5.86). Quem ainda não confirmou nenhuma vez parte do último relatório
+ * semanal (mesma lista do dropdown do check-in). Cada disco precisa de resposta:
+ * "Está comigo" / "Devolvi" / "Entregue a <motorista>" (ou "Não reconheço").
+ * Discos que outro motorista marcou como entregues pra este aparecem à parte
+ * (Recebi / Não recebi). Depois: discos novos que recebeu, ou "não recebi nenhum".
+ *
+ * Backend antigo (antes do v5.86, sem getDriverDisks): a lista vem do
+ * getDriverSsds e o resumo das respostas vai junto nos comentários, pra não se perder.
+ */
+function newDiskState() {
+  return { reqId: (state.disk && state.disk.reqId) || 0, ready: false, ledger: false,
+           mine: [], incoming: [], newCodes: [], newAnswer: null,
+           inUseLast: '', inUse: '', inUseTouched: false };
+}
+
+function diskNorm(s) {
+  return String(s || '').toUpperCase().trim()
+    .replace(/^S\/?N\s*[:#-]\s*/, '')
+    .replace(/[\s.]/g, '');
+}
+function diskValid(code) {
+  return /^[A-Z0-9-]{5,40}$/.test(code) && /\d/.test(code);
+}
+
+function dateLocale() {
+  return currentLang === 'pt' ? 'pt-BR' : currentLang === 'en' ? 'en-US' : 'es-ES';
+}
+function fmtDay(v) {
+  if (!v) return '—';
+  const d = new Date(v);
+  if (isNaN(d)) return String(v);
+  return d.toLocaleDateString(dateLocale(), { day: '2-digit', month: '2-digit' });
+}
+
+async function loadDriverDisks(email) {
+  state.disk = newDiskState();
+  const D = state.disk;
+  const req = ++D.reqId;
+  renderDisks();
+  const stale = () => !state.disk || state.disk.reqId !== req;
+
+  let data = null;
+  try {
+    const res = await fetch(CONFIG.scriptUrl + '?action=getDriverDisks&email=' + encodeURIComponent(email));
+    data = await res.json();
+  } catch (err) {
+    console.warn('[Assets] getDriverDisks falhou:', err);
+  }
+  if (stale()) return;
+
+  if (data && data.success && Array.isArray(data.disks)) {
+    D.ledger = true;
+    D.mine = data.disks
+      .map(d => ({ code: diskNorm(d.code), source: d.source || 'ledger', since: d.since || '', status: d.status || '',
+                   deniedBy: d.deniedBy || '', answer: null, toEmail: '', toName: '' }))
+      .filter(d => diskValid(d.code));
+    D.incoming = (data.incoming || [])
+      .map(x => ({ code: diskNorm(x.code), fromEmail: x.fromEmail || '', fromName: x.fromName || x.fromEmail || '',
+                   at: x.at || '', answer: null }))
+      .filter(x => diskValid(x.code) && !D.mine.some(m => m.code === x.code));
+    D.inUseLast = diskNorm(data.inUse);
+    console.log('[Assets] discos: ' + D.mine.length + ' no nome, ' + D.incoming.length + ' entregues por outros (SSD Tracking' + (data.known ? '' : ', 1ª vez — lista do último relatório') + ')');
+  } else {
+    console.warn('[Assets] getDriverDisks indisponível (' + ((data && data.error) || 'rede') + ') — lista do getDriverSsds; respostas vão nos comentários');
+    try {
+      const res = await fetch(CONFIG.scriptUrl + '?action=getDriverSsds&email=' + encodeURIComponent(email));
+      const j = await res.json();
+      if (stale()) return;
+      ((j && j.ssds) || []).forEach(s => {
+        const c = diskNorm(s.code);
+        if (!diskValid(c) || D.mine.some(m => m.code === c)) return;
+        D.mine.push({ code: c, source: 'report', since: '', status: '', deniedBy: '', answer: null, toEmail: '', toName: '' });
+        if (s.inUse) D.inUseLast = c;
+      });
+    } catch (err) {
+      console.warn('[Assets] getDriverSsds também falhou — lista de discos vazia:', err);
+    }
+  }
+  if (stale()) return;
+  D.mine.sort((a, b) => a.code.localeCompare(b.code));
+  D.ready = true;
+  renderDisks();
+}
+
+/** Discos que ficam com o motorista depois das respostas. */
+function keptDisks() {
+  const D = state.disk;
+  if (!D) return [];
+  return [
+    ...D.mine.filter(d => d.answer === 'with_me').map(d => d.code),
+    ...D.incoming.filter(x => x.answer === 'received').map(x => x.code),
+    ...(D.newAnswer === 'yes' ? D.newCodes : []),
+  ];
+}
+
+function driverOptionsHtml(selected) {
+  const me = state.selectedDriver || {};
+  const myEmail = String(me.email || '').toLowerCase();
+  const myCountry = me.country || '';
+  const groups = {};
+  state.drivers.forEach(d => {
+    if (!d.email || String(d.email).toLowerCase() === myEmail) return;
+    const c = d.country || '—';
+    (groups[c] = groups[c] || []).push(d);
+  });
+  const order = Object.keys(groups).sort((a, b) =>
+    (a === myCountry ? -1 : b === myCountry ? 1 : 0) || (a === '—') - (b === '—') || a.localeCompare(b, 'pt-BR'));
+  let html = `<option value="">${esc(t('diskHandedPick'))}</option>`;
+  order.forEach(c => {
+    html += `<optgroup label="${esc(c)}">`;
+    groups[c].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR')).forEach(d => {
+      html += `<option value="${esc(d.email)}"${d.email === selected ? ' selected' : ''}>${esc(d.name)}</option>`;
+    });
+    html += '</optgroup>';
+  });
+  return html;
+}
+
+function diskItemHtml(d, i) {
+  let meta;
+  if (d.source === 'report') meta = d.since ? t('diskFromReport').replace('{date}', fmtDay(d.since)) : t('diskFromReportNoDate');
+  else if (d.deniedBy) meta = fmtDay(d.since);   // voltou porque o outro negou — o aviso abaixo explica
+  else meta = t(d.status === 'received' ? 'diskReceivedOn' : 'diskSince').replace('{date}', fmtDay(d.since));
+  const btn = (st, key, cls) =>
+    `<button type="button" class="seg-btn${d.answer === st ? ' selected' + (cls ? ' ' + cls : '') : ''}" data-disk="${i}" data-st="${st}">${esc(t(key))}</button>`;
+  const unk = d.answer === 'unknown';
+  return `<div class="disk-item${d.answer ? ' answered' : ''}" data-disk-item="${i}">
+    <div class="disk-head"><span class="disk-code">${esc(d.code)}</span><span class="disk-meta">${esc(meta)}</span></div>
+    ${d.deniedBy ? `<div class="disk-note">${esc(t('diskDenied').replace('{name}', d.deniedBy))}</div>` : ''}
+    <div class="seg">${btn('with_me', 'diskWithMe', 'good')}${btn('returned', 'diskReturned', '')}${btn('handed', 'diskHanded', '')}</div>
+    ${d.answer === 'handed' ? `<select class="handed-select" data-disk-to="${i}">${driverOptionsHtml(d.toEmail)}</select>` : ''}
+    <button type="button" class="link-btn${unk ? ' on' : ''}" data-disk="${i}" data-st="${unk ? '' : 'unknown'}">${esc(t(unk ? 'diskUnknownOn' : 'diskUnknown'))}</button>
+  </div>`;
+}
+
+function incomingItemHtml(x, i) {
+  const btn = (st, key, cls) =>
+    `<button type="button" class="seg-btn${x.answer === st ? ' selected ' + cls : ''}" data-inc="${i}" data-st="${st}">${esc(t(key))}</button>`;
+  return `<div class="disk-item${x.answer ? ' answered' : ''}" data-inc-item="${i}">
+    <div class="disk-head"><span class="disk-code">${esc(x.code)}</span>
+      <span class="disk-meta">${esc(t('incomingFrom').replace('{name}', x.fromName || '—').replace('{date}', fmtDay(x.at)))}</span></div>
+    <div class="seg two">${btn('received', 'incomingYes', 'good')}${btn('not_received', 'incomingNo', 'bad')}</div>
+  </div>`;
+}
+
+function renderDisks() {
+  const D = state.disk;
+  const ready = !!(D && D.ready);
+  document.getElementById('disk-loading').classList.toggle('hidden', ready);
+  document.getElementById('disk-section').classList.toggle('hidden', !ready);
+  if (!ready) return;
+
+  document.getElementById('disk-list').innerHTML = D.mine.map(diskItemHtml).join('');
+  document.getElementById('disk-empty').classList.toggle('hidden', D.mine.length > 0);
+  document.getElementById('incoming-field').classList.toggle('hidden', !D.incoming.length);
+  document.getElementById('incoming-list').innerHTML = D.incoming.map(incomingItemHtml).join('');
+
+  // Sem nenhum disco no nome: a pergunta vira "Tem discos com você?" (1º cadastro).
+  const first = !D.mine.length && !D.incoming.length;
+  document.getElementById('newdisk-q').textContent = t(first ? 'newDiskQFirst' : 'newDiskQ');
+  document.getElementById('newdisk-hint').textContent = t(first ? 'newDiskHintFirst' : 'newDiskHint');
+  const noBtn = document.getElementById('newdisk-no');
+  const yesBtn = document.getElementById('newdisk-yes');
+  noBtn.textContent = t(first ? 'newDiskNoFirst' : 'newDiskNo');
+  yesBtn.textContent = t(first ? 'newDiskYesFirst' : 'newDiskYes');
+  noBtn.className = 'seg-btn' + (D.newAnswer === 'no' ? ' selected' : '');
+  yesBtn.className = 'seg-btn' + (D.newAnswer === 'yes' ? ' selected good' : '');
+  if (D.newAnswer) document.getElementById('newdisk-seg').classList.remove('needs-answer');
+  document.getElementById('newdisk-entry').classList.toggle('hidden', D.newAnswer !== 'yes');
+  document.getElementById('newdisk-tags').innerHTML = D.newCodes.map(c =>
+    `<span class="tag mono">${esc(c)}<button type="button" data-rm-disk="${esc(c)}" aria-label="×">×</button></span>`).join('');
+
+  renderInUse();
+}
+
+function renderInUse() {
+  const D = state.disk;
+  const sel = document.getElementById('disk-in-use-input');
+  const kept = keptDisks();
+  if (D.inUse && D.inUse !== 'none' && !kept.includes(D.inUse)) D.inUse = '';
+  // Pré-seleciona o disco em uso da semana passada se ele continua com o motorista.
+  if (!D.inUseTouched && !D.inUse && D.inUseLast && kept.includes(D.inUseLast)) D.inUse = D.inUseLast;
+  sel.innerHTML = `<option value="">${esc(t('inUseChoose'))}</option>` +
+    kept.map(c => `<option value="${esc(c)}"${c === D.inUse ? ' selected' : ''}>${esc(c)}</option>`).join('') +
+    `<option value="none"${D.inUse === 'none' ? ' selected' : ''}>${esc(t('inUseNone'))}</option>`;
+  document.getElementById('disk-summary').textContent = kept.length
+    ? t('diskSummary').replace('{n}', kept.length) : t('diskSummaryZero');
+}
+
+function addNewDisk(raw) {
+  const D = state.disk;
+  const c = diskNorm(raw);
+  if (!c) return false;
+  if (!diskValid(c)) { showToast(t('diskInvalid'), 'error'); return false; }
+  if (D.mine.some(m => m.code === c)) { showToast(t('diskInMyList'), 'error'); return false; }
+  const inc = D.incoming.find(x => x.code === c);
+  if (inc) { inc.answer = 'received'; renderDisks(); return true; }   // era uma transferência pendente
+  if (D.newCodes.includes(c)) { showToast(t('alreadyAdded'), 'error'); return true; }
+  D.newCodes.push(c);
+  renderDisks();
+  return true;
+}
+
+document.getElementById('disk-card').addEventListener('click', (e) => {
+  const D = state.disk;
+  if (!D || !D.ready) return;
+  const b = e.target.closest('[data-disk]');
+  if (b) {
+    const d = D.mine[Number(b.dataset.disk)];
+    if (!d) return;
+    const st = b.dataset.st || null;
+    d.answer = d.answer === st && st !== 'handed' ? null : st;   // tocar de novo desmarca
+    if (d.answer !== 'handed') { d.toEmail = ''; d.toName = ''; }
+    renderDisks();
+    if (d.answer === 'handed' && !d.toEmail) {
+      const s = document.querySelector('[data-disk-to="' + b.dataset.disk + '"]');
+      if (s) s.focus();
+    }
+    return;
+  }
+  const inc = e.target.closest('[data-inc]');
+  if (inc) {
+    const x = D.incoming[Number(inc.dataset.inc)];
+    if (x) { x.answer = x.answer === inc.dataset.st ? null : inc.dataset.st; renderDisks(); }
+    return;
+  }
+  const nd = e.target.closest('#newdisk-seg [data-v]');
+  if (nd) {
+    D.newAnswer = nd.dataset.v;
+    renderDisks();
+    if (D.newAnswer === 'yes' && !D.newCodes.length) document.getElementById('newdisk-input').focus();
+    return;
+  }
+  const rm = e.target.closest('[data-rm-disk]');
+  if (rm) { D.newCodes = D.newCodes.filter(c => c !== rm.dataset.rmDisk); renderDisks(); return; }
+  if (e.target.closest('#newdisk-add-btn')) {
+    const input = document.getElementById('newdisk-input');
+    if (addNewDisk(input.value)) input.value = '';
+    input.focus();
+  }
+});
+
+document.getElementById('disk-card').addEventListener('change', (e) => {
+  const D = state.disk;
+  if (!D) return;
+  const s = e.target.closest('[data-disk-to]');
+  if (s) {
+    const d = D.mine[Number(s.dataset.diskTo)];
+    const opt = s.options[s.selectedIndex];
+    if (d) { d.toEmail = s.value; d.toName = s.value ? opt.textContent : ''; }
+    s.classList.remove('needs-answer');
+    return;
+  }
+  if (e.target.id === 'disk-in-use-input') { D.inUse = e.target.value; D.inUseTouched = true; }
+});
+
+document.getElementById('newdisk-input').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  if (addNewDisk(e.target.value)) e.target.value = '';
+});
+
+/** Primeiro problema da parte de discos: { msg, el } ou null se está tudo respondido. */
+function diskProblem() {
+  const D = state.disk;
+  if (!D || !D.ready) return { msg: t('disksLoading'), el: document.getElementById('disk-card') };
+  const pending = D.mine.map((d, i) => ({ d, i })).filter(o => !o.d.answer);
+  if (pending.length) {
+    return { msg: t('errDiskPending').replace('{n}', pending.length),
+             el: document.querySelector('[data-disk-item="' + pending[0].i + '"]') };
+  }
+  const noTo = D.mine.findIndex(d => d.answer === 'handed' && !d.toEmail);
+  if (noTo >= 0) {
+    return { msg: t('errDiskHanded').replace('{code}', D.mine[noTo].code),
+             el: document.querySelector('[data-disk-to="' + noTo + '"]') };
+  }
+  const incPending = D.incoming.findIndex(x => !x.answer);
+  if (incPending >= 0) return { msg: t('errIncoming'), el: document.querySelector('[data-inc-item="' + incPending + '"]') };
+  if (!D.newAnswer) return { msg: t('errNewDisk'), el: document.getElementById('newdisk-seg') };
+  if (D.newAnswer === 'yes') {
+    const input = document.getElementById('newdisk-input');
+    if (input.value.trim() && addNewDisk(input.value)) input.value = '';   // digitou e não tocou em "Adicionar"
+    if (!D.newCodes.length) return { msg: t('errNewDiskCodes'), el: input };
+  }
+  return null;
+}
+
+/** Respostas → itens pro backend (aba SSD Tracking). */
+function diskPayloadItems() {
+  const D = state.disk;
+  const out = [];
+  D.mine.forEach(d => {
+    if (!d.answer) return;
+    const o = { code: d.code, status: d.answer };
+    if (d.answer === 'handed') { o.toEmail = d.toEmail; o.toName = d.toName; }
+    out.push(o);
+  });
+  D.incoming.forEach(x => {
+    if (x.answer) out.push({ code: x.code, status: x.answer, fromEmail: x.fromEmail, fromName: x.fromName });
+  });
+  if (D.newAnswer === 'yes') D.newCodes.forEach(c => out.push({ code: c, status: 'received' }));
+  return out;
+}
+
+/** Resumo legível (em pt, pra equipe) — só vai nos comentários se o backend ainda não tem a aba SSD Tracking. */
+function diskSummaryText() {
+  const D = state.disk;
+  const lab = { with_me: 'está comigo', returned: 'devolvi', handed: 'entregue a', unknown: 'não reconheço',
+                received: 'recebi', not_received: 'não recebi' };
+  const parts = [];
+  D.mine.forEach(d => { if (d.answer) parts.push(d.code + ': ' + lab[d.answer] + (d.answer === 'handed' ? ' ' + d.toName + ' (' + d.toEmail + ')' : '')); });
+  D.incoming.forEach(x => { if (x.answer) parts.push(x.code + ': ' + lab[x.answer] + ' (de ' + x.fromName + ')'); });
+  if (D.newAnswer === 'yes') D.newCodes.forEach(c => parts.push(c + ': recebi (novo)'));
+  if (D.newAnswer === 'no') parts.push('nenhum disco novo');
+  return '[Discos] ' + parts.join('; ');
+}
+
+function flagProblem(p) {
+  showToast(p.msg, 'error');
+  if (!p.el) return;
+  p.el.classList.add('needs-answer');
+  p.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function readLocalCache(email) {
@@ -1525,10 +2307,9 @@ function applyPrefill(assets) {
     else if (v !== '') console.log('[Assets] prefill ignorado em ' + id + ' (valor não parece válido)');
   };
 
-  // VID (col D)
-  const vid = pickHeader(assets, ['VID']);
-  if (vid !== '' && PREFILL_OK.vid(vid)) setInput('vid-input', cleanVid(vid), 'prefilled-vid');
-  else if (vid !== '') console.log('[Assets] prefill ignorado em vid-input (valor não parece um VID)');
+  // VID (col D) — desde 2026-11-12 NÃO preenche: vira botão de sugestão
+  // ("Usou antes"). Pode ter vários ("40623, 40624").
+  vidTokens(pickHeader(assets, ['VID'])).forEach(v => addVidSuggestion(v, 'vidFromReport', ''));
 
   // País (col E) — auto-select chip
   const country = String(pickHeader(assets, ['Pais', 'País', 'Country'])).trim();
@@ -1564,11 +2345,8 @@ function applyPrefill(assets) {
   // Cidade (col W)
   fill('city-input', ['ciudad', 'cidade', 'city'], PREFILL_OK.text, 'prefilled-city');
 
-  // Disk count (col P)
-  fill('disk-count-input', ['cuantos discos', 'quantos discos'], PREFILL_OK.count(50), 'prefilled-diskcount');
-
-  // Disks other codes (col R) — NÃO inclui o disco em uso (col Q), driver atualiza esse
-  fill('disks-other-input', ['codigos de los otros', 'codigos dos outros'], PREFILL_OK.codes, 'prefilled-diskother');
+  // Discos (cols P/Q/R): desde 2026-11-12 vêm da confirmação disco a disco
+  // (loadDriverDisks), não do pré-preenchimento.
 
   // Phone count (col S)
   fill('phone-count-input', ['cuantos celulares', 'quantos celulares'], PREFILL_OK.count(10), 'prefilled-phonecount');
@@ -1762,9 +2540,16 @@ document.getElementById('submit-btn').addEventListener('click', submitForm);
 async function submitForm() {
   if (!state.selectedDriver) return;
 
+  // VID(s): obrigatório toda semana. Digitou e não tocou em "Adicionar" → adiciona.
+  const vidInput = document.getElementById('vid-input');
+  if (vidInput.value.trim()) {
+    if (!addVid(vidInput.value)) { flagProblem({ msg: t('vidInvalid'), el: vidInput }); return; }
+    vidInput.value = '';
+  }
+  if (!state.vids.length) { flagProblem({ msg: t('vidRequired'), el: vidInput }); return; }
+
   // Validação mínima — só campos críticos
   const required = {
-    'vid-input': 'VID',
     'plate-input': 'Placa',
     'odometer-input': 'Odômetro',
   };
@@ -1777,6 +2562,12 @@ async function submitForm() {
     return;
   }
 
+  // Discos: cada um respondido + pergunta dos discos novos.
+  const diskIssue = diskProblem();
+  if (diskIssue) { flagProblem(diskIssue); return; }
+  const kept = keptDisks();
+  const inUse = kept.includes(state.disk.inUse) ? state.disk.inUse : '';
+
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="loading-spinner"></span>' + t('sending');
@@ -1785,7 +2576,8 @@ async function submitForm() {
     type: 'assetWeekly',
     driverEmail: state.selectedDriver.email,
     driverName: state.selectedDriver.name,
-    vid: getVal('vid-input'),
+    vid: state.vids.join(', '),          // col D — "40623" ou "40623, 40624"
+    vids: state.vids.slice(),
     country: state.selections.country || state.selectedDriver.country || '',
     hoursWeek1: Array.from(state.selections.hours8).join(', '),
     hoursWeek2: Array.from(state.selections.hours9).join(', '),
@@ -1797,9 +2589,12 @@ async function submitForm() {
     targets: getVal('targets-input'),
     licensePlate: getVal('plate-input').toUpperCase(),
     vehicleReceivedDate: formatVehicleDate(getVal('vehicle-date-input')),
-    diskCount: getVal('disk-count-input'),
-    diskInUse: getVal('disk-in-use-input'),
-    disksOther: getVal('disks-other-input'),
+    // P/Q/R calculados das confirmações (o check-in e o app leem daqui)
+    diskCount: String(kept.length),
+    diskInUse: inUse,
+    disksOther: kept.filter(c => c !== inUse).join(' '),
+    disks: diskPayloadItems(),          // → aba SSD Tracking (backend v5.86)
+    noNewDisks: state.disk.newAnswer === 'no',
     phoneCount: getVal('phone-count-input'),
     phoneModel: getVal('phone-model-input'),
     phoneImei: getVal('phone-imei-input'),
@@ -1809,6 +2604,8 @@ async function submitForm() {
     comments: getVal('comments-input'),
     photos: {},
   };
+  // Backend antigo (sem a aba SSD Tracking): o resumo das respostas vai nos comentários.
+  if (!state.disk.ledger) payload.comments = (payload.comments ? payload.comments + '\n' : '') + diskSummaryText();
 
   // Anexa fotos (só as que existem)
   ['front', 'right', 'left', 'back'].forEach(key => {
