@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="pt-BR" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="google" content="notranslate">
+<title>Troca de disco · Aceolution LATAM</title>
+<!-- Integração com o app do motorista (/app/, aba "Troca de disco"). Aberta direto → vai pro app. -->
+<script src="driver-embed.js?v=20261112swap"></script>
+<link rel="icon" type="image/png" href="aceolution-globe.png">
+<link rel="stylesheet" href="theme.css?v=20261023toggle">
+<!-- Página de motorista: sempre light (sem theme.js), igual ao assets.html. -->
+<script>document.documentElement.removeAttribute('data-theme');</script>
+<!--
+  TROCA DE DISCO (2026-11-12) — toda vez que o motorista troca o disco da câmera:
+  disco CHEIO (sai) + disco VAZIO (entra), com foto dos dois.
+  POST type 'diskSwap' → Code udpt.gs v5.88: aba "Disk Swaps" + 2 linhas na "SSD Tracking"
+  (alimenta disks.html) + e-mail pro David (EMAIL_CONFIG.diskSwapRecipients) com as fotos.
+-->
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--c-bg); color: var(--c-text);
+    padding: 12px 16px calc(32px + env(safe-area-inset-bottom, 0px));
+    max-width: 560px; margin: 0 auto; line-height: 1.45;
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  }
+  header {
+    background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 14px;
+    padding: 7px 7px 7px 12px; margin-bottom: 14px; box-shadow: var(--shadow-xs);
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .brand { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--c-text-muted); }
+  .brand span { color: var(--c-primary); }
+  .lang-switch { display: inline-flex; gap: 2px; padding: 3px; background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 10px; }
+  .lang-switch button { height: 32px; min-width: 34px; padding: 0 7px; border: 0; border-radius: 7px; background: transparent; color: var(--c-text-muted); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .lang-switch button.active { background: var(--c-surface); color: var(--c-text); box-shadow: var(--shadow-xs), 0 0 0 1px var(--c-border); }
+
+  h1 { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+  .subtitle { font-size: 14px; color: var(--c-text-muted); margin: 4px 0 14px; }
+  html.sv-app h1, html.sv-app .subtitle { display: none; }
+
+  .card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: var(--shadow-xs); }
+  .card.needs-answer { border-color: var(--c-danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-danger) 15%, transparent); }
+  .card-h { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .card-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; font-size: 18px; font-weight: 800; }
+  .card-ic.full { background: #FEF3C7; color: #B45309; }
+  .card-ic.empty { background: #DCFCE7; color: #15803D; }
+  .card-ic.neutral { background: var(--c-bg-tint); color: var(--c-primary); }
+  .card-t { font-size: 15.5px; font-weight: 700; line-height: 1.25; }
+  .card-s { font-size: 12.5px; color: var(--c-text-muted); }
+  label.lbl { display: block; font-size: 13px; font-weight: 600; margin: 10px 0 5px; }
+  label.lbl:first-of-type { margin-top: 0; }
+  select, input[type="text"], input[type="tel"], textarea {
+    width: 100%; font: inherit; font-size: 16px; color: var(--c-text); background: var(--c-surface);
+    border: 1px solid var(--c-border-strong); border-radius: 10px; padding: 11px 12px;
+  }
+  textarea { min-height: 70px; resize: vertical; }
+  select:focus, input:focus, textarea:focus { outline: 2px solid color-mix(in srgb, var(--c-primary) 35%, transparent); outline-offset: 1px; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .02em; }
+  .hint { font-size: 12.5px; color: var(--c-text-muted); margin-top: 5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip { border: 1px dashed var(--c-border-strong); background: var(--c-bg); border-radius: 999px; padding: 6px 11px; font: inherit; font-size: 13px; cursor: pointer; color: var(--c-text); }
+  .chip small { color: var(--c-text-muted); }
+
+  .photo {
+    position: relative; margin-top: 10px; border: 1.5px dashed var(--c-border-strong); border-radius: 12px; background: var(--c-bg);
+    min-height: 118px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    text-align: center; padding: 14px; cursor: pointer; overflow: hidden;
+  }
+  .photo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .photo .ph-ic { font-size: 26px; line-height: 1; }
+  .photo .ph-t { font-size: 14px; font-weight: 600; }
+  .photo .ph-s { font-size: 12px; color: var(--c-text-muted); }
+  .photo.has { border-style: solid; padding: 0; min-height: 0; }
+  .photo.has img { display: block; width: 100%; max-height: 280px; object-fit: cover; }
+  .photo.has .ph-ic, .photo.has .ph-t, .photo.has .ph-s { display: none; }
+  .photo .ph-redo { display: none; }
+  .photo.has .ph-redo { display: block; position: absolute; right: 8px; bottom: 8px; background: rgba(15,23,42,.72); color: #fff; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 5px 10px; pointer-events: none; }
+  .photo.busy::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,.6); }
+
+  .arrow { text-align: center; font-size: 13px; color: var(--c-text-muted); margin: -4px 0 8px; }
+  .btn { width: 100%; height: 50px; border: 0; border-radius: 12px; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .btn-primary { background: var(--c-primary); color: #fff; }
+  .btn-primary:disabled { opacity: .6; cursor: default; }
+  .btn-ghost { background: transparent; color: var(--c-primary); border: 1px solid var(--c-border-strong); margin-top: 10px; }
+  .msg { font-size: 14px; border-radius: 10px; padding: 10px 12px; margin: 0 0 12px; }
+  .msg.err { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+  .msg.info { background: var(--c-bg-tint); color: var(--c-primary-dark); }
+  .loader { text-align: center; color: var(--c-text-muted); padding: 40px 0; font-size: 14px; }
+
+  .done { text-align: center; padding: 26px 16px 18px; }
+  .done-ic { width: 64px; height: 64px; border-radius: 50%; background: #DCFCE7; color: #15803D; display: grid; place-items: center; font-size: 32px; margin: 0 auto 12px; }
+  .done h2 { font-size: 20px; letter-spacing: -.01em; }
+  .done p { color: var(--c-text-muted); font-size: 14px; margin-top: 6px; }
+  .swap-sum { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 16px 0 6px; }
+  .swap-sum .pill { border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+  .swap-sum .pill small { display: block; font-family: inherit; font-size: 11px; color: var(--c-text-muted); letter-spacing: 0; }
+  .swap-sum .pill.full { background: #FEF3C7; }
+  .swap-sum .pill.empty { background: #DCFCE7; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">STREET VIEW <span>LATAM</span></div>
+  <div class="lang-switch">
+    <button type="button" data-lang="pt" class="active">PT</button>
+    <button type="button" data-lang="es">ES</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<h1 data-i18n="title">Troca de disco</h1>
+<div class="subtitle" data-i18n="subtitle">Registre toda vez que trocar o disco da câmera.</div>
+
+<div id="loader" class="loader" data-i18n="loading">Carregando…</div>
+
+<form id="form" class="hidden" novalidate>
+  <div class="msg info" data-i18n="intro">Toda vez que trocar o disco da câmera, registre aqui: tire foto do disco cheio que saiu e do disco vazio que vai entrar. O time recebe na hora.</div>
+
+  <div class="card" id="card-driver">
+    <label class="lbl" for="driver-select" data-i18n="driverLabel">Seu nome</label>
+    <select id="driver-select"><option value="" data-i18n="driverPh">Selecione seu nome…</option></select>
+  </div>
+
+  <div class="card" id="card-vid">
+    <div class="card-h"><div class="card-ic neutral">🚗</div><div><div class="card-t" data-i18n="vidT">VID do carro</div><div class="card-s" data-i18n="vidS">Da câmera onde você está trocando o disco.</div></div></div>
+    <input type="tel" id="vid" inputmode="numeric" maxlength="6" autocomplete="off" data-i18n-ph="vidPh" placeholder="Ex: 40623">
+    <div class="chips" id="vid-sugg"></div>
+  </div>
+
+  <div class="card" id="card-full">
+    <div class="card-h"><div class="card-ic full">↑</div><div><div class="card-t" data-i18n="fullT">Disco CHEIO — saindo da câmera</div><div class="card-s" data-i18n="fullS">O disco que estava gravando e encheu.</div></div></div>
+    <label class="lbl" for="full-select" data-i18n="codeLabel">Código do disco</label>
+    <select id="full-select" class="mono"></select>
+    <input type="text" id="full-other" class="mono hidden" autocapitalize="characters" autocomplete="off" spellcheck="false" data-i18n-ph="codePh" placeholder="Ex: S6EPNN0X803192">
+    <label class="photo" id="photo-full">
+      <input type="file" accept="image/*" id="photo-full-input">
+      <div class="ph-ic">📷</div><div class="ph-t" data-i18n="photoFullT">Foto do disco cheio</div>
+      <div class="ph-s" data-i18n="photoS">Com o código do disco aparecendo</div>
+      <span class="ph-redo" data-i18n="photoRedo">Trocar foto</span>
+    </label>
+  </div>
+
+  <div class="arrow" data-i18n="arrow">↓ no lugar dele entra ↓</div>
+
+  <div class="card" id="card-empty">
+    <div class="card-h"><div class="card-ic empty">↓</div><div><div class="card-t" data-i18n="emptyT">Disco VAZIO — entrando na câmera</div><div class="card-s" data-i18n="emptyS">O disco que você vai usar agora.</div></div></div>
+    <label class="lbl" for="empty-select" data-i18n="codeLabel">Código do disco</label>
+    <select id="empty-select" class="mono"></select>
+    <input type="text" id="empty-other" class="mono hidden" autocapitalize="characters" autocomplete="off" spellcheck="false" data-i18n-ph="codePh" placeholder="Ex: S6EPNN0X803192">
+    <label class="photo" id="photo-empty">
+      <input type="file" accept="image/*" id="photo-empty-input">
+      <div class="ph-ic">📷</div><div class="ph-t" data-i18n="photoEmptyT">Foto do disco vazio</div>
+      <div class="ph-s" data-i18n="photoS">Com o código do disco aparecendo</div>
+      <span class="ph-redo" data-i18n="photoRedo">Trocar foto</span>
+    </label>
+  </div>
+
+  <div class="card">
+    <label class="lbl" for="notes" data-i18n="notesLabel">Observação (opcional)</label>
+    <textarea id="notes" maxlength="1000" data-i18n-ph="notesPh" placeholder="Algo que o time precisa saber?"></textarea>
+  </div>
+
+  <div id="form-msg" class="msg err hidden" role="alert"></div>
+  <button type="submit" class="btn btn-primary" id="submit-btn" data-i18n="submit">Registrar troca</button>
+</form>
+
+<div id="done" class="card done hidden">
+  <div class="done-ic">✓</div>
+  <h2 data-i18n="doneT">Troca registrada!</h2>
+  <div class="swap-sum" id="done-sum"></div>
+  <p id="done-mail"></p>
+  <button type="button" class="btn btn-primary" id="done-home" data-i18n="doneHome" style="margin-top:16px">Voltar ao início</button>
+  <button type="button" class="btn btn-ghost" id="done-again" data-i18n="doneAgain">Registrar outra troca</button>
+</div>
+
+<script>
+'use strict';
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+};
+// Leituras cacheáveis (lista de motoristas, VIDs da CTS) pelo Worker em produção; o resto direto.
+const API = location.hostname.endsWith('latamace.com') ? '/api' : CONFIG.scriptUrl;
+const OTHER = '__other__';
+const FLAGS = { Argentina: '🇦🇷', Brazil: '🇧🇷', Chile: '🇨🇱', Colombia: '🇨🇴', Mexico: '🇲🇽', Peru: '🇵🇪' };
+
+const I18N = {
+  pt: {
+    title: 'Troca de disco', subtitle: 'Registre toda vez que trocar o disco da câmera.', loading: 'Carregando…',
+    intro: 'Toda vez que trocar o disco da câmera, registre aqui: tire foto do disco cheio que saiu e do disco vazio que vai entrar. O time recebe na hora.',
+    driverLabel: 'Seu nome', driverPh: 'Selecione seu nome…',
+    vidT: 'VID do carro', vidS: 'Da câmera onde você está trocando o disco.', vidPh: 'Ex: 40623', vidUsed: 'usou {d}',
+    fullT: 'Disco CHEIO — saindo da câmera', fullS: 'O disco que estava gravando e encheu.',
+    emptyT: 'Disco VAZIO — entrando na câmera', emptyS: 'O disco que você vai usar agora.',
+    codeLabel: 'Código do disco', codePh: 'Ex: S6EPNN0X803192', pick: 'Escolha o disco…',
+    inCamera: 'na câmera agora', other: '➕ Outro código (não está na lista)',
+    photoFullT: 'Foto do disco cheio', photoEmptyT: 'Foto do disco vazio', photoS: 'Com o código do disco aparecendo', photoRedo: 'Trocar foto',
+    arrow: '↓ no lugar dele entra ↓',
+    notesLabel: 'Observação (opcional)', notesPh: 'Algo que o time precisa saber?',
+    submit: 'Registrar troca', sending: 'Enviando…',
+    eDriver: 'Selecione seu nome.', eVid: 'Informe o VID do carro (4 a 6 números).',
+    eFull: 'Escolha ou digite o código do disco CHEIO.', eEmpty: 'Escolha ou digite o código do disco VAZIO.',
+    eCode: 'Código de disco inválido — confira (ex: S6EPNN0X803192).', eSame: 'O disco cheio e o vazio não podem ser o mesmo.',
+    ePhotoFull: 'Tire a foto do disco CHEIO.', ePhotoEmpty: 'Tire a foto do disco VAZIO.', ePhoto: 'Não deu pra ler essa foto. Tente de novo.',
+    eSend: 'Não deu pra enviar: {e}. Confira a internet e toque em Registrar troca de novo — nada se perde.',
+    doneT: 'Troca registrada!', doneMail: 'O time já foi avisado por e-mail, com as fotos.', doneNoMail: 'Ficou registrado. O aviso por e-mail falhou, mas o time vê a troca na página de discos.',
+    doneHome: 'Voltar ao início', doneAgain: 'Registrar outra troca', sumFull: 'saiu (cheio)', sumEmpty: 'entrou (vazio)',
+  },
+  es: {
+    title: 'Cambio de disco', subtitle: 'Registrá cada vez que cambies el disco de la cámara.', loading: 'Cargando…',
+    intro: 'Cada vez que cambies el disco de la cámara, registralo acá: sacá foto del disco lleno que salió y del disco vacío que va a entrar. El equipo recibe el aviso al instante.',
+    driverLabel: 'Tu nombre', driverPh: 'Elegí tu nombre…',
+    vidT: 'VID del auto', vidS: 'De la cámara donde estás cambiando el disco.', vidPh: 'Ej: 40623', vidUsed: 'usado {d}',
+    fullT: 'Disco LLENO — sale de la cámara', fullS: 'El disco que estaba grabando y se llenó.',
+    emptyT: 'Disco VACÍO — entra en la cámara', emptyS: 'El disco que vas a usar ahora.',
+    codeLabel: 'Código del disco', codePh: 'Ej: S6EPNN0X803192', pick: 'Elegí el disco…',
+    inCamera: 'en la cámara ahora', other: '➕ Otro código (no está en la lista)',
+    photoFullT: 'Foto del disco lleno', photoEmptyT: 'Foto del disco vacío', photoS: 'Con el código del disco visible', photoRedo: 'Cambiar foto',
+    arrow: '↓ en su lugar entra ↓',
+    notesLabel: 'Observación (opcional)', notesPh: '¿Algo que el equipo tenga que saber?',
+    submit: 'Registrar cambio', sending: 'Enviando…',
+    eDriver: 'Elegí tu nombre.', eVid: 'Indicá el VID del auto (4 a 6 números).',
+    eFull: 'Elegí o escribí el código del disco LLENO.', eEmpty: 'Elegí o escribí el código del disco VACÍO.',
+    eCode: 'Código de disco inválido — revisalo (ej: S6EPNN0X803192).', eSame: 'El disco lleno y el vacío no pueden ser el mismo.',
+    ePhotoFull: 'Sacá la foto del disco LLENO.', ePhotoEmpty: 'Sacá la foto del disco VACÍO.', ePhoto: 'No se pudo leer esa foto. Probá de nuevo.',
+    eSend: 'No se pudo enviar: {e}. Revisá internet y tocá Registrar cambio de nuevo — no se pierde nada.',
+    doneT: '¡Cambio registrado!', doneMail: 'El equipo ya recibió el aviso por e-mail, con las fotos.', doneNoMail: 'Quedó registrado. El aviso por e-mail falló, pero el equipo ve el cambio en la página de discos.',
+    doneHome: 'Volver al inicio', doneAgain: 'Registrar otro cambio', sumFull: 'salió (lleno)', sumEmpty: 'entró (vacío)',
+  },
+  en: {
+    title: 'Disk swap', subtitle: 'Log it every time you swap the camera disk.', loading: 'Loading…',
+    intro: 'Every time you swap the camera disk, log it here: take a photo of the full disk that came out and of the empty disk going in. The team is notified right away.',
+    driverLabel: 'Your name', driverPh: 'Select your name…',
+    vidT: 'Car VID', vidS: 'The camera where you are swapping the disk.', vidPh: 'E.g. 40623', vidUsed: 'used {d}',
+    fullT: 'FULL disk — coming out of the camera', fullS: 'The disk that was recording and got full.',
+    emptyT: 'EMPTY disk — going into the camera', emptyS: 'The disk you will use now.',
+    codeLabel: 'Disk code', codePh: 'E.g. S6EPNN0X803192', pick: 'Pick the disk…',
+    inCamera: 'in the camera now', other: '➕ Other code (not in the list)',
+    photoFullT: 'Photo of the full disk', photoEmptyT: 'Photo of the empty disk', photoS: 'With the disk code visible', photoRedo: 'Retake',
+    arrow: '↓ replaced by ↓',
+    notesLabel: 'Notes (optional)', notesPh: 'Anything the team should know?',
+    submit: 'Log swap', sending: 'Sending…',
+    eDriver: 'Select your name.', eVid: 'Enter the car VID (4 to 6 digits).',
+    eFull: 'Pick or type the FULL disk code.', eEmpty: 'Pick or type the EMPTY disk code.',
+    eCode: 'Invalid disk code — check it (e.g. S6EPNN0X803192).', eSame: 'The full and the empty disk cannot be the same.',
+    ePhotoFull: 'Take the photo of the FULL disk.', ePhotoEmpty: 'Take the photo of the EMPTY disk.', ePhoto: 'Could not read that photo. Try again.',
+    eSend: 'Could not send: {e}. Check your connection and tap Log swap again — nothing is lost.',
+    doneT: 'Swap logged!', doneMail: 'The team has been notified by e-mail, with the photos.', doneNoMail: 'It was saved. The e-mail notice failed, but the team sees the swap on the disks page.',
+    doneHome: 'Back to home', doneAgain: 'Log another swap', sumFull: 'out (full)', sumEmpty: 'in (empty)',
+  },
+};
+let lang = 'pt';
+function t(k, v) {
+  let s = (I18N[lang] && I18N[lang][k]) || I18N.pt[k] || k;
+  if (v) Object.keys(v).forEach(x => { s = s.split('{' + x + '}').join(v[x]); });
+  return s;
+}
+function applyLang(l) {
+  lang = I18N[l] ? l : 'pt';
+  document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang;
+  document.querySelectorAll('.lang-switch button').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.title = t('title') + ' · Aceolution LATAM';
+  if (state.driver) renderDiskSelects(true);
+  renderVidSugg();
+  if (state.done) renderDone();
+}
+document.querySelectorAll('.lang-switch button').forEach(b => b.addEventListener('click', () => applyLang(b.dataset.lang)));
+
+const $ = (id) => document.getElementById(id);
+const state = {
+  drivers: [], driver: null, disks: [], inUse: '', vids: [],
+  photos: { full: null, empty: null }, submissionId: '', sending: false, done: null, loadSeq: 0,
+};
+
+function diskNorm(s) { return String(s || '').toUpperCase().trim().replace(/^S\/?N\s*[:#-]\s*/, '').replace(/[\s.]/g, ''); }
+function diskValid(c) { return /^[A-Z0-9-]{5,40}$/.test(c) && /\d/.test(c); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+// ---------------- motoristas ----------------
+async function loadDrivers() {
+  try {
+    const res = await fetch(API + '?action=getDrivers').then(r => r.json());
+    state.drivers = (res && res.drivers) || [];
+  } catch (e) {
+    console.warn('[Disk Swap] getDrivers falhou', e);
+  }
+  const sel = $('driver-select');
+  const sorted = state.drivers.slice().sort((a, b) => String(a.country || '').localeCompare(String(b.country || '')) || String(a.name || '').localeCompare(String(b.name || '')));
+  let last = null;
+  sorted.forEach(d => {
+    if (d.country !== last) {
+      const g = document.createElement('optgroup');
+      g.label = ((FLAGS[d.country] || '') + ' ' + (d.country || '—')).trim();
+      sel.appendChild(g);
+      last = d.country;
+    }
+    const o = document.createElement('option');
+    o.value = String(d.email || '').trim().toLowerCase();
+    o.textContent = d.name;
+    sel.lastElementChild.appendChild(o);
+  });
+  $('loader').classList.add('hidden');
+  $('form').classList.remove('hidden');
+}
+
+$('driver-select').addEventListener('change', () => {
+  const em = $('driver-select').value;
+  state.driver = state.drivers.find(d => String(d.email || '').trim().toLowerCase() === em) || null;
+  state.disks = []; state.inUse = ''; state.vids = [];
+  renderDiskSelects(false);
+  renderVidSugg();
+  if (state.driver) { loadDisks(em); loadVids(em); }
+});
+
+// ---------------- discos do motorista ----------------
+async function loadDisks(email) {
+  const seq = ++state.loadSeq;
+  let list = [], inUse = '';
+  try {
+    // Direto no Apps Script (sem o cache do Worker): a lista muda a cada troca.
+    const res = await fetch(CONFIG.scriptUrl + '?action=getDriverDisks&email=' + encodeURIComponent(email)).then(r => r.json());
+    if (res && res.success) {
+      list = (res.disks || []).map(d => diskNorm(d.code));
+      (res.incoming || []).forEach(x => list.push(diskNorm(x.code)));   // entregue por outro e ainda não confirmado: deixa escolher
+      inUse = diskNorm(res.inUse);
+    } else throw new Error((res && res.error) || 'sem getDriverDisks');
+  } catch (e) {
+    console.warn('[Disk Swap] getDriverDisks indisponível — usando getDriverSsds', e);
+    try {
+      const res = await fetch(CONFIG.scriptUrl + '?action=getDriverSsds&email=' + encodeURIComponent(email)).then(r => r.json());
+      (res.ssds || []).forEach(s => { list.push(diskNorm(s.code)); if (s.inUse) inUse = diskNorm(s.code); });
+    } catch (e2) { console.warn('[Disk Swap] getDriverSsds falhou', e2); }
+  }
+  if (seq !== state.loadSeq) return;
+  state.disks = list.filter((c, i) => diskValid(c) && list.indexOf(c) === i);
+  state.inUse = state.disks.indexOf(inUse) >= 0 ? inUse : '';
+  console.log('[Disk Swap] ' + state.disks.length + ' disco(s) de ' + email + (state.inUse ? ', na câmera: ' + state.inUse : ''));
+  renderDiskSelects(false);
+}
+
+function fillSelect(sel, codes, keep, mark) {
+  const prev = keep ? sel.value : '';
+  sel.innerHTML = '<option value="">' + esc(t('pick')) + '</option>' +
+    codes.map(c => '<option value="' + esc(c) + '">' + esc(c) + (c === mark ? ' · ' + esc(t('inCamera')) : '') + '</option>').join('') +
+    '<option value="' + OTHER + '">' + esc(t('other')) + '</option>';
+  if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+
+function renderDiskSelects(keep) {
+  const fullSel = $('full-select'), emptySel = $('empty-select');
+  fillSelect(fullSel, state.disks, keep, state.inUse);
+  if (!keep && state.inUse) fullSel.value = state.inUse;   // o cheio normalmente é o que estava na câmera
+  syncEmpty(keep);
+  toggleOther('full');
+}
+
+function codeOf(which) {
+  const sel = $(which + '-select');
+  return sel.value === OTHER ? diskNorm($(which + '-other').value) : sel.value;
+}
+
+function syncEmpty(keep) {
+  const full = codeOf('full');
+  fillSelect($('empty-select'), state.disks.filter(c => c !== full), keep !== false, '');
+  toggleOther('empty');
+}
+
+function toggleOther(which) {
+  const other = $(which + '-select').value === OTHER;
+  $(which + '-other').classList.toggle('hidden', !other);
+}
+$('full-select').addEventListener('change', () => { toggleOther('full'); syncEmpty(true); clearFlag('card-full'); });
+$('empty-select').addEventListener('change', () => { toggleOther('empty'); clearFlag('card-empty'); });
+$('full-other').addEventListener('input', () => { syncEmpty(true); clearFlag('card-full'); });
+$('empty-other').addEventListener('input', () => clearFlag('card-empty'));
+['full-other', 'empty-other'].forEach(id => $(id).addEventListener('blur', () => {
+  const v = diskNorm($(id).value); if (v) $(id).value = v;
+}));
+
+// ---------------- VID ----------------
+async function loadVids(email) {
+  try {
+    const res = await fetch(API + '?action=getFleetVids').then(r => r.json());
+    if (!res || !res.success || !state.driver || String(state.driver.email).toLowerCase() !== email) return;
+    state.vids = (res.vids || [])
+      .filter(v => String(v.email || '').trim().toLowerCase() === email && /^\d{4,6}$/.test(String(v.vid)))
+      .sort((a, b) => String(b.lastDate || '').localeCompare(String(a.lastDate || '')))
+      .slice(0, 3)
+      .map(v => { const m = String(v.lastDate || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return { vid: String(v.vid), d: m ? m[3] + '/' + m[2] : '' }; });
+    renderVidSugg();
+  } catch (e) { console.warn('[Disk Swap] getFleetVids falhou (VID fica pro motorista digitar)', e); }
+}
+function renderVidSugg() {
+  const box = $('vid-sugg');
+  box.innerHTML = state.vids.map(v => '<button type="button" class="chip" data-vid="' + esc(v.vid) + '">' + esc(v.vid) +
+    (v.d ? ' <small>· ' + esc(t('vidUsed', { d: v.d })) + '</small>' : '') + '</button>').join('');
+  box.querySelectorAll('[data-vid]').forEach(b => b.addEventListener('click', () => { $('vid').value = b.dataset.vid; clearFlag('card-vid'); }));
+}
+$('vid').addEventListener('input', () => { $('vid').value = $('vid').value.replace(/\D/g, '').slice(0, 6); clearFlag('card-vid'); });
+
+// ---------------- fotos ----------------
+function resizeImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; } else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve({ dataUrl, base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' });
+      };
+      img.onerror = reject;
+      img.src = ev.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+['full', 'empty'].forEach(which => {
+  const input = $('photo-' + which + '-input');
+  const box = $('photo-' + which);
+  input.addEventListener('change', async () => {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    box.classList.add('busy');
+    try {
+      const p = await resizeImage(f, 1600, 0.75);
+      state.photos[which] = p;
+      let img = box.querySelector('img');
+      if (!img) { img = document.createElement('img'); box.appendChild(img); }
+      img.src = p.dataUrl;
+      img.alt = '';
+      box.classList.add('has');
+      clearFlag('card-' + which);
+    } catch (e) {
+      console.warn('[Disk Swap] foto ilegível', e);
+      showError(t('ePhoto'));
+    } finally {
+      box.classList.remove('busy');
+      input.value = '';   // permite escolher a mesma foto de novo
+    }
+  });
+});
+
+// ---------------- envio ----------------
+function showError(msg) { const m = $('form-msg'); m.textContent = msg; m.classList.remove('hidden'); }
+function clearFlag(id) { const el = $(id); if (el) el.classList.remove('needs-answer'); $('form-msg').classList.add('hidden'); }
+function flag(id, msg) {
+  const el = $(id);
+  el.classList.add('needs-answer');
+  showError(msg);
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  return false;
+}
+
+function validate() {
+  if (!state.driver) return flag('card-driver', t('eDriver'));
+  if (!/^\d{4,6}$/.test($('vid').value.trim())) return flag('card-vid', t('eVid'));
+  const full = codeOf('full'), empty = codeOf('empty');
+  if (!full) return flag('card-full', t('eFull'));
+  if (!diskValid(full)) return flag('card-full', t('eCode'));
+  if (!state.photos.full) return flag('card-full', t('ePhotoFull'));
+  if (!empty) return flag('card-empty', t('eEmpty'));
+  if (!diskValid(empty)) return flag('card-empty', t('eCode'));
+  if (empty === full) return flag('card-empty', t('eSame'));
+  if (!state.photos.empty) return flag('card-empty', t('ePhotoEmpty'));
+  return true;
+}
+
+/** Localização só se o celular já deu permissão (o check-in pede) — não abre pergunta nova. */
+async function currentPosition() {
+  try {
+    if (!navigator.geolocation || !navigator.permissions) return null;
+    const p = await navigator.permissions.query({ name: 'geolocation' });
+    if (p.state !== 'granted') return null;
+    return await new Promise(res => navigator.geolocation.getCurrentPosition(
+      pos => res({ lat: pos.coords.latitude, lng: pos.coords.longitude }), () => res(null),
+      { timeout: 6000, maximumAge: 300000, enableHighAccuracy: false }));
+  } catch (e) { return null; }
+}
+
+$('form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  if (state.sending || !validate()) return;
+  state.sending = true;
+  const btn = $('submit-btn');
+  btn.disabled = true; btn.textContent = t('sending');
+  if (!state.submissionId) state.submissionId = 'swap-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+  const d = state.driver;
+  const full = codeOf('full'), empty = codeOf('empty');
+  const payload = {
+    type: 'diskSwap', submissionId: state.submissionId,
+    driverEmail: String(d.email).trim().toLowerCase(), driverName: d.name, country: d.country || '', city: d.city || '',
+    vid: $('vid').value.trim(), fullCode: full, emptyCode: empty,
+    fullPhoto: { base64: state.photos.full.base64, mimeType: state.photos.full.mimeType },
+    emptyPhoto: { base64: state.photos.empty.base64, mimeType: state.photos.empty.mimeType },
+    notes: $('notes').value.trim(),
+    clientTime: new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) +
+      ' (' + (Intl.DateTimeFormat().resolvedOptions().timeZone || '') + ')',
+    location: await currentPosition(),
+  };
+  try {
+    const res = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload) });
+    let data = null;
+    try { data = await res.json(); } catch (e) { throw new Error('HTTP ' + res.status); }
+    if (!data || data.success !== true) throw new Error((data && data.error) || 'erro no servidor');
+    console.log('[Disk Swap] troca registrada', data);
+    // Pro app: a tela inicial mostra o disco novo na câmera sem esperar o próximo relatório.
+    try { localStorage.setItem('svapp.lastSwap.v1:' + payload.driverEmail, JSON.stringify({ at: Date.now(), full, empty })); } catch (e) {}
+    state.done = { full, empty, emailed: data.emailed !== false };
+    renderDone();
+  } catch (e) {
+    console.error('[Disk Swap] envio falhou', e);
+    showError(t('eSend', { e: e.message || e }));
+  } finally {
+    state.sending = false;
+    btn.disabled = false; btn.textContent = t('submit');
+  }
+});
+
+function renderDone() {
+  const x = state.done;
+  $('form').classList.add('hidden');
+  $('done').classList.remove('hidden');
+  $('done-sum').innerHTML =
+    '<span class="pill full mono">' + esc(x.full) + '<small>' + esc(t('sumFull')) + '</small></span>' + '<span>→</span>' +
+    '<span class="pill empty mono">' + esc(x.empty) + '<small>' + esc(t('sumEmpty')) + '</small></span>';
+  $('done-mail').textContent = x.emailed ? t('doneMail') : t('doneNoMail');
+  let inApp = false;
+  try { inApp = !!(window.parent !== window && window.parent.SVApp); } catch (e) {}
+  $('done-home').classList.toggle('hidden', !inApp);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+$('done-home').addEventListener('click', () => { try { window.parent.SVApp.openTab('home'); } catch (e) {} reset(); });
+$('done-again').addEventListener('click', reset);
+
+function reset() {
+  state.done = null; state.submissionId = ''; state.photos = { full: null, empty: null };
+  ['full', 'empty'].forEach(w => {
+    const box = $('photo-' + w); box.classList.remove('has');
+    const img = box.querySelector('img'); if (img) img.remove();
+    $(w + '-other').value = '';
+  });
+  $('notes').value = '';
+  $('done').classList.add('hidden');
+  $('form').classList.remove('hidden');
+  document.querySelectorAll('.needs-answer').forEach(el => el.classList.remove('needs-answer'));
+  $('form-msg').classList.add('hidden');
+  if (state.driver) loadDisks(String(state.driver.email).toLowerCase());   // a lista mudou com a troca
+}
+
+applyLang('pt');
+renderDiskSelects(false);
+loadDrivers();
+if (window.SVEmbed) SVEmbed.run({ page: 'swap' });
+</script>
+</body>
+</html>

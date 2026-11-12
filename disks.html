@@ -15,6 +15,7 @@
   Fonte: aba "SSD Tracking" (confirmação disco a disco do relatório semanal, v5.86)
   + último relatório semanal de quem ainda não confirmou. Backend: ?action=getDiskOverview (v5.87).
   Aberta pra qualquer usuário logado (pedido do Lucas, 2026-11-12).
+  Trocas de disco (botão no app dos motoristas, aba "Disk Swaps") desde a v5.88.
 -->
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,7 +30,9 @@
 
   main { max-width: 1400px; margin: 0 auto; padding: 20px 28px 40px; }
 
-  .kpi-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .photo-link { font-size: 12px; color: var(--c-primary); text-decoration: none; white-space: nowrap; }
+  .photo-link:hover { text-decoration: underline; }
   .kpi-card {
     background: linear-gradient(to top, color-mix(in srgb, var(--c-primary) 4%, var(--c-surface)), var(--c-surface));
     border: 1px solid var(--sv-line, var(--c-border)); border-radius: 14px; box-shadow: var(--shadow-xs); padding: 16px 18px;
@@ -96,6 +99,7 @@
   .error-box { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border-radius: 12px; border: 1px solid #FECACA; background: #FEF2F2; color: #991B1B; font-size: 14px; }
   [data-theme="dark"] .error-box { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.28); color: #F87171; }
 
+  @media (max-width: 1180px) { .kpi-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 980px) { .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 680px) {
     .report-header { padding: 20px 16px 2px; }
@@ -161,6 +165,10 @@ const I18N = {
     stNotReceived: 'Não recebeu (de {n})', stUnknown: 'Não reconhece', stNone: 'Nenhum disco novo',
     empty: 'Nada aqui com esses filtros.', emptyLedger: 'Ninguém confirmou discos ainda — a confirmação começou no relatório semanal de 13/11.',
     diskFilter: 'Só o disco {c}',
+    tSwaps: 'Trocas', hSwaps: 'Cada troca de disco na câmera registrada pelo app: o disco cheio que saiu e o vazio que entrou, com as fotos.',
+    kSwaps: 'Trocas (7 dias)', kSwapsSub: 'cheios com motoristas: {n}', full: 'Cheio', cOut: 'Saiu (cheio)', cIn: 'Entrou (vazio)', cNotes: 'Observação',
+    photo: 'foto', map: 'mapa', mailFail: 'e-mail falhou', swapOn: 'Troca {d}',
+    stSwapOut: 'Troca: tirou da câmera (cheio)', stSwapIn: 'Troca: colocou na câmera',
   },
   es: {
     title: 'Discos', sub: 'Dónde está cada disco: quién lo tiene, qué se transfirió y qué se devolvió. Viene de la confirmación disco por disco del informe semanal; quien todavía no confirmó aparece con su último informe.',
@@ -183,6 +191,10 @@ const I18N = {
     stNotReceived: 'No lo recibió (de {n})', stUnknown: 'No lo reconoce', stNone: 'Ningún disco nuevo',
     empty: 'Nada acá con estos filtros.', emptyLedger: 'Nadie confirmó discos todavía — la confirmación empezó en el informe semanal del 13/11.',
     diskFilter: 'Solo el disco {c}',
+    tSwaps: 'Cambios', hSwaps: 'Cada cambio de disco en la cámara registrado por la app: el disco lleno que salió y el vacío que entró, con las fotos.',
+    kSwaps: 'Cambios (7 días)', kSwapsSub: 'llenos con conductores: {n}', full: 'Lleno', cOut: 'Salió (lleno)', cIn: 'Entró (vacío)', cNotes: 'Observación',
+    photo: 'foto', map: 'mapa', mailFail: 'falló el e-mail', swapOn: 'Cambio {d}',
+    stSwapOut: 'Cambio: lo sacó de la cámara (lleno)', stSwapIn: 'Cambio: lo puso en la cámara',
   },
   en: {
     title: 'Disks', sub: 'Where every disk is: who has it, what was handed over and what was returned. Comes from the disk-by-disk confirmation in the weekly report; drivers who have not confirmed yet show their last report.',
@@ -205,6 +217,10 @@ const I18N = {
     stNotReceived: 'Did not receive (from {n})', stUnknown: 'Does not recognize', stNone: 'No new disk',
     empty: 'Nothing here with these filters.', emptyLedger: 'No one has confirmed disks yet — confirmation started with the weekly report of Nov 13.',
     diskFilter: 'Only disk {c}',
+    tSwaps: 'Swaps', hSwaps: 'Every camera disk swap logged in the app: the full disk that came out and the empty one that went in, with photos.',
+    kSwaps: 'Swaps (7 days)', kSwapsSub: 'full disks with drivers: {n}', full: 'Full', cOut: 'Out (full)', cIn: 'In (empty)', cNotes: 'Notes',
+    photo: 'photo', map: 'map', mailFail: 'e-mail failed', swapOn: 'Swap {d}',
+    stSwapOut: 'Swap: took out of the camera (full)', stSwapIn: 'Swap: put in the camera',
   },
 };
 
@@ -287,7 +303,7 @@ async function loadData(force) {
 
 /* Junta índices que todas as abas usam. */
 function prepare(res) {
-  const D = { disks: res.disks || [], events: res.events || [], drivers: res.drivers || [], generatedAt: res.generatedAt };
+  const D = { disks: res.disks || [], events: res.events || [], swaps: res.swaps || [], drivers: res.drivers || [], generatedAt: res.generatedAt };
   D.driverBy = {};
   D.drivers.forEach(d => { D.driverBy[d.email] = d; });
   D.diskBy = {};
@@ -337,6 +353,10 @@ function rowsEvents(status) {
   return DATA.events.filter(ev => (!status || ev.status === status) && matchCountry(ev.country) &&
     matchDriver(ev.email, ev.otherEmail) && matchQ(ev.code, ev.name, ev.otherName, ev.vid));
 }
+function rowsSwaps() {
+  return DATA.swaps.filter(sw => matchCountry(sw.country) && matchDriver(sw.email) &&
+    matchQ(sw.fullCode, sw.emptyCode, sw.name, sw.vid, sw.city));
+}
 function rowsDrivers() {
   const held = {};
   DATA.disks.forEach(d => { if (d.kind === 'in_use') (held[d.holderEmail] = held[d.holderEmail] || []).push(d); });
@@ -357,13 +377,15 @@ function render() {
   const unknown = D.disks.filter(d => d.kind === 'unknown');
   const activeDrivers = D.drivers.filter(d => !/vaca|férias|ferias/i.test(d.situation || ''));
   const notConfirmed = activeDrivers.filter(d => !d.lastConfirm);
+  const swaps7 = D.swaps.filter(sw => Date.now() - new Date(sw.at).getTime() < 7 * 86400000);
+  const fullNow = inUse.filter(d => d.fill === 'full' && !d.inUseNow);
 
   const counts = {
     inuse: rowsInUse().length, transfers: rowsTransfers().length, returned: rowsEvents('returned').length,
-    unknown: rowsEvents('unknown').length, drivers: rowsDrivers().length, history: rowsEvents('').filter(e => e.status !== 'none_new').length,
+    unknown: rowsEvents('unknown').length, drivers: rowsDrivers().length, swaps: rowsSwaps().length, history: rowsEvents('').filter(e => e.status !== 'none_new').length,
   };
   const tabs = [
-    ['inuse', t('tInUse')], ['transfers', t('tTransfers')], ['returned', t('tReturned')],
+    ['inuse', t('tInUse')], ['swaps', t('tSwaps')], ['transfers', t('tTransfers')], ['returned', t('tReturned')],
     ...(D.events.some(e => e.status === 'unknown') ? [['unknown', t('tUnknown')]] : []),
     ['drivers', t('tDrivers')], ['history', t('tHistory')],
   ];
@@ -380,6 +402,7 @@ function render() {
   document.getElementById('content').innerHTML = `
     <div class="kpi-row">
       <button class="kpi-card" data-go="inuse"><div class="kpi-label">${esc(t('kInUse'))}</div><div class="kpi-value">${inUse.length}</div><div class="kpi-sub">${esc(t('kInUseSub', { n: inUse.filter(d => d.inUseNow).length }))}</div></button>
+      <button class="kpi-card" data-go="swaps"><div class="kpi-label">${esc(t('kSwaps'))}</div><div class="kpi-value">${swaps7.length}</div><div class="kpi-sub">${esc(t('kSwapsSub', { n: fullNow.length }))}</div></button>
       <button class="kpi-card" data-go="transfers"><div class="kpi-label">${esc(t('kTransit'))}</div><div class="kpi-value ${transit.length ? 'is-warn' : ''}">${transit.length}</div><div class="kpi-sub">${esc(t('kTransitSub'))}</div></button>
       <button class="kpi-card" data-go="returned"><div class="kpi-label">${esc(t('kReturned'))}</div><div class="kpi-value">${returned.length}</div><div class="kpi-sub">${esc(t('kReturnedSub'))}${unknown.length ? ' · ' + unknown.length + ' ' + esc(t('nowUnknown').toLowerCase()) : ''}</div></button>
       <button class="kpi-card" data-go="drivers"><div class="kpi-label">${esc(t('kPending'))}</div><div class="kpi-value ${notConfirmed.length ? 'is-warn' : ''}">${notConfirmed.length}</div><div class="kpi-sub">${esc(t('kPendingSub', { n: activeDrivers.length }))}</div></button>
@@ -409,9 +432,10 @@ function render() {
 
 function renderTab() {
   const body = document.getElementById('tab-body');
-  const hint = { inuse: 'hInUse', transfers: 'hTransfers', returned: 'hReturned', unknown: 'hUnknown', drivers: 'hDrivers', history: 'hHistory' }[F.tab];
+  const hint = { inuse: 'hInUse', swaps: 'hSwaps', transfers: 'hTransfers', returned: 'hReturned', unknown: 'hUnknown', drivers: 'hDrivers', history: 'hHistory' }[F.tab];
   let html = '';
   if (F.tab === 'inuse') html = tableInUse();
+  else if (F.tab === 'swaps') html = tableSwaps();
   else if (F.tab === 'transfers') html = tableTransfers();
   else if (F.tab === 'returned') html = tableReturned('returned');
   else if (F.tab === 'unknown') html = tableReturned('unknown');
@@ -436,8 +460,12 @@ function tableInUse() {
         ${d.deniedBy ? `<div class="note">${esc(t('deniedNote', { n: d.deniedBy }))}</div>` : ''}
         ${others.length ? `<div class="note">${esc(t('dupNote', { n: others.join(', ') }))}</div>` : ''}</td>
       <td class="nowrap">${esc(countryLabel(d.country))}</td>
-      <td>${d.inUseNow ? `<span class="badge b-info">${esc(t('camera'))}</span>` : `<span class="badge b-muted">${esc(t('spare'))}</span>`}</td>
-      <td class="small">${d.source === 'ledger'
+      <td>${d.inUseNow ? `<span class="badge b-info">${esc(t('camera'))}</span>`
+        : d.fill === 'full' ? `<span class="badge b-warn" title="${esc(fmtDate(d.fillAt, true))}">${esc(t('full'))}</span>`
+        : `<span class="badge b-muted">${esc(t('spare'))}</span>`}</td>
+      <td class="small">${d.source === 'ledger' && /^swap_/.test(d.status)
+        ? `<span class="badge b-info">${esc(t('swapOn', { d: fmtDate(d.at) }))}</span>`
+        : d.source === 'ledger'
         ? `<span class="badge b-ok">${esc(t('confirmed', { d: fmtDate(d.at) }))}</span>`
         : `<span class="muted">${esc(t('fromReport', { d: fmtDate(d.at) }))}</span> <span class="badge b-warn">${esc(t('notConfirmed'))}</span>`}</td>
     </tr>`;
@@ -453,8 +481,23 @@ function statusText(ev) {
     case 'not_received': return t('stNotReceived', { n: ev.otherName || ev.otherEmail || '?' });
     case 'unknown': return t('stUnknown');
     case 'none_new': return t('stNone');
+    case 'swap_out': return t('stSwapOut');
+    case 'swap_in': return t('stSwapIn');
     default: return ev.status || '—';
   }
+}
+
+function tableSwaps() {
+  const rows = rowsSwaps();
+  const photo = (url) => url ? ` <a class="photo-link" href="${esc(url)}" target="_blank" rel="noopener">📷 ${esc(t('photo'))}</a>` : '';
+  return table([t('cDate'), t('cDriver'), t('cVid'), t('cOut'), t('cIn'), t('cNotes')], rows.length ? rows.map(sw => `<tr>
+      <td class="nowrap">${esc(fmtDate(sw.at, true))}${/^FALHOU/.test(sw.mail) ? `<div><span class="badge b-danger">${esc(t('mailFail'))}</span></div>` : ''}</td>
+      <td><span class="who">${esc(sw.name)}</span><div class="muted small">${esc(countryLabel(sw.country))}${sw.city ? ' · ' + esc(sw.city) : ''}${sw.loc ? ` · <a class="photo-link" href="https://www.google.com/maps/search/?api=1&query=${esc(sw.loc)}" target="_blank" rel="noopener">${esc(t('map'))}</a>` : ''}</div></td>
+      <td class="nowrap">${esc(sw.vid || '—')}</td>
+      <td>${codeCell(sw.fullCode)}${photo(sw.fullPhoto)}</td>
+      <td>${codeCell(sw.emptyCode)}${photo(sw.emptyPhoto)}</td>
+      <td class="small">${esc(sw.notes || '')}</td>
+    </tr>`).join('') : `<tr><td colspan="6"><div class="empty">${esc(t('empty'))}</div></td></tr>`);
 }
 
 function tableTransfers() {
@@ -501,7 +544,7 @@ function tableDrivers() {
       <td><span class="who">${esc(d.name)}</span>${/vaca|férias|ferias/i.test(d.situation || '') ? ` <span class="badge b-muted">${esc(t('vacation'))}</span>` : ''}</td>
       <td class="nowrap">${esc(countryLabel(d.country))}</td>
       <td>${d.disks.length ? `<div class="disk-list">${d.disks.map(x =>
-          `<span class="${x.inUseNow ? 'in-use' : ''}">${codeCell(x.code)}${x.inUseNow ? ' <span class="badge b-info">' + esc(t('camera')) + '</span>' : ''}</span>`).join('')}</div>`
+          `<span class="${x.inUseNow ? 'in-use' : ''}">${codeCell(x.code)}${x.inUseNow ? ' <span class="badge b-info">' + esc(t('camera')) + '</span>' : x.fill === 'full' ? ' <span class="badge b-warn">' + esc(t('full')) + '</span>' : ''}</span>`).join('')}</div>`
         : `<span class="muted">${esc(t('noDisks'))}</span>`}</td>
       <td class="nowrap">${d.lastConfirm ? `<span class="badge b-ok">${esc(fmtDate(d.lastConfirm, true))}</span>` : `<span class="badge b-warn">${esc(t('neverConfirmed'))}</span>`}</td>
     </tr>`).join('') : emptyRow(4));

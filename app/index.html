@@ -67,6 +67,10 @@ svg.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-wid
 .btn-soft { background: var(--c-bg-tint); color: var(--c-primary); }
 .btn-sm { height: 34px; padding: 0 12px; font-size: 13px; border-radius: 10px; }
 .btn-block { width: 100%; }
+/* Troca de disco (2026-11-12): botão no card "Seus discos" */
+.swap-btn { margin-top: 14px; }
+.swap-last { font-size: 12.5px; color: var(--c-text-muted); margin-top: 10px; }
+.swap-last b { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 600; color: var(--c-text); }
 
 /* ============================================================
  * LOGIN
@@ -508,6 +512,7 @@ svg.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-wid
       </div>
     </div>
     <div class="view view-frame" id="view-assets"><div class="frame-wrap"></div></div>
+    <div class="view view-frame" id="view-swap"><div class="frame-wrap"></div></div>
     <div class="view view-frame" id="view-checkin"><div class="frame-wrap"></div></div>
     <div class="view view-frame" id="view-cash"><div class="frame-wrap"></div></div>
     <div class="view view-frame" id="view-ardiv"><div class="frame-wrap"></div></div>
@@ -551,12 +556,14 @@ const KEYS = {
   summary: 'svapp.summary.v1:',   // + email
   events: 'svapp.events.v1:',     // + email
   weeklySnooze: 'svapp.weeklySnooze.v1:',  // + email — até quando o lembrete de sexta está adiado (ms)
+  lastSwap: 'svapp.lastSwap.v1:',          // + email (minúsculo) — gravado pelo ../disk-swap.html: { at, full, empty }
   drivers: 'checkin_drivers_v1',  // mesmo cache do check-in (lista de motoristas)
 };
 
 const TABS = {
   home:    { t: 'tabHome' },
   assets:  { t: 'tabAssets',  src: '../assets.html?app=1' },
+  swap:    { t: 'tabSwap',    src: '../disk-swap.html?app=1', nav: 'assets' },   // troca de disco (botão no card de discos)
   checkin: { t: 'tabCheckin', src: '../checkin/?app=1' },
   cash:    { t: 'tabCash',    src: '../cash.html?app=1' },
   ardiv:   { t: 'tabArdiv',   src: '../ar-divergencias.html?app=1', nav: 'cash', ar: true },
@@ -615,6 +622,8 @@ const I18N = {
     disksNone: 'Nenhum disco no seu último relatório de equipamentos.',
     disksFrom: 'relatório de {date}',
     disksCount: '{n} no total',
+    tabSwap: 'Troca de disco', segWeekly: 'Relatório semanal', swapBtn: 'Troca de disco',
+    swapLast: 'Última troca {ago}: {full} saiu, {empty} na câmera',
     odometer: 'Odômetro',
     todoT: 'Pendências',
     weeklyT: 'Relatório semanal',
@@ -697,6 +706,8 @@ const I18N = {
     disksNone: 'Ningún disco en tu último reporte de equipos.',
     disksFrom: 'reporte del {date}',
     disksCount: '{n} en total',
+    tabSwap: 'Cambio de disco', segWeekly: 'Informe semanal', swapBtn: 'Cambio de disco',
+    swapLast: 'Último cambio {ago}: salió {full}, {empty} en la cámara',
     odometer: 'Odómetro',
     todoT: 'Pendientes',
     weeklyT: 'Reporte semanal',
@@ -779,6 +790,8 @@ const I18N = {
     disksNone: 'No disks in your last equipment report.',
     disksFrom: 'report of {date}',
     disksCount: '{n} total',
+    tabSwap: 'Disk swap', segWeekly: 'Weekly report', swapBtn: 'Disk swap',
+    swapLast: 'Last swap {ago}: {full} out, {empty} in the camera',
     odometer: 'Odometer',
     todoT: 'To-dos',
     weeklyT: 'Weekly report',
@@ -1144,22 +1157,30 @@ function markNav() {
   });
 }
 
-/** Argentina: a aba Cash tem um seletor Cash | Divergencias (as duas são "dinheiro"). */
+/**
+ * Seletor no topo de duas abas "irmãs":
+ *   Argentina: Cash | Divergencias (as duas são "dinheiro");
+ *   todos: Relatório semanal | Troca de disco (aba Equipamentos).
+ */
+const SEG_PAIRS = [
+  { a: 'cash', b: 'ardiv', la: 'tabCash', lb: 'tabArdiv', show: () => isAR() },
+  { a: 'assets', b: 'swap', la: 'segWeekly', lb: 'tabSwap', show: () => true },
+];
 function renderSegs() {
-  ['cash', 'ardiv'].forEach(id => {
+  SEG_PAIRS.forEach(p => [p.a, p.b].forEach(id => {
     const view = document.getElementById('view-' + id);
     let seg = view.querySelector('.seg');
-    if (!isAR()) { if (seg) seg.remove(); return; }
+    if (!p.show()) { if (seg) seg.remove(); return; }
     if (!seg) {
       seg = document.createElement('div');
       seg.className = 'seg';
       view.insertBefore(seg, view.firstChild);
     }
     seg.innerHTML = '<div class="seg-inner">' +
-      '<button type="button" data-seg="cash" class="' + (id === 'cash' ? 'active' : '') + '">' + esc(t('tabCash')) + '</button>' +
-      '<button type="button" data-seg="ardiv" class="' + (id === 'ardiv' ? 'active' : '') + '">' + esc(t('tabArdiv')) + '</button></div>';
+      '<button type="button" data-seg="' + p.a + '" class="' + (id === p.a ? 'active' : '') + '">' + esc(t(p.la)) + '</button>' +
+      '<button type="button" data-seg="' + p.b + '" class="' + (id === p.b ? 'active' : '') + '">' + esc(t(p.lb)) + '</button></div>';
     seg.querySelectorAll('button').forEach(b => b.addEventListener('click', () => openTab(b.dataset.seg)));
-  });
+  }));
 }
 
 /** Cria o iframe da aba na primeira vez; depois ele fica vivo (troca de aba é instantânea e o formulário não se perde). */
@@ -1287,7 +1308,7 @@ window.addEventListener('popstate', (e) => {
 // ================================================================
 // EVENTOS DAS PÁGINAS EMBUTIDAS (chamado pelo driver-embed.js)
 // ================================================================
-const POST_EVENTS = { checkin: 'checkin', checkout: 'checkout', base: 'base', assetWeekly: 'assets', submitDriverDocs: 'docs' };
+const POST_EVENTS = { checkin: 'checkin', checkout: 'checkout', base: 'base', assetWeekly: 'assets', submitDriverDocs: 'docs', diskSwap: 'swap' };
 
 function getEvents() {
   return S.session ? lsJson(KEYS.events + S.session.email, {}) : {};
@@ -1303,7 +1324,7 @@ function setEvent(kind, ts) {
 window.SVApp = {
   // Versão da casca. O driver-embed.js (APP_BUILD_MIN) recarrega app aberto com
   // build menor — é assim que uma mudança aqui chega em quem deixa o app aberto dias.
-  build: '2026-11-12',
+  build: '2026-11-12b',
   openTab: (tab) => openTab(tab),
   onEmbedEvent(page, evt) {
     if (!evt || !S.session) return;
@@ -1483,7 +1504,28 @@ function lastArea(sum) {
   return h ? { address: h.area, lat: Number(h.lat) || null, lng: Number(h.lng) || null, t: toDate(h.ts) } : null;
 }
 
+/** Última troca de disco registrada neste celular (o ../disk-swap.html grava): { at, full, empty }. */
+function lastSwap() {
+  if (!S.session) return null;
+  const sw = lsJson(KEYS.lastSwap + String(S.session.email).toLowerCase(), null);
+  return sw && sw.at && sw.full && sw.empty ? sw : null;
+}
+
 function disksOf(sum) {
+  const base = disksBase(sum);
+  // Trocou o disco depois do último relatório: o vazio da troca é o que está na câmera.
+  const sw = lastSwap();
+  if (!sw || (base && base.from && base.from.getTime() >= sw.at)) return base;
+  const up = (c) => String(c || '').toUpperCase();
+  const codes = [];
+  [sw.empty, sw.full].concat(base ? [base.inUse].concat(base.others) : []).forEach(c => {
+    if (c && !codes.some(x => up(x) === up(c))) codes.push(c);
+  });
+  return { inUse: sw.empty, others: codes.filter(c => up(c) !== up(sw.empty)),
+           count: Math.max(base ? base.count : 0, codes.length), from: base ? base.from : null };
+}
+
+function disksBase(sum) {
   // 1º: o último relatório semanal do PRÓPRIO motorista (por e-mail). O
   // getDriverSsds (até o backend v5.83) casa pelo VID numa resposta velha do
   // Forms — às vezes os discos de quem usava o carro antes —, então só entra
@@ -1639,6 +1681,11 @@ function renderHome() {
   if (disks && disks.from) {
     html += '<div class="card-meta" style="margin-top:10px">' + esc(t('disksFrom', { date: fmtDay(disks.from) })) + '</div>';
   }
+  const sw = lastSwap();
+  if (sw && Date.now() - sw.at < 14 * 86400000) {
+    html += '<div class="swap-last">' + t('swapLast', { ago: esc(ago(new Date(sw.at))), full: '<b>' + esc(sw.full) + '</b>', empty: '<b>' + esc(sw.empty) + '</b>' }) + '</div>';
+  }
+  html += '<button type="button" class="btn btn-primary btn-block swap-btn" data-go="swap">' + ic('refresh') + esc(t('swapBtn')) + '</button>';
   html += '</div>';
 
   // ---- Pendências ----

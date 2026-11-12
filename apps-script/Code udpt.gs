@@ -89,6 +89,7 @@ const CONFIG = {
   rawCtsSheet: 'RAW CTS DATA',
   assetsSheet: 'Assets Management',
   diskLedgerSheet: 'SSD Tracking',           // v5.86: confirmação disco a disco do relatório semanal (auto-criada)
+  diskSwapSheet: 'Disk Swaps',               // v5.88: troca de disco na câmera (botão no app; auto-criada)
   assetsPhotoFolderId: '',                  // v5.23: opcional — Drive folder ID pras fotos do form semanal. Se vazio usa parent da spreadsheet
   pmoNotesSheet: 'PMO Notes',                // v5.24: aba pra notes/coments do pmo.html (auto-criada na primeira chamada)
   finesSheet: 'Fines LATAM',
@@ -145,6 +146,9 @@ const EMAIL_CONFIG = {
   // Ver sendWeeklyCashDigest / setupWeeklyCashDigest.
   cashDigestRecipients: 'bia@aceolution.com, santhosh.b@aceolution.com, priyaspb@aceolution.com',
   cashDigestHour: 8,  // 8h SP = 16:30 na Índia
+
+  // v5.88: aviso de troca de disco (botão TROCA DE DISCO no app) — quem trocou, de onde, códigos e fotos.
+  diskSwapRecipients: 'davidromero@aceolution.com',
 
   // Link público do dashboard (pra botão "Abrir dashboard" nos emails)
   dashboardUrl: 'https://addcoolnamehere.github.io/latam-driver-checkin/dashboard.html',
@@ -311,13 +315,13 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.87',
+        version: 'v5.88',
         ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
                     'getDriverCalendar', 'getVidCalendar', 'getAvailableMonths',
                     'getDriverSsds', 'getDriverVehicleIssues',
-                    'getLastAssetsForm', 'getDriverDisks', 'getDiskOverview', 'getPMONotes', 'getArgentinaDrivers',
+                    'getLastAssetsForm', 'getDriverDisks', 'getDiskOverview', 'POST diskSwap', 'getPMONotes', 'getArgentinaDrivers',
                     'getCountryScope', 'getDriverDocsStatus',
                     'getScopeAssignments', 'POST saveScopeAssignments', 'POST deleteScopeAssignments',
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
@@ -686,6 +690,11 @@ function doPost(e) {
 
     // v5.14: registrar/atualizar incidente de veículo (acidente/mech/tech tracking)
     // v5.23: relatório semanal de equipamentos (Assets Management form)
+    // v5.88: troca de disco na câmera (botão TROCA DE DISCO no app) — fotos + aviso por e-mail
+    if (data.type === 'diskSwap') {
+      return jsonResponse(saveDiskSwap_(data));
+    }
+
     if (data.type === 'assetWeekly') {
       const result = saveAssetWeekly_(data);
       return jsonResponse({ success: true, message: result.message, photoUrls: result.photoUrls });
@@ -4882,23 +4891,36 @@ function getDriverSsdsByEmail_(email) {
   if (!assets) {
     const vidIndex = buildVidIndexByEmail_();
     const vidInfo = vidIndex[email.toLowerCase()];
-    if (!vidInfo || !vidInfo.vid) return [];
-    assets = getDriverAssets_(vidInfo.vid);
+    if (vidInfo && vidInfo.vid) assets = getDriverAssets_(vidInfo.vid);
   }
-  if (!assets) return [];
 
   // Lista combinada: o que está em uso primeiro (marcado), depois os outros
   const ssds = [];
-  if (assets.discInUse) {
+  if (assets && assets.discInUse) {
     ssds.push({ code: assets.discInUse, inUse: true });
   }
-  if (assets.otherDiscs) {
+  if (assets && assets.otherDiscs) {
     assets.otherDiscs.forEach(code => {
       // Evita duplicar se já está como inUse
       if (!ssds.some(s => s.code === code)) {
         ssds.push({ code: code, inUse: false });
       }
     });
+  }
+
+  // v5.88: trocou de disco (botão no app) depois do último relatório → o disco da câmera
+  // é o vazio da troca; o cheio continua na lista. Sem isso o check-in sugeria o disco velho.
+  try {
+    const sw = lastDiskSwapFor_(email);
+    if (sw && (!assets || !assets.lastUpdate || sw.at >= Date.parse(assets.lastUpdate))) {
+      [sw.empty, sw.full].forEach(code => {
+        if (code && !ssds.some(s => diskNorm_(s.code) === code)) ssds.push({ code: code, inUse: false });
+      });
+      ssds.forEach(s => { s.inUse = diskNorm_(s.code) === sw.empty; });
+      ssds.sort((a, b) => (b.inUse ? 1 : 0) - (a.inUse ? 1 : 0));
+    }
+  } catch (err) {
+    Logger.log('[getDriverSsdsByEmail_] troca de disco ignorada: ' + err);
   }
   return ssds;
 }
@@ -6040,6 +6062,8 @@ const DISK_STATUS_LABELS_ = {
   not_received: 'Não recebi',
   unknown: 'Não reconheço',
   none_new: 'Nenhum disco novo',
+  swap_out: 'Cheio — saiu da câmera',      // v5.88: troca de disco (botão no app)
+  swap_in: 'Colocou na câmera',
 };
 
 function diskNorm_(s) {
@@ -6063,6 +6087,8 @@ function diskStatusCode_(label) {
   if (/^recebi/.test(n)) return 'received';
   if (/^nao reconhe/.test(n)) return 'unknown';
   if (/^nenhum/.test(n)) return 'none_new';
+  if (/^cheio/.test(n)) return 'swap_out';
+  if (/^coloc|^na camera/.test(n)) return 'swap_in';
   return '';
 }
 
@@ -6127,7 +6153,9 @@ function saveDiskLedger_(ss, data, reportRow) {
  */
 function readDiskLedger_(ss) {
   const sh = getDiskLedgerSheet_(ss, false);
-  const out = { rows: [], state: {} };
+  // confirmed[e-mail] = última confirmação do RELATÓRIO SEMANAL (troca de disco não conta);
+  // camera[e-mail] = { code, at } do último disco que o motorista colocou na câmera numa troca.
+  const out = { rows: [], state: {}, confirmed: {}, camera: {} };
   if (!sh || sh.getLastRow() < 2) return out;
 
   out.rows = sh.getRange(2, 1, sh.getLastRow() - 1, 10).getValues()
@@ -6145,11 +6173,18 @@ function readDiskLedger_(ss) {
 
   const state = out.state;
   out.rows.forEach(function(r) {
+    const isSwap = r.st === 'swap_in' || r.st === 'swap_out';
+    if (r.email && !isSwap) out.confirmed[r.email] = Math.max(out.confirmed[r.email] || 0, r.ts);
+    if (r.st === 'swap_in' && r.code && r.email) out.camera[r.email] = { code: r.code, at: r.ts };
     if (!r.code || !r.st || r.st === 'none_new') return;
     const s = state[r.code] || (state[r.code] = { code: r.code, holder: '', holderName: '', pendingTo: '', pendingToName: '', pendingFrom: '', pendingFromName: '' });
     s.at = r.ts; s.status = r.st; s.deniedBy = ''; s.by = r.email; s.byName = r.name; s.country = r.country || s.country || '';
     if (r.st === 'with_me' || r.st === 'received') {
       s.holder = r.email; s.holderName = r.name; s.pendingTo = ''; s.pendingToName = '';
+    } else if (isSwap) {
+      // Troca na câmera: o disco continua com o motorista; muda só se está cheio ou na câmera.
+      s.holder = r.email; s.holderName = r.name; s.pendingTo = ''; s.pendingToName = '';
+      s.fill = r.st === 'swap_out' ? 'full' : 'in_camera'; s.fillAt = r.ts;
     } else if (r.st === 'returned' || r.st === 'unknown') {
       s.holder = ''; s.holderName = ''; s.pendingTo = ''; s.pendingToName = '';
     } else if (r.st === 'handed') {
@@ -6171,7 +6206,9 @@ function getDriverDisks_(email) {
   const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
   const ledger = readDiskLedger_(ss);
   const state = ledger.state;
-  const known = ledger.rows.some(function(r) { return r.email === target; });
+  // v5.88: troca de disco não conta como "já confirmou" — senão quem só trocou perderia
+  // os outros discos do último relatório na lista do formulário semanal.
+  const known = !!ledger.confirmed[target];
 
   const iso = function(ms) { return ms ? new Date(ms).toISOString() : ''; };
   const disks = [], incoming = [];
@@ -6188,6 +6225,9 @@ function getDriverDisks_(email) {
   try {
     const last = getDriverAssets_(null, email);
     if (last) { inUse = diskNorm_(last.discInUse); reportAt = last.lastUpdate || ''; }
+    // v5.88: trocou de disco depois do último relatório → o da câmera é o da troca.
+    const cam = ledger.camera[target];
+    if (cam && (!reportAt || cam.at >= Date.parse(reportAt))) inUse = cam.code;
     if (!known) {
       // Mesma lista do dropdown do check-in (getDriverSsdsByEmail_), sem reler a aba
       // quando o relatório por e-mail já veio; sem ele, cai no VID (Forms antigo).
@@ -6228,11 +6268,17 @@ function getDiskOverview_() {
   const drv = {};
   drivers.forEach(function(d) { drv[String(d.email).trim().toLowerCase()] = d; });
 
-  const lastConfirm = {};
-  ledger.rows.forEach(function(r) { if (r.email) lastConfirm[r.email] = Math.max(lastConfirm[r.email] || 0, r.ts); });
+  // v5.88: "confirmou" = relatório semanal; troca de disco não conta.
+  const lastConfirm = ledger.confirmed;
 
   // Último relatório semanal de cada motorista (por e-mail) e de cada VID (Forms antigo, sem e-mail).
   const rep = latestAssetReportsIndex_(ss);
+  // Disco na câmera = o da troca mais nova, se ela for depois do último relatório; senão o do relatório.
+  const cameraOf = function(email, r) {
+    const cam = ledger.camera[email];
+    if (cam && (!r || cam.at >= Date.parse(r.at))) return cam.code;
+    return r ? r.inUse : '';
+  };
 
   const disks = [];
   Object.keys(ledger.state).forEach(function(k) {
@@ -6244,7 +6290,8 @@ function getDiskOverview_() {
       code: s.code, kind: kind, source: 'ledger', at: iso(s.at), status: s.status,
       holderEmail: s.holder, holderName: (holder && holder.name) || s.holderName || '',
       country: (holder && holder.country) || s.country || '',
-      inUseNow: !!(r && r.inUse === s.code),
+      inUseNow: !!s.holder && cameraOf(s.holder, r) === s.code,
+      fill: s.fill || '', fillAt: iso(s.fillAt),
       byEmail: s.by || '', byName: s.byName || '',
       fromEmail: kind === 'transit' ? s.pendingFrom : '', fromName: kind === 'transit' ? s.pendingFromName : '',
       toEmail: kind === 'transit' ? s.pendingTo : '', toName: kind === 'transit' ? ((drv[s.pendingTo] && drv[s.pendingTo].name) || s.pendingToName) : '',
@@ -6267,7 +6314,7 @@ function getDiskOverview_() {
       if (ledger.state[code]) return;
       disks.push({
         code: code, kind: 'in_use', source: 'report', at: r.at, status: '',
-        holderEmail: em, holderName: d.name, country: d.country, inUseNow: r.inUse === code,
+        holderEmail: em, holderName: d.name, country: d.country, inUseNow: cameraOf(em, r) === code, fill: '', fillAt: '',
         byEmail: '', byName: '', fromEmail: '', fromName: '', toEmail: '', toName: '', deniedBy: '',
       });
     });
@@ -6282,9 +6329,13 @@ function getDiskOverview_() {
     };
   });
 
+  let swaps = [];
+  try { swaps = readDiskSwaps_(ss, drv); } catch (err) { Logger.log('[getDiskOverview_] trocas falharam: ' + err); }
+
   return {
     disks: disks,
     events: events,
+    swaps: swaps,
     drivers: drivers.map(function(d) {
       const em = String(d.email).trim().toLowerCase();
       return { email: em, name: d.name, country: d.country, situation: d.situation, lastConfirm: iso(lastConfirm[em]) };
@@ -6344,6 +6395,221 @@ function vidByEmailLight_(ss) {
     if (em && em !== 'no driver' && /@/.test(em) && v) out[em] = (v.match(/\d{4,6}/) || [v])[0];
   });
   return out;
+}
+
+// ================================================================
+// v5.88: TROCA DE DISCO (botão "Troca de disco" no app dos motoristas)
+// ================================================================
+/**
+ * Aba "Disk Swaps" (auto-criada), uma linha por troca:
+ *   A Data/Hora | B E-mail | C Motorista | D País | E Cidade | F VID | G Disco cheio (saiu da câmera) |
+ *   H Foto disco cheio | I Disco vazio (entrou na câmera) | J Foto disco vazio | K Observação |
+ *   L Hora no celular | M Localização | N Aviso por e-mail | O ID do envio
+ * Cada troca também grava 2 linhas na SSD Tracking (cheio / colocou na câmera), que é o que
+ * alimenta a página de discos e a lista de discos do formulário semanal.
+ * O e-mail vai pra EMAIL_CONFIG.diskSwapRecipients com as duas fotos no corpo.
+ */
+function getDiskSwapSheet_(ss, create) {
+  let sh = ss.getSheetByName(CONFIG.diskSwapSheet);
+  if (!sh && create) {
+    sh = ss.insertSheet(CONFIG.diskSwapSheet);
+    sh.appendRow(['Data/Hora', 'E-mail do motorista', 'Motorista', 'País', 'Cidade', 'VID',
+                  'Disco cheio (saiu da câmera)', 'Foto disco cheio', 'Disco vazio (entrou na câmera)', 'Foto disco vazio',
+                  'Observação', 'Hora no celular', 'Localização', 'Aviso por e-mail', 'ID do envio']);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, 15).setFontWeight('bold');
+    Logger.log('[Disk Swap] aba criada');
+  }
+  return sh;
+}
+
+function getDiskSwapFolder_() {
+  const parent = getAssetsPhotoFolder_();
+  try {
+    const it = parent.getFoldersByName('Trocas de disco');
+    return it.hasNext() ? it.next() : parent.createFolder('Trocas de disco');
+  } catch (err) {
+    Logger.log('[Disk Swap] subpasta "Trocas de disco" falhou, usando a pasta das fotos: ' + err);
+    return parent;
+  }
+}
+
+function saveDiskSwap_(data) {
+  const email = String(data.driverEmail || '').trim();
+  const name = String(data.driverName || '').trim();
+  if (!/@/.test(email)) return { success: false, error: 'driverEmail obrigatório' };
+  const full = diskNorm_(data.fullCode);
+  const empty = diskNorm_(data.emptyCode);
+  if (!diskValid_(full) || !diskValid_(empty)) return { success: false, error: 'Código de disco inválido' };
+  if (full === empty) return { success: false, error: 'Os dois discos têm o mesmo código' };
+  if (!data.fullPhoto || !data.fullPhoto.base64 || !data.emptyPhoto || !data.emptyPhoto.base64) {
+    return { success: false, error: 'Faltam as fotos dos discos' };
+  }
+
+  // Toque repetido / retry da rede: mesmo ID → devolve o resultado anterior, sem 2º e-mail.
+  const cache = CacheService.getScriptCache();
+  const sid = String(data.submissionId || '').slice(0, 80);
+  if (sid) {
+    const prev = cache.get('diskswap_' + sid);
+    if (prev) { const p = JSON.parse(prev); p.duplicate = true; return p; }
+  }
+
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const tz = ss.getSpreadsheetTimeZone() || 'America/Sao_Paulo';
+  const now = new Date();
+  const vid = String(data.vid || '').trim();
+  const country = String(data.country || '').trim();
+  const city = String(data.city || '').trim();
+  const notes = String(data.notes || '').trim().slice(0, 1000);
+  const loc = (data.location && isFinite(data.location.lat) && isFinite(data.location.lng))
+    ? Number(data.location.lat).toFixed(6) + ',' + Number(data.location.lng).toFixed(6) : '';
+
+  const stamp = Utilities.formatDate(now, tz, 'yyyy-MM-dd_HH-mm');
+  const safe = name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_').slice(0, 40) || 'motorista';
+  const toBlob = function(p, label, code) {
+    const mime = p.mimeType || 'image/jpeg';
+    const ext = (mime.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+    return Utilities.newBlob(Utilities.base64Decode(p.base64), mime, safe + '_' + stamp + '_' + label + '_' + code + '.' + ext);
+  };
+  const fullBlob = toBlob(data.fullPhoto, 'cheio', full);
+  const emptyBlob = toBlob(data.emptyPhoto, 'vazio', empty);
+
+  let fullUrl = '', emptyUrl = '';
+  try {
+    const folder = getDiskSwapFolder_();
+    fullUrl = 'https://drive.google.com/open?id=' + folder.createFile(fullBlob.copyBlob()).getId();
+    emptyUrl = 'https://drive.google.com/open?id=' + folder.createFile(emptyBlob.copyBlob()).getId();
+  } catch (err) {
+    Logger.log('[Disk Swap] upload das fotos falhou (seguem só no e-mail): ' + err);
+  }
+
+  const sh = getDiskSwapSheet_(ss, true);
+  sh.appendRow([now, email, name, country, city, vid, full, fullUrl, empty, emptyUrl, notes,
+                String(data.clientTime || '').slice(0, 60), loc, '', sid]);
+  const rowNum = sh.getLastRow();
+
+  // SSD Tracking: os dois discos continuam com o motorista — um cheio, o outro na câmera.
+  try {
+    const led = getDiskLedgerSheet_(ss, true);
+    const ref = 'Troca de disco (Disk Swaps, linha ' + rowNum + ')';
+    const base = [email, name, country, vid];
+    led.appendRow([now].concat(base, [full, DISK_STATUS_LABELS_.swap_out, '', '', ref]));
+    led.appendRow([now].concat(base, [empty, DISK_STATUS_LABELS_.swap_in, '', '', ref]));
+  } catch (err) {
+    Logger.log('[Disk Swap] falha ao gravar na SSD Tracking: ' + err);
+  }
+  // Dropdown de discos do check-in (cache de 30 min por motorista).
+  try { cache.removeAll(['checkin_ssds_' + email, 'checkin_ssds_' + email.toLowerCase()]); } catch (e) {}
+
+  let mailStatus = '';
+  try {
+    sendDiskSwapEmail_({
+      when: Utilities.formatDate(now, tz, 'dd/MM/yyyy HH:mm'), tz: tz, clientTime: String(data.clientTime || ''),
+      email: email, name: name, country: country, city: city, vid: vid, full: full, empty: empty, notes: notes,
+      fullUrl: fullUrl, emptyUrl: emptyUrl, loc: loc,
+    }, fullBlob, emptyBlob);
+    mailStatus = 'Enviado ' + Utilities.formatDate(new Date(), tz, 'dd/MM HH:mm') + ' → ' + EMAIL_CONFIG.diskSwapRecipients;
+  } catch (err) {
+    mailStatus = 'FALHOU: ' + err;
+    Logger.log('[Disk Swap] e-mail falhou: ' + err);
+  }
+  try { sh.getRange(rowNum, 14).setValue(mailStatus); } catch (e) {}
+  Logger.log('[Disk Swap] ' + email + ': ' + full + ' (cheio) → ' + empty + ' (câmera) · VID ' + vid + ' · ' + mailStatus);
+
+  const result = { success: true, message: 'Troca registrada', row: rowNum,
+                   photoUrls: { full: fullUrl, empty: emptyUrl }, emailed: mailStatus.indexOf('FALHOU') !== 0 };
+  if (sid) { try { cache.put('diskswap_' + sid, JSON.stringify(result), 600); } catch (e) {} }
+  return result;
+}
+
+function sendDiskSwapEmail_(x, fullBlob, emptyBlob) {
+  const PT = { Brazil: 'Brasil', Argentina: 'Argentina', Chile: 'Chile', Colombia: 'Colômbia', Mexico: 'México', Peru: 'Peru' };
+  const countryPt = PT[x.country] || x.country;
+  const where = [countryPt, x.city].filter(Boolean).join(' · ') || '—';
+  const e = escapeHtml_;
+  const tzLabel = x.tz === 'America/Sao_Paulo' ? 'horário de Brasília' : x.tz;
+  const label = 'color:#64748B;padding:7px 14px 7px 0;vertical-align:top;white-space:nowrap';
+  const val = 'padding:7px 0;vertical-align:top';
+  const mono = 'font-family:Consolas,Menlo,monospace;font-size:15px;font-weight:bold;letter-spacing:.02em';
+  const photo = function(cid, title, code, url) {
+    return '<td style="padding:0 12px 0 0;vertical-align:top;width:50%">' +
+      '<div style="font-size:13px;color:#64748B;margin-bottom:6px">' + title + '</div>' +
+      '<img src="cid:' + cid + '" alt="' + e(code) + '" style="width:100%;max-width:290px;border-radius:10px;border:1px solid #E2E8F0;display:block">' +
+      '<div style="' + mono + ';margin-top:6px">' + e(code) + '</div>' +
+      (url ? '<a href="' + e(url) + '" style="font-size:12px;color:#2C5282">abrir no Drive</a>' : '') + '</td>';
+  };
+  const html =
+    '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1A202C;max-width:640px;line-height:1.45">' +
+    '<div style="background:#1A365D;color:#fff;border-radius:12px 12px 0 0;padding:16px 20px">' +
+      '<div style="font-size:12px;letter-spacing:.06em;opacity:.8">STREET VIEW LATAM · DISCOS</div>' +
+      '<div style="font-size:20px;font-weight:bold;margin-top:2px">Troca de disco — ' + e(x.name) + '</div></div>' +
+    '<div style="border:1px solid #E2E8F0;border-top:0;border-radius:0 0 12px 12px;padding:16px 20px">' +
+    '<table style="border-collapse:collapse;font-size:14px;margin-bottom:16px">' +
+      '<tr><td style="' + label + '">Quem trocou</td><td style="' + val + '"><b>' + e(x.name) + '</b><br><span style="color:#64748B">' + e(x.email) + '</span></td></tr>' +
+      '<tr><td style="' + label + '">De onde</td><td style="' + val + '">' + e(where) + '</td></tr>' +
+      '<tr><td style="' + label + '">VID</td><td style="' + val + '">' + e(x.vid || '—') + '</td></tr>' +
+      '<tr><td style="' + label + '">Quando</td><td style="' + val + '">' + e(x.when) + ' (' + e(tzLabel) + ')' +
+        (x.clientTime ? '<br><span style="color:#64748B">no celular do motorista: ' + e(x.clientTime) + '</span>' : '') + '</td></tr>' +
+      '<tr><td style="' + label + '">Disco cheio<br>(saiu da câmera)</td><td style="' + val + ';' + mono + '">' + e(x.full) + '</td></tr>' +
+      '<tr><td style="' + label + '">Disco vazio<br>(entrou na câmera)</td><td style="' + val + ';' + mono + '">' + e(x.empty) + '</td></tr>' +
+      (x.loc ? '<tr><td style="' + label + '">Onde trocou</td><td style="' + val + '"><a href="https://www.google.com/maps/search/?api=1&query=' + e(x.loc) + '" style="color:#2C5282">ver no mapa</a></td></tr>' : '') +
+      (x.notes ? '<tr><td style="' + label + '">Observação</td><td style="' + val + '">' + e(x.notes).replace(/\n/g, '<br>') + '</td></tr>' : '') +
+    '</table>' +
+    '<table style="border-collapse:collapse;width:100%"><tr>' +
+      photo('full', 'Disco cheio (saiu da câmera)', x.full, x.fullUrl) +
+      photo('empty', 'Disco vazio (entrou na câmera)', x.empty, x.emptyUrl) +
+    '</tr></table>' +
+    '<p style="margin:18px 0 0"><a href="https://latamace.com/disks.html" style="background:#2C5282;color:#fff;text-decoration:none;padding:9px 16px;border-radius:8px;display:inline-block;font-weight:bold">Ver todos os discos</a></p>' +
+    '<p style="font-size:12px;color:#94A3B8;margin:14px 0 0">Enviado automaticamente pelo app dos motoristas (botão "Troca de disco"). Registro na aba "' + e(CONFIG.diskSwapSheet) + '" da Mastersheet.</p>' +
+    '</div></div>';
+  const text = 'Troca de disco — ' + x.name + ' (' + x.email + ')\n' +
+    'De onde: ' + where + '\nVID: ' + (x.vid || '—') + '\nQuando: ' + x.when + ' (' + tzLabel + ')\n' +
+    'Disco cheio (saiu da câmera): ' + x.full + (x.fullUrl ? ' — ' + x.fullUrl : '') + '\n' +
+    'Disco vazio (entrou na câmera): ' + x.empty + (x.emptyUrl ? ' — ' + x.emptyUrl : '') + '\n' +
+    (x.loc ? 'Onde trocou: https://www.google.com/maps/search/?api=1&query=' + x.loc + '\n' : '') +
+    (x.notes ? 'Observação: ' + x.notes + '\n' : '') + '\nhttps://latamace.com/disks.html';
+  MailApp.sendEmail({
+    to: EMAIL_CONFIG.diskSwapRecipients,
+    subject: 'Troca de disco · ' + x.name + (countryPt ? ' (' + countryPt + ')' : '') + (x.vid ? ' · VID ' + x.vid : ''),
+    body: text,
+    htmlBody: html,
+    inlineImages: { full: fullBlob, empty: emptyBlob },
+    name: 'SV LATAM · Discos',
+  });
+}
+
+/** Trocas pra página de discos, mais nova primeiro. */
+function readDiskSwaps_(ss, drv) {
+  const sh = getDiskSwapSheet_(ss, false);
+  if (!sh || sh.getLastRow() < 2) return [];
+  return sh.getRange(2, 1, sh.getLastRow() - 1, 15).getValues()
+    .filter(function(r) { return r[0] instanceof Date; })
+    .map(function(r) {
+      const em = String(r[1] || '').trim().toLowerCase();
+      const d = drv && drv[em];
+      return {
+        at: r[0].toISOString(), email: em, name: (d && d.name) || String(r[2] || ''), country: (d && d.country) || String(r[3] || ''),
+        city: String(r[4] || ''), vid: String(r[5] || ''), fullCode: diskNorm_(r[6]), fullPhoto: String(r[7] || ''),
+        emptyCode: diskNorm_(r[8]), emptyPhoto: String(r[9] || ''), notes: String(r[10] || ''), loc: String(r[12] || ''),
+        mail: String(r[13] || ''),
+      };
+    })
+    .sort(function(a, b) { return a.at < b.at ? 1 : a.at > b.at ? -1 : 0; });
+}
+
+/** Última troca do motorista: { at (ms), full, empty } ou null. Aba pequena — lida inteira. */
+function lastDiskSwapFor_(email) {
+  const target = String(email || '').trim().toLowerCase();
+  if (!target) return null;
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sh = getDiskSwapSheet_(ss, false);
+  if (!sh || sh.getLastRow() < 2) return null;
+  let best = null;
+  sh.getRange(2, 1, sh.getLastRow() - 1, 9).getValues().forEach(function(r) {
+    if (!(r[0] instanceof Date) || String(r[1] || '').trim().toLowerCase() !== target) return;
+    if (!best || r[0].getTime() >= best.at) best = { at: r[0].getTime(), full: diskNorm_(r[6]), empty: diskNorm_(r[8]) };
+  });
+  return best;
 }
 
 function uploadAssetPhotoToDrive_(photo, safeDriverName, timestamp, label, folder) {

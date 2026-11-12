@@ -47,6 +47,7 @@
     if (/\/assets\.html$/.test(p)) return 'assets';
     if (/\/cash\.html$/.test(p)) return 'cash';
     if (/\/ar-divergencias\.html$/.test(p)) return 'ardiv';
+    if (/\/disk-swap\.html$/.test(p)) return 'swap';
     if (/\/driver-docs\.html$/.test(p)) return 'docs';
     return '';
   }
@@ -131,7 +132,7 @@
   // sobe APP_BUILD_MIN aqui E window.SVApp.build no app/index.html, e troca o
   // ?v= do driver-embed.js nas 5 páginas de motorista.
   // Só recarrega com o app na tela Início e visível — nunca no meio de um formulário.
-  const APP_BUILD_MIN = '2026-11-12';
+  const APP_BUILD_MIN = '2026-11-12b';   // 12b: troca de disco
   const RELOAD_KEY = 'svapp.shellReloadAt';
   function shellOutdated() {
     try {
@@ -347,6 +348,7 @@
         else if (/\/cash\.html$/.test(p)) tab = 'cash';
         else if (/\/driver-docs\.html$/.test(p)) tab = 'docs';
         else if (/\/ar-divergencias\.html$/.test(p)) tab = 'ardiv';
+        else if (/\/disk-swap\.html$/.test(p)) tab = 'swap';
       } catch (err) { return; }
       if (!tab) return;
       try {
