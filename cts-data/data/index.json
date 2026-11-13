@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-11-12T21:25:07.229Z",
+  "generatedAt": "2026-11-13T17:06:14.656Z",
   "month": 11,
   "year": 2026,
   "countries": [
     {
       "country": "ALL",
       "slug": "all",
-      "drivers": 43
+      "drivers": 44
     },
     {
       "country": "Argentina",
       "slug": "argentina",
-      "drivers": 2
+      "drivers": 3
     },
     {
       "country": "Brazil",
