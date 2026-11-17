@@ -66,7 +66,7 @@ const USERS = [
   },
   {
     username: "david",
-    passwordHash: "473dcd19b98e413a24dfda72e73960d02ba47f6319122285a8a00a6741f196ec",
+    passwordHash: "f721392da397e18c7d905cb0bb6ae35193020633c414d32d87ed6b759dedadee",
     fullName: "David",
     pages: ["dashboard.html", "driver-profile.html", "disks.html", "recruitment.html", "country_scopes.html", "ops-map.html", "pmo.html", "ramp.html", "timesheet.html"],
   },
