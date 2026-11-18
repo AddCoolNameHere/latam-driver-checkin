@@ -575,6 +575,40 @@ table.cm-pace-table { width: 100%; border-collapse: collapse; font-size: 13px; m
 .cm-safety-num.acc .v { color: var(--c-danger); }
 .cm-safety-num.ok .v { color: var(--c-success); }
 .cm-safety-sev { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--c-text-muted); }
+/* cts-1.5: faixa clicável + modal de detalhe de acidentes */
+.cm-safety.cm-clickable { cursor: pointer; transition: box-shadow .12s ease, border-color .12s ease; }
+.cm-safety.cm-clickable:hover { border-color: var(--c-accent); box-shadow: 0 4px 16px rgba(44,82,130,0.14); }
+.cm-safety.cm-clickable:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+.cm-safety-more { margin-left: auto; font-weight: 700; color: var(--c-primary); font-size: 11.5px; white-space: nowrap; }
+.cm-vac-chip {
+  display: inline-flex; align-items: center; gap: 3px; margin-left: 8px; vertical-align: middle;
+  font-size: 10.5px; font-weight: 700; padding: 1px 8px; border-radius: 999px;
+  background: #CCFBF1; color: #0F766E; white-space: nowrap;
+}
+.cm-modal.cm-modal-wide {
+  max-width: 820px; max-height: 86vh; overflow: auto; text-align: left;
+}
+.cm-inc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.cm-inc-head h3 { margin-bottom: 2px; }
+.cm-inc-head p { margin-bottom: 10px; }
+.cm-inc-x {
+  flex: none; border: 1px solid var(--c-border); background: var(--c-bg); color: var(--c-text-muted);
+  width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 15px; line-height: 1;
+}
+.cm-inc-x:hover { color: var(--c-text); border-color: var(--c-accent); }
+.cm-inc-bds { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+@media (max-width: 680px) { .cm-inc-bds { grid-template-columns: 1fr; } }
+.cm-inc-col { background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 10px; padding: 10px 12px; }
+.cm-inc-h { font-size: 11.5px; font-weight: 800; color: var(--c-primary-dark); margin-bottom: 8px; }
+.cm-inc-bd { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin: 6px 0; font-size: 12px; }
+.cm-inc-bd b { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--c-text-muted); margin-right: 4px; }
+.cm-inc-bycountry { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-bottom: 14px; font-size: 12px; }
+.cm-inc-bycountry b { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--c-text-muted); margin-right: 4px; }
+.cm-inc-scroll { max-height: 42vh; overflow: auto; border: 1px solid var(--c-border); border-radius: 10px; }
+.cm-inc-table { width: 100%; font-size: 12.5px; }
+.cm-inc-table thead th { position: sticky; top: 0; background: var(--c-surface); z-index: 1; }
+.cm-inc-foot { font-size: 11.5px; color: var(--c-text-muted); margin-top: 8px; }
+.cm-inc-empty { font-size: 13px; color: var(--c-text-muted); padding: 14px; background: var(--c-bg); border-radius: 10px; }
 
 /* ---------- Aba Idle days ---------- */
 .cm-idle-grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-bottom: 30px; }
@@ -1453,8 +1487,130 @@ function renderSafety(d) {
       box('ok', days == null ? '—' : num(days), 'Days since last accident',
           s.lastAccident ? 'Last accident: ' + shortDate(s.lastAccident) : 'No accident on record this year') +
     '</div>' +
-    '<div class="cm-safety-sev">' + sevHtml + '</div>';
+    '<div class="cm-safety-sev">' + sevHtml +
+      '<span class="cm-safety-more" data-ov-skip aria-hidden="true">Ver detalhes →</span></div>';
   el.hidden = false;
+  // cts-1.5: clicar na faixa abre o detalhamento (registros individuais + quebras).
+  el.classList.add('cm-clickable');
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  el.onclick = function () {
+    if (document.body.classList.contains('cm-ov-editing')) return;   // não rouba o clique do modo edição
+    openIncidentsModal(d);
+  };
+  el.onkeydown = function (ev) {
+    if ((ev.key === 'Enter' || ev.key === ' ') && !document.body.classList.contains('cm-ov-editing')) {
+      ev.preventDefault(); openIncidentsModal(d);
+    }
+  };
+}
+
+/* ============================================================
+ * MODAL "Accidents & incidents" (cts-1.5) — registros individuais
+ * ------------------------------------------------------------
+ * Mostra cada ocorrência (data, país, tipo, severidade, de quem é a
+ * culpa, região e o motorista resolvido pelo VID) + as quebras do mês
+ * e do ano. A fonte não tem nome de motorista nem descrição: o VID é a
+ * ponte com a lista de condutores. Payload antigo (sem `list`) mostra
+ * só as quebras e avisa que os registros chegam no próximo refresh.
+ * ============================================================ */
+const CC_NAME = { AR: 'Argentina', BR: 'Brazil', CL: 'Chile', CO: 'Colombia', MX: 'Mexico', PE: 'Peru' };
+
+function closeIncidentsModal() { const m = $('inc-modal'); if (m) m.remove(); document.removeEventListener('keydown', incEsc); }
+function incEsc(e) { if (e.key === 'Escape') closeIncidentsModal(); }
+
+function incBreakdown(title, obj, pillFor) {
+  const keys = Object.keys(obj || {});
+  if (!keys.length) return '';
+  keys.sort(function (a, b) { return obj[b] - obj[a]; });
+  const chips = keys.map(function (k) {
+    return '<span class="cm-pill ' + (pillFor ? pillFor(k) : 'pill-neutral') + '">' +
+           esc(k) + ' ' + num(obj[k]) + '</span>';
+  }).join('');
+  return '<div class="cm-inc-bd"><b>' + esc(title) + '</b>' + chips + '</div>';
+}
+
+function openIncidentsModal(d) {
+  closeIncidentsModal();
+  const s = (d && d.incidents) || {};
+  const m = s.month || {}, y = s.ytd || {};
+
+  // VID -> nome do motorista (a lista de condutores já traz vids)
+  const vidToDriver = {};
+  ((d && d.drivers) || []).forEach(function (dr) {
+    (dr.vids || []).forEach(function (v) { if (v != null && v !== '') vidToDriver[String(v)] = dr.name; });
+  });
+
+  const sevPill = function (k) { return SEV_PILL[k] || 'pill-neutral'; };
+  const list = Array.isArray(s.list) ? s.list : null;
+
+  let rowsHtml;
+  if (!list) {
+    rowsHtml = '<div class="cm-inc-empty">Os registros individuais aparecem após o próximo refresh dos dados ' +
+               '(o backend do CTS precisa ser reimplantado com a versão nova). Por enquanto, as quebras acima.</div>';
+  } else if (!list.length) {
+    rowsHtml = '<div class="cm-inc-empty">Nenhuma ocorrência registrada neste escopo.</div>';
+  } else {
+    const body = list.map(function (r) {
+      const drv = r.vid && vidToDriver[String(r.vid)] ? vidToDriver[String(r.vid)] : null;
+      const isAcc = /^accident/i.test(r.type || '');
+      return '<tr>' +
+        '<td class="cm-num" style="white-space:nowrap">' + esc(shortDate(r.date)) + '</td>' +
+        '<td>' + esc(CC_NAME[r.cc] || r.cc || '—') + '</td>' +
+        '<td>' + (isAcc ? '<span class="cm-pill pill-danger">' : '<span class="cm-pill pill-neutral">') +
+          esc(r.type || 'Other') + '</span></td>' +
+        '<td>' + (r.severity ? '<span class="cm-pill ' + sevPill(r.severity) + '">' + esc(r.severity) + '</span>' : '<span class="cm-muted">—</span>') + '</td>' +
+        '<td class="cm-muted">' + esc(r.liability || '—') + '</td>' +
+        '<td class="cm-muted">' + esc(r.region || '—') + '</td>' +
+        '<td>' + (drv ? '<div class="cm-driver"><div class="cm-avatar">' + esc(initials(drv)) + '</div><span class="cm-driver-name">' + esc(drv) + '</span></div>'
+                      : (r.vid ? '<span class="cm-muted" title="VID sem motorista na lista">VID ' + esc(r.vid) + '</span>' : '<span class="cm-muted">—</span>')) + '</td>' +
+        '</tr>';
+    }).join('');
+    rowsHtml = '<div class="cm-scroll cm-inc-scroll"><table class="cm-table cm-inc-table">' +
+      '<thead><tr><th>Date</th><th>Country</th><th>Type</th><th>Severity</th><th>Liability</th><th>Region</th><th>Driver (via VID)</th></tr></thead>' +
+      '<tbody>' + body + '</tbody></table></div>' +
+      '<div class="cm-inc-foot">' + list.length + ' registro' + (list.length === 1 ? '' : 's') +
+        ' · motorista resolvido pelo VID quando há correspondência · sem descrição na fonte</div>';
+  }
+
+  const breakdowns =
+    '<div class="cm-inc-bds">' +
+      '<div class="cm-inc-col"><div class="cm-inc-h">' + esc(periodLabel(d.month, d.year)) +
+        ' · ' + num(m.total || 0) + ' total (' + num(m.accidents || 0) + ' acc · ' + num(m.incidents || 0) + ' inc)</div>' +
+        incBreakdown('Severity', m.bySeverity, sevPill) +
+        incBreakdown('Liability', m.byLiability) +
+        incBreakdown('Type', m.byType) + '</div>' +
+      '<div class="cm-inc-col"><div class="cm-inc-h">' + esc(String(s.year || '')) +
+        ' YTD · ' + num(y.total || 0) + ' total (' + num(y.accidents || 0) + ' acc · ' + num(y.incidents || 0) + ' inc)</div>' +
+        incBreakdown('Severity', y.bySeverity, sevPill) +
+        incBreakdown('Liability', y.byLiability) +
+        incBreakdown('Type', y.byType) + '</div>' +
+    '</div>';
+
+  const byCountry = (s.byCountry && s.byCountry.length)
+    ? '<div class="cm-inc-bycountry"><b>By country (YTD)</b>' + s.byCountry.map(function (c) {
+        return '<span class="cm-chip">' + esc(c.country) + ' ' + num(c.ytd) + '</span>';
+      }).join('') + '</div>'
+    : '';
+
+  const bg = document.createElement('div');
+  bg.className = 'cm-modal-bg';
+  bg.id = 'inc-modal';
+  bg.innerHTML =
+    '<div class="cm-modal cm-modal-wide" role="dialog" aria-modal="true" aria-label="Accidents and incidents detail">' +
+      '<div class="cm-inc-head">' +
+        '<div><h3>Accidents &amp; incidents</h3>' +
+          '<p>' + esc(periodLabel(d.month, d.year)) +
+            (s.dataThrough ? ' · log through ' + esc(shortDate(s.dataThrough)) : '') +
+            (s.lastAccident ? ' · último acidente ' + esc(shortDate(s.lastAccident)) : '') + '</p></div>' +
+        '<button type="button" class="cm-inc-x" id="inc-close" aria-label="Fechar">✕</button>' +
+      '</div>' +
+      breakdowns + byCountry + rowsHtml +
+    '</div>';
+  document.body.appendChild(bg);
+  bg.addEventListener('click', function (e) { if (e.target === bg) closeIncidentsModal(); });
+  const xb = $('inc-close'); if (xb) xb.addEventListener('click', closeIncidentsModal);
+  document.addEventListener('keydown', incEsc);
 }
 
 /* ============================================================
@@ -1609,7 +1765,9 @@ function renderIdleTable() {
       .map(i => '<span class="cm-chip" title="' + esc(i.r) + '">' + esc(shortDate(i.d)) + '</span>').join('');
     return '<tr>' +
       '<td><div class="cm-driver"><div class="cm-avatar">' + esc(initials(d.name)) +
-        '</div><span class="cm-driver-name">' + esc(d.name) + '</span></div></td>' +
+        '</div><span class="cm-driver-name">' + esc(d.name) + '</span>' +
+        (d.vacation ? '<span class="cm-vac-chip" title="De férias (RH: Situation = Vacation)">🌴 Férias</span>' : '') +
+        '</div></td>' +
       '<td class="cm-muted">' + esc(d.country) + '</td>' +
       '<td class="cm-num">' + num(d.mappingDays) + '</td>' +
       '<td class="cm-num">' + (d.idleDays > 0 ? '<strong>' + num(d.idleDays) + '</strong>' : num(0)) + '</td>' +

@@ -444,6 +444,7 @@ function ctsSource_() {
         date: ctsCol_(ih, ['incident_date']), cc: ctsCol_(ih, ['country_code']),
         type: ctsCol_(ih, ['type']), item: ctsCol_(ih, ['item']), sev: ctsCol_(ih, ['severity']),
         ticket: ctsCol_(ih, ['ticket']), vid: ctsCol_(ih, ['vehicle_id']),
+        region: ctsCol_(ih, ['region']),   // cts-1.5: pro detalhe por acidente
       };
       if (ix2.date >= 0 && ix2.cc >= 0) {
         const iDates = ctsDisplayCol_(iSheet, ix2.date, iv.length);
@@ -462,6 +463,8 @@ function ctsSource_() {
             type: ix2.type >= 0 ? String(r[ix2.type] || '').trim() : '',
             liability: ix2.item >= 0 ? String(r[ix2.item] || '').trim() : '',
             severity: ix2.sev >= 0 ? String(r[ix2.sev] || '').trim() : '',
+            vid: ix2.vid >= 0 ? String(r[ix2.vid] || '').trim() : '',       // cts-1.5: casa com driver.vids no front
+            region: ix2.region >= 0 ? String(r[ix2.region] || '').trim() : '',
           });
         }
       }
@@ -519,6 +522,13 @@ function ctsIncidentsSummary_(list, scopeCodes, mk) {
     year: +year,
     lastIncident: last || null,
     lastAccident: lastAcc || null,
+    // cts-1.5: registros individuais (do escopo), mais recente primeiro. Sem e-mail/ticket.
+    list: rows.slice().sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; })
+              .slice(0, 400)
+              .map(function (r) {
+                return { date: r.date, cc: r.cc, type: r.type, liability: r.liability,
+                         severity: r.severity, vid: r.vid || '', region: r.region || '' };
+              }),
     daysSinceLastAccident: lastAcc ? Math.max(0, days(lastAcc, today)) : null,
     dataThrough: list.reduce(function (m, r) { return r.date > m ? r.date : m; }, '') || null,
     byCountry: CTS_COUNTRIES.filter(function (c) { return byCC[c.code]; }).map(function (c) {
@@ -536,7 +546,7 @@ let _ctsMaster = null;
  */
 function ctsMaster_() {
   if (_ctsMaster) return _ctsMaster;
-  const out = { nameByEmail: {}, driversByCC: null, vidsByCC: null };
+  const out = { nameByEmail: {}, vacationByEmail: {}, driversByCC: null, vidsByCC: null };
   let ss = null;
   try { ss = SpreadsheetApp.openById(CTS_CONFIG.masterSpreadsheetId); }
   catch (e) { Logger.log('[CTS Backend] Mastersheet inacessível: ' + e); _ctsMaster = out; return out; }
@@ -555,6 +565,8 @@ function ctsMaster_() {
       const name = String(v[i][iName] || '').trim();
       if (name && !out.nameByEmail[email]) out.nameByEmail[email] = name;
       const sit = v[i][iSit];
+      // cts-1.5: quem está de FÉRIAS (Situation=Vacation) vira flag no motorista.
+      if (/vacation|f[eé]rias|vacaciones/i.test(String(sit || ''))) out.vacationByEmail[email] = 1;
       if (sit !== 'Active' && sit !== 'Offboarding') continue;
       const c = ctsCountry_(v[i][iCountry]);
       if (c) counts[c.code] = (counts[c.code] || 0) + 1;
@@ -853,6 +865,7 @@ function getClientMetrics_(month, year, country) {
     // ---- motoristas ----
     const drivers = ctsDriverRows_(rows, master.nameByEmail, mk, src.qc, { idleDates: true }).map(function (d) {
       d.tkmDriverTotal = d.tkm;
+      d.vacation = !!master.vacationByEmail[String(d.email || '').toLowerCase()];   // cts-1.5: de férias (join por e-mail, antes de apagar o e-mail)
       delete d.email;   // portal é público: email não sai no payload mensal
       return d;
     });
