@@ -33,7 +33,7 @@
  * Logs: [CTS Backend]
  */
 
-const CTS_VERSION = 'cts-1.4';
+const CTS_VERSION = 'cts-1.5';
 
 const CTS_CONFIG = {
   // ID da planilha que tem as abas KMS/Targets/QC. A conta que publica este
