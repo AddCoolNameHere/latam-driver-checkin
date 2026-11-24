@@ -4776,6 +4776,8 @@ async function fetchRealData(forceRefresh) {
   // vem e nada muda.
   const isVacation = (d) => /vacation|f[eé]rias|vacaciones/i.test(String(d.situation || ''));
   const allDrivers = dashData.data.drivers || [];
+  // Nome vazio (cabeçalho da HR mexido — nov/2026 virou "undefined" no mapa) → mostra o e-mail
+  allDrivers.forEach(d => { if (!String(d.name || "").trim()) d.name = d.email || "—"; });
   state.vacation = allDrivers.filter(isVacation).map(d => ({
     name: d.name, email: d.email, country: d.country,
   }));

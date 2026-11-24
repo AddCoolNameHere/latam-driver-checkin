@@ -316,7 +316,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.89',
+        version: 'v5.90',
         ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
@@ -865,7 +865,7 @@ function getActiveDrivers(includeOffboarding, includeVacation) {
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
 
-  const nameIdx = headers.indexOf('Beneficiary Full Name');
+  const nameIdx = hrNameCol_(headers);
   const emailIdx = headers.indexOf('Corporate E-mail');
   const countryIdx = headers.indexOf('Country');
   const situationIdx = headers.indexOf('Situation');
@@ -970,7 +970,7 @@ function getDriversWithAddress(includeVacation) {
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
 
-  const nameIdx = headers.indexOf('Beneficiary Full Name');
+  const nameIdx = hrNameCol_(headers);
   const emailIdx = headers.indexOf('Corporate E-mail');
   const countryIdx = headers.indexOf('Country');
   const situationIdx = headers.indexOf('Situation');
@@ -1879,7 +1879,7 @@ function getFleetVids_() {
       }
       return -1;
     };
-    const iName = findCol('Beneficiary Full Name', 'Full Name', 'Driver Name', 'Name');
+    const iName = hrNameCol_(headers);
     const iEmail = findCol('Corporate E-mail', 'Email', 'Driver Email');
     const iSit = findCol('Situation', 'Status', 'Driver Status');
     if (iEmail >= 0) {
@@ -2054,7 +2054,7 @@ function getDriverProfile_(email) {
   const hrData = hrSheet.getDataRange().getValues();
   const hrHeaders = hrData[0];
   const hrEmailIdx = hrHeaders.indexOf('Corporate E-mail');
-  const hrNameIdx = hrHeaders.indexOf('Beneficiary Full Name');
+  const hrNameIdx = hrNameCol_(hrHeaders);
   const hrCountryIdx = hrHeaders.indexOf('Country');
   const hrSituationIdx = hrHeaders.indexOf('Situation');
   const hrHireDateIdx = hrHeaders.indexOf('Hire Date');
@@ -2323,7 +2323,7 @@ function buildHrIndex_() {
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
 
-  const nameIdx = headers.indexOf('Beneficiary Full Name');
+  const nameIdx = hrNameCol_(headers);
   const cardPhysIdx = headers.indexOf('Ramp Card Last 4');
   const cardVirtIdx = headers.indexOf('Virtual Ramp Card Last 4');
   const emailIdx = headers.indexOf('Corporate E-mail');
@@ -3025,7 +3025,7 @@ function getDriverCalendarByMonth_(monthYear) {
     const hrData = hrSheet.getDataRange().getValues();
     const hrHeaders = hrData[0];
     const emailIdx = hrHeaders.indexOf('Corporate E-mail');
-    const nameIdx = hrHeaders.indexOf('Beneficiary Full Name');
+    const nameIdx = hrNameCol_(hrHeaders);
     const nameByEmail = {};
     for (let i = 1; i < hrData.length; i++) {
       const em = hrData[i][emailIdx];
@@ -3563,7 +3563,7 @@ function getPayrollCheckin_(startParam, endParam) {
       }
       return -1;
     };
-    const iName = col('Beneficiary Full Name', 'Full Name', 'Driver Name', 'Name');
+    const iName = hrNameCol_(H);
     const iEmail = col('Corporate E-mail', 'Email', 'Driver Email');
     const iCountry = col('Country');
     const iSit = col('Situation', 'Status', 'Driver Status');
@@ -8358,6 +8358,25 @@ function findHeader_(headerRow, candidates) {
   return -1;
 }
 
+/**
+ * v5.90: coluna do NOME na aba HR, tolerante a mexidas no cabeçalho (espaço sobrando,
+ * maiúscula, texto extra tipo "Beneficiary Full Name (…)"). Antes eram indexOf exatos e,
+ * quando o cabeçalho mudou (nov/2026 — e já tinha acontecido em set/2026), getDrivers /
+ * getDashboardData passaram a mandar name vazio → "undefined" no mapa e dropdowns sem nome.
+ * Mesmo critério do getCtsTimesheet_ (findHeader_), que seguiu funcionando.
+ */
+function hrNameCol_(headers) {
+  const H = headers || [];
+  let i = findHeader_(H, ['Beneficiary Full Name', 'Full Name', 'Driver Name']);
+  if (i < 0) i = H.map(function (h) { return String(h == null ? '' : h).toLowerCase().trim(); }).indexOf('name');
+  if (i >= 0 && H[i] !== 'Beneficiary Full Name') {
+    Logger.log('[HR Header] coluna do nome = "' + H[i] + '" (col ' + (i + 1) + ') — cabeçalho diferente de "Beneficiary Full Name"');
+  } else if (i < 0) {
+    Logger.log('[HR Header] ⚠ coluna do nome NÃO encontrada na HR — confira o cabeçalho');
+  }
+  return i;
+}
+
 /** Normaliza nome de país: minúsculas, sem acento, trim. */
 function normCountry_(s) {
   s = String(s == null ? '' : s).toLowerCase().trim();
@@ -8515,7 +8534,7 @@ function getActiveDriversByCountry_() {
     return -1;
   };
 
-  const idxName = findCol('Beneficiary Full Name', 'Full Name', 'Driver Name', 'Name');
+  const idxName = hrNameCol_(headers);
   const idxEmail = findCol('Corporate E-mail', 'Email', 'Driver Email');
   const idxCountry = findCol('Country');
   const idxStatus = findCol('Situation', 'Status', 'Driver Status');
@@ -9358,7 +9377,7 @@ function getDriverInfo_(email, name) {
     return -1;
   };
 
-  const idxName = findCol('Beneficiary Full Name', 'Full Name', 'Driver Name', 'Name');
+  const idxName = hrNameCol_(headers);
   const idxEmail = findCol('Corporate E-mail', 'Email', 'Driver Email');
   const idxCountry = findCol('Country');
   const idxStatus = findCol('Situation', 'Status');
@@ -10565,7 +10584,7 @@ function getArgentinaDrivers_() {
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
 
-  const nameIdx     = headers.indexOf('Beneficiary Full Name');
+  const nameIdx     = hrNameCol_(headers);
   const emailIdx    = headers.indexOf('Corporate E-mail');
   const countryIdx  = headers.indexOf('Country');
   const situationIdx = headers.indexOf('Situation');
@@ -10919,17 +10938,36 @@ function saveWorkConfirmation_(data) {
       if (locked) {
         sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, WORK_CONFIRM_COLS).setValues(rows);
       } else {
-        rows.forEach(function (r) { sheet.appendRow(r); });
+        // v5.90: appendRow ignora o formato @ e converte "2026-11-07" em data (virava 46333
+        // e o getter perdia o período). O apóstrofo força texto, igual digitar na planilha.
+        rows.forEach(function (r) {
+          const t = r.slice();
+          t[2] = "'" + t[2]; t[3] = "'" + t[3]; t[7] = "'" + t[7];
+          sheet.appendRow(t);
+        });
       }
     } finally {
       if (locked) lock.releaseLock();
     }
     Logger.log('[Work Confirm] ' + email + ' ' + start + '..' + end + ' → ' + rows.length + ' dias (' + id + ')');
-    return { success: true, version: 'v5.89', id: id, days: rows.length, submittedAt: now.toISOString() };
+    return { success: true, version: 'v5.90', id: id, days: rows.length, submittedAt: now.toISOString() };
   } catch (err) {
     Logger.log('saveWorkConfirmation_ erro: ' + err);
     return { success: false, error: String(err) };
   }
+}
+
+/**
+ * v5.90: data de uma célula da aba Work Confirmations → yyyy-MM-dd. Aceita Date, número
+ * serial do Sheets (46333 = 2026-11-07 — o que o appendRow gravou em nov/2026) e texto
+ * (com ou sem apóstrofo na frente).
+ */
+function wcDate_(v, tz) {
+  if (typeof v === "number" && isFinite(v) && v > 20000 && v < 80000) {
+    return Utilities.formatDate(new Date(Date.UTC(1899, 11, 30) + Math.round(v) * 86400000), "UTC", "yyyy-MM-dd");
+  }
+  if (typeof v === "string") v = v.replace(/^'/, "");
+  return fmtScopeDate_(v, tz);
 }
 
 /**
@@ -10939,7 +10977,7 @@ function saveWorkConfirmation_(data) {
 function getWorkConfirmations_(startParam, endParam, emailParam) {
   const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
   const sheet = ss.getSheetByName(CONFIG.workConfirmSheet);
-  if (!sheet || sheet.getLastRow() < 2) return { success: true, version: 'v5.89', submissions: [] };
+  if (!sheet || sheet.getLastRow() < 2) return { success: true, version: 'v5.90', submissions: [] };
   const tz = ss.getSpreadsheetTimeZone();
   const start = fmtScopeDate_(startParam);
   const end = fmtScopeDate_(endParam);
@@ -10952,8 +10990,8 @@ function getWorkConfirmations_(startParam, endParam, emailParam) {
     const em = String(r[4] || '').trim().toLowerCase();
     if (!sid || !em) return;
     if (want && em !== want) return;
-    const ps = fmtScopeDate_(r[2], tz);
-    const pe = fmtScopeDate_(r[3], tz);
+    const ps = wcDate_(r[2], tz);
+    const pe = wcDate_(r[3], tz);
     if (start && ps !== start) return;
     if (end && pe !== end) return;
     const at = r[1] instanceof Date ? r[1].toISOString() : String(r[1] || '');
@@ -10963,7 +11001,7 @@ function getWorkConfirmations_(startParam, endParam, emailParam) {
       comment: String(r[12] || ''), lang: String(r[13] || ''), days: [],
     });
     S.days.push({
-      date: fmtScopeDate_(r[7], tz),
+      date: wcDate_(r[7], tz),
       worked: /^(yes|sim|si|sí|true|1)$/i.test(String(r[8]).trim()),
       hours: Number(r[9]) || 0,
       reason: workConfirmReasonCode_(r[10]),
@@ -10988,7 +11026,7 @@ function getWorkConfirmations_(startParam, endParam, emailParam) {
   }).sort(function (a, b) {
     return String(a.country).localeCompare(String(b.country)) || String(a.name).localeCompare(String(b.name));
   });
-  return { success: true, version: 'v5.89', submissions: submissions };
+  return { success: true, version: 'v5.90', submissions: submissions };
 }
 
 
