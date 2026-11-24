@@ -2946,6 +2946,11 @@ const I18N = {
     mapTitle: 'Mapa LATAM',
     mapSub: 'Base atual e área de mapeamento por driver',
     driversVisible: 'drivers visíveis',
+    // painel "Precisa de atenção" (sv-enhance.js) + popup do mapa
+    excTitle: 'Precisa de atenção', excSub: 'Ordenado por severidade',
+    excItems: 'itens', excOk: 'ok',
+    excAllGood: 'Tudo certo', excAllGoodSub: 'Nenhuma exceção na frota agora',
+    popupDetails: 'Ver detalhes →',
     legendHome: 'Casa',
     legendHotel: 'Hotel',
     legendArea: 'Área de mapeamento',
@@ -3327,6 +3332,10 @@ const I18N = {
     mapTitle: 'Mapa LATAM',
     mapSub: 'Base actual y área de mapeo por conductor',
     driversVisible: 'conductores visibles',
+    excTitle: 'Requiere atención', excSub: 'Ordenado por gravedad',
+    excItems: 'ítems', excOk: 'ok',
+    excAllGood: 'Todo en orden', excAllGoodSub: 'Ninguna excepción en la flota ahora',
+    popupDetails: 'Ver detalles →',
     legendHome: 'Casa',
     legendHotel: 'Hotel',
     legendArea: 'Área de mapeo',
@@ -3708,6 +3717,10 @@ const I18N = {
     mapTitle: 'LATAM Map',
     mapSub: 'Current base and mapping area per driver',
     driversVisible: 'drivers visible',
+    excTitle: 'Needs attention', excSub: 'Sorted by severity',
+    excItems: 'items', excOk: 'ok',
+    excAllGood: 'All good', excAllGoodSub: 'No fleet exceptions right now',
+    popupDetails: 'View details →',
     legendHome: 'Home',
     legendHotel: 'Hotel',
     legendArea: 'Mapping area',
@@ -4641,7 +4654,7 @@ function renderMap(drivers) {
         : (d.hoursAgo !== null
           ? `<div class="popup-row" style="margin-top:6px;color:${isRecent ? '#22C55E' : '#F59E0B'};">${formatHoursAgo(d.hoursAgo)}</div>`
           : `<div class="popup-row" style="color:#94A3B8;">${t('pillNoCheckin')}</div>`)}
-      <div style="margin-top:8px;"><a href="#" onclick="event.preventDefault(); openDriverPanelByEmail('${d.email}'); return false;" style="color:#2C5282;font-weight:500;">Ver detalhes →</a></div>
+      <div style="margin-top:8px;"><a href="#" onclick="event.preventDefault(); openDriverPanelByEmail('${d.email}'); return false;" style="color:#2C5282;font-weight:500;">${t('popupDetails')}</a></div>
     `);
     markerLayer.addLayer(marker);
     bounds.push([d.base.lat, d.base.lng]);
@@ -9772,6 +9785,6 @@ setLanguage(currentLang);
 </div>
 
 <script src="/sv-shell.js?v=20261112disks"></script>
-<script src="/sv-enhance.js"></script>
+<script src="/sv-enhance.js?v=20261124"></script>
 </body>
 </html>

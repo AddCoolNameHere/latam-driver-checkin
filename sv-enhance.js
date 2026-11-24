@@ -18,6 +18,10 @@
     return '<svg width="' + sz + '" height="' + sz + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (ICON[name] || "") + "</svg>";
   }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  // i18n: usa o t() do dashboard (chaves exc* em I18N). Fallback = texto em PT.
+  function tr(key, fb) {
+    try { var v = (typeof t === "function") ? t(key) : key; return (v && v !== key) ? v : fb; } catch (e) { return fb; }
+  }
   function initials(name) { return String(name || "?").trim().split(/\s+/).map(function (w) { return w[0] || ""; }).slice(0, 2).join("").toUpperCase(); }
 
   /* ---- ícones nos 5 scorecards ---- */
@@ -55,8 +59,8 @@
     var panel = document.createElement("section");
     panel.className = "sv-exc";
     panel.innerHTML =
-      '<div class="sv-exc-head"><div><div class="sv-exc-title">Precisa de atenção</div>' +
-      '<div class="sv-exc-sub">Ordenado por severidade</div></div>' +
+      '<div class="sv-exc-head"><div><div class="sv-exc-title" data-i18n="excTitle">' + esc(tr("excTitle", "Precisa de atenção")) + '</div>' +
+      '<div class="sv-exc-sub" data-i18n="excSub">' + esc(tr("excSub", "Ordenado por severidade")) + '</div></div>' +
       '<span class="sv-exc-count" id="sv-exc-count">—</span></div>' +
       '<div class="sv-exc-list" id="sv-exc-list"></div>';
     hero.appendChild(panel);
@@ -80,20 +84,20 @@
     items.sort(function (a, b) { return a.sev - b.sev; });
 
     if (countEl) {
-      countEl.textContent = items.length ? items.length + " itens" : "ok";
+      countEl.textContent = items.length ? items.length + " " + tr("excItems", "itens") : tr("excOk", "ok");
       countEl.style.background = items.length ? "" : "#E7F7EE";
       countEl.style.color = items.length ? "" : "var(--c-success)";
     }
     if (!items.length) {
       listEl.innerHTML = '<div class="sv-exc-empty">' + svg("check", 34) +
-        '<div class="sv-exc-empty-t">Tudo certo</div>' +
-        '<div class="sv-exc-empty-s">Nenhuma exceção na frota agora</div></div>';
+        '<div class="sv-exc-empty-t">' + esc(tr("excAllGood", "Tudo certo")) + '</div>' +
+        '<div class="sv-exc-empty-s">' + esc(tr("excAllGoodSub", "Nenhuma exceção na frota agora")) + '</div></div>';
       return;
     }
     listEl.innerHTML = "";
     items.forEach(function (it) {
       var d = it.d;
-      var when = (d.hoursAgo === null || d.hoursAgo === undefined) ? "sem check-in"
+      var when = (d.hoursAgo === null || d.hoursAgo === undefined) ? tr("pillNoCheckin", "sem check-in")
         : (typeof formatHoursAgo === "function" ? formatHoursAgo(d.hoursAgo) : "");
       var meta = (d.city ? d.city : (d.country || "")) + (when ? " · " + when : "");
       var btn = document.createElement("button");
