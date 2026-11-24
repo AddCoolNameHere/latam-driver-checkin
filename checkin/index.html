@@ -879,6 +879,13 @@
       <div class="radio-option" data-dnm-reason="mech" data-i18n="dnmReasonMech">🔧 Problema com carro</div>
       <div class="radio-option" data-dnm-reason="tech" data-i18n="dnmReasonTech">📷 Câmera / dispositivos</div>
       <div class="radio-option" data-dnm-reason="disks" data-i18n="dnmReasonDisks">💾 Discos</div>
+      <!-- nov/2026: quem não se encaixava (viagem, documento, CNH…) marcava "sim" e explicava na obs -->
+      <div class="radio-option" data-dnm-reason="travel" data-i18n="dnmReasonTravel">🧳 Viagem / deslocamento</div>
+      <div class="radio-option" data-dnm-reason="other" data-i18n="dnmReasonOther">📝 Outro motivo</div>
+    </div>
+    <div id="dnm-note-wrap" class="hidden">
+      <label style="margin-top:12px;" data-i18n="dnmNoteLabel">Conta rapidinho o motivo</label>
+      <textarea id="dnm-note" rows="2" data-i18n-placeholder="dnmNotePlaceholder" placeholder="Ex: esperando documento do carro, renovando CNH, voltando pra base..."></textarea>
     </div>
   </div>
 
@@ -1211,6 +1218,11 @@ const I18N = {
     dnmReasonMech: '🔧 Problema com carro',
     dnmReasonTech: '📷 Câmera / dispositivos',
     dnmReasonDisks: '💾 Discos',
+    dnmReasonTravel: '🧳 Viagem / deslocamento',
+    dnmReasonOther: '📝 Outro motivo',
+    dnmNoteLabel: 'Conta rapidinho o motivo',
+    dnmNotePlaceholder: 'Ex: esperando documento do carro, renovando CNH, voltando pra base...',
+    dnmNoteRequired: 'Escreve o motivo pra gente entender 🙂',
     dnmDetailsTitle: 'Detalhes do problema',
     dnmDetailsIntro: 'Estes dados ajudam a equipe a acompanhar tech/mech e prazos de pagamento.',
     dnmDescriptionPlaceholder: 'Ex: Pneu furou, mecânico chamado...',
@@ -1340,6 +1352,11 @@ const I18N = {
     dnmReasonMech: '🔧 Problema con el auto',
     dnmReasonTech: '📷 Cámara / dispositivos',
     dnmReasonDisks: '💾 Discos',
+    dnmReasonTravel: '🧳 Viaje / traslado',
+    dnmReasonOther: '📝 Otro motivo',
+    dnmNoteLabel: 'Cuéntanos brevemente el motivo',
+    dnmNotePlaceholder: 'Ej: esperando la cédula del auto, renovando licencia, volviendo a la base...',
+    dnmNoteRequired: 'Escribe el motivo para que entendamos 🙂',
     dnmDetailsTitle: 'Detalles del problema',
     dnmDetailsIntro: 'Estos datos ayudan al equipo a seguir tech/mech y plazos de pago.',
     dnmDescriptionPlaceholder: 'Ej: Pinchazo, mecánico llamado...',
@@ -1468,6 +1485,11 @@ const I18N = {
     dnmReasonMech: '🔧 Vehicle issue',
     dnmReasonTech: '📷 Camera / devices',
     dnmReasonDisks: '💾 Disks',
+    dnmReasonTravel: '🧳 Travel / commute',
+    dnmReasonOther: '📝 Other reason',
+    dnmNoteLabel: 'Tell us briefly what happened',
+    dnmNotePlaceholder: 'E.g. waiting for vehicle papers, renewing license, heading back to base...',
+    dnmNoteRequired: 'Please write the reason 🙂',
     dnmDetailsTitle: 'Issue details',
     dnmDetailsIntro: 'This info helps the team track tech/mech and payment timelines.',
     dnmDescriptionPlaceholder: 'Ex: Flat tire, mechanic called...',
@@ -1613,6 +1635,7 @@ let state = {
   dnmExpectedEnd: '',
   dnmEndStatus: null,
   dnmDescription: '',
+  dnmNote: '',          // nov/2026: texto do motivo pra travel/other
 };
 let maps = {};
 let destCircle = null;
@@ -2224,6 +2247,8 @@ function setupDnmListeners() {
   if (expEnd) expEnd.addEventListener('change', e => { state.dnmExpectedEnd = e.target.value; });
   const desc = document.getElementById('dnm-description');
   if (desc) desc.addEventListener('input', e => { state.dnmDescription = e.target.value; });
+  const dnmNote = document.getElementById('dnm-note');
+  if (dnmNote) dnmNote.addEventListener('input', e => { state.dnmNote = e.target.value; });
 }
 
 /**
@@ -2257,6 +2282,10 @@ function onWillMapChange() {
     state.dnmExpectedEnd = '';
     state.dnmEndStatus = null;
     state.dnmDescription = '';
+    state.dnmNote = '';
+    const noteEl = document.getElementById('dnm-note');
+    if (noteEl) noteEl.value = '';
+    document.getElementById('dnm-note-wrap')?.classList.add('hidden');
     document.querySelectorAll('[data-dnm-reason]').forEach(o => o.classList.remove('selected'));
     document.getElementById('dnm-details-card').classList.add('hidden');
     document.getElementById('dnm-submit-btn').classList.add('hidden');
@@ -2264,15 +2293,23 @@ function onWillMapChange() {
 }
 
 /**
+ * Motivos que NÃO são problema de veículo: não abrem detalhes nem criam vehicle issue.
+ * travel/other pedem um texto curto (obrigatório no "other").
+ */
+const DNM_NON_VEHICLE = ['weather', 'travel', 'other'];
+
+/**
  * Quando driver escolhe motivo do "não vou mapear":
- *   weather → submit direto (sem detalhes)
+ *   weather/travel/other → submit direto (travel/other com texto do motivo)
  *   mech/tech/disks → mostra card de detalhes obrigatórios
  */
 function onDnmReasonChange() {
   const detailsCard = document.getElementById('dnm-details-card');
   const submitBtn = document.getElementById('dnm-submit-btn');
+  const noteWrap = document.getElementById('dnm-note-wrap');
+  if (noteWrap) noteWrap.classList.toggle('hidden', !(state.dnmReason === 'travel' || state.dnmReason === 'other'));
 
-  if (state.dnmReason === 'weather') {
+  if (DNM_NON_VEHICLE.includes(state.dnmReason)) {
     detailsCard.classList.add('hidden');
     submitBtn.classList.remove('hidden');
   } else {
@@ -2295,8 +2332,12 @@ async function submitDidNotMap() {
   if (!state.driver) return toast(t('selectDriver') || 'Selecione seu nome', 'error');
   if (!state.dnmReason) return toast(t('selectReason') || 'Selecione o motivo', 'error');
 
+  const nonVehicle = DNM_NON_VEHICLE.includes(state.dnmReason);
+  const note = String(state.dnmNote || '').trim();
+  if (state.dnmReason === 'other' && !note) return toast(t('dnmNoteRequired'), 'error');
+
   // Pra mech/tech/disks, valida detalhes obrigatórios
-  if (state.dnmReason !== 'weather') {
+  if (!nonVehicle) {
     if (!state.dnmStopDate) return toast(t('fillIssueDetails'), 'error');
     if (!state.dnmServiceStatus) return toast(t('fillIssueDetails'), 'error');
     if (state.dnmServiceStatus === 'finished' && !state.dnmEndStatus) {
@@ -2333,18 +2374,16 @@ async function submitDidNotMap() {
     // v5.17: flag dia parado
     didMap: 'no',
     dnmReason: state.dnmReason,
-    // Status veículo: weather=OK, demais=Critical
-    vehicleStatus: state.dnmReason === 'weather' ? 'OK' : 'Critical Issue',
-    vehicleIssue: state.dnmDescription || '',
-    notes: state.dnmReason === 'weather'
-      ? '[Did not map: weather]'
-      : `[Did not map: ${state.dnmReason}]`,
+    // Status veículo: weather/travel/other=OK, demais=Critical
+    vehicleStatus: nonVehicle ? 'OK' : 'Critical Issue',
+    vehicleIssue: nonVehicle ? '' : (state.dnmDescription || ''),
+    notes: `[Did not map: ${state.dnmReason}]` + (nonVehicle && note ? ' ' + note : ''),
     // v5.14: zera hodômetro/SSD (driver não vai usar carro)
     odometerStart: 0,
     ssdInUse: '',
     ssdSource: '',
     // v5.14: passa detalhes do issue se for mech/tech/disks
-    vehicleIssueDetails: state.dnmReason !== 'weather' ? {
+    vehicleIssueDetails: !nonVehicle ? {
       category: categoryMap[state.dnmReason] || state.dnmReason,
       stopDate: state.dnmStopDate,
       serviceStatus: state.dnmServiceStatus,

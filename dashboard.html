@@ -3079,6 +3079,13 @@ const I18N = {
     dnmReasonMech: 'mecânico',
     dnmReasonTech: 'técnico',
     dnmReasonDisks: 'discos',
+    dnmReasonTravel: 'viagem',
+    dnmReasonOther: 'outro',
+    pillCtsIdle: '⏸ {n} dias sem mapear',
+    ctsIdleTitle: 'RAW CTS até {d} · dias úteis seguidos sem mapear · último dia mapeado: {m}',
+    ctsIdleLastStatus: 'último status na CTS: {s}',
+    ctsIdleNoRecord: 'sem registro na CTS',
+    ctsIdleNever: 'nenhum nos últimos {k} dias',
     pillOk: '✓ OK',
     noCheckin: 'Nunca',
     hoursAgoPrefix: 'há',
@@ -3464,6 +3471,13 @@ const I18N = {
     dnmReasonMech: 'mecánico',
     dnmReasonTech: 'técnico',
     dnmReasonDisks: 'discos',
+    dnmReasonTravel: 'viaje',
+    dnmReasonOther: 'otro',
+    pillCtsIdle: '⏸ {n} días sin mapear',
+    ctsIdleTitle: 'RAW CTS hasta {d} · días hábiles seguidos sin mapear · último día mapeado: {m}',
+    ctsIdleLastStatus: 'último estado en la CTS: {s}',
+    ctsIdleNoRecord: 'sin registro en la CTS',
+    ctsIdleNever: 'ninguno en los últimos {k} días',
     pillOk: '✓ OK',
     noCheckin: 'Nunca',
     hoursAgoPrefix: 'hace',
@@ -3849,6 +3863,13 @@ const I18N = {
     dnmReasonMech: 'mechanical',
     dnmReasonTech: 'technical',
     dnmReasonDisks: 'disks',
+    dnmReasonTravel: 'travel',
+    dnmReasonOther: 'other',
+    pillCtsIdle: '⏸ {n} days not mapping',
+    ctsIdleTitle: 'RAW CTS up to {d} · consecutive workdays not mapping · last mapped day: {m}',
+    ctsIdleLastStatus: 'last CTS status: {s}',
+    ctsIdleNoRecord: 'no CTS record',
+    ctsIdleNever: 'none in the last {k} days',
     pillOk: '✓ OK',
     noCheckin: 'Never',
     hoursAgoPrefix: '',
@@ -4709,6 +4730,7 @@ async function loadData(forceRefresh) {
     state.drivers = await fetchRealData(forceRefresh);
 
     applyFiltersAndRender();
+    loadCtsIdle(forceRefresh);  // nov/2026: "dias sem mapear" pela CTS, em segundo plano
     document.getElementById('last-updated').textContent = t('updatedAt') + ' ' + formatTime(new Date());
     if (state._stale) showStale(); else clearStale();
   } catch (err) {
@@ -9078,11 +9100,107 @@ function handleSortClick(column) {
   applyFiltersAndRender();
 }
 
+// =================================================================
+// "DIAS SEM MAPEAR" PELA RAW CTS (nov/2026)
+// O status só confiava no check-in ("vou mapear: sim") → quem estava parado mas
+// marcava "sim" (ex.: Leandro esperando documento do carro) aparecia OK. Aqui a CTS
+// dos últimos ~2 semanas conta os dias ÚTEIS (seg–sex) seguidos SEM mapear até a
+// última data da CTS (ela chega com ~2 dias de atraso). Sáb/dom não contam — mas
+// se ele mapeou no fim de semana, a sequência zera. Sem registro na CTS = não mapeou.
+// Carrega em segundo plano depois do 1º render (a CTS demora) e redesenha.
+// =================================================================
+const CTS_IDLE = { lookbackDays: 16, warnDays: 2, dangerDays: 3, ttlSec: 1800, timeoutMs: 120000 };
+
+function ctsIdleFor(d) {
+  const ci = state.ctsIdle;
+  if (!ci || !d || !d.email) return null;
+  return ci.byEmail[String(d.email).toLowerCase()] || null;
+}
+
+function ctsIdlePill(idle, cls) {
+  const fmt = (iso) => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : '';
+  const n = idle.capped ? idle.streak + '+' : String(idle.streak);
+  const title = t('ctsIdleTitle').replace('{d}', fmt(state.ctsIdle.lastDataDate))
+    .replace('{m}', idle.lastMapped ? fmt(idle.lastMapped) : t('ctsIdleNever').replace('{k}', CTS_IDLE.lookbackDays))
+    + ' · ' + (idle.lastStatus ? t('ctsIdleLastStatus').replace('{s}', idle.lastStatus) : t('ctsIdleNoRecord'));
+  return '<span class="status-pill ' + cls + '" title="' + escapeHtml(title) + '">' + t('pillCtsIdle').replace('{n}', n) + '</span>';
+}
+
+function computeCtsIdle(res, drivers) {
+  const last = res && res.lastDataDate;
+  if (!last) return null;
+  const byCts = {};
+  (res.drivers || []).forEach(x => { if (x.email) byCts[String(x.email).toLowerCase()] = x.days || {}; });
+  const isoOf = (dt) => dt.toISOString().slice(0, 10);
+  const isMapped = (rec) => {
+    const st = rec ? String(rec.status || '').trim() : '';
+    return !!rec && (rec.mapped === true || /^⬆/.test(st)) && !/^⬇/.test(st);
+  };
+  const cKey = (c) => String(c || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  // Feriado/folga geral: dia útil em que NINGUÉM do país mapeou não conta (ex.: 20/11 no
+  // Brasil). Só pra países com 5+ motoristas — em país pequeno isso apagaria parada real.
+  const countryN = {}, countryMappedOn = {};
+  (drivers || []).forEach(d => {
+    const c = cKey(d.country);
+    countryN[c] = (countryN[c] || 0) + 1;
+    const days = byCts[String(d.email || '').toLowerCase()] || {};
+    Object.keys(days).forEach(iso => { if (isMapped(days[iso])) (countryMappedOn[c] = countryMappedOn[c] || {})[iso] = true; });
+  });
+  const base = new Date(last + 'T12:00:00Z');
+  const out = {};
+  (drivers || []).forEach(d => {
+    const em = String(d.email || '').toLowerCase();
+    if (!em) return;
+    const c = cKey(d.country);
+    const days = byCts[em] || {};
+    let streak = 0, lastMapped = null, lastStatus = '';
+    for (let i = 0; i < CTS_IDLE.lookbackDays; i++) {
+      const dt = new Date(base.getTime() - i * 86400000);
+      const iso = isoOf(dt);
+      const dow = dt.getUTCDay();
+      const rec = days[iso];
+      const status = rec ? String(rec.status || '').trim() : '';
+      if (isMapped(rec)) { lastMapped = iso; break; }
+      if (!lastStatus && status) lastStatus = status.replace(/^[⬆⬇]\s*/, '');
+      const dayOff = dow === 0 || dow === 6 || /holiday|feriado|festivo/i.test(status)
+        || (countryN[c] >= 5 && !(countryMappedOn[c] || {})[iso]);
+      if (dayOff) continue;
+      streak++;
+    }
+    // capped = nenhum dia mapeado na janela inteira → pill mostra "N+"
+    out[em] = { streak, capped: !lastMapped, lastMapped, lastStatus };
+  });
+  return { lastDataDate: last, byEmail: out };
+}
+
+async function loadCtsIdle(forceRefresh) {
+  try {
+    const end = new Date();
+    const start = new Date(end.getTime() - (CTS_IDLE.lookbackDays + 4) * 86400000);
+    const ymd = (dt) => dt.toISOString().slice(0, 10);
+    const url = CONFIG.scriptUrl + '?action=getCtsTimesheet&startDate=' + ymd(start) + '&endDate=' + ymd(end);
+    const res = await cachedFetch(url, CTS_IDLE.ttlSec, { forceRefresh: !!forceRefresh, timeoutMs: CTS_IDLE.timeoutMs, staleOnError: true });
+    if (!res || !res.success) { console.warn('[CTS Idle] getCtsTimesheet falhou', res && res.error); return; }
+    state.ctsIdle = computeCtsIdle(res, state.drivers);
+    if (!state.ctsIdle) return;
+    const flagged = Object.values(state.ctsIdle.byEmail).filter(x => x.streak >= CTS_IDLE.warnDays).length;
+    console.log('[CTS Idle] RAW CTS até', state.ctsIdle.lastDataDate, '·', flagged, 'motorista(s) com', CTS_IDLE.warnDays + '+ dias úteis sem mapear');
+    applyFiltersAndRender();
+  } catch (e) {
+    console.warn('[CTS Idle] erro', e);
+  }
+}
+
 function getStatusPill(d, periodHours) {
   // v5.17 DNM: condutor marcou "não vou mapear" → vermelho, tem prioridade
   if (d.didMap === 'no') return '<span class="status-pill status-danger">' + t('pillDidNotMap') + '</span>';
   if (d.vehicleStatus === 'Critical Issue') return '<span class="status-pill status-danger">' + t('pillCritical') + '</span>';
+  // nov/2026: o que a CTS diz (não depende do que o motorista marca). Fora do modo
+  // "data específica" (periodHours = Infinity), porque a sequência é sempre até HOJE.
+  const idle = periodHours === Infinity ? null : ctsIdleFor(d);
+  if (idle && idle.streak >= CTS_IDLE.dangerDays) return ctsIdlePill(idle, 'status-danger');
   if (d.vehicleStatus === 'Minor Issue') return '<span class="status-pill status-warn">' + t('pillMinor') + '</span>';
+  if (idle && idle.streak >= CTS_IDLE.warnDays) return ctsIdlePill(idle, 'status-warn');
   if (d.hoursAgo === null) return '<span class="status-pill status-neutral">' + t('pillNoCheckin') + '</span>';
   if (d.hoursAgo > 24) return '<span class="status-pill status-warn">' + t('pillWarn24h') + '</span>';
   return '<span class="status-pill status-active">' + t('pillActive') + '</span>';
@@ -9729,7 +9847,8 @@ function formatTime(d) {
 
 // v5.17 DNM: traduz o motivo do "não vou mapear" (weather/mech/tech/disks)
 function dnmReasonLabel(reason) {
-  const map = { weather: 'dnmReasonWeather', mech: 'dnmReasonMech', tech: 'dnmReasonTech', disks: 'dnmReasonDisks' };
+  const map = { weather: 'dnmReasonWeather', mech: 'dnmReasonMech', tech: 'dnmReasonTech', disks: 'dnmReasonDisks',
+                travel: 'dnmReasonTravel', other: 'dnmReasonOther' };  // nov/2026: novos motivos do check-in
   return map[reason] ? t(map[reason]) : reason;
 }
 

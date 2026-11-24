@@ -828,6 +828,7 @@ const I18N = {
     dnmMech: 'Mech down',
     dnmTech: 'Tech down (câmera/dispositivos)',
     dnmDisks: 'Problema com discos',
+    dnmTravel: 'Viagem / deslocamento',
     dnmOther: 'Outro motivo',
     areaPolygon: 'área',
     // Atribuição de áreas (v5.77)
@@ -928,6 +929,7 @@ const I18N = {
     dnmMech: 'Mech down',
     dnmTech: 'Tech down (cámara/dispositivos)',
     dnmDisks: 'Problema con discos',
+    dnmTravel: 'Viaje / traslado',
     dnmOther: 'Otro motivo',
     areaPolygon: 'área',
     // Asignación de áreas (v5.77)
@@ -1028,6 +1030,7 @@ const I18N = {
     dnmMech: 'Mech down',
     dnmTech: 'Tech down (camera/devices)',
     dnmDisks: 'Disk issue',
+    dnmTravel: 'Travel / commute',
     dnmOther: 'Other reason',
     areaPolygon: 'area',
     // Area assignment (v5.77)
@@ -1457,6 +1460,8 @@ const DNM_REASON_META = {
   mech:    { emoji: '🔧', i18nKey: 'dnmMech' },
   tech:    { emoji: '📷', i18nKey: 'dnmTech' },
   disks:   { emoji: '💾', i18nKey: 'dnmDisks' },
+  travel:  { emoji: '🧳', i18nKey: 'dnmTravel' },   // nov/2026: novos motivos do check-in
+  other:   { emoji: '📝', i18nKey: 'dnmOther' },
 };
 function dnmLabel(reason) {
   const meta = DNM_REASON_META[reason];

@@ -903,7 +903,7 @@ const I18N = {
     showHome: 'ver casa', address: 'Endereço', efficiency: 'Eficiência', qc: 'QC',
     planFeature: 'Área do plano', noDriversCountry: 'Nenhum motorista neste país.',
     reasonWeather: 'Clima', reasonMech: 'Mecânica', reasonTech: 'Tech (câmera/disp.)',
-    reasonDisks: 'Discos', reasonOther: 'Outro', fetchError: 'Erro ao carregar dados',
+    reasonDisks: 'Discos', reasonOther: 'Outro', reasonTravel: 'Viagem', fetchError: 'Erro ao carregar dados',
     fitBtn: 'Enquadrar', confirmReplace: 'Já existe um MyMaps pra esse mês. Substituir?',
     recActive: 'Em uso', recIdle: 'Uso recente', recParked: 'Parado',
     lastDriver: 'Último motorista', lastDrove: 'Rodou em', daysAgoWord: 'dias atrás',
@@ -960,7 +960,7 @@ const I18N = {
     showHome: 'ver casa', address: 'Dirección', efficiency: 'Eficiencia', qc: 'QC',
     planFeature: 'Área del plan', noDriversCountry: 'Ningún conductor en este país.',
     reasonWeather: 'Clima', reasonMech: 'Mecánica', reasonTech: 'Tech (cámara/disp.)',
-    reasonDisks: 'Discos', reasonOther: 'Otro', fetchError: 'Error al cargar datos',
+    reasonDisks: 'Discos', reasonOther: 'Otro', reasonTravel: 'Viaje', fetchError: 'Error al cargar datos',
     fitBtn: 'Encuadrar', confirmReplace: 'Ya existe un MyMaps para ese mes. ¿Reemplazar?',
     recActive: 'En uso', recIdle: 'Uso reciente', recParked: 'Parado',
     lastDriver: 'Último conductor', lastDrove: 'Rodó en', daysAgoWord: 'días atrás',
@@ -1017,7 +1017,7 @@ const I18N = {
     showHome: 'show home', address: 'Address', efficiency: 'Efficiency', qc: 'QC',
     planFeature: 'Plan area', noDriversCountry: 'No drivers in this country.',
     reasonWeather: 'Weather', reasonMech: 'Mechanical', reasonTech: 'Tech (camera/devices)',
-    reasonDisks: 'Disks', reasonOther: 'Other', fetchError: 'Error loading data',
+    reasonDisks: 'Disks', reasonOther: 'Other', reasonTravel: 'Travel', fetchError: 'Error loading data',
     fitBtn: 'Fit', confirmReplace: 'A MyMaps already exists for that month. Replace?',
     recActive: 'In use', recIdle: 'Recently used', recParked: 'Parked',
     lastDriver: 'Last driver', lastDrove: 'Last drove', daysAgoWord: 'days ago',
@@ -1527,7 +1527,7 @@ function matchesQuery(v, q) {
 // Popups
 // =================================================================
 function dnmReasonLabel(reason) {
-  const map = { weather: 'reasonWeather', mech: 'reasonMech', tech: 'reasonTech', disks: 'reasonDisks' };
+  const map = { weather: 'reasonWeather', mech: 'reasonMech', tech: 'reasonTech', disks: 'reasonDisks', travel: 'reasonTravel', other: 'reasonOther' };
   return t(map[reason] || 'reasonOther');
 }
 function freshLabel(hoursAgo) {
