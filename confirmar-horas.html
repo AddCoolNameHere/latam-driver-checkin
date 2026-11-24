@@ -244,7 +244,7 @@ body.is-admin { background: var(--c-bg); }
 .adm-wrap { max-width: 1240px; margin: 0 auto; padding: 18px 20px 40px; }
 .adm-link { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
 .adm-link code { font-family: var(--font-mono); font-size: 12.5px; background: var(--c-bg); padding: 3px 8px; border-radius: 6px; word-break: break-all; }
-.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
 .kpi { padding: 14px 16px; }
 .kpi small { display: block; font-size: 12px; color: var(--c-text-muted); font-weight: 600; }
 .kpi b { display: block; font-size: 26px; font-weight: 750; letter-spacing: -.02em; color: var(--c-primary-dark); margin-top: 2px; font-variant-numeric: tabular-nums; }
@@ -385,6 +385,14 @@ const I18N = {
     admResponded: 'Responderam', admOf: 'de {n} motoristas',
     admDiv: 'Dias com divergência', admDivSub: 'em {n} motoristas',
     admHours: 'Horas declaradas', admHoursSub: 'CTS considerada: {h}h · real: {r}h',
+    admPay: 'Salário da quinzena',
+    admPaySub: 'horas declaradas × US$/h · pela CTS considerada: {v}',
+    colRate: 'US$/h',
+    colPay: 'Salário (declarado)',
+    payCts: 'CTS: {v}',
+    noRate: 'sem taxa',
+    admPayRule: 'Salário = horas declaradas pelo motorista × Per Hour Salary (USD) da aba HR — sem reembolsos, deduções ou bônus. "CTS" = mesma conta com as horas da CTS considerada.',
+    admPayMissing: '{n} motorista(s) sem taxa na HR',
     admReasons: 'Dias parados (motivo)',
     admSearch: 'Buscar motorista…', admAll: 'Todos', admOnlyDiv: 'Com divergência', admOnlyPending: 'Pendentes',
     colDriver: 'Motorista', colStatus: 'Status', colDaysDecl: 'Dias (mot.)', colDaysCts: 'Dias (CTS)',
@@ -442,6 +450,14 @@ const I18N = {
     admResponded: 'Respondieron', admOf: 'de {n} conductores',
     admDiv: 'Días con divergencia', admDivSub: 'en {n} conductores',
     admHours: 'Horas declaradas', admHoursSub: 'CTS considerada: {h}h · real: {r}h',
+    admPay: 'Salario de la quincena',
+    admPaySub: 'horas declaradas × US$/h · por la CTS considerada: {v}',
+    colRate: 'US$/h',
+    colPay: 'Salario (declarado)',
+    payCts: 'CTS: {v}',
+    noRate: 'sin tarifa',
+    admPayRule: 'Salario = horas declaradas por el conductor × Per Hour Salary (USD) de la hoja HR — sin reembolsos, deducciones ni bonos. "CTS" = misma cuenta con las horas de la CTS considerada.',
+    admPayMissing: '{n} conductor(es) sin tarifa en HR',
     admReasons: 'Días parados (motivo)',
     admSearch: 'Buscar conductor…', admAll: 'Todos', admOnlyDiv: 'Con divergencia', admOnlyPending: 'Pendientes',
     colDriver: 'Conductor', colStatus: 'Estado', colDaysDecl: 'Días (cond.)', colDaysCts: 'Días (CTS)',
@@ -499,6 +515,14 @@ const I18N = {
     admResponded: 'Responded', admOf: 'of {n} drivers',
     admDiv: 'Days with mismatch', admDivSub: 'across {n} drivers',
     admHours: 'Declared hours', admHoursSub: 'CTS credited: {h}h · raw: {r}h',
+    admPay: 'Fortnight pay',
+    admPaySub: 'declared hours × US$/h · by CTS credited: {v}',
+    colRate: 'US$/h',
+    colPay: 'Pay (declared)',
+    payCts: 'CTS: {v}',
+    noRate: 'no rate',
+    admPayRule: 'Pay = hours declared by the driver × Per Hour Salary (USD) from the HR tab — no reimbursements, deductions or bonus. "CTS" = same math using CTS credited hours.',
+    admPayMissing: '{n} driver(s) without a rate in HR',
     admReasons: 'Days off (reason)',
     admSearch: 'Search driver…', admAll: 'All', admOnlyDiv: 'With mismatch', admOnlyPending: 'Pending',
     colDriver: 'Driver', colStatus: 'Status', colDaysDecl: 'Days (drv.)', colDaysCts: 'Days (CTS)',
@@ -563,6 +587,7 @@ function addDays(ymd, n) { const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(
 function dowOf(ymd) { return new Date(ymd + 'T12:00:00Z').getUTCDay(); }
 function periodDays(p) { const out = []; for (let k = p.start; k <= p.end; k = addDays(k, 1)) out.push(k); return out; }
 function fmtD(ymd, o) { return new Date(ymd + 'T12:00:00Z').toLocaleDateString(LOCALE[S.lang], Object.assign({ timeZone: 'UTC' }, o)); }
+function fmtUsd(n) { return (Number(n) || 0).toLocaleString(LOCALE[S.lang], { style: 'currency', currency: 'USD' }); }
 function fmtH(n) { const v = Math.round((Number(n) || 0) * 10) / 10; return v.toLocaleString(LOCALE[S.lang], { maximumFractionDigits: 1 }); }
 function fmtWhen(iso) {
   const d = new Date(iso);
@@ -1133,10 +1158,18 @@ function flagText(f) {
   return t('flagOk');
 }
 
-function buildAdminModel(subs, cts, roster) {
+function buildAdminModel(subs, cts, roster, rates) {
   const days = periodDays(S.period);
   const by = {};
-  const get = email => by[email] || (by[email] = { email, name: '', country: '', situation: '', sub: null, cts: null, inRoster: false });
+  const get = email => by[email] || (by[email] = { email, name: '', country: '', situation: '', sub: null, cts: null, inRoster: false, rate: 0 });
+  // US$/h vem do Per Hour Salary (USD) da HR via getPayrollCheckin (não fica no HTML, que é público)
+  const rateByEmail = {}, rateByName = {};
+  (rates || []).forEach(d => {
+    const v = Number(d.rate) || 0;
+    if (!(v > 0)) return;
+    if (d.email) rateByEmail[String(d.email).trim().toLowerCase()] = v;
+    if (d.name) rateByName[norm(d.name)] = v;
+  });
   (roster || []).forEach(d => {
     const em = String(d.email || '').trim().toLowerCase();
     if (em.indexOf('@') < 0) return;
@@ -1164,6 +1197,7 @@ function buildAdminModel(subs, cts, roster) {
       const drv = r.sub ? subDays[date] || null : null;
       return { date, raw, cons, drv, flag: r.sub ? dayFlag(drv, raw, cons) : null };
     });
+    r.rate = rateByEmail[em] || rateByName[norm(r.name)] || 0;
     const sum = { declDays: 0, declHours: 0, ctsDays: 0, ctsReal: 0, ctsCons: 0, div: 0, reasons: { mech: 0, tech: 0, personal: 0, dayoff: 0 } };
     rows.forEach(x => {
       if (x.drv && x.drv.worked) { sum.declDays++; sum.declHours += Number(x.drv.hours) || 0; }
@@ -1172,6 +1206,8 @@ function buildAdminModel(subs, cts, roster) {
       if (x.cons) { sum.ctsCons += x.cons; sum.ctsDays++; }
       if (x.flag && x.flag.type !== 'ok') sum.div++;
     });
+    sum.pay = r.sub && r.rate ? Math.round(sum.declHours * r.rate * 100) / 100 : null;
+    sum.payCts = r.rate ? Math.round(sum.ctsCons * r.rate * 100) / 100 : null;
     return Object.assign(r, { rows, sum, vacation: /vacation|ferias|vacaciones/.test(norm(r.situation)) });
   }).filter(r => r.sub || r.cts || r.inRoster);
 }
@@ -1199,10 +1235,11 @@ async function loadAdmin(force) {
   S.admin.loading = true; S.admin.error = '';
   render();
   const p = S.period;
-  const [subsR, ctsR, rosterR] = await Promise.allSettled([
+  const [subsR, ctsR, rosterR, payR] = await Promise.allSettled([
     apiGet(CFG.scriptUrl, { action: 'getWorkConfirmations', startDate: p.start, endDate: p.end, _: force ? Date.now() : '' }, 45000),
     apiGet(CFG.scriptUrl, { action: 'getCtsTimesheet', startDate: p.start, endDate: p.end }, 90000),
     apiGet(API_GET, force ? { action: 'getDrivers', nocache: '1' } : { action: 'getDrivers' }, 30000),
+    apiGet(CFG.scriptUrl, { action: 'getPayrollCheckin', start: p.start, end: p.end }, 90000),
   ]);
   const errs = [];
   let subs = [];
@@ -1212,7 +1249,9 @@ async function loadAdmin(force) {
   if (ctsR.status === 'fulfilled') cts = ctsR.value; else errs.push('getCtsTimesheet: ' + ctsR.reason.message);
   let roster = [];
   if (rosterR.status === 'fulfilled') roster = rosterR.value.drivers || []; else errs.push('getDrivers: ' + rosterR.reason.message);
-  S.admin.model = buildAdminModel(subs, cts, roster);
+  let rates = [];
+  if (payR.status === 'fulfilled') rates = payR.value.drivers || []; else errs.push('getPayrollCheckin (US$/h): ' + payR.reason.message);
+  S.admin.model = buildAdminModel(subs, cts, roster, rates);
   S.admin.ctsLast = (cts && cts.lastDataDate) || '';
   S.admin.error = errs.join(' · ');
   S.admin.loading = false;
@@ -1253,6 +1292,9 @@ function renderAdmin() {
   const realH = responded.reduce((s, r) => s + r.sum.ctsReal, 0);
   const reasons = { mech: 0, tech: 0, personal: 0, dayoff: 0 };
   responded.forEach(r => REASONS.forEach(k => { reasons[k] += r.sum.reasons[k]; }));
+  const payDecl = responded.reduce((s, r) => s + (r.sum.pay || 0), 0);
+  const payCts = responded.reduce((s, r) => s + (r.sum.payCts || 0), 0);
+  const noRate = scope.filter(r => !r.rate && (r.sub || r.inRoster) && !r.vacation).length;
 
   root.innerHTML = `
   <header class="adm-top"><div class="adm-top-in">
@@ -1274,6 +1316,7 @@ function renderAdmin() {
       <div class="card kpi"><small>${esc(t('admResponded'))}</small><b>${responded.length}</b><span>${esc(t('admOf', { n: scope.length }))}</span></div>
       <div class="card kpi"><small>${esc(t('admDiv'))}</small><b style="color:${divDays ? '#B91C1C' : 'var(--c-primary-dark)'}">${divDays}</b><span>${esc(t('admDivSub', { n: divDrivers }))}</span></div>
       <div class="card kpi"><small>${esc(t('admHours'))}</small><b>${fmtH(declH)}h</b><span>${esc(t('admHoursSub', { h: fmtH(consH), r: fmtH(realH) }))}</span></div>
+      <div class="card kpi"><small>${esc(t('admPay'))}</small><b>${esc(fmtUsd(payDecl))}</b><span>${esc(t('admPaySub', { v: fmtUsd(payCts) }))}</span></div>
       <div class="card kpi"><small>${esc(t('admReasons'))}</small><div class="reasons-mini">${REASONS.map(k => `<i>${REASON_TERM[k]}: ${reasons[k]}</i>`).join('')}</div></div>
     </section>
     <div class="adm-filters">
@@ -1285,6 +1328,7 @@ function renderAdmin() {
       <button type="button" class="fchip ${A.filterMode === 'pending' ? 'active' : ''}" data-act="fmode" data-v="pending">${esc(t('admOnlyPending'))}</button>
     </div>
     <div class="card tbl-wrap" id="adm-table">${adminTableHtml()}</div>
+    <p class="adm-foot">${esc(t('admPayRule'))}${noRate ? ' ' + esc(t('admPayMissing', { n: noRate })) + '.' : ''}</p>
     <p class="adm-foot">${esc(t('admRule', { n: CFG.hoursDiffFlag }))} ${A.ctsLast ? esc(t('admCtsUntil', { d: fmtD(A.ctsLast, { day: '2-digit', month: '2-digit' }) })) : ''}</p>
     `}
   </main>`;
@@ -1298,7 +1342,7 @@ function adminTableHtml() {
     <th>${esc(t('colDriver'))}</th><th>${esc(t('colStatus'))}</th>
     <th class="num">${esc(t('colDaysDecl'))}</th><th class="num">${esc(t('colDaysCts'))}</th>
     <th class="num">${esc(t('colHoursDecl'))}</th><th class="num">${esc(t('colCtsReal'))}</th><th class="num">${esc(t('colCtsCons'))}</th>
-    <th class="num">${esc(t('colDiv'))}</th></tr></thead>`;
+    <th class="num">${esc(t('colDiv'))}</th><th class="num">${esc(t('colRate'))}</th><th class="num">${esc(t('colPay'))}</th></tr></thead>`;
   const body = list.map(r => {
     const open = !!A.expanded[r.email];
     const st = r.sub
@@ -1315,6 +1359,8 @@ function adminTableHtml() {
       <td class="num">${fmtH(r.sum.ctsReal)}</td>
       <td class="num">${fmtH(r.sum.ctsCons)}</td>
       <td class="num">${r.sub ? (r.sum.div ? `<span class="pill warn">${r.sum.div}</span>` : '<span class="pill ok">0</span>') : dash}</td>
+      <td class="num">${r.rate ? esc(fmtUsd(r.rate)) : `<span class="muted">${esc(t('noRate'))}</span>`}</td>
+      <td class="num">${r.sum.pay != null ? `<b>${esc(fmtUsd(r.sum.pay))}</b>` : dash}${r.sum.payCts != null ? `<div class="cts-status">${esc(t('payCts', { v: fmtUsd(r.sum.payCts) }))}</div>` : ''}</td>
     </tr>`;
     if (!open) return tr;
     const det = r.rows.map(x => {
@@ -1333,7 +1379,7 @@ function adminTableHtml() {
     }).join('');
     const extra = r.sub ? `${r.sub.comment ? `<div class="adm-comment"><b>${esc(t('admComment'))}:</b> ${esc(r.sub.comment)}</div>` : ''}
       ${r.sub.versions > 1 ? `<div class="adm-foot">${esc(t('admVersions', { n: r.sub.versions }))}</div>` : ''}` : '';
-    return tr + `<tr><td class="detail" colspan="8">
+    return tr + `<tr><td class="detail" colspan="10">
       <table class="det"><thead><tr><th>${esc(t('detDate'))}</th><th>${esc(t('detDriver'))}</th><th class="num">${esc(t('detCtsReal'))}</th><th class="num">${esc(t('detCtsCons'))}</th><th>${esc(t('detCheck'))}</th></tr></thead>
       <tbody>${det}</tbody></table>${extra}<div class="adm-foot">${esc(r.email)}</div></td></tr>`;
   }).join('');
@@ -1345,7 +1391,8 @@ function exportCsv() {
   const num = n => n == null || n === '' ? '' : String(Math.round(Number(n) * 100) / 100).replace('.', ',');
   const q = s => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"';
   const lines = [['País', 'Motorista', 'Email', 'Status', 'Enviado em', 'Data', 'Motorista trabalhou', 'Horas motorista', 'Motivo', 'Obs motorista',
-                  'CTS real (h)', 'CTS status', 'CTS considerada (h)', 'Conferência', 'Comentário'].map(q).join(';')];
+                  'CTS real (h)', 'CTS status', 'CTS considerada (h)', 'Conferência', 'Comentário',
+                  'US$/h', 'Valor do dia declarado (US$)', 'Valor do dia CTS (US$)'].map(q).join(';')];
   list.forEach(r => {
     r.rows.forEach(x => {
       lines.push([
@@ -1354,6 +1401,9 @@ function exportCsv() {
         x.drv && !x.drv.worked ? (REASON_TERM[x.drv.reason] || '') : '', x.drv ? x.drv.note || '' : '',
         x.raw ? num(x.raw.h) : '', x.raw ? x.raw.status || '' : '', x.cons != null ? num(x.cons) : '',
         x.flag ? flagText(x.flag) : '', r.sub ? r.sub.comment || '' : '',
+        r.rate ? num(r.rate) : '',
+        r.rate && x.drv && x.drv.worked ? num((Number(x.drv.hours) || 0) * r.rate) : '',
+        r.rate && x.cons != null ? num(x.cons * r.rate) : '',
       ].map(q).join(';'));
     });
   });
