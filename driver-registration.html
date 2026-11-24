@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Driver registration · Street View</title>
+<meta name="description" content="Street View drivers worldwide: register your details with Aceolution.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1A365D">
+<link rel="icon" type="image/png" href="aceolution-globe.png">
+<link rel="apple-touch-icon" href="aceolution-globe-hd.png">
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<link rel="stylesheet" href="theme.css?v=20261023toggle">
+<script>
+  // Página de motorista = sempre light (não carrega theme.js, senão herda o dark de um admin).
+  document.documentElement.removeAttribute('data-theme');
+</script>
+<style>
+/* ============================================================
+ * driver-registration.html — cadastro GLOBAL dos motoristas Street View (2027)
+ * Regiões LATAM / NA / APAC / EMEA → país. Grava na planilha "HR Global"
+ * (backend v5.91, POST saveGlobalDriver) — NUNCA na Mastersheet.
+ * Link pronto pra mandar: ?region=EMEA&country=DE&lang=en (tudo opcional).
+ * ============================================================ */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --grad: linear-gradient(140deg, #1A365D 0%, #2C5282 55%, #4A9FE0 120%);
+  --ok: #16A34A; --ok-bg: #ECFDF5; --ok-tx: #166534;
+  --bad: #DC2626; --bad-bg: #FEF2F2; --bad-bd: #FECACA;
+  --r-card: 18px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans); background: var(--c-bg); color: var(--c-text);
+  font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; min-height: 100vh;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+input, textarea, select { font: inherit; color: inherit; }
+.hidden { display: none !important; }
+svg.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ---------- Botões ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 50px; padding: 0 20px; border-radius: 14px; font-weight: 650; font-size: 15.5px;
+  transition: transform .12s var(--ease-out), background .15s, box-shadow .15s, opacity .15s;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--c-primary); color: #fff; box-shadow: 0 8px 20px rgba(44,82,130,.28); }
+.btn-primary:disabled { opacity: .6; box-shadow: none; cursor: default; }
+.btn-soft { background: var(--c-bg-tint); color: var(--c-primary); }
+.btn-block { width: 100%; }
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative; overflow: hidden; background: var(--grad); color: #fff;
+  padding: calc(var(--sat) + 18px) 20px 78px;
+}
+.hero::after {
+  content: ""; position: absolute; right: -80px; top: 10px; width: 260px; height: 260px;
+  background: url("aceolution-globe-hd.png") center/contain no-repeat; opacity: .13; pointer-events: none;
+}
+.hero-in { position: relative; z-index: 1; max-width: 620px; margin: 0 auto; }
+.hero-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 30px; }
+.hero-logo { height: 24px; width: auto; }
+.lang-pills { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.16); }
+.lang-pills button { font-size: 12px; font-weight: 650; padding: 5px 10px; border-radius: 999px; color: rgba(255,255,255,.85); }
+.lang-pills button.active { background: #fff; color: var(--c-primary-dark); }
+.kicker { font-size: 11.5px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; opacity: .8; }
+.hero h1 { font-size: 28px; line-height: 1.12; font-weight: 750; letter-spacing: -.02em; margin: 8px 0 8px; }
+.hero p { font-size: 15px; opacity: .9; max-width: 480px; }
+.hero-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.hero-meta span { font-size: 12px; font-weight: 600; background: rgba(255,255,255,.15); border-radius: 99px; padding: 4px 10px; }
+
+.wrap { max-width: 620px; margin: 0 auto; padding: 0 16px; }
+.card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-card); box-shadow: var(--shadow-md); }
+.lift { position: relative; z-index: 2; margin-top: -56px; }
+
+/* ---------- Seções ---------- */
+.sec { padding: 18px 18px 20px; margin-bottom: 14px; }
+.sec-h { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.sec-n {
+  flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--c-bg-tint); color: var(--c-primary);
+  display: grid; place-items: center; font-weight: 750; font-size: 14px;
+}
+.sec-n.done { background: var(--ok-bg); color: var(--ok); }
+.sec-h h2 { font-size: 17px; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; padding-top: 3px; }
+.sec-h p { font-size: 13px; color: var(--c-text-muted); margin-top: 2px; }
+
+/* ---------- Regiões ---------- */
+.regions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.region {
+  display: flex; align-items: center; gap: 10px; text-align: left; padding: 12px; border-radius: 14px;
+  border: 1.5px solid var(--c-border-strong); background: #fff; min-height: 66px;
+  transition: border-color .15s, background .15s, box-shadow .15s, transform .12s var(--ease-out);
+}
+.region:active { transform: scale(.98); }
+.region .remo { font-size: 26px; line-height: 1; flex: none; }
+.region b { display: block; font-size: 15px; font-weight: 750; letter-spacing: .02em; }
+.region span { display: block; font-size: 11.5px; color: var(--c-text-muted); line-height: 1.3; margin-top: 1px; }
+.region.active { border-color: var(--c-primary); background: var(--c-bg-tint); box-shadow: 0 0 0 3px var(--ring); }
+.region.active b { color: var(--c-primary-dark); }
+.regions.invalid .region { border-color: var(--bad-bd); }
+
+/* ---------- Campos ---------- */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.field { margin-bottom: 14px; min-width: 0; }
+.field:last-child { margin-bottom: 0; }
+.field > label { display: block; font-size: 13.5px; font-weight: 650; margin-bottom: 6px; }
+.field > label .req { color: var(--bad); margin-left: 2px; }
+.field > label .opt { font-weight: 500; font-size: 12px; color: var(--c-text-dim); margin-left: 4px; }
+.ctl {
+  width: 100%; height: 50px; padding: 0 14px; border: 1.5px solid var(--c-border-strong); border-radius: 12px;
+  background: #fff; font-size: 16px; outline: 0; transition: border-color .15s, box-shadow .15s;
+  -webkit-appearance: none; appearance: none;
+}
+textarea.ctl { height: auto; min-height: 76px; padding: 12px 14px; resize: vertical; line-height: 1.4; }
+select.ctl {
+  padding-right: 38px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+}
+select.ctl:disabled { background-color: var(--c-bg); color: var(--c-text-dim); cursor: default; }
+input[type="date"].ctl { min-width: 0; }
+.ctl:focus { border-color: var(--c-accent); box-shadow: 0 0 0 4px var(--ring); }
+.ctl::placeholder { color: var(--c-text-dim); }
+.hint { font-size: 12.5px; color: var(--c-text-muted); margin-top: 6px; }
+.ferr { font-size: 12.5px; font-weight: 600; color: var(--bad); margin-top: 6px; }
+.field.invalid .ctl { border-color: var(--bad); background: var(--bad-bg); }
+.field.invalid .ctl:focus { box-shadow: 0 0 0 4px rgba(220,38,38,.18); }
+
+.consent {
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px; border-radius: 14px;
+  border: 1.5px solid var(--c-border-strong); background: #fff; cursor: pointer;
+}
+.consent input { width: 22px; height: 22px; margin-top: 1px; accent-color: var(--c-primary); flex: none; cursor: pointer; }
+.consent span { font-size: 13.5px; line-height: 1.45; }
+.consent.checked { border-color: var(--ok); background: var(--ok-bg); }
+.field.invalid .consent { border-color: var(--bad); background: var(--bad-bg); }
+.privacy { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--c-text-muted); margin-top: 12px; }
+.privacy svg.ic { width: 16px; height: 16px; margin-top: 1px; color: var(--ok); }
+.hp { position: absolute; left: -5000px; width: 1px; height: 1px; overflow: hidden; }
+
+/* ---------- Barra fixa ---------- */
+.spacer { height: calc(112px + var(--sab)); }
+.sticky {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: rgba(255,255,255,.93); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--c-border); padding: 10px 16px calc(12px + var(--sab));
+}
+.sticky-in { max-width: 620px; margin: 0 auto; }
+.sticky-meta { font-size: 12.5px; color: var(--c-text-muted); text-align: center; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.sticky-meta.ok { color: var(--ok-tx); font-weight: 600; }
+.mini-bar { height: 4px; border-radius: 99px; background: var(--c-bg-tint); overflow: hidden; margin-bottom: 8px; }
+.mini-bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--c-accent), var(--c-primary)); transition: width .3s var(--ease-out); }
+
+/* ---------- Mensagens ---------- */
+.banner { font-size: 13.5px; border-radius: 12px; padding: 11px 13px; margin-bottom: 14px; }
+.banner.warn { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; }
+.banner.err { background: var(--bad-bg); border: 1px solid var(--bad-bd); color: #991B1B; }
+.banner.info { background: var(--c-bg-tint); border: 1px solid #BFDBFE; color: var(--c-primary-dark); }
+.toast {
+  position: fixed; left: 50%; bottom: calc(124px + var(--sab)); transform: translateX(-50%); z-index: 30;
+  background: #0F172A; color: #fff; font-size: 13.5px; padding: 10px 14px; border-radius: 12px; box-shadow: var(--shadow-lg);
+  max-width: calc(100% - 32px); text-align: center;
+}
+
+/* ---------- Concluído ---------- */
+.done { padding: 26px 20px 22px; text-align: center; }
+.done-ic { width: 66px; height: 66px; border-radius: 50%; margin: 0 auto 14px; display: grid; place-items: center; background: var(--ok-bg); color: var(--ok); }
+.done-ic svg.ic { width: 34px; height: 34px; stroke-width: 2.4; }
+.done h2 { font-size: 22px; font-weight: 750; letter-spacing: -.01em; }
+.done > p { color: var(--c-text-muted); margin-top: 6px; }
+.recap { margin-top: 18px; text-align: left; }
+.recap-row { display: flex; align-items: baseline; gap: 10px; padding: 10px 2px; border-top: 1px solid var(--c-border); font-size: 14px; }
+.recap-row .rk { width: 96px; flex: none; color: var(--c-text-muted); font-size: 13px; }
+.recap-row .rv { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.done-actions { display: grid; gap: 10px; margin-top: 18px; }
+.done-hint { font-size: 12.5px; color: var(--c-text-muted); margin-top: 10px; }
+.foot { text-align: center; font-size: 12px; color: var(--c-text-dim); padding: 18px 0 8px; }
+
+@media (max-width: 420px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 25px; }
+  .region { padding: 10px; gap: 8px; }
+  .region .remo { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+// ================================================================
+// CONFIG
+// ================================================================
+const CFG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  backendVersion: 'v5.91',                 // Code udpt.gs com POST saveGlobalDriver (planilha HR Global)
+  xpenseDomain: 'field-ops-xpense-it.com',
+  minAge: 16, maxAge: 90,
+};
+const KEYS = { lang: 'svglobal.lang', draft: 'svglobal.draft.v1' };
+// Documento/carteira/CNPJ não ficam no rascunho do aparelho (pode ser celular compartilhado)
+const NO_DRAFT = ['idNumber', 'licenseNumber', 'companyTaxId'];
+const OTHER = '__other';
+
+// Regiões Street View → países (ISO alfa-2 : nome em inglês). O nome em inglês é o que
+// vai pra planilha (coluna Country, igual à HR: "Brazil", "Mexico"…); na tela aparece o
+// nome no idioma escolhido (Intl.DisplayNames). ⚠ MESMA lista do HRG_REGIONS_ no
+// Code udpt.gs — mudou aqui, muda lá.
+const REGIONS = {
+  LATAM: 'AR:Argentina|BO:Bolivia|BR:Brazil|CL:Chile|CO:Colombia|CR:Costa Rica|CU:Cuba|DO:Dominican Republic|EC:Ecuador|SV:El Salvador|GT:Guatemala|HT:Haiti|HN:Honduras|JM:Jamaica|MX:Mexico|NI:Nicaragua|PA:Panama|PY:Paraguay|PE:Peru|PR:Puerto Rico|UY:Uruguay|VE:Venezuela|AG:Antigua and Barbuda|AW:Aruba|BS:Bahamas|BB:Barbados|BZ:Belize|KY:Cayman Islands|CW:Curaçao|DM:Dominica|GD:Grenada|GY:Guyana|KN:Saint Kitts and Nevis|LC:Saint Lucia|VC:Saint Vincent and the Grenadines|SR:Suriname|TT:Trinidad and Tobago',
+  NA: 'US:United States|CA:Canada|BM:Bermuda',
+  APAC: 'AU:Australia|NZ:New Zealand|JP:Japan|KR:South Korea|TW:Taiwan|HK:Hong Kong|MO:Macao|CN:China|MN:Mongolia|IN:India|PK:Pakistan|BD:Bangladesh|LK:Sri Lanka|NP:Nepal|BT:Bhutan|MV:Maldives|AF:Afghanistan|TH:Thailand|VN:Vietnam|KH:Cambodia|LA:Laos|MM:Myanmar|MY:Malaysia|SG:Singapore|ID:Indonesia|PH:Philippines|BN:Brunei|TL:Timor-Leste|PG:Papua New Guinea|FJ:Fiji|WS:Samoa|TO:Tonga|VU:Vanuatu|SB:Solomon Islands|NC:New Caledonia|PF:French Polynesia|GU:Guam|KI:Kiribati|FM:Micronesia|MH:Marshall Islands|NR:Nauru|PW:Palau',
+  EMEA: 'GB:United Kingdom|IE:Ireland|FR:France|DE:Germany|ES:Spain|PT:Portugal|IT:Italy|NL:Netherlands|BE:Belgium|LU:Luxembourg|CH:Switzerland|AT:Austria|DK:Denmark|NO:Norway|SE:Sweden|FI:Finland|IS:Iceland|PL:Poland|CZ:Czechia|SK:Slovakia|HU:Hungary|RO:Romania|BG:Bulgaria|GR:Greece|CY:Cyprus|MT:Malta|SI:Slovenia|HR:Croatia|BA:Bosnia and Herzegovina|RS:Serbia|ME:Montenegro|MK:North Macedonia|AL:Albania|XK:Kosovo|EE:Estonia|LV:Latvia|LT:Lithuania|UA:Ukraine|MD:Moldova|BY:Belarus|RU:Russia|AD:Andorra|MC:Monaco|SM:San Marino|LI:Liechtenstein|VA:Vatican City|TR:Turkey|GE:Georgia|AM:Armenia|AZ:Azerbaijan|KZ:Kazakhstan|UZ:Uzbekistan|KG:Kyrgyzstan|TJ:Tajikistan|TM:Turkmenistan|IL:Israel|PS:Palestine|JO:Jordan|LB:Lebanon|SY:Syria|IQ:Iraq|IR:Iran|SA:Saudi Arabia|AE:United Arab Emirates|QA:Qatar|BH:Bahrain|KW:Kuwait|OM:Oman|YE:Yemen|EG:Egypt|MA:Morocco|DZ:Algeria|TN:Tunisia|LY:Libya|SD:Sudan|SS:South Sudan|ET:Ethiopia|ER:Eritrea|DJ:Djibouti|SO:Somalia|KE:Kenya|UG:Uganda|TZ:Tanzania|RW:Rwanda|BI:Burundi|NG:Nigeria|GH:Ghana|CI:Côte d’Ivoire|SN:Senegal|ML:Mali|BF:Burkina Faso|NE:Niger|TD:Chad|CM:Cameroon|CF:Central African Republic|GA:Gabon|CG:Congo - Brazzaville|CD:Congo - Kinshasa|GQ:Equatorial Guinea|ST:São Tomé and Príncipe|AO:Angola|ZM:Zambia|ZW:Zimbabwe|MW:Malawi|MZ:Mozambique|MG:Madagascar|MU:Mauritius|SC:Seychelles|KM:Comoros|ZA:South Africa|NA:Namibia|BW:Botswana|LS:Lesotho|SZ:Eswatini|BJ:Benin|TG:Togo|LR:Liberia|SL:Sierra Leone|GN:Guinea|GW:Guinea-Bissau|GM:Gambia|MR:Mauritania|CV:Cape Verde',
+};
+const REGION_ORDER = ['LATAM', 'NA', 'APAC', 'EMEA'];
+const REGION_EMOJI = { LATAM: '🌎', NA: '🌎', APAC: '🌏', EMEA: '🌍' };
+// Nome local do documento de identidade (só dica embaixo do campo)
+const ID_HINT = {
+  BR: 'CPF', AR: 'DNI', PE: 'DNI', CL: 'RUT', MX: 'CURP', CO: 'Cédula de ciudadanía', UY: 'Cédula de identidad',
+  EC: 'Cédula de identidad', VE: 'Cédula de identidad', BO: 'Carnet de identidad', PY: 'Cédula de identidad',
+  CR: 'Cédula de identidad', DO: 'Cédula de identidad', GT: 'DPI', ES: 'DNI / NIE', PT: 'Cartão de Cidadão',
+  IT: "Carta d'identità", FR: "Carte d'identité", DE: 'Personalausweis', IN: 'Aadhaar / PAN', ZA: 'ID number',
+};
+const ID_TYPES = { national: 'National ID', passport: 'Passport', residence: 'Residence permit', other: 'Other' };
+
+// Campos: obrigatório? + validação extra. A ordem aqui = ordem de checagem/rolagem.
+const FIELDS = {
+  region:            { req: true },
+  countryCode:       { req: true },
+  countryOther:      { req: () => S.f.countryCode === OTHER },
+  state:             {},
+  city:              { req: true },
+  firstNames:        { req: true },
+  surname:           { req: true },
+  dob:               { req: true, check: checkDob },
+  nationality:       {},
+  personalEmail:     { req: true, check: checkEmail },
+  phone:             { req: true, check: checkPhone },
+  address:           { req: true },
+  zip:               {},
+  corporateEmail:    { check: checkEmail },
+  idType:            { req: true },
+  idNumber:          { req: true },
+  licenseNumber:     { req: true },
+  licenseExpiry:     {},
+  companyTaxId:      {},
+  emergencyName:     { req: true },
+  emergencyRelation: {},
+  emergencyPhone:    { req: true, check: checkPhone },
+  notes:             {},
+  consent:           { req: true },
+};
+const SECTIONS = [
+  ['region', 'countryCode', 'countryOther', 'state', 'city'],
+  ['firstNames', 'surname', 'dob', 'nationality'],
+  ['personalEmail', 'phone', 'address', 'zip', 'corporateEmail'],
+  ['idType', 'idNumber', 'licenseNumber', 'licenseExpiry', 'companyTaxId'],
+  ['emergencyName', 'emergencyRelation', 'emergencyPhone'],
+];
+
+const LOCALE = { pt: 'pt-BR', es: 'es', en: 'en' };
+const I18N = {
+  pt: {
+    docTitle: 'Cadastro de motoristas · Street View',
+    kicker: 'Street View · Aceolution',
+    title: 'Cadastro de motoristas',
+    heroSub: 'Preencha uma vez, com seus dados reais. Se precisar corrigir depois, é só enviar de novo com o mesmo e-mail pessoal.',
+    metaTime: '⏱ uns 5 minutos', metaRegions: '🌐 LATAM · NA · APAC · EMEA',
+    s1: 'Onde você dirige', s1sub: 'A região e o país onde você trabalha (ou vai trabalhar) no Street View.',
+    s2: 'Seus dados', s2sub: 'Igual ao seu documento.',
+    s3: 'Contato', s3sub: 'Por onde a gente fala com você.',
+    s4: 'Documentos', s4sub: 'Pra cadastro e pagamento. Não precisa mandar foto agora.',
+    s5: 'Contato de emergência', s5sub: 'Alguém pra gente avisar se acontecer algo na rua.',
+    s6: 'Confirmação',
+    rLATAM: 'América Latina e Caribe', rNA: 'Estados Unidos e Canadá', rAPAC: 'Ásia e Pacífico', rEMEA: 'Europa, Oriente Médio e África',
+    l_countryCode: 'País', p_country: 'Escolha o país', p_countryNoRegion: 'Escolha a região primeiro', otherCountry: 'Outro país (escrever)',
+    l_countryOther: 'Qual país?', l_state: 'Estado / província', l_city: 'Cidade',
+    l_firstNames: 'Nome(s)', h_firstNames: 'Primeiro e segundo nome', l_surname: 'Sobrenome(s)',
+    l_dob: 'Data de nascimento', l_nationality: 'Nacionalidade', p_nationality: 'Escolha',
+    l_personalEmail: 'E-mail pessoal', h_personalEmail: 'É por ele que a gente te encontra se você enviar de novo.',
+    l_phone: 'Telefone / WhatsApp', h_phone: 'Com o código do país, ex.: +55 11 91234-5678',
+    l_address: 'Endereço completo', p_address: 'Rua, número, complemento, bairro', l_zip: 'CEP / código postal',
+    l_corporateEmail: 'E-mail da Ace / Xpense', h_corporateEmail: 'Só se você já tem (o que usa no app, ex.: nome@{domain}). Se não tem, deixe em branco.',
+    l_idType: 'Tipo de documento', idt_national: 'Documento de identidade', idt_passport: 'Passaporte', idt_residence: 'Autorização de residência', idt_other: 'Outro',
+    l_idNumber: 'Número do documento', h_idNumberFor: 'Em {country}: {doc}',
+    l_licenseNumber: 'Número da carteira de motorista', l_licenseExpiry: 'Validade da carteira',
+    l_companyTaxId: 'CNPJ / ID fiscal da empresa', h_companyTaxId: 'Só se você fatura como empresa (CNPJ, RFC, VAT, ABN…).',
+    l_emergencyName: 'Nome', l_emergencyRelation: 'Parentesco', p_emergencyRelation: 'ex.: mãe, esposa, irmão', l_emergencyPhone: 'Telefone',
+    l_notes: 'Algo mais que a gente deva saber?', p_notes: 'Opcional',
+    consent: 'Confirmo que as informações são verdadeiras e autorizo a Aceolution a guardar e usar esses dados só para RH, pagamento e operação do Street View.',
+    privacy: 'Seus dados vão pra uma planilha interna do time da Aceolution. Não ficam públicos.',
+    optional: 'opcional',
+    btnSend: 'Enviar cadastro', sending: 'Enviando…',
+    missing: 'Falta {n} campo obrigatório', missingN: 'Faltam {n} campos obrigatórios', allSet: 'Tudo pronto pra enviar',
+    errRequired: 'Campo obrigatório', errEmail: 'E-mail inválido', errPhone: 'Coloque o número completo, com o código do país',
+    errDob: 'Confira a data de nascimento', errConsent: 'Marque a confirmação pra enviar', errFix: 'Confira os campos em vermelho',
+    errNotReady: 'O cadastro ainda está sendo preparado do nosso lado. Seus dados ficaram salvos neste aparelho — tente de novo mais tarde.',
+    errNetwork: 'Não deu pra enviar (sem internet ou servidor lento). Seus dados ficaram salvos aqui — tente de novo.',
+    errServer: 'Não deu pra salvar: {m}',
+    draftRestored: 'Recuperamos o que você já tinha preenchido neste aparelho.',
+    doneTitle: 'Cadastro enviado!', doneSub: 'Obrigado, {name}. O time da Aceolution já recebeu seus dados.',
+    doneHint: 'Precisa corrigir algo? Envie de novo com o mesmo e-mail pessoal que a gente atualiza o seu cadastro.',
+    btnEdit: 'Corrigir e enviar de novo',
+    rcName: 'Nome', rcCountry: 'País', rcEmail: 'E-mail', rcPhone: 'Telefone',
+    foot: 'Aceolution · Street View',
+  },
+  es: {
+    docTitle: 'Registro de conductores · Street View',
+    kicker: 'Street View · Aceolution',
+    title: 'Registro de conductores',
+    heroSub: 'Complétalo una vez, con tus datos reales. Si después necesitas corregir algo, envíalo de nuevo con el mismo e-mail personal.',
+    metaTime: '⏱ unos 5 minutos', metaRegions: '🌐 LATAM · NA · APAC · EMEA',
+    s1: 'Dónde manejas', s1sub: 'La región y el país donde trabajas (o vas a trabajar) en Street View.',
+    s2: 'Tus datos', s2sub: 'Igual que en tu documento.',
+    s3: 'Contacto', s3sub: 'Cómo nos comunicamos contigo.',
+    s4: 'Documentos', s4sub: 'Para el registro y el pago. No hace falta mandar fotos ahora.',
+    s5: 'Contacto de emergencia', s5sub: 'Alguien a quien avisar si pasa algo en la calle.',
+    s6: 'Confirmación',
+    rLATAM: 'América Latina y el Caribe', rNA: 'Estados Unidos y Canadá', rAPAC: 'Asia y el Pacífico', rEMEA: 'Europa, Medio Oriente y África',
+    l_countryCode: 'País', p_country: 'Elige el país', p_countryNoRegion: 'Primero elige la región', otherCountry: 'Otro país (escribir)',
+    l_countryOther: '¿Qué país?', l_state: 'Estado / provincia', l_city: 'Ciudad',
+    l_firstNames: 'Nombre(s)', h_firstNames: 'Primer y segundo nombre', l_surname: 'Apellido(s)',
+    l_dob: 'Fecha de nacimiento', l_nationality: 'Nacionalidad', p_nationality: 'Elige',
+    l_personalEmail: 'E-mail personal', h_personalEmail: 'Con él te encontramos si lo envías de nuevo.',
+    l_phone: 'Teléfono / WhatsApp', h_phone: 'Con el código del país, ej.: +52 55 1234 5678',
+    l_address: 'Dirección completa', p_address: 'Calle, número, depto., barrio', l_zip: 'Código postal',
+    l_corporateEmail: 'E-mail de Ace / Xpense', h_corporateEmail: 'Solo si ya lo tienes (el que usas en la app, ej.: nombre@{domain}). Si no, déjalo vacío.',
+    l_idType: 'Tipo de documento', idt_national: 'Documento de identidad', idt_passport: 'Pasaporte', idt_residence: 'Permiso de residencia', idt_other: 'Otro',
+    l_idNumber: 'Número de documento', h_idNumberFor: 'En {country}: {doc}',
+    l_licenseNumber: 'Número de licencia de conducir', l_licenseExpiry: 'Vencimiento de la licencia',
+    l_companyTaxId: 'ID fiscal de la empresa', h_companyTaxId: 'Solo si facturas como empresa (RFC, RUT, VAT, ABN…).',
+    l_emergencyName: 'Nombre', l_emergencyRelation: 'Parentesco', p_emergencyRelation: 'ej.: madre, esposa, hermano', l_emergencyPhone: 'Teléfono',
+    l_notes: '¿Algo más que debamos saber?', p_notes: 'Opcional',
+    consent: 'Confirmo que la información es verdadera y autorizo a Aceolution a guardar y usar estos datos solo para RR. HH., pagos y operación de Street View.',
+    privacy: 'Tus datos van a una planilla interna del equipo de Aceolution. No son públicos.',
+    optional: 'opcional',
+    btnSend: 'Enviar registro', sending: 'Enviando…',
+    missing: 'Falta {n} campo obligatorio', missingN: 'Faltan {n} campos obligatorios', allSet: 'Todo listo para enviar',
+    errRequired: 'Campo obligatorio', errEmail: 'E-mail inválido', errPhone: 'Pon el número completo, con el código del país',
+    errDob: 'Revisa la fecha de nacimiento', errConsent: 'Marca la confirmación para enviar', errFix: 'Revisa los campos en rojo',
+    errNotReady: 'El registro todavía se está preparando de nuestro lado. Tus datos quedaron guardados en este dispositivo — inténtalo más tarde.',
+    errNetwork: 'No se pudo enviar (sin internet o servidor lento). Tus datos quedaron guardados aquí — inténtalo de nuevo.',
+    errServer: 'No se pudo guardar: {m}',
+    draftRestored: 'Recuperamos lo que ya habías completado en este dispositivo.',
+    doneTitle: '¡Registro enviado!', doneSub: 'Gracias, {name}. El equipo de Aceolution ya recibió tus datos.',
+    doneHint: '¿Necesitas corregir algo? Envíalo de nuevo con el mismo e-mail personal y actualizamos tu registro.',
+    btnEdit: 'Corregir y enviar de nuevo',
+    rcName: 'Nombre', rcCountry: 'País', rcEmail: 'E-mail', rcPhone: 'Teléfono',
+    foot: 'Aceolution · Street View',
+  },
+  en: {
+    docTitle: 'Driver registration · Street View',
+    kicker: 'Street View · Aceolution',
+    title: 'Driver registration',
+    heroSub: 'Fill it in once, with your real details. If you need to fix something later, just send it again with the same personal e-mail.',
+    metaTime: '⏱ about 5 minutes', metaRegions: '🌐 LATAM · NA · APAC · EMEA',
+    s1: 'Where you drive', s1sub: 'The region and country where you work (or will work) for Street View.',
+    s2: 'About you', s2sub: 'As it appears on your ID.',
+    s3: 'Contact', s3sub: 'How we reach you.',
+    s4: 'Documents', s4sub: 'For your registration and payments. No photos needed for now.',
+    s5: 'Emergency contact', s5sub: 'Someone we can call if something happens on the road.',
+    s6: 'Confirmation',
+    rLATAM: 'Latin America & Caribbean', rNA: 'United States & Canada', rAPAC: 'Asia-Pacific', rEMEA: 'Europe, Middle East & Africa',
+    l_countryCode: 'Country', p_country: 'Choose your country', p_countryNoRegion: 'Choose a region first', otherCountry: 'Other country (type it)',
+    l_countryOther: 'Which country?', l_state: 'State / province', l_city: 'City',
+    l_firstNames: 'First and middle name(s)', h_firstNames: '', l_surname: 'Last name(s)',
+    l_dob: 'Date of birth', l_nationality: 'Nationality', p_nationality: 'Choose',
+    l_personalEmail: 'Personal e-mail', h_personalEmail: 'We use it to find your record if you send the form again.',
+    l_phone: 'Phone / WhatsApp', h_phone: 'Include the country code, e.g. +44 7700 900123',
+    l_address: 'Full address', p_address: 'Street, number, apartment, area', l_zip: 'Postal / ZIP code',
+    l_corporateEmail: 'Ace / Xpense e-mail', h_corporateEmail: 'Only if you already have one (the one you use in the app, e.g. name@{domain}). Otherwise leave it blank.',
+    l_idType: 'ID type', idt_national: 'National ID card', idt_passport: 'Passport', idt_residence: 'Residence permit', idt_other: 'Other',
+    l_idNumber: 'ID number', h_idNumberFor: 'In {country}: {doc}',
+    l_licenseNumber: 'Driving licence number', l_licenseExpiry: 'Licence expiry date',
+    l_companyTaxId: 'Company tax ID', h_companyTaxId: 'Only if you invoice as a company (VAT, EIN, ABN, CNPJ…).',
+    l_emergencyName: 'Name', l_emergencyRelation: 'Relationship', p_emergencyRelation: 'e.g. mother, wife, brother', l_emergencyPhone: 'Phone',
+    l_notes: 'Anything else we should know?', p_notes: 'Optional',
+    consent: 'I confirm this information is true and I authorise Aceolution to store and use it only for HR, payroll and Street View operations.',
+    privacy: 'Your details go to an internal Aceolution team spreadsheet. They are never made public.',
+    optional: 'optional',
+    btnSend: 'Send registration', sending: 'Sending…',
+    missing: '{n} required field left', missingN: '{n} required fields left', allSet: 'All set — ready to send',
+    errRequired: 'Required', errEmail: 'Invalid e-mail', errPhone: 'Enter the full number, with the country code',
+    errDob: 'Check your date of birth', errConsent: 'Tick the confirmation to send', errFix: 'Check the fields in red',
+    errNotReady: 'Registration is still being set up on our side. Your answers are saved on this device — please try again later.',
+    errNetwork: "Couldn't send (no internet or slow server). Your answers are saved here — please try again.",
+    errServer: "Couldn't save: {m}",
+    draftRestored: 'We restored what you had already filled in on this device.',
+    doneTitle: 'Registration sent!', doneSub: 'Thank you, {name}. The Aceolution team has received your details.',
+    doneHint: 'Need to fix something? Send it again with the same personal e-mail and we will update your record.',
+    btnEdit: 'Edit and send again',
+    rcName: 'Name', rcCountry: 'Country', rcEmail: 'E-mail', rcPhone: 'Phone',
+    foot: 'Aceolution · Street View',
+  },
+};
+
+// ================================================================
+// HELPERS
+// ================================================================
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function t(key, vars) {
+  const dict = I18N[S.lang] || I18N.en;
+  let s = dict[key];
+  if (s == null) s = I18N.en[key];
+  if (s == null) return key;
+  if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
+  return s;
+}
+function browserLang() {
+  const l = String((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
+  return l.startsWith('pt') ? 'pt' : l.startsWith('es') ? 'es' : 'en';
+}
+const ICON = {
+  check: '<svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>',
+  lock: '<svg class="ic" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  send: '<svg class="ic" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>',
+};
+
+let toastTimer = null;
+function toast(msg, ms) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('hidden'), ms || 2800);
+}
+
+/** POST no Apps Script (body text/plain → sem preflight; a resposta é legível). */
+async function apiPost(payload, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs || 45000);
+  try {
+    const res = await fetch(CFG.scriptUrl, { method: 'POST', body: JSON.stringify(payload), signal: ctrl.signal });
+    let data = null;
+    try { data = await res.json(); } catch (e) { throw Object.assign(new Error('HTTP ' + res.status), { network: true }); }
+    if (!data || data.success !== true) throw new Error((data && data.error) || 'server error');
+    return data;
+  } catch (e) {
+    if (e.name === 'AbortError' || e instanceof TypeError) e.network = true;
+    throw e;
+  } finally { clearTimeout(timer); }
+}
+
+// ---------- países ----------
+const COUNTRY = {};          // 'BR' → { code, name (inglês), region }
+REGION_ORDER.forEach(region => {
+  REGIONS[region].split('|').forEach(pair => {
+    const i = pair.indexOf(':');
+    const code = pair.slice(0, i);
+    COUNTRY[code] = { code, name: pair.slice(i + 1), region };
+  });
+});
+const displayNamesCache = {};
+function countryLabel(code) {
+  const c = COUNTRY[code];
+  if (!c) return code;
+  try {
+    if (!displayNamesCache[S.lang]) displayNamesCache[S.lang] = new Intl.DisplayNames([LOCALE[S.lang]], { type: 'region' });
+    const n = displayNamesCache[S.lang].of(code);
+    if (n && n !== code) return n;
+  } catch (e) { /* navegador antigo: fica o nome em inglês */ }
+  return c.name;
+}
+function sortedCodes(codes) {
+  return codes.map(c => [c, countryLabel(c)]).sort((a, b) => a[1].localeCompare(b[1], LOCALE[S.lang])).map(x => x[0]);
+}
+function regionCodes(region) { return Object.keys(COUNTRY).filter(c => COUNTRY[c].region === region); }
+
+// ---------- validação ----------
+function checkEmail(v) { return !v || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? '' : t('errEmail'); }
+function checkPhone(v) { return !v || String(v).replace(/\D/g, '').length >= 8 ? '' : t('errPhone'); }
+function checkDob(v) {
+  if (!v) return '';
+  const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return t('errDob');
+  const now = new Date();
+  let age = now.getFullYear() - +m[1];
+  if (now.getMonth() + 1 < +m[2] || (now.getMonth() + 1 === +m[2] && now.getDate() < +m[3])) age--;
+  return age >= CFG.minAge && age <= CFG.maxAge ? '' : t('errDob');
+}
+function isReq(key) { const r = FIELDS[key].req; return typeof r === 'function' ? r() : !!r; }
+function isEmpty(key) { const v = S.f[key]; return key === 'consent' ? v !== true : !String(v == null ? '' : v).trim(); }
+function fieldError(key) {
+  if (isReq(key) && isEmpty(key)) return key === 'consent' ? t('errConsent') : t('errRequired');
+  const ck = FIELDS[key].check;
+  return ck ? ck(String(S.f[key] == null ? '' : S.f[key]).trim()) : '';
+}
+function missingCount() { return Object.keys(FIELDS).filter(k => isReq(k) && (isEmpty(k) || fieldError(k))).length; }
+
+// ================================================================
+// ESTADO
+// ================================================================
+const S = {
+  lang: 'en',
+  view: 'form',            // 'form' | 'done'
+  f: {
+    region: '', countryCode: '', countryOther: '', state: '', city: '',
+    firstNames: '', surname: '', dob: '', nationality: '',
+    personalEmail: '', phone: '', address: '', zip: '', corporateEmail: '',
+    idType: 'national', idNumber: '', licenseNumber: '', licenseExpiry: '', companyTaxId: '',
+    emergencyName: '', emergencyRelation: '', emergencyPhone: '', notes: '', consent: false,
+  },
+  touched: {},             // campo já saiu do foco → mostra erro
+  tried: false,            // já tentou enviar → mostra todos os erros
+  sending: false,
+  banner: null,            // { kind: 'warn'|'err'|'info', text }
+};
+const root = document.getElementById('root');
+
+let draftTimer = null;
+function saveDraft() {
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => {
+    const d = {};
+    Object.keys(S.f).forEach(k => { if (NO_DRAFT.indexOf(k) < 0 && k !== 'consent') d[k] = S.f[k]; });
+    lsSet(KEYS.draft, JSON.stringify({ f: d, at: new Date().toISOString() }));
+  }, 350);
+}
+function loadDraft() {
+  try {
+    const d = JSON.parse(lsGet(KEYS.draft) || 'null');
+    if (!d || !d.f) return false;
+    let any = false;
+    Object.keys(d.f).forEach(k => {
+      if (k in S.f && NO_DRAFT.indexOf(k) < 0 && k !== 'consent' && typeof d.f[k] === 'string') {
+        S.f[k] = d.f[k];
+        if (d.f[k] && k !== 'idType') any = true;
+      }
+    });
+    return any;
+  } catch (e) { return false; }
+}
+
+// ================================================================
+// RENDER — formulário
+// ================================================================
+function heroHtml() {
+  return `
+  <header class="hero">
+    <div class="hero-in">
+      <div class="hero-bar">
+        <img class="hero-logo" src="aceolution-white.png" alt="Aceolution">
+        <div class="lang-pills" role="group" aria-label="Language">
+          ${['pt', 'es', 'en'].map(l => `<button type="button" data-lang="${l}" class="${S.lang === l ? 'active' : ''}">${l.toUpperCase()}</button>`).join('')}
+        </div>
+      </div>
+      <div class="kicker">${esc(t('kicker'))}</div>
+      <h1>${esc(t('title'))}</h1>
+      <p>${esc(t('heroSub'))}</p>
+      <div class="hero-meta"><span>${esc(t('metaTime'))}</span><span>${esc(t('metaRegions'))}</span></div>
+    </div>
+  </header>`;
+}
+
+function labelHtml(key, forId) {
+  const req = isReq(key) || key === 'countryOther';
+  return `<label for="${forId || 'f-' + key}">${esc(t('l_' + key))}${req ? '<span class="req">*</span>' : `<span class="opt">(${esc(t('optional'))})</span>`}</label>`;
+}
+function hintHtml(key, text) {
+  const h = text != null ? text : (I18N[S.lang]['h_' + key] || '');
+  return `<div class="hint" id="h-${key}"${h ? '' : ' hidden'}>${esc(h)}</div>`;
+}
+function errSlot(key) { return `<div class="ferr hidden" id="e-${key}"></div>`; }
+
+/** input/textarea simples */
+function inputField(key, o) {
+  o = o || {};
+  const v = S.f[key] == null ? '' : S.f[key];
+  const ph = o.ph ? ` placeholder="${esc(t(o.ph))}"` : '';
+  const attrs = `id="f-${key}" data-k="${key}" class="ctl"${ph}${o.ac ? ` autocomplete="${o.ac}"` : ''}${o.im ? ` inputmode="${o.im}"` : ''}${o.max ? ` maxlength="${o.max}"` : ''}`;
+  const ctl = o.rows
+    ? `<textarea ${attrs} rows="${o.rows}">${esc(v)}</textarea>`
+    : `<input ${attrs} type="${o.type || 'text'}" value="${esc(v)}">`;
+  return `<div class="field" data-field="${key}">${labelHtml(key)}${ctl}${hintHtml(key, o.hint)}${errSlot(key)}</div>`;
+}
+
+function countryOptionsHtml() {
+  if (!S.f.region) return `<option value="">${esc(t('p_countryNoRegion'))}</option>`;
+  const opts = sortedCodes(regionCodes(S.f.region))
+    .map(c => `<option value="${c}"${S.f.countryCode === c ? ' selected' : ''}>${esc(countryLabel(c))}</option>`).join('');
+  return `<option value="">${esc(t('p_country'))}</option>${opts}<option value="${OTHER}"${S.f.countryCode === OTHER ? ' selected' : ''}>${esc(t('otherCountry'))}</option>`;
+}
+function nationalityOptionsHtml() {
+  const opts = sortedCodes(Object.keys(COUNTRY))
+    .map(c => `<option value="${c}"${S.f.nationality === c ? ' selected' : ''}>${esc(countryLabel(c))}</option>`).join('');
+  return `<option value="">${esc(t('p_nationality'))}</option>${opts}`;
+}
+function idHintText() {
+  const code = S.f.countryCode;
+  return COUNTRY[code] && ID_HINT[code] ? t('h_idNumberFor', { country: countryLabel(code), doc: ID_HINT[code] }) : '';
+}
+
+function secHead(n, titleKey, subKey) {
+  return `<div class="sec-h"><div class="sec-n" id="sn-${n}">${n}</div><div><h2>${esc(t(titleKey))}</h2>${subKey ? `<p>${esc(t(subKey))}</p>` : ''}</div></div>`;
+}
+
+function renderForm() {
+  document.title = t('docTitle');
+  const b = S.banner;
+  root.innerHTML = `
+  ${heroHtml()}
+  <main class="wrap lift">
+    ${b ? `<div class="banner ${b.kind}">${esc(b.text)}</div>` : ''}
+    <form id="reg" novalidate autocomplete="on">
+      <div class="hp" aria-hidden="true"><label>Website<input id="f-website" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+      <section class="card sec">
+        ${secHead(1, 's1', 's1sub')}
+        <div class="field" data-field="region">
+          <div class="regions" id="regions" role="radiogroup" aria-label="Region">
+            ${REGION_ORDER.map(r => `
+              <button type="button" class="region${S.f.region === r ? ' active' : ''}" data-region="${r}" role="radio" aria-checked="${S.f.region === r}">
+                <span class="remo" aria-hidden="true">${REGION_EMOJI[r]}</span>
+                <span><b>${r}</b><span>${esc(t('r' + r))}</span></span>
+              </button>`).join('')}
+          </div>
+          ${errSlot('region')}
+        </div>
+        <div class="field" data-field="countryCode">
+          ${labelHtml('countryCode')}
+          <select id="f-countryCode" data-k="countryCode" class="ctl" autocomplete="country"${S.f.region ? '' : ' disabled'}>${countryOptionsHtml()}</select>
+          ${errSlot('countryCode')}
+        </div>
+        <div id="other-wrap" class="${S.f.countryCode === OTHER ? '' : 'hidden'}">${inputField('countryOther', { ac: 'country-name', max: 60 })}</div>
+        <div class="grid2">
+          ${inputField('state', { ac: 'address-level1', max: 80 })}
+          ${inputField('city', { ac: 'address-level2', max: 80 })}
+        </div>
+      </section>
+
+      <section class="card sec">
+        ${secHead(2, 's2', 's2sub')}
+        <div class="grid2">
+          ${inputField('firstNames', { ac: 'given-name', max: 80 })}
+          ${inputField('surname', { ac: 'family-name', max: 80 })}
+        </div>
+        <div class="grid2">
+          ${inputField('dob', { type: 'date', ac: 'bday' })}
+          <div class="field" data-field="nationality">
+            ${labelHtml('nationality')}
+            <select id="f-nationality" data-k="nationality" class="ctl">${nationalityOptionsHtml()}</select>
+            ${errSlot('nationality')}
+          </div>
+        </div>
+      </section>
+
+      <section class="card sec">
+        ${secHead(3, 's3', 's3sub')}
+        ${inputField('personalEmail', { type: 'email', ac: 'email', im: 'email', max: 120 })}
+        ${inputField('phone', { type: 'tel', ac: 'tel', im: 'tel', max: 40 })}
+        ${inputField('address', { rows: 2, ac: 'street-address', ph: 'p_address', max: 300 })}
+        <div class="grid2">
+          ${inputField('zip', { ac: 'postal-code', max: 20 })}
+          <div></div>
+        </div>
+        ${inputField('corporateEmail', { type: 'email', im: 'email', max: 120, hint: t('h_corporateEmail', { domain: CFG.xpenseDomain }) })}
+      </section>
+
+      <section class="card sec">
+        ${secHead(4, 's4', 's4sub')}
+        <div class="field" data-field="idType">
+          ${labelHtml('idType')}
+          <select id="f-idType" data-k="idType" class="ctl">
+            ${Object.keys(ID_TYPES).map(k => `<option value="${k}"${S.f.idType === k ? ' selected' : ''}>${esc(t('idt_' + k))}</option>`).join('')}
+          </select>
+          ${errSlot('idType')}
+        </div>
+        ${inputField('idNumber', { max: 40, hint: idHintText() })}
+        <div class="grid2">
+          ${inputField('licenseNumber', { max: 40 })}
+          ${inputField('licenseExpiry', { type: 'date' })}
+        </div>
+        ${inputField('companyTaxId', { max: 40 })}
+      </section>
+
+      <section class="card sec">
+        ${secHead(5, 's5', 's5sub')}
+        <div class="grid2">
+          ${inputField('emergencyName', { max: 80 })}
+          ${inputField('emergencyRelation', { ph: 'p_emergencyRelation', max: 40 })}
+        </div>
+        ${inputField('emergencyPhone', { type: 'tel', im: 'tel', max: 40 })}
+      </section>
+
+      <section class="card sec">
+        ${secHead(6, 's6')}
+        ${inputField('notes', { rows: 3, ph: 'p_notes', max: 1000 })}
+        <div class="field" data-field="consent" style="margin-top:14px">
+          <label class="consent${S.f.consent ? ' checked' : ''}" id="consent-box">
+            <input type="checkbox" id="f-consent" data-k="consent"${S.f.consent ? ' checked' : ''}>
+            <span>${esc(t('consent'))}</span>
+          </label>
+          ${errSlot('consent')}
+        </div>
+        <div class="privacy">${ICON.lock}<span>${esc(t('privacy'))}</span></div>
+      </section>
+    </form>
+    <div class="foot">${esc(t('foot'))}</div>
+    <div class="spacer"></div>
+  </main>
+  <div class="sticky">
+    <div class="sticky-in">
+      <div class="mini-bar"><i id="mini-bar" style="width:0%"></i></div>
+      <div class="sticky-meta" id="sticky-meta"></div>
+      <button type="button" class="btn btn-primary btn-block" id="send-btn"${S.sending ? ' disabled' : ''}>${S.sending ? esc(t('sending')) : ICON.send + ' ' + esc(t('btnSend'))}</button>
+    </div>
+  </div>`;
+  bindForm();
+  refreshAll();
+}
+
+function bindForm() {
+  root.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+  root.querySelectorAll('[data-region]').forEach(b => b.addEventListener('click', () => setRegion(b.dataset.region)));
+  root.querySelectorAll('[data-k]').forEach(el => {
+    const key = el.dataset.k;
+    const onChange = () => {
+      S.f[key] = el.type === 'checkbox' ? el.checked : el.value;
+      if (key === 'countryCode') onCountryChange();
+      if (key === 'consent') document.getElementById('consent-box').classList.toggle('checked', el.checked);
+      if (S.touched[key] || S.tried) showError(key);
+      refreshProgress();
+      saveDraft();
+    };
+    el.addEventListener(el.tagName === 'SELECT' || el.type === 'checkbox' ? 'change' : 'input', onChange);
+    el.addEventListener('blur', () => { S.touched[key] = true; showError(key); });
+  });
+  document.getElementById('send-btn').addEventListener('click', submit);
+  document.getElementById('reg').addEventListener('submit', ev => { ev.preventDefault(); submit(); });
+}
+
+function setRegion(r) {
+  if (S.f.region === r) return;
+  S.f.region = r;
+  if (S.f.countryCode && S.f.countryCode !== OTHER && (!COUNTRY[S.f.countryCode] || COUNTRY[S.f.countryCode].region !== r)) S.f.countryCode = '';
+  root.querySelectorAll('[data-region]').forEach(b => {
+    const on = b.dataset.region === r;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-checked', String(on));
+  });
+  const sel = document.getElementById('f-countryCode');
+  sel.disabled = false;
+  sel.innerHTML = countryOptionsHtml();
+  onCountryChange();
+  showError('region');
+  if (S.tried || S.touched.countryCode) showError('countryCode');
+  refreshProgress();
+  saveDraft();
+  if (!S.f.countryCode) sel.focus();
+}
+function onCountryChange() {
+  document.getElementById('other-wrap').classList.toggle('hidden', S.f.countryCode !== OTHER);
+  const h = document.getElementById('h-idNumber');
+  const txt = idHintText();
+  h.textContent = txt;
+  h.hidden = !txt;
+}
+
+function showError(key) {
+  const slot = document.getElementById('e-' + key);
+  const box = root.querySelector(`[data-field="${key}"]`);
+  if (!slot || !box) return '';
+  const msg = fieldError(key);
+  slot.textContent = msg;
+  slot.classList.toggle('hidden', !msg);
+  box.classList.toggle('invalid', !!msg);
+  if (key === 'region') document.getElementById('regions').classList.toggle('invalid', !!msg);
+  return msg;
+}
+
+function refreshProgress() {
+  const req = Object.keys(FIELDS).filter(isReq);
+  const miss = missingCount();
+  const pct = req.length ? Math.round(100 * (req.length - miss) / req.length) : 100;
+  const bar = document.getElementById('mini-bar');
+  if (bar) bar.style.width = pct + '%';
+  const meta = document.getElementById('sticky-meta');
+  if (meta) {
+    meta.className = 'sticky-meta' + (miss ? '' : ' ok');
+    meta.innerHTML = miss ? esc(t(miss === 1 ? 'missing' : 'missingN', { n: miss })) : ICON.check + ' ' + esc(t('allSet'));
+  }
+  SECTIONS.forEach((keys, i) => {
+    const el = document.getElementById('sn-' + (i + 1));
+    if (!el) return;
+    const ok = keys.every(k => !isReq(k) || (!isEmpty(k) && !fieldError(k)));
+    el.classList.toggle('done', ok);
+    el.innerHTML = ok ? ICON.check : String(i + 1);
+  });
+  const last = document.getElementById('sn-6');
+  if (last) {
+    const ok = S.f.consent === true;
+    last.classList.toggle('done', ok);
+    last.innerHTML = ok ? ICON.check : '6';
+  }
+}
+function refreshAll() {
+  if (S.tried) Object.keys(FIELDS).forEach(showError);
+  else Object.keys(S.touched).forEach(showError);
+  refreshProgress();
+}
+
+// ================================================================
+// ENVIO
+// ================================================================
+function buildPayload() {
+  const f = {};
+  Object.keys(S.f).forEach(k => { f[k] = typeof S.f[k] === 'string' ? S.f[k].trim() : S.f[k]; });
+  if (f.countryCode === OTHER) f.countryCode = '';
+  else f.countryOther = '';
+  f.idType = ID_TYPES[S.f.idType] || '';
+  f.nationality = COUNTRY[S.f.nationality] ? COUNTRY[S.f.nationality].name : '';
+  f.personalEmail = f.personalEmail.toLowerCase();
+  f.corporateEmail = f.corporateEmail.toLowerCase();
+  f.consent = S.f.consent === true;
+  return f;
+}
+
+async function submit() {
+  if (S.sending) return;
+  S.tried = true;
+  const bad = Object.keys(FIELDS).filter(k => showError(k));
+  refreshProgress();
+  if (bad.length) {
+    toast(t('errFix'));
+    const first = root.querySelector(`[data-field="${bad[0]}"]`);
+    if (first) {
+      first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const ctl = first.querySelector('.ctl, input, button');
+      if (ctl) setTimeout(() => { try { ctl.focus({ preventScroll: true }); } catch (e) {} }, 350);
+    }
+    return;
+  }
+  setSending(true);
+  try {
+    const hp = document.getElementById('f-website');
+    const res = await apiPost({ type: 'saveGlobalDriver', lang: S.lang, hp: hp ? hp.value : '', f: buildPayload() });
+    console.log('[Global Registration] enviado', res.mode, res.version);
+    lsDel(KEYS.draft);
+    S.banner = null;
+    S.view = 'done';
+    S.sending = false;
+    render();
+    window.scrollTo({ top: 0 });
+  } catch (e) {
+    const m = String(e && e.message || e);
+    console.warn('[Global Registration] erro', m);
+    saveDraft();
+    S.banner = /unknown (action|type)|não configurada|nao configurada|not configured/i.test(m) ? { kind: 'warn', text: t('errNotReady') }
+             : e && e.network ? { kind: 'err', text: t('errNetwork') }
+             : { kind: 'err', text: t('errServer', { m }) };
+    setSending(false);
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+function setSending(on) {
+  S.sending = on;
+  const b = document.getElementById('send-btn');
+  if (!b) return;
+  b.disabled = on;
+  b.innerHTML = on ? esc(t('sending')) : ICON.send + ' ' + esc(t('btnSend'));
+}
+
+// ================================================================
+// RENDER — concluído
+// ================================================================
+function renderDone() {
+  document.title = t('docTitle');
+  const f = S.f;
+  const country = f.countryCode === OTHER ? f.countryOther : countryLabel(f.countryCode);
+  const first = String(f.firstNames || '').trim().split(/\s+/)[0] || '';
+  const rows = [
+    [t('rcName'), (f.firstNames + ' ' + f.surname).trim()],
+    [t('rcCountry'), [country, f.city].filter(Boolean).join(' · ') + (f.region ? ' (' + f.region + ')' : '')],
+    [t('rcEmail'), f.personalEmail],
+    [t('rcPhone'), f.phone],
+  ];
+  root.innerHTML = `
+  ${heroHtml()}
+  <main class="wrap lift">
+    <section class="card done">
+      <div class="done-ic">${ICON.check}</div>
+      <h2>${esc(t('doneTitle'))}</h2>
+      <p>${esc(t('doneSub', { name: first }))}</p>
+      <div class="recap">${rows.map(r => `<div class="recap-row"><span class="rk">${esc(r[0])}</span><span class="rv">${esc(r[1])}</span></div>`).join('')}</div>
+      <div class="done-actions"><button type="button" class="btn btn-soft btn-block" id="edit-btn">${esc(t('btnEdit'))}</button></div>
+      <p class="done-hint">${esc(t('doneHint'))}</p>
+    </section>
+    <div class="foot">${esc(t('foot'))}</div>
+  </main>`;
+  root.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+  document.getElementById('edit-btn').addEventListener('click', () => {
+    S.view = 'form';
+    S.tried = false;
+    S.touched = {};
+    S.f.consent = false;
+    render();
+    window.scrollTo({ top: 0 });
+  });
+}
+
+function render() { if (S.view === 'done') renderDone(); else renderForm(); }
+
+function setLang(l) {
+  if (!I18N[l]) return;
+  S.lang = l;
+  document.documentElement.lang = l === 'pt' ? 'pt-BR' : l;
+  lsSet(KEYS.lang, l);
+  const y = window.scrollY;
+  render();
+  window.scrollTo({ top: y });
+}
+
+// ================================================================
+// INIT
+// ================================================================
+(function init() {
+  const q = new URLSearchParams(location.search);
+  const ql = String(q.get('lang') || '').toLowerCase();
+  S.lang = I18N[ql] ? ql : (I18N[lsGet(KEYS.lang)] ? lsGet(KEYS.lang) : browserLang());
+  document.documentElement.lang = S.lang === 'pt' ? 'pt-BR' : S.lang;
+  if (loadDraft()) S.banner = { kind: 'info', text: t('draftRestored') };
+  // Link pronto: ?region=EMEA&country=DE (o país sozinho já define a região)
+  const qc = String(q.get('country') || '').toUpperCase();
+  const qr = String(q.get('region') || '').toUpperCase();
+  if (COUNTRY[qc]) { S.f.region = COUNTRY[qc].region; S.f.countryCode = qc; }
+  else if (REGIONS[qr] && S.f.region !== qr) { S.f.region = qr; S.f.countryCode = ''; }
+  if (S.f.countryCode && S.f.countryCode !== OTHER && (!COUNTRY[S.f.countryCode] || COUNTRY[S.f.countryCode].region !== S.f.region)) S.f.countryCode = '';
+  if (!ID_TYPES[S.f.idType]) S.f.idType = 'national';
+  render();
+})();
+</script>
+</body>
+</html>

@@ -300,6 +300,11 @@ function doGet(e) {
       return jsonResponse({ success: true, schedule: getArLaunchSchedule_() });
     }
 
+    // v5.91: HR Global configurada? (só contagens, sem dado pessoal)
+    if (action === 'getHrGlobalStatus') {
+      return jsonResponse(getHrGlobalStatus_());
+    }
+
     // v5.6: ping de saúde — retorna versão deployada (útil pra debugar deploys)
     if (action === 'ping') {
       // Faz uma chamada real à getDriversList_ pra confirmar que a função existe
@@ -316,7 +321,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.90',
+        version: 'v5.91',
         ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
@@ -335,7 +340,8 @@ function doGet(e) {
                     'listMyMaps', 'getMyMap', 'POST saveMyMap',
                     'getTkmReportOptions', 'getTkmReport', 'getFleetVids',
                     'getVidStatus', 'POST saveVidStatus',
-                    'getClientMetrics', 'getClientMetricsBatch', 'getClientWeeks', 'getVidCounts'],
+                    'getClientMetrics', 'getClientMetricsBatch', 'getClientWeeks', 'getVidCounts',
+                    'POST saveGlobalDriver', 'getHrGlobalStatus'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -665,6 +671,12 @@ function doGet(e) {
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
+
+    // v5.91: cadastro global (driver-registration.html) → planilha HR Global, NUNCA a Mastersheet
+    if (data.type === 'saveGlobalDriver') {
+      return jsonResponse(saveGlobalDriver_(data));
+    }
+
     ensureSheetsExist();
 
     if (data.type === 'checkin') {
@@ -12109,4 +12121,668 @@ function getDriverDocsStatus_() {
     }
   }
   return Object.keys(byName).map(function (k) { return byName[k]; });
+}
+
+// ================================================================
+// v5.91: HR GLOBAL (2027) — cadastro global dos motoristas Street View
+// ----------------------------------------------------------------
+// Formulário público driver-registration.html → POST saveGlobalDriver.
+// Grava numa planilha NOVA ("HR Global"), NUNCA na Mastersheet. A Mastersheet
+// só é LIDA, pra copiar a aba HR pra cá (setupHrGlobal / syncHrGlobalFromMastersheet).
+//
+// Abas da planilha HR Global:
+//   Busca                   → digita nome/e-mail/telefone/documento e vê a ficha inteira
+//   Todos                   → 1 linha por motorista (a fonte; o formulário escreve aqui)
+//   <país> (Brazil, …)      → FILTER de Todos por país (só leitura; criada sob demanda)
+//   Respostas do formulário → log de cada envio (append-only, com o que mudou)
+//
+// SETUP (uma vez, no editor do Apps Script): rodar setupHrGlobal(). Cria a planilha
+// na conta dona do script, copia a HR e loga a URL. O id fica em Script Properties
+// (HR_GLOBAL_SPREADSHEET_ID). Pra usar uma planilha que já existe, crie a propriedade
+// com o id antes de rodar. Pode rodar de novo: não duplica (casa por e-mail/nome) e
+// só completa células vazias — nunca apaga nem sobrescreve o que já está na HR Global.
+// ================================================================
+const HR_GLOBAL = {
+  propKey: 'HR_GLOBAL_SPREADSHEET_ID',
+  title: 'HR Global — Street View Drivers',
+  allSheet: 'Todos',
+  searchSheet: 'Busca',
+  logSheet: 'Respostas do formulário',
+  program: 'Street View',
+  searchMaxMatches: 8,
+  regionOrder: ['LATAM', 'NA', 'APAC', 'EMEA'],
+  regionColors: { LATAM: '#16A34A', NA: '#2563EB', APAC: '#D97706', EMEA: '#7C3AED' },
+};
+
+// Colunas da aba Todos, nesta ordem. Os nomes vindos da HR da Mastersheet ficam IGUAIS
+// (inclusive o typo "Full Adress") pra cópia casar 1:1; os outros são do formulário
+// global. Coluna nova que aparecer na HR da Mastersheet entra no fim, sozinha.
+const HRG_HEADERS_ = [
+  'Driver Full Name', 'Region', 'Country', 'Country Code', 'Situation', 'Type', 'Program',
+  'First and Second Name', 'Surname', 'Corporate E-mail', 'Personal E-mail', 'Phone Number',
+  'State / Province', 'City', 'Zip Code', 'Full Adress', 'Nationality', 'Date of Birth', 'Age',
+  'Id Type', 'Id Number', 'Driver License Number', 'Driver License Expiry', 'Emergency Contact',
+  'Company Tax ID', 'CNPJ (Brazil)', 'Preferred Language', 'Driver Notes',
+  'Per Hour Salary (USD)', 'Previous Rate (USD)', 'Joining Date/Renovation Date', 'First Joining Date', 'End Date',
+  'Ramp Card Last 4', 'Virtual Ramp Card Last 4', 'Previous Corporate E-mail', 'PAYHAWK NAME', 'Feedback',
+  'FILE LINK', 'Document URL (do not edit)', 'Home Lat', 'Home Lng',
+  'Source', 'Form Status', 'Form Submitted At', 'Last Updated',
+];
+// Datas ficam como TEXTO yyyy-MM-dd (igual Work Confirmations): não escorregam de fuso e
+// leem igual em qualquer locale. Colunas de controle não entram no "o que mudou" do log.
+const HRG_DATE_HEADERS_ = ['Date of Birth', 'Driver License Expiry', 'Joining Date/Renovation Date', 'First Joining Date', 'End Date'];
+const HRG_META_HEADERS_ = ['Source', 'Form Status', 'Form Submitted At', 'Last Updated', 'Program', 'Type'];
+const HRG_LOG_HEADERS_ = ['Submitted At', 'Result', 'Region', 'Country', 'Driver Full Name', 'Personal E-mail',
+                          'Corporate E-mail', 'Changes', 'Lang', 'Payload (JSON)'];
+
+// Países por região — ISO alfa-2 : nome em inglês (= valor gravado na coluna Country).
+// ⚠ MESMA lista do REGIONS em driver-registration.html: mudou lá, muda aqui.
+const HRG_REGIONS_ = {
+  LATAM: 'AR:Argentina|BO:Bolivia|BR:Brazil|CL:Chile|CO:Colombia|CR:Costa Rica|CU:Cuba|DO:Dominican Republic|EC:Ecuador|SV:El Salvador|GT:Guatemala|HT:Haiti|HN:Honduras|JM:Jamaica|MX:Mexico|NI:Nicaragua|PA:Panama|PY:Paraguay|PE:Peru|PR:Puerto Rico|UY:Uruguay|VE:Venezuela|AG:Antigua and Barbuda|AW:Aruba|BS:Bahamas|BB:Barbados|BZ:Belize|KY:Cayman Islands|CW:Curaçao|DM:Dominica|GD:Grenada|GY:Guyana|KN:Saint Kitts and Nevis|LC:Saint Lucia|VC:Saint Vincent and the Grenadines|SR:Suriname|TT:Trinidad and Tobago',
+  NA: 'US:United States|CA:Canada|BM:Bermuda',
+  APAC: 'AU:Australia|NZ:New Zealand|JP:Japan|KR:South Korea|TW:Taiwan|HK:Hong Kong|MO:Macao|CN:China|MN:Mongolia|IN:India|PK:Pakistan|BD:Bangladesh|LK:Sri Lanka|NP:Nepal|BT:Bhutan|MV:Maldives|AF:Afghanistan|TH:Thailand|VN:Vietnam|KH:Cambodia|LA:Laos|MM:Myanmar|MY:Malaysia|SG:Singapore|ID:Indonesia|PH:Philippines|BN:Brunei|TL:Timor-Leste|PG:Papua New Guinea|FJ:Fiji|WS:Samoa|TO:Tonga|VU:Vanuatu|SB:Solomon Islands|NC:New Caledonia|PF:French Polynesia|GU:Guam|KI:Kiribati|FM:Micronesia|MH:Marshall Islands|NR:Nauru|PW:Palau',
+  EMEA: 'GB:United Kingdom|IE:Ireland|FR:France|DE:Germany|ES:Spain|PT:Portugal|IT:Italy|NL:Netherlands|BE:Belgium|LU:Luxembourg|CH:Switzerland|AT:Austria|DK:Denmark|NO:Norway|SE:Sweden|FI:Finland|IS:Iceland|PL:Poland|CZ:Czechia|SK:Slovakia|HU:Hungary|RO:Romania|BG:Bulgaria|GR:Greece|CY:Cyprus|MT:Malta|SI:Slovenia|HR:Croatia|BA:Bosnia and Herzegovina|RS:Serbia|ME:Montenegro|MK:North Macedonia|AL:Albania|XK:Kosovo|EE:Estonia|LV:Latvia|LT:Lithuania|UA:Ukraine|MD:Moldova|BY:Belarus|RU:Russia|AD:Andorra|MC:Monaco|SM:San Marino|LI:Liechtenstein|VA:Vatican City|TR:Turkey|GE:Georgia|AM:Armenia|AZ:Azerbaijan|KZ:Kazakhstan|UZ:Uzbekistan|KG:Kyrgyzstan|TJ:Tajikistan|TM:Turkmenistan|IL:Israel|PS:Palestine|JO:Jordan|LB:Lebanon|SY:Syria|IQ:Iraq|IR:Iran|SA:Saudi Arabia|AE:United Arab Emirates|QA:Qatar|BH:Bahrain|KW:Kuwait|OM:Oman|YE:Yemen|EG:Egypt|MA:Morocco|DZ:Algeria|TN:Tunisia|LY:Libya|SD:Sudan|SS:South Sudan|ET:Ethiopia|ER:Eritrea|DJ:Djibouti|SO:Somalia|KE:Kenya|UG:Uganda|TZ:Tanzania|RW:Rwanda|BI:Burundi|NG:Nigeria|GH:Ghana|CI:Côte d’Ivoire|SN:Senegal|ML:Mali|BF:Burkina Faso|NE:Niger|TD:Chad|CM:Cameroon|CF:Central African Republic|GA:Gabon|CG:Congo - Brazzaville|CD:Congo - Kinshasa|GQ:Equatorial Guinea|ST:São Tomé and Príncipe|AO:Angola|ZM:Zambia|ZW:Zimbabwe|MW:Malawi|MZ:Mozambique|MG:Madagascar|MU:Mauritius|SC:Seychelles|KM:Comoros|ZA:South Africa|NA:Namibia|BW:Botswana|LS:Lesotho|SZ:Eswatini|BJ:Benin|TG:Togo|LR:Liberia|SL:Sierra Leone|GN:Guinea|GW:Guinea-Bissau|GM:Gambia|MR:Mauritania|CV:Cape Verde',
+};
+
+let HRG_COUNTRY_INDEX_ = null;
+function hrgCountryIndex_() {
+  if (HRG_COUNTRY_INDEX_) return HRG_COUNTRY_INDEX_;
+  const byCode = {}, byName = {};
+  Object.keys(HRG_REGIONS_).forEach(function (region) {
+    HRG_REGIONS_[region].split('|').forEach(function (pair) {
+      const k = pair.indexOf(':');
+      const rec = { code: pair.slice(0, k), name: pair.slice(k + 1), region: region };
+      byCode[rec.code] = rec;
+      byName[normCountry_(rec.name)] = rec;
+    });
+  });
+  // Como aparece na HR da Mastersheet ("México") ou digitado no "outro país"
+  const alias = { brasil: 'BR', 'estados unidos': 'US', usa: 'US', 'united states of america': 'US', uk: 'GB',
+                  england: 'GB', 'great britain': 'GB', espana: 'ES', deutschland: 'DE', korea: 'KR', 'republic of korea': 'KR',
+                  'czech republic': 'CZ', turkiye: 'TR', 'ivory coast': 'CI', 'cote d\'ivoire': 'CI', macau: 'MO' };
+  Object.keys(alias).forEach(function (a) { if (!byName[a]) byName[a] = byCode[alias[a]]; });
+  HRG_COUNTRY_INDEX_ = { byCode: byCode, byName: byName };
+  return HRG_COUNTRY_INDEX_;
+}
+/** 'BR' | 'Brazil' | 'Brasil' | 'México' → { code, name, region } ou null. */
+function hrgCountry_(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return null;
+  const idx = hrgCountryIndex_();
+  return (s.length === 2 && idx.byCode[s.toUpperCase()]) || idx.byName[normCountry_(s)] || null;
+}
+
+function hrgKey_(h) { return String(h == null ? '' : h).toLowerCase().replace(/\s+/g, ' ').trim(); }
+function hrgColMap_(headers) {
+  const m = {};
+  headers.forEach(function (h, i) { const k = hrgKey_(h); if (k && m[k] == null) m[k] = i; });
+  return m;
+}
+function hrgColLetter_(n) {
+  let s = '';
+  while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); }
+  return s;
+}
+/** Garante que a aba tem pelo menos n linhas (getRange além do fim dá erro). */
+function hrgEnsureRows_(sheet, n) {
+  const max = sheet.getMaxRows();
+  if (max < n) sheet.insertRowsAfter(max, Math.max(n - max, 200));
+}
+function hrgSheetRef_(name) { return "'" + String(name).replace(/'/g, "''") + "'"; }
+function hrgPad2_(x) { x = String(x); return x.length < 2 ? '0' + x : x; }
+
+/**
+ * Valor seguro pra célula. Texto que o Sheets converteria sozinho — fórmula (=, +, -, @,
+ * vindo de formulário público!), telefone "+55…", documento com zero à esquerda, data —
+ * ganha apóstrofo, que força texto (igual digitar na planilha).
+ */
+function hrgCell_(v) {
+  if (v == null) return '';
+  if (v instanceof Date || typeof v === 'number' || typeof v === 'boolean') return v;
+  const s = String(v).replace(/\r\n?/g, '\n').trim();
+  if (!s) return '';
+  if (/^[=+\-@]/.test(s) || /^[\d\s.,:\/()\-]+$/.test(s)) return "'" + s;
+  return s;
+}
+
+/** Date | 'yyyy-mm-dd' | 'dd/mm/yyyy' (padrão da HR) → 'yyyy-MM-dd'. Outro formato volta como veio. */
+function hrgDate_(v, tz) {
+  if (v instanceof Date) return isNaN(v.getTime()) ? '' : Utilities.formatDate(v, tz || Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  const s = String(v == null ? '' : v).trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return m[1] + '-' + hrgPad2_(m[2]) + '-' + hrgPad2_(m[3]);
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return m[3] + '-' + hrgPad2_(m[2]) + '-' + hrgPad2_(m[1]);
+  return s;
+}
+
+/** Abre a HR Global (id em Script Properties). createIfMissing=true cria (só o setup usa). */
+function hrGlobalSs_(createIfMissing) {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty(HR_GLOBAL.propKey);
+  if (id) {
+    try { return SpreadsheetApp.openById(id); } catch (e) {
+      if (!createIfMissing) throw new Error('HR Global: não consegui abrir a planilha ' + id + ' (' + e + ')');
+      Logger.log('[HR Global] ⚠ o id salvo não abre (' + e + ') — criando outra planilha');
+    }
+  }
+  if (!createIfMissing) throw new Error('HR Global ainda não configurada — rode setupHrGlobal() no editor do Apps Script');
+  const ss = SpreadsheetApp.create(HR_GLOBAL.title);
+  ss.setSpreadsheetLocale('en_US');   // planilha global; e fórmulas com vírgula
+  ss.setSpreadsheetTimeZone(Session.getScriptTimeZone());
+  props.setProperty(HR_GLOBAL.propKey, ss.getId());
+  Logger.log('[HR Global] planilha criada: ' + ss.getUrl());
+  return ss;
+}
+
+/**
+ * Garante a aba Todos com todas as colunas de HRG_HEADERS_ (+ extras, ex.: coluna nova
+ * da HR). Coluna que falta vai pro fim. Retorna { sheet, headers, added }.
+ */
+function hrgEnsureAll_(ss, extraHeaders) {
+  let sheet = ss.getSheetByName(HR_GLOBAL.allSheet);
+  if (!sheet) {
+    const sheets = ss.getSheets();
+    // planilha recém-criada: reaproveita a "Sheet1" vazia
+    if (sheets.length === 1 && sheets[0].getLastRow() === 0 && sheets[0].getLastColumn() === 0) {
+      sheet = sheets[0];
+      sheet.setName(HR_GLOBAL.allSheet);
+    } else {
+      sheet = ss.insertSheet(HR_GLOBAL.allSheet);
+    }
+  }
+  const lastCol = sheet.getLastColumn();
+  const headers = lastCol ? sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function (h) { return String(h == null ? '' : h).trim(); }) : [];
+  const have = {};
+  headers.forEach(function (h) { if (h) have[hrgKey_(h)] = true; });
+  const add = [];
+  HRG_HEADERS_.concat(extraHeaders || []).forEach(function (h) {
+    h = String(h == null ? '' : h).trim();
+    const k = hrgKey_(h);
+    if (h && !have[k]) { have[k] = true; add.push(h); }
+  });
+  if (add.length) {
+    const need = headers.length + add.length;
+    if (sheet.getMaxColumns() < need) sheet.insertColumnsAfter(sheet.getMaxColumns(), need - sheet.getMaxColumns());
+    sheet.getRange(1, headers.length + 1, 1, add.length).setValues([add]);
+    Array.prototype.push.apply(headers, add);
+    sheet.getRange(1, 1, 1, headers.length)
+      .setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1A365D').setWrap(true).setVerticalAlignment('middle');
+    sheet.setFrozenRows(1);
+    sheet.setFrozenColumns(1);
+    sheet.setColumnWidths(1, headers.length, 170);
+    sheet.setColumnWidth(1, 240);
+    const col = hrgColMap_(headers);
+    HRG_DATE_HEADERS_.forEach(function (h) {
+      const k = col[hrgKey_(h)];
+      if (k != null) sheet.getRange(2, k + 1, Math.max(1, sheet.getMaxRows() - 1), 1).setNumberFormat('yyyy-mm-dd');
+    });
+    Logger.log('[HR Global] Todos: +' + add.length + ' coluna(s): ' + add.join(', '));
+  }
+  return { sheet: sheet, headers: headers, added: add.length };
+}
+
+/** Índice das linhas de Todos: e-mail (corporativo e pessoal) e nome|país. */
+function hrgIndex_(data, col) {
+  const byEmail = {}, byName = {};
+  const iCorp = col[hrgKey_('Corporate E-mail')], iPers = col[hrgKey_('Personal E-mail')];
+  const iName = col[hrgKey_('Driver Full Name')], iCountry = col['country'];
+  data.forEach(function (r, i) { hrgIndexAdd_(byEmail, byName, r, i, iCorp, iPers, iName, iCountry); });
+  return { byEmail: byEmail, byName: byName, iCorp: iCorp, iPers: iPers, iName: iName, iCountry: iCountry };
+}
+function hrgIndexAdd_(byEmail, byName, r, i, iCorp, iPers, iName, iCountry) {
+  [iCorp, iPers].forEach(function (k) {
+    if (k == null) return;
+    const e = String(r[k] == null ? '' : r[k]).trim().toLowerCase();
+    if (e && byEmail[e] == null) byEmail[e] = i;
+  });
+  const n = normCountry_(r[iName]);
+  if (n) { const key = n + '|' + normCountry_(r[iCountry]); if (byName[key] == null) byName[key] = i; }
+}
+
+/**
+ * Copia a aba HR da Mastersheet pra Todos. Linha nova → acrescenta; linha que já existe
+ * (mesmo e-mail, ou mesmo nome+país) → só preenche as células VAZIAS (nunca sobrescreve
+ * o que o motorista atualizou pelo formulário nem o que alguém editou na HR Global).
+ */
+function syncHrGlobalFromMastersheet_(ss) {
+  const master = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const src = getSheetWithFallback_(master, CONFIG.hrSheet, ['HR & Vendors Database', 'HR VENDORS DATABASE', 'HR Vendors Database']);
+  if (!src || src.getLastRow() < 2) throw new Error('aba HR da Mastersheet não encontrada ou vazia');
+  const srcTz = master.getSpreadsheetTimeZone();
+  const nRows = src.getLastRow(), nCols = src.getLastColumn();
+  const vals = src.getRange(1, 1, nRows, nCols).getValues();   // getValues lê TODAS as linhas, inclusive as escondidas pelo filtro
+  const srcH = vals[0].map(function (h) { return String(h == null ? '' : h).trim(); });
+  const iName = hrNameCol_(srcH);
+  const iCountry = findHeader_(srcH, ['Country']);
+  const iCorp = findHeader_(srcH, ['Corporate E-mail']);
+  const iPers = findHeader_(srcH, ['Personal E-mail']);
+  if (iName < 0) throw new Error('coluna do nome não encontrada na HR');
+  // FILE LINK é hyperlink/chip: o texto vem no getValues, a URL só no RichText
+  const iLink = findHeader_(srcH, ['FILE LINK']);
+  let links = null;
+  if (iLink >= 0) {
+    links = src.getRange(1, iLink + 1, nRows, 1).getRichTextValues().map(function (r) {
+      const rt = r[0];
+      if (!rt) return '';
+      let u = rt.getLinkUrl();
+      if (!u) { const runs = rt.getRuns(); for (let i = 0; i < runs.length && !u; i++) u = runs[i].getLinkUrl(); }
+      return u || '';
+    });
+  }
+
+  const extra = srcH.filter(function (h, j) { return h && j !== iName && j !== iCountry; });
+  const all = hrgEnsureAll_(ss, extra);
+  const sheet = all.sheet, H = all.headers, nC = H.length, col = hrgColMap_(H);
+  const tz = ss.getSpreadsheetTimeZone();
+  const nowTxt = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm');
+  const isDate = {};
+  HRG_DATE_HEADERS_.forEach(function (h) { isDate[hrgKey_(h)] = true; });
+  const last = sheet.getLastRow();
+  const data = last > 1 ? sheet.getRange(2, 1, last - 1, nC).getValues() : [];
+  const idx = hrgIndex_(data, col);
+  const put = function (row, header, v) { const k = col[hrgKey_(header)]; if (k != null) row[k] = v; };
+
+  const newRows = [], newLinks = [], fills = [];
+  let skipped = 0, same = 0;
+  for (let r = 1; r < vals.length; r++) {
+    const row = vals[r];
+    const name = String(row[iName] == null ? '' : row[iName]).trim();
+    const corp = iCorp >= 0 ? String(row[iCorp] || '').trim().toLowerCase() : '';
+    const pers = iPers >= 0 ? String(row[iPers] || '').trim().toLowerCase() : '';
+    if (!name && !corp && !pers) { skipped++; continue; }
+    const c = iCountry >= 0 ? hrgCountry_(row[iCountry]) : null;
+    const out = new Array(nC).fill('');
+    srcH.forEach(function (h, j) {
+      if (!h) return;
+      const target = j === iName ? col[hrgKey_('Driver Full Name')] : j === iCountry ? col['country'] : col[hrgKey_(h)];
+      if (target == null) return;
+      let v = row[j];
+      if (j === iCountry) v = c ? c.name : String(v == null ? '' : v).trim();
+      else if (isDate[hrgKey_(h)] || v instanceof Date) v = hrgDate_(v, srcTz);
+      out[target] = hrgCell_(v);
+    });
+    put(out, 'Region', c ? c.region : '');
+    put(out, 'Country Code', c ? c.code : '');
+    put(out, 'Program', HR_GLOBAL.program);
+    put(out, 'Source', 'Mastersheet HR');
+    put(out, 'Last Updated', hrgCell_(nowTxt));
+
+    // mesmo motorista? e-mail primeiro, depois nome+país
+    let hit = null;
+    [corp, pers].forEach(function (e) { if (hit == null && e && idx.byEmail[e] != null) hit = idx.byEmail[e]; });
+    if (hit == null && name) { const key = normCountry_(name) + '|' + normCountry_(c ? c.name : row[iCountry]); if (idx.byName[key] != null) hit = idx.byName[key]; }
+
+    if (hit == null) {
+      newRows.push(out);
+      newLinks.push(links ? links[r] : '');
+      hrgIndexAdd_(idx.byEmail, idx.byName, out, -newRows.length, idx.iCorp, idx.iPers, idx.iName, idx.iCountry);
+    } else if (hit < 0) {
+      // duplicada dentro da própria HR: completa a linha nova que já vai entrar
+      const tgt = newRows[-hit - 1];
+      for (let k = 0; k < nC; k++) if (tgt[k] === '' && out[k] !== '') tgt[k] = out[k];
+    } else {
+      const cur = data[hit];
+      let changed = false;
+      for (let k = 0; k < nC; k++) {
+        if (k === col[hrgKey_('Last Updated')] || k === col[hrgKey_('Source')]) continue;
+        if ((cur[k] === '' || cur[k] == null) && out[k] !== '') { fills.push([hit + 2, k + 1, out[k]]); cur[k] = out[k]; changed = true; }
+      }
+      if (changed) fills.push([hit + 2, col[hrgKey_('Last Updated')] + 1, hrgCell_(nowTxt)]); else same++;
+    }
+  }
+
+  // Linhas novas entram agrupadas: região → país → nome
+  const order = newRows.map(function (r, i) { return i; });
+  const rk = function (r) { const reg = String(r[col['region']] || ''); const p = HR_GLOBAL.regionOrder.indexOf(reg); return p < 0 ? 9 : p; };
+  const iN = col[hrgKey_('Driver Full Name')], iC = col['country'];
+  order.sort(function (a, b) {
+    const A = newRows[a], B = newRows[b];
+    return (rk(A) - rk(B)) || String(A[iC]).localeCompare(String(B[iC])) || String(A[iN]).localeCompare(String(B[iN]));
+  });
+  if (newRows.length) {
+    const start = sheet.getLastRow() + 1;
+    hrgEnsureRows_(sheet, start + newRows.length);
+    sheet.getRange(start, 1, newRows.length, nC).setValues(order.map(function (i) { return newRows[i]; }));
+    const kLink = col[hrgKey_('FILE LINK')];
+    if (kLink != null && order.some(function (i) { return !!newLinks[i]; })) {
+      const rich = order.map(function (i) {
+        const text = String(newRows[i][kLink] || '').replace(/^'/, '');
+        const b = SpreadsheetApp.newRichTextValue().setText(text || (newLinks[i] ? 'link' : ''));
+        return [newLinks[i] ? b.setLinkUrl(newLinks[i]).build() : b.build()];
+      });
+      sheet.getRange(start, kLink + 1, newRows.length, 1).setRichTextValues(rich);
+    }
+  }
+  fills.forEach(function (f) { sheet.getRange(f[0], f[1]).setValue(f[2]); });
+
+  const res = { added: newRows.length, filled: fills.length ? new Set(fills.map(function (f) { return f[0]; })).size : 0, same: same, skipped: skipped, columns: all.added };
+  Logger.log('[HR Global] cópia da HR: ' + JSON.stringify(res));
+  return res;
+}
+
+/** Nome de aba válido pro país (sem [ ] * ? / \ :). */
+function hrgTabName_(country) {
+  return String(country || '').replace(/[\[\]\*\?\/\\:]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 90);
+}
+function hrgTabSortKey_(tabName) {
+  const c = hrgCountry_(tabName);
+  const p = c ? HR_GLOBAL.regionOrder.indexOf(c.region) : -1;
+  return (p < 0 ? 9 : p) + '|' + normCountry_(tabName);
+}
+
+/** Aba do país = FILTER de Todos (cabeçalho + linhas do país, por nome). Só leitura. */
+function hrgEnsureCountryTab_(ss, country, H, rewrite) {
+  const name = hrgTabName_(country);
+  if (!name || name === HR_GLOBAL.allSheet || name === HR_GLOBAL.searchSheet || name === HR_GLOBAL.logSheet) return null;
+  let sh = ss.getSheetByName(name);
+  const isNew = !sh;
+  if (isNew) {
+    // entra na posição certa (Busca, Todos, países por região/nome, log)
+    const key = hrgTabSortKey_(name);
+    const sheets = ss.getSheets();
+    let pos = sheets.length;
+    for (let i = 0; i < sheets.length; i++) {
+      const n = sheets[i].getName();
+      if (n === HR_GLOBAL.searchSheet || n === HR_GLOBAL.allSheet) continue;
+      if (n === HR_GLOBAL.logSheet || hrgTabSortKey_(n) > key) { pos = i; break; }
+    }
+    sh = ss.insertSheet(name, pos);
+  }
+  if (!isNew && !rewrite) return sh;
+  const nC = H.length, L = hrgColLetter_(nC);
+  const kC = hrgColMap_(H)['country'];
+  const cc = hrgColLetter_(kC + 1);
+  const all = hrgSheetRef_(HR_GLOBAL.allSheet);
+  const q = '"' + String(country).replace(/"/g, '""') + '"';
+  const head = all + '!A1:' + L + '1';
+  const f = '=IFERROR({' + head + ';SORT(FILTER(' + all + '!A2:' + L + ',' + all + '!' + cc + '2:' + cc + '=' + q + '),1,TRUE)},' + head + ')';
+  sh.clear();
+  if (sh.getMaxColumns() < nC) sh.insertColumnsAfter(sh.getMaxColumns(), nC - sh.getMaxColumns());
+  const allSh = ss.getSheetByName(HR_GLOBAL.allSheet);
+  if (allSh) hrgEnsureRows_(sh, allSh.getMaxRows());   // o FILTER precisa de linha livre pra espalhar
+  sh.getRange(1, 1).setFormula(f);
+  sh.getRange(1, 1, 1, nC).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1A365D').setWrap(true);
+  sh.setFrozenRows(1);
+  sh.setFrozenColumns(1);
+  sh.setColumnWidths(1, nC, 170);
+  sh.setColumnWidth(1, 240);
+  const col = hrgColMap_(H);
+  HRG_DATE_HEADERS_.forEach(function (h) {
+    const k = col[hrgKey_(h)];
+    if (k != null) sh.getRange(2, k + 1, Math.max(1, sh.getMaxRows() - 1), 1).setNumberFormat('yyyy-mm-dd');
+  });
+  const c = hrgCountry_(country);
+  if (c) sh.setTabColor(HR_GLOBAL.regionColors[c.region] || null);
+  if (!sh.getProtections(SpreadsheetApp.ProtectionType.SHEET).length) {
+    sh.protect().setDescription('Gerada a partir da aba ' + HR_GLOBAL.allSheet + ' — edite lá').setWarningOnly(true);
+  }
+  return sh;
+}
+
+/** Aba Busca: digita qualquer pedaço (nome, e-mail, telefone, documento, cidade) e vê a ficha. */
+function hrgEnsureSearch_(ss, H) {
+  let sh = ss.getSheetByName(HR_GLOBAL.searchSheet);
+  const keep = sh ? sh.getRange('B3').getValue() : '';
+  if (!sh) sh = ss.insertSheet(HR_GLOBAL.searchSheet, 0);
+  sh.getProtections(SpreadsheetApp.ProtectionType.SHEET).forEach(function (p) { p.remove(); });
+  sh.clear();
+  sh.getRange('B3').clearDataValidations();
+  const nC = H.length, L = hrgColLetter_(nC), max = HR_GLOBAL.searchMaxMatches;
+  const all = hrgSheetRef_(HR_GLOBAL.allSheet);
+  const text = 'BYROW(' + all + '!A2:' + L + ',LAMBDA(r,TEXTJOIN(" ",TRUE,r)))';
+  const match = 'ISNUMBER(SEARCH(TRIM($B$3),' + text + '))';
+  const cols = Math.max(sh.getMaxColumns(), max + 1);
+  if (sh.getMaxColumns() < cols) sh.insertColumnsAfter(sh.getMaxColumns(), cols - sh.getMaxColumns());
+  if (sh.getMaxRows() < nC + 10) sh.insertRowsAfter(sh.getMaxRows(), nC + 10 - sh.getMaxRows());
+
+  sh.getRange('A1').setValue('🔎 Busca rápida — HR Global').setFontSize(15).setFontWeight('bold').setFontColor('#1A365D');
+  sh.getRange('A2').setValue('Digite qualquer pedaço do nome, e-mail, telefone, documento ou cidade na célula amarela (ou escolha um nome na lista). Mostra até ' + max + ' pessoas lado a lado.')
+    .setFontColor('#64748B').setWrap(false);
+  sh.getRange('A3').setValue('Buscar').setFontWeight('bold');
+  sh.getRange('B3').setValue(keep).setBackground('#FEF9C3').setFontSize(12).setFontWeight('bold')
+    .setBorder(true, true, true, true, false, false, '#CA8A04', SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+  sh.getRange('A4').setValue('Encontrados').setFontWeight('bold');
+  sh.getRange('B4').setFormula('=IF(LEN(TRIM($B$3))=0,"",SUMPRODUCT(--' + match + '))').setHorizontalAlignment('left');
+  sh.getRange('A6').setFormula('=TRANSPOSE(' + all + '!A1:' + L + '1)');
+  sh.getRange('B6').setFormula('=IF(LEN(TRIM($B$3))=0,"",IFERROR(ARRAY_CONSTRAIN(TRANSPOSE(FILTER(' + all + '!A2:' + L + ',' + match + ')),' + nC + ',' + max + '),"Nada encontrado"))');
+
+  sh.setColumnWidth(1, 230);
+  sh.setColumnWidths(2, max, 280);
+  sh.getRange(6, 1, nC, 1).setFontWeight('bold').setBackground('#F1F5F9').setFontColor('#334155').setVerticalAlignment('top');
+  sh.getRange(6, 2, nC, max).setWrap(true).setVerticalAlignment('top');
+  sh.getRange(6, 1, 1, max + 1).setBackground('#DBEAFE').setFontWeight('bold').setFontSize(12);
+  const col = hrgColMap_(H);
+  HRG_DATE_HEADERS_.forEach(function (h) {
+    const k = col[hrgKey_(h)];
+    if (k != null) sh.getRange(6 + k, 2, 1, max).setNumberFormat('yyyy-mm-dd');
+  });
+  sh.setFrozenRows(6);
+  sh.setFrozenColumns(1);
+  // lista de nomes pra escolher (aceita texto livre também)
+  const allSheet = ss.getSheetByName(HR_GLOBAL.allSheet);
+  if (allSheet) {
+    sh.getRange('B3').setDataValidation(SpreadsheetApp.newDataValidation()
+      .requireValueInRange(allSheet.getRange('A2:A'), true).setAllowInvalid(true).build());
+  }
+  sh.setTabColor('#CA8A04');
+  const p = sh.protect().setDescription('Busca — só a célula amarela é pra digitar').setWarningOnly(true);
+  p.setUnprotectedRanges([sh.getRange('B3')]);
+  return sh;
+}
+
+function hrgEnsureLog_(ss) {
+  let sh = ss.getSheetByName(HR_GLOBAL.logSheet);
+  if (!sh) {
+    sh = ss.insertSheet(HR_GLOBAL.logSheet);
+    sh.getRange(1, 1, 1, HRG_LOG_HEADERS_.length).setValues([HRG_LOG_HEADERS_])
+      .setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#334155');
+    sh.setFrozenRows(1);
+    sh.setColumnWidth(8, 420);
+    sh.setTabColor('#64748B');
+  }
+  return sh;
+}
+
+/** Recria fórmulas (Busca + abas de país) e reordena as abas. Rodar quando mexer em colunas de Todos. */
+function hrgRebuildViews_(ss) {
+  const all = hrgEnsureAll_(ss);
+  const H = all.headers, kC = hrgColMap_(H)['country'];
+  const last = all.sheet.getLastRow();
+  const countries = {};
+  if (last > 1) {
+    all.sheet.getRange(2, kC + 1, last - 1, 1).getValues().forEach(function (r) {
+      const s = String(r[0] == null ? '' : r[0]).trim();
+      if (s) countries[s] = true;
+    });
+  }
+  hrgEnsureSearch_(ss, H);
+  hrgEnsureLog_(ss);
+  Object.keys(countries).forEach(function (c) { hrgEnsureCountryTab_(ss, c, H, true); });
+  // ordem: Busca, Todos, países (LATAM → NA → APAC → EMEA, alfabético), log, resto
+  const names = ss.getSheets().map(function (s) { return s.getName(); });
+  const tabs = names.filter(function (n) { return countries[n] || hrgCountry_(n); })
+    .sort(function (a, b) { return hrgTabSortKey_(a) < hrgTabSortKey_(b) ? -1 : 1; });
+  const want = [HR_GLOBAL.searchSheet, HR_GLOBAL.allSheet].concat(tabs, [HR_GLOBAL.logSheet]);
+  let pos = 1;
+  want.forEach(function (n) {
+    const sh = ss.getSheetByName(n);
+    if (!sh) return;
+    ss.setActiveSheet(sh);
+    ss.moveActiveSheet(pos++);
+  });
+  ss.setActiveSheet(ss.getSheetByName(HR_GLOBAL.searchSheet));
+  return { countries: Object.keys(countries).length, columns: H.length };
+}
+
+/** ▶ RODAR NO EDITOR (uma vez): cria a HR Global, copia a HR da Mastersheet e monta as abas. */
+function setupHrGlobal() {
+  const ss = hrGlobalSs_(true);
+  const r = syncHrGlobalFromMastersheet_(ss);
+  const v = hrgRebuildViews_(ss);
+  const msg = '[HR Global] pronto → ' + ss.getUrl() + ' · ' + r.added + ' motorista(s) copiado(s), ' + r.filled +
+              ' completado(s), ' + r.same + ' já estavam iguais · ' + v.countries + ' aba(s) de país · ' + v.columns + ' colunas';
+  Logger.log(msg);
+  return msg;
+}
+/** ▶ Pode rodar no editor quando quiser (ou num gatilho): traz da HR o que for novo, sem sobrescrever. */
+function syncHrGlobalFromMastersheet() {
+  const ss = hrGlobalSs_(false);
+  const r = syncHrGlobalFromMastersheet_(ss);
+  if (r.added || r.columns) hrgRebuildViews_(ss);
+  return r;
+}
+/** ▶ Recria Busca/abas de país (ex.: depois de adicionar ou renomear coluna em Todos). */
+function rebuildHrGlobalViews() { return hrgRebuildViews_(hrGlobalSs_(false)); }
+
+/**
+ * POST saveGlobalDriver (driver-registration.html).
+ * data: { lang, hp (honeypot — tem que vir vazio), f: { region, countryCode, countryOther, state, city, zip,
+ *         address, firstNames, surname, dob, nationality, personalEmail, corporateEmail, phone, idType, idNumber,
+ *         licenseNumber, licenseExpiry, emergencyName, emergencyRelation, emergencyPhone, companyTaxId, notes, consent } }
+ * Casa com quem já está em Todos SÓ por e-mail (corporativo ou pessoal) e atualiza as células que mudaram,
+ * registrando "antes → depois" no log. Sem e-mail conhecido = linha nova ("New — review").
+ */
+function saveGlobalDriver_(data) {
+  const fail = function (m) { return { success: false, version: 'v5.91', error: m }; };
+  if (!data || typeof data !== 'object') return fail('payload inválido');
+  if (String(data.hp || '').trim()) return { success: true, version: 'v5.91', mode: 'ignored' };   // robô
+  const f = (data.f && typeof data.f === 'object') ? data.f : {};
+  const str = function (k, max) { return String(f[k] == null ? '' : f[k]).replace(/\s+/g, ' ').trim().slice(0, max || 200); };
+  const emailOk = function (e) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e); };
+
+  const region = str('region', 10).toUpperCase();
+  if (!HRG_REGIONS_[region]) return fail('região inválida');
+  let c = hrgCountry_(str('countryCode', 2));
+  let country = '';
+  if (c) {
+    if (c.region !== region) return fail('o país não é dessa região');
+    country = c.name;
+  } else {
+    country = str('countryOther', 60);
+    if (!country) return fail('país obrigatório');
+    c = hrgCountry_(country);
+    if (c) country = c.name;
+  }
+  const first = str('firstNames', 80), sur = str('surname', 80);
+  if (!first || !sur) return fail('nome e sobrenome obrigatórios');
+  const pEmail = str('personalEmail', 120).toLowerCase();
+  if (!emailOk(pEmail)) return fail('e-mail pessoal inválido');
+  const cEmail = str('corporateEmail', 120).toLowerCase();
+  if (cEmail && !emailOk(cEmail)) return fail('e-mail corporativo inválido');
+  const phone = str('phone', 40);
+  if (phone.replace(/\D/g, '').length < 6) return fail('telefone inválido');
+  if (f.consent !== true) return fail('consentimento obrigatório');
+
+  const dob = hrgDate_(str('dob', 10));
+  let age = '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
+    const now = new Date(), y = +dob.slice(0, 4), m = +dob.slice(5, 7), d = +dob.slice(8, 10);
+    age = now.getFullYear() - y - ((now.getMonth() + 1 < m || (now.getMonth() + 1 === m && now.getDate() < d)) ? 1 : 0);
+    if (age < 14 || age > 100) return fail('data de nascimento inválida');
+  }
+  const emName = str('emergencyName', 80), emRel = str('emergencyRelation', 40), emPhone = str('emergencyPhone', 40);
+  const em = (emName + (emRel ? ' (' + emRel + ')' : '') + (emPhone ? ((emName || emRel) ? ' · ' : '') + emPhone : '')).trim();
+  const taxId = str('companyTaxId', 40);
+  const lang = String(data.lang || '').slice(0, 5);
+  const notes = String(f.notes == null ? '' : f.notes).replace(/\r\n?/g, '\n').trim().slice(0, 1000);
+
+  const vals = {
+    'Driver Full Name': first + ' ' + sur,
+    'First and Second Name': first, 'Surname': sur,
+    'Region': region, 'Country': country, 'Country Code': c ? c.code : '',
+    'Program': HR_GLOBAL.program,
+    'State / Province': str('state', 80), 'City': str('city', 80), 'Zip Code': str('zip', 20), 'Full Adress': str('address', 300),
+    'Phone Number': phone, 'Personal E-mail': pEmail, 'Corporate E-mail': cEmail,
+    'Nationality': (hrgCountry_(str('nationality', 60)) || {}).name || str('nationality', 60),
+    'Date of Birth': dob, 'Age': age,
+    'Id Type': str('idType', 40), 'Id Number': str('idNumber', 40),
+    'Driver License Number': str('licenseNumber', 40), 'Driver License Expiry': hrgDate_(str('licenseExpiry', 10)),
+    'Emergency Contact': em,
+    'Company Tax ID': taxId, 'CNPJ (Brazil)': c && c.code === 'BR' ? taxId : '',
+    'Preferred Language': lang, 'Driver Notes': notes,
+  };
+
+  const lock = LockService.getScriptLock();
+  let locked = false;
+  try { locked = lock.tryLock(20000); } catch (e) { locked = false; }
+  if (!locked) return fail('servidor ocupado — tente de novo em 1 minuto');
+  try {
+    const ss = hrGlobalSs_(false);
+    const all = hrgEnsureAll_(ss);
+    const sheet = all.sheet, H = all.headers, nC = H.length, col = hrgColMap_(H);
+    const tz = ss.getSpreadsheetTimeZone();
+    const nowTxt = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm');
+    const last = sheet.getLastRow();
+    const rows = last > 1 ? sheet.getRange(2, 1, last - 1, nC).getValues() : [];
+    const idx = hrgIndex_(rows, col);
+    let hit = null;
+    [cEmail, pEmail].forEach(function (e) { if (hit == null && e && idx.byEmail[e] != null) hit = idx.byEmail[e]; });
+
+    vals['Form Submitted At'] = nowTxt;
+    vals['Last Updated'] = nowTxt;
+    const isMeta = {};
+    HRG_META_HEADERS_.forEach(function (h) { isMeta[hrgKey_(h)] = true; });
+    const changes = [];
+    let mode;
+    if (hit == null) {
+      mode = 'created';
+      vals['Type'] = 'Driver';
+      vals['Source'] = 'Form';
+      vals['Form Status'] = 'New — review';
+      const out = new Array(nC).fill('');
+      Object.keys(vals).forEach(function (h) {
+        const k = col[hrgKey_(h)];
+        if (k != null && vals[h] !== '' && vals[h] != null) out[k] = hrgCell_(vals[h]);
+      });
+      hrgEnsureRows_(sheet, last + 2);
+      sheet.getRange(last + 1, 1, 1, nC).setValues([out]);
+    } else {
+      mode = 'updated';
+      const cur = rows[hit], rowNum = hit + 2;
+      const src = String(cur[col['source']] || '');
+      if (!/form/i.test(src)) vals['Source'] = src ? src + ' + Form' : 'Form';
+      vals['Form Status'] = 'Updated by driver';
+      // só as células que mudaram (não regrava a linha: preserva links/fórmulas que alguém pôs)
+      Object.keys(vals).forEach(function (h) {
+        const k = col[hrgKey_(h)], v = vals[h];
+        if (k == null || v === '' || v == null) return;
+        const old = cur[k] instanceof Date ? hrgDate_(cur[k], tz) : String(cur[k] == null ? '' : cur[k]).trim();
+        if (old === String(v)) return;
+        if (!isMeta[hrgKey_(h)]) changes.push(h + ': ' + (old || '∅') + ' → ' + v);
+        sheet.getRange(rowNum, k + 1).setValue(hrgCell_(v));
+      });
+    }
+    hrgEnsureCountryTab_(ss, country, H, all.added > 0);
+    if (all.added) hrgRebuildViews_(ss);
+    const payload = {};
+    Object.keys(f).forEach(function (k) { if (k !== 'consent') payload[k] = String(f[k] == null ? '' : f[k]).slice(0, 300); });
+    payload.consent = true;
+    hrgEnsureLog_(ss).appendRow([nowTxt, mode === 'created' ? 'New' : (changes.length ? 'Updated' : 'Same data'), region, country,
+      first + ' ' + sur, pEmail, cEmail, changes.join('\n'), lang, JSON.stringify(payload)].map(hrgCell_));
+    Logger.log('[HR Global] ' + mode + ' · ' + country + ' · ' + pEmail + (changes.length ? ' · ' + changes.length + ' mudança(s)' : ''));
+    return { success: true, version: 'v5.91', mode: mode, changes: changes.length };
+  } catch (err) {
+    Logger.log('saveGlobalDriver_ erro: ' + err);
+    return fail(String(err && err.message || err));
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** GET getHrGlobalStatus — só pra conferir o deploy/setup (não devolve dado pessoal). */
+function getHrGlobalStatus_() {
+  const id = PropertiesService.getScriptProperties().getProperty(HR_GLOBAL.propKey);
+  if (!id) return { success: true, version: 'v5.91', configured: false };
+  try {
+    const ss = SpreadsheetApp.openById(id);
+    const all = ss.getSheetByName(HR_GLOBAL.allSheet);
+    const log = ss.getSheetByName(HR_GLOBAL.logSheet);
+    return { success: true, version: 'v5.91', configured: true,
+             drivers: all ? Math.max(0, all.getLastRow() - 1) : 0,
+             submissions: log ? Math.max(0, log.getLastRow() - 1) : 0,
+             tabs: ss.getSheets().length };
+  } catch (e) {
+    return { success: true, version: 'v5.91', configured: false, error: String(e) };
+  }
 }
