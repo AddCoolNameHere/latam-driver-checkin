@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-24T01:35:50.633Z",
+  "generatedAt": "2026-11-24T20:05:11.924Z",
   "month": 11,
   "year": 2026,
   "countries": [
@@ -41,7 +41,7 @@
   ],
   "weeks": {
     "count": 10,
-    "latest": "2026-W47",
-    "oldest": "2026-W38"
+    "latest": "2026-W48",
+    "oldest": "2026-W39"
   }
 }
