@@ -90,6 +90,7 @@ const CONFIG = {
   assetsSheet: 'Assets Management',
   diskLedgerSheet: 'SSD Tracking',           // v5.86: confirmação disco a disco do relatório semanal (auto-criada)
   diskSwapSheet: 'Disk Swaps',               // v5.88: troca de disco na câmera (botão no app; auto-criada)
+  workConfirmSheet: 'Work Confirmations',    // v5.89: motorista confirma dias/horas da quinzena (confirmar-horas.html; auto-criada)
   assetsPhotoFolderId: '',                  // v5.23: opcional — Drive folder ID pras fotos do form semanal. Se vazio usa parent da spreadsheet
   pmoNotesSheet: 'PMO Notes',                // v5.24: aba pra notes/coments do pmo.html (auto-criada na primeira chamada)
   finesSheet: 'Fines LATAM',
@@ -315,7 +316,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.88',
+        version: 'v5.89',
         ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
@@ -327,7 +328,7 @@ function doGet(e) {
                     'POST analyzeDriver', 'POST saveVehicleIssue', 'POST assetWeekly',
                     'POST savePMONote', 'POST editPMONote', 'POST deletePMONote',
                     'POST submitArgentinaCash', 'POST submitDriverDocs', 'POST updateAuthUsers',
-                    'getRecruitmentData', 'getTimesheetTab', 'getPayrollCheckin', 'getCtsTimesheet', 'writeAceHours', 'POST writeAceHoursManual',
+                    'getRecruitmentData', 'getTimesheetTab', 'getPayrollCheckin', 'getCtsTimesheet', 'getWorkConfirmations', 'POST saveWorkConfirmation', 'writeAceHours', 'POST writeAceHoursManual',
                     'getPayrollAdjustments', 'POST savePayrollAdjustment', 'POST deletePayrollAdjustment',
                     'getCrimeOverlay',
                     'getArLaunchSchedule', 'POST saveArLaunchSchedule',
@@ -605,6 +606,12 @@ function doGet(e) {
       return jsonResponse(getCtsTimesheet_(e.parameter.startDate, e.parameter.endDate));
     }
 
+    // v5.89: confirmações de dias/horas dos motoristas (confirmar-horas.html).
+    // ?startDate=&endDate= (período exato, opcional) &email= (opcional). Só o envio mais recente.
+    if (action === 'getWorkConfirmations') {
+      return jsonResponse(getWorkConfirmations_(e.parameter.startDate, e.parameter.endDate, e.parameter.email));
+    }
+
     // v5.55: escreve as horas calculadas na coluna "Hrs Worked" da aba REAL da quinzena na ACE.
     // ?tab=<nome exato da aba>&start=&end=&confirm=1. Sem &tab = lista as abas; sem confirm=1 = DRY-RUN.
     // v5.83: prévia das horas da Argentina na ACE (gravar = fillAceArgentinaNow / gatilho)
@@ -693,6 +700,11 @@ function doPost(e) {
     // v5.88: troca de disco na câmera (botão TROCA DE DISCO no app) — fotos + aviso por e-mail
     if (data.type === 'diskSwap') {
       return jsonResponse(saveDiskSwap_(data));
+    }
+
+    // v5.89: motorista confirma os dias/horas da quinzena (confirmar-horas.html)
+    if (data.type === 'saveWorkConfirmation') {
+      return jsonResponse(saveWorkConfirmation_(data));
     }
 
     if (data.type === 'assetWeekly') {
@@ -10818,6 +10830,165 @@ function deleteScopeAssignments_(data) {
   } finally {
     lock.releaseLock();
   }
+}
+
+
+// ================================================================
+// WORK CONFIRMATIONS (v5.89) — confirmar-horas.html
+// O motorista confirma, dia a dia de uma quinzena, se trabalhou (e quantas
+// horas) ou por que não trabalhou (mech / tech / personal down, folga).
+// Camada extra de conferência contra a RAW CTS (getCtsTimesheet).
+// Aba "Work Confirmations" (auto-criada), 1 linha por dia, SÓ APPEND:
+// reenviar a mesma quinzena gera um envio novo e o getter devolve o mais
+// recente de cada motorista (os antigos ficam na aba como histórico).
+// Sem delete de linha = sem lock longo e sem risco de apagar a linha errada.
+// ================================================================
+const WORK_CONFIRM_COLS = 14;
+const WORK_CONFIRM_REASONS_ = { mech: 'Mech down', tech: 'Tech down', personal: 'Personal down', dayoff: 'Day off' };
+
+function ensureWorkConfirmSheet_(ss) {
+  let sheet = ss.getSheetByName(CONFIG.workConfirmSheet);
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.workConfirmSheet);
+    sheet.appendRow(['Submission ID', 'Submitted At', 'Period Start', 'Period End', 'Driver Email', 'Driver Name',
+                     'Country', 'Date', 'Worked', 'Hours', 'Reason', 'Day Note', 'Comment', 'Lang']);
+    sheet.setFrozenRows(1);
+    // Datas como texto puro (yyyy-MM-dd) — evita virar Date e escorregar um dia por fuso
+    sheet.getRange('C:D').setNumberFormat('@');
+    sheet.getRange('H:H').setNumberFormat('@');
+  }
+  return sheet;
+}
+
+/** 'Mech down' / 'mech' → 'mech'. Desconhecido → ''. */
+function workConfirmReasonCode_(v) {
+  const s = String(v || '').trim().toLowerCase();
+  if (!s) return '';
+  for (const code in WORK_CONFIRM_REASONS_) {
+    if (s === code || s === WORK_CONFIRM_REASONS_[code].toLowerCase()) return code;
+  }
+  return '';
+}
+
+/**
+ * data: { email, name, country, lang, periodStart, periodEnd, comment,
+ *         days: [{ date:'yyyy-MM-dd', worked:bool, hours:number, reason:'mech|tech|personal|dayoff', note }] }
+ */
+function saveWorkConfirmation_(data) {
+  const email = String(data.email || '').trim().toLowerCase();
+  const start = fmtScopeDate_(data.periodStart);
+  const end = fmtScopeDate_(data.periodEnd);
+  const days = Array.isArray(data.days) ? data.days : [];
+  if (email.indexOf('@') < 0) return { success: false, error: 'email obrigatório' };
+  if (!start || !end || start > end) return { success: false, error: 'período inválido' };
+  if (!days.length || days.length > 62) return { success: false, error: 'lista de dias inválida' };
+
+  const id = Utilities.getUuid();
+  const now = new Date();
+  const name = String(data.name || '').slice(0, 120);
+  const country = String(data.country || '').slice(0, 40);
+  const comment = String(data.comment || '').slice(0, 1000);
+  const lang = String(data.lang || '').slice(0, 5);
+  const seen = {};
+  const rows = [];
+  days.forEach(function (d) {
+    const date = fmtScopeDate_(d && d.date);
+    if (!date || date < start || date > end || seen[date]) return;
+    seen[date] = true;
+    const worked = d.worked === true;
+    let hours = worked ? Number(d.hours) : 0;
+    if (!isFinite(hours) || hours < 0) hours = 0;
+    hours = Math.min(24, Math.round(hours * 100) / 100);
+    const reason = worked ? '' : (WORK_CONFIRM_REASONS_[workConfirmReasonCode_(d.reason)] || '');
+    rows.push([id, now, start, end, email, name, country, date, worked ? 'Yes' : 'No', hours,
+               reason, String(d.note || '').slice(0, 500), comment, lang]);
+  });
+  if (!rows.length) return { success: false, error: 'nenhum dia válido no período' };
+  rows.sort(function (a, b) { return a[7] < b[7] ? -1 : a[7] > b[7] ? 1 : 0; });
+
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+    const sheet = ensureWorkConfirmSheet_(ss);
+    // Lock curto só pro append em bloco. Se o lock estiver ocupado (getTkmReport_
+    // segura o mesmo lock), cai pro appendRow linha a linha, que é atômico por linha
+    // — linhas de 2 envios podem se intercalar, mas o getter agrupa pelo Submission ID.
+    const lock = LockService.getScriptLock();
+    let locked = false;
+    try { locked = lock.tryLock(8000); } catch (e) { locked = false; }
+    try {
+      if (locked) {
+        sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, WORK_CONFIRM_COLS).setValues(rows);
+      } else {
+        rows.forEach(function (r) { sheet.appendRow(r); });
+      }
+    } finally {
+      if (locked) lock.releaseLock();
+    }
+    Logger.log('[Work Confirm] ' + email + ' ' + start + '..' + end + ' → ' + rows.length + ' dias (' + id + ')');
+    return { success: true, version: 'v5.89', id: id, days: rows.length, submittedAt: now.toISOString() };
+  } catch (err) {
+    Logger.log('saveWorkConfirmation_ erro: ' + err);
+    return { success: false, error: String(err) };
+  }
+}
+
+/**
+ * Envios mais recentes por motorista. Filtros opcionais: período exato
+ * (startDate/endDate) e e-mail. Retorna também quantos envios cada um fez.
+ */
+function getWorkConfirmations_(startParam, endParam, emailParam) {
+  const ss = SpreadsheetApp.openById(CONFIG.spreadsheetId);
+  const sheet = ss.getSheetByName(CONFIG.workConfirmSheet);
+  if (!sheet || sheet.getLastRow() < 2) return { success: true, version: 'v5.89', submissions: [] };
+  const tz = ss.getSpreadsheetTimeZone();
+  const start = fmtScopeDate_(startParam);
+  const end = fmtScopeDate_(endParam);
+  const want = String(emailParam || '').trim().toLowerCase();
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, WORK_CONFIRM_COLS).getValues();
+
+  const bySub = {};
+  data.forEach(function (r) {
+    const sid = String(r[0] || '').trim();
+    const em = String(r[4] || '').trim().toLowerCase();
+    if (!sid || !em) return;
+    if (want && em !== want) return;
+    const ps = fmtScopeDate_(r[2], tz);
+    const pe = fmtScopeDate_(r[3], tz);
+    if (start && ps !== start) return;
+    if (end && pe !== end) return;
+    const at = r[1] instanceof Date ? r[1].toISOString() : String(r[1] || '');
+    const S = bySub[sid] || (bySub[sid] = {
+      id: sid, email: em, name: String(r[5] || ''), country: String(r[6] || ''),
+      periodStart: ps, periodEnd: pe, submittedAt: at,
+      comment: String(r[12] || ''), lang: String(r[13] || ''), days: [],
+    });
+    S.days.push({
+      date: fmtScopeDate_(r[7], tz),
+      worked: /^(yes|sim|si|sí|true|1)$/i.test(String(r[8]).trim()),
+      hours: Number(r[9]) || 0,
+      reason: workConfirmReasonCode_(r[10]),
+      note: String(r[11] || ''),
+    });
+  });
+
+  // Fica só o envio mais recente de cada motorista+período
+  const latest = {};
+  const count = {};
+  Object.keys(bySub).forEach(function (sid) {
+    const S = bySub[sid];
+    const key = S.email + '|' + S.periodStart + '|' + S.periodEnd;
+    count[key] = (count[key] || 0) + 1;
+    if (!latest[key] || S.submittedAt >= latest[key].submittedAt) latest[key] = S;   // empate: vale a linha mais abaixo
+  });
+  const submissions = Object.keys(latest).map(function (key) {
+    const S = latest[key];
+    S.versions = count[key];
+    S.days.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    return S;
+  }).sort(function (a, b) {
+    return String(a.country).localeCompare(String(b.country)) || String(a.name).localeCompare(String(b.name));
+  });
+  return { success: true, version: 'v5.89', submissions: submissions };
 }
 
 

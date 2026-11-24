@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Confirmar horas · SV LATAM</title>
+<meta name="description" content="Motoristas Street View LATAM confirmam os dias e as horas trabalhadas da quinzena.">
+<meta name="theme-color" content="#1A365D">
+<link rel="icon" type="image/png" href="aceolution-globe.png">
+<link rel="apple-touch-icon" href="aceolution-globe-hd.png">
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<link rel="stylesheet" href="theme.css?v=20261023toggle">
+<script>
+  // Página de motorista = sempre light (não carrega theme.js, senão herda o dark de um admin).
+  document.documentElement.removeAttribute('data-theme');
+</script>
+<style>
+/* ============================================================
+ * confirmar-horas.html — motorista confirma dia a dia da quinzena
+ * (trabalhei X horas / não trabalhei + motivo). ?admin=1 = visão
+ * do time: respostas × RAW CTS. Backend v5.89 (Work Confirmations).
+ * ============================================================ */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --grad: linear-gradient(140deg, #1A365D 0%, #2C5282 55%, #4A9FE0 120%);
+  --ok: #16A34A; --ok-bg: #ECFDF5; --ok-bd: #86EFAC; --ok-tx: #166534;
+  --off: #EA580C; --off-bg: #FFF7ED; --off-bd: #FDBA74; --off-tx: #9A3412;
+  --r-card: 18px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans); background: var(--c-bg); color: var(--c-text);
+  font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; min-height: 100vh;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+input, textarea, select { font: inherit; color: inherit; }
+.hidden { display: none !important; }
+svg.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ---------- Botões ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 48px; padding: 0 20px; border-radius: 14px; font-weight: 650; font-size: 15.5px;
+  transition: transform .12s var(--ease-out), background .15s, box-shadow .15s, opacity .15s;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--c-primary); color: #fff; box-shadow: 0 8px 20px rgba(44,82,130,.28); }
+.btn-primary:disabled { opacity: .55; box-shadow: none; }
+.btn-soft { background: var(--c-bg-tint); color: var(--c-primary); }
+.btn-ghost { color: var(--c-text-muted); }
+.btn-block { width: 100%; }
+.btn-sm { height: 36px; padding: 0 14px; font-size: 13.5px; border-radius: 10px; }
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative; overflow: hidden; background: var(--grad); color: #fff;
+  padding: calc(var(--sat) + 18px) 20px 76px;
+}
+.hero::after {
+  content: ""; position: absolute; right: -80px; top: 10px; width: 260px; height: 260px;
+  background: url("aceolution-globe-hd.png") center/contain no-repeat; opacity: .13; pointer-events: none;
+}
+.hero-in { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; }
+.hero-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 30px; }
+.hero-logo { height: 24px; width: auto; }
+.lang-pills { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.16); }
+.lang-pills button { font-size: 12px; font-weight: 650; padding: 5px 10px; border-radius: 999px; color: rgba(255,255,255,.85); }
+.lang-pills button.active { background: #fff; color: var(--c-primary-dark); }
+.kicker { font-size: 11.5px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; opacity: .8; }
+.hero h1 { font-size: 28px; line-height: 1.12; font-weight: 750; letter-spacing: -.02em; margin: 8px 0 8px; }
+.hero p { font-size: 15px; opacity: .9; max-width: 440px; }
+
+.wrap { max-width: 560px; margin: 0 auto; padding: 0 16px; }
+.card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-card); box-shadow: var(--shadow-md); }
+.lift { position: relative; z-index: 2; margin-top: -56px; }
+
+/* ---------- Login ---------- */
+.login-card { padding: 22px 20px 20px; box-shadow: var(--shadow-lg); }
+.login-card label { display: block; font-size: 13px; font-weight: 650; margin-bottom: 8px; }
+.email-field {
+  display: flex; align-items: center; border: 1.5px solid var(--c-border-strong); border-radius: 12px; background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+.email-field:focus-within { border-color: var(--c-accent); box-shadow: 0 0 0 4px var(--ring); }
+.email-field input { flex: 1; min-width: 0; height: 52px; padding: 0 0 0 14px; border: 0; outline: 0; background: transparent; font-size: 16px; }
+.email-domain { flex: none; padding: 0 12px 0 2px; color: var(--c-text-muted); font-size: 12.5px; max-width: 56%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hint { font-size: 12.5px; color: var(--c-text-muted); margin: 8px 2px 16px; }
+.err { font-size: 13.5px; color: var(--c-danger); background: #FEF2F2; border: 1px solid #FECACA; border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; }
+
+/* ---------- Progresso ---------- */
+.prog { padding: 16px 18px; }
+.prog-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.prog-label { font-weight: 650; font-size: 14.5px; }
+.prog-pct { font-size: 13px; color: var(--c-text-muted); font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 99px; background: var(--c-bg-tint); overflow: hidden; margin: 10px 0 14px; }
+.bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--c-accent), var(--c-primary)); transition: width .35s var(--ease-out); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--c-bg); border-radius: 12px; padding: 9px 10px; }
+.stat b { display: block; font-size: 20px; font-weight: 750; letter-spacing: -.02em; color: var(--c-primary-dark); font-variant-numeric: tabular-nums; line-height: 1.15; }
+.stat span { font-size: 11.5px; color: var(--c-text-muted); }
+.who { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; font-size: 12.5px; color: var(--c-text-muted); }
+.who button { color: var(--c-primary); font-weight: 600; font-size: 12.5px; }
+
+/* ---------- Dias ---------- */
+.week-h { font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--c-text-muted); margin: 22px 4px 10px; }
+.day { margin-bottom: 10px; overflow: hidden; scroll-margin-top: 14px; transition: border-color .2s, box-shadow .2s; box-shadow: var(--shadow-sm); }
+.day.is-open { border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--ring), var(--shadow-md); }
+.day.is-worked:not(.is-open) { border-left: 4px solid var(--ok); }
+.day.is-off:not(.is-open) { border-left: 4px solid var(--off); }
+.day-head { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-align: left; }
+.dnum {
+  flex: none; width: 50px; height: 50px; border-radius: 13px; background: var(--c-bg-tint); color: var(--c-primary-dark);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1;
+}
+.dnum small { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .75; }
+.dnum b { font-size: 20px; font-weight: 750; margin-top: 3px; }
+.is-worked .dnum { background: var(--ok-bg); color: var(--ok-tx); }
+.is-off .dnum { background: var(--off-bg); color: var(--off-tx); }
+.dmid { flex: 1; min-width: 0; }
+.dname { display: block; font-weight: 650; font-size: 15px; }
+.dsub { display: block; font-size: 12.5px; color: var(--c-text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dsub.ok { color: var(--ok-tx); font-weight: 600; }
+.dsub.off { color: var(--off-tx); font-weight: 600; }
+.hol { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 99px; background: #F3E8FF; color: #6B21A8; margin-left: 6px; vertical-align: 2px; text-transform: none; }
+.chev { color: var(--c-text-dim); transition: transform .2s; }
+.is-open .chev { transform: rotate(180deg); }
+.todo-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c-accent); flex: none; box-shadow: 0 0 0 4px var(--ring); }
+
+.day-body { padding: 2px 14px 16px; }
+.q { font-size: 13.5px; font-weight: 650; color: var(--c-text); margin: 6px 2px 10px; }
+.choice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.choice button {
+  height: 58px; border-radius: 14px; border: 1.5px solid var(--c-border-strong); background: #fff;
+  display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 650; font-size: 15.5px;
+  transition: transform .12s var(--ease-out), background .15s, border-color .15s;
+}
+.choice button:active { transform: scale(.97); }
+.choice .yes.active { background: var(--ok-bg); border-color: var(--ok); color: var(--ok-tx); }
+.choice .no.active { background: var(--off-bg); border-color: var(--off); color: var(--off-tx); }
+
+.stepper { display: grid; grid-template-columns: 58px 1fr 58px; gap: 10px; align-items: center; }
+.stepper > button {
+  height: 58px; border-radius: 14px; background: var(--c-bg-tint); color: var(--c-primary);
+  display: flex; align-items: center; justify-content: center;
+}
+.stepper > button:active { transform: scale(.95); }
+.hours-box {
+  height: 58px; border-radius: 14px; border: 1.5px solid var(--c-border-strong); background: #fff;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.hours-box:focus-within { border-color: var(--c-accent); box-shadow: 0 0 0 4px var(--ring); }
+.hours-box input {
+  width: 74px; border: 0; outline: 0; background: transparent; text-align: right;
+  font-size: 28px; font-weight: 750; letter-spacing: -.02em; color: var(--c-primary-dark); font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield; appearance: textfield;
+}
+.hours-box input::-webkit-outer-spin-button, .hours-box input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.hours-box span { font-size: 18px; font-weight: 650; color: var(--c-text-muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.chips button { height: 34px; padding: 0 14px; border-radius: 99px; background: var(--c-bg); border: 1px solid var(--c-border); font-size: 13.5px; font-weight: 600; color: var(--c-text-muted); }
+.chips button.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+
+.reasons { display: grid; gap: 8px; }
+.reason {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 11px 12px; border-radius: 14px; border: 1.5px solid var(--c-border); background: #fff;
+  transition: border-color .15s, background .15s;
+}
+.reason:active { transform: scale(.99); }
+.reason .ric { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--c-bg); color: var(--c-text-muted); flex: none; }
+.reason .rt { flex: 1; min-width: 0; }
+.reason .rt b { display: block; font-size: 14.5px; font-weight: 650; }
+.reason .rt span { display: block; font-size: 12px; color: var(--c-text-muted); margin-top: 1px; }
+.reason .term { flex: none; font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: .02em; color: var(--c-text-dim); border: 1px solid var(--c-border); border-radius: 6px; padding: 2px 6px; }
+.reason.active { border-color: var(--off); background: var(--off-bg); }
+.reason.active .ric { background: #fff; color: var(--off); }
+.reason.active .term { color: var(--off-tx); border-color: var(--off-bd); }
+.note {
+  width: 100%; margin-top: 10px; border: 1.5px solid var(--c-border); border-radius: 12px; padding: 11px 12px;
+  font-size: 15px; outline: 0; background: #fff; resize: none;
+}
+.note:focus { border-color: var(--c-accent); box-shadow: 0 0 0 4px var(--ring); }
+.next-row { margin-top: 14px; }
+
+.comment-card { padding: 16px; margin-top: 18px; }
+.comment-card label { display: block; font-weight: 650; font-size: 14px; margin-bottom: 8px; }
+.comment-card textarea { margin-top: 0; min-height: 76px; }
+
+/* ---------- Barra fixa ---------- */
+.spacer { height: calc(104px + var(--sab)); }
+.sticky {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: rgba(255,255,255,.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--c-border); padding: 12px 16px calc(12px + var(--sab));
+}
+.sticky-in { max-width: 560px; margin: 0 auto; }
+.sticky-meta { font-size: 12.5px; color: var(--c-text-muted); text-align: center; margin-bottom: 8px; }
+
+/* ---------- Concluído ---------- */
+.done { padding: 26px 20px 22px; text-align: center; }
+.done-ic { width: 66px; height: 66px; border-radius: 50%; margin: 0 auto 14px; display: grid; place-items: center; background: var(--ok-bg); color: var(--ok); }
+.done-ic svg.ic { width: 34px; height: 34px; stroke-width: 2.4; }
+.done h2 { font-size: 22px; font-weight: 750; letter-spacing: -.01em; }
+.done p { color: var(--c-text-muted); margin-top: 6px; }
+.done .stats { margin: 18px 0 4px; text-align: left; }
+.recap { margin-top: 14px; text-align: left; }
+.recap-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-top: 1px solid var(--c-border); font-size: 13.5px; }
+.recap-row .rd { width: 92px; flex: none; color: var(--c-text-muted); }
+.recap-row .rv { flex: 1; font-weight: 600; }
+.recap-row .rv.ok { color: var(--ok-tx); }
+.recap-row .rv.off { color: var(--off-tx); }
+.done-actions { display: grid; gap: 10px; margin-top: 18px; }
+.done-hint { font-size: 12.5px; color: var(--c-text-muted); margin-top: 8px; }
+
+.center-msg { padding: 40px 20px; text-align: center; color: var(--c-text-muted); }
+.spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--c-bg-tint); border-top-color: var(--c-primary); margin: 0 auto 12px; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.banner { font-size: 13px; border-radius: 12px; padding: 10px 12px; margin-top: 12px; background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(118px + var(--sab)); transform: translateX(-50%); z-index: 30;
+  background: #0F172A; color: #fff; font-size: 13.5px; padding: 10px 14px; border-radius: 12px; box-shadow: var(--shadow-lg);
+  max-width: calc(100% - 32px); text-align: center;
+}
+.foot { text-align: center; font-size: 12px; color: var(--c-text-dim); padding: 22px 0 8px; }
+
+/* ============================================================
+ * ADMIN (?admin=1)
+ * ============================================================ */
+body.is-admin { background: var(--c-bg); }
+.adm-top { background: var(--c-surface); border-bottom: 1px solid var(--c-border); position: sticky; top: 0; z-index: 10; }
+.adm-top-in { max-width: 1240px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.adm-brand { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 220px; }
+.adm-brand img { height: 26px; }
+.adm-brand b { display: block; font-size: 15.5px; font-weight: 700; }
+.adm-brand span { display: block; font-size: 12px; color: var(--c-text-muted); }
+.adm-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.adm-actions select { height: 36px; border: 1px solid var(--c-border-strong); border-radius: 10px; padding: 0 10px; background: #fff; font-size: 13.5px; }
+.seg { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--c-bg-tint); }
+.seg button { font-size: 12px; font-weight: 650; padding: 5px 9px; border-radius: 8px; color: var(--c-text-muted); }
+.seg button.active { background: #fff; color: var(--c-primary-dark); box-shadow: var(--shadow-sm); }
+.adm-wrap { max-width: 1240px; margin: 0 auto; padding: 18px 20px 40px; }
+.adm-link { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+.adm-link code { font-family: var(--font-mono); font-size: 12.5px; background: var(--c-bg); padding: 3px 8px; border-radius: 6px; word-break: break-all; }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+.kpi { padding: 14px 16px; }
+.kpi small { display: block; font-size: 12px; color: var(--c-text-muted); font-weight: 600; }
+.kpi b { display: block; font-size: 26px; font-weight: 750; letter-spacing: -.02em; color: var(--c-primary-dark); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.kpi span { display: block; font-size: 12px; color: var(--c-text-muted); margin-top: 2px; }
+.kpi .reasons-mini { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.kpi .reasons-mini i { font-style: normal; font-size: 12px; font-weight: 600; background: var(--c-bg); border-radius: 99px; padding: 3px 9px; }
+.adm-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.adm-filters input { height: 36px; border: 1px solid var(--c-border-strong); border-radius: 10px; padding: 0 12px; min-width: 220px; background: #fff; font-size: 13.5px; outline: 0; }
+.adm-filters input:focus { border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--ring); }
+.fchip { height: 34px; padding: 0 12px; border-radius: 99px; border: 1px solid var(--c-border); background: #fff; font-size: 13px; font-weight: 600; color: var(--c-text-muted); }
+.fchip.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+.tbl-wrap { overflow-x: auto; }
+table.adm { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 900px; }
+table.adm th { text-align: left; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--c-text-muted); padding: 10px 12px; border-bottom: 1px solid var(--c-border); background: var(--c-surface); white-space: nowrap; }
+table.adm td { padding: 10px 12px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+table.adm td.num, table.adm th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.adm tr.drow { cursor: pointer; }
+table.adm tr.drow:hover td { background: #F8FBFE; }
+table.adm tr.drow.open td { background: var(--c-bg-tint); }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 650; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+.pill.ok { background: var(--ok-bg); color: var(--ok-tx); }
+.pill.pend { background: #F1F5F9; color: #475569; }
+.pill.warn { background: #FEF2F2; color: #B91C1C; }
+.pill.vac { background: #F3E8FF; color: #6B21A8; }
+.pill.off { background: var(--off-bg); color: var(--off-tx); }
+.dname-cell b { font-weight: 650; }
+.dname-cell span { display: block; font-size: 11.5px; color: var(--c-text-muted); }
+td.detail { background: #FBFDFF; padding: 4px 12px 14px !important; }
+table.det { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.det th { text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--c-text-muted); padding: 8px; border-bottom: 1px solid var(--c-border); }
+table.det td { padding: 7px 8px; border-bottom: 1px dashed var(--c-border); vertical-align: top; }
+table.det td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.det tr.flag td { background: #FEF2F2; }
+.muted { color: var(--c-text-muted); }
+.cts-status { font-size: 11.5px; color: var(--c-text-muted); }
+.adm-comment { margin-top: 10px; font-size: 13px; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 10px; padding: 8px 10px; }
+.adm-foot { font-size: 12px; color: var(--c-text-muted); margin-top: 12px; }
+@media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) {
+  .adm-top-in, .adm-wrap { padding-left: 16px; padding-right: 16px; }
+  .adm-filters input { min-width: 0; flex: 1; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+// ================================================================
+// CONFIG
+// ================================================================
+const CFG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  domain: 'field-ops-xpense-it.com',   // domínio do e-mail Xpense dos motoristas
+  backendVersion: 'v5.89',             // versão do Code udpt.gs que tem saveWorkConfirmation/getWorkConfirmations
+  hoursStep: 0.5, hoursMin: 0.5, hoursMax: 16,
+  hoursDiffFlag: 2,                    // admin: |motorista − CTS considerada| ≥ isso = divergência
+  ctsOffMinHours: 1,                   // admin: "não trabalhei" mas CTS com ≥ isso de sistema ligado = divergência
+};
+// getDrivers passa pelo Worker (latamace.com/api, cache KV); confirmações vão direto no Apps Script (sem cache).
+const API_GET = location.hostname.endsWith('latamace.com') ? '/api' : CFG.scriptUrl;
+
+// Quinzenas abertas pra confirmação — a mais recente primeiro. Pra abrir outra, é só adicionar aqui.
+const PERIODS = [
+  { start: '2026-11-07', end: '2026-11-20' },
+];
+
+// Feriados nacionais (só rótulo no card do dia; não muda nada no envio)
+const HOLIDAYS = {
+  brazil:   { '2026-11-15': 'Proclamação da República', '2026-11-20': 'Consciência Negra' },
+  mexico:   { '2026-11-16': 'Día de la Revolución' },
+  colombia: { '2026-11-16': 'Independencia de Cartagena' },
+};
+
+// Mesma regra da "Folha de ponto — RAW CTS" do dashboard (CTS_TS_RULE em dashboard.html).
+const CTS_RULE = { minHoursFullDay: 3, fullDayDefault: 8, fullDay9hCountries: ['argentina'], saturdayHours: 4, mappedNoHoursIsFullDay: true };
+
+// Sessão e idioma COMPARTILHADOS com o app dos motoristas (app/index.html):
+// quem já entrou no app cai direto aqui, e vice-versa.
+const KEYS = {
+  session: 'svapp.session.v1',
+  lang: 'svapp.lang',
+  drivers: 'checkin_drivers_v1',
+  draft: 'svconfirm.draft.v1:',      // + email + ':' + início do período
+  adminLang: 'svconfirm.adminLang',
+};
+const LOCALE = { pt: 'pt-BR', es: 'es', en: 'en-US' };
+const REASONS = ['mech', 'tech', 'personal', 'dayoff'];
+const REASON_TERM = { mech: 'Mech down', tech: 'Tech down', personal: 'Personal down', dayoff: 'Day off' };
+const REASON_ICON = { mech: 'car', tech: 'camera', personal: 'user', dayoff: 'moon' };
+
+// ================================================================
+// I18N (pt / es / en)
+// ================================================================
+const I18N = {
+  pt: {
+    kicker: 'Street View LATAM',
+    loginTitle: 'Confirme seus dias de trabalho',
+    loginSub: 'Leva 2 minutinhos. Entre com seu e-mail Xpense.',
+    loginLabel: 'Seu e-mail Xpense', loginPh: 'nome.sobrenome', loginHint: 'Pode digitar só a parte antes do @.',
+    loginBtn: 'Entrar', loginChecking: 'Conferindo…', loginEmpty: 'Digite seu e-mail Xpense.',
+    loginNotFound: 'Não encontramos esse e-mail entre os motoristas. Confira se digitou certo ou fale com o time LATAM.',
+    loginOffline: 'Sem conexão com o servidor. Tente de novo em instantes.',
+    hello: 'Olá, {name}!',
+    intro: 'Conte pra gente, dia a dia, se você trabalhou entre {start} e {end}. É rapidinho.',
+    progress: '{n} de {total} dias respondidos',
+    statWorked: 'dias trabalhados', statHours: 'horas', statOff: 'dias parado',
+    week: 'Semana {n}', holiday: 'Feriado',
+    tapToAnswer: 'Toque pra responder',
+    qWorked: 'Você trabalhou neste dia?', yesWorked: 'Trabalhei', noWorked: 'Não trabalhei',
+    qHours: 'Quantas horas, mais ou menos?',
+    qWhy: 'O que aconteceu?',
+    r_mech: 'Problema no carro', r_mech_sub: 'Pane, oficina, pneu, documento…',
+    r_tech: 'Problema no equipamento', r_tech_sub: 'Câmera, disco, notebook, sistema…',
+    r_personal: 'Motivo pessoal', r_personal_sub: 'Saúde, família, compromisso…',
+    r_dayoff: 'Folga ou feriado', r_dayoff_sub: 'Dia de descanso',
+    notePh: 'Quer contar mais? (opcional)',
+    next: 'Próximo dia', finish: 'Pronto',
+    sumWorked: 'Trabalhei · {h}h', sumOff: 'Não trabalhei · {r}', sumOffNoReason: 'Não trabalhei · falta o motivo',
+    commentLabel: 'Algo mais que a gente deva saber?', commentPh: 'Opcional',
+    missingN: 'Faltam {n} dias', missing1: 'Falta 1 dia', goNext: 'Responder o próximo',
+    allSet: 'Tudo respondido 👍', send: 'Enviar confirmação', sending: 'Enviando…',
+    sendFail: 'Não deu pra enviar agora. Suas respostas estão salvas neste celular — tente de novo.',
+    needDeploy: 'O servidor ainda não está pronto pra receber as confirmações. Suas respostas ficaram salvas neste celular — tente mais tarde.',
+    doneTitle: 'Recebido, {name}!', doneSub: 'Obrigado por confirmar. Isso ajuda a gente a fechar suas horas certinho.',
+    sentAt: 'Enviado em {when}',
+    edit: 'Revisar ou corrigir', editHint: 'Se mudar algo, é só enviar de novo — vale o último envio.',
+    backApp: 'Voltar pro app',
+    notYou: 'Não é você?', logout: 'Sair',
+    loading: 'Carregando…', draftSaved: 'Respostas salvas neste celular',
+    // admin
+    adminTitle: 'Confirmação de horas', adminSub: 'Respostas dos motoristas × RAW CTS',
+    admRefresh: 'Atualizar', admExport: 'CSV', admLogout: 'Sair',
+    admDriverLink: 'Link pros motoristas:', admCopy: 'Copiar', admCopied: 'Link copiado!',
+    admResponded: 'Responderam', admOf: 'de {n} motoristas',
+    admDiv: 'Dias com divergência', admDivSub: 'em {n} motoristas',
+    admHours: 'Horas declaradas', admHoursSub: 'CTS considerada: {h}h · real: {r}h',
+    admReasons: 'Dias parados (motivo)',
+    admSearch: 'Buscar motorista…', admAll: 'Todos', admOnlyDiv: 'Com divergência', admOnlyPending: 'Pendentes',
+    colDriver: 'Motorista', colStatus: 'Status', colDaysDecl: 'Dias (mot.)', colDaysCts: 'Dias (CTS)',
+    colHoursDecl: 'Horas mot.', colCtsReal: 'CTS real', colCtsCons: 'CTS consid.', colDiv: 'Diverg.',
+    stResponded: 'Respondeu', stPending: 'Pendente', stVacation: 'Férias',
+    detDate: 'Dia', detDriver: 'Motorista disse', detCtsReal: 'CTS real', detCtsCons: 'CTS consid.', detCheck: 'Conferência',
+    flagNoCts: 'Disse que trabalhou, CTS sem registro', flagCtsHas: 'Disse que não trabalhou, CTS tem {h}h',
+    flagHours: 'Diferença de {d}h', flagOk: 'OK',
+    drvWorked: 'Trabalhei {h}h', drvOff: 'Não trabalhei', drvNone: 'sem resposta',
+    admLoading: 'Carregando respostas e RAW CTS…', admLoadFail: 'Falha ao carregar: {e}',
+    admNeedDeploy: 'O backend ainda não tem o getWorkConfirmations — reimplantar o Code udpt.gs como "Nova versão" (ping {v}).',
+    admComment: 'Comentário do motorista', admVersions: '{n} envios (vale o último)', admSentAt: 'enviado {when}',
+    admCtsUntil: 'RAW CTS com dado até {d}.',
+    admRule: 'CTS considerada = regra da folha de ponto: ≥3h = dia cheio (8h, AR 9h), sábado 4h, <3h = horas reais. Divergência de horas a partir de {n}h.',
+    admEmpty: 'Nenhum motorista nesse filtro.',
+  },
+  es: {
+    kicker: 'Street View LATAM',
+    loginTitle: 'Confirma tus días de trabajo',
+    loginSub: 'Toma 2 minutitos. Entra con tu correo Xpense.',
+    loginLabel: 'Tu correo Xpense', loginPh: 'nombre.apellido', loginHint: 'Puedes escribir solo la parte antes de la @.',
+    loginBtn: 'Entrar', loginChecking: 'Verificando…', loginEmpty: 'Escribe tu correo Xpense.',
+    loginNotFound: 'No encontramos ese correo entre los conductores. Revisa si lo escribiste bien o habla con el equipo LATAM.',
+    loginOffline: 'Sin conexión con el servidor. Intenta de nuevo en un momento.',
+    hello: '¡Hola, {name}!',
+    intro: 'Cuéntanos, día por día, si trabajaste entre el {start} y el {end}. Es rapidito.',
+    progress: '{n} de {total} días respondidos',
+    statWorked: 'días trabajados', statHours: 'horas', statOff: 'días parado',
+    week: 'Semana {n}', holiday: 'Feriado',
+    tapToAnswer: 'Toca para responder',
+    qWorked: '¿Trabajaste este día?', yesWorked: 'Trabajé', noWorked: 'No trabajé',
+    qHours: '¿Cuántas horas, más o menos?',
+    qWhy: '¿Qué pasó?',
+    r_mech: 'Problema con el vehículo', r_mech_sub: 'Falla, taller, neumático, papeles…',
+    r_tech: 'Problema con el equipo', r_tech_sub: 'Cámara, disco, notebook, sistema…',
+    r_personal: 'Motivo personal', r_personal_sub: 'Salud, familia, trámite…',
+    r_dayoff: 'Día libre o feriado', r_dayoff_sub: 'Día de descanso',
+    notePh: '¿Quieres contarnos más? (opcional)',
+    next: 'Siguiente día', finish: 'Listo',
+    sumWorked: 'Trabajé · {h}h', sumOff: 'No trabajé · {r}', sumOffNoReason: 'No trabajé · falta el motivo',
+    commentLabel: '¿Algo más que debamos saber?', commentPh: 'Opcional',
+    missingN: 'Faltan {n} días', missing1: 'Falta 1 día', goNext: 'Responder el siguiente',
+    allSet: 'Todo respondido 👍', send: 'Enviar confirmación', sending: 'Enviando…',
+    sendFail: 'No se pudo enviar ahora. Tus respuestas quedaron guardadas en este celular — intenta de nuevo.',
+    needDeploy: 'El servidor todavía no está listo para recibir confirmaciones. Tus respuestas quedaron guardadas en este celular — intenta más tarde.',
+    doneTitle: '¡Recibido, {name}!', doneSub: 'Gracias por confirmar. Esto nos ayuda a cerrar tus horas bien.',
+    sentAt: 'Enviado el {when}',
+    edit: 'Revisar o corregir', editHint: 'Si cambias algo, solo envía de nuevo — vale el último envío.',
+    backApp: 'Volver a la app',
+    notYou: '¿No eres tú?', logout: 'Salir',
+    loading: 'Cargando…', draftSaved: 'Respuestas guardadas en este celular',
+    adminTitle: 'Confirmación de horas', adminSub: 'Respuestas de los conductores × RAW CTS',
+    admRefresh: 'Actualizar', admExport: 'CSV', admLogout: 'Salir',
+    admDriverLink: 'Link para los conductores:', admCopy: 'Copiar', admCopied: '¡Link copiado!',
+    admResponded: 'Respondieron', admOf: 'de {n} conductores',
+    admDiv: 'Días con divergencia', admDivSub: 'en {n} conductores',
+    admHours: 'Horas declaradas', admHoursSub: 'CTS considerada: {h}h · real: {r}h',
+    admReasons: 'Días parados (motivo)',
+    admSearch: 'Buscar conductor…', admAll: 'Todos', admOnlyDiv: 'Con divergencia', admOnlyPending: 'Pendientes',
+    colDriver: 'Conductor', colStatus: 'Estado', colDaysDecl: 'Días (cond.)', colDaysCts: 'Días (CTS)',
+    colHoursDecl: 'Horas cond.', colCtsReal: 'CTS real', colCtsCons: 'CTS consid.', colDiv: 'Diverg.',
+    stResponded: 'Respondió', stPending: 'Pendiente', stVacation: 'Vacaciones',
+    detDate: 'Día', detDriver: 'Conductor dijo', detCtsReal: 'CTS real', detCtsCons: 'CTS consid.', detCheck: 'Verificación',
+    flagNoCts: 'Dijo que trabajó, CTS sin registro', flagCtsHas: 'Dijo que no trabajó, CTS tiene {h}h',
+    flagHours: 'Diferencia de {d}h', flagOk: 'OK',
+    drvWorked: 'Trabajé {h}h', drvOff: 'No trabajé', drvNone: 'sin respuesta',
+    admLoading: 'Cargando respuestas y RAW CTS…', admLoadFail: 'Error al cargar: {e}',
+    admNeedDeploy: 'El backend todavía no tiene getWorkConfirmations — reimplementar Code udpt.gs como "Nueva versión" (ping {v}).',
+    admComment: 'Comentario del conductor', admVersions: '{n} envíos (vale el último)', admSentAt: 'enviado {when}',
+    admCtsUntil: 'RAW CTS con datos hasta {d}.',
+    admRule: 'CTS considerada = regla de la hoja de horas: ≥3h = día completo (8h, AR 9h), sábado 4h, <3h = horas reales. Divergencia de horas desde {n}h.',
+    admEmpty: 'Ningún conductor con ese filtro.',
+  },
+  en: {
+    kicker: 'Street View LATAM',
+    loginTitle: 'Confirm your work days',
+    loginSub: 'Takes 2 minutes. Sign in with your Xpense e-mail.',
+    loginLabel: 'Your Xpense e-mail', loginPh: 'first.last', loginHint: 'You can type just the part before the @.',
+    loginBtn: 'Sign in', loginChecking: 'Checking…', loginEmpty: 'Type your Xpense e-mail.',
+    loginNotFound: "We couldn't find that e-mail among the drivers. Check the spelling or talk to the LATAM team.",
+    loginOffline: 'No connection to the server. Try again in a moment.',
+    hello: 'Hi, {name}!',
+    intro: 'Tell us, day by day, whether you worked between {start} and {end}. Quick and easy.',
+    progress: '{n} of {total} days answered',
+    statWorked: 'days worked', statHours: 'hours', statOff: 'days off',
+    week: 'Week {n}', holiday: 'Holiday',
+    tapToAnswer: 'Tap to answer',
+    qWorked: 'Did you work this day?', yesWorked: 'I worked', noWorked: "I didn't work",
+    qHours: 'About how many hours?',
+    qWhy: 'What happened?',
+    r_mech: 'Car problem', r_mech_sub: 'Breakdown, repair shop, tire, paperwork…',
+    r_tech: 'Equipment problem', r_tech_sub: 'Camera, disk, laptop, system…',
+    r_personal: 'Personal reason', r_personal_sub: 'Health, family, appointment…',
+    r_dayoff: 'Day off or holiday', r_dayoff_sub: 'Rest day',
+    notePh: 'Want to tell us more? (optional)',
+    next: 'Next day', finish: 'Done',
+    sumWorked: 'Worked · {h}h', sumOff: "Didn't work · {r}", sumOffNoReason: "Didn't work · reason missing",
+    commentLabel: 'Anything else we should know?', commentPh: 'Optional',
+    missingN: '{n} days left', missing1: '1 day left', goNext: 'Answer the next one',
+    allSet: 'All answered 👍', send: 'Send confirmation', sending: 'Sending…',
+    sendFail: "Couldn't send right now. Your answers are saved on this phone — try again.",
+    needDeploy: "The server isn't ready to receive confirmations yet. Your answers are saved on this phone — try again later.",
+    doneTitle: 'Got it, {name}!', doneSub: 'Thanks for confirming. This helps us close your hours correctly.',
+    sentAt: 'Sent on {when}',
+    edit: 'Review or fix', editHint: 'If you change anything, just send again — the latest one counts.',
+    backApp: 'Back to the app',
+    notYou: 'Not you?', logout: 'Sign out',
+    loading: 'Loading…', draftSaved: 'Answers saved on this phone',
+    adminTitle: 'Hours confirmation', adminSub: 'Driver answers × RAW CTS',
+    admRefresh: 'Refresh', admExport: 'CSV', admLogout: 'Sign out',
+    admDriverLink: 'Link for drivers:', admCopy: 'Copy', admCopied: 'Link copied!',
+    admResponded: 'Responded', admOf: 'of {n} drivers',
+    admDiv: 'Days with mismatch', admDivSub: 'across {n} drivers',
+    admHours: 'Declared hours', admHoursSub: 'CTS credited: {h}h · raw: {r}h',
+    admReasons: 'Days off (reason)',
+    admSearch: 'Search driver…', admAll: 'All', admOnlyDiv: 'With mismatch', admOnlyPending: 'Pending',
+    colDriver: 'Driver', colStatus: 'Status', colDaysDecl: 'Days (drv.)', colDaysCts: 'Days (CTS)',
+    colHoursDecl: 'Drv. hours', colCtsReal: 'CTS raw', colCtsCons: 'CTS credited', colDiv: 'Mismatch',
+    stResponded: 'Responded', stPending: 'Pending', stVacation: 'Vacation',
+    detDate: 'Day', detDriver: 'Driver said', detCtsReal: 'CTS raw', detCtsCons: 'CTS credited', detCheck: 'Check',
+    flagNoCts: 'Said worked, no CTS record', flagCtsHas: "Said didn't work, CTS has {h}h",
+    flagHours: '{d}h difference', flagOk: 'OK',
+    drvWorked: 'Worked {h}h', drvOff: "Didn't work", drvNone: 'no answer',
+    admLoading: 'Loading answers and RAW CTS…', admLoadFail: 'Failed to load: {e}',
+    admNeedDeploy: 'Backend has no getWorkConfirmations yet — redeploy Code udpt.gs as "New version" (ping {v}).',
+    admComment: 'Driver comment', admVersions: '{n} submissions (latest counts)', admSentAt: 'sent {when}',
+    admCtsUntil: 'RAW CTS has data up to {d}.',
+    admRule: 'CTS credited = timesheet rule: ≥3h = full day (8h, AR 9h), Saturday 4h, <3h = raw hours. Hours mismatch from {n}h.',
+    admEmpty: 'No drivers for this filter.',
+  },
+};
+
+// ================================================================
+// ÍCONES
+// ================================================================
+const ICONS = {
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  chev: '<path d="m6 9 6 6 6-6"/>',
+  minus: '<path d="M5 12h14"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  arrow: '<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
+  car: '<path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3z"/><circle cx="7.5" cy="16" r="1.4"/><circle cx="16.5" cy="16" r="1.4"/><path d="M5 11h14"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20v-4h-4"/>',
+  download: '<path d="M12 4v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 20h14"/>',
+  logout: '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/>',
+  alert: '<path d="M12 4 2.5 20h19z"/><path d="M12 10v4"/><path d="M12 17h.01"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+};
+function ic(name) { return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[name] || '') + '</svg>'; }
+
+// ================================================================
+// UTILITÁRIOS
+// ================================================================
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+function lsJson(k, fallback) { try { const v = JSON.parse(lsGet(k) || 'null'); return v == null ? fallback : v; } catch (e) { return fallback; } }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function norm(s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
+function countryKey(c) { const n = norm(c); return n === 'brasil' ? 'brazil' : n; }
+function t(key, vars) {
+  const dict = I18N[S.lang] || I18N.pt;
+  let s = dict[key];
+  if (s == null) s = I18N.pt[key];
+  if (s == null) return key;
+  if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
+  return s;
+}
+function addDays(ymd, n) { const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+function dowOf(ymd) { return new Date(ymd + 'T12:00:00Z').getUTCDay(); }
+function periodDays(p) { const out = []; for (let k = p.start; k <= p.end; k = addDays(k, 1)) out.push(k); return out; }
+function fmtD(ymd, o) { return new Date(ymd + 'T12:00:00Z').toLocaleDateString(LOCALE[S.lang], Object.assign({ timeZone: 'UTC' }, o)); }
+function fmtH(n) { const v = Math.round((Number(n) || 0) * 10) / 10; return v.toLocaleString(LOCALE[S.lang], { maximumFractionDigits: 1 }); }
+function fmtWhen(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString(LOCALE[S.lang], { day: '2-digit', month: '2-digit' }) + ' ' +
+         d.toLocaleTimeString(LOCALE[S.lang], { hour: '2-digit', minute: '2-digit' });
+}
+function cap(s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); }
+function firstName(name) { const w = String(name || '').trim().split(/\s+/)[0] || ''; return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : ''; }
+function browserLang() {
+  const l = String((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
+  return l.startsWith('pt') ? 'pt' : l.startsWith('en') ? 'en' : 'es';
+}
+function defaultLangFor(c) { if (!String(c || '').trim()) return browserLang(); return countryKey(c) === 'brazil' ? 'pt' : 'es'; }
+function fullDayHours(country, dow) {
+  if (dow === 6) return CTS_RULE.saturdayHours;
+  return CTS_RULE.fullDay9hCountries.indexOf(countryKey(country)) >= 0 ? 9 : CTS_RULE.fullDayDefault;
+}
+function holidayOf(country, ymd) { const h = HOLIDAYS[countryKey(country)]; return (h && h[ymd]) || ''; }
+function periodKey(p) { return p.start + '_' + p.end; }
+
+let toastTimer = null;
+function toast(msg, ms) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('hidden'), ms || 2600);
+}
+
+/** GET com timeout. Lança se a resposta não for {success:true}. */
+async function apiGet(base, params, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs || 30000);
+  try {
+    const res = await fetch(base + '?' + new URLSearchParams(params).toString(), { signal: ctrl.signal });
+    const data = await res.json();
+    if (!data || data.success === false) throw new Error((data && data.error) || 'resposta inválida');
+    return data;
+  } finally { clearTimeout(timer); }
+}
+/** POST no Apps Script (body text/plain → sem preflight; a resposta é legível). */
+async function apiPost(payload, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs || 45000);
+  try {
+    const res = await fetch(CFG.scriptUrl, { method: 'POST', body: JSON.stringify(payload), signal: ctrl.signal });
+    let data = null;
+    try { data = await res.json(); } catch (e) { throw new Error('HTTP ' + res.status); }
+    if (!data || data.success !== true) throw new Error((data && data.error) || 'erro no servidor');
+    return data;
+  } finally { clearTimeout(timer); }
+}
+function isUnknownAction(err) { return /unknown action/i.test(String(err && err.message || err)); }
+
+// ================================================================
+// ESTADO
+// ================================================================
+const S = {
+  lang: 'pt',
+  mode: 'driver',          // 'driver' | 'admin'
+  view: 'loading',         // driver: 'login' | 'loading' | 'form' | 'done'
+  session: null,           // { email, name, country, ... } — mesmo formato do app
+  period: PERIODS[0],
+  answers: {},             // 'yyyy-MM-dd' → { worked: bool, hours, reason, note }
+  comment: '',
+  open: null,              // dia expandido
+  existing: null,          // último envio do servidor { submittedAt, ... }
+  sending: false,
+  backendMissing: false,
+  loginError: '',
+  admin: null,
+};
+const root = document.getElementById('root');
+
+// ================================================================
+// MOTORISTA — sessão, rascunho, envio
+// ================================================================
+function draftKey() { return KEYS.draft + String(S.session.email).toLowerCase() + ':' + S.period.start; }
+function saveDraft() {
+  lsSet(draftKey(), JSON.stringify({ answers: S.answers, comment: S.comment, at: new Date().toISOString() }));
+}
+function answerOf(date) { return S.answers[date] || null; }
+function isAnswered(a) { return !!a && (a.worked === true ? Number(a.hours) > 0 : (a.worked === false && !!a.reason)); }
+function counts() {
+  const days = periodDays(S.period);
+  let answered = 0, worked = 0, off = 0, hours = 0;
+  days.forEach(d => {
+    const a = answerOf(d);
+    if (!isAnswered(a)) return;
+    answered++;
+    if (a.worked) { worked++; hours += Number(a.hours) || 0; } else off++;
+  });
+  return { total: days.length, answered, worked, off, hours };
+}
+function firstUnanswered(after) {
+  const days = periodDays(S.period);
+  const idx = after ? days.indexOf(after) : -1;
+  for (let i = idx + 1; i < days.length; i++) if (!isAnswered(answerOf(days[i]))) return days[i];
+  for (let i = 0; i <= idx && i < days.length; i++) if (!isAnswered(answerOf(days[i]))) return days[i];
+  return null;
+}
+
+function setLang(l, opts) {
+  if (!I18N[l]) return;
+  S.lang = l;
+  document.documentElement.lang = l === 'pt' ? 'pt-BR' : l;
+  if (S.mode === 'admin') lsSet(KEYS.adminLang, l); else lsSet(KEYS.lang, l);
+  if (!(opts && opts.silent)) render();
+}
+
+async function doLogin(ev) {
+  ev.preventDefault();
+  const input = document.getElementById('login-email');
+  let email = input.value.trim().toLowerCase().replace(/\s+/g, '');
+  if (!email) { S.loginError = t('loginEmpty'); render(); return; }
+  if (!email.includes('@')) email += '@' + CFG.domain;
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = t('loginChecking');
+
+  const find = list => Array.isArray(list) ? list.find(d => d && String(d.email || '').trim().toLowerCase() === email) || null : null;
+  let driver = null, list = null;
+  try {
+    list = (await apiGet(API_GET, { action: 'getDrivers' })).drivers;
+    lsSet(KEYS.drivers, JSON.stringify(list));
+    driver = find(list);
+    if (!driver) { try { driver = find((await apiGet(API_GET, { action: 'getDrivers', nocache: '1' })).drivers); } catch (e) {} }
+  } catch (err) {
+    console.warn('[Confirm Hours] getDrivers falhou, tentando a lista salva:', err);
+    list = lsJson(KEYS.drivers, null);
+    driver = find(list);
+    if (!driver && !list) { S.loginError = t('loginOffline'); render(); return; }
+  }
+  if (!driver) { S.loginError = t('loginNotFound'); render(); return; }
+
+  S.session = {
+    email: String(driver.email).trim(), name: String(driver.name || '').trim(),
+    country: String(driver.country || '').trim(), city: String(driver.city || '').trim(),
+    situation: String(driver.situation || '').trim(), at: Date.now(),
+  };
+  lsSet(KEYS.session, JSON.stringify(S.session));   // mesmo login do app
+  if (!lsGet(KEYS.lang)) setLang(defaultLangFor(S.session.country), { silent: true });
+  S.loginError = '';
+  console.log('[Confirm Hours] login ok: ' + S.session.email + ' (' + S.session.country + ')');
+  startDriver();
+}
+
+function logout() {
+  lsDel(KEYS.session);
+  S.session = null; S.answers = {}; S.comment = ''; S.existing = null; S.open = null;
+  S.view = 'login';
+  render();
+}
+
+function subToAnswers(sub) {
+  const out = {};
+  (sub.days || []).forEach(d => { out[d.date] = { worked: !!d.worked, hours: Number(d.hours) || 0, reason: d.reason || '', note: d.note || '' }; });
+  return out;
+}
+
+async function startDriver() {
+  S.view = 'loading';
+  render();
+  const draft = lsJson(draftKey(), null);
+  let existing = null;
+  try {
+    const data = await apiGet(CFG.scriptUrl, {
+      action: 'getWorkConfirmations', email: S.session.email, startDate: S.period.start, endDate: S.period.end,
+    }, 25000);
+    existing = (data.submissions || [])[0] || null;
+    S.backendMissing = false;
+  } catch (err) {
+    S.backendMissing = isUnknownAction(err);
+    console.warn('[Confirm Hours] getWorkConfirmations falhou:', err);
+  }
+  S.existing = existing;
+  const draftNewer = draft && (!existing || String(draft.at || '') > String(existing.submittedAt || ''));
+  if (draftNewer) {
+    S.answers = draft.answers || {}; S.comment = draft.comment || '';
+    S.view = 'form';
+  } else if (existing) {
+    S.answers = subToAnswers(existing); S.comment = existing.comment || '';
+    S.view = 'done';
+  } else {
+    S.answers = {}; S.comment = '';
+    S.view = 'form';
+  }
+  S.open = S.view === 'form' ? firstUnanswered() : null;
+  render();
+}
+
+async function submit() {
+  const c = counts();
+  if (c.answered < c.total || S.sending) return;
+  S.sending = true;
+  render();
+  const payload = {
+    type: 'saveWorkConfirmation',
+    email: S.session.email, name: S.session.name, country: S.session.country, lang: S.lang,
+    periodStart: S.period.start, periodEnd: S.period.end, comment: S.comment.trim(),
+    days: periodDays(S.period).map(d => {
+      const a = answerOf(d);
+      return { date: d, worked: !!a.worked, hours: a.worked ? Number(a.hours) : 0, reason: a.worked ? '' : a.reason, note: a.worked ? '' : (a.note || '').trim() };
+    }),
+  };
+  try {
+    const res = await apiPost(payload);
+    console.log('[Confirm Hours] enviado', res);
+    lsDel(draftKey());
+    S.existing = { submittedAt: res.submittedAt || new Date().toISOString() };
+    S.sending = false;
+    S.view = 'done';
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    console.warn('[Confirm Hours] envio falhou:', err);
+    S.sending = false;
+    saveDraft();
+    render();
+    toast(isUnknownAction(err) ? t('needDeploy') : t('sendFail'), 5000);
+  }
+}
+
+// ================================================================
+// MOTORISTA — render
+// ================================================================
+function heroHtml(title, sub) {
+  return `
+  <header class="hero"><div class="hero-in">
+    <div class="hero-bar">
+      <img class="hero-logo" src="aceolution-white.png" alt="Aceolution">
+      <div class="lang-pills" role="group" aria-label="Idioma">
+        ${['pt', 'es', 'en'].map(l => `<button type="button" data-act="lang" data-v="${l}" class="${S.lang === l ? 'active' : ''}">${l.toUpperCase()}</button>`).join('')}
+      </div>
+    </div>
+    <div class="kicker">${esc(t('kicker'))}</div>
+    <h1>${esc(title)}</h1>
+    ${sub ? `<p>${esc(sub)}</p>` : ''}
+  </div></header>`;
+}
+
+function renderLogin() {
+  root.innerHTML = heroHtml(t('loginTitle'), t('loginSub')) + `
+  <main class="wrap">
+    <form class="card login-card lift" id="login-form" novalidate>
+      ${S.loginError ? `<div class="err">${esc(S.loginError)}</div>` : ''}
+      <label for="login-email">${esc(t('loginLabel'))}</label>
+      <div class="email-field">
+        <input id="login-email" type="text" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="${esc(t('loginPh'))}">
+        <span class="email-domain" id="email-domain">@${esc(CFG.domain)}</span>
+      </div>
+      <div class="hint">${esc(t('loginHint'))}</div>
+      <button class="btn btn-primary btn-block" id="login-btn" type="submit">${esc(t('loginBtn'))}</button>
+    </form>
+  </main>`;
+  const input = document.getElementById('login-email');
+  input.addEventListener('input', () => document.getElementById('email-domain').classList.toggle('hidden', input.value.includes('@')));
+  document.getElementById('login-form').addEventListener('submit', doLogin);
+}
+
+function introText() {
+  return t('intro', { start: fmtD(S.period.start, { day: 'numeric', month: 'long' }), end: fmtD(S.period.end, { day: 'numeric', month: 'long' }) });
+}
+
+function statsHtml(c) {
+  return `<div class="stats">
+    <div class="stat"><b>${c.worked}</b><span>${esc(t('statWorked'))}</span></div>
+    <div class="stat"><b>${fmtH(c.hours)}</b><span>${esc(t('statHours'))}</span></div>
+    <div class="stat"><b>${c.off}</b><span>${esc(t('statOff'))}</span></div>
+  </div>`;
+}
+
+function progressHtml() {
+  const c = counts();
+  const pct = Math.round(c.answered / c.total * 100);
+  return `
+  <section class="card prog lift" id="prog">
+    <div class="prog-top"><span class="prog-label">${esc(t('progress', { n: c.answered, total: c.total }))}</span><span class="prog-pct">${pct}%</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    ${statsHtml(c)}
+    <div class="who"><span>${esc(S.session.name)}</span><button type="button" data-act="logout">${esc(t('notYou'))} ${esc(t('logout'))}</button></div>
+    ${S.backendMissing ? `<div class="banner">${esc(t('needDeploy'))}</div>` : ''}
+  </section>`;
+}
+
+function reasonLabel(code) { return code ? t('r_' + code) : ''; }
+
+function dayHtml(date) {
+  const a = answerOf(date);
+  const dow = dowOf(date);
+  const open = S.open === date;
+  const answered = isAnswered(a);
+  const hol = holidayOf(S.session.country, date);
+  let sub = `<span class="dsub">${esc(t('tapToAnswer'))}</span>`;
+  if (a && a.worked === true) sub = `<span class="dsub ok">${esc(t('sumWorked', { h: fmtH(a.hours) }))}</span>`;
+  else if (a && a.worked === false) sub = `<span class="dsub off">${esc(a.reason ? t('sumOff', { r: reasonLabel(a.reason) }) : t('sumOffNoReason'))}</span>`;
+  const cls = ['card', 'day', open ? 'is-open' : '', a && a.worked === true ? 'is-worked' : '', a && a.worked === false ? 'is-off' : ''].join(' ');
+
+  let body = '';
+  if (open) {
+    const hours = a && a.worked ? Number(a.hours) : fullDayHours(S.session.country, dow);
+    const chipsH = [4, 6, 8, 9, 10];
+    body = `<div class="day-body">
+      <div class="q">${esc(t('qWorked'))}</div>
+      <div class="choice">
+        <button type="button" class="yes ${a && a.worked === true ? 'active' : ''}" data-act="worked" data-d="${date}">${ic('check')}${esc(t('yesWorked'))}</button>
+        <button type="button" class="no ${a && a.worked === false ? 'active' : ''}" data-act="notworked" data-d="${date}">${ic('x')}${esc(t('noWorked'))}</button>
+      </div>
+      ${a && a.worked === true ? `
+        <div class="q" style="margin-top:16px">${esc(t('qHours'))}</div>
+        <div class="stepper">
+          <button type="button" data-act="hstep" data-d="${date}" data-v="-1" aria-label="−">${ic('minus')}</button>
+          <label class="hours-box"><input type="number" inputmode="decimal" step="${CFG.hoursStep}" min="${CFG.hoursMin}" max="${CFG.hoursMax}" value="${hours}" data-hours="${date}" aria-label="${esc(t('qHours'))}"><span>h</span></label>
+          <button type="button" data-act="hstep" data-d="${date}" data-v="1" aria-label="+">${ic('plus')}</button>
+        </div>
+        <div class="chips">${chipsH.map(h => `<button type="button" data-act="hset" data-d="${date}" data-v="${h}" class="${Number(a.hours) === h ? 'active' : ''}">${h}h</button>`).join('')}</div>
+      ` : ''}
+      ${a && a.worked === false ? `
+        <div class="q" style="margin-top:16px">${esc(t('qWhy'))}</div>
+        <div class="reasons">${REASONS.map(r => `
+          <button type="button" class="reason ${a.reason === r ? 'active' : ''}" data-act="reason" data-d="${date}" data-v="${r}">
+            <span class="ric">${ic(REASON_ICON[r])}</span>
+            <span class="rt"><b>${esc(t('r_' + r))}</b><span>${esc(t('r_' + r + '_sub'))}</span></span>
+            <span class="term">${REASON_TERM[r]}</span>
+          </button>`).join('')}
+        </div>
+        <textarea class="note" rows="2" data-note="${date}" placeholder="${esc(t('notePh'))}">${esc(a.note || '')}</textarea>
+      ` : ''}
+      ${answered ? `<div class="next-row"><button type="button" class="btn btn-soft btn-block" data-act="next" data-d="${date}">${esc(firstUnanswered(date) ? t('next') : t('finish'))} ${ic('arrow')}</button></div>` : ''}
+    </div>`;
+  }
+
+  return `
+  <article class="${cls}" id="day-${date}">
+    <button type="button" class="day-head" data-act="toggle" data-d="${date}" aria-expanded="${open}">
+      <span class="dnum"><small>${esc(fmtD(date, { weekday: 'short' }).replace('.', ''))}</small><b>${Number(date.slice(8))}</b></span>
+      <span class="dmid">
+        <span class="dname">${esc(cap(fmtD(date, { weekday: 'long', day: 'numeric', month: 'short' })))}${hol ? `<span class="hol" title="${esc(hol)}">${esc(t('holiday'))}</span>` : ''}</span>
+        ${sub}
+      </span>
+      ${!answered && !open ? '<span class="todo-dot" aria-hidden="true"></span>' : ''}
+      <span class="chev">${ic('chev')}</span>
+    </button>
+    ${body}
+  </article>`;
+}
+
+function stickyHtml() {
+  const c = counts();
+  const left = c.total - c.answered;
+  if (left > 0) {
+    return `<div class="sticky"><div class="sticky-in">
+      <div class="sticky-meta">${esc(left === 1 ? t('missing1') : t('missingN', { n: left }))}</div>
+      <button type="button" class="btn btn-primary btn-block" data-act="gonext">${esc(t('goNext'))} ${ic('arrow')}</button>
+    </div></div>`;
+  }
+  return `<div class="sticky"><div class="sticky-in">
+    <div class="sticky-meta">${esc(t('allSet'))}</div>
+    <button type="button" class="btn btn-primary btn-block" data-act="submit" ${S.sending ? 'disabled' : ''}>${esc(S.sending ? t('sending') : t('send'))}</button>
+  </div></div>`;
+}
+
+function renderForm() {
+  const days = periodDays(S.period);
+  let weeks = '';
+  for (let i = 0; i < days.length; i += 7) {
+    const chunk = days.slice(i, i + 7);
+    const range = fmtD(chunk[0], { day: 'numeric', month: 'short' }) + ' – ' + fmtD(chunk[chunk.length - 1], { day: 'numeric', month: 'short' });
+    weeks += `<div class="week-h">${esc(t('week', { n: i / 7 + 1 }))} · ${esc(range)}</div>` + chunk.map(dayHtml).join('');
+  }
+  root.innerHTML = heroHtml(t('hello', { name: firstName(S.session.name) }), introText()) + `
+  <main class="wrap">
+    ${progressHtml()}
+    ${weeks}
+    <section class="card comment-card">
+      <label for="comment">${esc(t('commentLabel'))}</label>
+      <textarea class="note" id="comment" rows="3" placeholder="${esc(t('commentPh'))}">${esc(S.comment)}</textarea>
+    </section>
+    <div class="foot">Aceolution do Brasil · Street View LATAM</div>
+    <div class="spacer"></div>
+  </main>
+  ${stickyHtml()}`;
+}
+
+function renderDone() {
+  const c = counts();
+  const recap = periodDays(S.period).map(d => {
+    const a = answerOf(d);
+    if (!a) return '';
+    const v = a.worked ? t('sumWorked', { h: fmtH(a.hours) }) : t('sumOff', { r: reasonLabel(a.reason) });
+    return `<div class="recap-row"><span class="rd">${esc(cap(fmtD(d, { weekday: 'short', day: 'numeric' })))}</span><span class="rv ${a.worked ? 'ok' : 'off'}">${esc(v)}</span></div>`;
+  }).join('');
+  const when = S.existing && S.existing.submittedAt ? fmtWhen(S.existing.submittedAt) : '';
+  root.innerHTML = heroHtml(t('hello', { name: firstName(S.session.name) }), introText()) + `
+  <main class="wrap">
+    <section class="card done lift">
+      <div class="done-ic">${ic('check')}</div>
+      <h2>${esc(t('doneTitle', { name: firstName(S.session.name) }))}</h2>
+      <p>${esc(t('doneSub'))}</p>
+      ${when ? `<p style="font-size:13px">${esc(t('sentAt', { when }))}</p>` : ''}
+      ${statsHtml(c)}
+      <div class="recap">${recap}</div>
+      <div class="done-actions">
+        <button type="button" class="btn btn-soft btn-block" data-act="edit">${esc(t('edit'))}</button>
+        <a class="btn btn-ghost btn-block" href="app/" style="text-decoration:none">${esc(t('backApp'))}</a>
+      </div>
+      <div class="done-hint">${esc(t('editHint'))}</div>
+    </section>
+    <div class="foot"><button type="button" class="btn-ghost" data-act="logout" style="font-size:12px">${esc(S.session.name)} · ${esc(t('logout'))}</button></div>
+  </main>`;
+}
+
+function renderLoading(msg) {
+  root.innerHTML = heroHtml(S.session ? t('hello', { name: firstName(S.session.name) }) : t('loginTitle'), '') + `
+  <main class="wrap"><section class="card lift center-msg"><div class="spin"></div>${esc(msg || t('loading'))}</section></main>`;
+}
+
+function render() {
+  if (S.mode === 'admin') return renderAdmin();
+  if (S.view === 'login') return renderLogin();
+  if (S.view === 'loading') return renderLoading();
+  if (S.view === 'done') return renderDone();
+  return renderForm();
+}
+
+function scrollToDay(date) {
+  requestAnimationFrame(() => {
+    const el = document.getElementById('day-' + date);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+function clampHours(v) {
+  const n = Math.round((Number(String(v).replace(',', '.')) || 0) / CFG.hoursStep) * CFG.hoursStep;
+  return Math.min(CFG.hoursMax, Math.max(CFG.hoursMin, n));
+}
+
+// ================================================================
+// MOTORISTA — eventos (delegação)
+// ================================================================
+function onDriverClick(e) {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  const d = el.dataset.d;
+  const v = el.dataset.v;
+  if (act === 'lang') return setLang(v);
+  if (act === 'logout') return logout();
+  if (act === 'edit') { S.view = 'form'; S.open = null; render(); window.scrollTo({ top: 0 }); return; }
+  if (act === 'submit') return submit();
+  if (act === 'gonext') {
+    const n = firstUnanswered(S.open);
+    if (n) { S.open = n; render(); scrollToDay(n); }
+    return;
+  }
+  if (act === 'toggle') {
+    S.open = S.open === d ? null : d;
+    render();
+    if (S.open) scrollToDay(d);
+    return;
+  }
+  const prev = S.answers[d] || {};
+  if (act === 'worked') {
+    S.answers[d] = { worked: true, hours: prev.worked && prev.hours ? prev.hours : fullDayHours(S.session.country, dowOf(d)), reason: '', note: prev.note || '' };
+  } else if (act === 'notworked') {
+    S.answers[d] = { worked: false, hours: 0, reason: prev.worked === false ? prev.reason : '', note: prev.note || '' };
+  } else if (act === 'reason') {
+    S.answers[d] = Object.assign({}, prev, { worked: false, hours: 0, reason: v });
+  } else if (act === 'hstep') {
+    S.answers[d] = Object.assign({}, prev, { hours: clampHours((Number(prev.hours) || 0) + Number(v) * CFG.hoursStep) });
+  } else if (act === 'hset') {
+    S.answers[d] = Object.assign({}, prev, { hours: clampHours(v) });
+  } else if (act === 'next') {
+    const n = firstUnanswered(d);
+    S.open = n;
+    render();
+    if (n) scrollToDay(n);
+    else { const sb = document.querySelector('.comment-card'); if (sb) sb.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    return;
+  } else return;
+  saveDraft();
+  render();
+}
+
+/** Atualiza só o resumo do card + chips + progresso (sem re-render: o input de horas fica com foco e o próximo toque não se perde). */
+function softUpdateHours(date) {
+  const a = answerOf(date);
+  if (!a) return;
+  const card = document.getElementById('day-' + date);
+  if (card) {
+    const sub = card.querySelector('.dsub');
+    if (sub) sub.textContent = t('sumWorked', { h: fmtH(a.hours) });
+    card.querySelectorAll('[data-act="hset"]').forEach(b => b.classList.toggle('active', Number(b.dataset.v) === Number(a.hours)));
+  }
+  const prog = document.getElementById('prog');
+  if (prog) prog.outerHTML = progressHtml();
+}
+
+function onDriverInput(e) {
+  const el = e.target;
+  if (el.id === 'comment') { S.comment = el.value; saveDraft(); return; }
+  if (el.dataset.hours) {
+    const d = el.dataset.hours;
+    const n = Number(String(el.value).replace(',', '.'));
+    if (n > 0) {
+      S.answers[d] = Object.assign({}, S.answers[d] || {}, { worked: true, hours: Math.min(CFG.hoursMax, n) });
+      saveDraft();
+      softUpdateHours(d);
+    }
+    return;
+  }
+  if (el.dataset.note) {
+    const d = el.dataset.note;
+    S.answers[d] = Object.assign({}, S.answers[d] || {}, { note: el.value });
+    saveDraft();
+  }
+}
+function onDriverChange(e) {
+  const el = e.target;
+  if (el.dataset.hours) {
+    const d = el.dataset.hours;
+    const h = clampHours(el.value);
+    el.value = h;
+    S.answers[d] = Object.assign({}, S.answers[d] || {}, { worked: true, hours: h });
+    saveDraft();
+    softUpdateHours(d);
+  }
+}
+
+// ================================================================
+// ADMIN (?admin=1) — respostas × RAW CTS
+// ================================================================
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = () => reject(new Error('falha ao carregar ' + src));
+    document.head.appendChild(s);
+  });
+}
+
+function ctsCredit(raw, dow, country) {
+  if (!raw) return null;
+  const full = dow === 6 ? CTS_RULE.saturdayHours : (CTS_RULE.fullDay9hCountries.indexOf(countryKey(country)) >= 0 ? 9 : CTS_RULE.fullDayDefault);
+  const h = Number(raw.h) || 0;
+  if (h >= CTS_RULE.minHoursFullDay) return full;
+  if (h > 0) return Math.round(h * 100) / 100;
+  if (raw.mapped && CTS_RULE.mappedNoHoursIsFullDay) return full;
+  return 0;
+}
+
+function dayFlag(drv, raw, cons) {
+  if (!drv) return null;
+  const h = raw ? Number(raw.h) || 0 : 0;
+  const ctsWorked = !!raw && (h > 0 || !!raw.mapped);
+  if (drv.worked) {
+    if (!ctsWorked) return { type: 'noCts' };
+    if (cons != null && Math.abs(drv.hours - cons) >= CFG.hoursDiffFlag) return { type: 'hours', d: Math.round((drv.hours - cons) * 10) / 10 };
+    return { type: 'ok' };
+  }
+  if (raw && h >= CFG.ctsOffMinHours) return { type: 'ctsHas', h };
+  return { type: 'ok' };
+}
+function flagText(f) {
+  if (!f) return '';
+  if (f.type === 'noCts') return t('flagNoCts');
+  if (f.type === 'ctsHas') return t('flagCtsHas', { h: fmtH(f.h) });
+  if (f.type === 'hours') return t('flagHours', { d: (f.d > 0 ? '+' : '') + fmtH(f.d) });
+  return t('flagOk');
+}
+
+function buildAdminModel(subs, cts, roster) {
+  const days = periodDays(S.period);
+  const by = {};
+  const get = email => by[email] || (by[email] = { email, name: '', country: '', situation: '', sub: null, cts: null, inRoster: false });
+  (roster || []).forEach(d => {
+    const em = String(d.email || '').trim().toLowerCase();
+    if (em.indexOf('@') < 0) return;
+    const r = get(em);
+    r.name = String(d.name || '').trim(); r.country = String(d.country || '').trim(); r.situation = String(d.situation || ''); r.inRoster = true;
+  });
+  ((cts && cts.drivers) || []).forEach(d => {
+    const r = get(String(d.email || '').trim().toLowerCase());
+    if (!r.name) r.name = d.name; if (!r.country) r.country = d.country;
+    r.cts = d;
+  });
+  (subs || []).forEach(s => {
+    const r = get(String(s.email || '').trim().toLowerCase());
+    if (!r.name) r.name = s.name; if (!r.country) r.country = s.country;
+    r.sub = s;
+  });
+
+  return Object.keys(by).map(em => {
+    const r = by[em];
+    const subDays = {};
+    if (r.sub) (r.sub.days || []).forEach(d => { subDays[d.date] = d; });
+    const rows = days.map(date => {
+      const raw = r.cts && r.cts.days ? r.cts.days[date] || null : null;
+      const cons = ctsCredit(raw, dowOf(date), r.country);
+      const drv = r.sub ? subDays[date] || null : null;
+      return { date, raw, cons, drv, flag: r.sub ? dayFlag(drv, raw, cons) : null };
+    });
+    const sum = { declDays: 0, declHours: 0, ctsDays: 0, ctsReal: 0, ctsCons: 0, div: 0, reasons: { mech: 0, tech: 0, personal: 0, dayoff: 0 } };
+    rows.forEach(x => {
+      if (x.drv && x.drv.worked) { sum.declDays++; sum.declHours += Number(x.drv.hours) || 0; }
+      if (x.drv && !x.drv.worked && sum.reasons[x.drv.reason] != null) sum.reasons[x.drv.reason]++;
+      if (x.raw) { sum.ctsReal += Number(x.raw.h) || 0; }
+      if (x.cons) { sum.ctsCons += x.cons; sum.ctsDays++; }
+      if (x.flag && x.flag.type !== 'ok') sum.div++;
+    });
+    return Object.assign(r, { rows, sum, vacation: /vacation|ferias|vacaciones/.test(norm(r.situation)) });
+  }).filter(r => r.sub || r.cts || r.inRoster);
+}
+
+async function initAdmin() {
+  S.mode = 'admin';
+  document.body.classList.add('is-admin');
+  S.lang = lsGet(KEYS.adminLang) || 'pt';
+  S.admin = { loading: true, error: '', model: [], filterCountry: '', filterMode: 'all', q: '', expanded: {}, ctsLast: '', user: null };
+  try {
+    await loadScript('auth.js?v=20261117b');
+    await loadScript('common.js?v=20261015ui');
+  } catch (err) {
+    root.innerHTML = `<div class="center-msg">${esc(String(err.message || err))}</div>`;
+    return;
+  }
+  // eslint-disable-next-line no-undef
+  injectLogin({
+    title: t('adminTitle'), sub: t('adminSub'), lang: S.lang,
+    onSuccess: user => { S.admin.user = user; loadAdmin(); },
+  });
+}
+
+async function loadAdmin(force) {
+  S.admin.loading = true; S.admin.error = '';
+  render();
+  const p = S.period;
+  const [subsR, ctsR, rosterR] = await Promise.allSettled([
+    apiGet(CFG.scriptUrl, { action: 'getWorkConfirmations', startDate: p.start, endDate: p.end, _: force ? Date.now() : '' }, 45000),
+    apiGet(CFG.scriptUrl, { action: 'getCtsTimesheet', startDate: p.start, endDate: p.end }, 90000),
+    apiGet(API_GET, force ? { action: 'getDrivers', nocache: '1' } : { action: 'getDrivers' }, 30000),
+  ]);
+  const errs = [];
+  let subs = [];
+  if (subsR.status === 'fulfilled') subs = subsR.value.submissions || [];
+  else errs.push(isUnknownAction(subsR.reason) ? t('admNeedDeploy', { v: CFG.backendVersion }) : 'getWorkConfirmations: ' + subsR.reason.message);
+  let cts = null;
+  if (ctsR.status === 'fulfilled') cts = ctsR.value; else errs.push('getCtsTimesheet: ' + ctsR.reason.message);
+  let roster = [];
+  if (rosterR.status === 'fulfilled') roster = rosterR.value.drivers || []; else errs.push('getDrivers: ' + rosterR.reason.message);
+  S.admin.model = buildAdminModel(subs, cts, roster);
+  S.admin.ctsLast = (cts && cts.lastDataDate) || '';
+  S.admin.error = errs.join(' · ');
+  S.admin.loading = false;
+  console.log('[Confirm Hours Admin] ' + subs.length + ' envios, ' + ((cts && cts.drivers) || []).length + ' na CTS, ' + roster.length + ' no roster');
+  render();
+}
+
+function adminFiltered() {
+  const A = S.admin;
+  const q = norm(A.q);
+  return A.model.filter(r => {
+    if (A.filterCountry && countryKey(r.country) !== A.filterCountry) return false;
+    if (A.filterMode === 'div' && !(r.sum.div > 0)) return false;
+    if (A.filterMode === 'pending' && r.sub) return false;
+    if (q && norm(r.name).indexOf(q) < 0 && r.email.indexOf(q) < 0) return false;
+    return true;
+  }).sort((a, b) => {
+    const rank = r => r.sub ? (r.sum.div > 0 ? 0 : 1) : 2;
+    return rank(a) - rank(b) || (b.sum.div - a.sum.div) || String(a.country).localeCompare(String(b.country)) || String(a.name).localeCompare(String(b.name));
+  });
+}
+
+function driverLink() { return location.origin + location.pathname; }
+
+function renderAdmin() {
+  const A = S.admin;
+  if (!A || !A.user) return;   // tela de login do common.js por cima
+  const model = A.model;
+  const countries = Array.from(new Set(model.map(r => countryKey(r.country)).filter(Boolean))).sort();
+  const nameOf = {};
+  model.forEach(r => { const k = countryKey(r.country); if (k && !nameOf[k]) nameOf[k] = r.country; });
+  const scope = model.filter(r => !A.filterCountry || countryKey(r.country) === A.filterCountry);
+  const responded = scope.filter(r => r.sub);
+  const divDays = responded.reduce((s, r) => s + r.sum.div, 0);
+  const divDrivers = responded.filter(r => r.sum.div > 0).length;
+  const declH = responded.reduce((s, r) => s + r.sum.declHours, 0);
+  const consH = responded.reduce((s, r) => s + r.sum.ctsCons, 0);
+  const realH = responded.reduce((s, r) => s + r.sum.ctsReal, 0);
+  const reasons = { mech: 0, tech: 0, personal: 0, dayoff: 0 };
+  responded.forEach(r => REASONS.forEach(k => { reasons[k] += r.sum.reasons[k]; }));
+
+  root.innerHTML = `
+  <header class="adm-top"><div class="adm-top-in">
+    <div class="adm-brand"><img src="aceolution-logo.png" alt="Aceolution"><div><b>${esc(t('adminTitle'))}</b><span>${esc(t('adminSub'))}</span></div></div>
+    <div class="adm-actions">
+      <select id="adm-period" aria-label="Período">${PERIODS.map(p => `<option value="${periodKey(p)}" ${periodKey(p) === periodKey(S.period) ? 'selected' : ''}>${esc(fmtD(p.start, { day: '2-digit', month: 'short' }) + ' – ' + fmtD(p.end, { day: '2-digit', month: 'short', year: 'numeric' }))}</option>`).join('')}</select>
+      <div class="seg">${['pt', 'es', 'en'].map(l => `<button type="button" data-act="lang" data-v="${l}" class="${S.lang === l ? 'active' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
+      <button type="button" class="btn btn-soft btn-sm" data-act="refresh" ${A.loading ? 'disabled' : ''}>${ic('refresh')}${esc(t('admRefresh'))}</button>
+      <button type="button" class="btn btn-soft btn-sm" data-act="csv" ${A.loading ? 'disabled' : ''}>${ic('download')}${esc(t('admExport'))}</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-act="admlogout">${ic('logout')}${esc(t('admLogout'))}</button>
+    </div>
+  </div></header>
+  <main class="adm-wrap">
+    <div class="card adm-link">${esc(t('admDriverLink'))} <code>${esc(driverLink())}</code>
+      <button type="button" class="btn btn-soft btn-sm" data-act="copylink">${ic('copy')}${esc(t('admCopy'))}</button></div>
+    ${A.error ? `<div class="err">${ic('alert')} ${esc(A.error)}</div>` : ''}
+    ${A.loading ? `<div class="card center-msg"><div class="spin"></div>${esc(t('admLoading'))}</div>` : `
+    <section class="kpis">
+      <div class="card kpi"><small>${esc(t('admResponded'))}</small><b>${responded.length}</b><span>${esc(t('admOf', { n: scope.length }))}</span></div>
+      <div class="card kpi"><small>${esc(t('admDiv'))}</small><b style="color:${divDays ? '#B91C1C' : 'var(--c-primary-dark)'}">${divDays}</b><span>${esc(t('admDivSub', { n: divDrivers }))}</span></div>
+      <div class="card kpi"><small>${esc(t('admHours'))}</small><b>${fmtH(declH)}h</b><span>${esc(t('admHoursSub', { h: fmtH(consH), r: fmtH(realH) }))}</span></div>
+      <div class="card kpi"><small>${esc(t('admReasons'))}</small><div class="reasons-mini">${REASONS.map(k => `<i>${REASON_TERM[k]}: ${reasons[k]}</i>`).join('')}</div></div>
+    </section>
+    <div class="adm-filters">
+      <input id="adm-q" type="search" placeholder="${esc(t('admSearch'))}" value="${esc(A.q)}">
+      <button type="button" class="fchip ${!A.filterCountry ? 'active' : ''}" data-act="fcountry" data-v="">${esc(t('admAll'))}</button>
+      ${countries.map(k => `<button type="button" class="fchip ${A.filterCountry === k ? 'active' : ''}" data-act="fcountry" data-v="${esc(k)}">${esc(nameOf[k] || k)}</button>`).join('')}
+      <span style="width:8px"></span>
+      <button type="button" class="fchip ${A.filterMode === 'div' ? 'active' : ''}" data-act="fmode" data-v="div">${esc(t('admOnlyDiv'))}</button>
+      <button type="button" class="fchip ${A.filterMode === 'pending' ? 'active' : ''}" data-act="fmode" data-v="pending">${esc(t('admOnlyPending'))}</button>
+    </div>
+    <div class="card tbl-wrap" id="adm-table">${adminTableHtml()}</div>
+    <p class="adm-foot">${esc(t('admRule', { n: CFG.hoursDiffFlag }))} ${A.ctsLast ? esc(t('admCtsUntil', { d: fmtD(A.ctsLast, { day: '2-digit', month: '2-digit' }) })) : ''}</p>
+    `}
+  </main>`;
+}
+
+function adminTableHtml() {
+  const A = S.admin;
+  const list = adminFiltered();
+  if (!list.length) return `<div class="center-msg">${esc(t('admEmpty'))}</div>`;
+  const head = `<thead><tr>
+    <th>${esc(t('colDriver'))}</th><th>${esc(t('colStatus'))}</th>
+    <th class="num">${esc(t('colDaysDecl'))}</th><th class="num">${esc(t('colDaysCts'))}</th>
+    <th class="num">${esc(t('colHoursDecl'))}</th><th class="num">${esc(t('colCtsReal'))}</th><th class="num">${esc(t('colCtsCons'))}</th>
+    <th class="num">${esc(t('colDiv'))}</th></tr></thead>`;
+  const body = list.map(r => {
+    const open = !!A.expanded[r.email];
+    const st = r.sub
+      ? `<span class="pill ok">${ic('check')}${esc(t('stResponded'))}</span> <span class="muted" style="font-size:11.5px">${esc(t('admSentAt', { when: fmtWhen(r.sub.submittedAt) }))}</span>`
+      : `<span class="pill pend">${esc(t('stPending'))}</span>`;
+    const vac = r.vacation ? ` <span class="pill vac">${esc(t('stVacation'))}</span>` : '';
+    const dash = '<span class="muted">—</span>';
+    const tr = `<tr class="drow ${open ? 'open' : ''}" data-act="expand" data-v="${esc(r.email)}">
+      <td class="dname-cell"><b>${esc(r.name || r.email)}</b><span>${esc(r.country || '—')}</span></td>
+      <td>${st}${vac}</td>
+      <td class="num">${r.sub ? r.sum.declDays : dash}</td>
+      <td class="num">${r.sum.ctsDays}</td>
+      <td class="num">${r.sub ? fmtH(r.sum.declHours) : dash}</td>
+      <td class="num">${fmtH(r.sum.ctsReal)}</td>
+      <td class="num">${fmtH(r.sum.ctsCons)}</td>
+      <td class="num">${r.sub ? (r.sum.div ? `<span class="pill warn">${r.sum.div}</span>` : '<span class="pill ok">0</span>') : dash}</td>
+    </tr>`;
+    if (!open) return tr;
+    const det = r.rows.map(x => {
+      const isFlag = x.flag && x.flag.type !== 'ok';
+      let said = `<span class="muted">${esc(t('drvNone'))}</span>`;
+      if (x.drv && x.drv.worked) said = `<span class="pill ok">${esc(t('drvWorked', { h: fmtH(x.drv.hours) }))}</span>`;
+      else if (x.drv) said = `<span class="pill off">${esc(t('drvOff'))} · ${esc(REASON_TERM[x.drv.reason] || '?')}</span>`;
+      if (x.drv && x.drv.note) said += `<div class="cts-status">“${esc(x.drv.note)}”</div>`;
+      const real = x.raw ? `${fmtH(x.raw.h)}h${x.raw.status ? `<div class="cts-status">${esc(x.raw.status)}</div>` : ''}` : '<span class="muted">—</span>';
+      const cons = x.cons != null ? fmtH(x.cons) + 'h' : '<span class="muted">—</span>';
+      return `<tr class="${isFlag ? 'flag' : ''}">
+        <td>${esc(fmtD(x.date, { weekday: 'short', day: '2-digit', month: '2-digit' }))}</td>
+        <td>${said}</td><td class="num">${real}</td><td class="num">${cons}</td>
+        <td>${x.flag ? (isFlag ? `<b style="color:#B91C1C">${esc(flagText(x.flag))}</b>` : `<span class="muted">${esc(flagText(x.flag))}</span>`) : ''}</td>
+      </tr>`;
+    }).join('');
+    const extra = r.sub ? `${r.sub.comment ? `<div class="adm-comment"><b>${esc(t('admComment'))}:</b> ${esc(r.sub.comment)}</div>` : ''}
+      ${r.sub.versions > 1 ? `<div class="adm-foot">${esc(t('admVersions', { n: r.sub.versions }))}</div>` : ''}` : '';
+    return tr + `<tr><td class="detail" colspan="8">
+      <table class="det"><thead><tr><th>${esc(t('detDate'))}</th><th>${esc(t('detDriver'))}</th><th class="num">${esc(t('detCtsReal'))}</th><th class="num">${esc(t('detCtsCons'))}</th><th>${esc(t('detCheck'))}</th></tr></thead>
+      <tbody>${det}</tbody></table>${extra}<div class="adm-foot">${esc(r.email)}</div></td></tr>`;
+  }).join('');
+  return `<table class="adm">${head}<tbody>${body}</tbody></table>`;
+}
+
+function exportCsv() {
+  const list = adminFiltered();
+  const num = n => n == null || n === '' ? '' : String(Math.round(Number(n) * 100) / 100).replace('.', ',');
+  const q = s => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"';
+  const lines = [['País', 'Motorista', 'Email', 'Status', 'Enviado em', 'Data', 'Motorista trabalhou', 'Horas motorista', 'Motivo', 'Obs motorista',
+                  'CTS real (h)', 'CTS status', 'CTS considerada (h)', 'Conferência', 'Comentário'].map(q).join(';')];
+  list.forEach(r => {
+    r.rows.forEach(x => {
+      lines.push([
+        r.country, r.name, r.email, r.sub ? 'Respondeu' : 'Pendente', r.sub ? r.sub.submittedAt : '',
+        x.date, x.drv ? (x.drv.worked ? 'Sim' : 'Não') : '', x.drv && x.drv.worked ? num(x.drv.hours) : '',
+        x.drv && !x.drv.worked ? (REASON_TERM[x.drv.reason] || '') : '', x.drv ? x.drv.note || '' : '',
+        x.raw ? num(x.raw.h) : '', x.raw ? x.raw.status || '' : '', x.cons != null ? num(x.cons) : '',
+        x.flag ? flagText(x.flag) : '', r.sub ? r.sub.comment || '' : '',
+      ].map(q).join(';'));
+    });
+  });
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'confirmacao-horas_' + S.period.start + '_' + S.period.end + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+function onAdminClick(e) {
+  const el = e.target.closest('[data-act]');
+  if (!el || !S.admin) return;
+  const act = el.dataset.act;
+  const v = el.dataset.v;
+  const A = S.admin;
+  if (act === 'lang') return setLang(v);
+  if (act === 'refresh') return loadAdmin(true);
+  if (act === 'csv') return exportCsv();
+  if (act === 'admlogout') { try { clearSession(); } catch (err) {} location.reload(); return; }   // eslint-disable-line no-undef
+  if (act === 'copylink') {
+    const link = driverLink();
+    if (navigator.clipboard) navigator.clipboard.writeText(link).then(() => toast(t('admCopied')), () => toast(link, 5000));
+    else toast(link, 5000);
+    return;
+  }
+  if (act === 'fcountry') { A.filterCountry = v; render(); return; }
+  if (act === 'fmode') { A.filterMode = A.filterMode === v ? 'all' : v; render(); return; }
+  if (act === 'expand') {
+    A.expanded[v] = !A.expanded[v];
+    document.getElementById('adm-table').innerHTML = adminTableHtml();
+  }
+}
+function onAdminInput(e) {
+  if (e.target.id === 'adm-q') { S.admin.q = e.target.value; document.getElementById('adm-table').innerHTML = adminTableHtml(); }
+}
+function onAdminChange(e) {
+  if (e.target.id === 'adm-period') {
+    const p = PERIODS.find(x => periodKey(x) === e.target.value);
+    if (p) { S.period = p; S.admin.expanded = {}; loadAdmin(); }
+  }
+}
+
+// ================================================================
+// BOOT
+// ================================================================
+(function boot() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('admin') === '1') {
+    root.addEventListener('click', onAdminClick);
+    root.addEventListener('input', onAdminInput);
+    root.addEventListener('change', onAdminChange);
+    initAdmin();
+    return;
+  }
+  root.addEventListener('click', onDriverClick);
+  root.addEventListener('input', onDriverInput);
+  root.addEventListener('change', onDriverChange);
+  const session = lsJson(KEYS.session, null);
+  S.lang = lsGet(KEYS.lang) || (session ? defaultLangFor(session.country) : browserLang());
+  if (!I18N[S.lang]) S.lang = 'pt';
+  document.documentElement.lang = S.lang === 'pt' ? 'pt-BR' : S.lang;
+  if (session && session.email) {
+    S.session = session;
+    startDriver();
+  } else {
+    S.view = 'login';
+    render();
+  }
+})();
+</script>
+</body>
+</html>
