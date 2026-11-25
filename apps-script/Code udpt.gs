@@ -321,7 +321,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.93',
+        version: 'v5.94',
         ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
@@ -341,7 +341,9 @@ function doGet(e) {
                     'getTkmReportOptions', 'getTkmReport', 'getFleetVids',
                     'getVidStatus', 'POST saveVidStatus',
                     'getClientMetrics', 'getClientMetricsBatch', 'getClientWeeks', 'getVidCounts',
-                    'POST saveGlobalDriver', 'getHrGlobalStatus', 'POST getHrGlobal'],
+                    'POST saveGlobalDriver', 'getHrGlobalStatus', 'POST getHrGlobal',
+                    'POST getPlan2027', 'POST importPlan2027', 'POST geocodePlan2027', 'POST savePlan2027Geo',
+                    'POST savePlan2027Decision', 'POST savePlan2027Map', 'POST getPlan2027Map', 'POST deletePlan2027Map'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -679,6 +681,10 @@ function doPost(e) {
     // v5.92: consulta da HR Global (hr-global.html) — v5.93: sem chave
     if (data.type === 'getHrGlobal') {
       return jsonResponse(getHrGlobal_());
+    }
+    // v5.94: Plano 2027 (latamace.com/2027/) — planilha própria; só LÊ HR Global e VID Status
+    if (/Plan2027$/.test(String(data.type || ''))) {
+      return jsonResponse(plan2027Dispatch_(data));
     }
 
     ensureSheetsExist();
@@ -12864,4 +12870,620 @@ function getHrGlobal_() {
     Logger.log('getHrGlobal_ erro: ' + err);
     return { success: false, version: V, error: String(err && err.message || err) };
   }
+}
+
+// ================================================================
+// v5.94: PLANO 2027 (latamace.com/2027/) — planejamento do Street View 2027.
+// ----------------------------------------------------------------
+// Planilha PRÓPRIA "Plano 2027 — Street View" (conta dona do script; id em Script
+// Properties PLAN2027_SPREADSHEET_ID). NUNCA grava na Mastersheet: só LÊ a VID Status
+// (frota) e a HR Global (motoristas atuais).
+// O escopo vem das planilhas da Google — "[ACE 2027] Scope & Recruiting" (NA) e
+// "[LATAM] GSV New Hires 2027" —: o Lucas baixa .xlsx e sobe na página, que lê o
+// arquivo no navegador e manda pronto (importPlan2027).
+// Abas: Escopo (local × mês) · Vagas (1 linha por vaga) · Decisões (fica/sai por
+// motorista) · Mapas (KML/KMZ → GeoJSON numa pasta do Drive) · Importações (log).
+// setupPlan2027() cria tudo (e autoriza o geocoder); o 1º import também cria sozinho.
+// ⚠ Endpoint aberto, igual HR Global v5.93: devolve nome/cidade/lat-lng dos motoristas.
+// ================================================================
+const P27_V_ = 'v5.94';
+const PLAN2027 = {
+  propKey: 'PLAN2027_SPREADSHEET_ID',
+  folderKey: 'PLAN2027_FOLDER_ID',
+  title: 'Plano 2027 — Street View',
+  folderTitle: 'Plano 2027 — mapas',
+  scopeSheet: 'Escopo',
+  slotsSheet: 'Vagas',
+  decisionsSheet: 'Decisões',
+  mapsSheet: 'Mapas',
+  importsSheet: 'Importações',
+};
+const P27_MONTHS_ = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const P27_SCOPE_HEADERS_ = ['Key', 'Region', 'Country', 'Location', 'Scope Km'].concat(P27_MONTHS_)
+  .concat(['Peak', 'Driver Months', 'Lat', 'Lng', 'Geo', 'Notes', 'Imported At', 'Source File']);
+const P27_SLOT_HEADERS_ = ['Region', 'Country', 'Slot', 'Hiring Status', 'Order Month', 'Name', 'City', 'State',
+  'Duration (mos)', 'Training', 'Training Date', 'Trainer', 'Xpense Email', 'Imported At', 'Source File'];
+const P27_DECISION_HEADERS_ = ['Driver Key', 'Driver Name', 'Country', 'Decision', 'Target Location', 'Note', 'Updated At', 'Updated By'];
+const P27_MAP_HEADERS_ = ['Uploaded At', 'Region', 'Label', 'Filename', 'File Id', 'Features', 'Uploaded By'];
+const P27_IMPORT_HEADERS_ = ['Imported At', 'Region', 'Countries', 'Source File', 'Locations', 'Slots', 'By'];
+const P27_DECISIONS_ = { keep: 1, release: 1, relocate: 1, undecided: 1 };
+
+/** Roteia os POST *Plan2027 (despachado no doPost ANTES do ensureSheetsExist). */
+function plan2027Dispatch_(data) {
+  try {
+    switch (String(data.type)) {
+      case 'getPlan2027': return getPlan2027_();
+      case 'importPlan2027': return importPlan2027_(data);
+      case 'geocodePlan2027': return geocodePlan2027_(data);
+      case 'savePlan2027Geo': return savePlan2027Geo_(data);
+      case 'savePlan2027Decision': return savePlan2027Decision_(data);
+      case 'savePlan2027Map': return savePlan2027Map_(data);
+      case 'getPlan2027Map': return getPlan2027Map_(data);
+      case 'deletePlan2027Map': return deletePlan2027Map_(data);
+    }
+    return { success: false, version: P27_V_, error: 'tipo desconhecido: ' + data.type };
+  } catch (err) {
+    if (!(err && err.code === 'notConfigured')) Logger.log('[Plano 2027] ' + data.type + ' erro: ' + (err && err.stack || err));
+    return { success: false, version: P27_V_, code: (err && err.code) || '', error: String(err && err.message || err) };
+  }
+}
+
+// ---------- helpers ----------
+function p27Str_(v) { return String(v == null ? '' : v).trim(); }
+/** Texto curto e seguro pra célula (corta + apóstrofo em fórmula/número, ver hrgCell_). */
+function p27Text_(v, max) { return hrgCell_(p27Str_(v).slice(0, max || 300)); }
+function p27Num_(v) {
+  if (typeof v === 'number') return isFinite(v) ? v : null;
+  const s = p27Str_(v).replace(/\s/g, '');
+  if (!s) return null;
+  // "1,234.5" (en) · "1.234,5" (pt) · "-23,55" (vírgula decimal)
+  let t = s;
+  if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)) t = t.replace(/,/g, '');
+  else if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(t)) t = t.replace(/\./g, '').replace(',', '.');
+  else t = t.replace(',', '.');
+  const n = Number(t);
+  return isFinite(n) ? n : null;
+}
+/** Nome normalizado pra chave: minúsculo, sem acento, espaços simples. */
+function p27Norm_(s) { return normCountry_(s).replace(/\s+/g, ' ').trim(); }
+function p27Iso_(v) { return v instanceof Date && !isNaN(v.getTime()) ? v.toISOString() : p27Str_(v); }
+
+/** Abre a planilha do Plano 2027. createIfMissing=true cria (setup/1º import). */
+function plan2027Ss_(createIfMissing) {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty(PLAN2027.propKey);
+  if (id) {
+    try { return SpreadsheetApp.openById(id); } catch (e) {
+      if (!createIfMissing) throw new Error('Plano 2027: não consegui abrir a planilha ' + id + ' (' + e + ')');
+      Logger.log('[Plano 2027] ⚠ o id salvo não abre (' + e + ') — criando outra planilha');
+    }
+  }
+  if (!createIfMissing) {
+    const err = new Error('Plano 2027 ainda não tem planilha — importe a primeira planilha de escopo (ou rode setupPlan2027())');
+    err.code = 'notConfigured';
+    throw err;
+  }
+  const ss = SpreadsheetApp.create(PLAN2027.title);
+  ss.setSpreadsheetLocale('en_US');
+  ss.setSpreadsheetTimeZone(Session.getScriptTimeZone());
+  props.setProperty(PLAN2027.propKey, ss.getId());
+  Logger.log('[Plano 2027] planilha criada: ' + ss.getUrl());
+  p27Sheet_(ss, PLAN2027.scopeSheet, P27_SCOPE_HEADERS_);
+  p27Sheet_(ss, PLAN2027.slotsSheet, P27_SLOT_HEADERS_);
+  p27Sheet_(ss, PLAN2027.decisionsSheet, P27_DECISION_HEADERS_);
+  p27Sheet_(ss, PLAN2027.mapsSheet, P27_MAP_HEADERS_);
+  p27Sheet_(ss, PLAN2027.importsSheet, P27_IMPORT_HEADERS_);
+  return ss;
+}
+
+/** Pasta do Drive dos mapas (GeoJSON). Fica privada — a página lê pelo getPlan2027Map. */
+function p27Folder_() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty(PLAN2027.folderKey);
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) { Logger.log('[Plano 2027] ⚠ pasta ' + id + ' não abre: ' + e); } }
+  const f = DriveApp.createFolder(PLAN2027.folderTitle);
+  props.setProperty(PLAN2027.folderKey, f.getId());
+  return f;
+}
+
+/**
+ * Aba com o cabeçalho garantido (coluna que falta vai pro fim; reaproveita a "Sheet1"
+ * vazia da planilha nova). Retorna { sheet, headers, col } — col = hrgColMap_ (minúsculo).
+ */
+function p27Sheet_(ss, name, wanted) {
+  let sh = ss.getSheetByName(name);
+  if (!sh) {
+    const ours = [PLAN2027.scopeSheet, PLAN2027.slotsSheet, PLAN2027.decisionsSheet, PLAN2027.mapsSheet, PLAN2027.importsSheet];
+    const spare = ss.getSheets().filter(function (s) {
+      return ours.indexOf(s.getName()) < 0 && s.getLastRow() === 0 && s.getLastColumn() === 0;
+    })[0];
+    if (spare) { sh = spare; sh.setName(name); } else sh = ss.insertSheet(name);
+  }
+  const lastCol = sh.getLastColumn();
+  const headers = lastCol ? sh.getRange(1, 1, 1, lastCol).getValues()[0].map(p27Str_) : [];
+  const have = {};
+  headers.forEach(function (h) { if (h) have[hrgKey_(h)] = true; });
+  const add = wanted.filter(function (h) { return !have[hrgKey_(h)]; });
+  if (add.length) {
+    const need = headers.length + add.length;
+    if (sh.getMaxColumns() < need) sh.insertColumnsAfter(sh.getMaxColumns(), need - sh.getMaxColumns());
+    sh.getRange(1, headers.length + 1, 1, add.length).setValues([add]);
+    Array.prototype.push.apply(headers, add);
+    sh.getRange(1, 1, 1, headers.length).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#1A365D');
+    sh.setFrozenRows(1);
+  }
+  return { sheet: sh, headers: headers, col: hrgColMap_(headers) };
+}
+
+/** Linhas de dados (getValues) com a largura do cabeçalho. */
+function p27Rows_(t) {
+  const n = t.sheet.getLastRow() - 1;
+  if (n < 1 || !t.headers.length) return [];
+  return t.sheet.getRange(2, 1, n, t.headers.length).getValues();
+}
+
+/** Reescreve o corpo inteiro da aba (limpa as linhas antigas). */
+function p27WriteBody_(t, rows) {
+  const sh = t.sheet, w = t.headers.length;
+  const old = sh.getLastRow() - 1;
+  if (old > 0) sh.getRange(2, 1, old, Math.max(w, sh.getLastColumn())).clearContent();
+  if (!rows.length) return;
+  hrgEnsureRows_(sh, rows.length + 1);
+  sh.getRange(2, 1, rows.length, w).setValues(rows.map(function (r) {
+    const x = r.slice(0, w);
+    while (x.length < w) x.push('');
+    return x;
+  }));
+}
+
+function p27Row_(t, obj) {
+  return t.headers.map(function (h) { const v = obj[h]; return v == null ? '' : v; });
+}
+
+/** "Portland, Oregon (Hood River, Oregon)" → "Hood River, Oregon"; "Rosario (2x)" → "Rosario";
+ *  "Cody/Worland, Wyoming" → "Cody, Wyoming"; "Santa Rosa - La pampa" → "Santa Rosa, La pampa". */
+function p27GeoQuery_(loc) {
+  let s = p27Str_(loc);
+  const m = s.match(/\(([^)]*)\)/);
+  if (m && m[1].indexOf(',') >= 0) s = m[1];
+  s = s.replace(/\([^)]*\)/g, ' ');
+  const parts = s.split('/');
+  let first = parts[0].trim();
+  if (first.indexOf(',') < 0 && parts.length > 1) {
+    const last = parts[parts.length - 1];
+    const k = last.indexOf(',');
+    if (k >= 0) first += last.slice(k);
+  }
+  return first.replace(/\s+-\s+/g, ', ').replace(/\s+/g, ' ').replace(/,\s*$/, '').trim();
+}
+
+// ---------- leitura ----------
+/** POST getPlan2027 → tudo que a página precisa numa chamada só. */
+function getPlan2027_() {
+  const warnings = [];
+  let ss = null;
+  try { ss = plan2027Ss_(false); } catch (e) { if (e.code !== 'notConfigured') throw e; }
+
+  const scope = [], slots = [], decisions = {}, maps = [], imports = [];
+  if (ss) {
+    const T = p27Sheet_(ss, PLAN2027.scopeSheet, P27_SCOPE_HEADERS_), c = T.col;
+    p27Rows_(T).forEach(function (r) {
+      const key = p27Str_(r[c['key']]);
+      if (!key) return;
+      const lat = p27Num_(r[c['lat']]), lng = p27Num_(r[c['lng']]);
+      scope.push({
+        key: key, region: p27Str_(r[c['region']]).toUpperCase(), cc: p27Str_(r[c['country']]).toUpperCase(),
+        location: p27Str_(r[c['location']]), km: p27Num_(r[c['scope km']]) || 0,
+        m: P27_MONTHS_.map(function (mo) { return p27Num_(r[c[mo.toLowerCase()]]) || 0; }),
+        lat: lat, lng: lng, geo: p27Str_(r[c['geo']]), notes: p27Str_(r[c['notes']]),
+      });
+    });
+    const S = p27Sheet_(ss, PLAN2027.slotsSheet, P27_SLOT_HEADERS_), s = S.col;
+    p27Rows_(S).forEach(function (r) {
+      const cc = p27Str_(r[s['country']]).toUpperCase();
+      if (!cc) return;
+      slots.push({
+        region: p27Str_(r[s['region']]).toUpperCase(), cc: cc, slot: p27Num_(r[s['slot']]) || 0,
+        status: p27Str_(r[s['hiring status']]), month: p27Str_(r[s['order month']]), name: p27Str_(r[s['name']]),
+        city: p27Str_(r[s['city']]), state: p27Str_(r[s['state']]), dur: p27Num_(r[s['duration (mos)']]),
+        training: p27Str_(r[s['training']]), trainingDate: p27Iso_(r[s['training date']]).slice(0, 10),
+        trainer: p27Str_(r[s['trainer']]), email: p27Str_(r[s['xpense email']]).toLowerCase(),
+      });
+    });
+    const D = p27Sheet_(ss, PLAN2027.decisionsSheet, P27_DECISION_HEADERS_), d = D.col;
+    p27Rows_(D).forEach(function (r) {
+      const key = p27Str_(r[d['driver key']]).toLowerCase();
+      if (!key) return;
+      decisions[key] = {
+        decision: p27Str_(r[d['decision']]), target: p27Str_(r[d['target location']]), note: p27Str_(r[d['note']]),
+        at: p27Iso_(r[d['updated at']]), by: p27Str_(r[d['updated by']]),
+        name: p27Str_(r[d['driver name']]), country: p27Str_(r[d['country']]),
+      };
+    });
+    const M = p27Sheet_(ss, PLAN2027.mapsSheet, P27_MAP_HEADERS_), mm = M.col;
+    p27Rows_(M).forEach(function (r) {
+      const id = p27Str_(r[mm['file id']]);
+      if (!id) return;
+      maps.push({
+        at: p27Iso_(r[mm['uploaded at']]), region: p27Str_(r[mm['region']]).toUpperCase(), label: p27Str_(r[mm['label']]),
+        filename: p27Str_(r[mm['filename']]), fileId: id, features: p27Num_(r[mm['features']]) || 0, by: p27Str_(r[mm['uploaded by']]),
+      });
+    });
+    const I = p27Sheet_(ss, PLAN2027.importsSheet, P27_IMPORT_HEADERS_), ii = I.col;
+    p27Rows_(I).slice(-20).reverse().forEach(function (r) {
+      imports.push({
+        at: p27Iso_(r[ii['imported at']]), region: p27Str_(r[ii['region']]), countries: p27Str_(r[ii['countries']]),
+        file: p27Str_(r[ii['source file']]), locations: p27Num_(r[ii['locations']]) || 0, slots: p27Num_(r[ii['slots']]) || 0,
+        by: p27Str_(r[ii['by']]),
+      });
+    });
+  }
+
+  let drivers = [];
+  try { drivers = p27Drivers_(); } catch (e) { warnings.push('HR Global: ' + (e && e.message || e)); }
+  let fleet = {};
+  try { fleet = p27Fleet_(); } catch (e) { warnings.push('Frota (VID Status): ' + (e && e.message || e)); }
+
+  return {
+    success: true, version: P27_V_, at: new Date().toISOString(), configured: !!ss,
+    sheetUrl: ss ? ss.getUrl() : '', scope: scope, slots: slots, decisions: decisions, maps: maps, imports: imports,
+    drivers: drivers, fleet: fleet, warnings: warnings,
+  };
+}
+
+/** Motoristas da HR Global (aba Todos), enxutos: só o que o plano usa. */
+function p27Drivers_() {
+  const ss = hrGlobalSs_(false);
+  const sh = ss.getSheetByName(HR_GLOBAL.allSheet);
+  if (!sh || sh.getLastRow() < 2) return [];
+  const vals = sh.getRange(1, 1, sh.getLastRow(), sh.getLastColumn()).getValues();
+  const col = hrgColMap_(vals[0].map(p27Str_));
+  const g = function (r, h) { const i = col[hrgKey_(h)]; return i == null ? '' : r[i]; };
+  const out = [];
+  for (let i = 1; i < vals.length; i++) {
+    const r = vals[i];
+    const name = p27Str_(g(r, 'Driver Full Name')) || (p27Str_(g(r, 'First and Second Name')) + ' ' + p27Str_(g(r, 'Surname'))).trim();
+    if (!name) continue;
+    const corp = p27Str_(g(r, 'Corporate E-mail')).toLowerCase(), pers = p27Str_(g(r, 'Personal E-mail')).toLowerCase();
+    const c = hrgCountry_(g(r, 'Country Code')) || hrgCountry_(g(r, 'Country'));
+    const rawLat = g(r, 'Home Lat'), rawLng = g(r, 'Home Lng');
+    const lat = p27Num_(rawLat), lng = p27Num_(rawLng);
+    const ok = lat !== null && lng !== null && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && !(lat === 0 && lng === 0);
+    out.push({
+      key: corp || pers || ('name:' + p27Norm_(name) + '|' + (c ? c.code : '')),
+      row: i + 1, name: name, region: c ? c.region : p27Str_(g(r, 'Region')).toUpperCase(),
+      cc: c ? c.code : '', country: c ? c.name : p27Str_(g(r, 'Country')),
+      sit: p27Str_(g(r, 'Situation')), type: p27Str_(g(r, 'Type')),
+      city: p27Str_(g(r, 'City')), state: p27Str_(g(r, 'State / Province')),
+      lat: ok ? lat : null, lng: ok ? lng : null, badGeo: !ok && (p27Str_(rawLat) !== '' || p27Str_(rawLng) !== ''),
+      email: corp || pers, rate: p27Num_(g(r, 'Per Hour Salary (USD)')),
+      since: hrgDate_(g(r, 'First Joining Date')) || hrgDate_(g(r, 'Joining Date/Renovation Date')),
+    });
+  }
+  return out;
+}
+
+/** Frota por país (ISO2) da curadoria do ops-map (aba VID Status da Mastersheet — só leitura). */
+function p27Fleet_() {
+  const out = {};
+  getVidStatus_().forEach(function (v) {
+    const c = hrgCountry_(v.country) || hrgCountry_(clientCountryName_(v.country));
+    const k = c ? c.code : normCountry_(v.country);
+    if (!out[k]) out[k] = { active: 0, inactive: 0, cancelled: 0 };
+    out[k][v.status] = (out[k][v.status] || 0) + 1;
+  });
+  return out;
+}
+
+// ---------- escrita ----------
+/**
+ * POST importPlan2027 — data: { region, fileName, by,
+ *   locations: [{ country, location, km, months:[12] }],
+ *   slots: [{ country, status, month, name, city, state, duration, training, trainingDate, trainer, email }] }
+ * Substitui SÓ os países que vieram no arquivo (Escopo e Vagas). Lat/Lng/Notes de um local
+ * que já existia (mesma chave) são mantidos — não precisa geocodificar de novo.
+ */
+function importPlan2027_(data) {
+  const region = p27Str_(data.region).toUpperCase();
+  if (!HRG_REGIONS_[region]) return { success: false, version: P27_V_, error: 'região inválida: ' + region };
+  const locsIn = Array.isArray(data.locations) ? data.locations : [];
+  const slotsIn = Array.isArray(data.slots) ? data.slots : [];
+  if (!locsIn.length && !slotsIn.length) return { success: false, version: P27_V_, error: 'o arquivo não tem locais nem vagas' };
+  if (locsIn.length > 3000 || slotsIn.length > 10000) return { success: false, version: P27_V_, error: 'arquivo grande demais' };
+
+  const file = p27Text_(data.fileName, 200), by = p27Text_(data.by, 80);
+  const skipped = [];
+  const ccOf = function (v, what) {
+    const c = hrgCountry_(v);
+    if (c && c.region === region) return c.code;
+    skipped.push(what + ': país "' + p27Str_(v) + '" não é de ' + region);
+    return '';
+  };
+  const countries = {};
+  const locs = [];
+  locsIn.forEach(function (l) {
+    const location = p27Str_(l && l.location).slice(0, 200);
+    if (!location) return;
+    const cc = ccOf(l.country, location);
+    if (!cc) return;
+    const months = P27_MONTHS_.map(function (_, i) {
+      const n = p27Num_(l.months && l.months[i]);
+      return n && n > 0 ? Math.min(n, 999) : 0;
+    });
+    countries[cc] = true;
+    locs.push({ cc: cc, location: location, km: Math.max(0, p27Num_(l.km) || 0), months: months });
+  });
+  const slots = [];
+  slotsIn.forEach(function (s) {
+    if (!s) return;
+    const cc = ccOf(s.country, 'vaga ' + p27Str_(s.city));
+    if (!cc) return;
+    countries[cc] = true;
+    slots.push({ cc: cc, s: s });
+  });
+  const ccList = Object.keys(countries).sort();
+  if (!ccList.length) return { success: false, version: P27_V_, error: 'nenhum país de ' + region + ' no arquivo', skipped: skipped.slice(0, 20) };
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const ss = plan2027Ss_(true);
+    const now = new Date();
+
+    // Escopo
+    const T = p27Sheet_(ss, PLAN2027.scopeSheet, P27_SCOPE_HEADERS_), c = T.col;
+    const prev = {}, keepRows = [];
+    p27Rows_(T).forEach(function (r) {
+      const reg = p27Str_(r[c['region']]).toUpperCase(), cc = p27Str_(r[c['country']]).toUpperCase();
+      if (reg === region && countries[cc]) prev[p27Str_(r[c['key']])] = r;
+      else if (p27Str_(r[c['key']])) keepRows.push(r);
+    });
+    const seen = {};
+    let needGeo = 0;
+    const newRows = locs.map(function (l) {
+      let key = region + '|' + l.cc + '|' + p27Norm_(l.location);
+      seen[key] = (seen[key] || 0) + 1;
+      if (seen[key] > 1) key += '#' + seen[key];
+      const p = prev[key];
+      const o = {
+        'Key': key, 'Region': region, 'Country': l.cc, 'Location': hrgCell_(l.location), 'Scope Km': l.km,
+        'Peak': Math.max.apply(null, l.months), 'Driver Months': l.months.reduce(function (a, b) { return a + b; }, 0),
+        'Imported At': now, 'Source File': file,
+      };
+      P27_MONTHS_.forEach(function (mo, i) { o[mo] = l.months[i] || ''; });
+      if (p) ['Lat', 'Lng', 'Geo', 'Notes'].forEach(function (h) { o[h] = p[c[h.toLowerCase()]]; });
+      if (o['Lat'] === '' || o['Lat'] == null) needGeo++;
+      return p27Row_(T, o);
+    });
+    p27WriteBody_(T, keepRows.concat(newRows));
+
+    // Vagas
+    const S = p27Sheet_(ss, PLAN2027.slotsSheet, P27_SLOT_HEADERS_), sc = S.col;
+    const keepSlots = p27Rows_(S).filter(function (r) {
+      const reg = p27Str_(r[sc['region']]).toUpperCase(), cc = p27Str_(r[sc['country']]).toUpperCase();
+      return cc && !(reg === region && countries[cc]);
+    });
+    const seq = {};
+    const newSlots = slots.map(function (x) {
+      const s = x.s;
+      seq[x.cc] = (seq[x.cc] || 0) + 1;
+      const dur = p27Num_(String(s.duration == null ? '' : s.duration).replace(/[^\d.,-]/g, ''));
+      return p27Row_(S, {
+        'Region': region, 'Country': x.cc, 'Slot': seq[x.cc], 'Hiring Status': p27Text_(s.status, 60),
+        'Order Month': p27Text_(s.month, 30), 'Name': p27Text_(s.name, 120), 'City': p27Text_(s.city, 160),
+        'State': p27Text_(s.state, 120), 'Duration (mos)': dur == null ? '' : dur, 'Training': p27Text_(s.training, 60),
+        'Training Date': p27Text_(s.trainingDate, 30), 'Trainer': p27Text_(s.trainer, 120),
+        'Xpense Email': p27Text_(String(s.email || '').toLowerCase(), 160), 'Imported At': now, 'Source File': file,
+      });
+    });
+    p27WriteBody_(S, keepSlots.concat(newSlots));
+
+    const I = p27Sheet_(ss, PLAN2027.importsSheet, P27_IMPORT_HEADERS_);
+    I.sheet.appendRow(p27Row_(I, {
+      'Imported At': now, 'Region': region, 'Countries': ccList.join(', '), 'Source File': file,
+      'Locations': newRows.length, 'Slots': newSlots.length, 'By': by,
+    }));
+    Logger.log('[Plano 2027] import ' + region + ' (' + ccList.join(',') + '): ' + newRows.length + ' locais, ' + newSlots.length + ' vagas, ' + needGeo + ' sem coordenada');
+    return { success: true, version: P27_V_, countries: ccList, locations: newRows.length, slots: newSlots.length,
+             needGeo: needGeo, skipped: skipped.slice(0, 20), skippedCount: skipped.length };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * POST geocodePlan2027 — geocodifica (Google, serviço Maps do Apps Script) os locais sem
+ * Lat/Lng, até ~20 s por chamada; a página chama de novo enquanto remaining > 0.
+ * Local não encontrado fica com Geo="not found" (a página deixa posicionar na mão).
+ */
+function geocodePlan2027_(data) {
+  const ss = plan2027Ss_(false);
+  const T = p27Sheet_(ss, PLAN2027.scopeSheet, P27_SCOPE_HEADERS_), c = T.col;
+  const rows = p27Rows_(T);
+  const todo = [];
+  rows.forEach(function (r, i) {
+    const geo = p27Str_(r[c['geo']]);
+    if (p27Str_(r[c['key']]) && p27Num_(r[c['lat']]) === null && geo !== 'not found' && geo !== 'manual') todo.push(i);
+  });
+  const t0 = Date.now(), maxN = Math.min(Number(data && data.max) || 80, 200);
+  const results = [];
+  let error = '';
+  for (let k = 0; k < todo.length && results.length < maxN && Date.now() - t0 < 20000; k++) {
+    const i = todo[k], r = rows[i];
+    const cc = hrgCountry_(r[c['country']]);
+    const q = p27GeoQuery_(r[c['location']]) + (cc ? ', ' + cc.name : '');
+    let lat = '', lng = '', geo = 'not found';
+    try {
+      const gc = Maps.newGeocoder();
+      if (cc) gc.setRegion(cc.code.toLowerCase());
+      const resp = gc.geocode(q);
+      if (resp && resp.status === 'OK' && resp.results && resp.results.length) {
+        const loc = resp.results[0].geometry.location;
+        lat = Math.round(loc.lat * 1e6) / 1e6; lng = Math.round(loc.lng * 1e6) / 1e6; geo = 'google';
+      } else if (resp && resp.status && resp.status !== 'ZERO_RESULTS') {
+        error = 'geocoder: ' + resp.status;
+        break;
+      }
+    } catch (e) {
+      error = String(e && e.message || e);
+      break;
+    }
+    if (c['lng'] === c['lat'] + 1 && c['geo'] === c['lat'] + 2) {
+      T.sheet.getRange(i + 2, c['lat'] + 1, 1, 3).setValues([[lat, lng, geo]]);
+    } else {
+      T.sheet.getRange(i + 2, c['lat'] + 1).setValue(lat);
+      T.sheet.getRange(i + 2, c['lng'] + 1).setValue(lng);
+      T.sheet.getRange(i + 2, c['geo'] + 1).setValue(geo);
+    }
+    results.push({ key: p27Str_(r[c['key']]), q: q, lat: lat === '' ? null : lat, lng: lng === '' ? null : lng, geo: geo });
+  }
+  if (error) Logger.log('[Plano 2027] geocode parou: ' + error);
+  return { success: !error || results.length > 0, version: P27_V_, done: results.length,
+           remaining: Math.max(0, todo.length - results.length), results: results, error: error };
+}
+
+/** POST savePlan2027Geo — posição corrigida na mão. data: { key, lat, lng } (lat null = limpar). */
+function savePlan2027Geo_(data) {
+  const key = p27Str_(data.key);
+  const lat = data.lat == null ? null : p27Num_(data.lat), lng = data.lng == null ? null : p27Num_(data.lng);
+  if (!key) return { success: false, version: P27_V_, error: 'key obrigatória' };
+  if (lat !== null && (lng === null || Math.abs(lat) > 90 || Math.abs(lng) > 180)) return { success: false, version: P27_V_, error: 'coordenada inválida' };
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const ss = plan2027Ss_(false);
+    const T = p27Sheet_(ss, PLAN2027.scopeSheet, P27_SCOPE_HEADERS_), c = T.col;
+    const rows = p27Rows_(T);
+    for (let i = 0; i < rows.length; i++) {
+      if (p27Str_(rows[i][c['key']]) !== key) continue;
+      T.sheet.getRange(i + 2, c['lat'] + 1).setValue(lat === null ? '' : Math.round(lat * 1e6) / 1e6);
+      T.sheet.getRange(i + 2, c['lng'] + 1).setValue(lng === null ? '' : Math.round(lng * 1e6) / 1e6);
+      T.sheet.getRange(i + 2, c['geo'] + 1).setValue(lat === null ? '' : 'manual');
+      return { success: true, version: P27_V_ };
+    }
+    return { success: false, version: P27_V_, error: 'local não encontrado: ' + key };
+  } finally { lock.releaseLock(); }
+}
+
+/**
+ * POST savePlan2027Decision — upsert por motorista.
+ * data: { items:[{ key, name, country, decision, target, note }], by }  (ou um item solto no data)
+ * decision: keep | release | relocate | undecided | '' (vazio = volta pra "a decidir").
+ */
+function savePlan2027Decision_(data) {
+  const items = Array.isArray(data.items) ? data.items : [data];
+  if (!items.length || items.length > 1000) return { success: false, version: P27_V_, error: 'itens inválidos' };
+  for (let k = 0; k < items.length; k++) {
+    const it = items[k] || {};
+    if (!p27Str_(it.key) || p27Str_(it.key).length > 200) return { success: false, version: P27_V_, error: 'key inválida' };
+    if (p27Str_(it.decision) && !P27_DECISIONS_[p27Str_(it.decision)]) return { success: false, version: P27_V_, error: 'decisão inválida: ' + it.decision };
+  }
+  const by = p27Text_(data.by, 80);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const ss = plan2027Ss_(true);
+    const D = p27Sheet_(ss, PLAN2027.decisionsSheet, P27_DECISION_HEADERS_), c = D.col;
+    const rows = p27Rows_(D);
+    const at = {};
+    rows.forEach(function (r, i) { const k = p27Str_(r[c['driver key']]).toLowerCase(); if (k) at[k] = i; });
+    const now = new Date();
+    items.forEach(function (it) {
+      const key = p27Str_(it.key).toLowerCase();
+      const row = p27Row_(D, {
+        'Driver Key': hrgCell_(key), 'Driver Name': p27Text_(it.name, 120), 'Country': p27Text_(it.country, 60),
+        'Decision': p27Str_(it.decision), 'Target Location': p27Text_(it.target, 200), 'Note': p27Text_(it.note, 1000),
+        'Updated At': now, 'Updated By': by,
+      });
+      if (at[key] != null) rows[at[key]] = row;
+      else { at[key] = rows.length; rows.push(row); }
+    });
+    // poucas mudanças → reescreve só as linhas tocadas; lote grande → corpo inteiro
+    if (items.length <= 20) {
+      items.forEach(function (it) {
+        const i = at[p27Str_(it.key).toLowerCase()];
+        hrgEnsureRows_(D.sheet, i + 2);
+        D.sheet.getRange(i + 2, 1, 1, D.headers.length).setValues([rows[i]]);
+      });
+    } else {
+      p27WriteBody_(D, rows);
+    }
+    return { success: true, version: P27_V_, at: now.toISOString(), saved: items.length };
+  } finally { lock.releaseLock(); }
+}
+
+/** POST savePlan2027Map — data: { region, label, filename, geojson (texto), features, by }. */
+function savePlan2027Map_(data) {
+  const region = p27Str_(data.region).toUpperCase();
+  if (!HRG_REGIONS_[region]) return { success: false, version: P27_V_, error: 'região inválida' };
+  const gj = String(data.geojson || '');
+  if (!gj) return { success: false, version: P27_V_, error: 'geojson vazio' };
+  try { JSON.parse(gj); } catch (e) { return { success: false, version: P27_V_, error: 'geojson inválido' }; }
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const ss = plan2027Ss_(true);
+    const stamp = Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyyy-MM-dd_HH-mm-ss');
+    const name = region + '_' + p27Str_(data.label || data.filename || 'mapa').replace(/[^a-z0-9]+/gi, '_').slice(0, 60) + '_' + stamp + '.geojson';
+    const file = p27Folder_().createFile(Utilities.newBlob(gj, 'application/json', name));
+    const M = p27Sheet_(ss, PLAN2027.mapsSheet, P27_MAP_HEADERS_);
+    M.sheet.appendRow(p27Row_(M, {
+      'Uploaded At': new Date(), 'Region': region, 'Label': p27Text_(data.label || data.filename, 120),
+      'Filename': p27Text_(data.filename, 200), 'File Id': file.getId(), 'Features': p27Num_(data.features) || '',
+      'Uploaded By': p27Text_(data.by, 80),
+    }));
+    return { success: true, version: P27_V_, fileId: file.getId() };
+  } finally { lock.releaseLock(); }
+}
+
+/** Só serve arquivo que está na aba Mapas (o endpoint é aberto: não vira leitor de Drive). */
+function p27MapRow_(fileId) {
+  const id = p27Str_(fileId);
+  if (!id) return null;
+  const ss = plan2027Ss_(false);
+  const M = p27Sheet_(ss, PLAN2027.mapsSheet, P27_MAP_HEADERS_);
+  const rows = p27Rows_(M);
+  for (let i = 0; i < rows.length; i++) if (p27Str_(rows[i][M.col['file id']]) === id) return { t: M, i: i };
+  return null;
+}
+
+/** POST getPlan2027Map — data: { fileId } → { geojson (texto) }. */
+function getPlan2027Map_(data) {
+  const hit = p27MapRow_(data.fileId);
+  if (!hit) return { success: false, version: P27_V_, error: 'mapa não encontrado' };
+  return { success: true, version: P27_V_, geojson: DriveApp.getFileById(p27Str_(data.fileId)).getBlob().getDataAsString() };
+}
+
+/** POST deletePlan2027Map — tira da aba e manda o arquivo pra lixeira do Drive. */
+function deletePlan2027Map_(data) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const hit = p27MapRow_(data.fileId);
+    if (!hit) return { success: false, version: P27_V_, error: 'mapa não encontrado' };
+    hit.t.sheet.deleteRow(hit.i + 2);
+    try { DriveApp.getFileById(p27Str_(data.fileId)).setTrashed(true); } catch (e) { Logger.log('[Plano 2027] lixeira: ' + e); }
+    return { success: true, version: P27_V_ };
+  } finally { lock.releaseLock(); }
+}
+
+/**
+ * Rodar UMA vez no editor depois do deploy da v5.94: cria a planilha + pasta dos mapas e
+ * testa o geocoder (se o Google pedir autorização nova, é aqui que aparece).
+ */
+function setupPlan2027() {
+  const ss = plan2027Ss_(true);
+  [[PLAN2027.scopeSheet, P27_SCOPE_HEADERS_], [PLAN2027.slotsSheet, P27_SLOT_HEADERS_],
+   [PLAN2027.decisionsSheet, P27_DECISION_HEADERS_], [PLAN2027.mapsSheet, P27_MAP_HEADERS_],
+   [PLAN2027.importsSheet, P27_IMPORT_HEADERS_]].forEach(function (p) { p27Sheet_(ss, p[0], p[1]); });
+  const f = p27Folder_();
+  try {
+    const r = Maps.newGeocoder().setRegion('us').geocode('Huntsville, Alabama, United States');
+    Logger.log('[Plano 2027] geocoder ok: ' + r.status + ' ' + JSON.stringify(r.results && r.results[0] && r.results[0].geometry.location));
+  } catch (e) {
+    Logger.log('[Plano 2027] ⚠ geocoder falhou: ' + e);
+  }
+  Logger.log('[Plano 2027] planilha: ' + ss.getUrl());
+  Logger.log('[Plano 2027] pasta dos mapas: ' + f.getUrl());
+  return ss.getUrl();
 }

@@ -89,6 +89,7 @@
       { label: { pt: "Motoristas",       es: "Conductores",      en: "Drivers" },          href: "driver-profile.html", icon: "users",    access: "all" },
       { label: { pt: "Recrutamento",     es: "Reclutamiento",    en: "Recruitment" },      href: "recruitment.html",    icon: "userPlus", access: "all" },
       { label: { pt: "HR Global",        es: "HR Global",        en: "HR Global" },        href: "hr-global.html",      icon: "globe",    access: "super" },
+      { label: { pt: "Plano 2027",       es: "Plan 2027",        en: "2027 Plan" },        href: "/2027/",              icon: "map",      access: "super" },
       { label: { pt: "Áreas por país",   es: "Áreas por país",   en: "Country Scopes" },   href: "country_scopes.html", icon: "layers",   access: "admin" },
       { label: { pt: "Mapa de Operações",es: "Mapa de Operaciones",en: "Ops Map" },        href: "ops-map.html",        icon: "pin",      access: "admin" },
       { label: { pt: "Discos",           es: "Discos",           en: "Disks" },            href: "disks.html",          icon: "disk",     access: "all" },

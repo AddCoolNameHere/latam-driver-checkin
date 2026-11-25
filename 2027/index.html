@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Plano 2027 · Street View</title>
+<link rel="icon" type="image/png" href="/aceolution-globe.png">
+<script src="/auth.js?v=20261117b"></script>
+<script src="/theme.js?v=20261015ui"></script>
+<script src="/common.js?v=20261125p27"></script>
+<link rel="stylesheet" href="/theme.css?v=20261023toggle">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<!--
+  Plano 2027 — portal de planejamento do Street View 2027 (latamace.com/2027/).
+  Separado do portal LATAM, mas lê a HR Global (motoristas atuais) e a frota (VID Status).
+  Fonte do escopo: planilhas da Google "[ACE 2027] Scope & Recruiting" (NA) e
+  "[LATAM] GSV New Hires 2027" — o Lucas baixa .xlsx e sobe na aba Importar (lido aqui no
+  navegador com SheetJS e gravado na planilha "Plano 2027 — Street View" pelo backend v5.94).
+  NUNCA guarda dado do cliente no repo (é público): tudo vem do backend.
+  Por enquanto só o login "fuss" (superAdminGate) — pageId '/2027/' deixa liberar pela página
+  de usuários (cargo restrito a páginas) sem colidir com o index.html da raiz.
+-->
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--c-bg); color: var(--c-text); min-height: 100vh; -webkit-font-smoothing: antialiased; font-family: var(--font-sans); font-size: 14px; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  .app { display: none; }
+  body.ready .app { display: block; }
+
+  /* ---------- topo ---------- */
+  .top { position: sticky; top: 0; z-index: 1000; background: color-mix(in srgb, var(--c-surface) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--c-border); }
+  .top-in { max-width: 1500px; margin: 0 auto; padding: 10px 24px 0; display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--c-text); margin-right: 6px; }
+  .brand img { width: 30px; height: 30px; }
+  .brand b { display: block; font-size: 16px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.1; }
+  .brand small { display: block; font-size: 12px; color: var(--c-text-muted); }
+  .seg { display: inline-flex; background: var(--c-bg-tint); border-radius: 10px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+  .seg button { border: 0; background: none; padding: 5px 11px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--c-text-muted); white-space: nowrap; }
+  .seg button.on { background: var(--c-surface); color: var(--c-text); box-shadow: var(--shadow-xs); }
+  .seg button .n { font-size: 11.5px; color: var(--c-text-dim); margin-left: 4px; font-variant-numeric: tabular-nums; }
+  .top-side { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--c-text-muted); }
+  .btn { border: 1px solid var(--c-border); background: var(--c-surface); border-radius: 8px; padding: 6px 11px; cursor: pointer; font-size: 13px; font-weight: 500; text-decoration: none; color: var(--c-text); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .btn:hover { border-color: var(--c-border-strong); }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .btn.primary { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+  .btn.primary:hover { background: var(--c-primary-dark); }
+  .btn.danger { color: var(--c-danger); }
+  .btn.sm { padding: 3px 8px; font-size: 12px; }
+  .icon-btn { border: 1px solid var(--c-border); background: var(--c-surface); border-radius: 8px; width: 32px; height: 30px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--c-text-muted); }
+  select.sel { border: 1px solid var(--c-border); background: var(--c-surface); border-radius: 8px; padding: 5px 8px; font-size: 13px; }
+  .status { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .status.is-stale { color: var(--c-warn); }
+  .spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--c-border); border-top-color: var(--c-primary); animation: spin .8s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .tabs { max-width: 1500px; margin: 0 auto; padding: 6px 24px 0; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+  .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 9px 13px; font-size: 14px; font-weight: 500; color: var(--c-text-muted); cursor: pointer; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+  .tab.on { color: var(--c-text); border-bottom-color: var(--c-primary); }
+  .tab .n { font-size: 11.5px; background: var(--c-bg-tint); color: var(--c-text-muted); border-radius: 999px; padding: 1px 7px; font-variant-numeric: tabular-nums; }
+  .countries { max-width: 1500px; margin: 0 auto; padding: 8px 24px 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .chip { border: 1px solid var(--c-border); background: var(--c-surface); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; cursor: pointer; color: var(--c-text-muted); white-space: nowrap; display: inline-flex; gap: 5px; align-items: center; }
+  .chip.on { border-color: var(--c-primary); color: var(--c-primary); background: color-mix(in srgb, var(--c-primary) 8%, var(--c-surface)); font-weight: 500; }
+  .chip .n { font-variant-numeric: tabular-nums; color: var(--c-text-dim); }
+
+  main { max-width: 1500px; margin: 0 auto; padding: 18px 24px 48px; }
+  .view { display: none; }
+  .view.on { display: block; }
+  .banner { border: 1px solid var(--c-border); background: var(--c-surface); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; display: flex; gap: 12px; align-items: flex-start; }
+  .banner.warn { border-color: color-mix(in srgb, var(--c-warn) 45%, var(--c-border)); background: color-mix(in srgb, var(--c-warn) 7%, var(--c-surface)); }
+  .banner.err { border-color: color-mix(in srgb, var(--c-danger) 45%, var(--c-border)); background: color-mix(in srgb, var(--c-danger) 6%, var(--c-surface)); }
+  .banner b { display: block; margin-bottom: 2px; }
+  .muted { color: var(--c-text-muted); }
+  .dim { color: var(--c-text-dim); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- KPIs + cards ---------- */
+  .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .kpi { background: linear-gradient(to top, color-mix(in srgb, var(--c-primary) 4%, var(--c-surface)), var(--c-surface)); border: 1px solid var(--c-border); border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow-xs); }
+  .kpi-l { font-size: 12.5px; font-weight: 500; color: var(--c-text-muted); }
+  .kpi-v { font-size: 28px; font-weight: 600; letter-spacing: -0.035em; line-height: 1.2; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .kpi-v.warn { color: var(--c-warn); }
+  .kpi-v.bad { color: var(--c-danger); }
+  .kpi-s { font-size: 12px; color: var(--c-text-muted); margin-top: 2px; }
+  .card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 14px; box-shadow: var(--shadow-xs); margin-bottom: 14px; }
+  .card-h { padding: 14px 16px 6px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .card-t { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .card-s { font-size: 12.5px; color: var(--c-text-muted); margin-top: 2px; }
+  .card-b { padding: 6px 16px 16px; }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; }
+
+  /* ---------- gráfico ---------- */
+  .chart { position: relative; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart .axis text { fill: var(--c-text-muted); font-size: 11px; }
+  .chart .grid line { stroke: var(--c-border); stroke-width: 1; }
+  .chart .bar { fill: var(--c-primary); }
+  .chart .bar.dim { fill: color-mix(in srgb, var(--c-primary) 35%, var(--c-surface)); }
+  .chart .ref { stroke: var(--c-text); stroke-width: 2; stroke-dasharray: 5 4; fill: none; }
+  .chart .hit { fill: transparent; cursor: default; }
+  .chart .hit:hover + .bar, .chart .hover { fill: var(--c-primary-dark); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--c-text-muted); margin-bottom: 6px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
+  .legend i.line { height: 0; border-top: 2px dashed var(--c-text); border-radius: 0; vertical-align: 3px; }
+  .tip { position: absolute; pointer-events: none; background: var(--c-surface); border: 1px solid var(--c-border-strong); border-radius: 8px; box-shadow: var(--shadow-md); padding: 7px 9px; font-size: 12px; white-space: nowrap; z-index: 5; transform: translate(-50%, calc(-100% - 8px)); }
+  .tip b { display: block; margin-bottom: 2px; }
+
+  /* ---------- tabelas ---------- */
+  .tbl-wrap { overflow-x: auto; }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th { text-align: left; font-weight: 500; color: var(--c-text-muted); font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--c-border); white-space: nowrap; position: sticky; top: 0; background: var(--c-surface); }
+  .tbl td { padding: 8px 10px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+  .tbl tr.click { cursor: pointer; }
+  .tbl tr.click:hover td { background: var(--c-bg-tint); }
+  .tbl td.r, .tbl th.r { text-align: right; font-variant-numeric: tabular-nums; }
+  .tbl td.c, .tbl th.c { text-align: center; }
+  .tbl tfoot td { font-weight: 600; border-bottom: 0; }
+  .tbl .sub { display: block; font-size: 12px; color: var(--c-text-muted); }
+  .heat { display: inline-block; min-width: 24px; padding: 2px 0; border-radius: 5px; text-align: center; font-variant-numeric: tabular-nums; font-size: 12px; }
+  .tbl th.m, .tbl td.m { padding: 6px 2px; text-align: center; width: 30px; }
+  .bad-c { color: var(--c-danger); font-weight: 600; }
+  .ok-c { color: var(--c-success); font-weight: 600; }
+
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 999px; white-space: nowrap; background: var(--c-bg-tint); color: var(--c-text-muted); }
+  .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .badge.ok { color: var(--c-success); background: color-mix(in srgb, var(--c-success) 11%, transparent); }
+  .badge.partial { color: var(--c-warn); background: color-mix(in srgb, var(--c-warn) 13%, transparent); }
+  .badge.empty { color: var(--c-danger); background: color-mix(in srgb, var(--c-danger) 10%, transparent); }
+  .badge.keep { color: #2563EB; background: color-mix(in srgb, #2563EB 11%, transparent); }
+  .badge.relocate { color: #7C3AED; background: color-mix(in srgb, #7C3AED 11%, transparent); }
+  .badge.release { color: var(--c-text-muted); }
+  .badge.excess { color: #B45309; background: color-mix(in srgb, #D97706 13%, transparent); }
+  .badge.far, .badge.noscope { color: var(--c-danger); background: color-mix(in srgb, var(--c-danger) 9%, transparent); }
+
+  .decs { display: inline-flex; border: 1px solid var(--c-border); border-radius: 8px; overflow: hidden; }
+  .decs button { border: 0; border-right: 1px solid var(--c-border); background: var(--c-surface); padding: 4px 8px; font-size: 12px; cursor: pointer; color: var(--c-text-muted); white-space: nowrap; }
+  .decs button:last-child { border-right: 0; }
+  .decs button:hover { background: var(--c-bg-tint); }
+  .decs button.on[data-v="keep"] { background: #2563EB; color: #fff; }
+  .decs button.on[data-v="relocate"] { background: #7C3AED; color: #fff; }
+  .decs button.on[data-v="release"] { background: #475569; color: #fff; }
+  .decs button.on[data-v="undecided"] { background: var(--c-bg-tint); color: var(--c-text); font-weight: 600; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin-bottom: 12px; }
+  .search { flex: 1 1 260px; min-width: 200px; max-width: 420px; border: 1px solid var(--c-border); background: var(--c-surface); border-radius: 8px; padding: 7px 10px; }
+  .search:focus, select.sel:focus, textarea:focus, input:focus { outline: 2px solid var(--ring); outline-offset: 0; }
+  .spacer { flex: 1; }
+  .count { font-size: 12.5px; color: var(--c-text-muted); margin: 0 0 8px; }
+
+  /* ---------- mapa ---------- */
+  .map-wrap { position: relative; height: calc(100vh - 190px); min-height: 460px; border: 1px solid var(--c-border); border-radius: 14px; overflow: hidden; background: var(--c-surface); }
+  #map { position: absolute; inset: 0; }
+  #map.placing { cursor: crosshair; }
+  .map-ctrl { position: absolute; top: 10px; left: 54px; right: 10px; z-index: 500; display: flex; gap: 8px; flex-wrap: wrap; pointer-events: none; }
+  .map-ctrl > * { pointer-events: auto; }
+  .mbox { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 10px; box-shadow: var(--shadow-md); padding: 6px 10px; font-size: 12.5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .mbox label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; white-space: nowrap; }
+  .mbox input[type="range"] { width: 110px; }
+  .map-legend { position: absolute; bottom: 22px; left: 10px; z-index: 500; }
+  .map-legend .mbox { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .lg { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .lg i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; border: 2px solid transparent; }
+  .map-side { position: absolute; top: 56px; right: 10px; z-index: 500; width: 260px; max-height: calc(100% - 80px); overflow: auto; }
+  .map-side .mbox { flex-direction: column; align-items: stretch; }
+  .place-row { display: flex; justify-content: space-between; gap: 6px; align-items: center; font-size: 12px; padding: 3px 0; border-top: 1px solid var(--c-border); }
+  .place-hint { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); z-index: 600; }
+  .leaflet-tooltip.p27tip { font-size: 12px; }
+
+  /* ---------- gaveta ---------- */
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(460px, 100vw); background: var(--c-surface); border-left: 1px solid var(--c-border); box-shadow: var(--shadow-lg); z-index: 2000; display: flex; flex-direction: column; }
+  .dr-h { padding: 16px 18px 10px; border-bottom: 1px solid var(--c-border); display: flex; gap: 10px; align-items: flex-start; }
+  .dr-h h2 { font-size: 17px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.25; }
+  .dr-h .x { margin-left: auto; }
+  .dr-b { padding: 12px 18px 24px; overflow: auto; flex: 1; }
+  .dr-sec { margin-top: 16px; }
+  .dr-sec h3 { font-size: 12px; font-weight: 600; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .kv { display: grid; grid-template-columns: 110px 1fr; gap: 4px 10px; font-size: 13px; }
+  .kv dt { color: var(--c-text-muted); }
+  .mstrip { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+  .mstrip div { text-align: center; font-size: 11px; }
+  .mstrip .v { border-radius: 5px; padding: 4px 0; font-weight: 600; font-variant-numeric: tabular-nums; font-size: 12.5px; }
+  .li { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--c-border); font-size: 13px; }
+  .li:first-child { border-top: 0; }
+  .li .nm { min-width: 0; }
+  .li .nm b { font-weight: 500; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+  .li .nm b:hover { text-decoration: underline; }
+  textarea.note { width: 100%; min-height: 70px; border: 1px solid var(--c-border); border-radius: 8px; padding: 8px; background: var(--c-surface); resize: vertical; }
+  .backdrop { position: fixed; inset: 0; background: rgba(15,23,42,.25); z-index: 1999; }
+
+  /* ---------- importar ---------- */
+  .drop { border: 2px dashed var(--c-border-strong); border-radius: 12px; padding: 26px; text-align: center; cursor: pointer; color: var(--c-text-muted); background: var(--c-bg); }
+  .drop.over { border-color: var(--c-primary); background: color-mix(in srgb, var(--c-primary) 6%, var(--c-bg)); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--c-text-muted); }
+  .field input[type="text"] { border: 1px solid var(--c-border); background: var(--c-surface); border-radius: 8px; padding: 6px 9px; min-width: 220px; color: var(--c-text); }
+  .progress { height: 6px; background: var(--c-bg-tint); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+  .progress > div { height: 100%; background: var(--c-primary); width: 0; transition: width .3s; }
+  ul.plain { list-style: none; font-size: 13px; }
+  ul.plain li { padding: 4px 0; }
+
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--c-text); color: var(--c-surface); padding: 9px 14px; border-radius: 10px; font-size: 13px; opacity: 0; pointer-events: none; transition: .2s; z-index: 3000; max-width: 90vw; }
+  .toast.on { opacity: 1; transform: translateX(-50%); }
+  .toast.err { background: var(--c-danger); color: #fff; }
+
+  @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .grid2 { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) {
+    .top-in, .tabs, .countries { padding-left: 16px; padding-right: 16px; }
+    main { padding: 14px 16px 40px; }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .top-side { margin-left: 0; width: 100%; }
+    .map-side { display: none; }
+    .map-ctrl { left: 10px; top: 56px; }
+    .map-wrap { height: calc(100vh - 240px); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="top-in">
+      <a class="brand" href="/2027/"><img src="/aceolution-globe.png" alt=""><span><b>Street View 2027</b><small data-i18n="brandSub"></small></span></a>
+      <div class="seg" id="regions" role="group"></div>
+      <div class="top-side">
+        <span class="status" id="status"></span>
+        <button class="btn" id="btn-refresh" type="button" data-i18n="refresh"></button>
+        <a class="btn" id="lnk-sheet" target="_blank" rel="noopener" hidden data-i18n="sheet"></a>
+        <select class="sel" id="lang" aria-label="Idioma"><option value="pt">PT</option><option value="es">ES</option><option value="en">EN</option></select>
+        <button class="icon-btn" id="btn-theme" type="button"></button>
+        <a class="btn" href="/dashboard.html" data-i18n="portal"></a>
+        <button class="btn" id="btn-logout" type="button" data-i18n="logout"></button>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="countries" id="countries"></div>
+  </header>
+
+  <main>
+    <div id="banners"></div>
+    <section class="view" id="v-overview"></section>
+    <section class="view" id="v-map">
+      <div class="map-wrap">
+        <div id="map"></div>
+        <div class="map-ctrl" id="map-ctrl"></div>
+        <div class="map-side" id="map-side"></div>
+        <div class="map-legend" id="map-legend"></div>
+        <div class="place-hint" id="place-hint" hidden></div>
+      </div>
+    </section>
+    <section class="view" id="v-drivers"></section>
+    <section class="view" id="v-locations"></section>
+    <section class="view" id="v-cars"></section>
+    <section class="view" id="v-import"></section>
+  </main>
+</div>
+
+<div class="backdrop" id="backdrop" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-live="polite"></aside>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  backendVersion: 'v5.94',
+  cacheStore: 'p27.cache.v1',
+  prefsStore: 'p27.prefs.v1',
+  timeoutMs: 60000,
+  libs: {
+    xlsx: 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+    jszip: 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+    togeojson: 'https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.js',
+  },
+};
+const REGIONS = ['NA', 'LATAM', 'APAC', 'EMEA'];
+const TABS = ['overview', 'map', 'drivers', 'locations', 'cars', 'import'];
+const DECISIONS = ['keep', 'relocate', 'release', 'undecided'];
+const DEC_COLOR = { keep: '#2563EB', relocate: '#7C3AED', release: '#64748B' };
+const SUGG_COLOR = { keep: '#2563EB', excess: '#D97706', far: '#DC2626', noscope: '#DC2626', nogeo: '#94A3B8', inactive: '#94A3B8', near: '#64748B' };
+const STATUS_COLOR = { ok: 'var(--c-success)', partial: 'var(--c-warn)', empty: 'var(--c-danger)', off: 'var(--c-text-dim)' };
+// Leaflet não lê var(): cores resolvidas na hora de desenhar
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#888';
+
+const I18N = {
+  pt: {
+    brandSub: 'Planejamento', loginSub: 'Planejamento do Street View 2027',
+    tOverview: 'Visão geral', tMap: 'Mapa', tDrivers: 'Motoristas', tLocations: 'Locais e vagas', tCars: 'Carros', tImport: 'Importar',
+    all: 'Todas', allCountries: 'Todos os países',
+    refresh: 'Atualizar', sheet: 'Planilha', portal: 'Portal LATAM', logout: 'Sair', theme: 'Trocar tema',
+    loading: 'Carregando…', refreshing: 'Atualizando…', updated: 'Atualizado {t}', stale: 'Cópia de {t} — não deu pra atualizar',
+    needDeploy: 'O backend ainda não tem o Plano 2027 — falta implantar a v5.94 do Apps Script (Implantar → Gerenciar implantações → Editar → Nova versão).',
+    network: 'Sem resposta do servidor. Tente de novo.', error: 'Erro',
+    emptyTitle: 'Nenhum escopo importado ainda',
+    emptyText: 'Baixe a planilha de escopo da Google como .xlsx (Arquivo → Fazer download → Microsoft Excel) e suba na aba Importar. Os motoristas atuais já vêm da HR Global.',
+    goImport: 'Ir pra Importar',
+    kLocs: 'Locais 2027', kLocsSub: '{km} km de escopo · {c} país(es)',
+    kPeak: 'Pico de motoristas', kPeakSub: 'em {m} · {dm} motoristas-mês no ano',
+    kSlots: 'Vagas da Google', kSlotsSub: '{h} contratadas · {o} abertas · {oh} em espera',
+    kOurs: 'Nossos motoristas', kOursSub: '{s} ficam ({k} decididos) · {r} saem · {u} a decidir',
+    kGap: 'Faltam no pico', kGapSub: '{e} locais sem ninguém perto',
+    chartTitle: 'Motoristas por mês', chartSub: 'Demanda do escopo × nossos que ficam (decididos + sugeridos, dentro do raio)',
+    sDemand: 'Demanda', sOurs: 'Nossos que ficam', lblGap: 'faltam {n}', lblSurplus: 'sobram {n}', lblEven: 'empata',
+    byCountry: 'Por país', cCountry: 'País', cLocs: 'Locais', cKm: 'Km escopo', cPeak: 'Pico', cDm: 'Motor.-mês',
+    cSlots: 'Vagas', cSlotsSub: 'contr. · abertas · espera', cOurs: 'Nossos hoje', cNear: 'Perto do escopo', cGap: 'Faltam no pico', cFleet: 'Frota ativa',
+    noDriversRegion: 'Nenhum motorista nosso nesse filtro ainda. Quem mandar o cadastro global (HR Global) aparece aqui.',
+    warnings: 'Avisos do backend', lastImport: 'Última importação: {f} · {t}',
+    noGeoLocs: '{n} local(is) sem coordenada — posicione no Mapa.', noGeoDrivers: '{n} motorista(s) sem coordenada de casa na HR Global (não entram no cálculo de distância).',
+    mMonth: 'Mês', mPeak: 'Pico', mRadius: 'Raio', mDrivers: 'Motoristas', mRings: 'Círculos do raio', mLayers: 'Mapas',
+    stOk: 'Coberto', stPartial: 'Parcial', stEmpty: 'Sem ninguém', stOff: 'Sem demanda no mês',
+    dKeep: 'Fica', dRelocate: 'Realocar', dRelease: 'Sai', dUndecided: 'A decidir',
+    sgKeep: 'Sugestão: fica', sgExcess: 'Excedente no local', sgFar: 'Longe do escopo', sgNoscope: 'Sem escopo no país', sgNogeo: 'Sem coordenada', sgInactive: 'Inativo', sgNear: 'Perto do escopo',
+    lgDecided: 'Decidido', lgUndecided: 'A decidir (contorno = sugestão)',
+    placeTitle: 'Locais sem coordenada', place: 'Posicionar', placing: 'Clique no mapa pra posicionar “{n}”', cancel: 'Cancelar',
+    movePin: 'Mover pino', dragHint: 'Arraste o pino até o lugar certo e solte.', clearPin: 'Limpar posição',
+    saved: 'Salvo', saving: 'Salvando…', saveErr: 'Não salvou: {e}',
+    search: 'Buscar nome, cidade, e-mail…', allDecisions: 'Todas', allSugg: 'Todas as sugestões',
+    sitNotInactive: 'Sem os inativos', sitAll: 'Todas as situações',
+    cDriver: 'Motorista', cSit: 'Situação', cNearest: 'Local 2027 mais perto', cSugg: 'Sugestão', cDecision: 'Decisão',
+    bulkKeep: 'Aceitar “fica” sugerido ({n})', bulkFar: 'Longe do escopo → “sai” ({n})', confirmQ: 'Confirmar? ({n})',
+    showing: 'Mostrando {n} de {t}', empty: 'Ninguém com esses filtros.', km: '{d} km',
+    cLocation: 'Local', cStatus: 'Situação', stAll: 'Todos', emptyLocs: 'Nenhum local com esses filtros.',
+    dNear: 'Motoristas nossos perto (≤ {r} km)', dCandidates: 'Mais perto, fora do raio', dSlots: 'Vagas da Google', dMonths: 'Demanda por mês',
+    noneNear: 'Ninguém nosso a ≤ {r} km.', noSlots: 'Nenhuma vaga ligada a este local.', openGmaps: 'Abrir no Google Maps',
+    since: 'Desde', rate: 'US$/h', email: 'E-mail', city: 'Cidade', country: 'País', scopeKm: 'Km de escopo', peak: 'Pico', covered: 'Cobertos', gap: 'Faltam',
+    target: 'Realocar para', targetNone: '— escolha o local —', note: 'Nota', saveNote: 'Salvar nota',
+    nearestLocs: 'Locais 2027 mais perto', inSlot: 'Já está numa vaga 2027: {s}', openHr: 'Abrir no HR Global', close: 'Fechar',
+    kHired: 'Contratada', kOpen: 'Aberta', kHold: 'Em espera', kOther: 'Outra', mos: '{n} meses', training: 'Treinamento',
+    carsTitle: 'Carros por mês', carsSub: '1 motorista na rua = 1 carro. Frota = VIDs ativos da curadoria do Mapa de Operações (VID Status).',
+    sNeed: 'Carros necessários', sFleet: 'Frota ativa hoje', rowNeed: 'Necessários', rowFleet: 'Frota ativa hoje', rowDiff: 'Sobra (+) / falta (−)',
+    noFleet: 'sem frota cadastrada', carsPeak: 'Pico: {n} carros em {m}', fleetNote: 'Países sem frota na VID Status (ex.: EUA) aparecem com “—”. A linha da frota no gráfico só aparece quando todos os países do filtro têm frota (ex.: escolha LATAM).',
+    impTitle: 'Planilha de escopo e vagas (.xlsx)',
+    impHow: 'Na planilha da Google: Arquivo → Fazer download → Microsoft Excel (.xlsx). Serve a “[ACE 2027] Scope & Recruiting” (NA) e a “[LATAM] GSV New Hires 2027” — o formato é o mesmo.',
+    drop: 'Arraste o .xlsx aqui ou clique pra escolher', parsing: 'Lendo {f}…', region: 'Região',
+    impBtn: 'Importar e substituir {c}', impNote: 'Substitui só os países que estão no arquivo. Coordenadas já achadas e as decisões (fica/sai) continuam.',
+    importing: 'Importando…', geocoding: 'Localizando os locais no mapa… {d} de {t}', impDone: 'Importado: {l} locais e {s} vagas ({c}).',
+    geoDone: 'Todos os locais estão no mapa.', geoLeft: '{n} local(is) não foram achados — posicione na aba Mapa.',
+    geoBtn: 'Localizar locais sem coordenada ({n})', sheetsRead: 'Abas lidas', kindScope: 'escopo', kindSlots: 'vagas', kindIgnored: 'ignorada',
+    noneFound: 'Não achei aba de escopo (cabeçalho “Hiring Location”) nem de vagas (“Hiring Status”).',
+    skippedRows: '{n} linha(s) ignorada(s)', fileWarn: 'Avisos do arquivo',
+    mapsTitle: 'Mapas (KML / KMZ / GeoJSON)', mapsHow: 'No My Maps: ⋮ → Fazer download do KML (ou KMZ) e suba aqui. Vira camada na aba Mapa.',
+    mapLabel: 'Nome do mapa', mapFile: 'Arquivo', mapUpload: 'Subir mapa', mapUploading: 'Subindo…', noMaps: 'Nenhum mapa ainda.',
+    del: 'Remover', delQ: 'Remover mesmo?', features: '{n} formas', mapTooBig: 'Mapa grande demais ({mb} MB) — simplifique ou divida.',
+    recentImports: 'Importações recentes', noImports: 'Nenhuma ainda.', by: 'por {u}',
+  },
+  es: {
+    brandSub: 'Planificación', loginSub: 'Planificación de Street View 2027',
+    tOverview: 'Resumen', tMap: 'Mapa', tDrivers: 'Conductores', tLocations: 'Lugares y vacantes', tCars: 'Autos', tImport: 'Importar',
+    all: 'Todas', allCountries: 'Todos los países',
+    refresh: 'Actualizar', sheet: 'Planilla', portal: 'Portal LATAM', logout: 'Salir', theme: 'Cambiar tema',
+    loading: 'Cargando…', refreshing: 'Actualizando…', updated: 'Actualizado {t}', stale: 'Copia de {t} — no se pudo actualizar',
+    needDeploy: 'El backend todavía no tiene el Plan 2027 — falta implementar la v5.94 del Apps Script (Implementar → Gestionar implementaciones → Editar → Nueva versión).',
+    network: 'Sin respuesta del servidor. Intenta de nuevo.', error: 'Error',
+    emptyTitle: 'Todavía no hay alcance importado',
+    emptyText: 'Descarga la planilla de alcance de Google como .xlsx (Archivo → Descargar → Microsoft Excel) y súbela en la pestaña Importar. Los conductores actuales ya vienen de HR Global.',
+    goImport: 'Ir a Importar',
+    kLocs: 'Lugares 2027', kLocsSub: '{km} km de alcance · {c} país(es)',
+    kPeak: 'Pico de conductores', kPeakSub: 'en {m} · {dm} conductores-mes en el año',
+    kSlots: 'Vacantes de Google', kSlotsSub: '{h} contratadas · {o} abiertas · {oh} en espera',
+    kOurs: 'Nuestros conductores', kOursSub: '{s} se quedan ({k} decididos) · {r} salen · {u} por decidir',
+    kGap: 'Faltan en el pico', kGapSub: '{e} lugares sin nadie cerca',
+    chartTitle: 'Conductores por mes', chartSub: 'Demanda del alcance × nuestros que se quedan (decididos + sugeridos, dentro del radio)',
+    sDemand: 'Demanda', sOurs: 'Nuestros que se quedan', lblGap: 'faltan {n}', lblSurplus: 'sobran {n}', lblEven: 'empata',
+    byCountry: 'Por país', cCountry: 'País', cLocs: 'Lugares', cKm: 'Km alcance', cPeak: 'Pico', cDm: 'Cond.-mes',
+    cSlots: 'Vacantes', cSlotsSub: 'contr. · abiertas · espera', cOurs: 'Nuestros hoy', cNear: 'Cerca del alcance', cGap: 'Faltan en el pico', cFleet: 'Flota activa',
+    noDriversRegion: 'Ningún conductor nuestro en este filtro todavía. Quien envíe el registro global (HR Global) aparece aquí.',
+    warnings: 'Avisos del backend', lastImport: 'Última importación: {f} · {t}',
+    noGeoLocs: '{n} lugar(es) sin coordenada — ubícalos en el Mapa.', noGeoDrivers: '{n} conductor(es) sin coordenada de casa en HR Global (no entran en el cálculo de distancia).',
+    mMonth: 'Mes', mPeak: 'Pico', mRadius: 'Radio', mDrivers: 'Conductores', mRings: 'Círculos del radio', mLayers: 'Mapas',
+    stOk: 'Cubierto', stPartial: 'Parcial', stEmpty: 'Sin nadie', stOff: 'Sin demanda en el mes',
+    dKeep: 'Se queda', dRelocate: 'Reubicar', dRelease: 'Sale', dUndecided: 'Por decidir',
+    sgKeep: 'Sugerencia: se queda', sgExcess: 'Excedente en el lugar', sgFar: 'Lejos del alcance', sgNoscope: 'Sin alcance en el país', sgNogeo: 'Sin coordenada', sgInactive: 'Inactivo', sgNear: 'Cerca del alcance',
+    lgDecided: 'Decidido', lgUndecided: 'Por decidir (borde = sugerencia)',
+    placeTitle: 'Lugares sin coordenada', place: 'Ubicar', placing: 'Haz clic en el mapa para ubicar “{n}”', cancel: 'Cancelar',
+    movePin: 'Mover pin', dragHint: 'Arrastra el pin al lugar correcto y suéltalo.', clearPin: 'Borrar posición',
+    saved: 'Guardado', saving: 'Guardando…', saveErr: 'No se guardó: {e}',
+    search: 'Buscar nombre, ciudad, e-mail…', allDecisions: 'Todas', allSugg: 'Todas las sugerencias',
+    sitNotInactive: 'Sin los inactivos', sitAll: 'Todas las situaciones',
+    cDriver: 'Conductor', cSit: 'Situación', cNearest: 'Lugar 2027 más cercano', cSugg: 'Sugerencia', cDecision: 'Decisión',
+    bulkKeep: 'Aceptar “se queda” sugerido ({n})', bulkFar: 'Lejos del alcance → “sale” ({n})', confirmQ: '¿Confirmar? ({n})',
+    showing: 'Mostrando {n} de {t}', empty: 'Nadie con estos filtros.', km: '{d} km',
+    cLocation: 'Lugar', cStatus: 'Situación', stAll: 'Todos', emptyLocs: 'Ningún lugar con estos filtros.',
+    dNear: 'Nuestros conductores cerca (≤ {r} km)', dCandidates: 'Más cerca, fuera del radio', dSlots: 'Vacantes de Google', dMonths: 'Demanda por mes',
+    noneNear: 'Nadie nuestro a ≤ {r} km.', noSlots: 'Ninguna vacante ligada a este lugar.', openGmaps: 'Abrir en Google Maps',
+    since: 'Desde', rate: 'US$/h', email: 'E-mail', city: 'Ciudad', country: 'País', scopeKm: 'Km de alcance', peak: 'Pico', covered: 'Cubiertos', gap: 'Faltan',
+    target: 'Reubicar en', targetNone: '— elige el lugar —', note: 'Nota', saveNote: 'Guardar nota',
+    nearestLocs: 'Lugares 2027 más cercanos', inSlot: 'Ya está en una vacante 2027: {s}', openHr: 'Abrir en HR Global', close: 'Cerrar',
+    kHired: 'Contratada', kOpen: 'Abierta', kHold: 'En espera', kOther: 'Otra', mos: '{n} meses', training: 'Capacitación',
+    carsTitle: 'Autos por mes', carsSub: '1 conductor en la calle = 1 auto. Flota = VIDs activos de la curaduría del Mapa de Operaciones (VID Status).',
+    sNeed: 'Autos necesarios', sFleet: 'Flota activa hoy', rowNeed: 'Necesarios', rowFleet: 'Flota activa hoy', rowDiff: 'Sobra (+) / falta (−)',
+    noFleet: 'sin flota registrada', carsPeak: 'Pico: {n} autos en {m}', fleetNote: 'Países sin flota en VID Status (ej.: EE. UU.) aparecen con “—”. La línea de flota del gráfico solo aparece cuando todos los países del filtro tienen flota (ej.: elige LATAM).',
+    impTitle: 'Planilla de alcance y vacantes (.xlsx)',
+    impHow: 'En la planilla de Google: Archivo → Descargar → Microsoft Excel (.xlsx). Sirve “[ACE 2027] Scope & Recruiting” (NA) y “[LATAM] GSV New Hires 2027” — el formato es el mismo.',
+    drop: 'Arrastra el .xlsx aquí o haz clic para elegir', parsing: 'Leyendo {f}…', region: 'Región',
+    impBtn: 'Importar y reemplazar {c}', impNote: 'Reemplaza solo los países del archivo. Las coordenadas ya encontradas y las decisiones siguen.',
+    importing: 'Importando…', geocoding: 'Ubicando los lugares en el mapa… {d} de {t}', impDone: 'Importado: {l} lugares y {s} vacantes ({c}).',
+    geoDone: 'Todos los lugares están en el mapa.', geoLeft: '{n} lugar(es) no se encontraron — ubícalos en la pestaña Mapa.',
+    geoBtn: 'Ubicar lugares sin coordenada ({n})', sheetsRead: 'Pestañas leídas', kindScope: 'alcance', kindSlots: 'vacantes', kindIgnored: 'ignorada',
+    noneFound: 'No encontré pestaña de alcance (encabezado “Hiring Location”) ni de vacantes (“Hiring Status”).',
+    skippedRows: '{n} fila(s) ignorada(s)', fileWarn: 'Avisos del archivo',
+    mapsTitle: 'Mapas (KML / KMZ / GeoJSON)', mapsHow: 'En My Maps: ⋮ → Descargar KML (o KMZ) y súbelo aquí. Se vuelve capa en la pestaña Mapa.',
+    mapLabel: 'Nombre del mapa', mapFile: 'Archivo', mapUpload: 'Subir mapa', mapUploading: 'Subiendo…', noMaps: 'Ningún mapa todavía.',
+    del: 'Quitar', delQ: '¿Quitar?', features: '{n} formas', mapTooBig: 'Mapa demasiado grande ({mb} MB) — simplifícalo o divídelo.',
+    recentImports: 'Importaciones recientes', noImports: 'Ninguna todavía.', by: 'por {u}',
+  },
+  en: {
+    brandSub: 'Planning', loginSub: 'Street View 2027 planning',
+    tOverview: 'Overview', tMap: 'Map', tDrivers: 'Drivers', tLocations: 'Locations & slots', tCars: 'Cars', tImport: 'Import',
+    all: 'All', allCountries: 'All countries',
+    refresh: 'Refresh', sheet: 'Sheet', portal: 'LATAM portal', logout: 'Sign out', theme: 'Toggle theme',
+    loading: 'Loading…', refreshing: 'Refreshing…', updated: 'Updated {t}', stale: 'Copy from {t} — could not refresh',
+    needDeploy: 'The backend does not have the 2027 Plan yet — deploy v5.94 of the Apps Script (Deploy → Manage deployments → Edit → New version).',
+    network: 'No response from the server. Try again.', error: 'Error',
+    emptyTitle: 'No scope imported yet',
+    emptyText: 'Download the Google scope sheet as .xlsx (File → Download → Microsoft Excel) and upload it in the Import tab. Current drivers already come from HR Global.',
+    goImport: 'Go to Import',
+    kLocs: '2027 locations', kLocsSub: '{km} scope km · {c} country(ies)',
+    kPeak: 'Peak drivers', kPeakSub: 'in {m} · {dm} driver-months in the year',
+    kSlots: 'Google slots', kSlotsSub: '{h} hired · {o} open · {oh} on hold',
+    kOurs: 'Our drivers', kOursSub: '{s} stay ({k} decided) · {r} leave · {u} undecided',
+    kGap: 'Short at peak', kGapSub: '{e} locations with nobody nearby',
+    chartTitle: 'Drivers per month', chartSub: 'Scope demand × our drivers who stay (decided + suggested, within radius)',
+    sDemand: 'Demand', sOurs: 'Ours who stay', lblGap: '{n} short', lblSurplus: '{n} extra', lblEven: 'even',
+    byCountry: 'By country', cCountry: 'Country', cLocs: 'Locations', cKm: 'Scope km', cPeak: 'Peak', cDm: 'Driver-months',
+    cSlots: 'Slots', cSlotsSub: 'hired · open · on hold', cOurs: 'Ours today', cNear: 'Near scope', cGap: 'Short at peak', cFleet: 'Active fleet',
+    noDriversRegion: 'None of our drivers in this filter yet. Whoever submits the global registration (HR Global) shows up here.',
+    warnings: 'Backend warnings', lastImport: 'Last import: {f} · {t}',
+    noGeoLocs: '{n} location(s) without coordinates — place them on the Map.', noGeoDrivers: '{n} driver(s) without home coordinates in HR Global (left out of distance math).',
+    mMonth: 'Month', mPeak: 'Peak', mRadius: 'Radius', mDrivers: 'Drivers', mRings: 'Radius circles', mLayers: 'Maps',
+    stOk: 'Covered', stPartial: 'Partial', stEmpty: 'Nobody', stOff: 'No demand this month',
+    dKeep: 'Stays', dRelocate: 'Relocate', dRelease: 'Leaves', dUndecided: 'Undecided',
+    sgKeep: 'Suggest: stays', sgExcess: 'Extra at location', sgFar: 'Far from scope', sgNoscope: 'No scope in country', sgNogeo: 'No coordinates', sgInactive: 'Inactive', sgNear: 'Near scope',
+    lgDecided: 'Decided', lgUndecided: 'Undecided (outline = suggestion)',
+    placeTitle: 'Locations without coordinates', place: 'Place', placing: 'Click the map to place “{n}”', cancel: 'Cancel',
+    movePin: 'Move pin', dragHint: 'Drag the pin to the right spot and drop it.', clearPin: 'Clear position',
+    saved: 'Saved', saving: 'Saving…', saveErr: 'Not saved: {e}',
+    search: 'Search name, city, e-mail…', allDecisions: 'All', allSugg: 'All suggestions',
+    sitNotInactive: 'Without inactive', sitAll: 'All situations',
+    cDriver: 'Driver', cSit: 'Situation', cNearest: 'Nearest 2027 location', cSugg: 'Suggestion', cDecision: 'Decision',
+    bulkKeep: 'Accept suggested “stays” ({n})', bulkFar: 'Far from scope → “leaves” ({n})', confirmQ: 'Confirm? ({n})',
+    showing: 'Showing {n} of {t}', empty: 'Nobody matches these filters.', km: '{d} km',
+    cLocation: 'Location', cStatus: 'Status', stAll: 'All', emptyLocs: 'No location matches these filters.',
+    dNear: 'Our drivers nearby (≤ {r} km)', dCandidates: 'Closest outside the radius', dSlots: 'Google slots', dMonths: 'Demand per month',
+    noneNear: 'None of ours within {r} km.', noSlots: 'No slot linked to this location.', openGmaps: 'Open in Google Maps',
+    since: 'Since', rate: 'US$/h', email: 'E-mail', city: 'City', country: 'Country', scopeKm: 'Scope km', peak: 'Peak', covered: 'Covered', gap: 'Short',
+    target: 'Relocate to', targetNone: '— pick a location —', note: 'Note', saveNote: 'Save note',
+    nearestLocs: 'Nearest 2027 locations', inSlot: 'Already in a 2027 slot: {s}', openHr: 'Open in HR Global', close: 'Close',
+    kHired: 'Hired', kOpen: 'Open', kHold: 'On hold', kOther: 'Other', mos: '{n} months', training: 'Training',
+    carsTitle: 'Cars per month', carsSub: '1 driver on the road = 1 car. Fleet = active VIDs from the Ops Map curation (VID Status).',
+    sNeed: 'Cars needed', sFleet: 'Active fleet today', rowNeed: 'Needed', rowFleet: 'Active fleet today', rowDiff: 'Extra (+) / short (−)',
+    noFleet: 'no fleet on file', carsPeak: 'Peak: {n} cars in {m}', fleetNote: 'Countries with no fleet in VID Status (e.g. US) show “—”. The fleet line on the chart only shows when every country in the filter has fleet (e.g. pick LATAM).',
+    impTitle: 'Scope & slots sheet (.xlsx)',
+    impHow: 'In the Google sheet: File → Download → Microsoft Excel (.xlsx). Works for “[ACE 2027] Scope & Recruiting” (NA) and “[LATAM] GSV New Hires 2027” — same format.',
+    drop: 'Drop the .xlsx here or click to choose', parsing: 'Reading {f}…', region: 'Region',
+    impBtn: 'Import and replace {c}', impNote: 'Only replaces the countries in the file. Coordinates already found and decisions are kept.',
+    importing: 'Importing…', geocoding: 'Placing locations on the map… {d} of {t}', impDone: 'Imported: {l} locations and {s} slots ({c}).',
+    geoDone: 'Every location is on the map.', geoLeft: '{n} location(s) not found — place them in the Map tab.',
+    geoBtn: 'Locate locations without coordinates ({n})', sheetsRead: 'Tabs read', kindScope: 'scope', kindSlots: 'slots', kindIgnored: 'ignored',
+    noneFound: 'Found no scope tab (“Hiring Location” header) or slots tab (“Hiring Status”).',
+    skippedRows: '{n} row(s) skipped', fileWarn: 'File warnings',
+    mapsTitle: 'Maps (KML / KMZ / GeoJSON)', mapsHow: 'In My Maps: ⋮ → Download KML (or KMZ) and upload it here. It becomes a layer in the Map tab.',
+    mapLabel: 'Map name', mapFile: 'File', mapUpload: 'Upload map', mapUploading: 'Uploading…', noMaps: 'No maps yet.',
+    del: 'Remove', delQ: 'Remove it?', features: '{n} shapes', mapTooBig: 'Map too big ({mb} MB) — simplify or split it.',
+    recentImports: 'Recent imports', noImports: 'None yet.', by: 'by {u}',
+  },
+};
+
+// ---------- preferências (só este navegador) ----------
+function loadPrefs() {
+  const def = { region: 'ALL', country: '', tab: 'overview', radius: 150, month: -1, showDrivers: true, showRings: false, layers: {},
+                dq: '', dDec: '', dSugg: '', dSit: 'notInactive', lq: '', lSt: '' };
+  try { return Object.assign(def, JSON.parse(localStorage.getItem(CONFIG.prefsStore) || '{}')); } catch (e) { return def; }
+}
+const P = loadPrefs();
+function savePrefs() { try { localStorage.setItem(CONFIG.prefsStore, JSON.stringify(P)); } catch (e) {} }
+
+let currentLang = (() => {
+  let l = '';
+  try { l = localStorage.getItem('p27.lang') || localStorage.getItem('latam.lang') || ''; } catch (e) {}
+  if (!I18N[l]) l = (navigator.language || 'pt').slice(0, 2);
+  return I18N[l] ? l : 'pt';
+})();
+function t(k, v) {
+  let s = (I18N[currentLang] && I18N[currentLang][k]) || I18N.pt[k] || k;
+  if (v) Object.keys(v).forEach(x => { s = s.split('{' + x + '}').join(v[x]); });
+  return s;
+}
+const LOCALE = () => ({ pt: 'pt-BR', es: 'es', en: 'en-US' })[currentLang];
+const fmt = n => new Intl.NumberFormat(LOCALE(), { maximumFractionDigits: 0 }).format(n || 0);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = s => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const isNum = x => typeof x === 'number' && isFinite(x);
+function ccName(cc) {
+  if (!cc) return '—';
+  try { return new Intl.DisplayNames([LOCALE()], { type: 'region' }).of(cc) || cc; } catch (e) { return cc; }
+}
+function monthLabel(i) {
+  return new Intl.DateTimeFormat(LOCALE(), { month: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(2027, i, 1))).replace('.', '');
+}
+function timeLabel(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const today = new Date().toDateString() === d.toDateString();
+  return today ? d.toLocaleTimeString(LOCALE(), { hour: '2-digit', minute: '2-digit' })
+               : d.toLocaleString(LOCALE(), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+function hav(lat1, lng1, lat2, lng2) {
+  const r = x => x * Math.PI / 180, dLat = r(lat2 - lat1), dLng = r(lng2 - lng1);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(lat1)) * Math.cos(r(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+function toast(msg, isErr) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast on' + (isErr ? ' err' : '');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { el.className = 'toast'; }, isErr ? 6000 : 2200);
+}
+function loadScript(src) {
+  loadScript.p = loadScript.p || {};
+  if (!loadScript.p[src]) loadScript.p[src] = new Promise((ok, ko) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = ok; s.onerror = () => { delete loadScript.p[src]; ko(new Error('falhou: ' + src)); };
+    document.head.appendChild(s);
+  });
+  return loadScript.p[src];
+}
+
+async function post(payload) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), CONFIG.timeoutMs);
+  try {
+    const r = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload), signal: ctrl.signal });
+    return await r.json();
+  } finally { clearTimeout(timer); }
+}
+/** POST que entende backend velho (sem v5.94) e erro de rede. */
+async function call(payload) {
+  let res;
+  try { res = await post(payload); } catch (e) { throw new Error(t('network')); }
+  if (!res || (!res.success && !res.version)) throw Object.assign(new Error(t('needDeploy')), { needDeploy: true });
+  if (!res.success) throw new Error(res.error || t('error'));
+  return res;
+}
+
+// ---------- dados ----------
+let DATA = null, M = null, USER = null;
+const STATE = { loading: false, error: '', needDeploy: false, at: '', stale: false };
+
+function loadCache() {
+  try { const c = JSON.parse(localStorage.getItem(CONFIG.cacheStore) || 'null'); if (c && c.data && c.data.scope) return c; } catch (e) {}
+  return null;
+}
+function saveCache() {
+  try { localStorage.setItem(CONFIG.cacheStore, JSON.stringify({ at: STATE.at, data: DATA })); } catch (e) {}
+}
+
+function slotKind(s) {
+  const x = norm(s);
+  if (/hired|active|contrat/.test(x)) return 'hired';
+  if (/hold|espera/.test(x)) return 'hold';
+  if (/open|sourc|progress|abiert|abert/.test(x)) return 'open';
+  return 'other';
+}
+const locNorm = s => norm(s).replace(/\([^)]*\)/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
+function matchLoc(slot, list) {
+  const raw = norm(slot.city).trim(), c = locNorm(slot.city);
+  if (!c) return null;
+  const same = list.filter(l => l.cc === slot.cc);
+  const first = s => locNorm(String(s).split(/[,/]/)[0]);
+  return same.find(l => norm(l.location).trim() === raw)
+    || same.find(l => locNorm(l.location) === c)
+    || same.find(l => locNorm(l.location).startsWith(c + ' ') || c.startsWith(locNorm(l.location) + ' '))
+    || same.find(l => (' ' + locNorm(l.location) + ' ').indexOf(' ' + c + ' ') >= 0)
+    || same.find(l => first(l.location) && first(l.location) === first(slot.city))
+    || null;
+}
+const isInactive = d => /inactiv|inativ/.test(norm(d.sit));
+const decOf = d => (d.decision && d.decision !== 'undecided') ? d.decision : 'undecided';
+const stays = d => d.decision === 'keep' || d.decision === 'relocate' || (decOf(d) === 'undecided' && d.sugg === 'keep');
+
+/** Modelo derivado: casa vaga↔local, motorista↔local mais perto, sugestão fica/excedente/longe e cobertura. */
+function buildModel() {
+  const d = DATA || {};
+  const radius = Number(P.radius) || 150;
+  const scope = (d.scope || []).map(s => {
+    const m = (s.m || []).slice(0, 12); while (m.length < 12) m.push(0);
+    return Object.assign({}, s, { m, peak: Math.max(0, ...m), sum: m.reduce((a, b) => a + b, 0), hasGeo: isNum(s.lat) && isNum(s.lng), slots: [], cand: [] });
+  });
+  const byKey = {}; scope.forEach(l => { byKey[l.key] = l; });
+  const slots = (d.slots || []).map(s => Object.assign({}, s, { kind: slotKind(s.status) }));
+  const slotByEmail = {};
+  slots.forEach(s => { s.loc = matchLoc(s, scope); if (s.loc) s.loc.slots.push(s); if (s.email) slotByEmail[s.email] = s; });
+
+  const decs = d.decisions || {};
+  const drivers = (d.drivers || []).map(x => {
+    const dc = decs[String(x.key).toLowerCase()] || {};
+    const o = Object.assign({}, x, { decision: dc.decision || '', target: dc.target || '', note: dc.note || '', decAt: dc.at || '', decBy: dc.by || '' });
+    o.hasGeo = isNum(o.lat) && isNum(o.lng);
+    o.inactive = isInactive(o);
+    o.slot = (o.email && slotByEmail[o.email]) || null;
+    return o;
+  });
+  const geoByCc = {};
+  scope.forEach(l => { if (l.hasGeo) (geoByCc[l.cc] = geoByCc[l.cc] || []).push(l); });
+  drivers.forEach(dr => {
+    dr.nearest = null;
+    if (!dr.hasGeo) return;
+    (geoByCc[dr.cc] || []).forEach(l => {
+      const dist = hav(dr.lat, dr.lng, l.lat, l.lng);
+      if (!dr.nearest || dist < dr.nearest.dist) dr.nearest = { loc: l, dist };
+    });
+  });
+  // a qual local o motorista "pertence": alvo da realocação > vaga 2027 dele > local mais perto dentro do raio
+  drivers.forEach(dr => {
+    dr.sugg = ''; dr.assigned = null; dr.assignedDist = null;
+    if (dr.inactive) { dr.sugg = 'inactive'; return; }
+    const tgt = dr.target && byKey[dr.target];
+    if (tgt) dr.assigned = tgt;
+    else if (dr.slot && dr.slot.loc) dr.assigned = dr.slot.loc;
+    else if (dr.nearest && dr.nearest.dist <= radius) dr.assigned = dr.nearest.loc;
+    if (dr.assigned) {
+      dr.assignedDist = (dr.hasGeo && dr.assigned.hasGeo) ? hav(dr.lat, dr.lng, dr.assigned.lat, dr.assigned.lng) : null;
+      dr.assigned.cand.push(dr);
+    } else dr.sugg = !dr.hasGeo ? 'nogeo' : (!dr.nearest ? 'noscope' : 'far');
+  });
+  // vagas por local = pico; decididos (fica/realocar) sentam primeiro, depois os mais perto
+  const rank = dr => (dr.decision === 'keep' || dr.decision === 'relocate' || dr.slot) ? 0 : (decOf(dr) === 'undecided' ? 1 : 2);
+  scope.forEach(l => {
+    l.cand.sort((a, b) => (rank(a) - rank(b)) || ((a.assignedDist == null ? 1e9 : a.assignedDist) - (b.assignedDist == null ? 1e9 : b.assignedDist)));
+    let seats = l.peak;
+    l.cand.forEach(dr => {
+      if (dr.decision === 'release') { dr.sugg = 'near'; return; }
+      if (seats > 0) { dr.sugg = 'keep'; seats--; } else dr.sugg = dr.decision === 'keep' || dr.decision === 'relocate' ? 'keep' : 'excess';
+    });
+    l.covered = l.cand.filter(stays).length;
+    l.gap = Math.max(0, l.peak - l.covered);
+    l.status = l.peak === 0 ? 'off' : (l.covered >= l.peak ? 'ok' : (l.covered > 0 ? 'partial' : 'empty'));
+    l.hired = l.slots.filter(s => s.kind === 'hired').length;
+    l.open = l.slots.filter(s => s.kind === 'open').length;
+    l.hold = l.slots.filter(s => s.kind === 'hold').length;
+  });
+  const byDriver = {}; drivers.forEach(x => { byDriver[x.key] = x; });
+  M = { scope, byKey, slots, drivers, byDriver, radius };
+  return M;
+}
+
+// filtros globais (região/país do topo)
+const inFilter = (region, cc) => (P.region === 'ALL' || region === P.region) && (!P.country || cc === P.country);
+const fLocs = () => M.scope.filter(l => inFilter(l.region, l.cc));
+const fDrivers = () => M.drivers.filter(d => inFilter(d.region, d.cc));
+const fSlots = () => M.slots.filter(s => inFilter(s.region, s.cc));
+function monthlyNeed(locs) { const n = new Array(12).fill(0); locs.forEach(l => l.m.forEach((v, i) => { n[i] += v; })); return n; }
+
+// ---------- carga ----------
+async function load() {
+  STATE.loading = true; STATE.error = ''; renderStatus();
+  try {
+    const res = await call({ type: 'getPlan2027' });
+    if (!Array.isArray(res.scope)) throw Object.assign(new Error(t('needDeploy')), { needDeploy: true });
+    DATA = res; STATE.at = res.at || new Date().toISOString(); STATE.stale = false; STATE.needDeploy = false;
+    saveCache();
+  } catch (e) {
+    console.warn('[Plano 2027] load', e);
+    STATE.error = e.message; STATE.needDeploy = !!e.needDeploy; STATE.stale = !!DATA;
+  } finally {
+    STATE.loading = false;
+    renderAll();
+  }
+}
+
+// ---------- render: casca ----------
+function applyI18n() {
+  document.documentElement.lang = ({ pt: 'pt-BR', es: 'es', en: 'en' })[currentLang];
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.getElementById('lang').value = currentLang;
+  const th = document.getElementById('btn-theme');
+  th.innerHTML = typeof themeToggleIcon === 'function' ? themeToggleIcon() : '◐';
+  th.title = t('theme'); th.setAttribute('aria-label', t('theme'));
+}
+function renderStatus() {
+  const el = document.getElementById('status');
+  if (STATE.loading) { el.className = 'status'; el.innerHTML = '<span class="spin"></span>' + esc(DATA ? t('refreshing') : t('loading')); return; }
+  if (STATE.stale && STATE.at) { el.className = 'status is-stale'; el.textContent = t('stale', { t: timeLabel(STATE.at) }); return; }
+  el.className = 'status';
+  el.textContent = STATE.at ? t('updated', { t: timeLabel(STATE.at) }) : '';
+}
+function regionsPresent() {
+  const set = new Set();
+  if (DATA) { (DATA.scope || []).forEach(s => set.add(s.region)); (DATA.drivers || []).forEach(d => set.add(d.region)); }
+  set.add('NA'); set.add('LATAM');
+  return REGIONS.filter(r => set.has(r));
+}
+function renderShell() {
+  applyI18n();
+  const sheet = document.getElementById('lnk-sheet');
+  sheet.hidden = !(DATA && DATA.sheetUrl);
+  if (DATA && DATA.sheetUrl) sheet.href = DATA.sheetUrl;
+  const regs = regionsPresent();
+  if (P.region !== 'ALL' && regs.indexOf(P.region) < 0) P.region = 'ALL';
+  const cnt = r => M ? M.scope.filter(l => r === 'ALL' || l.region === r).length : 0;
+  document.getElementById('regions').innerHTML = ['ALL'].concat(regs).map(r =>
+    `<button type="button" data-act="region" data-v="${r}" class="${P.region === r ? 'on' : ''}">${r === 'ALL' ? esc(t('all')) : r}<span class="n">${cnt(r) || ''}</span></button>`).join('');
+  // países da região escolhida (escopo + motoristas)
+  const ccs = {};
+  if (M) {
+    M.scope.forEach(l => { if (P.region === 'ALL' || l.region === P.region) ccs[l.cc] = (ccs[l.cc] || 0) + 1; });
+    M.drivers.forEach(d => { if (d.cc && !d.inactive && (P.region === 'ALL' || d.region === P.region) && ccs[d.cc] == null) ccs[d.cc] = 0; });
+  }
+  if (P.country && ccs[P.country] == null) P.country = '';
+  const list = Object.keys(ccs).sort((a, b) => ccName(a).localeCompare(ccName(b), LOCALE()));
+  document.getElementById('countries').innerHTML = list.length > 1 || P.country ? [`<button type="button" class="chip ${!P.country ? 'on' : ''}" data-act="country" data-v="">${esc(t('allCountries'))}</button>`]
+    .concat(list.map(cc => `<button type="button" class="chip ${P.country === cc ? 'on' : ''}" data-act="country" data-v="${esc(cc)}">${esc(ccName(cc))}<span class="n">${ccs[cc] || ''}</span></button>`)).join('') : '';
+  const tabCount = { drivers: M ? fDrivers().filter(d => !d.inactive && decOf(d) === 'undecided').length : 0, locations: M ? fLocs().length : 0 };
+  document.getElementById('tabs').innerHTML = TABS.map(k =>
+    `<button type="button" class="tab ${P.tab === k ? 'on' : ''}" data-act="tab" data-v="${k}">${esc(t('t' + k[0].toUpperCase() + k.slice(1)))}${tabCount[k] ? `<span class="n">${tabCount[k]}</span>` : ''}</button>`).join('');
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + P.tab));
+  // avisos
+  const b = [];
+  if (STATE.error) b.push(`<div class="banner ${STATE.needDeploy ? 'warn' : 'err'}"><div><b>${esc(STATE.needDeploy ? 'Apps Script v5.94' : t('error'))}</b>${esc(STATE.error)}</div></div>`);
+  if (DATA && DATA.warnings && DATA.warnings.length) b.push(`<div class="banner warn"><div><b>${esc(t('warnings'))}</b>${DATA.warnings.map(esc).join('<br>')}</div></div>`);
+  document.getElementById('banners').innerHTML = b.join('');
+}
+function renderAll() {
+  if (DATA) buildModel();
+  renderShell();
+  renderStatus();
+  renderView();
+}
+function renderView() {
+  const fn = { overview: renderOverview, map: renderMap, drivers: renderDrivers, locations: renderLocations, cars: renderCars, import: renderImport }[P.tab];
+  if (!M && P.tab !== 'import') {
+    if (P.tab !== 'map') document.getElementById('v-' + P.tab).innerHTML = STATE.loading ? `<div class="card"><div class="card-b" style="padding:24px"><span class="spin"></span> ${esc(t('loading'))}</div></div>` : '';
+    return;
+  }
+  fn();
+}
+
+// ---------- gráfico de barras (1 eixo: motoristas/carros) ----------
+/** bars: 12 valores; ref: número constante (linha tracejada) ou null. */
+function barChart(id, bars, ref, labels) {
+  const W = 640, H = 220, L = 34, R = 10, T = 14, B = 26;
+  const max = Math.max(1, ...bars, ref || 0);
+  const step = max <= 5 ? 1 : max <= 12 ? 2 : max <= 30 ? 5 : max <= 60 ? 10 : max <= 150 ? 25 : max <= 300 ? 50 : 100;
+  const top = Math.ceil(max / step) * step;
+  const y = v => T + (H - T - B) * (1 - v / top);
+  const bw = (W - L - R) / 12;
+  let g = '<g class="grid">';
+  for (let v = 0; v <= top; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/>`;
+  g += '</g><g class="axis">';
+  for (let v = 0; v <= top; v += step) g += `<text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
+  for (let i = 0; i < 12; i++) g += `<text x="${L + bw * i + bw / 2}" y="${H - 8}" text-anchor="middle">${esc(monthLabel(i))}</text>`;
+  g += '</g>';
+  let bs = '';
+  bars.forEach((v, i) => {
+    const x = L + bw * i + bw * 0.2, w = bw * 0.6, h = Math.max(0, y(0) - y(v));
+    const r = Math.min(4, w / 2, h);
+    // topo arredondado 4px, base reta no eixo
+    const path = h <= 0 ? '' : `M${x},${y(0)} V${y(v) + r} Q${x},${y(v)} ${x + r},${y(v)} H${x + w - r} Q${x + w},${y(v)} ${x + w},${y(v) + r} V${y(0)} Z`;
+    bs += `<rect class="hit" data-i="${i}" x="${L + bw * i}" y="${T}" width="${bw}" height="${H - T - B}"/>`;
+    if (path) bs += `<path class="bar" data-bar="${i}" d="${path}"/>`;
+  });
+  const refLine = isNum(ref) && ref > 0 ? `<line class="ref" x1="${L}" x2="${W - R}" y1="${y(ref)}" y2="${y(ref)}"/>` : '';
+  return `<div class="legend"><span><i style="background:var(--c-primary)"></i>${esc(labels.bars)}</span>${refLine ? `<span><i class="line"></i>${esc(labels.ref)} (${fmt(ref)})</span>` : ''}</div>
+    <div class="chart" id="${id}" data-bars="${bars.join(',')}" data-ref="${isNum(ref) ? ref : ''}" data-lb="${esc(labels.bars)}" data-lr="${esc(labels.ref || '')}">
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(labels.bars)}">${g}${bs}${refLine}</svg><div class="tip" hidden></div></div>`;
+}
+function wireChart(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const bars = el.dataset.bars.split(',').map(Number), ref = el.dataset.ref === '' ? null : Number(el.dataset.ref);
+  const tip = el.querySelector('.tip'), svg = el.querySelector('svg');
+  svg.addEventListener('mousemove', e => {
+    const hit = e.target.closest('.hit');
+    el.querySelectorAll('.bar.hover').forEach(b => b.classList.remove('hover'));
+    if (!hit) { tip.hidden = true; return; }
+    const i = Number(hit.dataset.i), v = bars[i];
+    const bar = el.querySelector(`[data-bar="${i}"]`); if (bar) bar.classList.add('hover');
+    let extra = '';
+    if (ref != null) { const d = ref - v; extra = `<br>${esc(el.dataset.lr)}: ${fmt(ref)} · ${esc(d < 0 ? t('lblGap', { n: fmt(-d) }) : d > 0 ? t('lblSurplus', { n: fmt(d) }) : t('lblEven'))}`; }
+    tip.innerHTML = `<b>${esc(monthLabel(i))} 2027</b>${esc(el.dataset.lb)}: ${fmt(v)}${extra}`;
+    const box = el.getBoundingClientRect(), hb = hit.getBoundingClientRect();
+    tip.style.left = (hb.left - box.left + hb.width / 2) + 'px';
+    tip.style.top = (hb.top - box.top + 20) + 'px';
+    tip.hidden = false;
+  });
+  svg.addEventListener('mouseleave', () => { tip.hidden = true; el.querySelectorAll('.bar.hover').forEach(b => b.classList.remove('hover')); });
+}
+
+// ---------- visão geral ----------
+function renderOverview() {
+  const el = document.getElementById('v-overview');
+  const locs = fLocs(), drs = fDrivers().filter(d => !d.inactive), slots = fSlots();
+  if (!M.scope.length) {
+    el.innerHTML = `<div class="card"><div class="card-b" style="padding:22px 20px">
+      <div class="card-t">${esc(t('emptyTitle'))}</div><p class="muted" style="margin:6px 0 14px;max-width:720px">${esc(t('emptyText'))}</p>
+      <button class="btn primary" type="button" data-act="tab" data-v="import">${esc(t('goImport'))}</button></div></div>` + overviewDriversOnly(drs);
+    return;
+  }
+  const need = monthlyNeed(locs);
+  const peak = Math.max(0, ...need), peakM = need.indexOf(peak);
+  const ccs = [...new Set(locs.map(l => l.cc))];
+  const km = locs.reduce((a, l) => a + (l.km || 0), 0), dm = need.reduce((a, b) => a + b, 0);
+  const h = slots.filter(s => s.kind === 'hired').length, o = slots.filter(s => s.kind === 'open').length, oh = slots.filter(s => s.kind === 'hold').length;
+  const sCount = drs.filter(stays).length, rCount = drs.filter(d => d.decision === 'release').length, uCount = drs.filter(d => decOf(d) === 'undecided').length;
+  const gapSum = locs.reduce((a, l) => a + l.gap, 0), emptyN = locs.filter(l => l.status === 'empty').length;
+  const oursStay = drs.filter(d => stays(d) && d.assigned && inFilter(d.assigned.region, d.assigned.cc)).length;
+  const noGeoL = locs.filter(l => !l.hasGeo).length, noGeoD = drs.filter(d => !d.hasGeo).length;
+  const lastImp = (DATA.imports || [])[0];
+  el.innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-l">${esc(t('kLocs'))}</div><div class="kpi-v">${fmt(locs.length)}</div><div class="kpi-s">${esc(t('kLocsSub', { km: fmt(km), c: ccs.length }))}</div></div>
+      <div class="kpi"><div class="kpi-l">${esc(t('kPeak'))}</div><div class="kpi-v">${fmt(peak)}</div><div class="kpi-s">${esc(t('kPeakSub', { m: peak ? monthLabel(peakM) : '—', dm: fmt(dm) }))}</div></div>
+      <div class="kpi"><div class="kpi-l">${esc(t('kSlots'))}</div><div class="kpi-v">${fmt(slots.length)}</div><div class="kpi-s">${esc(t('kSlotsSub', { h, o, oh }))}</div></div>
+      <div class="kpi"><div class="kpi-l">${esc(t('kOurs'))}</div><div class="kpi-v">${fmt(drs.length)}</div><div class="kpi-s">${esc(t('kOursSub', { s: sCount, k: drs.filter(d => d.decision === 'keep' || d.decision === 'relocate').length, r: rCount, u: uCount }))}</div></div>
+      <div class="kpi"><div class="kpi-l">${esc(t('kGap'))}</div><div class="kpi-v ${gapSum ? 'warn' : ''}">${fmt(gapSum)}</div><div class="kpi-s">${esc(t('kGapSub', { e: emptyN }))}</div></div>
+    </div>
+    ${noGeoL ? `<div class="banner warn"><div>${esc(t('noGeoLocs', { n: noGeoL }))} <button class="btn sm" type="button" data-act="tab" data-v="map">${esc(t('tMap'))}</button></div></div>` : ''}
+    <div class="grid2">
+      <div class="card"><div class="card-h"><div><div class="card-t">${esc(t('chartTitle'))}</div><div class="card-s">${esc(t('chartSub'))}</div></div></div>
+        <div class="card-b">${barChart('ch-demand', need, drs.length ? oursStay : null, { bars: t('sDemand'), ref: t('sOurs') })}</div></div>
+      <div class="card"><div class="card-h"><div class="card-t">${esc(t('dKeep'))} · ${esc(t('dRelocate'))} · ${esc(t('dRelease'))}</div></div>
+        <div class="card-b">${decisionSummary(drs)}
+          ${noGeoD ? `<p class="muted" style="margin-top:10px;font-size:12.5px">${esc(t('noGeoDrivers', { n: noGeoD }))}</p>` : ''}
+          ${!drs.length ? `<p class="muted" style="margin-top:10px">${esc(t('noDriversRegion'))}</p>` : ''}
+          ${lastImp ? `<p class="dim" style="margin-top:12px;font-size:12px">${esc(t('lastImport', { f: lastImp.file || lastImp.region, t: timeLabel(lastImp.at) }))}</p>` : ''}
+        </div></div>
+    </div>
+    <div class="card"><div class="card-h"><div class="card-t">${esc(t('byCountry'))}</div></div><div class="card-b tbl-wrap">${countryTable(locs, drs, slots)}</div></div>`;
+  wireChart('ch-demand');
+}
+function overviewDriversOnly(drs) {
+  if (!drs.length) return '';
+  return `<div class="card"><div class="card-h"><div class="card-t">${esc(t('kOurs'))}: ${fmt(drs.length)}</div></div><div class="card-b">${decisionSummary(drs)}</div></div>`;
+}
+function decisionSummary(drs) {
+  const n = k => drs.filter(d => decOf(d) === k).length;
+  const sg = k => drs.filter(d => decOf(d) === 'undecided' && d.sugg === k).length;
+  return `<table class="tbl"><tbody>
+    ${['keep', 'relocate', 'release'].map(k => `<tr class="click" data-act="gotoDrivers" data-dec="${k}"><td><span class="badge ${k}"><span class="dot"></span>${esc(t('d' + k[0].toUpperCase() + k.slice(1)))}</span></td><td class="r">${fmt(n(k))}</td></tr>`).join('')}
+    <tr class="click" data-act="gotoDrivers" data-dec="undecided"><td><span class="badge"><span class="dot"></span>${esc(t('dUndecided'))}</span>
+      <span class="sub">${['keep', 'excess', 'far', 'noscope', 'nogeo'].filter(k => sg(k)).map(k => esc(t('sg' + k[0].toUpperCase() + k.slice(1))) + ': ' + sg(k)).join(' · ')}</span></td><td class="r">${fmt(n('undecided'))}</td></tr>
+  </tbody></table>`;
+}
+function countryTable(locs, drs, slots) {
+  const ccs = [...new Set(locs.map(l => l.cc).concat(drs.map(d => d.cc)).filter(Boolean))].sort((a, b) => ccName(a).localeCompare(ccName(b), LOCALE()));
+  const fleet = DATA.fleet || {};
+  const tot = { locs: 0, km: 0, peak: 0, dm: 0, h: 0, o: 0, oh: 0, ours: 0, near: 0, gap: 0, fleet: 0 };
+  const rows = ccs.map(cc => {
+    const L = locs.filter(l => l.cc === cc), D = drs.filter(d => d.cc === cc), S = slots.filter(s => s.cc === cc);
+    const need = monthlyNeed(L), peak = Math.max(0, ...need);
+    const r = { locs: L.length, km: L.reduce((a, l) => a + l.km, 0), peak, dm: need.reduce((a, b) => a + b, 0),
+      h: S.filter(s => s.kind === 'hired').length, o: S.filter(s => s.kind === 'open').length, oh: S.filter(s => s.kind === 'hold').length,
+      ours: D.length, near: D.filter(d => d.assigned).length, gap: L.reduce((a, l) => a + l.gap, 0), fleet: fleet[cc] ? fleet[cc].active : null };
+    Object.keys(tot).forEach(k => { tot[k] += r[k] || 0; });
+    return `<tr class="click" data-act="country" data-v="${esc(cc)}"><td><b>${esc(ccName(cc))}</b> <span class="dim">${esc(cc)}</span></td>
+      <td class="r">${fmt(r.locs)}</td><td class="r">${fmt(r.km)}</td><td class="r">${fmt(r.peak)}</td><td class="r">${fmt(r.dm)}</td>
+      <td class="r">${r.h} · ${r.o} · ${r.oh}</td><td class="r">${fmt(r.ours)}</td><td class="r">${fmt(r.near)}</td>
+      <td class="r ${r.gap ? 'bad-c' : ''}">${fmt(r.gap)}</td><td class="r">${r.fleet == null ? '<span class="dim">—</span>' : fmt(r.fleet)}</td></tr>`;
+  }).join('');
+  return `<table class="tbl"><thead><tr><th>${esc(t('cCountry'))}</th><th class="r">${esc(t('cLocs'))}</th><th class="r">${esc(t('cKm'))}</th><th class="r">${esc(t('cPeak'))}</th><th class="r">${esc(t('cDm'))}</th>
+    <th class="r">${esc(t('cSlots'))}<span class="sub">${esc(t('cSlotsSub'))}</span></th><th class="r">${esc(t('cOurs'))}</th><th class="r">${esc(t('cNear'))}</th><th class="r">${esc(t('cGap'))}</th><th class="r">${esc(t('cFleet'))}</th></tr></thead>
+    <tbody>${rows}</tbody>${ccs.length > 1 ? `<tfoot><tr><td>Total</td><td class="r">${fmt(tot.locs)}</td><td class="r">${fmt(tot.km)}</td><td class="r">${fmt(Math.max(0, ...monthlyNeed(locs)))}</td><td class="r">${fmt(tot.dm)}</td>
+    <td class="r">${tot.h} · ${tot.o} · ${tot.oh}</td><td class="r">${fmt(tot.ours)}</td><td class="r">${fmt(tot.near)}</td><td class="r">${fmt(tot.gap)}</td><td class="r">${fmt(tot.fleet)}</td></tr></tfoot>` : ''}</table>`;
+}
+
+// ---------- mapa ----------
+const MAP = { map: null, layer: null, rings: null, kml: {}, kmlData: {}, placing: '', dragMarker: null, fitted: '' };
+function locColor(l, val) { return css({ ok: '--c-success', partial: '--c-warn', empty: '--c-danger', off: '--c-text-dim' }[val === 0 ? 'off' : l.status]); }
+function renderMap() {
+  if (!window.L) return;
+  if (!MAP.map) {
+    MAP.map = L.map('map', { zoomControl: true, worldCopyJump: true }).setView([20, -80], 3);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(MAP.map);
+    MAP.layer = L.layerGroup().addTo(MAP.map);
+    MAP.rings = L.layerGroup().addTo(MAP.map);
+    MAP.map.on('click', onMapClick);
+  }
+  setTimeout(() => MAP.map.invalidateSize(), 0);
+  const locs = fLocs(), drs = fDrivers().filter(d => !d.inactive && d.hasGeo);
+  const month = Number(P.month);
+  // controles
+  document.getElementById('map-ctrl').innerHTML = `
+    <div class="mbox"><label>${esc(t('mMonth'))} <select class="sel" data-act="mapMonth">
+      <option value="-1" ${month < 0 ? 'selected' : ''}>${esc(t('mPeak'))}</option>${[...Array(12)].map((_, i) => `<option value="${i}" ${month === i ? 'selected' : ''}>${esc(monthLabel(i))}</option>`).join('')}</select></label></div>
+    <div class="mbox"><label>${esc(t('mRadius'))} <input type="range" min="25" max="500" step="25" value="${M.radius}" data-act="radius"> <b class="num" id="radius-v">${fmt(M.radius)} km</b></label></div>
+    <div class="mbox"><label><input type="checkbox" data-act="showDrivers" ${P.showDrivers ? 'checked' : ''}> ${esc(t('mDrivers'))}</label>
+      <label><input type="checkbox" data-act="showRings" ${P.showRings ? 'checked' : ''}> ${esc(t('mRings'))}</label></div>
+    ${(DATA.maps || []).filter(m => P.region === 'ALL' || m.region === P.region).length ? `<div class="mbox">${esc(t('mLayers'))}: ${(DATA.maps || []).filter(m => P.region === 'ALL' || m.region === P.region)
+      .map(m => `<label><input type="checkbox" data-act="layer" data-v="${esc(m.fileId)}" ${P.layers[m.fileId] ? 'checked' : ''}> ${esc(m.label)}</label>`).join('')}</div>` : ''}`;
+  document.getElementById('map-legend').innerHTML = `<div class="mbox">
+    ${['ok', 'partial', 'empty', 'off'].map(s => `<span class="lg"><i style="background:${STATUS_COLOR[s]}"></i>${esc(t('st' + s[0].toUpperCase() + s.slice(1)))}</span>`).join('')}
+    ${P.showDrivers ? `<span class="lg dim" style="margin-top:4px">${esc(t('lgDecided'))}:</span>
+      ${['keep', 'relocate', 'release'].map(k => `<span class="lg"><i style="background:${DEC_COLOR[k]};width:9px;height:9px"></i>${esc(t('d' + k[0].toUpperCase() + k.slice(1)))}</span>`).join('')}
+      <span class="lg dim" style="margin-top:4px">${esc(t('lgUndecided'))}:</span>
+      ${['keep', 'excess', 'far'].map(k => `<span class="lg"><i style="background:var(--c-surface);border-color:${SUGG_COLOR[k]};width:9px;height:9px"></i>${esc(t('sg' + k[0].toUpperCase() + k.slice(1)))}</span>`).join('')}` : ''}
+  </div>`;
+  const noGeo = locs.filter(l => !l.hasGeo);
+  document.getElementById('map-side').innerHTML = noGeo.length ? `<div class="mbox"><b>${esc(t('placeTitle'))} (${noGeo.length})</b>
+    ${noGeo.slice(0, 60).map(l => `<div class="place-row"><span>${esc(l.location)} <span class="dim">${esc(l.cc)}</span></span><button class="btn sm" type="button" data-act="place" data-v="${esc(l.key)}">${esc(t('place'))}</button></div>`).join('')}</div>` : '';
+  // camadas
+  MAP.layer.clearLayers(); MAP.rings.clearLayers();
+  const pts = [];
+  locs.filter(l => l.hasGeo).forEach(l => {
+    const val = month < 0 ? l.peak : l.m[month];
+    const col = locColor(l, val);
+    if (P.showRings) L.circle([l.lat, l.lng], { radius: M.radius * 1000, color: col, weight: 1, dashArray: '4 4', fill: false, interactive: false }).addTo(MAP.rings);
+    const mk = L.circleMarker([l.lat, l.lng], { radius: 6 + 3 * Math.sqrt(val || 0), color: css('--c-surface'), weight: 2, fillColor: col, fillOpacity: val ? 0.85 : 0.35 })
+      .bindTooltip(`<b>${esc(l.location)}</b><br>${esc(t('peak'))}: ${l.peak}${month >= 0 ? ` · ${esc(monthLabel(month))}: ${val}` : ''} · ${esc(t('covered'))}: ${l.covered}${l.gap ? ` · ${esc(t('gap'))}: ${l.gap}` : ''}`, { className: 'p27tip', direction: 'top', offset: [0, -6] })
+      .on('click', () => openLoc(l.key));
+    mk.addTo(MAP.layer);
+    pts.push([l.lat, l.lng]);
+  });
+  if (P.showDrivers) drs.forEach(d => {
+    const dec = decOf(d);
+    const decided = dec !== 'undecided';
+    L.circleMarker([d.lat, d.lng], { radius: 4.5, weight: 2, color: decided ? css('--c-surface') : (SUGG_COLOR[d.sugg] || '#94A3B8'), fillColor: decided ? DEC_COLOR[dec] : css('--c-surface'), fillOpacity: 1 })
+      .bindTooltip(`<b>${esc(d.name)}</b><br>${esc(d.city || '')}${d.nearest ? ' · ' + esc(d.nearest.loc.location) + ' ' + t('km', { d: fmt(d.nearest.dist) }) : ''}<br>${esc(decided ? t('d' + dec[0].toUpperCase() + dec.slice(1)) : t('sg' + (d.sugg || 'far')[0].toUpperCase() + (d.sugg || 'far').slice(1)))}`, { className: 'p27tip', direction: 'top' })
+      .on('click', () => openDriver(d.key)).addTo(MAP.layer);
+    pts.push([d.lat, d.lng]);
+  });
+  // KML
+  Object.keys(MAP.kml).forEach(id => { if (!P.layers[id]) { MAP.map.removeLayer(MAP.kml[id]); delete MAP.kml[id]; } });
+  Object.keys(P.layers).forEach(id => { if (P.layers[id] && !MAP.kml[id] && (DATA.maps || []).some(m => m.fileId === id)) showKml(id); });
+  // enquadra quando o filtro muda
+  const fk = P.region + '|' + P.country + '|' + locs.length;
+  if (pts.length && MAP.fitted !== fk) { MAP.fitted = fk; MAP.map.fitBounds(L.latLngBounds(pts).pad(0.08), { maxZoom: 9 }); }
+  const hint = document.getElementById('place-hint');
+  hint.hidden = !MAP.placing;
+  if (MAP.placing) {
+    const l = M.byKey[MAP.placing];
+    hint.innerHTML = `<div class="mbox">${esc(t('placing', { n: l ? l.location : '' }))} <button class="btn sm" type="button" data-act="placeCancel">${esc(t('cancel'))}</button></div>`;
+  }
+  document.getElementById('map').classList.toggle('placing', !!MAP.placing);
+}
+async function showKml(id) {
+  try {
+    if (!MAP.kmlData[id]) { const r = await call({ type: 'getPlan2027Map', fileId: id }); MAP.kmlData[id] = JSON.parse(r.geojson); }
+    if (!P.layers[id] || MAP.kml[id]) return;
+    const accent = css('--c-accent');
+    MAP.kml[id] = L.geoJSON(MAP.kmlData[id], {
+      style: () => ({ color: accent, weight: 1.5, fillColor: accent, fillOpacity: 0.12 }),
+      pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 4, color: accent, weight: 1, fillOpacity: 0.6 }),
+      onEachFeature: (f, layer) => { const n = f.properties && (f.properties.name || f.properties.Name); if (n) layer.bindTooltip(esc(n), { className: 'p27tip' }); },
+    }).addTo(MAP.map);
+    MAP.kml[id].bringToBack();
+  } catch (e) { toast(e.message, true); delete P.layers[id]; savePrefs(); }
+}
+async function onMapClick(e) {
+  if (!MAP.placing) return;
+  const key = MAP.placing; MAP.placing = '';
+  await saveGeo(key, e.latlng.lat, e.latlng.lng);
+}
+async function saveGeo(key, lat, lng) {
+  const l = (DATA.scope || []).find(s => s.key === key);
+  if (!l) return;
+  const prev = { lat: l.lat, lng: l.lng, geo: l.geo };
+  l.lat = lat == null ? null : Math.round(lat * 1e6) / 1e6; l.lng = lng == null ? null : Math.round(lng * 1e6) / 1e6; l.geo = lat == null ? '' : 'manual';
+  renderAll();
+  try { await call({ type: 'savePlan2027Geo', key, lat: l.lat, lng: l.lng, by: USER && USER.username }); saveCache(); toast(t('saved')); }
+  catch (e) { Object.assign(l, prev); renderAll(); toast(t('saveErr', { e: e.message }), true); }
+}
+
+// ---------- motoristas ----------
+function driverRows() {
+  const q = norm(P.dq).trim();
+  return fDrivers().filter(d => (P.dSit === 'all' || !d.inactive)
+    && (!P.dDec || decOf(d) === P.dDec)
+    && (!P.dSugg || d.sugg === P.dSugg)
+    && (!q || norm([d.name, d.city, d.state, d.email, d.country].join(' ')).indexOf(q) >= 0))
+    .sort((a, b) => (a.cc || '').localeCompare(b.cc || '') || (a.assigned ? 0 : 1) - (b.assigned ? 0 : 1) || (a.name || '').localeCompare(b.name || '', LOCALE()));
+}
+function decButtons(d) {
+  const cur = decOf(d);
+  return `<div class="decs" role="group">${DECISIONS.map(k => `<button type="button" data-act="dec" data-key="${esc(d.key)}" data-v="${k}" class="${cur === k ? 'on' : ''}" title="${esc(t('d' + k[0].toUpperCase() + k.slice(1)))}">${esc(k === 'undecided' ? '?' : t('d' + k[0].toUpperCase() + k.slice(1)))}</button>`).join('')}</div>`;
+}
+function suggBadge(d) {
+  if (!d.sugg || d.decision === 'keep' || d.decision === 'relocate') return '';
+  return `<span class="badge ${d.sugg === 'keep' ? 'keep' : d.sugg}">${esc(t('sg' + d.sugg[0].toUpperCase() + d.sugg.slice(1)))}</span>`;
+}
+function renderDrivers() {
+  const el = document.getElementById('v-drivers');
+  const all = fDrivers(), rows = driverRows();
+  const undecided = rows.filter(d => !d.inactive && decOf(d) === 'undecided');
+  const bulkKeep = undecided.filter(d => d.sugg === 'keep'), bulkFar = undecided.filter(d => d.sugg === 'far' || d.sugg === 'noscope');
+  const sitOpts = `<select class="sel" data-act="dSit"><option value="notInactive" ${P.dSit !== 'all' ? 'selected' : ''}>${esc(t('sitNotInactive'))}</option><option value="all" ${P.dSit === 'all' ? 'selected' : ''}>${esc(t('sitAll'))}</option></select>`;
+  const suggOpts = `<select class="sel" data-act="dSugg"><option value="">${esc(t('allSugg'))}</option>${['keep', 'excess', 'far', 'noscope', 'nogeo', 'near'].map(k => `<option value="${k}" ${P.dSugg === k ? 'selected' : ''}>${esc(t('sg' + k[0].toUpperCase() + k.slice(1)))}</option>`).join('')}</select>`;
+  const decChips = ['', 'keep', 'relocate', 'release', 'undecided'].map(k => `<button type="button" class="chip ${P.dDec === k ? 'on' : ''}" data-act="dDec" data-v="${k}">${esc(k ? t('d' + k[0].toUpperCase() + k.slice(1)) : t('allDecisions'))}</button>`).join('');
+  el.innerHTML = `
+    <div class="filters">
+      <input class="search" type="search" data-act="dq" placeholder="${esc(t('search'))}" value="${esc(P.dq)}">
+      ${decChips} ${suggOpts} ${sitOpts}
+      <span class="spacer"></span>
+      ${bulkKeep.length ? `<button class="btn" type="button" data-act="bulk" data-v="keep" data-n="${bulkKeep.length}">${esc(t('bulkKeep', { n: bulkKeep.length }))}</button>` : ''}
+      ${bulkFar.length ? `<button class="btn" type="button" data-act="bulk" data-v="release" data-n="${bulkFar.length}">${esc(t('bulkFar', { n: bulkFar.length }))}</button>` : ''}
+    </div>
+    <p class="count">${esc(t('showing', { n: rows.length, t: all.length }))}</p>
+    ${!all.length ? `<div class="banner"><div>${esc(t('noDriversRegion'))}</div></div>` : ''}
+    <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr>
+      <th>${esc(t('cDriver'))}</th><th>${esc(t('cCountry'))}</th><th>${esc(t('cSit'))}</th><th>${esc(t('cNearest'))}</th><th>${esc(t('cSugg'))}</th><th>${esc(t('cDecision'))}</th>
+    </tr></thead><tbody>
+    ${rows.slice(0, 600).map(d => `<tr class="click" data-act="openDriver" data-key="${esc(d.key)}">
+      <td><b>${esc(d.name)}</b><span class="sub">${esc([d.city, d.state].filter(Boolean).join(', ') || '—')}${d.note ? ' · ✎' : ''}</span></td>
+      <td>${esc(ccName(d.cc))}</td>
+      <td>${esc(d.sit || '—')}</td>
+      <td>${d.assigned ? `${d.nearest && d.assigned !== d.nearest.loc ? '→ ' : ''}${esc(d.assigned.location)}${d.assignedDist != null ? `<span class="sub">${esc(t('km', { d: fmt(d.assignedDist) }))}</span>` : ''}` : d.nearest ? `<span class="muted">${esc(d.nearest.loc.location)}</span><span class="sub">${esc(t('km', { d: fmt(d.nearest.dist) }))}</span>` : '<span class="dim">—</span>'}</td>
+      <td>${suggBadge(d)}</td>
+      <td>${d.inactive ? '' : decButtons(d)}</td></tr>`).join('')}
+    </tbody></table>${!rows.length ? `<p class="muted" style="padding:18px">${esc(t('empty'))}</p>` : ''}</div></div>`;
+}
+
+// ---------- locais e vagas ----------
+function renderLocations() {
+  const el = document.getElementById('v-locations');
+  const q = norm(P.lq).trim();
+  const all = fLocs();
+  const rows = all.filter(l => (!P.lSt || l.status === P.lSt) && (!q || norm(l.location + ' ' + l.cc).indexOf(q) >= 0))
+    .sort((a, b) => b.gap - a.gap || b.peak - a.peak || a.location.localeCompare(b.location));
+  const maxV = Math.max(1, ...all.map(l => l.peak));
+  const heat = v => v ? `<span class="heat" style="background:color-mix(in srgb, var(--c-primary) ${Math.round(12 + 60 * v / maxV)}%, transparent);color:${v / maxV > .55 ? '#fff' : 'var(--c-text)'}">${v}</span>` : '<span class="dim">·</span>';
+  el.innerHTML = `
+    <div class="filters">
+      <input class="search" type="search" data-act="lq" placeholder="${esc(t('search'))}" value="${esc(P.lq)}">
+      ${['', 'empty', 'partial', 'ok', 'off'].map(k => `<button type="button" class="chip ${P.lSt === k ? 'on' : ''}" data-act="lSt" data-v="${k}">${esc(k ? t('st' + k[0].toUpperCase() + k.slice(1)) : t('stAll'))}<span class="n">${k ? all.filter(l => l.status === k).length : all.length}</span></button>`).join('')}
+    </div>
+    <p class="count">${esc(t('showing', { n: rows.length, t: all.length }))}</p>
+    <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr>
+      <th>${esc(t('cLocation'))}</th><th class="r">${esc(t('cKm'))}</th>${[...Array(12)].map((_, i) => `<th class="m">${esc(monthLabel(i))}</th>`).join('')}
+      <th class="r">${esc(t('cPeak'))}</th><th class="r">${esc(t('cSlots'))}<span class="sub">${esc(t('cSlotsSub'))}</span></th><th class="r">${esc(t('covered'))}</th><th class="r">${esc(t('gap'))}</th><th>${esc(t('cStatus'))}</th>
+    </tr></thead><tbody>
+    ${rows.map(l => `<tr class="click" data-act="openLoc" data-key="${esc(l.key)}">
+      <td><b>${esc(l.location)}</b><span class="sub">${esc(ccName(l.cc))}${l.hasGeo ? '' : ' · ⚠ ' + esc(t('sgNogeo'))}</span></td>
+      <td class="r">${fmt(l.km)}</td>${l.m.map(v => `<td class="m">${heat(v)}</td>`).join('')}
+      <td class="r"><b>${l.peak}</b></td><td class="r">${l.hired} · ${l.open} · ${l.hold}</td><td class="r">${l.covered}</td>
+      <td class="r ${l.gap ? 'bad-c' : ''}">${l.gap || '—'}</td><td>${statusBadge(l)}</td></tr>`).join('')}
+    </tbody></table>${!rows.length ? `<p class="muted" style="padding:18px">${esc(M.scope.length ? t('emptyLocs') : t('emptyText'))}</p>` : ''}</div></div>`;
+}
+function statusBadge(l) {
+  return `<span class="badge ${l.status === 'off' ? '' : l.status}"><span class="dot"></span>${esc(t('st' + l.status[0].toUpperCase() + l.status.slice(1)))}</span>`;
+}
+
+// ---------- carros ----------
+function renderCars() {
+  const el = document.getElementById('v-cars');
+  const locs = fLocs(), fleet = DATA.fleet || {};
+  const ccs = [...new Set(locs.map(l => l.cc))].sort((a, b) => ccName(a).localeCompare(ccName(b), LOCALE()));
+  const need = monthlyNeed(locs), peak = Math.max(0, ...need);
+  const fleetTot = ccs.reduce((a, cc) => a + (fleet[cc] ? fleet[cc].active : 0), 0);
+  // linha da frota só quando TODO país do filtro tem frota — senão compara LATAM com demanda dos EUA
+  const allFleet = ccs.length > 0 && ccs.every(cc => fleet[cc]);
+  const blocks = ccs.map(cc => {
+    const n = monthlyNeed(locs.filter(l => l.cc === cc)), f = fleet[cc] ? fleet[cc].active : null;
+    return `<tr><td rowspan="3"><b>${esc(ccName(cc))}</b></td><td class="muted">${esc(t('rowNeed'))}</td>${n.map(v => `<td class="r">${v || '<span class="dim">·</span>'}</td>`).join('')}</tr>
+      <tr><td class="muted">${esc(t('rowFleet'))}</td>${n.map(() => `<td class="r">${f == null ? '<span class="dim">—</span>' : f}</td>`).join('')}</tr>
+      <tr><td class="muted">${esc(t('rowDiff'))}</td>${n.map(v => { if (f == null) return '<td class="r dim">—</td>'; const d = f - v; return `<td class="r ${d < 0 ? 'bad-c' : ''}">${d > 0 ? '+' + d : d}</td>`; }).join('')}</tr>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="card"><div class="card-h"><div><div class="card-t">${esc(t('carsTitle'))}</div><div class="card-s">${esc(t('carsSub'))}</div></div>
+      <div class="muted">${esc(t('carsPeak', { n: fmt(peak), m: peak ? monthLabel(need.indexOf(peak)) : '—' }))}</div></div>
+      <div class="card-b">${barChart('ch-cars', need, allFleet ? fleetTot : null, { bars: t('sNeed'), ref: t('sFleet') })}
+        ${!ccs.every(cc => fleet[cc]) ? `<p class="dim" style="font-size:12px;margin-top:6px">${esc(t('fleetNote'))}</p>` : ''}</div></div>
+    <div class="card"><div class="card-b tbl-wrap" style="padding-top:12px"><table class="tbl"><thead><tr><th>${esc(t('cCountry'))}</th><th></th>${[...Array(12)].map((_, i) => `<th class="r">${esc(monthLabel(i))}</th>`).join('')}</tr></thead>
+      <tbody>${blocks || `<tr><td colspan="14" class="muted">${esc(t('emptyText'))}</td></tr>`}</tbody></table></div></div>`;
+  wireChart('ch-cars');
+}
+
+// ---------- gaveta ----------
+let DRAWER = null;
+function openDrawer(kind, key) { DRAWER = { kind, key }; renderDrawer(); }
+function closeDrawer() {
+  DRAWER = null;
+  document.getElementById('drawer').hidden = true; document.getElementById('backdrop').hidden = true;
+  if (MAP.dragMarker) { MAP.map.removeLayer(MAP.dragMarker); MAP.dragMarker = null; }
+}
+const openLoc = key => openDrawer('loc', key);
+const openDriver = key => openDrawer('driver', key);
+function renderDrawer() {
+  if (!DRAWER || !M) return;
+  const el = document.getElementById('drawer');
+  const body = DRAWER.kind === 'loc' ? locDrawer(M.byKey[DRAWER.key]) : driverDrawer(M.byDriver[DRAWER.key]);
+  if (!body) { closeDrawer(); return; }
+  el.innerHTML = body;
+  el.hidden = false;
+  document.getElementById('backdrop').hidden = P.tab === 'map';
+}
+function locDrawer(l) {
+  if (!l) return '';
+  const maxV = Math.max(1, ...l.m);
+  const others = M.drivers.filter(d => !d.inactive && d.hasGeo && d.cc === l.cc && d.assigned !== l && l.hasGeo)
+    .map(d => ({ d, dist: hav(d.lat, d.lng, l.lat, l.lng) })).sort((a, b) => a.dist - b.dist).slice(0, 6);
+  const gm = l.hasGeo ? `https://www.google.com/maps/search/?api=1&query=${l.lat},${l.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.location + ', ' + ccName(l.cc))}`;
+  return `<div class="dr-h"><div><h2>${esc(l.location)}</h2><div class="muted" style="font-size:13px;margin-top:3px">${esc(ccName(l.cc))} · ${esc(l.region)} · ${statusBadge(l)}</div></div>
+      <button class="icon-btn x" type="button" data-act="close" aria-label="${esc(t('close'))}">✕</button></div>
+    <div class="dr-b">
+      <dl class="kv"><dt>${esc(t('scopeKm'))}</dt><dd class="num">${fmt(l.km)}</dd><dt>${esc(t('peak'))}</dt><dd class="num">${l.peak}</dd>
+        <dt>${esc(t('covered'))}</dt><dd class="num">${l.covered}</dd><dt>${esc(t('gap'))}</dt><dd class="num ${l.gap ? 'bad-c' : ''}">${l.gap}</dd></dl>
+      <div class="dr-sec"><h3>${esc(t('dMonths'))}</h3><div class="mstrip">${l.m.map((v, i) => `<div><div class="dim">${esc(monthLabel(i))}</div>
+        <div class="v" style="background:${v ? `color-mix(in srgb, var(--c-primary) ${Math.round(14 + 60 * v / maxV)}%, transparent)` : 'var(--c-bg-tint)'};color:${v && v / maxV > .55 ? '#fff' : 'var(--c-text)'}">${v || '·'}</div></div>`).join('')}</div></div>
+      <div class="dr-sec"><h3>${esc(t('dNear', { r: fmt(M.radius) }))}</h3>
+        ${l.cand.length ? l.cand.map(d => `<div class="li"><div class="nm"><b data-act="openDriver" data-key="${esc(d.key)}">${esc(d.name)}</b>
+          <span class="dim" style="font-size:12px">${d.assignedDist != null ? esc(t('km', { d: fmt(d.assignedDist) })) + ' · ' : ''}${esc(d.city || '')}</span> ${suggBadge(d)}</div>${decButtons(d)}</div>`).join('')
+          : `<p class="muted">${esc(t('noneNear', { r: fmt(M.radius) }))}</p>`}</div>
+      ${others.length ? `<div class="dr-sec"><h3>${esc(t('dCandidates'))}</h3>${others.map(o => `<div class="li"><div class="nm"><b data-act="openDriver" data-key="${esc(o.d.key)}">${esc(o.d.name)}</b>
+          <span class="dim" style="font-size:12px">${esc(t('km', { d: fmt(o.dist) }))} · ${esc(o.d.city || '')}</span> ${o.d.assigned ? `<span class="badge">${esc(o.d.assigned.location)}</span>` : ''}</div>${decButtons(o.d)}</div>`).join('')}</div>` : ''}
+      <div class="dr-sec"><h3>${esc(t('dSlots'))} (${l.slots.length})</h3>
+        ${l.slots.length ? l.slots.map(s => `<div class="li"><div class="nm"><b style="cursor:default">${esc(s.name || '—')}</b>
+          <span class="dim" style="font-size:12px">${esc(s.month || '')}${s.dur ? ' · ' + esc(t('mos', { n: s.dur })) : ''}${s.training ? ' · ' + esc(t('training')) + ': ' + esc(s.training) : ''}</span></div>
+          <span class="badge ${s.kind === 'hired' ? 'ok' : s.kind === 'open' ? 'partial' : ''}">${esc(t('k' + s.kind[0].toUpperCase() + s.kind.slice(1)))}</span></div>`).join('')
+          : `<p class="muted">${esc(t('noSlots'))}</p>`}</div>
+      <div class="dr-sec row">
+        <a class="btn" href="${esc(gm)}" target="_blank" rel="noopener">${esc(t('openGmaps'))}</a>
+        <button class="btn" type="button" data-act="movePin" data-v="${esc(l.key)}">${esc(l.hasGeo ? t('movePin') : t('place'))}</button>
+        ${l.hasGeo ? `<button class="btn danger" type="button" data-act="clearPin" data-v="${esc(l.key)}">${esc(t('clearPin'))}</button>` : ''}
+      </div>
+    </div>`;
+}
+function driverDrawer(d) {
+  if (!d) return '';
+  const near = d.hasGeo ? M.scope.filter(l => l.hasGeo && l.cc === d.cc).map(l => ({ l, dist: hav(d.lat, d.lng, l.lat, l.lng) })).sort((a, b) => a.dist - b.dist) : [];
+  const targets = near.length ? near : M.scope.filter(l => l.cc === d.cc).map(l => ({ l, dist: null }));
+  return `<div class="dr-h"><div><h2>${esc(d.name)}</h2><div class="muted" style="font-size:13px;margin-top:3px">${esc([d.city, d.state].filter(Boolean).join(', '))} · ${esc(ccName(d.cc))}</div></div>
+      <button class="icon-btn x" type="button" data-act="close" aria-label="${esc(t('close'))}">✕</button></div>
+    <div class="dr-b">
+      <dl class="kv"><dt>${esc(t('cSit'))}</dt><dd>${esc(d.sit || '—')}</dd><dt>${esc(t('since'))}</dt><dd>${esc(d.since || '—')}</dd>
+        <dt>${esc(t('rate'))}</dt><dd class="num">${d.rate != null ? esc(d.rate) : '—'}</dd><dt>${esc(t('email'))}</dt><dd style="word-break:break-all">${esc(d.email || '—')}</dd>
+        <dt>${esc(t('cSugg'))}</dt><dd>${suggBadge(d) || '—'}</dd></dl>
+      ${d.slot ? `<p style="margin-top:10px"><span class="badge ok">${esc(t('inSlot', { s: (d.slot.city || '') + (d.slot.month ? ' · ' + d.slot.month : '') }))}</span></p>` : ''}
+      ${d.inactive ? '' : `<div class="dr-sec"><h3>${esc(t('cDecision'))}</h3>${decButtons(d)}
+        <div class="field" style="margin-top:10px">${esc(t('target'))}
+          <select class="sel" data-act="target" data-key="${esc(d.key)}"><option value="">${esc(t('targetNone'))}</option>
+          ${targets.map(o => `<option value="${esc(o.l.key)}" ${d.target === o.l.key ? 'selected' : ''}>${esc(o.l.location)}${o.dist != null ? ' — ' + esc(t('km', { d: fmt(o.dist) })) : ''}${o.l.gap ? ' · ' + esc(t('gap')) + ' ' + o.l.gap : ''}</option>`).join('')}
+          </select></div>
+        <div class="field" style="margin-top:10px">${esc(t('note'))}<textarea class="note" id="dr-note">${esc(d.note)}</textarea></div>
+        <div class="row" style="margin-top:6px"><button class="btn" type="button" data-act="saveNote" data-key="${esc(d.key)}">${esc(t('saveNote'))}</button>
+          ${d.decAt ? `<span class="dim" style="font-size:12px">${esc(timeLabel(d.decAt))}${d.decBy ? ' · ' + esc(t('by', { u: d.decBy })) : ''}</span>` : ''}</div></div>`}
+      <div class="dr-sec"><h3>${esc(t('nearestLocs'))}</h3>
+        ${near.slice(0, 5).map(o => `<div class="li"><div class="nm"><b data-act="openLoc" data-key="${esc(o.l.key)}">${esc(o.l.location)}</b>
+          <span class="dim" style="font-size:12px">${esc(t('km', { d: fmt(o.dist) }))} · ${esc(t('peak'))} ${o.l.peak}${o.l.gap ? ' · ' + esc(t('gap')) + ' ' + o.l.gap : ''}</span></div>${statusBadge(o.l)}</div>`).join('') || `<p class="muted">${esc(d.hasGeo ? t('sgNoscope') : t('sgNogeo'))}</p>`}</div>
+      <div class="dr-sec"><a class="btn" href="/hr-global.html" target="_blank" rel="noopener">${esc(t('openHr'))}</a></div>
+    </div>`;
+}
+
+// ---------- decisões ----------
+async function setDecision(keys, decision, extra) {
+  const items = [], prev = {};
+  keys.forEach(k => {
+    const d = M.byDriver[k]; if (!d) return;
+    const cur = DATA.decisions[String(k).toLowerCase()] || {};
+    prev[k] = DATA.decisions[String(k).toLowerCase()];
+    const next = Object.assign({}, cur, { decision: decision === 'undecided' ? '' : decision, name: d.name, country: d.country, at: new Date().toISOString(), by: USER && USER.username }, extra || {});
+    if (decision && decision !== 'relocate' && !(extra && 'target' in extra)) next.target = decision === 'release' ? '' : (cur.target || '');
+    DATA.decisions[String(k).toLowerCase()] = next;
+    items.push({ key: d.key, name: d.name, country: d.country, decision: next.decision, target: next.target || '', note: next.note || '' });
+  });
+  if (!items.length) return;
+  renderAll(); renderDrawer();
+  try {
+    await call({ type: 'savePlan2027Decision', items, by: USER && USER.username });
+    saveCache(); toast(t('saved'));
+  } catch (e) {
+    Object.keys(prev).forEach(k => { if (prev[k]) DATA.decisions[String(k).toLowerCase()] = prev[k]; else delete DATA.decisions[String(k).toLowerCase()]; });
+    renderAll(); renderDrawer();
+    toast(t('saveErr', { e: e.message }), true);
+  }
+}
+
+// ---------- importar ----------
+const IMP = { parsed: null, file: '', busy: '', msg: '', progress: 0, geoLeft: 0, mapMsg: '', mapBusy: false };
+function renderImport() {
+  const el = document.getElementById('v-import');
+  const p = IMP.parsed;
+  const noGeo = M ? M.scope.filter(l => !l.hasGeo && l.geo !== 'not found' && l.geo !== 'manual').length : 0;
+  const maps = (DATA && DATA.maps) || [], imps = (DATA && DATA.imports) || [];
+  el.innerHTML = `
+    <div class="grid2">
+    <div>
+    <div class="card"><div class="card-h"><div><div class="card-t">${esc(t('impTitle'))}</div><div class="card-s" style="max-width:640px">${esc(t('impHow'))}</div></div></div>
+      <div class="card-b">
+        <label class="drop" id="drop"><input type="file" accept=".xlsx,.xls" id="xlsx-in" hidden>${esc(IMP.busy === 'parse' ? t('parsing', { f: IMP.file }) : t('drop'))}</label>
+        ${p ? importPreview(p) : ''}
+        ${IMP.msg ? `<p style="margin-top:10px">${IMP.msg}</p>` : ''}
+        ${IMP.busy === 'geo' || IMP.busy === 'import' ? `<div class="progress"><div style="width:${Math.round(IMP.progress * 100)}%"></div></div>` : ''}
+        ${!IMP.busy && noGeo ? `<p style="margin-top:12px"><button class="btn" type="button" data-act="geocode">${esc(t('geoBtn', { n: noGeo }))}</button></p>` : ''}
+      </div></div>
+    <div class="card"><div class="card-h"><div class="card-t">${esc(t('recentImports'))}</div></div><div class="card-b">
+      ${imps.length ? `<ul class="plain">${imps.map(i => `<li><b>${esc(i.region)}</b> ${esc(i.countries)} · ${esc(i.file)} · ${i.locations} ${esc(t('cLocs').toLowerCase())}, ${i.slots} ${esc(t('cSlots').toLowerCase())} <span class="dim">· ${esc(timeLabel(i.at))}${i.by ? ' · ' + esc(t('by', { u: i.by })) : ''}</span></li>`).join('')}</ul>` : `<p class="muted">${esc(t('noImports'))}</p>`}
+    </div></div>
+    </div>
+    <div class="card"><div class="card-h"><div><div class="card-t">${esc(t('mapsTitle'))}</div><div class="card-s">${esc(t('mapsHow'))}</div></div></div>
+      <div class="card-b">
+        <div class="row" style="align-items:flex-end">
+          <label class="field">${esc(t('region'))}<select class="sel" id="map-region">${REGIONS.map(r => `<option ${r === (P.region === 'ALL' ? 'NA' : P.region) ? 'selected' : ''}>${r}</option>`).join('')}</select></label>
+          <label class="field">${esc(t('mapLabel'))}<input type="text" id="map-label" maxlength="80"></label>
+          <label class="field">${esc(t('mapFile'))}<input type="file" id="map-file" accept=".kml,.kmz,.geojson,.json"></label>
+          <button class="btn primary" type="button" data-act="mapUpload" ${IMP.mapBusy ? 'disabled' : ''}>${esc(IMP.mapBusy ? t('mapUploading') : t('mapUpload'))}</button>
+        </div>
+        ${IMP.mapMsg ? `<p style="margin-top:8px">${IMP.mapMsg}</p>` : ''}
+        <div style="margin-top:12px">${maps.length ? maps.map(m => `<div class="li"><div class="nm"><b style="cursor:default">${esc(m.label)}</b>
+          <span class="dim" style="font-size:12px">${esc(m.region)} · ${esc(m.filename)} · ${esc(t('features', { n: m.features }))} · ${esc(timeLabel(m.at))}</span></div>
+          <button class="btn sm danger" type="button" data-act="mapDel" data-v="${esc(m.fileId)}">${esc(t('del'))}</button></div>`).join('') : `<p class="muted">${esc(t('noMaps'))}</p>`}</div>
+      </div></div>
+    </div>`;
+  const drop = document.getElementById('drop'), inp = document.getElementById('xlsx-in');
+  inp.addEventListener('change', () => { if (inp.files[0]) readXlsx(inp.files[0]); });
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files[0]) readXlsx(e.dataTransfer.files[0]); });
+}
+function importPreview(p) {
+  if (!p.locations.length && !p.slots.length) return `<div class="banner err" style="margin-top:12px"><div>${esc(t('noneFound'))}</div></div>`;
+  const ccs = [...new Set(p.locations.map(l => l.cc).concat(p.slots.map(s => s.cc)).filter(Boolean))];
+  const rows = ccs.map(cc => {
+    const L = p.locations.filter(l => l.cc === cc), S = p.slots.filter(s => s.cc === cc);
+    const need = new Array(12).fill(0); L.forEach(l => l.months.forEach((v, i) => { need[i] += v; }));
+    const k = x => S.filter(s => slotKind(s.status) === x).length;
+    return `<tr><td>${esc(cc.length === 2 ? ccName(cc) : cc)}</td><td class="r">${L.length}</td><td class="r">${Math.max(0, ...need)}</td><td class="r">${need.reduce((a, b) => a + b, 0)}</td><td class="r">${S.length} <span class="dim">(${k('hired')} · ${k('open')} · ${k('hold')})</span></td></tr>`;
+  }).join('');
+  const busy = !!IMP.busy;
+  return `<div style="margin-top:14px">
+    <div class="row" style="justify-content:space-between"><b>${esc(IMP.file)}</b>
+      <label class="field" style="flex-direction:row;align-items:center;gap:8px">${esc(t('region'))}
+        <select class="sel" id="imp-region">${REGIONS.map(r => `<option ${p.region === r ? 'selected' : ''}>${r}</option>`).join('')}</select></label></div>
+    <div class="tbl-wrap" style="margin-top:8px"><table class="tbl"><thead><tr><th>${esc(t('cCountry'))}</th><th class="r">${esc(t('cLocs'))}</th><th class="r">${esc(t('cPeak'))}</th><th class="r">${esc(t('cDm'))}</th><th class="r">${esc(t('cSlots'))} <span class="dim">(${esc(t('cSlotsSub'))})</span></th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="dim" style="font-size:12px;margin-top:6px">${esc(t('sheetsRead'))}: ${p.sheets.map(s => esc(s.name) + ' (' + esc(t('kind' + s.kind[0].toUpperCase() + s.kind.slice(1))) + ')').join(' · ')}</p>
+    ${p.warnings.length ? `<details style="margin-top:6px;font-size:12.5px"><summary class="muted">${esc(t('fileWarn'))} (${p.warnings.length})</summary><ul class="plain">${p.warnings.slice(0, 40).map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}
+    <p class="muted" style="font-size:12.5px;margin-top:10px">${esc(t('impNote'))}</p>
+    <button class="btn primary" type="button" data-act="doImport" style="margin-top:8px" ${busy ? 'disabled' : ''}>${esc(busy ? t('importing') : t('impBtn', { c: ccs.join(', ') }))}</button>
+  </div>`;
+}
+
+// leitura do .xlsx (SheetJS) — acha as abas pelo cabeçalho, não pela posição
+const MONTH_RX = [/^jan/, /^fe[bv]/, /^mar/, /^a[bp]r/, /^ma[iy]/, /^jun/, /^jul/, /^a[gu]g|^ago/, /^se[pt]/, /^o[ck]t|^out/, /^nov/, /^de[cz]|^dic/];
+const hkey = s => norm(s).replace(/[^a-z0-9]/g, '');
+const NAME_CC = { argentina: 'AR', brazil: 'BR', brasil: 'BR', chile: 'CL', colombia: 'CO', mexico: 'MX', peru: 'PE', 'united states': 'US', usa: 'US', us: 'US', canada: 'CA',
+  uruguay: 'UY', paraguay: 'PY', bolivia: 'BO', ecuador: 'EC', 'costa rica': 'CR', panama: 'PA', guatemala: 'GT', 'dominican republic': 'DO' };
+const NA_CC = ['US', 'CA', 'BM'];
+function toCc(v, fallback) {
+  const s = String(v == null ? '' : v).trim();
+  if (/^[A-Za-z]{2}$/.test(s)) return s.toUpperCase();
+  return NAME_CC[norm(s)] || fallback || s;
+}
+function cellNum(v) {
+  if (typeof v === 'number') return v;
+  const n = Number(String(v == null ? '' : v).replace(/[^\d.,-]/g, '').replace(/,(?=\d{3}\b)/g, '').replace(',', '.'));
+  return isFinite(n) ? n : 0;
+}
+function cellMonth(v) {
+  if (v instanceof Date) return monthEn(v.getMonth());
+  if (typeof v === 'number' && v > 59 && window.XLSX) { const d = XLSX.SSF.parse_date_code(v); if (d) return monthEn(d.m - 1); }
+  return String(v == null ? '' : v).trim();
+}
+function cellDate(v) {
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  if (typeof v === 'number' && v > 59 && window.XLSX) { const d = XLSX.SSF.parse_date_code(v); if (d) return d.y + '-' + String(d.m).padStart(2, '0') + '-' + String(d.d).padStart(2, '0'); }
+  return String(v == null ? '' : v).trim();
+}
+const monthEn = i => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i];
+function parseWorkbook(wb) {
+  const out = { locations: [], slots: [], warnings: [], sheets: [], region: '' };
+  wb.SheetNames.forEach(name => {
+    const A = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: true, defval: '', blankrows: false });
+    const hi = A.findIndex(r => r.some(c => hkey(c) === 'hiringlocation'));
+    if (hi >= 0) { parseScopeSheet(A, hi, name, out); out.sheets.push({ name, kind: 'scope' }); return; }
+    const si = A.findIndex(r => r.some(c => hkey(c) === 'hiringstatus') && r.some(c => hkey(c) === 'city'));
+    if (si >= 0) { parseSlotSheet(A, si, name, out); out.sheets.push({ name, kind: 'slots' }); return; }
+    out.sheets.push({ name, kind: 'ignored' });
+  });
+  const ccs = out.locations.map(l => l.cc).concat(out.slots.map(s => s.cc));
+  out.region = ccs.some(c => NA_CC.indexOf(c) >= 0) ? 'NA' : 'LATAM';
+  return out;
+}
+function parseScopeSheet(A, hi, name, out) {
+  const H = A[hi].map(hkey);
+  const iC = H.findIndex(h => h === 'country'), iL = H.indexOf('hiringlocation'), iK = H.findIndex(h => h.indexOf('scopekm') >= 0 || h.indexOf('km') >= 0 && h !== 'hiringlocation');
+  const mcol = new Array(12).fill(-1);
+  H.forEach((h, j) => { if (j <= iL) return; MONTH_RX.forEach((rx, m) => { if (mcol[m] < 0 && h.length <= 9 && rx.test(h)) mcol[m] = j; }); });
+  // cabeçalho de mês sumido (texto girado/formatado): deduz a partir do que achou (dez ou nov)
+  if (mcol.some(c => c < 0)) {
+    const anchor = mcol.findIndex(c => c >= 0);
+    if (anchor >= 0) {
+      for (let m = 0; m < 12; m++) { if (mcol[m] < 0) mcol[m] = mcol[anchor] - anchor + m; }
+    } else {
+      // nem um mês no cabeçalho: assume as 12 colunas logo depois do km (pulando 1 coluna vazia)
+      const start = (iK >= 0 ? iK : iL) + (H[(iK >= 0 ? iK : iL) + 1] ? 1 : 2);
+      for (let m = 0; m < 12; m++) mcol[m] = start + m;
+      out.warnings.push(name + ': meses não encontrados no cabeçalho — usei as 12 colunas depois do km');
+    }
+  }
+  let lastCc = '', skipped = 0;
+  for (let r = hi + 1; r < A.length; r++) {
+    const row = A[r], loc = String(row[iL] == null ? '' : row[iL]).trim();
+    if (!loc) continue;
+    if (/^(total|sum|soma)\b/i.test(loc)) { skipped++; continue; }
+    const cc = toCc(row[iC], lastCc); lastCc = cc || lastCc;
+    if (!cc) { skipped++; out.warnings.push(name + ' L' + (r + 1) + ': sem país — ' + loc); continue; }
+    const months = mcol.map(c => (c >= 0 ? Math.max(0, Math.round(cellNum(row[c]))) : 0));
+    out.locations.push({ country: cc, cc, location: loc, km: iK >= 0 ? cellNum(row[iK]) : 0, months });
+  }
+  if (skipped) out.warnings.push(name + ': ' + t('skippedRows', { n: skipped }));
+}
+function parseSlotSheet(A, hi, name, out) {
+  const H = A[hi].map(hkey);
+  const find = (...names) => H.findIndex(h => names.some(n => h === n));
+  const iS = find('hiringstatus'), iM = H.findIndex(h => h.indexOf('order') === 0), iN = find('name', 'drivername', 'fullname'), iCo = find('country'),
+        iCi = find('city'), iSt = find('state', 'stateprovince', 'province'), iT = find('training'), iTD = find('trainingdate'), iTr = find('trainer'),
+        iE = H.findIndex(h => h.indexOf('email') >= 0);
+  // duração: coluna sem título com "x mos" (ou título com duration/months)
+  let iD = H.findIndex(h => h.indexOf('duration') >= 0 || h === 'months' || h === 'mos');
+  if (iD < 0) for (let j = 0; j < H.length && iD < 0; j++) {
+    if (H[j]) continue;
+    for (let r = hi + 1; r < Math.min(A.length, hi + 30); r++) if (/\bmos?\b|mes(es)?\b|months?\b/i.test(String(A[r][j]))) { iD = j; break; }
+  }
+  // LATAM: coluna sem título logo depois de State com o nº de meses (5, 10…)
+  if (iD < 0 && iSt >= 0 && !H[iSt + 1] && A.slice(hi + 1, hi + 30).some(r => /^\s*\d{1,2}(\.\d+)?\s*$/.test(String(r[iSt + 1])))) iD = iSt + 1;
+  const sheetCc = toCc((name.match(/^([A-Z]{2})\b/) || [])[1] || name, '');
+  const fallback = /^[A-Z]{2}$/.test(sheetCc) ? sheetCc : '';
+  let skipped = 0;
+  for (let r = hi + 1; r < A.length; r++) {
+    const row = A[r], g = i => (i >= 0 ? row[i] : '');
+    const status = String(g(iS)).trim(), city = String(g(iCi)).trim();
+    if (!status && !city) continue;
+    const cc = toCc(g(iCo), '') || fallback || toCc(name, '');
+    if (!/^[A-Z]{2}$/.test(cc)) { skipped++; out.warnings.push(name + ' L' + (r + 1) + ': país não reconhecido — ' + (g(iCo) || name)); continue; }
+    out.slots.push({ country: cc, cc, status, month: cellMonth(g(iM)), name: String(g(iN)).trim(), city, state: String(g(iSt)).trim(),
+      duration: String(g(iD)).trim(), training: String(g(iT)).trim(), trainingDate: cellDate(g(iTD)), trainer: String(g(iTr)).trim(), email: String(g(iE)).trim().toLowerCase() });
+  }
+  if (skipped) out.warnings.push(name + ': ' + t('skippedRows', { n: skipped }));
+}
+async function readXlsx(file) {
+  IMP.file = file.name; IMP.busy = 'parse'; IMP.parsed = null; IMP.msg = ''; renderImport();
+  try {
+    await loadScript(CONFIG.libs.xlsx);
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+    IMP.parsed = parseWorkbook(wb);
+    console.log('[Plano 2027 Import]', IMP.parsed.sheets, IMP.parsed.locations.length, 'locais', IMP.parsed.slots.length, 'vagas');
+  } catch (e) {
+    IMP.msg = `<span class="bad-c">${esc(e.message)}</span>`;
+  } finally { IMP.busy = ''; renderImport(); }
+}
+async function doImport() {
+  const p = IMP.parsed; if (!p) return;
+  const sel = document.getElementById('imp-region'); if (sel) p.region = sel.value;
+  IMP.busy = 'import'; IMP.progress = 0.05; IMP.msg = ''; renderImport();
+  try {
+    const res = await call({ type: 'importPlan2027', region: p.region, fileName: IMP.file, by: USER && USER.username,
+      locations: p.locations.map(l => ({ country: l.cc, location: l.location, km: l.km, months: l.months })),
+      slots: p.slots.map(s => ({ country: s.cc, status: s.status, month: s.month, name: s.name, city: s.city, state: s.state, duration: s.duration,
+        training: s.training, trainingDate: s.trainingDate, trainer: s.trainer, email: s.email })) });
+    IMP.msg = esc(t('impDone', { l: res.locations, s: res.slots, c: (res.countries || []).join(', ') }))
+      + (res.skippedCount ? ` <span class="dim">· ${esc(t('skippedRows', { n: res.skippedCount }))}</span>` : '');
+    IMP.parsed = null;
+    if (res.needGeo) await geocodeLoop(res.needGeo);
+    IMP.busy = ''; await load();
+  } catch (e) {
+    IMP.busy = ''; IMP.msg = `<span class="bad-c">${esc(e.message)}</span>`; renderImport();
+  }
+}
+async function geocodeLoop(total) {
+  IMP.busy = 'geo'; let done = 0, left = total;
+  const base = IMP.msg;
+  for (let guard = 0; guard < 30 && left > 0; guard++) {
+    IMP.msg = base + '<br>' + esc(t('geocoding', { d: done, t: total })); IMP.progress = total ? done / total : 1; renderImport();
+    const r = await call({ type: 'geocodePlan2027', max: 60 });
+    done += r.done; left = r.remaining;
+    if (r.error && !r.done) throw new Error(r.error);
+    if (!r.done) break;
+  }
+  IMP.progress = 1;
+  await load();
+  const notFound = M ? M.scope.filter(l => !l.hasGeo).length : 0;
+  IMP.msg = base + '<br>' + esc(notFound ? t('geoLeft', { n: notFound }) : t('geoDone'));
+  IMP.busy = ''; renderImport();
+}
+async function fileToGeoJSON(file) {
+  const n = file.name.toLowerCase();
+  if (n.endsWith('.geojson') || n.endsWith('.json')) return JSON.parse(await file.text());
+  let kml;
+  if (n.endsWith('.kmz')) {
+    await loadScript(CONFIG.libs.jszip);
+    const zip = await JSZip.loadAsync(file);
+    const f = Object.values(zip.files).find(x => x.name.toLowerCase().endsWith('.kml'));
+    if (!f) throw new Error('KMZ sem .kml dentro');
+    kml = await f.async('text');
+  } else kml = await file.text();
+  await loadScript(CONFIG.libs.togeojson);
+  return toGeoJSON.kml(new DOMParser().parseFromString(kml, 'text/xml'));
+}
+function slimGeo(gj) {
+  const round = c => Array.isArray(c[0]) ? c.map(round) : [Math.round(c[0] * 1e5) / 1e5, Math.round(c[1] * 1e5) / 1e5];
+  (gj.features || []).forEach(f => {
+    if (f.geometry && f.geometry.coordinates) f.geometry.coordinates = round(f.geometry.coordinates);
+    if (f.geometry && f.geometry.geometries) f.geometry.geometries.forEach(g => { if (g.coordinates) g.coordinates = round(g.coordinates); });
+    const p = f.properties || {};
+    f.properties = { name: p.name || p.Name || '', description: String(p.description || '').replace(/<[^>]*>/g, ' ').slice(0, 300) };
+  });
+  return gj;
+}
+async function uploadMap() {
+  const file = document.getElementById('map-file').files[0];
+  if (!file) return;
+  const region = document.getElementById('map-region').value, label = document.getElementById('map-label').value.trim() || file.name.replace(/\.[^.]+$/, '');
+  IMP.mapBusy = true; IMP.mapMsg = ''; renderImport();
+  try {
+    const gj = slimGeo(await fileToGeoJSON(file));
+    const text = JSON.stringify(gj), mb = text.length / 1048576;
+    if (mb > 25) throw new Error(t('mapTooBig', { mb: mb.toFixed(1) }));
+    const r = await call({ type: 'savePlan2027Map', region, label, filename: file.name, geojson: text, features: (gj.features || []).length, by: USER && USER.username });
+    MAP.kmlData[r.fileId] = gj; P.layers[r.fileId] = true; savePrefs();
+    IMP.mapMsg = esc(t('saved')) + ' · ' + esc(t('features', { n: (gj.features || []).length }));
+    await load();
+  } catch (e) { IMP.mapMsg = `<span class="bad-c">${esc(e.message)}</span>`; }
+  finally { IMP.mapBusy = false; renderImport(); }
+}
+
+// ---------- eventos ----------
+const CONFIRM = {};
+document.addEventListener('click', async e => {
+  const a = e.target.closest('[data-act]');
+  if (!a) {
+    if (e.target.id === 'backdrop') closeDrawer();
+    return;
+  }
+  const act = a.dataset.act, v = a.dataset.v;
+  if (a.tagName === 'SELECT' || a.tagName === 'INPUT' && a.type !== 'button') return;
+  if (act === 'region') { P.region = v; P.country = ''; savePrefs(); renderAll(); }
+  else if (act === 'country') { P.country = P.country === v ? '' : v; savePrefs(); renderAll(); }
+  else if (act === 'tab') { P.tab = v; savePrefs(); closeDrawer(); renderAll(); window.scrollTo(0, 0); }
+  else if (act === 'gotoDrivers') { P.tab = 'drivers'; P.dDec = a.dataset.dec; P.dSugg = ''; savePrefs(); renderAll(); }
+  else if (act === 'dDec') { P.dDec = v; savePrefs(); renderDrivers(); }
+  else if (act === 'lSt') { P.lSt = v; savePrefs(); renderLocations(); }
+  else if (act === 'openDriver') { e.stopPropagation(); openDriver(a.dataset.key); }
+  else if (act === 'openLoc') { e.stopPropagation(); openLoc(a.dataset.key); }
+  else if (act === 'close') closeDrawer();
+  else if (act === 'dec') { e.stopPropagation(); setDecision([a.dataset.key], v); }
+  else if (act === 'bulk') {
+    const n = a.dataset.n;
+    if (!CONFIRM.bulk || CONFIRM.bulk !== v) {
+      CONFIRM.bulk = v; a.textContent = t('confirmQ', { n });
+      clearTimeout(CONFIRM.t); CONFIRM.t = setTimeout(() => { CONFIRM.bulk = ''; renderDrivers(); }, 4000);
+      return;
+    }
+    CONFIRM.bulk = '';
+    const und = driverRows().filter(d => !d.inactive && decOf(d) === 'undecided');
+    const keys = (v === 'keep' ? und.filter(d => d.sugg === 'keep') : und.filter(d => d.sugg === 'far' || d.sugg === 'noscope')).map(d => d.key);
+    setDecision(keys, v);
+  }
+  else if (act === 'saveNote') {
+    const d = M.byDriver[a.dataset.key]; if (!d) return;
+    setDecision([d.key], decOf(d), { note: document.getElementById('dr-note').value.slice(0, 1000) });
+  }
+  else if (act === 'place') { MAP.placing = v; closeDrawer(); if (P.tab !== 'map') { P.tab = 'map'; savePrefs(); renderAll(); } else renderMap(); }
+  else if (act === 'placeCancel') { MAP.placing = ''; renderMap(); }
+  else if (act === 'movePin') {
+    const l = M.byKey[v]; if (!l) return;
+    if (!l.hasGeo) { MAP.placing = v; closeDrawer(); P.tab = 'map'; savePrefs(); renderAll(); return; }
+    if (P.tab !== 'map') { P.tab = 'map'; savePrefs(); renderAll(); }
+    if (MAP.dragMarker) MAP.map.removeLayer(MAP.dragMarker);
+    MAP.dragMarker = L.marker([l.lat, l.lng], { draggable: true, autoPan: true }).addTo(MAP.map).bindTooltip(t('dragHint'), { permanent: true, direction: 'top', offset: [0, -30] });
+    MAP.map.setView([l.lat, l.lng], Math.max(MAP.map.getZoom(), 9));
+    MAP.dragMarker.on('dragend', ev => { const ll = ev.target.getLatLng(); MAP.map.removeLayer(MAP.dragMarker); MAP.dragMarker = null; saveGeo(v, ll.lat, ll.lng); });
+  }
+  else if (act === 'clearPin') { saveGeo(v, null, null); }
+  else if (act === 'doImport') doImport();
+  else if (act === 'geocode') {
+    const n = M ? M.scope.filter(l => !l.hasGeo && l.geo !== 'not found' && l.geo !== 'manual').length : 0;
+    try { IMP.msg = ''; await geocodeLoop(n); } catch (err) { IMP.busy = ''; IMP.msg = `<span class="bad-c">${esc(err.message)}</span>`; renderImport(); }
+  }
+  else if (act === 'mapUpload') uploadMap();
+  else if (act === 'mapDel') {
+    if (CONFIRM.map !== v) { CONFIRM.map = v; a.textContent = t('delQ'); clearTimeout(CONFIRM.mt); CONFIRM.mt = setTimeout(() => { CONFIRM.map = ''; renderImport(); }, 4000); return; }
+    CONFIRM.map = '';
+    try { await call({ type: 'deletePlan2027Map', fileId: v }); delete P.layers[v]; savePrefs(); if (MAP.kml[v]) { MAP.map.removeLayer(MAP.kml[v]); delete MAP.kml[v]; } await load(); }
+    catch (err) { toast(err.message, true); }
+  }
+});
+document.addEventListener('change', e => {
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  const act = a.dataset.act;
+  if (act === 'dSit') { P.dSit = a.value; savePrefs(); renderDrivers(); }
+  else if (act === 'dSugg') { P.dSugg = a.value; savePrefs(); renderDrivers(); }
+  else if (act === 'mapMonth') { P.month = Number(a.value); savePrefs(); renderMap(); }
+  else if (act === 'showDrivers') { P.showDrivers = a.checked; savePrefs(); renderMap(); }
+  else if (act === 'showRings') { P.showRings = a.checked; savePrefs(); renderMap(); }
+  else if (act === 'layer') { P.layers[a.dataset.v] = a.checked; savePrefs(); renderMap(); }
+  else if (act === 'radius') { P.radius = Number(a.value); savePrefs(); renderAll(); }
+  else if (act === 'target') {
+    const d = M.byDriver[a.dataset.key]; if (!d) return;
+    setDecision([d.key], a.value ? 'relocate' : decOf(d) === 'relocate' ? 'undecided' : decOf(d), { target: a.value });
+  }
+});
+document.addEventListener('input', e => {
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  if (a.dataset.act === 'radius') { const o = document.getElementById('radius-v'); if (o) o.textContent = fmt(a.value) + ' km'; }
+  if (a.dataset.act === 'dq' || a.dataset.act === 'lq') {
+    P[a.dataset.act] = a.value; savePrefs();
+    clearTimeout(a._t);
+    a._t = setTimeout(() => {
+      const pos = a.selectionStart;
+      (a.dataset.act === 'dq' ? renderDrivers : renderLocations)();
+      const n = document.querySelector(`[data-act="${a.dataset.act}"]`); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (err) {} }
+    }, 180);
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { if (MAP.placing) { MAP.placing = ''; renderMap(); } else closeDrawer(); }
+});
+
+// ---------- início ----------
+function startApp(user) {
+  USER = user;
+  document.body.classList.add('ready');
+  document.getElementById('lang').addEventListener('change', e => {
+    currentLang = e.target.value;
+    try { localStorage.setItem('p27.lang', currentLang); } catch (err) {}
+    renderAll(); renderDrawer();
+  });
+  document.getElementById('btn-refresh').addEventListener('click', () => load());
+  document.getElementById('btn-theme').addEventListener('click', () => { if (typeof toggleTheme === 'function') toggleTheme(); applyI18n(); if (P.tab === 'map') renderMap(); });
+  document.getElementById('btn-logout').addEventListener('click', () => { if (typeof aceLogout === 'function') aceLogout(); });
+  const c = loadCache();
+  if (c) { DATA = c.data; STATE.at = c.at; }
+  renderAll();
+  load();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyI18n();
+  injectLogin({
+    title: 'Plano 2027',
+    sub: t('loginSub'),
+    lang: currentLang,
+    superAdminGate: 'fuss',   // por enquanto só o Lucas; dá pra liberar por usuário na página de permissões
+    pageId: '/2027/',   // = href do item no sv-shell (a allowlist guarda o href)
+    onSuccess: startApp,
+  });
+});
+</script>
+</body>
+</html>

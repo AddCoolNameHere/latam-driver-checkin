@@ -160,7 +160,10 @@ function injectLogin(opts) {
   const i18n = ACE_LOGIN_I18N[lang] || ACE_LOGIN_I18N.pt;
 
   // Arquivo da página atual (ex: 'ops-map.html') — base do gate por página.
+  // opts.pageId: id da página na allowlist quando não é um arquivo da raiz (ex.: '2027/' →
+  // latamace.com/2027/, que senão viraria 'index.html' e colidiria com o index da raiz)
   function currentPageFile() {
+    if (opts.pageId) return String(opts.pageId).toLowerCase();
     const f = (location.pathname.split('/').pop() || '').toLowerCase();
     return f || 'index.html';
   }
@@ -196,7 +199,7 @@ function injectLogin(opts) {
     }
     // Usuário restrito logado fora do seu escopo → manda pra página dele (sem travar numa tela inútil).
     const home = restrictedHome(saved.username);
-    if (home && home !== currentPageFile()) { location.replace(home); return; }
+    if (home && home !== currentPageFile()) { location.replace(home.charAt(0) === '/' || /^https?:/.test(home) ? home : '/' + home); return; }
   }
 
   // Cria o DOM
@@ -267,7 +270,7 @@ function injectLogin(opts) {
         const home = restrictedHome(user.username);
         if (home && home !== currentPageFile()) {
           saveSession(user);
-          location.replace(home);
+          location.replace(home.charAt(0) === '/' || /^https?:/.test(home) ? home : '/' + home);
           return;
         }
         err.textContent = deniedMsg;
