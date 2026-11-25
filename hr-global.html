@@ -56,8 +56,11 @@
   .tab .n { font-size: 12px; background: var(--c-bg-tint); color: var(--c-text-muted); border-radius: 999px; padding: 1px 7px; font-variant-numeric: tabular-nums; }
   .tab .n.hot { background: color-mix(in srgb, var(--c-warn) 16%, transparent); color: var(--c-warn); }
 
-  .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .filters { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; min-width: 0; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip .cc { margin-right: 0; }
+  .chip.active .cc { color: #fff; background: rgba(255,255,255,.22); }
   .chip {
     border: 1px solid var(--c-border); background: var(--c-surface); color: var(--c-text);
     border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
@@ -153,6 +156,8 @@
     .kpi-card { padding: 12px 14px; }
     .kpi-value { font-size: 23px; }
     .filters select, .filters input[type="search"] { width: 100%; max-width: none; }
+    .country-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; width: 100%; padding-bottom: 2px; }
+    .country-chips .chip { flex: none; }
     th, td { padding: 9px 10px; }
     .opt { display: none; }
     .f { grid-template-columns: 1fr; gap: 2px; }
@@ -572,27 +577,33 @@ function driversHtml() {
   const base = filtered('region');
   const rc = {}; base.forEach(d => { rc[d.region] = (rc[d.region] || 0) + 1; });
   let h = '<div class="filters">' +
+    // linha 1: busca + regiões
+    '<div class="filter-row">' +
     '<input type="search" id="f-q" placeholder="' + esc(t('search')) + '" value="' + esc(F.q) + '" autocomplete="off">' +
     '<div class="chips">' +
     '<button type="button" class="chip' + (!F.region ? ' active' : '') + '" data-region="">' + esc(t('allRegions')) + '<span class="n">' + base.length + '</span></button>' +
     REGION_ORDER.map(r => '<button type="button" class="chip' + (F.region === r ? ' active' : '') + '" data-region="' + r + '" style="--rc:' + REGION_COLOR[r] + '"><span class="dot"></span>' + r + '<span class="n">' + (rc[r] || 0) + '</span></button>').join('') +
-    '</div>';
-  // países da região escolhida (com contagem já filtrada por situação/busca)
+    '</div></div>';
+  // linha 2: países (da região escolhida; contagem já filtrada por situação/busca)
   const cBase = filtered('country');
   const cc = {};
   cBase.forEach(d => { if (!d.country) return; (cc[d.country] = cc[d.country] || { n: 0, cc: d.cc, r: d.region }).n++; });
   const cList = Object.keys(cc).sort((a, b) => (regionIdx(cc[a].r) - regionIdx(cc[b].r)) || countryName(cc[a].cc, a).localeCompare(countryName(cc[b].cc, b), locale()));
   if (F.country && !cc[F.country]) { cc[F.country] = { n: 0, cc: '', r: '' }; cList.unshift(F.country); }
-  h += '<select id="f-country"><option value="">' + esc(t('allCountries')) + '</option>' +
-    cList.map(c => '<option value="' + esc(c) + '"' + (F.country === c ? ' selected' : '') + '>' + esc(countryName(cc[c].cc, c)) + ' (' + cc[c].n + ')</option>').join('') + '</select>';
+  h += '<div class="filter-row"><div class="chips country-chips">' +
+    '<button type="button" class="chip' + (!F.country ? ' active' : '') + '" data-country="">' + esc(t('allCountries')) + '<span class="n">' + cBase.length + '</span></button>' +
+    cList.map(c => '<button type="button" class="chip' + (F.country === c ? ' active' : '') + '" data-country="' + esc(c) + '">' +
+      ccTag(cc[c].cc, cc[c].r) + esc(countryName(cc[c].cc, c)) + '<span class="n">' + cc[c].n + '</span></button>').join('') +
+    '</div></div>';
+  // linha 3: situação + formulário
   const sits = [['notInactive', t('sitDefault')], ['all', t('sitAll')], ['active', t('Active')], ['vacation', t('Vacation')], ['offboarding', t('Offboarding')], ['inactive', t('Inactive')], ['none', t('sitNone')]];
-  h += '<select id="f-sit">' + sits.map(s => '<option value="' + s[0] + '"' + (F.sit === s[0] ? ' selected' : '') + '>' + esc(s[1]) + '</option>').join('') + '</select>';
+  h += '<div class="filter-row"><select id="f-sit">' + sits.map(s => '<option value="' + s[0] + '"' + (F.sit === s[0] ? ' selected' : '') + '>' + esc(s[1]) + '</option>').join('') + '</select>';
   h += '<div class="chips">' +
     '<button type="button" class="chip' + (F.form === 'any' ? ' active' : '') + '" data-form="any">' + esc(t('onlyForm')) + '</button>' +
     '<button type="button" class="chip' + (F.form === 'new' ? ' active' : '') + '" data-form="new">' + esc(t('onlyNew')) + '</button></div>';
   const dirty = F.q || F.region || F.country || F.sit !== 'notInactive' || F.form;
   if (dirty) h += '<button type="button" class="btn-link" id="f-clear">' + esc(t('clear')) + '</button>';
-  h += '</div>';
+  h += '</div></div>';
 
   const list = filtered().sort(sorter());
   const shown = F.all ? list : list.slice(0, CONFIG.pageSize);
@@ -672,7 +683,11 @@ function bind() {
     const open = el.classList.toggle('clamp');
     b.textContent = open ? t('seeAll') : t('seeLess');
   });
-  const fc = document.getElementById('f-country'); if (fc) fc.onchange = () => { F.country = fc.value; F.all = false; saveFilters(); render(); };
+  c.querySelectorAll('[data-country]').forEach(b => b.onclick = () => {
+    const v = b.dataset.country;
+    F.country = (v && F.country === v) ? '' : v;   // clicar no país ativo de novo desmarca
+    F.all = false; saveFilters(); render();
+  });
   const fs = document.getElementById('f-sit'); if (fs) fs.onchange = () => { F.sit = fs.value; F.all = false; saveFilters(); render(); };
   const cl = document.getElementById('f-clear'); if (cl) cl.onclick = () => { Object.assign(F, { q: '', region: '', country: '', sit: 'notInactive', form: '', all: false }); saveFilters(); render(); };
   const sa = document.getElementById('show-all'); if (sa) sa.onclick = () => { F.all = true; render(); };
