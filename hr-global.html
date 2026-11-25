@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>HR Global · Aceolution</title>
+<link rel="icon" type="image/png" href="/aceolution-globe.png">
+<script src="/auth.js?v=20261117b"></script>
+<script src="/theme.js?v=20261015ui"></script>
+<script src="/common.js?v=20261015ui"></script>
+<link rel="stylesheet" href="/theme.css?v=20261023toggle">
+<!--
+  HR Global — consulta leve da planilha "HR Global — Street View Drivers" (cadastro 2027).
+  Fonte: aba Todos + "Respostas do formulário" via POST getHrGlobal (backend v5.92).
+  Tem documento/nascimento/endereço → além do login admin, pede a CHAVE HR_GLOBAL_VIEW_KEY
+  (rodar hrGlobalViewKey() no editor do Apps Script: o log mostra a chave e um link #k=… que já entra).
+  Rápida: mostra na hora a última cópia salva neste navegador e atualiza por trás.
+-->
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--c-bg); color: var(--c-text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+  .report-header { padding: 26px 28px 2px; }
+  .report-header-inner { max-width: 1400px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; }
+  .report-eyebrow { font-size: 12px; font-weight: 500; letter-spacing: .05em; color: var(--c-text-muted); text-transform: uppercase; margin-bottom: 6px; }
+  .report-title { font-size: 24px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.2; }
+  .report-subtitle { font-size: 14px; color: var(--c-text-muted); margin-top: 4px; max-width: 760px; }
+  .head-side { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--c-text-muted); }
+  .head-side a, .btn-link { color: var(--c-primary); text-decoration: none; font-weight: 500; background: none; border: 0; font: inherit; font-size: 13px; cursor: pointer; }
+  .head-side a:hover, .btn-link:hover { text-decoration: underline; }
+  .status { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .status.is-stale { color: var(--c-warn); }
+  .mini-spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--c-border); border-top-color: var(--c-primary); animation: spin .8s linear infinite; }
+
+  main { max-width: 1400px; margin: 0 auto; padding: 20px 28px 40px; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .kpi-card {
+    background: linear-gradient(to top, color-mix(in srgb, var(--c-primary) 4%, var(--c-surface)), var(--c-surface));
+    border: 1px solid var(--sv-line, var(--c-border)); border-radius: 14px; box-shadow: var(--shadow-xs); padding: 16px 18px;
+    cursor: pointer; text-align: left; font: inherit; color: inherit; transition: border-color .15s;
+  }
+  .kpi-card:hover { border-color: var(--c-border-strong); }
+  .kpi-label { font-size: 12.5px; font-weight: 500; color: var(--c-text-muted); }
+  .kpi-value { font-size: 28px; font-weight: 600; letter-spacing: -0.035em; line-height: 1.2; font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .kpi-value.is-warn { color: var(--c-warn); }
+  .kpi-sub { font-size: 12px; color: var(--c-text-muted); margin-top: 2px; }
+
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--c-border); margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; }
+  .tab {
+    background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; font: inherit; font-size: 14px; font-weight: 500;
+    color: var(--c-text-muted); cursor: pointer; white-space: nowrap; display: inline-flex; gap: 7px; align-items: center; margin-bottom: -1px;
+  }
+  .tab.active { color: var(--c-text); border-bottom-color: var(--c-primary); }
+  .tab .n { font-size: 12px; background: var(--c-bg-tint); color: var(--c-text-muted); border-radius: 999px; padding: 1px 7px; font-variant-numeric: tabular-nums; }
+  .tab .n.hot { background: color-mix(in srgb, var(--c-warn) 16%, transparent); color: var(--c-warn); }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    border: 1px solid var(--c-border); background: var(--c-surface); color: var(--c-text);
+    border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .chip.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+  .chip .n { font-size: 11.5px; opacity: .75; font-variant-numeric: tabular-nums; }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rc, var(--c-text-dim)); }
+  .filters select, .filters input[type="search"] {
+    font: inherit; font-size: 13.5px; color: var(--c-text); background: var(--c-surface);
+    border: 1px solid var(--c-border); border-radius: 9px; padding: 8px 10px; min-width: 0;
+  }
+  .filters select { max-width: 240px; }
+  .filters input[type="search"] { width: 320px; }
+  .count-line { font-size: 12.5px; color: var(--c-text-muted); margin: 0 2px 8px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+  .panel { background: var(--c-surface); border: 1px solid var(--sv-line, var(--c-border)); border-radius: 14px; box-shadow: var(--shadow-xs); overflow: hidden; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; font-size: 12px; font-weight: 500; color: var(--c-text-muted); padding: 10px 14px; border-bottom: 1px solid var(--c-border); white-space: nowrap; background: var(--c-surface); }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: var(--c-text); }
+  th .arr { font-size: 10px; margin-left: 3px; }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--c-border); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr.click { cursor: pointer; }
+  tbody tr.click:hover td { background: color-mix(in srgb, var(--c-bg-tint) 55%, transparent); }
+  .who { font-weight: 500; }
+  .muted { color: var(--c-text-muted); }
+  .small { font-size: 12px; }
+  .nowrap { white-space: nowrap; }
+  .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .cc { display: inline-block; font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; letter-spacing: .03em; padding: 1px 5px; border-radius: 5px;
+        color: var(--rc, var(--c-text-muted)); background: color-mix(in srgb, var(--rc, #64748B) 12%, transparent); margin-right: 6px; vertical-align: 1px; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 500; border-radius: 999px; padding: 2px 8px; white-space: nowrap; border: 1px solid transparent; }
+  .b-ok { background: color-mix(in srgb, var(--c-success) 12%, transparent); color: var(--c-success); }
+  .b-warn { background: color-mix(in srgb, var(--c-warn) 14%, transparent); color: var(--c-warn); }
+  .b-danger { background: color-mix(in srgb, var(--c-danger) 11%, transparent); color: var(--c-danger); }
+  .b-info { background: var(--c-bg-tint); color: var(--c-primary); }
+  .b-muted { border-color: var(--c-border); color: var(--c-text-muted); }
+  .changes { white-space: pre-wrap; font-size: 12.5px; line-height: 1.45; max-width: 520px; }
+  .changes.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .more { margin-top: 2px; }
+  .empty { padding: 40px 20px; text-align: center; color: var(--c-text-muted); font-size: 14px; }
+  .show-all { display: block; width: 100%; padding: 12px; border: 0; border-top: 1px solid var(--c-border); background: none; color: var(--c-primary); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+
+  .loading { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 80px 20px; color: var(--c-text-muted); font-size: 13px; }
+  .spinner { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--c-border); border-top-color: var(--c-primary); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border-radius: 12px; border: 1px solid #FECACA; background: #FEF2F2; color: #991B1B; font-size: 14px; }
+  [data-theme="dark"] .error-box { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.28); color: #F87171; }
+
+  /* chave de acesso */
+  .key-card { max-width: 520px; margin: 40px auto; padding: 24px; }
+  .key-card h2 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .key-card p { font-size: 13.5px; color: var(--c-text-muted); line-height: 1.55; margin-bottom: 14px; }
+  .key-card code { font-family: var(--font-mono); font-size: 12.5px; background: var(--c-bg-tint); padding: 1px 5px; border-radius: 5px; color: var(--c-text); }
+  .key-row { display: flex; gap: 8px; }
+  .key-row input { flex: 1; min-width: 0; font: inherit; font-family: var(--font-mono); font-size: 13px; color: var(--c-text); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 9px; padding: 9px 11px; }
+  .btn { font: inherit; font-size: 13.5px; font-weight: 500; border-radius: 9px; padding: 9px 16px; cursor: pointer; border: 1px solid var(--c-primary); background: var(--c-primary); color: #fff; }
+  .key-msg { font-size: 13px; margin-top: 10px; color: var(--c-danger); }
+
+  /* ficha (drawer) */
+  .drawer-bg { position: fixed; inset: 0; background: rgba(15,23,42,.32); opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 900; }
+  .drawer-bg.open { opacity: 1; pointer-events: auto; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100vw); background: var(--c-surface); border-left: 1px solid var(--c-border);
+            box-shadow: var(--shadow-lg); transform: translateX(102%); transition: transform .18s ease; z-index: 901; display: flex; flex-direction: column; }
+  .drawer.open { transform: none; }
+  .drawer-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--c-border); display: flex; gap: 12px; align-items: flex-start; }
+  .drawer-head .t { flex: 1; min-width: 0; }
+  .drawer-head h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; }
+  .drawer-head .s { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 13px; color: var(--c-text-muted); }
+  .x { background: none; border: 0; font-size: 22px; line-height: 1; color: var(--c-text-muted); cursor: pointer; padding: 2px 6px; border-radius: 6px; }
+  .x:hover { background: var(--c-bg-tint); color: var(--c-text); }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 6px 20px 20px; }
+  .grp { margin-top: 16px; }
+  .grp h3 { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--c-text-muted); margin-bottom: 4px; }
+  .f { display: grid; grid-template-columns: 170px 1fr; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--c-border); font-size: 13.5px; }
+  .f:last-child { border-bottom: 0; }
+  .f dt { color: var(--c-text-muted); font-size: 12.5px; padding-top: 1px; }
+  .f dd { word-break: break-word; white-space: pre-wrap; }
+  .f dd.copy { cursor: copy; }
+  .f dd.empty-v { color: var(--c-text-dim); }
+  .f dd a { color: var(--c-primary); }
+  .drawer-foot { padding: 10px 20px; border-top: 1px solid var(--c-border); font-size: 12.5px; color: var(--c-text-muted); display: flex; justify-content: space-between; gap: 10px; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--c-text); color: var(--c-surface); font-size: 13px; padding: 7px 14px; border-radius: 999px; opacity: 0; transition: opacity .15s; z-index: 1000; pointer-events: none; }
+  .toast.show { opacity: .92; }
+
+  @media (max-width: 1080px) { .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 680px) {
+    .report-header { padding: 20px 16px 2px; }
+    main { padding: 16px 16px 32px; }
+    .kpi-row { gap: 10px; }
+    .kpi-card { padding: 12px 14px; }
+    .kpi-value { font-size: 23px; }
+    .filters select, .filters input[type="search"] { width: 100%; max-width: none; }
+    th, td { padding: 9px 10px; }
+    .opt { display: none; }
+    .f { grid-template-columns: 1fr; gap: 2px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app" style="display:none;">
+  <section class="report-header">
+    <div class="report-header-inner">
+      <div>
+        <div class="report-eyebrow" id="page-eyebrow">Aceolution · Street View Global</div>
+        <h1 class="report-title" id="page-title">HR Global</h1>
+        <div class="report-subtitle" id="page-sub"></div>
+      </div>
+      <div class="head-side" id="head-side"></div>
+    </div>
+  </section>
+  <main>
+    <div id="content"><div class="loading"><div class="spinner"></div><div id="loading-text"></div></div></div>
+  </main>
+</div>
+
+<div class="drawer-bg" id="drawer-bg"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title"></aside>
+<div class="toast" id="toast"></div>
+
+<script>
+const CONFIG = {
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
+  backendVersion: 'v5.92',
+  keyStore: 'hrg.key',
+  cacheStore: 'hrg.cache.v1',
+  timeoutMs: 45000,
+  pageSize: 300,
+};
+const REGION_ORDER = ['LATAM', 'NA', 'APAC', 'EMEA'];
+const REGION_COLOR = { LATAM: '#16A34A', NA: '#2563EB', APAC: '#D97706', EMEA: '#7C3AED' };
+
+const I18N = {
+  pt: {
+    title: 'HR Global', eyebrow: 'Aceolution · Street View Global',
+    sub: 'Todos os motoristas da planilha HR Global (cadastro 2027). Clique num nome pra ver a ficha completa.',
+    loginSub: 'Acesso interno', loading: 'Carregando motoristas…', refreshing: 'Atualizando…', updated: 'Atualizado {t}',
+    stale: 'Cópia de {t} — não deu pra atualizar', refresh: 'Atualizar', openSheet: 'Abrir planilha', forget: 'Esquecer chave',
+    keyTitle: 'Chave de acesso',
+    keyText: 'Essa página mostra documento, nascimento e endereço dos motoristas, então pede uma chave além do login. No editor do Apps Script, rode <code>hrGlobalViewKey()</code>: o log mostra a chave e um link que já entra com ela.',
+    keyPh: 'Cole a chave aqui', keyBtn: 'Entrar', keyBad: 'Chave inválida — confira e tente de novo.',
+    keyNone: 'A chave ainda não foi criada. Rode hrGlobalViewKey() no editor do Apps Script.',
+    needDeploy: 'O backend ainda não tem essa página — falta implantar a v5.92 do Apps Script (Implantar → Gerenciar implantações → Editar → Nova versão).',
+    error: 'Erro ao carregar', network: 'Sem resposta do servidor. Tente de novo.',
+    kTotal: 'Motoristas', kTotalSub: '{n} países', kActive: 'Ativos', kActiveSub: '+{v} de férias · {o} em offboarding',
+    kForm: 'Enviaram o formulário', kFormSub: '{n} envios no total', kNew: 'Novos pra revisar', kNewSub: 'cadastros que vieram do formulário',
+    tDrivers: 'Motoristas', tSubs: 'Envios do formulário',
+    search: 'Buscar nome, e-mail, telefone, documento, cidade…', allRegions: 'Todas', allCountries: 'Todos os países',
+    sitDefault: 'Sem os inativos', sitAll: 'Todas as situações', sitNone: 'Sem situação',
+    onlyForm: 'Enviaram o formulário', onlyNew: 'Novos pra revisar', clear: 'Limpar filtros',
+    showing: 'Mostrando {n} de {t}', showAll: 'Mostrar todos ({n})',
+    cName: 'Nome', cCountry: 'País', cSit: 'Situação', cPhone: 'Telefone', cCity: 'Cidade', cJoin: 'Entrada', cRate: 'US$/h', cForm: 'Formulário',
+    empty: 'Ninguém com esses filtros.', emptySubs: 'Nenhum envio ainda. Quando alguém mandar o formulário, aparece aqui.',
+    subsCount: '{n} envio(s), do mais novo pro mais antigo', subsCountCut: 'Últimos {n} de {t} envios',
+    cWhen: 'Quando', cResult: 'Resultado', cWho: 'Motorista', cEmail: 'E-mail', cChanges: 'O que mudou',
+    rNew: 'Novo', rUpdated: 'Atualizou', rSame: 'Sem mudança', fsNew: 'Novo — revisar', fsUpd: 'Atualizou',
+    seeAll: 'ver tudo', seeLess: 'ver menos',
+    Active: 'Ativo', Inactive: 'Inativo', Vacation: 'Férias', Offboarding: 'Offboarding',
+    openRow: 'Abrir na planilha', close: 'Fechar', copied: 'Copiado', emptyFields: '{n} campos vazios', showEmpty: 'Mostrar vazios', hideEmpty: 'Esconder vazios',
+    map: 'Ver no mapa', open: 'Abrir', clickCopy: 'Clique num valor pra copiar.',
+    gIdentity: 'Identificação', gContact: 'Contato', gAddress: 'Endereço', gDocs: 'Documentos', gContract: 'Contrato e pagamento', gRecord: 'Cadastro', gOther: 'Outros',
+  },
+  es: {
+    title: 'HR Global', eyebrow: 'Aceolution · Street View Global',
+    sub: 'Todos los conductores de la planilla HR Global (registro 2027). Haz clic en un nombre para ver la ficha completa.',
+    loginSub: 'Acceso interno', loading: 'Cargando conductores…', refreshing: 'Actualizando…', updated: 'Actualizado {t}',
+    stale: 'Copia de {t} — no se pudo actualizar', refresh: 'Actualizar', openSheet: 'Abrir planilla', forget: 'Olvidar clave',
+    keyTitle: 'Clave de acceso',
+    keyText: 'Esta página muestra documento, nacimiento y dirección de los conductores, por eso pide una clave además del login. En el editor de Apps Script, ejecuta <code>hrGlobalViewKey()</code>: el registro muestra la clave y un link que ya entra con ella.',
+    keyPh: 'Pega la clave aquí', keyBtn: 'Entrar', keyBad: 'Clave inválida — revísala e intenta de nuevo.',
+    keyNone: 'La clave todavía no fue creada. Ejecuta hrGlobalViewKey() en el editor de Apps Script.',
+    needDeploy: 'El backend todavía no tiene esta página — falta implementar la v5.92 del Apps Script (Implementar → Gestionar implementaciones → Editar → Nueva versión).',
+    error: 'Error al cargar', network: 'Sin respuesta del servidor. Intenta de nuevo.',
+    kTotal: 'Conductores', kTotalSub: '{n} países', kActive: 'Activos', kActiveSub: '+{v} de vacaciones · {o} en offboarding',
+    kForm: 'Enviaron el formulario', kFormSub: '{n} envíos en total', kNew: 'Nuevos para revisar', kNewSub: 'registros que vinieron del formulario',
+    tDrivers: 'Conductores', tSubs: 'Envíos del formulario',
+    search: 'Buscar nombre, correo, teléfono, documento, ciudad…', allRegions: 'Todas', allCountries: 'Todos los países',
+    sitDefault: 'Sin los inactivos', sitAll: 'Todas las situaciones', sitNone: 'Sin situación',
+    onlyForm: 'Enviaron el formulario', onlyNew: 'Nuevos para revisar', clear: 'Limpiar filtros',
+    showing: 'Mostrando {n} de {t}', showAll: 'Mostrar todos ({n})',
+    cName: 'Nombre', cCountry: 'País', cSit: 'Situación', cPhone: 'Teléfono', cCity: 'Ciudad', cJoin: 'Ingreso', cRate: 'US$/h', cForm: 'Formulario',
+    empty: 'Nadie con estos filtros.', emptySubs: 'Ningún envío todavía. Cuando alguien envíe el formulario, aparece aquí.',
+    subsCount: '{n} envío(s), del más nuevo al más antiguo', subsCountCut: 'Últimos {n} de {t} envíos',
+    cWhen: 'Cuándo', cResult: 'Resultado', cWho: 'Conductor', cEmail: 'Correo', cChanges: 'Qué cambió',
+    rNew: 'Nuevo', rUpdated: 'Actualizó', rSame: 'Sin cambios', fsNew: 'Nuevo — revisar', fsUpd: 'Actualizó',
+    seeAll: 'ver todo', seeLess: 'ver menos',
+    Active: 'Activo', Inactive: 'Inactivo', Vacation: 'Vacaciones', Offboarding: 'Offboarding',
+    openRow: 'Abrir en la planilla', close: 'Cerrar', copied: 'Copiado', emptyFields: '{n} campos vacíos', showEmpty: 'Mostrar vacíos', hideEmpty: 'Ocultar vacíos',
+    map: 'Ver en el mapa', open: 'Abrir', clickCopy: 'Haz clic en un valor para copiarlo.',
+    gIdentity: 'Identificación', gContact: 'Contacto', gAddress: 'Dirección', gDocs: 'Documentos', gContract: 'Contrato y pago', gRecord: 'Registro', gOther: 'Otros',
+  },
+  en: {
+    title: 'HR Global', eyebrow: 'Aceolution · Street View Global',
+    sub: 'Every driver in the HR Global sheet (2027 registration). Click a name to see the full record.',
+    loginSub: 'Internal access', loading: 'Loading drivers…', refreshing: 'Refreshing…', updated: 'Updated {t}',
+    stale: 'Copy from {t} — could not refresh', refresh: 'Refresh', openSheet: 'Open sheet', forget: 'Forget key',
+    keyTitle: 'Access key',
+    keyText: 'This page shows drivers’ ID numbers, birth dates and addresses, so it asks for a key on top of the login. In the Apps Script editor, run <code>hrGlobalViewKey()</code>: the log shows the key and a link that signs you in with it.',
+    keyPh: 'Paste the key here', keyBtn: 'Enter', keyBad: 'Invalid key — check it and try again.',
+    keyNone: 'The key has not been created yet. Run hrGlobalViewKey() in the Apps Script editor.',
+    needDeploy: 'The backend does not have this page yet — deploy Apps Script v5.92 (Deploy → Manage deployments → Edit → New version).',
+    error: 'Failed to load', network: 'No response from the server. Try again.',
+    kTotal: 'Drivers', kTotalSub: '{n} countries', kActive: 'Active', kActiveSub: '+{v} on vacation · {o} offboarding',
+    kForm: 'Sent the form', kFormSub: '{n} submissions in total', kNew: 'New to review', kNewSub: 'records that came from the form',
+    tDrivers: 'Drivers', tSubs: 'Form submissions',
+    search: 'Search name, e-mail, phone, ID, city…', allRegions: 'All', allCountries: 'All countries',
+    sitDefault: 'Hide inactive', sitAll: 'All statuses', sitNone: 'No status',
+    onlyForm: 'Sent the form', onlyNew: 'New to review', clear: 'Clear filters',
+    showing: 'Showing {n} of {t}', showAll: 'Show all ({n})',
+    cName: 'Name', cCountry: 'Country', cSit: 'Status', cPhone: 'Phone', cCity: 'City', cJoin: 'Joined', cRate: 'US$/h', cForm: 'Form',
+    empty: 'Nobody matches these filters.', emptySubs: 'No submissions yet. When someone sends the form, it shows up here.',
+    subsCount: '{n} submission(s), newest first', subsCountCut: 'Latest {n} of {t} submissions',
+    cWhen: 'When', cResult: 'Result', cWho: 'Driver', cEmail: 'E-mail', cChanges: 'What changed',
+    rNew: 'New', rUpdated: 'Updated', rSame: 'No change', fsNew: 'New — review', fsUpd: 'Updated',
+    seeAll: 'see all', seeLess: 'see less',
+    Active: 'Active', Inactive: 'Inactive', Vacation: 'Vacation', Offboarding: 'Offboarding',
+    openRow: 'Open in sheet', close: 'Close', copied: 'Copied', emptyFields: '{n} empty fields', showEmpty: 'Show empty', hideEmpty: 'Hide empty',
+    map: 'View on map', open: 'Open', clickCopy: 'Click a value to copy it.',
+    gIdentity: 'Identity', gContact: 'Contact', gAddress: 'Address', gDocs: 'Documents', gContract: 'Contract & pay', gRecord: 'Record', gOther: 'Other',
+  },
+};
+
+// Rótulo de cada coluna da planilha [pt, es, en]. Coluna desconhecida mostra o cabeçalho cru.
+const FIELD = {
+  'Driver Full Name': ['Nome completo', 'Nombre completo', 'Full name'],
+  'Region': ['Região', 'Región', 'Region'],
+  'Country': ['País', 'País', 'Country'],
+  'Country Code': ['Código do país', 'Código de país', 'Country code'],
+  'Situation': ['Situação', 'Situación', 'Status'],
+  'Type': ['Tipo', 'Tipo', 'Type'],
+  'Program': ['Programa', 'Programa', 'Program'],
+  'First and Second Name': ['Nome(s)', 'Nombre(s)', 'First name(s)'],
+  'Surname': ['Sobrenome', 'Apellido', 'Surname'],
+  'Corporate E-mail': ['E-mail corporativo', 'Correo corporativo', 'Corporate e-mail'],
+  'Personal E-mail': ['E-mail pessoal', 'Correo personal', 'Personal e-mail'],
+  'Phone Number': ['Telefone', 'Teléfono', 'Phone'],
+  'State / Province': ['Estado / província', 'Estado / provincia', 'State / province'],
+  'City': ['Cidade', 'Ciudad', 'City'],
+  'Zip Code': ['CEP / código postal', 'Código postal', 'Zip code'],
+  'Full Adress': ['Endereço', 'Dirección', 'Address'],
+  'Nationality': ['Nacionalidade', 'Nacionalidad', 'Nationality'],
+  'Date of Birth': ['Nascimento', 'Fecha de nacimiento', 'Date of birth'],
+  'Age': ['Idade', 'Edad', 'Age'],
+  'Id Type': ['Tipo de documento', 'Tipo de documento', 'ID type'],
+  'Id Number': ['Nº do documento', 'N.º de documento', 'ID number'],
+  'Driver License Number': ['Nº da carteira', 'N.º de licencia', 'Driver license no.'],
+  'Driver License Expiry': ['Validade da carteira', 'Vencimiento de la licencia', 'License expiry'],
+  'Emergency Contact': ['Contato de emergência', 'Contacto de emergencia', 'Emergency contact'],
+  'Company Tax ID': ['ID fiscal da empresa', 'ID fiscal de la empresa', 'Company tax ID'],
+  'CNPJ (Brazil)': ['CNPJ (Brasil)', 'CNPJ (Brasil)', 'CNPJ (Brazil)'],
+  'Preferred Language': ['Idioma', 'Idioma', 'Language'],
+  'Driver Notes': ['Observações do motorista', 'Notas del conductor', 'Driver notes'],
+  'Per Hour Salary (USD)': ['Valor hora (US$)', 'Tarifa por hora (US$)', 'Hourly rate (USD)'],
+  'Previous Rate (USD)': ['Valor hora anterior (US$)', 'Tarifa anterior (US$)', 'Previous rate (USD)'],
+  'Joining Date/Renovation Date': ['Entrada / renovação', 'Ingreso / renovación', 'Joining / renewal'],
+  'First Joining Date': ['Primeira entrada', 'Primer ingreso', 'First joining date'],
+  'End Date': ['Saída', 'Fecha de salida', 'End date'],
+  'Ramp Card Last 4': ['Cartão Ramp (final)', 'Tarjeta Ramp (últimos 4)', 'Ramp card last 4'],
+  'Virtual Ramp Card Last 4': ['Ramp virtual (final)', 'Ramp virtual (últimos 4)', 'Virtual Ramp last 4'],
+  'Previous Corporate E-mail': ['E-mail corporativo anterior', 'Correo corporativo anterior', 'Previous corporate e-mail'],
+  'PAYHAWK NAME': ['Nome no Payhawk', 'Nombre en Payhawk', 'Payhawk name'],
+  'Feedback': ['Avaliação', 'Evaluación', 'Feedback'],
+  'FILE LINK': ['Pasta de arquivos', 'Carpeta de archivos', 'Files folder'],
+  'Document URL (do not edit)': ['Documento', 'Documento', 'Document'],
+  'Home Lat': ['Casa — latitude', 'Casa — latitud', 'Home latitude'],
+  'Home Lng': ['Casa — longitude', 'Casa — longitud', 'Home longitude'],
+  'Source': ['Origem', 'Origen', 'Source'],
+  'Form Status': ['Status do formulário', 'Estado del formulario', 'Form status'],
+  'Form Submitted At': ['Enviou o formulário em', 'Envió el formulario el', 'Form submitted at'],
+  'Last Updated': ['Última atualização', 'Última actualización', 'Last updated'],
+};
+const GROUPS = [
+  ['gIdentity', ['Driver Full Name', 'First and Second Name', 'Surname', 'Situation', 'Type', 'Program', 'Region', 'Country', 'Country Code', 'Nationality', 'Date of Birth', 'Age', 'Preferred Language']],
+  ['gContact', ['Corporate E-mail', 'Personal E-mail', 'Phone Number', 'Emergency Contact', 'Previous Corporate E-mail']],
+  ['gAddress', ['Full Adress', 'City', 'State / Province', 'Zip Code', 'Home Lat', 'Home Lng']],
+  ['gDocs', ['Id Type', 'Id Number', 'Driver License Number', 'Driver License Expiry', 'Company Tax ID', 'CNPJ (Brazil)', 'FILE LINK', 'Document URL (do not edit)']],
+  ['gContract', ['Per Hour Salary (USD)', 'Previous Rate (USD)', 'Joining Date/Renovation Date', 'First Joining Date', 'End Date', 'Ramp Card Last 4', 'Virtual Ramp Card Last 4', 'PAYHAWK NAME', 'Feedback']],
+  ['gRecord', ['Driver Notes', 'Form Status', 'Form Submitted At', 'Source', 'Last Updated']],
+];
+const SIT_ORDER = { active: 0, vacation: 1, offboarding: 2, '': 3, inactive: 4 };
+
+let currentLang = 'pt';
+try { const l = localStorage.getItem('hrg.lang') || localStorage.getItem('latam.lang'); if (I18N[l]) currentLang = l; } catch (e) {}
+let RAW = null, DATA = null;
+const STATUS = { at: null, refreshing: false, stale: false };
+const F = { tab: 'drivers', q: '', region: '', country: '', sit: 'notInactive', form: '', sort: 'country', dir: 1, all: false };
+try { const s = JSON.parse(sessionStorage.getItem('hrg.filters') || 'null'); if (s) Object.assign(F, s, { all: false }); } catch (e) {}
+let OPEN_N = null, SHOW_EMPTY = false;
+
+function t(key, vars) {
+  let s = (I18N[currentLang] && I18N[currentLang][key]) || I18N.pt[key] || key;
+  if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
+  return s;
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function norm(s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+function fieldLabel(h) { const f = FIELD[h]; return f ? f[currentLang === 'es' ? 1 : currentLang === 'en' ? 2 : 0] : h; }
+function locale() { return currentLang === 'en' ? 'en-US' : currentLang === 'es' ? 'es-AR' : 'pt-BR'; }
+let _dn = null, _dnLang = null;
+function countryName(cc, fallback) {
+  if (!/^[A-Z]{2}$/.test(cc || '')) return fallback || '';
+  try {
+    if (_dnLang !== currentLang) { _dn = new Intl.DisplayNames([locale()], { type: 'region' }); _dnLang = currentLang; }
+    return _dn.of(cc) || fallback || cc;
+  } catch (e) { return fallback || cc; }
+}
+function fmtTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  const sameDay = new Date().toDateString() === d.toDateString();
+  return d.toLocaleString(locale(), sameDay ? { hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+function sitKey(s) { return norm(s).trim(); }
+function sitBadge(s) {
+  const k = sitKey(s);
+  if (!k) return '<span class="badge b-muted">—</span>';
+  const cls = k === 'active' ? 'b-ok' : k === 'vacation' ? 'b-info' : k === 'offboarding' ? 'b-warn' : 'b-muted';
+  const lbl = { active: 'Active', inactive: 'Inactive', vacation: 'Vacation', offboarding: 'Offboarding' }[k];
+  return '<span class="badge ' + cls + '">' + esc(lbl ? t(lbl) : s) + '</span>';
+}
+function formBadge(fs) {
+  if (!fs) return '';
+  if (/^new/i.test(fs)) return '<span class="badge b-warn">' + esc(t('fsNew')) + '</span>';
+  if (/^updated/i.test(fs)) return '<span class="badge b-info">' + esc(t('fsUpd')) + '</span>';
+  return '<span class="badge b-muted">' + esc(fs) + '</span>';
+}
+function ccTag(cc, region) {
+  if (!cc) return '';
+  return '<span class="cc" style="--rc:' + (REGION_COLOR[region] || '#64748B') + '">' + esc(cc) + '</span>';
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 1200);
+}
+
+// ---------- chave + cache (só neste navegador) ----------
+function getKey() { try { return localStorage.getItem(CONFIG.keyStore) || ''; } catch (e) { return ''; } }
+function setKey(k) { try { localStorage.setItem(CONFIG.keyStore, k); } catch (e) {} }
+function forgetKey() {
+  try { localStorage.removeItem(CONFIG.keyStore); localStorage.removeItem(CONFIG.cacheStore); } catch (e) {}
+  RAW = null; DATA = null;
+}
+function loadCache() { try { return JSON.parse(localStorage.getItem(CONFIG.cacheStore) || 'null'); } catch (e) { return null; } }
+function saveCache(res) { try { localStorage.setItem(CONFIG.cacheStore, JSON.stringify(res)); } catch (e) { console.warn('[HR Global] cache cheio', e); } }
+
+async function post(payload) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), CONFIG.timeoutMs);
+  try {
+    const r = await fetch(CONFIG.scriptUrl, { method: 'POST', body: JSON.stringify(payload), signal: ctrl.signal });
+    return await r.json();
+  } finally { clearTimeout(timer); }
+}
+
+// ---------- dados ----------
+function prepare(res) {
+  const H = res.headers || [];
+  const ix = {}; H.forEach((h, i) => { ix[h] = i; });
+  const g = (v, h) => (ix[h] == null ? '' : String(v[ix[h]] == null ? '' : v[ix[h]]).trim());
+  const drivers = (res.rows || []).map(r => {
+    const v = r.v;
+    const d = {
+      n: r.n, v: v, l: r.l || {},
+      name: g(v, 'Driver Full Name') || (g(v, 'First and Second Name') + ' ' + g(v, 'Surname')).trim() || '—',
+      region: g(v, 'Region').toUpperCase(), country: g(v, 'Country'), cc: g(v, 'Country Code').toUpperCase(),
+      sit: g(v, 'Situation'), corp: g(v, 'Corporate E-mail'), pers: g(v, 'Personal E-mail'), phone: g(v, 'Phone Number'),
+      city: g(v, 'City'), join: g(v, 'Joining Date/Renovation Date'), rate: g(v, 'Per Hour Salary (USD)'),
+      form: g(v, 'Form Status'), formAt: g(v, 'Form Submitted At'),
+    };
+    d.sitK = sitKey(d.sit);
+    d.hay = norm(v.join(' \u0001 '));
+    d.digits = v.map(x => String(x).replace(/\D/g, '')).filter(x => x.length >= 4).join('|');
+    return d;
+  });
+  const byEmail = {};
+  drivers.forEach(d => { [d.corp, d.pers].forEach(e => { if (e) byEmail[e.toLowerCase()] = d; }); });
+  const byN = {}; drivers.forEach(d => { byN[d.n] = d; });
+  const log = res.log || { headers: [], rows: [], total: 0 };
+  return { H, ix, drivers, byEmail, byN, log, sheetUrl: res.sheetUrl || '', gid: res.gid };
+}
+
+function matchQ(d, q, qd) {
+  if (!q) return true;
+  if (d.hay.indexOf(q) >= 0) return true;
+  return qd.length >= 4 && d.digits.indexOf(qd) >= 0;
+}
+function passSit(d) {
+  if (F.sit === 'all') return true;
+  if (F.sit === 'notInactive') return d.sitK !== 'inactive';
+  if (F.sit === 'none') return !d.sitK;
+  return d.sitK === F.sit;
+}
+function passForm(d) {
+  if (F.form === 'any') return !!d.form;
+  if (F.form === 'new') return /^new/i.test(d.form);
+  return true;
+}
+function filtered(skip) {
+  const q = norm(F.q).trim();
+  const qd = /^[\d\s()+\-./]+$/.test(F.q.trim()) ? F.q.replace(/\D/g, '') : '';
+  return DATA.drivers.filter(d =>
+    (skip === 'region' || skip === 'country' || !F.region || d.region === F.region) &&
+    (skip === 'country' || !F.country || d.country === F.country) &&
+    (skip === 'sit' || passSit(d)) && passForm(d) && matchQ(d, q, qd));
+}
+function regionIdx(r) { const i = REGION_ORDER.indexOf(r); return i < 0 ? 9 : i; }
+function sorter() {
+  const dir = F.dir, cmpS = (a, b) => a.localeCompare(b, locale(), { sensitivity: 'base' });
+  const emptyLast = (a, b, f) => (!a && !b ? 0 : !a ? 1 : !b ? -1 : f());
+  const by = {
+    name: (a, b) => cmpS(a.name, b.name) * dir,
+    country: (a, b) => ((regionIdx(a.region) - regionIdx(b.region)) || cmpS(a.country, b.country)) * dir || cmpS(a.name, b.name),
+    sit: (a, b) => ((SIT_ORDER[a.sitK] ?? 3) - (SIT_ORDER[b.sitK] ?? 3)) * dir || cmpS(a.name, b.name),
+    phone: (a, b) => emptyLast(a.phone, b.phone, () => cmpS(a.phone, b.phone) * dir),
+    city: (a, b) => emptyLast(a.city, b.city, () => cmpS(a.city, b.city) * dir),
+    join: (a, b) => emptyLast(a.join, b.join, () => (a.join < b.join ? -1 : a.join > b.join ? 1 : 0) * dir),
+    rate: (a, b) => emptyLast(a.rate, b.rate, () => ((parseFloat(a.rate) || 0) - (parseFloat(b.rate) || 0)) * dir),
+    form: (a, b) => emptyLast(a.formAt, b.formAt, () => (a.formAt < b.formAt ? -1 : a.formAt > b.formAt ? 1 : 0) * dir),
+  };
+  return by[F.sort] || by.country;
+}
+function saveFilters() { try { sessionStorage.setItem('hrg.filters', JSON.stringify(F)); } catch (e) {} }
+
+// ---------- render ----------
+function applyI18n() {
+  document.documentElement.lang = currentLang === 'pt' ? 'pt-BR' : currentLang;
+  document.getElementById('page-eyebrow').textContent = t('eyebrow');
+  document.getElementById('page-title').textContent = t('title');
+  document.getElementById('page-sub').textContent = t('sub');
+  const lt = document.getElementById('loading-text'); if (lt) lt.textContent = t('loading');
+  document.title = t('title') + ' · Aceolution';
+}
+function setLang(lang) {
+  currentLang = I18N[lang] ? lang : 'pt';
+  try { localStorage.setItem('hrg.lang', currentLang); } catch (e) {}
+  applyI18n(); renderHead();
+  if (DATA) render(); else if (!getKey()) renderKeyPanel();
+  if (OPEN_N != null) openDrawer(OPEN_N);
+}
+
+function renderHead() {
+  const el = document.getElementById('head-side');
+  if (!el) return;
+  let st = '';
+  if (STATUS.refreshing) st = '<span class="status"><span class="mini-spin"></span>' + esc(t('refreshing')) + '</span>';
+  else if (STATUS.stale && STATUS.at) st = '<span class="status is-stale">⚠ ' + esc(t('stale', { t: fmtTime(STATUS.at) })) + '</span>';
+  else if (STATUS.at) st = '<span class="status">' + esc(t('updated', { t: fmtTime(STATUS.at) })) + '</span>';
+  const parts = [st];
+  if (DATA || getKey()) parts.push('<button type="button" class="btn-link" id="btn-refresh">' + esc(t('refresh')) + '</button>');
+  if (DATA && DATA.sheetUrl) parts.push('<a href="' + esc(DATA.sheetUrl) + '" target="_blank" rel="noopener">' + esc(t('openSheet')) + ' ↗</a>');
+  if (getKey()) parts.push('<button type="button" class="btn-link muted" id="btn-forget" style="color:var(--c-text-muted)">' + esc(t('forget')) + '</button>');
+  el.innerHTML = parts.filter(Boolean).join('<span class="muted">·</span>');
+  const r = document.getElementById('btn-refresh'); if (r) r.onclick = () => load();
+  const f = document.getElementById('btn-forget'); if (f) f.onclick = () => { forgetKey(); STATUS.at = null; closeDrawer(); renderHead(); renderKeyPanel(); };
+}
+
+function renderKeyPanel(msgKey) {
+  renderHead();
+  document.getElementById('content').innerHTML =
+    '<div class="panel key-card"><h2>' + esc(t('keyTitle')) + '</h2><p>' + t('keyText') + '</p>' +
+    '<form class="key-row" id="key-form"><input id="key-in" type="password" autocomplete="off" spellcheck="false" placeholder="' + esc(t('keyPh')) + '">' +
+    '<button class="btn" type="submit">' + esc(t('keyBtn')) + '</button></form>' +
+    (msgKey ? '<div class="key-msg">' + esc(t(msgKey)) + '</div>' : '') + '</div>';
+  const inp = document.getElementById('key-in'); inp.focus();
+  document.getElementById('key-form').onsubmit = (e) => {
+    e.preventDefault();
+    const k = inp.value.trim().replace(/^.*#k=/, '');
+    if (!k) return;
+    setKey(k); load();
+  };
+}
+
+function renderError(msg) {
+  document.getElementById('content').innerHTML = '<div class="error-box"><span>⚠</span><span>' + esc(t('error')) + ': ' + esc(msg) + '</span></div>';
+}
+
+function render() {
+  if (!DATA) return;
+  renderHead();
+  const D = DATA.drivers;
+  const countries = new Set(D.map(d => d.country).filter(Boolean)).size;
+  const act = D.filter(d => d.sitK === 'active').length, vac = D.filter(d => d.sitK === 'vacation').length, off = D.filter(d => d.sitK === 'offboarding').length;
+  const formN = D.filter(d => d.form).length, newN = D.filter(d => /^new/i.test(d.form)).length;
+  const subsTotal = DATA.log.total || DATA.log.rows.length;
+
+  let h = '<div class="kpi-row">' +
+    kpi('total', t('kTotal'), D.length, t('kTotalSub', { n: countries })) +
+    kpi('active', t('kActive'), act, t('kActiveSub', { v: vac, o: off })) +
+    kpi('form', t('kForm'), formN, t('kFormSub', { n: subsTotal })) +
+    kpi('new', t('kNew'), newN, t('kNewSub'), newN > 0) + '</div>';
+  h += '<div class="tabs">' +
+    '<button type="button" class="tab' + (F.tab === 'drivers' ? ' active' : '') + '" data-tab="drivers">' + esc(t('tDrivers')) + '<span class="n">' + D.length + '</span></button>' +
+    '<button type="button" class="tab' + (F.tab === 'subs' ? ' active' : '') + '" data-tab="subs">' + esc(t('tSubs')) + '<span class="n' + (subsTotal ? ' hot' : '') + '">' + subsTotal + '</span></button></div>';
+  h += F.tab === 'subs' ? subsHtml() : driversHtml();
+  document.getElementById('content').innerHTML = h;
+  bind();
+}
+function kpi(id, label, val, sub, warn) {
+  return '<button type="button" class="kpi-card" data-kpi="' + id + '"><div class="kpi-label">' + esc(label) + '</div>' +
+    '<div class="kpi-value' + (warn ? ' is-warn' : '') + '">' + val + '</div><div class="kpi-sub">' + esc(sub) + '</div></button>';
+}
+
+function driversHtml() {
+  // contagens dos chips de região ignoram o próprio filtro de região/país
+  const base = filtered('region');
+  const rc = {}; base.forEach(d => { rc[d.region] = (rc[d.region] || 0) + 1; });
+  let h = '<div class="filters">' +
+    '<input type="search" id="f-q" placeholder="' + esc(t('search')) + '" value="' + esc(F.q) + '" autocomplete="off">' +
+    '<div class="chips">' +
+    '<button type="button" class="chip' + (!F.region ? ' active' : '') + '" data-region="">' + esc(t('allRegions')) + '<span class="n">' + base.length + '</span></button>' +
+    REGION_ORDER.map(r => '<button type="button" class="chip' + (F.region === r ? ' active' : '') + '" data-region="' + r + '" style="--rc:' + REGION_COLOR[r] + '"><span class="dot"></span>' + r + '<span class="n">' + (rc[r] || 0) + '</span></button>').join('') +
+    '</div>';
+  // países da região escolhida (com contagem já filtrada por situação/busca)
+  const cBase = filtered('country');
+  const cc = {};
+  cBase.forEach(d => { if (!d.country) return; (cc[d.country] = cc[d.country] || { n: 0, cc: d.cc, r: d.region }).n++; });
+  const cList = Object.keys(cc).sort((a, b) => (regionIdx(cc[a].r) - regionIdx(cc[b].r)) || countryName(cc[a].cc, a).localeCompare(countryName(cc[b].cc, b), locale()));
+  if (F.country && !cc[F.country]) { cc[F.country] = { n: 0, cc: '', r: '' }; cList.unshift(F.country); }
+  h += '<select id="f-country"><option value="">' + esc(t('allCountries')) + '</option>' +
+    cList.map(c => '<option value="' + esc(c) + '"' + (F.country === c ? ' selected' : '') + '>' + esc(countryName(cc[c].cc, c)) + ' (' + cc[c].n + ')</option>').join('') + '</select>';
+  const sits = [['notInactive', t('sitDefault')], ['all', t('sitAll')], ['active', t('Active')], ['vacation', t('Vacation')], ['offboarding', t('Offboarding')], ['inactive', t('Inactive')], ['none', t('sitNone')]];
+  h += '<select id="f-sit">' + sits.map(s => '<option value="' + s[0] + '"' + (F.sit === s[0] ? ' selected' : '') + '>' + esc(s[1]) + '</option>').join('') + '</select>';
+  h += '<div class="chips">' +
+    '<button type="button" class="chip' + (F.form === 'any' ? ' active' : '') + '" data-form="any">' + esc(t('onlyForm')) + '</button>' +
+    '<button type="button" class="chip' + (F.form === 'new' ? ' active' : '') + '" data-form="new">' + esc(t('onlyNew')) + '</button></div>';
+  const dirty = F.q || F.region || F.country || F.sit !== 'notInactive' || F.form;
+  if (dirty) h += '<button type="button" class="btn-link" id="f-clear">' + esc(t('clear')) + '</button>';
+  h += '</div>';
+
+  const list = filtered().sort(sorter());
+  const shown = F.all ? list : list.slice(0, CONFIG.pageSize);
+  h += '<div class="count-line">' + esc(t('showing', { n: shown.length, t: list.length })) + '</div>';
+  if (!list.length) return h + '<div class="panel"><div class="empty">' + esc(t('empty')) + '</div></div>';
+  const th = (key, label, cls) => '<th class="sortable' + (cls ? ' ' + cls : '') + '" data-sort="' + key + '">' + esc(label) +
+    (F.sort === key ? '<span class="arr">' + (F.dir > 0 ? '▲' : '▼') + '</span>' : '') + '</th>';
+  h += '<div class="panel"><div class="table-wrap"><table><thead><tr>' +
+    th('name', t('cName')) + th('country', t('cCountry')) + th('sit', t('cSit')) + th('phone', t('cPhone'), 'opt') +
+    th('city', t('cCity'), 'opt') + th('join', t('cJoin'), 'opt') + th('rate', t('cRate'), 'opt') + th('form', t('cForm')) +
+    '</tr></thead><tbody id="tbody">';
+  h += shown.map(d =>
+    '<tr class="click" data-n="' + d.n + '">' +
+    '<td><div class="who">' + esc(d.name) + '</div><div class="muted small">' + esc(d.corp || d.pers) + '</div></td>' +
+    '<td class="nowrap">' + ccTag(d.cc, d.region) + esc(countryName(d.cc, d.country)) + '</td>' +
+    '<td>' + sitBadge(d.sit) + '</td>' +
+    '<td class="num opt">' + esc(d.phone) + '</td>' +
+    '<td class="opt">' + esc(d.city) + '</td>' +
+    '<td class="num opt">' + esc(d.join) + '</td>' +
+    '<td class="num opt">' + esc(d.rate) + '</td>' +
+    '<td>' + formBadge(d.form) + (d.formAt ? '<div class="muted small num">' + esc(d.formAt) + '</div>' : '') + '</td></tr>').join('');
+  h += '</tbody></table></div>';
+  if (shown.length < list.length) h += '<button type="button" class="show-all" id="show-all">' + esc(t('showAll', { n: list.length })) + '</button>';
+  return h + '</div>';
+}
+
+function subsHtml() {
+  const L = DATA.log, ix = {};
+  L.headers.forEach((x, i) => { ix[x] = i; });
+  const g = (r, k) => (ix[k] == null ? '' : r[ix[k]] || '');
+  if (!L.rows.length) return '<div class="panel"><div class="empty">' + esc(t('emptySubs')) + '</div></div>';
+  const total = L.total || L.rows.length;
+  let h = '<div class="count-line">' + esc(total > L.rows.length ? t('subsCountCut', { n: L.rows.length, t: total }) : t('subsCount', { n: total })) + '</div>';
+  h += '<div class="panel"><div class="table-wrap"><table><thead><tr><th>' + esc(t('cWhen')) + '</th><th>' + esc(t('cResult')) + '</th><th>' +
+    esc(t('cWho')) + '</th><th class="opt">' + esc(t('cEmail')) + '</th><th>' + esc(t('cChanges')) + '</th></tr></thead><tbody>';
+  h += L.rows.map((r, i) => {
+    const res = g(r, 'Result'), pe = g(r, 'Personal E-mail'), ce = g(r, 'Corporate E-mail');
+    const d = DATA.byEmail[(ce || '').toLowerCase()] || DATA.byEmail[(pe || '').toLowerCase()];
+    const badge = /^new/i.test(res) ? '<span class="badge b-warn">' + esc(t('rNew')) + '</span>'
+      : /^updated/i.test(res) ? '<span class="badge b-info">' + esc(t('rUpdated')) + '</span>'
+      : '<span class="badge b-muted">' + esc(/same/i.test(res) ? t('rSame') : res) + '</span>';
+    const ch = g(r, 'Changes'), lines = ch ? ch.split('\n').length : 0;
+    const country = g(r, 'Country');
+    return '<tr' + (d ? ' class="click" data-n="' + d.n + '"' : '') + '>' +
+      '<td class="num">' + esc(g(r, 'Submitted At')) + '</td><td>' + badge + '</td>' +
+      '<td><div class="who">' + esc(g(r, 'Driver Full Name')) + '</div><div class="muted small">' + (d ? ccTag(d.cc, d.region) : '') + esc(country) + (g(r, 'Lang') ? ' · ' + esc(g(r, 'Lang').toUpperCase()) : '') + '</div></td>' +
+      '<td class="opt"><div>' + esc(pe) + '</div><div class="muted small">' + esc(ce) + '</div></td>' +
+      '<td>' + (ch ? '<div class="changes' + (lines > 3 ? ' clamp' : '') + '" id="ch-' + i + '">' + esc(ch) + '</div>' +
+        (lines > 3 ? '<button type="button" class="btn-link small more" data-more="' + i + '">' + esc(t('seeAll')) + '</button>' : '') : '<span class="muted">—</span>') + '</td></tr>';
+  }).join('');
+  return h + '</tbody></table></div></div>';
+}
+
+function bind() {
+  const c = document.getElementById('content');
+  c.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { F.tab = b.dataset.tab; saveFilters(); render(); });
+  c.querySelectorAll('[data-kpi]').forEach(b => b.onclick = () => {
+    const k = b.dataset.kpi;
+    Object.assign(F, { tab: 'drivers', q: '', region: '', country: '', form: '', all: false, sit: k === 'active' ? 'active' : 'all' });
+    if (k === 'form' || k === 'new') Object.assign(F, { form: k === 'new' ? 'new' : 'any', sort: 'form', dir: -1 });
+    saveFilters(); render();
+  });
+  c.querySelectorAll('[data-region]').forEach(b => b.onclick = () => { F.region = b.dataset.region; F.country = ''; F.all = false; saveFilters(); render(); });
+  c.querySelectorAll('[data-form]').forEach(b => b.onclick = () => {
+    F.form = F.form === b.dataset.form ? '' : b.dataset.form;
+    if (F.form) { F.sit = 'all'; F.sort = 'form'; F.dir = -1; }
+    F.all = false; saveFilters(); render();
+  });
+  c.querySelectorAll('[data-sort]').forEach(b => b.onclick = () => {
+    const k = b.dataset.sort;
+    if (F.sort === k) F.dir = -F.dir; else { F.sort = k; F.dir = (k === 'form' || k === 'join' || k === 'rate') ? -1 : 1; }
+    saveFilters(); render();
+  });
+  c.querySelectorAll('[data-more]').forEach(b => b.onclick = (e) => {
+    e.stopPropagation();
+    const el = document.getElementById('ch-' + b.dataset.more);
+    const open = el.classList.toggle('clamp');
+    b.textContent = open ? t('seeAll') : t('seeLess');
+  });
+  const fc = document.getElementById('f-country'); if (fc) fc.onchange = () => { F.country = fc.value; F.all = false; saveFilters(); render(); };
+  const fs = document.getElementById('f-sit'); if (fs) fs.onchange = () => { F.sit = fs.value; F.all = false; saveFilters(); render(); };
+  const cl = document.getElementById('f-clear'); if (cl) cl.onclick = () => { Object.assign(F, { q: '', region: '', country: '', sit: 'notInactive', form: '', all: false }); saveFilters(); render(); };
+  const sa = document.getElementById('show-all'); if (sa) sa.onclick = () => { F.all = true; render(); };
+  const q = document.getElementById('f-q');
+  if (q) q.oninput = () => {
+    clearTimeout(bind._t);
+    bind._t = setTimeout(() => {
+      F.q = q.value; F.all = false; saveFilters();
+      const pos = q.selectionStart;
+      render();
+      const nq = document.getElementById('f-q'); nq.focus(); try { nq.setSelectionRange(pos, pos); } catch (e) {}
+    }, 120);
+  };
+  c.querySelectorAll('tr.click').forEach(tr => tr.onclick = () => openDrawer(+tr.dataset.n));
+}
+
+// ---------- ficha ----------
+function valueHtml(d, h, i) {
+  const raw = String(d.v[i] == null ? '' : d.v[i]).trim();
+  const url = d.l[i] || (/^https?:\/\//i.test(raw) ? raw : '');
+  if (url) return { html: '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(raw && raw !== url ? raw : t('open')) + ' ↗</a>', copy: '' };
+  if (!raw) return null;
+  if (/e-mail/i.test(h) && /@/.test(raw)) return { html: '<a href="mailto:' + esc(raw) + '">' + esc(raw) + '</a>', copy: raw };
+  if (h === 'Situation') return { html: sitBadge(raw), copy: raw };
+  if (h === 'Form Status') return { html: formBadge(raw) + ' <span class="muted small">' + esc(raw) + '</span>', copy: raw };
+  if (h === 'Country') return { html: ccTag(d.cc, d.region) + esc(countryName(d.cc, raw)), copy: raw };
+  return { html: esc(raw), copy: raw };
+}
+function openDrawer(n) {
+  const d = DATA && DATA.byN[n];
+  if (!d) return closeDrawer();
+  OPEN_N = n;
+  const H = DATA.H, used = {};
+  let empty = 0;
+  const grp = (title, heads) => {
+    let rows = '';
+    heads.forEach(h => {
+      const i = DATA.ix[h];
+      if (i == null) return;
+      used[h] = true;
+      const v = valueHtml(d, h, i);
+      if (!v) { empty++; if (!SHOW_EMPTY) return; }
+      rows += '<div class="f"><dt>' + esc(fieldLabel(h)) + '</dt>' +
+        (v ? '<dd' + (v.copy ? ' class="copy" data-copy="' + esc(v.copy) + '"' : '') + '>' + v.html + '</dd>' : '<dd class="empty-v">—</dd>') + '</div>';
+      if (h === 'Home Lng') {
+        const la = parseFloat(String(d.v[DATA.ix['Home Lat']] || '').replace(',', '.')), lo = parseFloat(String(d.v[i] || '').replace(',', '.'));
+        if (isFinite(la) && isFinite(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180 && (la || lo)) {
+          rows += '<div class="f"><dt></dt><dd><a href="https://www.google.com/maps?q=' + la + ',' + lo + '" target="_blank" rel="noopener">' + esc(t('map')) + ' ↗</a></dd></div>';
+        }
+      }
+    });
+    return rows ? '<section class="grp"><h3>' + esc(t(title)) + '</h3><dl>' + rows + '</dl></section>' : '';
+  };
+  let body = GROUPS.map(g => grp(g[0], g[1])).join('');
+  body += grp('gOther', H.filter(h => h && !used[h]));
+  const rowUrl = DATA.sheetUrl ? DATA.sheetUrl.replace(/#.*$/, '') + '#gid=' + DATA.gid + '&range=A' + d.n : '';
+  const el = document.getElementById('drawer');
+  el.innerHTML =
+    '<div class="drawer-head"><div class="t"><h2 id="drawer-title">' + esc(d.name) + '</h2><div class="s">' +
+      (d.country ? '<span>' + ccTag(d.cc, d.region) + esc(countryName(d.cc, d.country)) + '</span>' : '') + sitBadge(d.sit) + formBadge(d.form) +
+      (rowUrl ? '<a class="btn-link" href="' + esc(rowUrl) + '" target="_blank" rel="noopener">' + esc(t('openRow')) + ' ↗</a>' : '') +
+    '</div></div><button type="button" class="x" id="drawer-x" aria-label="' + esc(t('close')) + '">×</button></div>' +
+    '<div class="drawer-body">' + body + '</div>' +
+    '<div class="drawer-foot"><span>' + esc(t('clickCopy')) + '</span>' +
+      (empty ? '<button type="button" class="btn-link" id="drawer-empty">' + esc(t(SHOW_EMPTY ? 'hideEmpty' : 'showEmpty')) + ' (' + empty + ')</button>' : '') + '</div>';
+  el.classList.add('open');
+  document.getElementById('drawer-bg').classList.add('open');
+  document.getElementById('drawer-x').onclick = closeDrawer;
+  const de = document.getElementById('drawer-empty'); if (de) de.onclick = () => { SHOW_EMPTY = !SHOW_EMPTY; openDrawer(n); };
+  el.querySelectorAll('[data-copy]').forEach(dd => dd.onclick = (e) => {
+    if (e.target.closest('a')) return;
+    const txt = dd.dataset.copy;
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast(t('copied')), () => {});
+  });
+}
+function closeDrawer() {
+  OPEN_N = null;
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-bg').classList.remove('open');
+}
+
+// ---------- carga ----------
+async function load() {
+  if (!getKey()) return renderKeyPanel();
+  STATUS.refreshing = true; renderHead();
+  try {
+    const res = await post({ type: 'getHrGlobal', key: getKey() });
+    if (!res || !res.success) {
+      const code = res && res.code, msg = String((res && res.error) || 'backend');
+      STATUS.refreshing = false;
+      if (code === 'badKey') { forgetKey(); closeDrawer(); return renderKeyPanel('keyBad'); }
+      if (code === 'noKey') { forgetKey(); closeDrawer(); return renderKeyPanel('keyNone'); }
+      throw new Error(/unknown type/i.test(msg) ? t('needDeploy') : msg);
+    }
+    saveCache(res);
+    RAW = res; DATA = prepare(res);
+    Object.assign(STATUS, { at: res.at, refreshing: false, stale: false });
+    console.log('[HR Global] ' + DATA.drivers.length + ' motoristas, ' + (DATA.log.total || 0) + ' envios (' + res.version + ')');
+    render();
+    if (OPEN_N != null) openDrawer(OPEN_N);
+  } catch (err) {
+    console.error('[HR Global] falha ao carregar', err);
+    STATUS.refreshing = false;
+    const msg = err && err.name === 'AbortError' || /failed to fetch|network/i.test(String(err && err.message)) ? t('network') : String(err && err.message || err);
+    if (DATA) { STATUS.stale = true; renderHead(); toast(msg); }
+    else { renderHead(); renderError(msg); }
+  }
+}
+
+function startApp(user) {
+  injectTopbar({
+    region: 'GLOBAL · HR',
+    user: user,
+    showBack: true,
+    showLangSwitch: true,
+    lang: currentLang,
+    onLangChange: (l) => setLang(l),
+    onRefresh: () => load(),
+  });
+  document.getElementById('app').style.display = '';
+  if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
+  // link pronto do hrGlobalViewKey(): …/hr-global.html#k=CHAVE → guarda e limpa a URL
+  const m = location.hash.match(/[#&]k=([A-Za-z0-9_-]{8,128})/);
+  if (m) { setKey(m[1]); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+  if (!getKey()) return renderKeyPanel();
+  const cached = loadCache();
+  if (cached && cached.success) {   // mostra na hora a última cópia e atualiza por trás
+    RAW = cached; DATA = prepare(cached); STATUS.at = cached.at;
+    render();
+  }
+  load();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && OPEN_N != null) closeDrawer();
+  if (e.key === '/' && !/input|textarea|select/i.test((document.activeElement || {}).tagName || '')) {
+    const q = document.getElementById('f-q'); if (q) { e.preventDefault(); q.focus(); }
+  }
+});
+document.getElementById('drawer-bg').onclick = closeDrawer;
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyI18n();
+  injectLogin({
+    title: 'HR Global',
+    sub: t('loginSub'),
+    lang: currentLang,
+    adminGate: true,
+    onSuccess: startApp,
+  });
+});
+</script>
+
+<script src="/sv-shell.js?v=20261124hrg"></script>
+</body>
+</html>

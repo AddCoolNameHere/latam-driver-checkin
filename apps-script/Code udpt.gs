@@ -321,7 +321,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.91',
+        version: 'v5.92',
         ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
@@ -341,7 +341,7 @@ function doGet(e) {
                     'getTkmReportOptions', 'getTkmReport', 'getFleetVids',
                     'getVidStatus', 'POST saveVidStatus',
                     'getClientMetrics', 'getClientMetricsBatch', 'getClientWeeks', 'getVidCounts',
-                    'POST saveGlobalDriver', 'getHrGlobalStatus'],
+                    'POST saveGlobalDriver', 'getHrGlobalStatus', 'POST getHrGlobal'],
         timestamp: new Date().toISOString(),
         diagnostic: stats,
       });
@@ -675,6 +675,10 @@ function doPost(e) {
     // v5.91: cadastro global (driver-registration.html) → planilha HR Global, NUNCA a Mastersheet
     if (data.type === 'saveGlobalDriver') {
       return jsonResponse(saveGlobalDriver_(data));
+    }
+    // v5.92: consulta da HR Global (hr-global.html) — exige a chave HR_GLOBAL_VIEW_KEY
+    if (data.type === 'getHrGlobal') {
+      return jsonResponse(getHrGlobal_(data));
     }
 
     ensureSheetsExist();
@@ -12784,5 +12788,113 @@ function getHrGlobalStatus_() {
              tabs: ss.getSheets().length };
   } catch (e) {
     return { success: true, version: 'v5.91', configured: false, error: String(e) };
+  }
+}
+
+// ================================================================
+// v5.92: hr-global.html — CONSULTA da HR Global (página admin leve).
+// ----------------------------------------------------------------
+// POST getHrGlobal { key } → aba Todos inteira (valores como aparecem na planilha)
+// + links da FILE LINK + últimos envios do formulário.
+// Tem documento, nascimento e endereço de todo mundo → NÃO é um GET aberto como os
+// outros: exige a chave HR_GLOBAL_VIEW_KEY (Script Properties). A chave vai no corpo
+// do POST (não fica em URL/log). Pra criar/ver a chave: rodar hrGlobalViewKey() no
+// editor — o log mostra a chave e um link que já entra com ela. Trocar a chave
+// (corta quem tinha a antiga): hrGlobalNewViewKey().
+// ================================================================
+const HRG_VIEW_KEY_PROP_ = 'HR_GLOBAL_VIEW_KEY';
+const HRG_PAGE_URL_ = 'https://latamace.com/hr-global.html';
+
+/** ▶ RODAR NO EDITOR: cria (se não existir) e mostra a chave da página hr-global.html. */
+function hrGlobalViewKey() {
+  const props = PropertiesService.getScriptProperties();
+  let k = props.getProperty(HRG_VIEW_KEY_PROP_);
+  if (!k) {
+    k = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '').slice(0, 8);
+    props.setProperty(HRG_VIEW_KEY_PROP_, k);
+  }
+  const msg = '[HR Global] chave da página: ' + k + '\nLink que já entra com a chave (não compartilhe fora do time): ' +
+              HRG_PAGE_URL_ + '#k=' + k;
+  Logger.log(msg);
+  return msg;
+}
+/** ▶ Troca a chave — quem tinha a antiga perde o acesso na próxima atualização. */
+function hrGlobalNewViewKey() {
+  PropertiesService.getScriptProperties().deleteProperty(HRG_VIEW_KEY_PROP_);
+  return hrGlobalViewKey();
+}
+
+function hrgSafeEq_(a, b) {
+  a = String(a); b = String(b);
+  let d = a.length ^ b.length;
+  const n = Math.max(a.length, b.length);
+  for (let i = 0; i < n; i++) d |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  return d === 0;
+}
+
+function hrgRichUrl_(rt) {
+  if (!rt) return '';
+  let u = rt.getLinkUrl();
+  if (!u) {
+    const runs = rt.getRuns();
+    for (let k = 0; k < runs.length && !u; k++) u = runs[k].getLinkUrl();
+  }
+  return u || '';
+}
+
+/** POST getHrGlobal (hr-global.html). data: { key } */
+function getHrGlobal_(data) {
+  const V = 'v5.92';
+  const want = PropertiesService.getScriptProperties().getProperty(HRG_VIEW_KEY_PROP_);
+  if (!want) return { success: false, version: V, code: 'noKey', error: 'Chave da página ainda não criada — rode hrGlobalViewKey() no editor do Apps Script' };
+  if (!hrgSafeEq_(String((data && data.key) || '').trim(), want)) return { success: false, version: V, code: 'badKey', error: 'Chave inválida' };
+  try {
+    const ss = hrGlobalSs_(false);
+    const sh = ss.getSheetByName(HR_GLOBAL.allSheet);
+    if (!sh) return { success: false, version: V, code: 'notConfigured', error: 'A aba ' + HR_GLOBAL.allSheet + ' não existe — rode setupHrGlobal()' };
+    const lastRow = sh.getLastRow(), lastCol = sh.getLastColumn();
+    const trim = function (h) { return String(h == null ? '' : h).trim(); };
+    const headers = sh.getRange(1, 1, 1, lastCol).getDisplayValues()[0].map(trim);
+    const rows = [];
+    if (lastRow > 1) {
+      const n = lastRow - 1;
+      const vals = sh.getRange(2, 1, n, lastCol).getDisplayValues();
+      const links = {};
+      ['FILE LINK', 'Document URL (do not edit)'].forEach(function (h) {
+        const c = headers.indexOf(h);
+        if (c < 0) return;
+        sh.getRange(2, c + 1, n, 1).getRichTextValues().forEach(function (r, i) {
+          const u = hrgRichUrl_(r[0]);
+          if (u) (links[i] = links[i] || {})[c] = u;
+        });
+      });
+      vals.forEach(function (r, i) {
+        if (!r.some(function (c) { return c !== ''; })) return;
+        const o = { n: i + 2, v: r };
+        if (links[i]) o.l = links[i];
+        rows.push(o);
+      });
+    }
+    // Envios do formulário, do mais novo pro mais antigo (sem o Payload JSON: pesado e repetido)
+    let log = { headers: [], rows: [], total: 0 };
+    const lg = ss.getSheetByName(HR_GLOBAL.logSheet);
+    if (lg && lg.getLastRow() > 1) {
+      const lc = lg.getLastColumn(), total = lg.getLastRow() - 1;
+      const lh = lg.getRange(1, 1, 1, lc).getDisplayValues()[0].map(trim);
+      const keep = [];
+      lh.forEach(function (h, i) { if (!/^payload/i.test(h)) keep.push(i); });
+      const take = Math.min(500, total);
+      const lv = lg.getRange(lg.getLastRow() - take + 1, 1, take, lc).getDisplayValues().reverse();
+      log = {
+        headers: keep.map(function (i) { return lh[i]; }),
+        rows: lv.map(function (r) { return keep.map(function (i) { return r[i]; }); }),
+        total: total,
+      };
+    }
+    return { success: true, version: V, at: new Date().toISOString(), sheetUrl: ss.getUrl(), gid: sh.getSheetId(),
+             headers: headers, rows: rows, log: log };
+  } catch (err) {
+    Logger.log('getHrGlobal_ erro: ' + err);
+    return { success: false, version: V, error: String(err && err.message || err) };
   }
 }
