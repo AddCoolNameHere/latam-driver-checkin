@@ -471,7 +471,7 @@ function filtered(skip) {
   const q = norm(F.q).trim();
   const qd = /^[\d\s()+\-./]+$/.test(F.q.trim()) ? F.q.replace(/\D/g, '') : '';
   return DATA.drivers.filter(d =>
-    (skip === 'region' || skip === 'country' || !F.region || d.region === F.region) &&
+    (skip === 'region' || !F.region || d.region === F.region) &&
     (skip === 'country' || !F.country || d.country === F.country) &&
     (skip === 'sit' || passSit(d)) && passForm(d) && matchQ(d, q, qd));
 }
