@@ -321,7 +321,7 @@ function doGet(e) {
       }
       return jsonResponse({
         success: true,
-        version: 'v5.92',
+        version: 'v5.93',
         ctsSource: _rawCtsSourceUsed,   // 'mirror' (CTS Mirror) | 'mastersheet' (fallback)
         endpoints: ['getDrivers', 'getBase', 'getDashboardData', 'getDriverHistory',
                     'getCheckinsByPeriod', 'getRampData', 'getDriversList', 'getDriverProfile',
@@ -676,9 +676,9 @@ function doPost(e) {
     if (data.type === 'saveGlobalDriver') {
       return jsonResponse(saveGlobalDriver_(data));
     }
-    // v5.92: consulta da HR Global (hr-global.html) — exige a chave HR_GLOBAL_VIEW_KEY
+    // v5.92: consulta da HR Global (hr-global.html) — v5.93: sem chave
     if (data.type === 'getHrGlobal') {
-      return jsonResponse(getHrGlobal_(data));
+      return jsonResponse(getHrGlobal_());
     }
 
     ensureSheetsExist();
@@ -12792,46 +12792,16 @@ function getHrGlobalStatus_() {
 }
 
 // ================================================================
-// v5.92: hr-global.html — CONSULTA da HR Global (página admin leve).
+// v5.92/v5.93: hr-global.html — CONSULTA da HR Global (página leve).
 // ----------------------------------------------------------------
-// POST getHrGlobal { key } → aba Todos inteira (valores como aparecem na planilha)
+// POST getHrGlobal → aba Todos inteira (valores como aparecem na planilha)
 // + links da FILE LINK + últimos envios do formulário.
-// Tem documento, nascimento e endereço de todo mundo → NÃO é um GET aberto como os
-// outros: exige a chave HR_GLOBAL_VIEW_KEY (Script Properties). A chave vai no corpo
-// do POST (não fica em URL/log). Pra criar/ver a chave: rodar hrGlobalViewKey() no
-// editor — o log mostra a chave e um link que já entra com ela. Trocar a chave
-// (corta quem tinha a antiga): hrGlobalNewViewKey().
+// v5.93: SEM chave (pedido do Lucas, 2026-11-24) — por enquanto a página fica só pro
+// login "fuss" (gate client-side, como o resto do portal); depois abre pro time.
+// ⚠ Traz documento/nascimento/endereço de todo mundo: quem chamar o endpoint direto
+// (a URL do Web App está no GitHub) recebe os dados. A v5.92 tinha a chave
+// HR_GLOBAL_VIEW_KEY — se precisar de novo, está no histórico do git (commit 98553a3).
 // ================================================================
-const HRG_VIEW_KEY_PROP_ = 'HR_GLOBAL_VIEW_KEY';
-const HRG_PAGE_URL_ = 'https://latamace.com/hr-global.html';
-
-/** ▶ RODAR NO EDITOR: cria (se não existir) e mostra a chave da página hr-global.html. */
-function hrGlobalViewKey() {
-  const props = PropertiesService.getScriptProperties();
-  let k = props.getProperty(HRG_VIEW_KEY_PROP_);
-  if (!k) {
-    k = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '').slice(0, 8);
-    props.setProperty(HRG_VIEW_KEY_PROP_, k);
-  }
-  const msg = '[HR Global] chave da página: ' + k + '\nLink que já entra com a chave (não compartilhe fora do time): ' +
-              HRG_PAGE_URL_ + '#k=' + k;
-  Logger.log(msg);
-  return msg;
-}
-/** ▶ Troca a chave — quem tinha a antiga perde o acesso na próxima atualização. */
-function hrGlobalNewViewKey() {
-  PropertiesService.getScriptProperties().deleteProperty(HRG_VIEW_KEY_PROP_);
-  return hrGlobalViewKey();
-}
-
-function hrgSafeEq_(a, b) {
-  a = String(a); b = String(b);
-  let d = a.length ^ b.length;
-  const n = Math.max(a.length, b.length);
-  for (let i = 0; i < n; i++) d |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
-  return d === 0;
-}
-
 function hrgRichUrl_(rt) {
   if (!rt) return '';
   let u = rt.getLinkUrl();
@@ -12842,12 +12812,9 @@ function hrgRichUrl_(rt) {
   return u || '';
 }
 
-/** POST getHrGlobal (hr-global.html). data: { key } */
-function getHrGlobal_(data) {
-  const V = 'v5.92';
-  const want = PropertiesService.getScriptProperties().getProperty(HRG_VIEW_KEY_PROP_);
-  if (!want) return { success: false, version: V, code: 'noKey', error: 'Chave da página ainda não criada — rode hrGlobalViewKey() no editor do Apps Script' };
-  if (!hrgSafeEq_(String((data && data.key) || '').trim(), want)) return { success: false, version: V, code: 'badKey', error: 'Chave inválida' };
+/** POST getHrGlobal (hr-global.html). */
+function getHrGlobal_() {
+  const V = 'v5.93';
   try {
     const ss = hrGlobalSs_(false);
     const sh = ss.getSheetByName(HR_GLOBAL.allSheet);

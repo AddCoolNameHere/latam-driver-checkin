@@ -12,9 +12,9 @@
 <link rel="stylesheet" href="/theme.css?v=20261023toggle">
 <!--
   HR Global — consulta leve da planilha "HR Global — Street View Drivers" (cadastro 2027).
-  Fonte: aba Todos + "Respostas do formulário" via POST getHrGlobal (backend v5.92).
-  Tem documento/nascimento/endereço → além do login admin, pede a CHAVE HR_GLOBAL_VIEW_KEY
-  (rodar hrGlobalViewKey() no editor do Apps Script: o log mostra a chave e um link #k=… que já entra).
+  Fonte: aba Todos + "Respostas do formulário" via POST getHrGlobal (backend v5.93, sem chave).
+  Por enquanto só o login "fuss" entra (superAdminGate) — depois abre pro time (trocar pra adminGate
+  aqui e o access do item no sv-shell.js).
   Rápida: mostra na hora a última cópia salva neste navegador e atualiza por trás.
 -->
 <style>
@@ -112,15 +112,6 @@
   .error-box { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border-radius: 12px; border: 1px solid #FECACA; background: #FEF2F2; color: #991B1B; font-size: 14px; }
   [data-theme="dark"] .error-box { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.28); color: #F87171; }
 
-  /* chave de acesso */
-  .key-card { max-width: 520px; margin: 40px auto; padding: 24px; }
-  .key-card h2 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
-  .key-card p { font-size: 13.5px; color: var(--c-text-muted); line-height: 1.55; margin-bottom: 14px; }
-  .key-card code { font-family: var(--font-mono); font-size: 12.5px; background: var(--c-bg-tint); padding: 1px 5px; border-radius: 5px; color: var(--c-text); }
-  .key-row { display: flex; gap: 8px; }
-  .key-row input { flex: 1; min-width: 0; font: inherit; font-family: var(--font-mono); font-size: 13px; color: var(--c-text); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 9px; padding: 9px 11px; }
-  .btn { font: inherit; font-size: 13.5px; font-weight: 500; border-radius: 9px; padding: 9px 16px; cursor: pointer; border: 1px solid var(--c-primary); background: var(--c-primary); color: #fff; }
-  .key-msg { font-size: 13px; margin-top: 10px; color: var(--c-danger); }
 
   /* ficha (drawer) */
   .drawer-bg { position: fixed; inset: 0; background: rgba(15,23,42,.32); opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 900; }
@@ -189,8 +180,7 @@
 <script>
 const CONFIG = {
   scriptUrl: 'https://script.google.com/macros/s/AKfycbzNgMr7RXi4d1rhF3xBJVUk0EvAgYgRXGNgW_QBEAp-eI2jqahRynmQPwd6Q4m5EsSv/exec',
-  backendVersion: 'v5.92',
-  keyStore: 'hrg.key',
+  backendVersion: 'v5.93',
   cacheStore: 'hrg.cache.v1',
   timeoutMs: 45000,
   pageSize: 300,
@@ -203,12 +193,8 @@ const I18N = {
     title: 'HR Global', eyebrow: 'Aceolution · Street View Global',
     sub: 'Todos os motoristas da planilha HR Global (cadastro 2027). Clique num nome pra ver a ficha completa.',
     loginSub: 'Acesso interno', loading: 'Carregando motoristas…', refreshing: 'Atualizando…', updated: 'Atualizado {t}',
-    stale: 'Cópia de {t} — não deu pra atualizar', refresh: 'Atualizar', openSheet: 'Abrir planilha', forget: 'Esquecer chave',
-    keyTitle: 'Chave de acesso',
-    keyText: 'Essa página mostra documento, nascimento e endereço dos motoristas, então pede uma chave além do login. No editor do Apps Script, rode <code>hrGlobalViewKey()</code>: o log mostra a chave e um link que já entra com ela.',
-    keyPh: 'Cole a chave aqui', keyBtn: 'Entrar', keyBad: 'Chave inválida — confira e tente de novo.',
-    keyNone: 'A chave ainda não foi criada. Rode hrGlobalViewKey() no editor do Apps Script.',
-    needDeploy: 'O backend ainda não tem essa página — falta implantar a v5.92 do Apps Script (Implantar → Gerenciar implantações → Editar → Nova versão).',
+    stale: 'Cópia de {t} — não deu pra atualizar', refresh: 'Atualizar', openSheet: 'Abrir planilha',
+    needDeploy: 'O backend ainda não tem essa página — falta implantar a v5.93 do Apps Script (Implantar → Gerenciar implantações → Editar → Nova versão).',
     error: 'Erro ao carregar', network: 'Sem resposta do servidor. Tente de novo.',
     kTotal: 'Motoristas', kTotalSub: '{n} países', kActive: 'Ativos', kActiveSub: '+{v} de férias · {o} em offboarding',
     kForm: 'Enviaram o formulário', kFormSub: '{n} envios no total', kNew: 'Novos pra revisar', kNewSub: 'cadastros que vieram do formulário',
@@ -232,12 +218,8 @@ const I18N = {
     title: 'HR Global', eyebrow: 'Aceolution · Street View Global',
     sub: 'Todos los conductores de la planilla HR Global (registro 2027). Haz clic en un nombre para ver la ficha completa.',
     loginSub: 'Acceso interno', loading: 'Cargando conductores…', refreshing: 'Actualizando…', updated: 'Actualizado {t}',
-    stale: 'Copia de {t} — no se pudo actualizar', refresh: 'Actualizar', openSheet: 'Abrir planilla', forget: 'Olvidar clave',
-    keyTitle: 'Clave de acceso',
-    keyText: 'Esta página muestra documento, nacimiento y dirección de los conductores, por eso pide una clave además del login. En el editor de Apps Script, ejecuta <code>hrGlobalViewKey()</code>: el registro muestra la clave y un link que ya entra con ella.',
-    keyPh: 'Pega la clave aquí', keyBtn: 'Entrar', keyBad: 'Clave inválida — revísala e intenta de nuevo.',
-    keyNone: 'La clave todavía no fue creada. Ejecuta hrGlobalViewKey() en el editor de Apps Script.',
-    needDeploy: 'El backend todavía no tiene esta página — falta implementar la v5.92 del Apps Script (Implementar → Gestionar implementaciones → Editar → Nueva versión).',
+    stale: 'Copia de {t} — no se pudo actualizar', refresh: 'Actualizar', openSheet: 'Abrir planilla',
+    needDeploy: 'El backend todavía no tiene esta página — falta implementar la v5.93 del Apps Script (Implementar → Gestionar implementaciones → Editar → Nueva versión).',
     error: 'Error al cargar', network: 'Sin respuesta del servidor. Intenta de nuevo.',
     kTotal: 'Conductores', kTotalSub: '{n} países', kActive: 'Activos', kActiveSub: '+{v} de vacaciones · {o} en offboarding',
     kForm: 'Enviaron el formulario', kFormSub: '{n} envíos en total', kNew: 'Nuevos para revisar', kNewSub: 'registros que vinieron del formulario',
@@ -261,12 +243,8 @@ const I18N = {
     title: 'HR Global', eyebrow: 'Aceolution · Street View Global',
     sub: 'Every driver in the HR Global sheet (2027 registration). Click a name to see the full record.',
     loginSub: 'Internal access', loading: 'Loading drivers…', refreshing: 'Refreshing…', updated: 'Updated {t}',
-    stale: 'Copy from {t} — could not refresh', refresh: 'Refresh', openSheet: 'Open sheet', forget: 'Forget key',
-    keyTitle: 'Access key',
-    keyText: 'This page shows drivers’ ID numbers, birth dates and addresses, so it asks for a key on top of the login. In the Apps Script editor, run <code>hrGlobalViewKey()</code>: the log shows the key and a link that signs you in with it.',
-    keyPh: 'Paste the key here', keyBtn: 'Enter', keyBad: 'Invalid key — check it and try again.',
-    keyNone: 'The key has not been created yet. Run hrGlobalViewKey() in the Apps Script editor.',
-    needDeploy: 'The backend does not have this page yet — deploy Apps Script v5.92 (Deploy → Manage deployments → Edit → New version).',
+    stale: 'Copy from {t} — could not refresh', refresh: 'Refresh', openSheet: 'Open sheet',
+    needDeploy: 'The backend does not have this page yet — deploy Apps Script v5.93 (Deploy → Manage deployments → Edit → New version).',
     error: 'Failed to load', network: 'No response from the server. Try again.',
     kTotal: 'Drivers', kTotalSub: '{n} countries', kActive: 'Active', kActiveSub: '+{v} on vacation · {o} offboarding',
     kForm: 'Sent the form', kFormSub: '{n} submissions in total', kNew: 'New to review', kNewSub: 'records that came from the form',
@@ -405,13 +383,8 @@ function toast(msg) {
   clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 1200);
 }
 
-// ---------- chave + cache (só neste navegador) ----------
-function getKey() { try { return localStorage.getItem(CONFIG.keyStore) || ''; } catch (e) { return ''; } }
-function setKey(k) { try { localStorage.setItem(CONFIG.keyStore, k); } catch (e) {} }
-function forgetKey() {
-  try { localStorage.removeItem(CONFIG.keyStore); localStorage.removeItem(CONFIG.cacheStore); } catch (e) {}
-  RAW = null; DATA = null;
-}
+// ---------- cache (só neste navegador) ----------
+try { localStorage.removeItem('hrg.key'); } catch (e) {}   // sobra da v5.92 (tinha chave)
 function loadCache() { try { return JSON.parse(localStorage.getItem(CONFIG.cacheStore) || 'null'); } catch (e) { return null; } }
 function saveCache(res) { try { localStorage.setItem(CONFIG.cacheStore, JSON.stringify(res)); } catch (e) { console.warn('[HR Global] cache cheio', e); } }
 
@@ -506,7 +479,7 @@ function setLang(lang) {
   currentLang = I18N[lang] ? lang : 'pt';
   try { localStorage.setItem('hrg.lang', currentLang); } catch (e) {}
   applyI18n(); renderHead();
-  if (DATA) render(); else if (!getKey()) renderKeyPanel();
+  if (DATA) render();
   if (OPEN_N != null) openDrawer(OPEN_N);
 }
 
@@ -518,28 +491,10 @@ function renderHead() {
   else if (STATUS.stale && STATUS.at) st = '<span class="status is-stale">⚠ ' + esc(t('stale', { t: fmtTime(STATUS.at) })) + '</span>';
   else if (STATUS.at) st = '<span class="status">' + esc(t('updated', { t: fmtTime(STATUS.at) })) + '</span>';
   const parts = [st];
-  if (DATA || getKey()) parts.push('<button type="button" class="btn-link" id="btn-refresh">' + esc(t('refresh')) + '</button>');
+  parts.push('<button type="button" class="btn-link" id="btn-refresh">' + esc(t('refresh')) + '</button>');
   if (DATA && DATA.sheetUrl) parts.push('<a href="' + esc(DATA.sheetUrl) + '" target="_blank" rel="noopener">' + esc(t('openSheet')) + ' ↗</a>');
-  if (getKey()) parts.push('<button type="button" class="btn-link muted" id="btn-forget" style="color:var(--c-text-muted)">' + esc(t('forget')) + '</button>');
   el.innerHTML = parts.filter(Boolean).join('<span class="muted">·</span>');
   const r = document.getElementById('btn-refresh'); if (r) r.onclick = () => load();
-  const f = document.getElementById('btn-forget'); if (f) f.onclick = () => { forgetKey(); STATUS.at = null; closeDrawer(); renderHead(); renderKeyPanel(); };
-}
-
-function renderKeyPanel(msgKey) {
-  renderHead();
-  document.getElementById('content').innerHTML =
-    '<div class="panel key-card"><h2>' + esc(t('keyTitle')) + '</h2><p>' + t('keyText') + '</p>' +
-    '<form class="key-row" id="key-form"><input id="key-in" type="password" autocomplete="off" spellcheck="false" placeholder="' + esc(t('keyPh')) + '">' +
-    '<button class="btn" type="submit">' + esc(t('keyBtn')) + '</button></form>' +
-    (msgKey ? '<div class="key-msg">' + esc(t(msgKey)) + '</div>' : '') + '</div>';
-  const inp = document.getElementById('key-in'); inp.focus();
-  document.getElementById('key-form').onsubmit = (e) => {
-    e.preventDefault();
-    const k = inp.value.trim().replace(/^.*#k=/, '');
-    if (!k) return;
-    setKey(k); load();
-  };
 }
 
 function renderError(msg) {
@@ -771,15 +726,13 @@ function closeDrawer() {
 
 // ---------- carga ----------
 async function load() {
-  if (!getKey()) return renderKeyPanel();
   STATUS.refreshing = true; renderHead();
   try {
-    const res = await post({ type: 'getHrGlobal', key: getKey() });
+    const res = await post({ type: 'getHrGlobal' });
     if (!res || !res.success) {
       const code = res && res.code, msg = String((res && res.error) || 'backend');
       STATUS.refreshing = false;
-      if (code === 'badKey') { forgetKey(); closeDrawer(); return renderKeyPanel('keyBad'); }
-      if (code === 'noKey') { forgetKey(); closeDrawer(); return renderKeyPanel('keyNone'); }
+      if (code === 'badKey' || code === 'noKey') throw new Error(t('needDeploy'));   // v5.92 ainda pedia chave
       throw new Error(/unknown type/i.test(msg) ? t('needDeploy') : msg);
     }
     saveCache(res);
@@ -809,10 +762,6 @@ function startApp(user) {
   });
   document.getElementById('app').style.display = '';
   if (typeof setupThemeToggle === 'function') setupThemeToggle(user);
-  // link pronto do hrGlobalViewKey(): …/hr-global.html#k=CHAVE → guarda e limpa a URL
-  const m = location.hash.match(/[#&]k=([A-Za-z0-9_-]{8,128})/);
-  if (m) { setKey(m[1]); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
-  if (!getKey()) return renderKeyPanel();
   const cached = loadCache();
   if (cached && cached.success) {   // mostra na hora a última cópia e atualiza por trás
     RAW = cached; DATA = prepare(cached); STATUS.at = cached.at;
@@ -835,12 +784,12 @@ document.addEventListener('DOMContentLoaded', () => {
     title: 'HR Global',
     sub: t('loginSub'),
     lang: currentLang,
-    adminGate: true,
+    superAdminGate: 'fuss',   // por enquanto só o Lucas; depois: adminGate: true
     onSuccess: startApp,
   });
 });
 </script>
 
-<script src="/sv-shell.js?v=20261124hrg"></script>
+<script src="/sv-shell.js?v=20261124hrg2"></script>
 </body>
 </html>
